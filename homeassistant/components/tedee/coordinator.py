@@ -108,9 +108,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         if not self._current_locks:
             self._current_locks = set(self.tedee_client.locks_dict)
 
-        if removed_locks := self._current_locks - set(
-            self.tedee_client.locks_dict.keys()
-        ):
+        if removed_locks := self._current_locks - set(self.tedee_client.locks_dict):
             _LOGGER.debug("Removed locks: %s", ", ".join(map(str, removed_locks)))
             device_registry = dr.async_get(self.hass)
             for lock_id in removed_locks:
@@ -119,7 +117,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
                 ):
                     device_registry.async_remove_device(device.id)
 
-        if new_locks := set(self.tedee_client.locks_dict.keys()) - self._current_locks:
+        if new_locks := set(self.tedee_client.locks_dict) - self._current_locks:
             _LOGGER.debug("New locks found: %s", ", ".join(map(str, new_locks)))
             for lock_id in new_locks:
                 for callback in self.new_lock_callbacks:
