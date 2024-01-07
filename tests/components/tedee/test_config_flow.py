@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -36,6 +36,7 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     assert result2["data"] == {
         CONF_HOST: "192.168.1.62",
         CONF_LOCAL_ACCESS_TOKEN: "token",
+        CONF_WEBHOOK_ID: result2["data"][CONF_WEBHOOK_ID],
     }
 
 

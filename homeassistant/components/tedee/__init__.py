@@ -11,7 +11,6 @@ from pytedee_async.exception import TedeeWebhookException
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
-    async_generate_id as webhook_generate_id,
     async_generate_url as webhook_generate_url,
     async_register as webhook_register,
     async_unregister as webhook_unregister,
@@ -34,11 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Integration setup."""
-
-    if CONF_WEBHOOK_ID not in entry.data:
-        new_data = entry.data.copy()
-        new_data[CONF_WEBHOOK_ID] = webhook_generate_id()
-        hass.config_entries.async_update_entry(entry, data=new_data)
 
     coordinator = TedeeApiCoordinator(hass)
 

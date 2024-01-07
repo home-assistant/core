@@ -10,7 +10,8 @@ from pytedee_async import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant.components.webhook import async_generate_id as webhook_generate_id
+from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN, NAME
@@ -39,7 +40,8 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(local_bridge.serial)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=NAME, data=user_input)
+                data = {**user_input, CONF_WEBHOOK_ID: webhook_generate_id()}
+                return self.async_create_entry(title=NAME, data=data)
 
         return self.async_show_form(
             step_id="user",
