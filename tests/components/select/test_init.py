@@ -80,7 +80,14 @@ async def test_select(hass: HomeAssistant) -> None:
     await select.async_select_option("option_two")
     assert select.select_option.call_args[0][0] == "option_two"
 
-    assert select.select_option.call_count == 5
+    await select.async_random()
+    assert select.select_option.call_args[0][0] in [
+        "option_one",
+        "option_two",
+        "option_three",
+    ]
+
+    assert select.select_option.call_count == 6
 
     assert select.capability_attributes[ATTR_OPTIONS] == [
         "option_one",

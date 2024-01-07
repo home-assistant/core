@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import random
 from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
@@ -29,6 +30,7 @@ from .const import (
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
+    SERVICE_SELECT_RANDOM,
 )
 
 if TYPE_CHECKING:
@@ -58,6 +60,7 @@ __all__ = [
     "SERVICE_SELECT_NEXT",
     "SERVICE_SELECT_OPTION",
     "SERVICE_SELECT_PREVIOUS",
+    "SERVICE_SELECT_RANDOM",
 ]
 
 # mypy: disallow-any-generics
@@ -98,6 +101,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SELECT_PREVIOUS,
         {vol.Optional(ATTR_CYCLE, default=True): bool},
         SelectEntity.async_previous.__name__,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_RANDOM,
+        {},
+        SelectEntity.async_random.__name__,
     )
 
     return True
@@ -222,6 +231,12 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.async_first()
             return
         await self._async_offset_index(1, cycle)
+
+    @final
+    async def async_random(self) -> None:
+        """Select a random option."""
+        random_index = random.randint(0, len(self.options) - 1)
+        await self._async_select_index(random_index)
 
     @final
     async def async_previous(self, cycle: bool) -> None:
