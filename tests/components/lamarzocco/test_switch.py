@@ -33,8 +33,6 @@ async def test_main(
     """Test the La Marzocco Main switch."""
     serial_number = mock_lamarzocco.serial_number
 
-    mock_lamarzocco.set_power.return_value = None
-
     state = hass.states.get(f"switch.{serial_number}_main")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
@@ -67,8 +65,8 @@ async def test_main(
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_power.mock_calls) == 1
-    mock_lamarzocco.set_power.assert_called_once_with(enabled=False)
+    assert len(mock_lamarzocco.set_power_hass.mock_calls) == 1
+    mock_lamarzocco.set_power_hass.assert_called_once_with(enabled=False)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -79,8 +77,8 @@ async def test_main(
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_power.mock_calls) == 2
-    mock_lamarzocco.set_power.assert_called_with(enabled=True)
+    assert len(mock_lamarzocco.set_power_hass.mock_calls) == 2
+    mock_lamarzocco.set_power_hass.assert_called_with(enabled=True)
 
 
 async def test_auto_on_off(
@@ -91,7 +89,6 @@ async def test_auto_on_off(
 ) -> None:
     """Test the La Marzocco Auto On/Off switch."""
     serial_number = mock_lamarzocco.serial_number
-    mock_lamarzocco.set_auto_on_off_global.return_value = None
 
     state = hass.states.get(f"switch.{serial_number}_auto_on_off")
     assert state
@@ -149,7 +146,6 @@ async def test_prebrew(
 ) -> None:
     """Test the La Marzocco Prebrew switch."""
     serial_number = mock_lamarzocco.serial_number
-    mock_lamarzocco.set_prebrew.return_value = None
 
     state = hass.states.get(f"switch.{serial_number}_prebrew")
 
@@ -211,7 +207,6 @@ async def test_preinfusion(
 ) -> None:
     """Test the La Marzocco Preinfusion switch."""
     serial_number = mock_lamarzocco.serial_number
-    mock_lamarzocco.set_preinfusion.return_value = None
 
     state = hass.states.get(f"switch.{serial_number}_preinfusion")
 
@@ -274,7 +269,6 @@ async def test_steam_boiler_enable(
 ) -> None:
     """Test the La Marzocco Steam Boiler switch."""
     serial_number = mock_lamarzocco.serial_number
-    mock_lamarzocco.set_steam_boiler_enable.return_value = None
 
     state = hass.states.get(f"switch.{serial_number}_steam_boiler")
     assert state
@@ -308,8 +302,8 @@ async def test_steam_boiler_enable(
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_steam_boiler_enable.mock_calls) == 1
-    mock_lamarzocco.set_steam_boiler_enable.assert_called_once_with(enable=False)
+    assert len(mock_lamarzocco.set_steam_boiler_hass.mock_calls) == 1
+    mock_lamarzocco.set_steam_boiler_hass.assert_called_once_with(enable=False)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -320,5 +314,5 @@ async def test_steam_boiler_enable(
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_steam_boiler_enable.mock_calls) == 2
-    mock_lamarzocco.set_steam_boiler_enable.assert_called_with(enable=True)
+    assert len(mock_lamarzocco.set_steam_boiler_hass.mock_calls) == 2
+    mock_lamarzocco.set_steam_boiler_hass.assert_called_with(enable=True)

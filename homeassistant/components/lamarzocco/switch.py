@@ -32,7 +32,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         key="main",
         translation_key="main",
         icon="mdi:power",
-        control_fn=lambda client, state: client.set_power(state),
+        control_fn=lambda client, state: client.set_power_hass(state),
         is_on_fn=lambda client: client.current_status["power"],
     ),
     LaMarzoccoSwitchEntityDescription(
@@ -73,7 +73,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         key="steam_boiler_enable",
         translation_key="steam_boiler",
         icon="mdi:water-boiler",
-        control_fn=lambda client, state: client.set_steam_boiler_enable(state),
+        control_fn=lambda client, state: client.set_steam_boiler_hass(state),
         is_on_fn=lambda client: client.current_status["steam_boiler_enable"],
     ),
 )

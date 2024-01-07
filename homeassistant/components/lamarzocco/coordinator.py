@@ -100,7 +100,6 @@ class LmApiCoordinator(DataUpdateCoordinator[None]):
                 self.config_entry,
                 data=new_data,
             )
-            await self.lm.get_hass_bt_client()
 
         host: str = self.config_entry.data.get(CONF_HOST, "")
         if host:
