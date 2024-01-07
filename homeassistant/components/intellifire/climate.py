@@ -52,7 +52,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    last_temp = DEFAULT_THERMOSTAT_TEMP
+    last_temp: int = DEFAULT_THERMOSTAT_TEMP
 
     def __init__(
         self,
@@ -63,7 +63,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         super().__init__(coordinator, description)
 
         if coordinator.data.thermostat_on:
-            self.last_temp = coordinator.data.thermostat_setpoint_c
+            self.last_temp = int(coordinator.data.thermostat_setpoint_c)
 
     @property
     def hvac_mode(self) -> HVACMode:
