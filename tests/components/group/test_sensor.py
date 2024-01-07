@@ -365,6 +365,22 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
     assert state.attributes.get("state_class") == "measurement"
     assert state.attributes.get("unit_of_measurement") == "kWh"
 
+    # Test that a change of source entity's unit of measurement
+    # is converted correctly by the group sensor
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": "kWh",
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(float(sum(VALUES)))
+
 
 async def test_last_sensor(hass: HomeAssistant) -> None:
     """Test the last sensor."""
