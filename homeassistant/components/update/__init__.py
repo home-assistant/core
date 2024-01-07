@@ -404,6 +404,8 @@ class UpdateEntity(
             return STATE_OFF
         if latest_version == installed_version:
             return STATE_OFF
+        if latest_version == "-1" or latest_version == "-1.0":
+            return STATE_OFF
 
         try:
             newer = _version_is_newer(latest_version, installed_version)
