@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .coordinator import TeslemetryStateUpdateCoordinator
+from tesla_fleet_api import Teslemetry
 
 
 @dataclass
-class TeslemetryVehicle:
+class TeslemetryData:
     """Data for the Teslemetry integration."""
 
-    state_coordinator: TeslemetryStateUpdateCoordinator
+    api: Teslemetry.Vehicle.Specific
+    stream: dict  # Will be a Stream object
+    fields: dict[str, str] = {}
