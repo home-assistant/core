@@ -62,7 +62,7 @@ PRODUCT_VALUE = prod(VALUES)
         ("product", PRODUCT_VALUE, {}),
     ],
 )
-async def test_sensors(
+async def test_sensors2(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     sensor_type: str,
@@ -146,7 +146,8 @@ async def test_sensors_attributes_defined(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.sensor_group_sum")
 
-    assert state.state == str(float(SUM_VALUE))
+    # Liter to M3 = 1:0.001
+    assert state.state == str(float(SUM_VALUE * 0.001))
     assert state.attributes.get(ATTR_ENTITY_ID) == entity_ids
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
@@ -324,9 +325,6 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
         }
     }
 
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
     entity_ids = config["sensor"]["entities"]
 
     hass.states.async_set(
@@ -347,30 +345,25 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
             "unit_of_measurement": "kWh",
         },
     )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.test_sum")
-    assert state.state == str(float(sum([VALUES[0], VALUES[1]])))
-    assert state.attributes.get("device_class") == "energy"
-    assert state.attributes.get("state_class") == "measurement"
-    assert state.attributes.get("unit_of_measurement") == "kWh"
-
     hass.states.async_set(
         entity_ids[2],
         VALUES[2],
         {
-            "device_class": SensorDeviceClass.BATTERY,
-            "state_class": SensorStateClass.TOTAL,
-            "unit_of_measurement": None,
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": "Wh",
         },
     )
     await hass.async_block_till_done()
 
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
     state = hass.states.get("sensor.test_sum")
-    assert state.state == str(sum(VALUES))
-    assert state.attributes.get("device_class") is None
-    assert state.attributes.get("state_class") is None
-    assert state.attributes.get("unit_of_measurement") is None
+    assert state.state == str(float(sum([VALUES[0], VALUES[1], VALUES[2] / 1000])))
+    assert state.attributes.get("device_class") == "energy"
+    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get("unit_of_measurement") == "kWh"
 
 
 async def test_last_sensor(hass: HomeAssistant) -> None:
