@@ -40,7 +40,7 @@
   "entity": {
     "sensor": {
       "wifi_rssi": {
-        "name": "Wi-Fi Strength"
+        "name": "Wi-Fi strength"
       }
     },
     "binary_sensor": {
