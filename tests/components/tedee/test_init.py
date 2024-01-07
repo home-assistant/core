@@ -61,6 +61,7 @@ async def test_config_entry_not_ready(
     assert len(mock_tedee.get_locks.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
+
 async def test_cleanup_on_shutdown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -76,6 +77,7 @@ async def test_cleanup_on_shutdown(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     mock_tedee.delete_webhooks.assert_called_once()
+
 
 async def test_bridge_device(
     hass: HomeAssistant,
@@ -94,6 +96,7 @@ async def test_bridge_device(
     )
     assert device
     assert device == snapshot
+
 
 @pytest.mark.parametrize(
     ("body", "expected_code", "side_effect"),
@@ -127,4 +130,3 @@ async def test_webhook_post(
     await hass.async_block_till_done()
 
     assert resp.status == expected_code
-
