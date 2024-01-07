@@ -44,7 +44,7 @@ class LutronScene(LutronDevice, Scene):
         self,
         area_name: str,
         keypad_name: str,
-        lutron_device: LutronEntity,
+        lutron_device: Button,
         lutron_led: Led,
         controller: Lutron,
     ) -> None:
