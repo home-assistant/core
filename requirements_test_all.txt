@@ -407,7 +407,7 @@ anthemav==1.4.1
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.6.0
+apprise==1.7.1
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -1201,7 +1201,7 @@ pushover_complete==1.1.1
 pvo==2.1.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.1
+py-aosmith==1.0.6
 
 # homeassistant.components.canary
 py-canary==0.5.3
