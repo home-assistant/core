@@ -1,175 +1,871 @@
 # serializer version: 1
 # name: test_sensors[filter][sensor.filter_battery-data]
-  '12'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Filter Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.filter_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
+  })
 # ---
 # name: test_sensors[filter][sensor.filter_battery-reset]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Filter Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.filter_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[filter][sensor.filter_current_water_pressure-data]
-  '263.3797174'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Filter Current water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.filter_current_water_pressure',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '263.3797174',
+  })
 # ---
 # name: test_sensors[filter][sensor.filter_current_water_pressure-reset]
-  'unknown'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Filter Current water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.filter_current_water_pressure',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
 # ---
 # name: test_sensors[filter][sensor.filter_water_flow_rate-data]
-  '19.84'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Filter Water flow rate',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.filter_water_flow_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19.84',
+  })
 # ---
 # name: test_sensors[filter][sensor.filter_water_flow_rate-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Filter Water flow rate',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.filter_water_flow_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_average_daily_water_usage-data]
-  '287.691295584'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Hub DROP-1_C0FFEE Average daily water usage',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_average_daily_water_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '287.691295584',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_average_daily_water_usage-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Hub DROP-1_C0FFEE Average daily water usage',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_average_daily_water_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_battery-data]
-  '50'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Hub DROP-1_C0FFEE Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_battery-reset]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Hub DROP-1_C0FFEE Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_current_water_pressure-data]
-  '428.8538854'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Hub DROP-1_C0FFEE Current water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_current_water_pressure',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '428.8538854',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_current_water_pressure-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Hub DROP-1_C0FFEE Current water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_current_water_pressure',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_high_water_pressure_today-data]
-  '427.474934'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Hub DROP-1_C0FFEE High water pressure today',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_high_water_pressure_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '427.474934',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_high_water_pressure_today-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Hub DROP-1_C0FFEE High water pressure today',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_high_water_pressure_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_low_water_pressure_today-data]
-  '420.580177'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Hub DROP-1_C0FFEE Low water pressure today',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_low_water_pressure_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '420.580177',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_low_water_pressure_today-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Hub DROP-1_C0FFEE Low water pressure today',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_low_water_pressure_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today-data]
-  '13.8'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hub DROP-1_C0FFEE Peak water flow rate today',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.8',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hub DROP-1_C0FFEE Peak water flow rate today',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_total_water_used_today-data]
-  '881.13030096168'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Hub DROP-1_C0FFEE Total water used today',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_total_water_used_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '881.13030096168',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_total_water_used_today-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Hub DROP-1_C0FFEE Total water used today',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_total_water_used_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_water_flow_rate-data]
-  '5.77'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hub DROP-1_C0FFEE Water flow rate',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_water_flow_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.77',
+  })
 # ---
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_water_flow_rate-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hub DROP-1_C0FFEE Water flow rate',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_drop_1_c0ffee_water_flow_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[leak][sensor.leak_detector_battery-data]
-  '100'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Leak Detector Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.leak_detector_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
 # ---
 # name: test_sensors[leak][sensor.leak_detector_battery-reset]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Leak Detector Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.leak_detector_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[leak][sensor.leak_detector_temperature-data]
-  '20.1111111111111'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Leak Detector Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.leak_detector_temperature',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.1111111111111',
+  })
 # ---
 # name: test_sensors[leak][sensor.leak_detector_temperature-reset]
-  '-17.7777777777778'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Leak Detector Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.leak_detector_temperature',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-17.7777777777778',
+  })
 # ---
 # name: test_sensors[protection_valve][sensor.protection_valve_battery-data]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Protection Valve Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.protection_valve_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[protection_valve][sensor.protection_valve_battery-reset]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Protection Valve Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.protection_valve_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[protection_valve][sensor.protection_valve_current_water_pressure-data]
-  '422.6486041'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Protection Valve Current water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.protection_valve_current_water_pressure',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '422.6486041',
+  })
 # ---
 # name: test_sensors[protection_valve][sensor.protection_valve_current_water_pressure-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Protection Valve Current water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.protection_valve_current_water_pressure',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[protection_valve][sensor.protection_valve_temperature-data]
-  '21.3888888888889'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Protection Valve Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.protection_valve_temperature',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.3888888888889',
+  })
 # ---
 # name: test_sensors[protection_valve][sensor.protection_valve_temperature-reset]
-  '-17.7777777777778'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Protection Valve Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.protection_valve_temperature',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-17.7777777777778',
+  })
 # ---
 # name: test_sensors[protection_valve][sensor.protection_valve_water_flow_rate-data]
-  '7.1'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Protection Valve Water flow rate',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.protection_valve_water_flow_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.1',
+  })
 # ---
 # name: test_sensors[protection_valve][sensor.protection_valve_water_flow_rate-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Protection Valve Water flow rate',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.protection_valve_water_flow_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[pump_controller][sensor.pump_controller_current_water_pressure-data]
-  '428.8538854'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Pump Controller Current water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pump_controller_current_water_pressure',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '428.8538854',
+  })
 # ---
 # name: test_sensors[pump_controller][sensor.pump_controller_current_water_pressure-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Pump Controller Current water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pump_controller_current_water_pressure',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[pump_controller][sensor.pump_controller_temperature-data]
-  '20.4444444444444'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Pump Controller Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pump_controller_temperature',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.4444444444444',
+  })
 # ---
 # name: test_sensors[pump_controller][sensor.pump_controller_temperature-reset]
-  '-17.7777777777778'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Pump Controller Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pump_controller_temperature',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-17.7777777777778',
+  })
 # ---
 # name: test_sensors[pump_controller][sensor.pump_controller_water_flow_rate-data]
-  '2.2'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pump Controller Water flow rate',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pump_controller_water_flow_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.2',
+  })
 # ---
 # name: test_sensors[pump_controller][sensor.pump_controller_water_flow_rate-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pump Controller Water flow rate',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pump_controller_water_flow_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[ro_filter][sensor.ro_filter_cartridge_1_life_remaining-data]
-  '59'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RO Filter Cartridge 1 life remaining',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ro_filter_cartridge_1_life_remaining',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '59',
+  })
 # ---
 # name: test_sensors[ro_filter][sensor.ro_filter_cartridge_1_life_remaining-reset]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RO Filter Cartridge 1 life remaining',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ro_filter_cartridge_1_life_remaining',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[ro_filter][sensor.ro_filter_cartridge_2_life_remaining-data]
-  '80'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RO Filter Cartridge 2 life remaining',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ro_filter_cartridge_2_life_remaining',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
 # ---
 # name: test_sensors[ro_filter][sensor.ro_filter_cartridge_2_life_remaining-reset]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RO Filter Cartridge 2 life remaining',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ro_filter_cartridge_2_life_remaining',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[ro_filter][sensor.ro_filter_cartridge_3_life_remaining-data]
-  '59'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RO Filter Cartridge 3 life remaining',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ro_filter_cartridge_3_life_remaining',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '59',
+  })
 # ---
 # name: test_sensors[ro_filter][sensor.ro_filter_cartridge_3_life_remaining-reset]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RO Filter Cartridge 3 life remaining',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ro_filter_cartridge_3_life_remaining',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[ro_filter][sensor.ro_filter_inlet_tds-data]
-  '164'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RO Filter Inlet TDS',
+      'icon': 'mdi:water-opacity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ro_filter_inlet_tds',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '164',
+  })
 # ---
 # name: test_sensors[ro_filter][sensor.ro_filter_inlet_tds-reset]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RO Filter Inlet TDS',
+      'icon': 'mdi:water-opacity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ro_filter_inlet_tds',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[ro_filter][sensor.ro_filter_outlet_tds-data]
-  '9'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RO Filter Outlet TDS',
+      'icon': 'mdi:water-opacity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ro_filter_outlet_tds',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9',
+  })
 # ---
 # name: test_sensors[ro_filter][sensor.ro_filter_outlet_tds-reset]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RO Filter Outlet TDS',
+      'icon': 'mdi:water-opacity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ro_filter_outlet_tds',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[softener][sensor.softener_battery-data]
-  '20'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Softener Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.softener_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
 # ---
 # name: test_sensors[softener][sensor.softener_battery-reset]
-  '0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Softener Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.softener_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensors[softener][sensor.softener_capacity_remaining-data]
-  '3785.411784'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Softener Capacity remaining',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.softener_capacity_remaining',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3785.411784',
+  })
 # ---
 # name: test_sensors[softener][sensor.softener_capacity_remaining-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Softener Capacity remaining',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.softener_capacity_remaining',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[softener][sensor.softener_current_water_pressure-data]
-  '348.1852285'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Softener Current water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.softener_current_water_pressure',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '348.1852285',
+  })
 # ---
 # name: test_sensors[softener][sensor.softener_current_water_pressure-reset]
-  'unknown'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Softener Current water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.softener_current_water_pressure',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
 # ---
 # name: test_sensors[softener][sensor.softener_water_flow_rate-data]
-  '5.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Softener Water flow rate',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.softener_water_flow_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
+  })
 # ---
 # name: test_sensors[softener][sensor.softener_water_flow_rate-reset]
-  '0.0'
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Softener Water flow rate',
+      'icon': 'mdi:shower-head',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.softener_water_flow_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---

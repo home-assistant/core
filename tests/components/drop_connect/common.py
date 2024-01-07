@@ -242,6 +242,6 @@ def help_assert_entries(
         return
 
     for entity_entry in entity_entries:
-        assert hass.states.get(entity_entry.entity_id).state == snapshot(
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
             name=f"{entity_entry.entity_id}-{step}"
         )
