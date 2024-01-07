@@ -143,7 +143,7 @@ class LutronButton:
         button.subscribe(self.button_callback, None)
 
     def button_callback(
-        self, _button: LutronEntity, _context: Any, event: LutronEvent, _params: dict
+        self, _button: Button, _context: None, event: LutronEvent, _params: dict
     ) -> None:
         """Fire an event about a button being pressed or released."""
         # Events per button type:
