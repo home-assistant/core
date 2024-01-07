@@ -40,6 +40,9 @@
     "switch": {
       "onboard_access_point": {
         "name": "Onboard access point"
+      },
+      "valve_controller": {
+        "name": "Valve controller"
       }
     },
     "valve": {
