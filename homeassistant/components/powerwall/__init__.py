@@ -7,6 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Optional, cast
 
+from aiohttp import CookieJar
 from tesla_powerwall import (
     AccessDeniedError,
     ApiError,
@@ -21,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.network import is_ip_address
@@ -120,7 +121,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ip_address: str = entry.data[CONF_IP_ADDRESS]
 
     password: str | None = entry.data.get(CONF_PASSWORD)
-    http_session = async_get_clientsession(hass, verify_ssl=False)
+    http_session = async_create_clientsession(
+        hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
+    )
     power_wall = Powerwall(ip_address, http_session=http_session, verify_ssl=False)
     try:
         base_info = await _login_and_fetch_base_info(power_wall, ip_address, password)

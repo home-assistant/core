@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, cast
 
+from aiohttp import CookieJar
 from tesla_powerwall import (
     AccessDeniedError,
     MissingAttributeError,
@@ -19,6 +20,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.util.network import is_ip_address
 
 from . import async_last_update_was_successful
@@ -65,8 +67,10 @@ async def validate_input(
 
     Data has the keys from schema with values provided by the user.
     """
-
-    async with Powerwall(data[CONF_IP_ADDRESS]) as power_wall:
+    session = async_create_clientsession(
+        hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
+    )
+    async with Powerwall(data[CONF_IP_ADDRESS], http_session=session) as power_wall:
         password = data[CONF_PASSWORD]
 
         try:
@@ -141,7 +145,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "name": gateway_din,
             "ip_address": self.ip_address,
         }
-        errors, info = await self._async_try_connect(
+        errors, info, _ = await self._async_try_connect(
             {CONF_IP_ADDRESS: self.ip_address, CONF_PASSWORD: gateway_din[-5:]}
         )
         if errors:
@@ -156,23 +160,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(
         self, user_input: dict[str, Any]
-    ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+    ) -> tuple[dict[str, Any] | None, dict[str, str] | None, dict[str, str]]:
         """Try to connect to the powerwall."""
         info = None
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         try:
             info = await validate_input(self.hass, user_input)
-        except PowerwallUnreachableError:
+        except PowerwallUnreachableError as ex:
             errors[CONF_IP_ADDRESS] = "cannot_connect"
-        except WrongVersion:
+            description_placeholders = {"error": str(ex)}
+        except WrongVersion as ex:
             errors["base"] = "wrong_version"
-        except AccessDeniedError:
+            description_placeholders = {"error": str(ex)}
+        except AccessDeniedError as ex:
             errors[CONF_PASSWORD] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+            description_placeholders = {"error": str(ex)}
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+            description_placeholders = {"error": str(ex)}
 
-        return errors, info
+        return errors, info, description_placeholders
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
@@ -208,8 +217,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] | None = {}
+        description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            errors, info = await self._async_try_connect(user_input)
+            errors, info, description_placeholders = await self._async_try_connect(
+                user_input
+            )
             if not errors:
                 assert info is not None
                 if info["unique_id"]:
@@ -231,6 +243,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_reauth_confirm(
@@ -239,9 +252,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle reauth confirmation."""
         assert self.reauth_entry is not None
         errors: dict[str, str] | None = {}
+        description_placeholders: dict[str, str] = {}
         if user_input is not None:
             entry_data = self.reauth_entry.data
-            errors, _ = await self._async_try_connect(
+            errors, _, description_placeholders = await self._async_try_connect(
                 {CONF_IP_ADDRESS: entry_data[CONF_IP_ADDRESS], **user_input}
             )
             if not errors:
@@ -255,6 +269,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Optional(CONF_PASSWORD): str}),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
