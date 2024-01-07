@@ -1,8 +1,6 @@
 """Support for Enigma2 media players."""
 from __future__ import annotations
 
-from typing import Any
-
 from aiohttp.client_exceptions import ClientConnectorError
 from openwebif.api import OpenWebIfDevice
 from openwebif.enums import RemoteControlCodes, SetVolumeOption
@@ -128,8 +126,6 @@ class Enigma2Device(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    _data: dict[str, Any]
-
     def __init__(self, name: str, device: OpenWebIfDevice, about: dict) -> None:
         """Initialize the Enigma2 device."""
         self._device: OpenWebIfDevice = device
@@ -189,34 +185,33 @@ class Enigma2Device(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Update state of the media_player."""
         await self._device.update()
-        self._data = self._device.status_info
         self._attr_available = not self._device.is_offline
 
-        if self._data.get("inStandby") == "false":
+        if not self._device.status.in_standby:
             self._attr_extra_state_attributes = {
-                ATTR_MEDIA_CURRENTLY_RECORDING: self._data.get("isRecording"),
-                ATTR_MEDIA_DESCRIPTION: self._data.get("currservice_description"),
-                ATTR_MEDIA_START_TIME: self._data.get("currservice_begin"),
-                ATTR_MEDIA_END_TIME: self._data.get("currservice_end"),
+                ATTR_MEDIA_CURRENTLY_RECORDING: self._device.status.is_recording,
+                ATTR_MEDIA_DESCRIPTION: self._device.status.currservice.fulldescription,
+                ATTR_MEDIA_START_TIME: self._device.status.currservice.begin,
+                ATTR_MEDIA_END_TIME: self._device.status.currservice.end,
             }
         else:
             self._attr_extra_state_attributes = {}
 
-        self._attr_media_title = self._data.get("currservice_station")
-        self._attr_media_series_title = self._data.get("currservice_name")
-        self._attr_media_channel = self._data.get("currservice_station")
-        self._attr_is_volume_muted = self._data.get("muted")
-        self._attr_media_content_id = self._data.get("currservice_serviceref")
+        self._attr_media_title = self._device.status.currservice.station
+        self._attr_media_series_title = self._device.status.currservice.name
+        self._attr_media_channel = self._device.status.currservice.station
+        self._attr_is_volume_muted = self._device.status.muted
+        self._attr_media_content_id = self._device.status.currservice.serviceref
         self._attr_media_image_url = self._device.picon_url
-        self._attr_source = self._data.get("currservice_station")
+        self._attr_source = self._device.status.currservice.station
         self._attr_source_list = self._device.source_list
 
-        if self._data.get("inStandby") == "true":
+        if self._device.status.in_standby:
             self._attr_state = MediaPlayerState.OFF
         else:
             self._attr_state = MediaPlayerState.ON
 
-        if (volume_level := self._data.get("volume")) is not None:
+        if (volume_level := self._device.status.volume) is not None:
             self._attr_volume_level = volume_level / 100
         else:
             self._attr_volume_level = None
