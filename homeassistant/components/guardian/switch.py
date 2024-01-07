@@ -10,17 +10,23 @@ from aioguardian import Client
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
-from .const import API_WIFI_STATUS, DOMAIN
+from .const import API_VALVE_STATUS, API_WIFI_STATUS, DOMAIN
 from .util import convert_exceptions_to_homeassistant_error
+from .valve import GuardianValveState
 
+ATTR_AVG_CURRENT = "average_current"
 ATTR_CONNECTED_CLIENTS = "connected_clients"
+ATTR_INST_CURRENT = "instantaneous_current"
+ATTR_INST_CURRENT_DDT = "instantaneous_current_ddt"
 ATTR_STATION_CONNECTED = "station_connected"
+ATTR_TRAVEL_COUNT = "travel_count"
 
 SWITCH_KIND_ONBOARD_AP = "onboard_ap"
+SWITCH_KIND_VALVE = "valve"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,6 +51,27 @@ async def _async_enable_ap(client: Client) -> None:
     await client.wifi.enable_ap()
 
 
+async def _async_close_valve(client: Client) -> None:
+    """Close the valve."""
+    await client.valve.close()
+
+
+async def _async_open_valve(client: Client) -> None:
+    """Open the valve."""
+    await client.valve.open()
+
+
+@callback
+def is_open(data: dict[str, Any]) -> bool:
+    """Return if the valve is opening."""
+    return data["state"] in (
+        GuardianValveState.FINISH_OPENING,
+        GuardianValveState.OPEN,
+        GuardianValveState.OPENING,
+        GuardianValveState.START_OPENING,
+    )
+
+
 VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_ONBOARD_AP,
@@ -59,6 +86,21 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         is_on_fn=lambda data: data["ap_enabled"],
         off_fn=_async_disable_ap,
         on_fn=_async_enable_ap,
+    ),
+    ValveControllerSwitchDescription(
+        key=SWITCH_KIND_VALVE,
+        translation_key="valve_controller",
+        icon="mdi:water",
+        api_category=API_VALVE_STATUS,
+        extra_state_attributes_fn=lambda data: {
+            ATTR_AVG_CURRENT: data["average_current"],
+            ATTR_INST_CURRENT: data["instantaneous_current"],
+            ATTR_INST_CURRENT_DDT: data["instantaneous_current_ddt"],
+            ATTR_TRAVEL_COUNT: data["travel_count"],
+        },
+        is_on_fn=is_open,
+        off_fn=_async_close_valve,
+        on_fn=_async_open_valve,
     ),
 )
 
