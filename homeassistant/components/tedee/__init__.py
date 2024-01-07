@@ -18,6 +18,7 @@ from homeassistant.components.webhook import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, NAME
 from .coordinator import TedeeApiCoordinator
@@ -37,6 +38,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = TedeeApiCoordinator(hass)
 
     await coordinator.async_config_entry_first_refresh()
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, coordinator.bridge.serial)},
+        manufacturer="Tedee",
+        name=coordinator.bridge.name,
+        model="Bridge",
+        serial_number=coordinator.bridge.serial,
+    )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
