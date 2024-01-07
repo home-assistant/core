@@ -35,21 +35,11 @@ async def async_setup_entry(
 
     coordinator: GoveeLocalApiCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    def check_supported_devices(devices: list[GoveeDevice]) -> None:
-        for device in devices:
-            if not device.capabilities:
-                _LOGGER.warning(
-                    "Discovered an unsupported device. Model: %s", device.sku
-                )
-
     def discovery_callback(device: GoveeDevice, is_new: bool) -> bool:
         if is_new:
-            devices = [device]
-            check_supported_devices(devices)
-            async_add_entities(GoveeLight(coordinator, d) for d in devices)
+            async_add_entities([GoveeLight(coordinator, device)])
         return True
 
-    check_supported_devices(coordinator.devices)
     async_add_entities(
         GoveeLight(coordinator, device) for device in coordinator.devices
     )
