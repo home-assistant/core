@@ -162,7 +162,7 @@ jobs:
             fi
 
             # Some speedups are only for 64-bit
-            if [ "${{ matrix.arch }}" = "x86_64" ] || [ "${{ matrix.arch }}" = "aarch64" ]; then
+            if [ "${{ matrix.arch }}" = "amd64" ] || [ "${{ matrix.arch }}" = "aarch64" ]; then
               sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" ${requirement_file}
             fi
 

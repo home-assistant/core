@@ -145,6 +145,7 @@ homeassistant.components.downloader.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
+homeassistant.components.easyenergy.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
@@ -152,6 +153,7 @@ homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
 homeassistant.components.energy.*
+homeassistant.components.energyzero.*
 homeassistant.components.enigma2.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
@@ -295,6 +297,7 @@ homeassistant.components.opensky.*
 homeassistant.components.openuv.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
+homeassistant.components.p1_monitor.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
