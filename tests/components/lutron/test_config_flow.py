@@ -1,4 +1,5 @@
 """Test the lutron config flow."""
+from email.message import Message
 from unittest.mock import AsyncMock, patch
 from urllib.error import HTTPError
 
@@ -45,7 +46,7 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [
-        (HTTPError("", 404, "", None, {}), "cannot_connect"),
+        (HTTPError("", 404, "", Message(), None), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -163,7 +164,7 @@ async def test_import(
 @pytest.mark.parametrize(
     ("raise_error", "reason"),
     [
-        (HTTPError("", 404, "", None, {}), "cannot_connect"),
+        (HTTPError("", 404, "", Message(), None), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )

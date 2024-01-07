@@ -317,8 +317,6 @@ build.json @home-assistant/supervisor
 /tests/components/eafm/ @Jc2k
 /homeassistant/components/easyenergy/ @klaasnicolaas
 /tests/components/easyenergy/ @klaasnicolaas
-/homeassistant/components/ecobee/ @marcolivierarsenault
-/tests/components/ecobee/ @marcolivierarsenault
 /homeassistant/components/ecoforest/ @pjanuario
 /tests/components/ecoforest/ @pjanuario
 /homeassistant/components/econet/ @w1ll1am23
@@ -1559,7 +1557,7 @@ build.json @home-assistant/supervisor
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core
 /tests/components/zone/ @home-assistant/core
-/homeassistant/components/zoneminder/ @rohankapoorcom
+/homeassistant/components/zoneminder/ @rohankapoorcom @nabbi
 /homeassistant/components/zwave_js/ @home-assistant/z-wave
 /tests/components/zwave_js/ @home-assistant/z-wave
 /homeassistant/components/zwave_me/ @lawfulchaos @Z-Wave-Me @PoltoS

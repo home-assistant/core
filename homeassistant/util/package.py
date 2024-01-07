@@ -9,7 +9,6 @@ import os
 from pathlib import Path
 from subprocess import PIPE, Popen
 import sys
-from urllib.parse import urlparse
 
 from packaging.requirements import InvalidRequirement, Requirement
 
@@ -38,7 +37,7 @@ def get_installed_versions(specifiers: set[str]) -> set[str]:
 def is_installed(requirement_str: str) -> bool:
     """Check if a package is installed and will be loaded when we import it.
 
-    expected input is a pip compatible package specifier
+    expected input is a pip compatible package specifier (requirement string)
     e.g. "package==1.0.0" or "package>=1.0.0,<2.0.0"
 
     Returns True when the requirement is met.
@@ -47,20 +46,14 @@ def is_installed(requirement_str: str) -> bool:
     try:
         req = Requirement(requirement_str)
     except InvalidRequirement:
-        # This is a zip file. We no longer use this in Home Assistant,
-        # leaving it in for custom components.
-        try:
-            req = Requirement(urlparse(requirement_str).fragment)
-        except InvalidRequirement:
-            _LOGGER.error("Invalid requirement '%s'", requirement_str)
-            return False
+        _LOGGER.error("Invalid requirement '%s'", requirement_str)
+        return False
 
     try:
-        installed_version = version(req.name)
-        # This will happen when an install failed or
-        # was aborted while in progress see
-        # https://github.com/home-assistant/core/issues/47699
-        if installed_version is None:
+        if (installed_version := version(req.name)) is None:
+            # This can happen when an install failed or
+            # was aborted while in progress see
+            # https://github.com/home-assistant/core/issues/47699
             _LOGGER.error(  # type: ignore[unreachable]
                 "Installed version for %s resolved to None", req.name
             )
