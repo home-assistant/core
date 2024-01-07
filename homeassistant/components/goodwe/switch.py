@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Any
-from datetime import timedelta
 
 from goodwe import Inverter, InverterError
 
@@ -25,7 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, kw_only=True)
 class GoodweSwitchEntityDescriptionBase:
     """Required values when describing Goodwe switch settings."""
 
@@ -33,7 +34,7 @@ class GoodweSwitchEntityDescriptionBase:
     icon_off: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class GoodweNumberEntityDescription(
     SwitchEntityDescription, GoodweSwitchEntityDescriptionBase
 ):
