@@ -66,11 +66,22 @@ async def async_setup_entry(
     ]
     possible_entities: list[
         tuple[RoborockDataUpdateCoordinator, RoborockNumberDescription]
-    ] = [
-        (coordinator, description)
-        for coordinator in coordinators.values()
-        for description in NUMBER_DESCRIPTIONS
-    ]
+    ] = []
+    valid_entities: list[RoborockNumberEntity] = []
+    for coordinator in coordinators.values():
+        for description in NUMBER_DESCRIPTIONS:
+            unique_id = f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}"
+            if coordinator.api.is_available:
+                possible_entities.append((coordinator, description))
+            elif unique_id in coordinator.supported_entities:
+                valid_entities.append(
+                    RoborockNumberEntity(
+                        unique_id,
+                        coordinator,
+                        description,
+                    )
+                )
+
     # We need to check if this function is supported by the device.
     results = await asyncio.gather(
         *(
@@ -79,14 +90,18 @@ async def async_setup_entry(
         ),
         return_exceptions=True,
     )
-    valid_entities: list[RoborockNumberEntity] = []
     for (coordinator, description), result in zip(possible_entities, results):
-        if result is None or isinstance(result, RoborockException):
+        unique_id = (
+            f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}"
+        )
+        if (
+            result is None or isinstance(result, RoborockException)
+        ) and unique_id not in coordinator.supported_entities:
             _LOGGER.debug("Not adding entity because of %s", result)
         else:
             valid_entities.append(
                 RoborockNumberEntity(
-                    f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}",
+                    unique_id,
                     coordinator,
                     description,
                 )
@@ -107,7 +122,13 @@ class RoborockNumberEntity(RoborockEntity, NumberEntity):
     ) -> None:
         """Create a number entity."""
         self.entity_description = entity_description
-        super().__init__(unique_id, coordinator.device_info, coordinator.api)
+        super().__init__(
+            unique_id,
+            coordinator.device_info,
+            coordinator.api,
+            coordinator.supported_entities,
+        )
+        coordinator.needed_cache_keys.append(entity_description.cache_key)
 
     @property
     def native_value(self) -> float | None:

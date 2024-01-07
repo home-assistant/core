@@ -8,6 +8,8 @@ CONF_ENTRY_CODE = "code"
 CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 
+STORE_VERSION = 1
+
 PLATFORMS = [
     Platform.BUTTON,
     Platform.BINARY_SENSOR,

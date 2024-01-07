@@ -1,10 +1,12 @@
 """Roborock Coordinator."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
 from roborock.cloud_api import RoborockMqttClient
+from roborock.command_cache import CacheableAttribute
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.exceptions import RoborockException
 from roborock.local_api import RoborockLocalClient
@@ -55,10 +57,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             model=self.roborock_device_info.product.model,
             sw_version=self.roborock_device_info.device.fv,
         )
+        self.supported_entities: set[str] = set()
+        self.needed_cache_keys: list[CacheableAttribute] = []
         self.current_map: int | None = None
 
         if mac := self.roborock_device_info.network_info.mac:
             self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+        self.maps: dict[str, int] = {}
 
     async def verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
@@ -79,6 +84,12 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """Disconnect from API."""
         await self.api.async_disconnect()
 
+    async def _recover(self) -> None:
+        """When the api has been unavailable - we need to update the cache for all the values that we need."""
+        await asyncio.gather(
+            *(self.api.cache[key].async_value() for key in self.needed_cache_keys)
+        )
+
     async def _update_device_prop(self) -> None:
         """Update device properties."""
         device_prop = await self.api.get_prop()
@@ -95,6 +106,19 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             self._set_current_map()
         except RoborockException as ex:
             raise UpdateFailed(ex) from ex
+        if (
+            self.roborock_device_info.props.consumable is None
+            or self.roborock_device_info.props.clean_summary is None
+            or self.roborock_device_info.props.status is None
+        ):
+            raise UpdateFailed("One of the needed props was None.")
+        if not self.api.is_available:
+            _LOGGER.debug(
+                "Coordinator for device %s recovered",
+                self.roborock_device_info.device.duid,
+            )
+            await self._recover()
+            self.api.is_available = True
         return self.roborock_device_info.props
 
     def _set_current_map(self) -> None:
@@ -107,3 +131,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             self.current_map = (
                 self.roborock_device_info.props.status.map_status - 3
             ) // 4
+
+    async def get_maps(self) -> None:
+        """Add a map to the coordinators mapping."""
+        maps = await self.api.get_multi_maps_list()
+        if maps is not None and maps.map_info is not None:
+            for roborock_map in maps.map_info:
+                self.maps[roborock_map.name] = roborock_map.mapFlag

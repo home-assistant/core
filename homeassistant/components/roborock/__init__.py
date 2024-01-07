@@ -3,22 +3,31 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
+from dataclasses import asdict
 from datetime import timedelta
 import logging
 from typing import Any
 
-from roborock import RoborockException, RoborockInvalidCredentials
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
-from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
+from roborock.containers import (
+    DeviceData,
+    HomeDataDevice,
+    HomeDataProduct,
+    NetworkInfo,
+    UserData,
+)
+from roborock.exceptions import RoborockException, RoborockInvalidCredentials
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.storage import Store
 
-from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
+from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS, STORE_VERSION
 from .coordinator import RoborockDataUpdateCoordinator
+from .models import CachedCoordinatorInformation
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -28,7 +37,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up roborock from a config entry."""
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
-
+    cached_storage: Store = Store(hass, STORE_VERSION, DOMAIN)
+    current_cached_data = await cached_storage.async_load()
+    current_cached_data = current_cached_data if current_cached_data is not None else {}
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     api_client = RoborockApiClient(entry.data[CONF_USERNAME], entry.data[CONF_BASE_URL])
     _LOGGER.debug("Getting home data")
@@ -47,7 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     # Get a Coordinator if the device is available or if we have connected to the device before
     coordinators = await asyncio.gather(
-        *build_setup_functions(hass, device_map, user_data, product_info),
+        *build_setup_functions(
+            hass, device_map, user_data, product_info, current_cached_data
+        ),
         return_exceptions=True,
     )
     # Valid coordinators are those where we had networking cached or we could get networking
@@ -62,8 +75,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator.roborock_device_info.device.duid: coordinator
         for coordinator in valid_coordinators
     }
+    updated_cached: dict[str, dict] = {}
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
+    for coord in valid_coordinators:
+        updated_cached.update(
+            {
+                coord.roborock_device_info.device.duid: asdict(
+                    CachedCoordinatorInformation(
+                        network_info=coord.roborock_device_info.network_info,
+                        supported_entities=coord.supported_entities,
+                        map_info=coord.maps,
+                    )
+                )
+            }
+        )
+    await cached_storage.async_save(updated_cached)
     return True
 
 
@@ -72,12 +98,26 @@ def build_setup_functions(
     device_map: dict[str, HomeDataDevice],
     user_data: UserData,
     product_info: dict[str, HomeDataProduct],
+    stored_cached_data: dict[str, dict],
 ) -> list[Coroutine[Any, Any, RoborockDataUpdateCoordinator | None]]:
     """Create a list of setup functions that can later be called asynchronously."""
     setup_functions = []
     for device in device_map.values():
+        cached_info = None
+        if device.duid in stored_cached_data:
+            cached_info = CachedCoordinatorInformation(
+                network_info=NetworkInfo(
+                    **stored_cached_data[device.duid]["network_info"]
+                ),
+                supported_entities=set(
+                    stored_cached_data[device.duid]["supported_entities"]
+                ),
+                map_info=stored_cached_data[device.duid]["map_info"],
+            )
         setup_functions.append(
-            setup_device(hass, user_data, device, product_info[device.product_id])
+            setup_device(
+                hass, user_data, device, product_info[device.product_id], cached_info
+            )
         )
     return setup_functions
 
@@ -87,6 +127,7 @@ async def setup_device(
     user_data: UserData,
     device: HomeDataDevice,
     product_info: HomeDataProduct,
+    cached_data: CachedCoordinatorInformation | None,
 ) -> RoborockDataUpdateCoordinator | None:
     """Set up a device Coordinator."""
     mqtt_client = RoborockMqttClient(user_data, DeviceData(device, product_info.name))
@@ -97,19 +138,32 @@ async def setup_device(
             # get_networking - then we need to go through cache checking.
             raise RoborockException("Networking request returned None.")
     except RoborockException as err:
-        _LOGGER.warning(
-            "Not setting up %s because we could not get the network information of the device. "
-            "Please confirm it is online and the Roborock servers can communicate with it",
-            device.name,
-        )
-        _LOGGER.debug(err)
-        raise err
+        if cached_data is None:
+            # If we have never added this device before - don't start now.
+            _LOGGER.warning(
+                "Not setting up %s because we could not get the network information of the device. "
+                "Please confirm it is online and the Roborock servers can communicate with it",
+                device.name,
+            )
+            _LOGGER.debug(err)
+            raise err
+        # If cached data exist, then we have set up this vacuum before,
+        # and we have cached network information.
+        networking = cached_data.network_info
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client
+    )
+    coordinator.supported_entities = (
+        cached_data.supported_entities if cached_data is not None else set()
     )
     # Verify we can communicate locally - if we can't, switch to cloud api
     await coordinator.verify_api()
     coordinator.api.is_available = True
+    try:
+        await coordinator.get_maps()
+    except RoborockException:
+        if cached_data:
+            coordinator.maps = cached_data.map_info
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
@@ -124,7 +178,6 @@ async def setup_device(
             # but in case if it isn't, the error can be included in debug logs for the user to grab.
             if coordinator.last_exception:
                 _LOGGER.debug(coordinator.last_exception)
-                raise coordinator.last_exception
         elif coordinator.last_exception:
             # If this is reached, we have verified that we can communicate with the Vacuum locally,
             # so if there is an error here - it is not a communication issue but some other problem
@@ -135,7 +188,9 @@ async def setup_device(
                 device.name,
                 extra_error,
             )
-            raise coordinator.last_exception
+        if not cached_data:
+            return None
+        coordinator.api.is_available = False
     return coordinator
 
 

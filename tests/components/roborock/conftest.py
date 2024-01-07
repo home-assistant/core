@@ -43,6 +43,9 @@ def bypass_api_fixture() -> None:
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
         return_value=PROP,
     ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_multi_maps_list",
+        return_value=MULTI_MAP_LIST,
+    ), patch(
         "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_multi_maps_list",
         return_value=MULTI_MAP_LIST,
     ), patch(
@@ -76,6 +79,7 @@ def mock_roborock_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USER_DATA: USER_DATA.as_dict(),
             CONF_BASE_URL: BASE_URL,
         },
+        version=1,
     )
     mock_entry.add_to_hass(hass)
     return mock_entry

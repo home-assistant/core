@@ -11,7 +11,16 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
 
-TO_REDACT_CONFIG = ["token", "sn", "rruid", CONF_UNIQUE_ID, "username", "uid"]
+TO_REDACT_CONFIG = [
+    "token",
+    "sn",
+    "rruid",
+    CONF_UNIQUE_ID,
+    "username",
+    "uid",
+    "mac",
+    "bssid",
+]
 
 TO_REDACT_COORD = ["duid", "localKey", "mac", "bssid"]
 

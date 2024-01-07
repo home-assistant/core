@@ -23,3 +23,12 @@ class RoborockHassDeviceInfo:
             "product": self.product.as_dict(),
             "props": self.props.as_dict(),
         }
+
+
+@dataclass
+class CachedCoordinatorInformation:
+    """A model to describe the cached coordinator information."""
+
+    network_info: NetworkInfo
+    supported_entities: set[str]
+    map_info: dict[str, int]

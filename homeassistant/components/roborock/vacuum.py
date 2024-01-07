@@ -94,7 +94,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
         RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
-        self._attr_fan_speed_list = self._device_status.fan_power_options
         self.api.add_listener(
             RoborockDataProtocol.FAN_POWER, self._update_from_listener, self.api.cache
         )
@@ -107,6 +106,11 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Return the status of the vacuum cleaner."""
         assert self._device_status.state is not None
         return STATE_CODE_TO_STATE.get(self._device_status.state)
+
+    @property
+    def fan_speed_list(self) -> list[str]:
+        """Return the fan speed list."""
+        return self._device_status.fan_power_options if self.available else []
 
     @property
     def battery_level(self) -> int | None:

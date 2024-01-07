@@ -78,19 +78,7 @@ async def async_setup_entry(
     coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    async_add_entities(
-        RoborockSelectEntity(
-            f"{description.key}_{slugify(device_id)}", coordinator, description, options
-        )
-        for device_id, coordinator in coordinators.items()
-        for description in SELECT_DESCRIPTIONS
-        if (
-            options := description.options_lambda(
-                coordinator.roborock_device_info.props.status
-            )
-        )
-        is not None
-    )
+    async_add_entities(determine_valid_select_entities(coordinators))
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
@@ -112,6 +100,14 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         if (protocol := self.entity_description.protocol_listener) is not None:
             self.api.add_listener(protocol, self._update_from_listener, self.api.cache)
 
+    @property
+    def options(self) -> list[str]:
+        """Get the option of the selector - if the api just became available - get it for the first time."""
+        if not self._attr_options and self.api.is_available:
+            new_options = self.entity_description.options_lambda(self._device_status)
+            self._attr_options = new_options if new_options is not None else []
+        return self._attr_options
+
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         await self.send(
@@ -123,3 +119,33 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
         return self.entity_description.value_fn(self._device_status)
+
+
+def determine_valid_select_entities(
+    coordinators: dict[str, RoborockDataUpdateCoordinator]
+) -> list[RoborockSelectEntity]:
+    """Determine which select entities to create."""
+    valid_select_entities = []
+    for device_id, coordinator in coordinators.items():
+        for description in SELECT_DESCRIPTIONS:
+            options = None
+            if (
+                f"{description.key}_{slugify(device_id)}"
+                in coordinator.supported_entities
+                or coordinator.api.is_available
+                and (
+                    options := description.options_lambda(
+                        coordinator.roborock_device_info.props.status
+                    )
+                )
+                is not None
+            ):
+                valid_select_entities.append(
+                    RoborockSelectEntity(
+                        f"{description.key}_{slugify(device_id)}",
+                        coordinator,
+                        description,
+                        options if options is not None else [],
+                    )
+                )
+    return valid_select_entities

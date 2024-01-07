@@ -104,7 +104,12 @@ class RoborockButtonEntity(RoborockEntity, ButtonEntity):
         entity_description: RoborockButtonDescription,
     ) -> None:
         """Create a button entity."""
-        super().__init__(unique_id, coordinator.device_info, coordinator.api)
+        super().__init__(
+            unique_id,
+            coordinator.device_info,
+            coordinator.api,
+            coordinator.supported_entities,
+        )
         self.entity_description = entity_description
 
     async def async_press(self) -> None:
