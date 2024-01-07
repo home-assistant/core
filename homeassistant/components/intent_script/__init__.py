@@ -153,16 +153,17 @@ class ScriptIntentHandler(intent.IntentHandler):
         card: _IntentCardData | None = self.config.get(CONF_CARD)
         action: script.Script | None = self.config.get(CONF_ACTION)
         is_async_action: bool = self.config[CONF_ASYNC_ACTION]
-        slots: dict[str, Any] = {
+        variables: dict[str, Any] = {
             key: value["value"] for key, value in intent_obj.slots.items()
         }
+        variables["slots"] = intent_obj.slots
 
         _LOGGER.debug(
             "Intent named %s received with slots: %s",
             intent_obj.intent_type,
             {
                 key: value
-                for key, value in slots.items()
+                for key, value in variables.items()
                 if not key.startswith("_") and not key.endswith("_raw_value")
             },
         )
@@ -170,25 +171,25 @@ class ScriptIntentHandler(intent.IntentHandler):
         if action is not None:
             if is_async_action:
                 intent_obj.hass.async_create_task(
-                    action.async_run(slots, intent_obj.context)
+                    action.async_run(variables, intent_obj.context)
                 )
             else:
-                action_res = await action.async_run(slots, intent_obj.context)
+                action_res = await action.async_run(variables, intent_obj.context)
 
                 # if the action returns a response, make it available to the speech/reprompt templates below
                 if action_res and action_res.service_response is not None:
-                    slots["action_response"] = action_res.service_response
+                    variables["action_response"] = action_res.service_response
 
         response = intent_obj.create_response()
 
         if speech is not None:
             response.async_set_speech(
-                speech["text"].async_render(slots, parse_result=False),
+                speech["text"].async_render(variables, parse_result=False),
                 speech["type"],
             )
 
         if reprompt is not None:
-            text_reprompt = reprompt["text"].async_render(slots, parse_result=False)
+            text_reprompt = reprompt["text"].async_render(variables, parse_result=False)
             if text_reprompt:
                 response.async_set_reprompt(
                     text_reprompt,
@@ -197,8 +198,8 @@ class ScriptIntentHandler(intent.IntentHandler):
 
         if card is not None:
             response.async_set_card(
-                card["title"].async_render(slots, parse_result=False),
-                card["content"].async_render(slots, parse_result=False),
+                card["title"].async_render(variables, parse_result=False),
+                card["content"].async_render(variables, parse_result=False),
                 card["type"],
             )
 

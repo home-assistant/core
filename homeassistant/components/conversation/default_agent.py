@@ -255,7 +255,13 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Slot values to pass to the intent
         slots = {
-            entity.name: {"value": entity.value} for entity in result.entities_list
+            entity.name: {
+                "id": entity.value,
+                "value": entity.metadata["name"]
+                if entity.metadata is not None and "name" in entity.metadata
+                else entity.value,
+            }
+            for entity in result.entities_list
         }
 
         try:
@@ -638,7 +644,7 @@ class DefaultAgent(AbstractConversationAgent):
         ]
 
         # Gather exposed entity names
-        entity_names = []
+        entity_names: list[tuple[str, Any, dict[str, Any], dict[str, Any]]] = []
         for state in states:
             # Checked against "requires_context" and "excludes_context" in hassil
             context = {"domain": state.domain}
@@ -653,7 +659,9 @@ class DefaultAgent(AbstractConversationAgent):
 
             if not entity:
                 # Default name
-                entity_names.append((state.name, state.name, context))
+                entity_names.append(
+                    (state.name, state.entity_id, context, {"name": state.name})
+                )
                 continue
 
             if entity.aliases:
@@ -661,22 +669,26 @@ class DefaultAgent(AbstractConversationAgent):
                     if not alias.strip():
                         continue
 
-                    entity_names.append((alias, alias, context))
+                    entity_names.append(
+                        (alias, state.entity_id, context, {"name": alias})
+                    )
 
             # Default name
-            entity_names.append((state.name, state.name, context))
+            entity_names.append(
+                (state.name, state.entity_id, context, {"name": state.name})
+            )
 
         # Expose all areas
         areas = ar.async_get(self.hass)
-        area_names = []
+        area_names: list[tuple[str, Any, dict[str, Any], dict[str, Any]]] = []
         for area in areas.async_list_areas():
-            area_names.append((area.name, area.id))
+            area_names.append((area.name, area.id, {}, {"name": area.name}))
             if area.aliases:
                 for alias in area.aliases:
                     if not alias.strip():
                         continue
 
-                    area_names.append((alias, area.id))
+                    area_names.append((alias, area.id, {}, {"name": alias}))
 
         _LOGGER.debug("Exposed entities: %s", entity_names)
 

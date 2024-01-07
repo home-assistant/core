@@ -276,7 +276,8 @@ class IntentHandleView(http.HomeAssistantView):
         try:
             intent_name = data["name"]
             slots = {
-                key: {"value": value} for key, value in data.get("data", {}).items()
+                key: {"id": value, "value": value}
+                for key, value in data.get("data", {}).items()
             }
             intent_result = await intent.async_handle(
                 hass, DOMAIN, intent_name, slots, "", self.context(request)
