@@ -1,0 +1,1 @@
+"""KNX integration specific triggers."""
