@@ -410,9 +410,8 @@ class ZHADevice(LogMixin):
     @property
     def sw_version(self) -> str | None:
         """Return the software version for this device."""
-        reg_device: DeviceEntry | None = self._zha_gateway.ha_device_registry.async_get(
-            self.device_id
-        )
+        device_registry = dr.async_get(self.hass)
+        reg_device: DeviceEntry | None = device_registry.async_get(self.device_id)
         if reg_device is None:
             return None
         return reg_device.sw_version
