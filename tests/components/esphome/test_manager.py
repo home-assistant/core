@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, call
 
 from aioesphomeapi import (
     APIClient,
+    APIConnectionError,
     DeviceInfo,
     EntityInfo,
     EntityState,
@@ -86,6 +87,7 @@ async def test_esphome_device_service_calls_allowed(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a device with service calls are allowed."""
+    await async_setup_component(hass, "tag", {})
     entity_info = []
     states = []
     user_service = []
@@ -198,6 +200,23 @@ async def test_esphome_device_service_calls_allowed(
     event = events[0]
     assert event.data["raw"] == "event"
     assert event.event_type == "esphome.test"
+    events.clear()
+    caplog.clear()
+
+    # Try scanning a tag
+    events = async_capture_events(hass, "tag_scanned")
+    device.mock_service_call(
+        HomeassistantServiceCall(
+            service="esphome.tag_scanned",
+            is_event=True,
+            data={"tag_id": "1234"},
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    event = events[0]
+    assert event.event_type == "tag_scanned"
+    assert event.data["tag_id"] == "1234"
     events.clear()
     caplog.clear()
 
@@ -510,8 +529,11 @@ async def test_connection_aborted_wrong_device(
         "with mac address `11:22:33:44:55:ab`" in caplog.text
     )
 
+    assert "Error getting setting up connection for" not in caplog.text
+    assert len(mock_client.disconnect.mock_calls) == 1
+    mock_client.disconnect.reset_mock()
     caplog.clear()
-    # Make sure discovery triggers a reconnect to the correct device
+    # Make sure discovery triggers a reconnect
     service_info = dhcp.DhcpServiceInfo(
         ip="192.168.43.184",
         hostname="test",
@@ -531,6 +553,35 @@ async def test_connection_aborted_wrong_device(
     await hass.async_block_till_done()
     assert len(new_info.mock_calls) == 1
     assert "Unexpected device found at" not in caplog.text
+
+
+async def test_failure_during_connect(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_zeroconf: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we disconnect when there is a failure during connection setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.43.183",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.device_info = AsyncMock(side_effect=APIConnectionError("fail"))
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "Error getting setting up connection for" in caplog.text
+    # Ensure we disconnect so that the reconnect logic is triggered
+    assert len(mock_client.disconnect.mock_calls) == 1
 
 
 async def test_state_subscription(
