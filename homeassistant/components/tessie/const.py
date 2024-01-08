@@ -1,7 +1,7 @@
 """Constants used by Tessie integration."""
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 
 DOMAIN = "tessie"
 
@@ -36,3 +36,20 @@ class TessieClimateKeeper(StrEnum):
     ON = "on"
     DOG = "dog"
     CAMP = "camp"
+
+
+class TessieUpdateStatus(StrEnum):
+    """Tessie Update Statuses."""
+
+    AVAILABLE = "available"
+    DOWNLOADING = "downloading"
+    INSTALLING = "installing"
+    WIFI_WAIT = "downloading_wifi_wait"
+    SCHEDULED = "scheduled"
+
+
+class TessieCoverStates(IntEnum):
+    """Tessie Cover states."""
+
+    CLOSED = 0
+    OPEN = 1

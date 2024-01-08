@@ -63,6 +63,7 @@ BLOCK_PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
+    Platform.VALVE,
 ]
 BLOCK_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
