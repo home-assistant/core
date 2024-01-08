@@ -10,7 +10,7 @@ from tessie_api import get_state
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TessieStatus
 
@@ -55,6 +55,8 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if e.status == HTTPStatus.UNAUTHORIZED:
                 # Auth Token is no longer valid
                 raise ConfigEntryAuthFailed from e
+            if e.status == HTTPStatus.REQUEST_TIMEOUT:
+                raise UpdateFailed(f"Vehicle {self.vin} has no connectivity") from e
             raise e
 
         if vehicle["state"] == TessieStatus.ONLINE:
