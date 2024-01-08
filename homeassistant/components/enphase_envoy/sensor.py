@@ -484,7 +484,7 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity):
         inverters = self.data.inverters
         assert inverters is not None
         # Some envoy fw versions return an empty inverter array every 4 hours when
-        # no production is taking place. Prevent collection failur due to this
+        # no production is taking place. Prevent collection failure due to this
         # as other data seems fine. Inverters will show unknown during this cycle.
         if self._serial_number not in inverters:
             _LOGGER.debug(
