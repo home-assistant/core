@@ -2410,7 +2410,7 @@ def test_bitwise_or(hass: HomeAssistant) -> None:
     [(8, 8, 0), (10, 2, 8), (0x8000, 0xFAFA, 31482), (True, False, 1), (True, True, 0)],
 )
 def test_bitwise_xor(
-    hass: HomeAssistant, value_one: Any, value_two: Any, expected: int
+    hass: HomeAssistant, value: Any, xor_value: Any, expected: int
 ) -> None:
     """Test bitwise_xor method."""
     assert (
