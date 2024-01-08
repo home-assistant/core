@@ -317,8 +317,6 @@ build.json @home-assistant/supervisor
 /tests/components/eafm/ @Jc2k
 /homeassistant/components/easyenergy/ @klaasnicolaas
 /tests/components/easyenergy/ @klaasnicolaas
-/homeassistant/components/ecobee/ @marcolivierarsenault
-/tests/components/ecobee/ @marcolivierarsenault
 /homeassistant/components/ecoforest/ @pjanuario
 /tests/components/ecoforest/ @pjanuario
 /homeassistant/components/econet/ @w1ll1am23
@@ -528,6 +526,8 @@ build.json @home-assistant/supervisor
 /tests/components/history/ @home-assistant/core
 /homeassistant/components/hive/ @Rendili @KJonline
 /tests/components/hive/ @Rendili @KJonline
+/homeassistant/components/hko/ @MisterCommand
+/tests/components/hko/ @MisterCommand
 /homeassistant/components/hlk_sw16/ @jameshilliard
 /tests/components/hlk_sw16/ @jameshilliard
 /homeassistant/components/holiday/ @jrieger @gjohansson-ST
@@ -745,7 +745,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/luftdaten/ @fabaff @frenck
 /tests/components/luftdaten/ @fabaff @frenck
 /homeassistant/components/lupusec/ @majuss
-/homeassistant/components/lutron/ @cdheiser
+/homeassistant/components/lutron/ @cdheiser @wilburCForce
+/tests/components/lutron/ @cdheiser @wilburCForce
 /homeassistant/components/lutron_caseta/ @swails @bdraco @danaues
 /tests/components/lutron_caseta/ @swails @bdraco @danaues
 /homeassistant/components/lyric/ @timmo001
@@ -1034,8 +1035,10 @@ build.json @home-assistant/supervisor
 /homeassistant/components/qvr_pro/ @oblogic7
 /homeassistant/components/qwikswitch/ @kellerza
 /tests/components/qwikswitch/ @kellerza
-/homeassistant/components/rachio/ @bdraco
-/tests/components/rachio/ @bdraco
+/homeassistant/components/rabbitair/ @rabbit-air
+/tests/components/rabbitair/ @rabbit-air
+/homeassistant/components/rachio/ @bdraco @rfverbruggen
+/tests/components/rachio/ @bdraco @rfverbruggen
 /homeassistant/components/radarr/ @tkdrob
 /tests/components/radarr/ @tkdrob
 /homeassistant/components/radio_browser/ @frenck
@@ -1047,6 +1050,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/raincloud/ @vanstinator
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
+/homeassistant/components/rainforest_raven/ @cottsay
+/tests/components/rainforest_raven/ @cottsay
 /homeassistant/components/rainmachine/ @bachya
 /tests/components/rainmachine/ @bachya
 /homeassistant/components/random/ @fabaff
@@ -1552,7 +1557,7 @@ build.json @home-assistant/supervisor
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core
 /tests/components/zone/ @home-assistant/core
-/homeassistant/components/zoneminder/ @rohankapoorcom
+/homeassistant/components/zoneminder/ @rohankapoorcom @nabbi
 /homeassistant/components/zwave_js/ @home-assistant/z-wave
 /tests/components/zwave_js/ @home-assistant/z-wave
 /homeassistant/components/zwave_me/ @lawfulchaos @Z-Wave-Me @PoltoS
