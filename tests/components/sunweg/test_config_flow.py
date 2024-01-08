@@ -1,7 +1,7 @@
 """Tests for the Sun WEG server config flow."""
 from unittest.mock import patch
 
-from sunweg.api import APIHelper, LoginError, SunWegApiError
+from sunweg.api import APIHelper, SunWegApiError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sunweg.const import CONF_PLANT_ID, DOMAIN
@@ -29,25 +29,7 @@ async def test_incorrect_login(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch.object(
-        APIHelper, "authenticate", side_effect=SunWegApiError("Failed Auth")
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], SUNWEG_USER_INPUT
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_authentication_expired(hass: HomeAssistant) -> None:
-    """Test when the authentication information is expired."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch.object(APIHelper, "authenticate", side_effect=LoginError("Failed Auth")):
+    with patch.object(APIHelper, "authenticate", return_value=False):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], SUNWEG_USER_INPUT
         )
@@ -72,7 +54,7 @@ async def test_server_unavailable(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": "timeout_connect"}
 
 
 async def test_reauth(hass: HomeAssistant) -> None:
@@ -94,7 +76,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch.object(APIHelper, "authenticate", side_effect=LoginError("Failed Auth")):
+    with patch.object(APIHelper, "authenticate", return_value=False):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=SUNWEG_USER_INPUT,
@@ -124,9 +106,7 @@ async def test_no_plants_on_account(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch.object(
-        APIHelper, "authenticate", side_effect=SunWegApiError("Failed Auth")
-    ):
+    with patch.object(APIHelper, "authenticate", return_value=False):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], SUNWEG_USER_INPUT
         )

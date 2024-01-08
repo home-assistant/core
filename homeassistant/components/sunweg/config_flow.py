@@ -59,9 +59,10 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = user_input
         self._set_auth_data(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
         try:
-            await self.hass.async_add_executor_job(self.api.authenticate)
+            if not await self.hass.async_add_executor_job(self.api.authenticate):
+                return self._async_show_user_form("user", {"base": "invalid_auth"})
         except SunWegApiError:
-            return self._async_show_user_form("user", {"base": "invalid_auth"})
+            return self._async_show_user_form("user", {"base": "timeout_connect"})
 
         return await self.async_step_plant()
 
@@ -103,9 +104,7 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data.update(user_input)
         self._set_auth_data(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
 
-        try:
-            await self.hass.async_add_executor_job(self.api.authenticate)
-        except SunWegApiError:
+        if not await self.hass.async_add_executor_job(self.api.authenticate):
             return self._async_show_user_form(
                 "reauth_confirm", {"base": "invalid_auth"}
             )
