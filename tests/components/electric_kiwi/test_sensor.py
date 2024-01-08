@@ -105,8 +105,8 @@ async def test_account_sensors(
     assert state
     assert state.state == sensor_state
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == AccountSensor.device_class
-    assert state.attributes.get(ATTR_STATE_CLASS) == AccountSensor.state_class
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == .device_class
+    assert state.attributes.get(ATTR_STATE_CLASS) == state_class
 
 
 async def test_check_and_move_time(ek_api: AsyncMock) -> None:
