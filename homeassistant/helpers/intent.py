@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Coroutine, Iterable
 import dataclasses
 from dataclasses import dataclass
 from enum import Enum
@@ -451,7 +451,7 @@ class ServiceIntentHandler(IntentHandler):
         else:
             speech_name = states[0].name
 
-        service_coros = []
+        service_coros: list[Coroutine[Any, Any, None]] = []
         for state in states:
             service_coros.append(self.async_call_service(intent_obj, state))
 
@@ -507,7 +507,7 @@ class ServiceIntentHandler(IntentHandler):
             )
         )
 
-    async def _run_then_background(self, task: asyncio.Task) -> None:
+    async def _run_then_background(self, task: asyncio.Task[Any]) -> None:
         """Run task with timeout to (hopefully) catch validation errors.
 
         After the timeout the task will continue to run in the background.
