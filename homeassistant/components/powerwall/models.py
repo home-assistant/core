@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 class PowerwallBaseInfo:
     """Base information for the powerwall integration."""
 
-    gateway_din: None | str
+    gateway_din: str
     site_info: SiteInfo
     status: PowerwallStatus
     device_type: DeviceType

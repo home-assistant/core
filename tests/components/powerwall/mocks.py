@@ -62,6 +62,7 @@ def _mock_powerwall_return_value(
     powerwall_mock.get_status = Mock(return_value=status)
     powerwall_mock.get_device_type = Mock(return_value=device_type)
     powerwall_mock.get_serial_numbers = Mock(return_value=serial_numbers)
+    powerwall_mock.get_gateway_din = Mock(return_value=MOCK_GATEWAY_DIN)
     powerwall_mock.get_backup_reserve_percentage = Mock(
         return_value=backup_reserve_percentage
     )

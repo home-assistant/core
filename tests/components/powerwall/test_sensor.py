@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .mocks import _mock_powerwall_with_fixtures
+from .mocks import MOCK_GATEWAY_DIN, _mock_powerwall_with_fixtures
 
 from tests.common import MockConfigEntry
 
@@ -40,7 +40,7 @@ async def test_sensors(
 
     device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
-        identifiers={("powerwall", "TG0123456789AB_TG9876543210BA")},
+        identifiers={("powerwall", MOCK_GATEWAY_DIN)},
     )
     assert reg_device.model == "PowerWall 2 (GW1)"
     assert reg_device.sw_version == "1.45.1"
