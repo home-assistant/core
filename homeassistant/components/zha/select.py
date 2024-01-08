@@ -936,13 +936,8 @@ class MultitermSleepModeStates(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_BINARY_OUTPUT,
+    manufacturers={"MultiTerm"},
     models={"ZC0101"},
-)
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="manufacturer",
-    manufacturers={
-        "MultiTerm",
-    },
 )
 class MultitermBOSelectEntity(ZCLEnumSelectEntity):
     """Multiterm Binary Output as Select Entity."""
