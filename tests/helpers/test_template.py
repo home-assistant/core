@@ -2406,7 +2406,7 @@ def test_bitwise_or(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("value_one", "value_two", "expected"),
+    ("value", "xor_value", "expected"),
     [(8, 8, 0), (10, 2, 8), (0x8000, 0xFAFA, 31482), (True, False, 1), (True, True, 0)],
 )
 def test_bitwise_xor(
