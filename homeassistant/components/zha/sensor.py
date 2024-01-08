@@ -802,6 +802,19 @@ class Tier6SmartEnergySummation(PolledSmartEnergySummation):
     _attr_translation_key: str = "tier6_summation_delivered"
 
 
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SmartEnergySummationReceived(PolledSmartEnergySummation):
+    """Smart Energy Metering summation received sensor."""
+
+    _use_custom_polling = False  # Poll indirectly by PolledSmartEnergySummation
+    _attribute_name = "current_summ_received"
+    _unique_id_suffix = "summation_received"
+    _attr_translation_key: str = "summation_received"
+
+
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_PRESSURE)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Pressure(Sensor):

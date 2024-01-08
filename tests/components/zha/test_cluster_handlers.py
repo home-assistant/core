@@ -235,6 +235,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
                 "current_tier4_summ_delivered",
                 "current_tier5_summ_delivered",
                 "current_tier6_summ_delivered",
+                "current_summ_received",
                 "status",
             },
         ),
