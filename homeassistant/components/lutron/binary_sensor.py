@@ -49,6 +49,7 @@ class LutronOccupancySensor(LutronDevice, BinarySensorEntity):
     reported as a single occupancy group.
     """
 
+    _lutron_device: OccupancyGroup
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     @property

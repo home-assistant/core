@@ -49,22 +49,26 @@ class ValveControllerSwitchDescription(
 
 async def _async_disable_ap(client: Client) -> None:
     """Disable the onboard AP."""
-    await client.wifi.disable_ap()
+    async with client:
+        await client.wifi.disable_ap()
 
 
 async def _async_enable_ap(client: Client) -> None:
     """Enable the onboard AP."""
-    await client.wifi.enable_ap()
+    async with client:
+        await client.wifi.enable_ap()
 
 
 async def _async_close_valve(client: Client) -> None:
     """Close the valve."""
-    await client.valve.close()
+    async with client:
+        await client.valve.close()
 
 
 async def _async_open_valve(client: Client) -> None:
     """Open the valve."""
-    await client.valve.open()
+    async with client:
+        await client.valve.open()
 
 
 VALVE_CONTROLLER_DESCRIPTIONS = (
@@ -141,13 +145,11 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
     @convert_exceptions_to_homeassistant_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        async with self._client:
-            await self.entity_description.off_fn(self._client)
+        await self.entity_description.off_fn(self._client)
         await self.coordinator.async_request_refresh()
 
     @convert_exceptions_to_homeassistant_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        async with self._client:
-            await self.entity_description.on_fn(self._client)
+        await self.entity_description.on_fn(self._client)
         await self.coordinator.async_request_refresh()
