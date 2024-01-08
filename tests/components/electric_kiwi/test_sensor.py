@@ -70,7 +70,7 @@ async def test_hop_sensors(
 
 
 @pytest.mark.parametrize(
-    ("sensor", "sensor_state"),
+    ("sensor", "sensor_state", "device_class", "state_class"),
     [
         ("sensor.total_running_balance", "184.09"),
         ("sensor.total_current_balance", "-102.22"),
