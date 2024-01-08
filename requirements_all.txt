@@ -1246,7 +1246,7 @@ maxcube-api==0.4.3
 mbddns==0.1.2
 
 # homeassistant.components.minecraft_server
-mcstatus==11.0.0
+mcstatus==11.1.0
 
 # homeassistant.components.meater
 meater-python==0.0.8
