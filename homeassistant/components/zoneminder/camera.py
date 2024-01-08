@@ -17,10 +17,10 @@ from . import DOMAIN as ZONEMINDER_DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ZoneMinder cameras."""
@@ -28,8 +28,7 @@ async def async_setup_platform(
     cameras = []
     zm_client: ZoneMinder
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
-        monitors = await hass.async_add_executor_job(zm_client.get_monitors)
-        if not monitors:
+        if not (monitors := zm_client.get_monitors()):
             raise PlatformNotReady(
                 "Camera could not fetch any monitors from ZoneMinder"
             )
@@ -37,7 +36,7 @@ async def async_setup_platform(
         for monitor in monitors:
             _LOGGER.info("Initializing camera %s", monitor.id)
             cameras.append(ZoneMinderCamera(monitor, zm_client.verify_ssl))
-    async_add_entities(cameras)
+    add_entities(cameras)
 
 
 class ZoneMinderCamera(MjpegCamera):

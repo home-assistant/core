@@ -64,10 +64,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
+def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ZoneMinder sensor platform."""
@@ -77,8 +77,7 @@ async def async_setup_platform(
     sensors: list[SensorEntity] = []
     zm_client: ZoneMinder
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
-        monitors = await hass.async_add_executor_job(zm_client.get_monitors)
-        if not monitors:
+        if not (monitors := zm_client.get_monitors()):
             raise PlatformNotReady(
                 "Sensor could not fetch any monitors from ZoneMinder"
             )
@@ -95,7 +94,7 @@ async def async_setup_platform(
             )
 
         sensors.append(ZMSensorRunState(zm_client))
-    async_add_entities(sensors)
+    add_entities(sensors)
 
 
 class ZMSensorMonitors(SensorEntity):

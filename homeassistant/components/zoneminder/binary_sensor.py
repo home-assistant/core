@@ -17,14 +17,14 @@ from . import DOMAIN as ZONEMINDER_DOMAIN
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ZoneMinder binary sensor platform."""
     sensors = []
     for host_name, zm_client in hass.data[ZONEMINDER_DOMAIN].items():
         sensors.append(ZMAvailabilitySensor(host_name, zm_client))
-    async_add_entities(sensors)
+    add_entities(sensors)
 
 
 class ZMAvailabilitySensor(BinarySensorEntity):
