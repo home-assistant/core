@@ -80,12 +80,12 @@ def _async_device_entities(
         can_write = device.can_write(data.api.bootstrap.auth_user)
         for description in descs:
             if description.ufp_perm is not None:
-                if description.ufp_perm == PermRequired.WRITE and not can_write:
+                if description.ufp_perm is PermRequired.WRITE and not can_write:
                     continue
-                if description.ufp_perm == PermRequired.NO_WRITE and can_write:
+                if description.ufp_perm is PermRequired.NO_WRITE and can_write:
                     continue
                 if (
-                    description.ufp_perm == PermRequired.DELETE
+                    description.ufp_perm is PermRequired.DELETE
                     and not device.can_delete(data.api.bootstrap.auth_user)
                 ):
                     continue
@@ -157,17 +157,17 @@ def async_all_device_entities(
         )
 
     descs = []
-    if ufp_device.model == ModelType.CAMERA:
+    if ufp_device.model is ModelType.CAMERA:
         descs = camera_descs
-    elif ufp_device.model == ModelType.LIGHT:
+    elif ufp_device.model is ModelType.LIGHT:
         descs = light_descs
-    elif ufp_device.model == ModelType.SENSOR:
+    elif ufp_device.model is ModelType.SENSOR:
         descs = sense_descs
-    elif ufp_device.model == ModelType.VIEWPORT:
+    elif ufp_device.model is ModelType.VIEWPORT:
         descs = viewer_descs
-    elif ufp_device.model == ModelType.DOORLOCK:
+    elif ufp_device.model is ModelType.DOORLOCK:
         descs = lock_descs
-    elif ufp_device.model == ModelType.CHIME:
+    elif ufp_device.model is ModelType.CHIME:
         descs = chime_descs
 
     if not descs and not unadopted_descs or ufp_device.model is None:
@@ -249,7 +249,7 @@ class ProtectDeviceEntity(Entity):
         self._attr_available = (
             last_update_success
             and (
-                device.state == StateType.CONNECTED
+                device.state is StateType.CONNECTED
                 or (not device.is_adopted_by_us and device.can_adopt)
             )
             and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
