@@ -45,8 +45,8 @@ def json_encoder_default(obj: Any) -> Any:
 
     Hand other objects to the original method.
     """
-    if hasattr(obj, "as_json_fragment"):
-        return obj.as_json_fragment
+    if hasattr(obj, "json_fragment"):
+        return obj.json_fragment
     if isinstance(obj, (set, tuple)):
         return list(obj)
     if isinstance(obj, float):

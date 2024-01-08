@@ -1031,7 +1031,7 @@ class Context:
         return ReadOnlyDict(self._as_mutable_dict)
 
     @cached_property
-    def as_json_fragment(self) -> json_fragment:
+    def json_fragment(self) -> json_fragment:
         """Return a JSON fragment of the context."""
         return json_fragment(json_dumps(self._as_mutable_dict))
 
@@ -1098,7 +1098,7 @@ class Event:
         as_dict = self._as_dict
         data = as_dict["data"]
         context = as_dict["context"]
-        # as_json_fragment will serialize data from a ReadOnlyDict
+        # json_fragment will serialize data from a ReadOnlyDict
         # or a normal dict so its ok to have either. We only
         # mutate the cache if someone asks for the as_dict version
         # to avoid storing multiple copies of the data in memory.
@@ -1109,7 +1109,7 @@ class Event:
         return ReadOnlyDict(as_dict)
 
     @cached_property
-    def as_json_fragment(self) -> json_fragment:
+    def json_fragment(self) -> json_fragment:
         """Return an event as a JSON fragment."""
         return json_fragment(json_dumps(self._as_dict))
 
@@ -1474,7 +1474,7 @@ class State:
         """Return a ReadOnlyDict representation of the State."""
         as_dict = self._as_dict
         context = as_dict["context"]
-        # as_json_fragment will serialize data from a ReadOnlyDict
+        # json_fragment will serialize data from a ReadOnlyDict
         # or a normal dict so its ok to have either. We only
         # mutate the cache if someone asks for the as_dict version
         # to avoid storing multiple copies of the data in memory.
@@ -1488,7 +1488,7 @@ class State:
         return json_dumps(self._as_dict)
 
     @cached_property
-    def as_json_fragment(self) -> json_fragment:
+    def json_fragment(self) -> json_fragment:
         """Return a JSON fragment of the State."""
         return json_fragment(self.as_dict_json)
 

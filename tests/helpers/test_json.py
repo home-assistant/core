@@ -152,12 +152,12 @@ def test_json_fragments() -> None:
 
     class Fragment1:
         @property
-        def as_json_fragment(self):
+        def json_fragment(self):
             return json_fragment('{"inner":"fragment1"}')
 
     class Fragment2:
         @property
-        def as_json_fragment(self):
+        def json_fragment(self):
             return json_fragment('{"inner":"fragment2"}')
 
     assert (

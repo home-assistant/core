@@ -635,11 +635,11 @@ def test_event_json_fragment() -> None:
     )
 
     # We are testing that the JSON fragments are the same when as_dict is called
-    # after as_json_fragment or before.
-    json_fragment_1 = event1.as_json_fragment
+    # after json_fragment or before.
+    json_fragment_1 = event1.json_fragment
     as_dict_1 = event1.as_dict()
     as_dict_2 = event2.as_dict()
-    json_fragment_2 = event2.as_json_fragment
+    json_fragment_2 = event2.json_fragment
 
     assert json_dumps(json_fragment_1) == json_dumps(json_fragment_2)
     # We also test that the as_dict is the same
@@ -761,11 +761,11 @@ def test_state_json_fragment() -> None:
     )
 
     # We are testing that the JSON fragments are the same when as_dict is called
-    # after as_json_fragment or before.
-    json_fragment_1 = state1.as_json_fragment
+    # after json_fragment or before.
+    json_fragment_1 = state1.json_fragment
     as_dict_1 = state1.as_dict()
     as_dict_2 = state2.as_dict()
-    json_fragment_2 = state2.as_json_fragment
+    json_fragment_2 = state2.json_fragment
 
     assert json_dumps(json_fragment_1) == json_dumps(json_fragment_2)
     # We also test that the as_dict is the same
@@ -1805,11 +1805,11 @@ def test_context_json_fragment() -> None:
     context1, context2 = (ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW") for _ in range(2))
 
     # We are testing that the JSON fragments are the same when as_dict is called
-    # after as_json_fragment or before.
-    json_fragment_1 = context1.as_json_fragment
+    # after json_fragment or before.
+    json_fragment_1 = context1.json_fragment
     as_dict_1 = context1.as_dict()
     as_dict_2 = context2.as_dict()
-    json_fragment_2 = context2.as_json_fragment
+    json_fragment_2 = context2.json_fragment
 
     assert json_dumps(json_fragment_1) == json_dumps(json_fragment_2)
     # We also test that the as_dict is the same

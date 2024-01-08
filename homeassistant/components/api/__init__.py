@@ -381,7 +381,7 @@ class APIDomainServicesView(HomeAssistantView):
             event: EventType[EventStateChangedData],
         ) -> None:
             if event.context == context and (state := event.data["new_state"]):
-                changed_states.append(state.as_json_fragment)
+                changed_states.append(state.json_fragment)
 
         cancel_listen = hass.bus.async_listen(
             EVENT_STATE_CHANGED, _async_save_changed_entities, run_immediately=True
