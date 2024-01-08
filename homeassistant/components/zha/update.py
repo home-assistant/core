@@ -7,8 +7,10 @@ from datetime import datetime
 import functools
 from typing import TYPE_CHECKING, Any
 
-from awesomeversion import AwesomeVersion
 import zigpy.exceptions
+from zigpy.ota.image import BaseOTAImage
+from zigpy.ota.manager import update_firmware
+from zigpy.zcl.foundation import Status
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -32,7 +34,9 @@ if TYPE_CHECKING:
     from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.UPDATE)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.UPDATE
+)
 
 
 async def async_setup_entry(
@@ -53,10 +57,12 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-@STRICT_MATCH(channel_names=CLUSTER_HANDLER_OTA)
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_OTA)
 class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     """Representation of a ZHA firmware update entity."""
 
+    _attribute_name = "firmware_update"
+    _unique_id_suffix = "firmware_update"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = (
@@ -64,7 +70,6 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         | UpdateEntityFeature.PROGRESS
         | UpdateEntityFeature.SPECIFIC_VERSION
     )
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -75,20 +80,26 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     ) -> None:
         """Initialize the ZHA update entity."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._attr_name = "Firmware"
-        self._ota_channel = self.cluster_handlers[CLUSTER_HANDLER_OTA]
-        self._attr_installed_version = self.zha_device.sw_version
-        self._latest_version_firmware = None
+        self._ota_cluster_handler: ClusterHandler = self.cluster_handlers[
+            CLUSTER_HANDLER_OTA
+        ]
+        self._attr_installed_version: str = self.zha_device.sw_version or "unknown"
+        self._latest_version_firmware: BaseOTAImage = None
         self._result = None
 
     @callback
-    def _update_progress(self, details: dict[str, Any]) -> None:
+    def device_ota_update_available(self, image: BaseOTAImage) -> None:
+        """Handle update available."""
+        self._latest_version_firmware = image
+        self._attr_latest_version = image.header.file_version
+        self.async_write_ha_state()
+
+    @callback
+    def _update_progress(self, current: int, total: int, progress: float) -> None:
         """Update install progress on event."""
-        # TODO: need to determine Zigpy OTA progress status update event
-        progress = details["firmware_update_progress"]
         if not self._latest_version_firmware:
             return
-        self._attr_in_progress = int(progress.progress)
+        self._attr_in_progress = int(progress)
         self.async_write_ha_state()
 
     @callback
@@ -101,48 +112,12 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
 
     async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
-
-        # TODO do we want to be able to look into Zigpy for available updates?
-        available_firmware_updates: list[Any] = []
-        """
-        try:
-            # TODO: Zigpy won't need semaphore since it will be async / not remote
-            async with self.semaphore:
-                available_firmware_updates = (
-                    await self.driver.controller.async_get_available_firmware_updates(
-                        self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
-                    )
-                )
-        except FailedZWaveCommand as err:
-            LOGGER.debug(
-                "Failed to get firmware updates for node %s: %s",
-                self.node.node_id,
-                err,
-            )
-        else:
-            """
-        # If we have an available firmware update that is a higher version than
-        # what's on the node, we should advertise it, otherwise the installed
-        # version is the latest.
-        if (
-            available_firmware_updates
-            and (
-                latest_firmware := max(
-                    available_firmware_updates,
-                    key=lambda x: AwesomeVersion(x.version),
-                )
-            )
-            # TODO: need to determine Zigpy OTA version comparison
-            and AwesomeVersion(latest_firmware.version)
-            # TODO: need to determine where to look for current version... channel maybe?
-            > AwesomeVersion(self.zha_device.sw_version)
-        ):
-            self._latest_version_firmware = latest_firmware
-            self._attr_latest_version = latest_firmware.version
-            self.async_write_ha_state()
-        elif self._attr_latest_version != self._attr_installed_version:
-            self._attr_latest_version = self._attr_installed_version
-            self.async_write_ha_state()
+        await self._ota_cluster_handler.image_notify(
+            payload_type=(
+                self._ota_cluster_handler.cluster.ImageNotifyCommand.PayloadType.QueryJitter
+            ),
+            query_jitter=100,
+        )
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -155,10 +130,11 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         self.async_write_ha_state()
 
         try:
-            # TODO fill in with Zigpy install OTA command _update_progress will be passed to Zigpy as callback
-            # this call will block until the OTA is complete
-            # self._result = await <some call into Zigpy>
-            pass
+            self._result = await update_firmware(
+                self.zha_device.device,
+                self._latest_version_firmware,
+                self._update_progress,
+            )
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self._reset_progress()
             raise HomeAssistantError(ex) from ex
@@ -167,14 +143,17 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         assert self._result is not None
 
         # If the update was not successful, we should throw an error to let the user know
-        if not self._result.success:
+        if self._result != Status.SUCCESS:
             # TODO: make this work for Zigpy
-            error_msg = self._result.status.name.replace("_", " ").title()
             self._reset_progress()
-            raise HomeAssistantError(error_msg)
+            raise HomeAssistantError(
+                "Update was not successful - result: {self._result}"
+            )
 
         # If we get here, all files were installed successfully
-        self._attr_installed_version = self._attr_latest_version = firmware.version
+        self._attr_installed_version = (
+            self._attr_latest_version
+        ) = firmware.header.file_version
         self._latest_version_firmware = None
         self._reset_progress()
 
@@ -183,6 +162,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         await super().async_added_to_hass()
         # this is used to look for available firmware updates when HA starts
         self.async_on_remove(async_at_start(self.hass, self._async_update))
+        self.zha_device.device.add_listener(self)
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed."""
