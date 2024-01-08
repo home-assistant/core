@@ -110,6 +110,7 @@ homeassistant.components.bond.*
 homeassistant.components.braviatv.*
 homeassistant.components.brother.*
 homeassistant.components.browser.*
+homeassistant.components.bthome.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
 homeassistant.components.camera.*
