@@ -94,6 +94,119 @@ async def test_telegram_trigger(
     assert test_call.data["id"] == 0
 
 
+@pytest.mark.parametrize(
+    "group_value_options",
+    [
+        {
+            "group_value_write": True,
+            "group_value_response": True,
+            "group_value_read": False,
+        },
+        {
+            "group_value_write": False,
+            "group_value_response": False,
+            "group_value_read": True,
+        },
+        {
+            # "group_value_write": True,  # omitted defaults to True
+            "group_value_response": False,
+            "group_value_read": False,
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "direction_options",
+    [
+        {
+            "incoming": True,
+            "outgoing": True,
+        },
+        {
+            # "incoming": True,  # omitted defaults to True
+            "outgoing": False,
+        },
+        {
+            "incoming": False,
+            "outgoing": True,
+        },
+    ],
+)
+async def test_telegram_trigger_options(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    knx: KNXTestKit,
+    group_value_options: dict[str, bool],
+    direction_options: dict[str, bool],
+) -> None:
+    """Test telegram telegram trigger options."""
+    await knx.setup_integration({})
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                # "catch_all" trigger
+                {
+                    "trigger": {
+                        "platform": "knx.telegram",
+                        **group_value_options,
+                        **direction_options,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "catch_all": ("telegram - {{ trigger.destination }}"),
+                            "id": (" {{ trigger.id }}"),
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    await knx.receive_write("0/0/1", 1)
+    if group_value_options.get("group_value_write", True) and direction_options.get(
+        "incoming", True
+    ):
+        assert len(calls) == 1
+        assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+    else:
+        assert len(calls) == 0
+
+    await knx.receive_response("0/0/1", 1)
+    if group_value_options["group_value_response"] and direction_options.get(
+        "incoming", True
+    ):
+        assert len(calls) == 1
+        assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+    else:
+        assert len(calls) == 0
+
+    await knx.receive_read("0/0/1")
+    if group_value_options["group_value_read"] and direction_options.get(
+        "incoming", True
+    ):
+        assert len(calls) == 1
+        assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+    else:
+        assert len(calls) == 0
+
+    await hass.services.async_call(
+        "knx",
+        "send",
+        {"address": "0/0/1", "payload": True},
+        blocking=True,
+    )
+    await knx.assert_write("0/0/1", True)
+    if (
+        group_value_options.get("group_value_write", True)
+        and direction_options["outgoing"]
+    ):
+        assert len(calls) == 1
+        assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+    else:
+        assert len(calls) == 0
+
+
 async def test_remove_telegram_trigger(
     hass: HomeAssistant,
     calls: list[ServiceCall],

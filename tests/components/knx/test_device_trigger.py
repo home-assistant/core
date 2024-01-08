@@ -6,6 +6,9 @@ import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.knx import DOMAIN, device_trigger
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -426,4 +429,31 @@ async def test_invalid_device_trigger(
             "Unnamed automation failed to setup triggers and has been disabled: "
             "extra keys not allowed @ data['invalid']. Got None"
             in caplog.records[0].message
+        )
+
+
+async def test_invalid_trigger_configuration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    knx: KNXTestKit,
+):
+    """Test invalid telegram device trigger configuration at attach_trigger."""
+    await knx.setup_integration({})
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    )
+    # After changing the config in async_attach_trigger, the config is validated again
+    # against the integration trigger. This test checks if this validation works.
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_attach_trigger(
+            hass,
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "type": "telegram",
+                "group_value_write": "invalid",
+            },
+            None,
+            {},
         )
