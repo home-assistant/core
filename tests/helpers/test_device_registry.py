@@ -20,6 +20,7 @@ from homeassistant.helpers import (
 from tests.common import (
     MockConfigEntry,
     flush_store,
+    help_test_all,
     import_and_test_deprecated_constant_enum,
 )
 
@@ -2016,6 +2017,11 @@ async def test_loading_invalid_configuration_url_from_storage(
         identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.configuration_url == "invalid"
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(dr)
 
 
 @pytest.mark.parametrize(("enum"), list(dr.DeviceEntryDisabler))

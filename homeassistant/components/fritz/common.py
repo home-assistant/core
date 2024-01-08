@@ -1063,6 +1063,7 @@ class SwitchInfo(TypedDict):
     type: str
     callback_update: Callable
     callback_switch: Callable
+    init_state: bool
 
 
 class FritzBoxBaseEntity:

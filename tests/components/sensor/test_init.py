@@ -52,6 +52,7 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_restore_state_shutdown_restart,
+    help_test_all,
     import_and_test_deprecated_constant_enum,
     mock_config_flow,
     mock_integration,
@@ -2522,6 +2523,15 @@ async def test_entity_category_config_raises_error(
     )
 
     assert not hass.states.get("sensor.test")
+
+
+@pytest.mark.parametrize(
+    "module",
+    [sensor, sensor.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
 
 
 @pytest.mark.parametrize(("enum"), list(sensor.SensorStateClass))
