@@ -371,7 +371,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==2.0.0
+aiowithings==2.1.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -407,7 +407,7 @@ anthemav==1.4.1
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.6.0
+apprise==1.7.1
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -469,7 +469,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.4
+blinkpy==0.22.5
 
 # homeassistant.components.blue_current
 bluecurrent-api==1.0.6
@@ -985,7 +985,7 @@ maxcube-api==0.4.3
 mbddns==0.1.2
 
 # homeassistant.components.minecraft_server
-mcstatus==11.0.0
+mcstatus==11.1.1
 
 # homeassistant.components.meater
 meater-python==0.0.8
@@ -1204,7 +1204,7 @@ pushover_complete==1.1.1
 pvo==2.1.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.1
+py-aosmith==1.0.6
 
 # homeassistant.components.canary
 py-canary==0.5.3
@@ -1871,7 +1871,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.6.1
+sensorpush-ble==1.6.2
 
 # homeassistant.components.sentry
 sentry-sdk==1.37.1
@@ -1970,7 +1970,7 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.0.3
+sunweg==2.1.0
 
 # homeassistant.components.surepetcare
 surepy==0.9.0

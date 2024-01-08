@@ -767,6 +767,7 @@ omit =
     homeassistant/components/motionmount/__init__.py
     homeassistant/components/motionmount/entity.py
     homeassistant/components/motionmount/number.py
+    homeassistant/components/motionmount/select.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/msteams/notify.py
@@ -1043,6 +1044,7 @@ omit =
     homeassistant/components/renson/fan.py
     homeassistant/components/renson/binary_sensor.py
     homeassistant/components/renson/number.py
+    homeassistant/components/renson/time.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
     homeassistant/components/recorder/repack.py

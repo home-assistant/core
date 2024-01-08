@@ -54,6 +54,8 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfTemperature,
 )
 from homeassistant.core import State, callback
@@ -167,7 +169,9 @@ HEAT_COOL_DEADBAND = 5
 
 def _hk_hvac_mode_from_state(state: State) -> int | None:
     """Return the equivalent HomeKit HVAC mode for a given state."""
-    if not (hvac_mode := try_parse_enum(HVACMode, state.state)):
+    if (current_state := state.state) in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        return None
+    if not (hvac_mode := try_parse_enum(HVACMode, current_state)):
         _LOGGER.error(
             "%s: Received invalid HVAC mode: %s", state.entity_id, state.state
         )
