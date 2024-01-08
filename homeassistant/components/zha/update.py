@@ -93,7 +93,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     def device_ota_update_available(self, image: BaseOTAImage) -> None:
         """Handle update available."""
         self._latest_version_firmware = image
-        self._attr_latest_version = image.header.file_version
+        self._attr_latest_version = f"0x{image.header.file_version:08x}"
         self.async_write_ha_state()
 
     @callback
@@ -114,12 +114,13 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
 
     async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
-        await self._ota_cluster_handler.image_notify(
-            payload_type=(
-                self._ota_cluster_handler.cluster.ImageNotifyCommand.PayloadType.QueryJitter
-            ),
-            query_jitter=100,
-        )
+        if self.zha_device.is_mains_powered:
+            await self._ota_cluster_handler.image_notify(
+                payload_type=(
+                    self._ota_cluster_handler.cluster.ImageNotifyCommand.PayloadType.QueryJitter
+                ),
+                query_jitter=100,
+            )
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -155,7 +156,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         # If we get here, all files were installed successfully
         self._attr_installed_version = (
             self._attr_latest_version
-        ) = firmware.header.file_version
+        ) = f"0x{firmware.header.file_version:08x}"
         self._latest_version_firmware = None
         self._reset_progress()
 
