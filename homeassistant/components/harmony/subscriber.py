@@ -34,7 +34,7 @@ class HarmonySubscriberMixin:
         self._subscriptions: list[HarmonyCallback] = []
         self._activity_lock = asyncio.Lock()
 
-    async def async_lock_start_activity(self):
+    async def async_lock_start_activity(self) -> None:
         """Acquire the lock."""
         await self._activity_lock.acquire()
 
@@ -59,17 +59,17 @@ class HarmonySubscriberMixin:
         """Remove a callback subscriber."""
         self._subscriptions.remove(update_callback)
 
-    def _config_updated(self, _=None) -> None:
+    def _config_updated(self, _: dict | None = None) -> None:
         _LOGGER.debug("config_updated")
         self._call_callbacks("config_updated")
 
-    def _connected(self, _=None) -> None:
+    def _connected(self, _: str | None = None) -> None:
         _LOGGER.debug("connected")
         self.async_unlock_start_activity()
         self._available = True
         self._call_callbacks("connected")
 
-    def _disconnected(self, _=None) -> None:
+    def _disconnected(self, _: str | None = None) -> None:
         _LOGGER.debug("disconnected")
         self.async_unlock_start_activity()
         self._available = False

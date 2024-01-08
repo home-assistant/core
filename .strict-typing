@@ -155,6 +155,7 @@ homeassistant.components.emulated_hue.*
 homeassistant.components.energy.*
 homeassistant.components.energyzero.*
 homeassistant.components.enigma2.*
+homeassistant.components.enphase_envoy.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
@@ -242,6 +243,7 @@ homeassistant.components.laundrify.*
 homeassistant.components.lawn_mower.*
 homeassistant.components.lcn.*
 homeassistant.components.ld2410_ble.*
+homeassistant.components.led_ble.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
@@ -295,6 +297,7 @@ homeassistant.components.open_meteo.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
+homeassistant.components.oralb.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
 homeassistant.components.p1_monitor.*
@@ -417,6 +420,7 @@ homeassistant.components.vlc_telnet.*
 homeassistant.components.wake_on_lan.*
 homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*
+homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
@@ -430,6 +434,7 @@ homeassistant.components.wled.*
 homeassistant.components.worldclock.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*
+homeassistant.components.youtube.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zodiac.*
 homeassistant.components.zone.*
