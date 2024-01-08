@@ -1,4 +1,5 @@
 """Tests for KNX device triggers."""
+import logging
 
 import pytest
 import voluptuous_serialize
@@ -320,3 +321,48 @@ async def test_get_trigger_capabilities(
             "selector": {"boolean": {}},
         },
     ]
+
+
+async def test_invalid_device_trigger(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    knx: KNXTestKit,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid telegram device trigger configuration."""
+    await knx.setup_integration({})
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    )
+    caplog.clear()
+    with caplog.at_level(logging.ERROR):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: [
+                    {
+                        "trigger": {
+                            "platform": "device",
+                            "domain": DOMAIN,
+                            "device_id": device_entry.id,
+                            "type": "telegram",
+                            "invalid": True,
+                        },
+                        "action": {
+                            "service": "test.automation",
+                            "data_template": {
+                                "catch_all": ("telegram - {{ trigger.destination }}"),
+                                "id": (" {{ trigger.id }}"),
+                            },
+                        },
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        assert (
+            "Unnamed automation failed to setup triggers and has been disabled: "
+            "extra keys not allowed @ data['invalid']. Got None"
+            in caplog.records[0].message
+        )
