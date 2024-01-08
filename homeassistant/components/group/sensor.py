@@ -334,9 +334,12 @@ class SensorGroup(GroupEntity, SensorEntity):
                 states.append(state.state)
                 try:
                     numeric_state = float(state.state)
-                    if (device_class := self.device_class) in UNIT_CONVERTERS and (
-                        uom := state.attributes["unit_of_measurement"]
-                    ) in UNIT_CONVERTERS[device_class].VALID_UNITS:
+                    if (
+                        (device_class := self.device_class) in UNIT_CONVERTERS
+                        and self.native_unit_of_measurement
+                        and (uom := state.attributes["unit_of_measurement"])
+                        in UNIT_CONVERTERS[device_class].VALID_UNITS
+                    ):
                         numeric_state = UNIT_CONVERTERS[device_class].convert(
                             numeric_state, uom, self.native_unit_of_measurement
                         )
@@ -460,9 +463,8 @@ class SensorGroup(GroupEntity, SensorEntity):
                 return None
             unit_of_measurements.append(_unit_of_measurement)
 
-        if (device_class := self.device_class) in UNIT_CONVERTERS and any(
-            x == unit_of_measurements[0]
-            for x in UNIT_CONVERTERS[device_class].VALID_UNITS
+        if (device_class := self.device_class) in UNIT_CONVERTERS and all(
+            x in UNIT_CONVERTERS[device_class].VALID_UNITS for x in unit_of_measurements
         ):
             return unit_of_measurements[0]
         return None
