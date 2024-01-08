@@ -90,6 +90,10 @@ class BaseMockReconnectLogic(ReconnectLogic):
         self._cancel_connect("forced disconnect from test")
         self._is_stopped = True
 
+    async def stop(self) -> None:
+        """Stop the reconnect logic."""
+        self.stop_callback()
+
 
 @pytest.fixture
 def mock_device_info() -> DeviceInfo:
