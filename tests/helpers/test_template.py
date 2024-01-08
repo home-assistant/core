@@ -2414,9 +2414,9 @@ def test_bitwise_xor(
 ) -> None:
     """Test bitwise_xor method."""
     assert (
-        template.Template(
-            "{{ value | bitwise_xor(xor_value) }}", hass
-        ).async_render({"value": value, "xor_value": xor_value})
+        template.Template("{{ value | bitwise_xor(xor_value) }}", hass).async_render(
+            {"value": value, "xor_value": xor_value}
+        )
         == expected
     )
 
