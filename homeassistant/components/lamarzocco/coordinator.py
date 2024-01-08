@@ -3,8 +3,9 @@ from datetime import timedelta
 import logging
 
 from bleak.backends.device import BLEDevice
+from bleak.exc import BleakError
 from lmcloud import LMCloud as LaMarzoccoClient
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
+from lmcloud.exceptions import AuthFail, BluetoothDeviceNotFound, RequestNotSuccessful
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -40,15 +41,16 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
+
+        if not self._lm.initialized:
+            await self._async_init_client()
+
         _LOGGER.debug("Update coordinator: Updating data")
         try:
-            if not self._lm.initialized:
-                await self._async_init_client()
             await self._lm.update_local_machine_status(force_update=True)
 
         except AuthFail as ex:
-            msg = "Authentication failed. \
-                            Maybe one of your credential details was invalid or you changed your password."
+            msg = "Authentication failed."
             _LOGGER.debug(msg, exc_info=True)
             raise ConfigEntryAuthFailed(msg) from ex
         except RequestNotSuccessful as ex:
@@ -68,10 +70,18 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
         # Initialize cloud API
         _LOGGER.debug("Initializing Cloud API")
-        await self._lm.init_cloud_api(
-            credentials=self.config_entry.data,
-            machine_serial=self.config_entry.data[CONF_MACHINE],
-        )
+        try:
+            await self._lm.init_cloud_api(
+                credentials=self.config_entry.data,
+                machine_serial=self.config_entry.data[CONF_MACHINE],
+            )
+        except AuthFail as ex:
+            msg = "Authentication failed."
+            _LOGGER.debug(msg, exc_info=True)
+            raise ConfigEntryAuthFailed(msg) from ex
+        except RequestNotSuccessful as ex:
+            _LOGGER.debug(ex, exc_info=True)
+            raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
         _LOGGER.debug("Model name: %s", self._lm.model_name)
 
         # initialize Bluetooth
@@ -88,19 +98,23 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                 self._use_bluetooth = True
                 bt_scanner = bluetooth.async_get_scanner(self.hass)
 
-                await self._lm.init_bluetooth(
-                    username=username,
-                    init_client=False,
-                    bluetooth_scanner=bt_scanner,
-                )
-
-                # update the config entry with the MAC address
-                new_data = self.config_entry.data.copy()
-                new_data[CONF_MAC] = self._lm.lm_bluetooth.address
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data=new_data,
-                )
+                try:
+                    await self._lm.init_bluetooth(
+                        username=username,
+                        init_client=False,
+                        bluetooth_scanner=bt_scanner,
+                    )
+                except (BleakError, BluetoothDeviceNotFound) as ex:
+                    _LOGGER.debug(ex, exc_info=True)
+                    self._use_bluetooth = False
+                else:
+                    # update the config entry with the MAC address
+                    new_data = self.config_entry.data.copy()
+                    new_data[CONF_MAC] = self._lm.lm_bluetooth.address
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data=new_data,
+                    )
 
         # initialize local API
         if host:

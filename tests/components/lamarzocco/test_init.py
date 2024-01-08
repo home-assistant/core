@@ -1,7 +1,7 @@
 """Test initialization of lamarzocco."""
 from unittest.mock import MagicMock
 
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
+from lmcloud.exceptions import AuthFail, BluetoothDeviceNotFound, RequestNotSuccessful
 
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -68,3 +68,56 @@ async def test_invalid_auth(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+async def test_first_refresh_request_fail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Test if the first refresh throws an error."""
+    mock_lamarzocco.init_cloud_api.side_effect = RequestNotSuccessful("")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_first_refresh_auth_fail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Test if the first refresh throws an Authfail."""
+    mock_lamarzocco.init_cloud_api.side_effect = AuthFail("")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    flow = flows[0]
+    assert flow.get("step_id") == "user"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+async def test_first_refresh_bluetooth_fail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Test if the first refresh throws BluetoothDeviceNotFound."""
+    mock_lamarzocco.init_bluetooth.side_effect = BluetoothDeviceNotFound("")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+    assert coordinator._use_bluetooth is False
