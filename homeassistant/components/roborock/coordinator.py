@@ -113,6 +113,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     async def get_maps(self) -> None:
         """Add a map to the coordinators mapping."""
         maps = await self.api.get_multi_maps_list()
-        if maps is not None and maps.map_info is not None:
+        if maps and maps.map_info:
             for roborock_map in maps.map_info:
                 self.maps[roborock_map.mapFlag] = roborock_map.name
