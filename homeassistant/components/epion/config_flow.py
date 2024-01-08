@@ -28,16 +28,20 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
-            key_valid = await self.hass.async_add_executor_job(
-                self._check_api_key, user_input[CONF_API_KEY]
-            )
-            if key_valid:
-                return self.async_create_entry(
-                    title="Epion integration",
-                    data={CONF_API_KEY: user_input[CONF_API_KEY]},
+            try:
+                key_valid = await self.hass.async_add_executor_job(
+                    self._check_api_key, user_input[CONF_API_KEY]
                 )
-            else:
-                errors["base"] = "invalid_api_key"
+                if key_valid:
+                    return self.async_create_entry(
+                        title="Epion integration",
+                        data={CONF_API_KEY: user_input[CONF_API_KEY]},
+                    )
+                else:
+                    errors["base"] = "invalid_api_key"
+            except (HTTPError, ConnectTimeout, KeyError):
+                _LOGGER.error("Unexpected problem when configuring Epion API")
+                errors["base"] = "could_not_connect"
         else:
             user_input = {}
             user_input[CONF_API_KEY] = ""
