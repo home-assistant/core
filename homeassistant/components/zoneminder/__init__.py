@@ -1,7 +1,7 @@
 """Support for ZoneMinder."""
 import logging
 
-from requests.exceptions import SSLError
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 from zoneminder.zm import ZoneMinder
 
@@ -78,7 +78,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             success = zm_client.login() and success
-        except (SSLError, ConnectionError) as ex:
+        except RequestsConnectionError as ex:
             _LOGGER.error(
                 "ZoneMinder connection failure to %s: %s",
                 host_name,
