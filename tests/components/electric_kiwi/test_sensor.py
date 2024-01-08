@@ -100,10 +100,6 @@ async def test_account_sensors(
     account_data = await api.get_account_balance()
     assert account_data
 
-    AccountSensors = list(
-        filter(lambda x: entity.unique_id.endswith(x.key), ACCOUNT_SENSOR_TYPES)
-    )
-    AccountSensor: ElectricKiwiAccountSensorEntityDescription = AccountSensors[0]
 
     state = hass.states.get(sensor)
     assert state
