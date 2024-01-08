@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    async def _async_update():
+    async def _async_update() -> None:
         """Update the device state."""
         try:
             await led_ble.update()

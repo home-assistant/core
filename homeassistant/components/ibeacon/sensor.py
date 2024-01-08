@@ -23,14 +23,14 @@ from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class IBeaconRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[iBeaconAdvertisement], str | int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IBeaconSensorEntityDescription(SensorEntityDescription, IBeaconRequiredKeysMixin):
     """Describes iBeacon sensor entity."""
 

@@ -1,6 +1,8 @@
 """The Nibe Heat Pump sensors."""
 from __future__ import annotations
 
+from datetime import date
+
 from nibe.coil import Coil
 from nibe.coil_groups import WATER_HEATER_COILGROUPS, WaterHeaterCoilGroup
 from nibe.exceptions import CoilNotFoundException
@@ -132,7 +134,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
                 return None
             return self.coordinator.get_coil_float(coil)
 
-        def _get_value(coil: Coil | None) -> int | str | float | None:
+        def _get_value(coil: Coil | None) -> int | str | float | date | None:
             if coil is None:
                 return None
             return self.coordinator.get_coil_value(coil)

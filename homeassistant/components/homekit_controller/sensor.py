@@ -46,7 +46,7 @@ from .entity import CharacteristicEntity, HomeKitEntity
 from .utils import folded_name
 
 
-@dataclass
+@dataclass(frozen=True)
 class HomeKitSensorEntityDescription(SensorEntityDescription):
     """Describes Homekit sensor."""
 

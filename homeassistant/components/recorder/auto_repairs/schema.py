@@ -101,9 +101,8 @@ def _validate_table_schema_has_correct_collation(
 
         collate = (
             dialect_kwargs.get("mysql_collate")
-            or dialect_kwargs.get(
-                "mariadb_collate"
-            )  # pylint: disable-next=protected-access
+            or dialect_kwargs.get("mariadb_collate")
+            # pylint: disable-next=protected-access
             or connection.dialect._fetch_setting(connection, "collation_server")  # type: ignore[attr-defined]
         )
         if collate and collate != "utf8mb4_unicode_ci":

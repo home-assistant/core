@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from aionotion.sensor.models import ListenerKind
 
 
-@dataclass
+@dataclass(frozen=True)
 class NotionEntityDescriptionMixin:
     """Define an description mixin Notion entities."""
 

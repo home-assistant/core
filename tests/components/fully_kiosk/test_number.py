@@ -13,13 +13,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_numbers(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test standard Fully Kiosk numbers."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("number.amazon_fire_screensaver_timer")
     assert state
     assert state.state == "900"

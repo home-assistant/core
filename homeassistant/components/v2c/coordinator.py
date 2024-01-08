@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class V2CUpdateCoordinator(DataUpdateCoordinator[TrydanData]):
         """Fetch sensor data from api."""
         try:
             data: TrydanData = await self.evse.get_data()
-            _LOGGER.debug("Received data: %s", data)
-            return data
         except TrydanError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+        _LOGGER.debug("Received data: %s", data)
+        return data

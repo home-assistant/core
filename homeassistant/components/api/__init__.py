@@ -1,11 +1,9 @@
 """Rest API for Home Assistant."""
 import asyncio
 from asyncio import shield, timeout
-from collections.abc import Collection
 from functools import lru_cache
 from http import HTTPStatus
 import logging
-from typing import Any
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
@@ -41,13 +39,11 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.aiohttp_compat import enable_compression
 from homeassistant.helpers.event import EventStateChangedData
-from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.util.json import json_loads
-from homeassistant.util.read_only_dict import ReadOnlyDict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -218,9 +214,11 @@ class APIStatesView(HomeAssistantView):
                 if entity_perm(state.entity_id, "read")
             )
         response = web.Response(
-            body=f'[{",".join(states)}]', content_type=CONTENT_TYPE_JSON
+            body=f'[{",".join(states)}]',
+            content_type=CONTENT_TYPE_JSON,
+            zlib_executor_size=32768,
         )
-        enable_compression(response)
+        response.enable_compression()
         return response
 
 
@@ -376,31 +374,28 @@ class APIDomainServicesView(HomeAssistantView):
             )
 
         context = self.context(request)
-        changed_states: list[ReadOnlyDict[str, Collection[Any]]] = []
+        changed_states: list[json_fragment] = []
 
         @ha.callback
         def _async_save_changed_entities(
             event: EventType[EventStateChangedData],
         ) -> None:
             if event.context == context and (state := event.data["new_state"]):
-                changed_states.append(state.as_dict())
+                changed_states.append(state.json_fragment)
 
         cancel_listen = hass.bus.async_listen(
             EVENT_STATE_CHANGED, _async_save_changed_entities, run_immediately=True
         )
 
         try:
-            async with timeout(SERVICE_WAIT_TIMEOUT):
-                # shield the service call from cancellation on connection drop
-                await shield(
-                    hass.services.async_call(
-                        domain, service, data, blocking=True, context=context
-                    )
+            # shield the service call from cancellation on connection drop
+            await shield(
+                hass.services.async_call(
+                    domain, service, data, blocking=True, context=context
                 )
+            )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest() from ex
-        except TimeoutError:
-            pass
         finally:
             cancel_listen()
 
