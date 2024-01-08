@@ -10,7 +10,7 @@ from voluptuous import Required, Schema
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
