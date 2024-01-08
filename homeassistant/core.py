@@ -1014,7 +1014,11 @@ class Context:
 
     @cached_property
     def _as_dict(self) -> dict[str, str | None]:
-        """Return a dictionary representation of the context."""
+        """Return a dictionary representation of the context.
+
+        Callers should be careful to not mutate the returned dictionary
+        as it will mutate the cached version.
+        """
         return {
             "id": self.id,
             "parent_id": self.parent_id,
@@ -1073,7 +1077,11 @@ class Event:
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
-        """Create a dict representation of this Event."""
+        """Create a dict representation of this Event.
+
+        Callers should be careful to not mutate the returned dictionary
+        as it will mutate the cached version.
+        """
         return {
             "event_type": self.event_type,
             "data": self.data,
@@ -1437,7 +1445,11 @@ class State:
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of the State."""
+        """Return a dict representation of the State.
+
+        Callers should be careful to not mutate the returned dictionary
+        as it will mutate the cached version.
+        """
         last_changed_isoformat = self.last_changed.isoformat()
         if self.last_changed == self.last_updated:
             last_updated_isoformat = last_changed_isoformat
