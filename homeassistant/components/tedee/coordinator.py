@@ -104,7 +104,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         except (TedeeClientException, TimeoutError) as ex:
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
 
-
     def webhook_received(self, message: dict[str, Any]) -> None:
         """Handle webhook message."""
         self.tedee_client.parse_webhook_message(message)
