@@ -26,7 +26,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 
 from .core import discovery
-from .core.const import CLUSTER_HANDLER_OTA, DATA_ZHA, SIGNAL_ADD_ENTITIES
+from .core.const import CLUSTER_HANDLER_OTA, SIGNAL_ADD_ENTITIES
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -45,7 +46,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation update from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.UPDATE]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.UPDATE]
 
     unsub = async_dispatcher_connect(
         hass,
