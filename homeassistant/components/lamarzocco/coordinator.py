@@ -3,9 +3,13 @@ from datetime import timedelta
 import logging
 
 from bleak.backends.device import BLEDevice
-from bleak.exc import BleakError
 from lmcloud import LMCloud as LaMarzoccoClient
-from lmcloud.exceptions import AuthFail, BluetoothDeviceNotFound, RequestNotSuccessful
+from lmcloud.exceptions import (
+    AuthFail,
+    BluetoothConnectionFailed,
+    BluetoothDeviceNotFound,
+    RequestNotSuccessful,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -66,6 +70,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         # only set when discovered via Bluetooth
         mac_address: str = self.config_entry.data.get(CONF_MAC, "")
         name: str = self.config_entry.data.get(CONF_NAME, "")
+        # optional setting
         host: str = self.config_entry.data.get(CONF_HOST, "")
 
         # Initialize cloud API
@@ -104,7 +109,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                         init_client=False,
                         bluetooth_scanner=bt_scanner,
                     )
-                except (BleakError, BluetoothDeviceNotFound) as ex:
+                except (BluetoothConnectionFailed, BluetoothDeviceNotFound) as ex:
                     _LOGGER.debug(ex, exc_info=True)
                     self._use_bluetooth = False
                 else:
