@@ -494,7 +494,7 @@ async def test_entity_options(
     assert entity_entry
     assert entity_entry.device_id == switch_entity_entry.device_id
     assert entity_entry.options == {
-        DOMAIN: {"entity_id": switch_entity_entry.entity_id}
+        DOMAIN: {"entity_id": switch_entity_entry.entity_id, "invert": False},
     }
 
 
@@ -550,7 +550,7 @@ async def test_entity_name(
     assert entity_entry.name is None
     assert entity_entry.original_name is None
     assert entity_entry.options == {
-        DOMAIN: {"entity_id": switch_entity_entry.entity_id}
+        DOMAIN: {"entity_id": switch_entity_entry.entity_id, "invert": False}
     }
 
 
@@ -610,7 +610,7 @@ async def test_custom_name_1(
     assert entity_entry.name == "Custom entity name"
     assert entity_entry.original_name == "Original entity name"
     assert entity_entry.options == {
-        DOMAIN: {"entity_id": switch_entity_entry.entity_id}
+        DOMAIN: {"entity_id": switch_entity_entry.entity_id, "invert": False}
     }
 
 
@@ -689,7 +689,7 @@ async def test_custom_name_2(
     assert entity_entry.name == "Old custom entity name"
     assert entity_entry.original_name == "Original entity name"
     assert entity_entry.options == {
-        DOMAIN: {"entity_id": switch_entity_entry.entity_id}
+        DOMAIN: {"entity_id": switch_entity_entry.entity_id, "invert": False}
     }
 
 
