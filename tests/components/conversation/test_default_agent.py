@@ -503,6 +503,31 @@ async def test_error_match_failure(hass: HomeAssistant, init_components) -> None
         )
 
 
+async def test_no_states_matched_default_error(
+    hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
+) -> None:
+    """Test default response when no states match and slots are missing."""
+    area_registry.async_get_or_create("kitchen")
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.intent.async_handle",
+        side_effect=intent.NoStatesMatchedError(None, None, None, None),
+    ):
+        result = await conversation.async_converse(
+            hass, "turn on lights in the kitchen", None, Context(), None
+        )
+
+        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert (
+            result.response.error_code
+            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+        )
+        assert (
+            result.response.speech["plain"]["speech"]
+            == "Sorry, I couldn't understand that"
+        )
+
+
 async def test_empty_aliases(
     hass: HomeAssistant,
     init_components,
