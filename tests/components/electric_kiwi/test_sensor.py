@@ -49,7 +49,7 @@ async def test_hop_sensors(
     sensor state should be set to today at 4pm or if now is past 4pm,
     then tomorrow at 4pm.
     """
-    await component_setup()
+    assert await component_setup()
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity = entity_registry.async_get(sensor)
