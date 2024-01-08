@@ -4,6 +4,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -36,6 +37,8 @@ class Alpha2HeatControlValveOpeningSensor(
     """Alpha2 heat control valve opening sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, coordinator: Alpha2BaseCoordinator, heat_control_id: str
@@ -45,10 +48,12 @@ class Alpha2HeatControlValveOpeningSensor(
         self.heat_control_id = heat_control_id
         self._attr_unique_id = f"{heat_control_id}:valve_opening"
         heat_control = self.coordinator.data["heat_controls"][heat_control_id]
-        heat_area = self.coordinator.data["heat_areas"][heat_control["_HEATAREA_ID"]]
-        self._attr_name = (
-            f"{heat_area['HEATAREA_NAME']} heat control {heat_control['NR']} valve"
-            " opening"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heat_control_id)},
+            manufacturer="Möhlenhoff",
+            model="Alpha2",
+            name=heat_control["NR"],
+            via_device=(DOMAIN, heat_control["_HEATAREA_ID"]),
         )
 
     @property

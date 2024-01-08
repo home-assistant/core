@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -46,13 +47,20 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_preset_modes = [PRESET_AUTO, PRESET_DAY, PRESET_NIGHT]
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, coordinator: Alpha2BaseCoordinator, heat_area_id: str) -> None:
         """Initialize Alpha2 ClimateEntity."""
         super().__init__(coordinator)
         self.heat_area_id = heat_area_id
         self._attr_unique_id = heat_area_id
-        self._attr_name = self.heat_area["HEATAREA_NAME"]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heat_area_id)},
+            manufacturer="Möhlenhoff",
+            model="Alpha2",
+            name=self.heat_area["HEATAREA_NAME"],
+        )
 
     @property
     def heat_area(self) -> dict[str, Any]:
