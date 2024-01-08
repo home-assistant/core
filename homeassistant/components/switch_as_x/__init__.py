@@ -13,7 +13,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import EventType
 
-from .const import CONF_TARGET_DOMAIN
+from .const import CONF_INVERT, CONF_TARGET_DOMAIN
 from .light import LightSwitch
 
 __all__ = ["LightSwitch"]
@@ -97,6 +97,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options[CONF_TARGET_DOMAIN],)
     )
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
+    )
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+    if config_entry.version == 1:
+        options = {**config_entry.options}
+        if config_entry.minor_version < 2:
+            options[CONF_INVERT] = False
+        config_entry.version = 1
+        config_entry.minor_version = 2
+        hass.config_entries.async_update_entry(config_entry, options=options)
+
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
     return True
 
 

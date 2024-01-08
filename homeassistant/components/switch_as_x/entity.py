@@ -178,3 +178,20 @@ class BaseToggleEntity(BaseEntity, ToggleEntity):
             return
 
         self._attr_is_on = state.state == STATE_ON
+
+
+class BaseInvertableEntity(BaseEntity):
+    """Represents a Switch as an X."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry_title: str,
+        domain: str,
+        invert: bool,
+        switch_entity_id: str,
+        unique_id: str,
+    ) -> None:
+        """Initialize Switch as an X."""
+        super().__init__(hass, config_entry_title, domain, switch_entity_id, unique_id)
+        self._invert_state = invert

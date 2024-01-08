@@ -6,7 +6,11 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.switch_as_x.const import CONF_TARGET_DOMAIN, DOMAIN
+from homeassistant.components.switch_as_x.const import (
+    CONF_INVERT,
+    CONF_TARGET_DOMAIN,
+    DOMAIN,
+)
 from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -41,6 +45,7 @@ async def test_config_flow(
         result["flow_id"],
         {
             CONF_ENTITY_ID: "switch.ceiling",
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
     )
@@ -51,6 +56,7 @@ async def test_config_flow(
     assert result["data"] == {}
     assert result["options"] == {
         CONF_ENTITY_ID: "switch.ceiling",
+        CONF_INVERT: False,
         CONF_TARGET_DOMAIN: target_domain,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -59,6 +65,7 @@ async def test_config_flow(
     assert config_entry.data == {}
     assert config_entry.options == {
         CONF_ENTITY_ID: "switch.ceiling",
+        CONF_INVERT: False,
         CONF_TARGET_DOMAIN: target_domain,
     }
 
@@ -96,6 +103,7 @@ async def test_config_flow_registered_entity(
         result["flow_id"],
         {
             CONF_ENTITY_ID: "switch.ceiling",
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
     )
@@ -106,6 +114,7 @@ async def test_config_flow_registered_entity(
     assert result["data"] == {}
     assert result["options"] == {
         CONF_ENTITY_ID: "switch.ceiling",
+        CONF_INVERT: False,
         CONF_TARGET_DOMAIN: target_domain,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -114,6 +123,7 @@ async def test_config_flow_registered_entity(
     assert config_entry.data == {}
     assert config_entry.options == {
         CONF_ENTITY_ID: "switch.ceiling",
+        CONF_INVERT: False,
         CONF_TARGET_DOMAIN: target_domain,
     }
 
