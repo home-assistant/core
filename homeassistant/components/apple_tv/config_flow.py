@@ -126,7 +126,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _entry_unique_id_from_identifers(self, all_identifiers: set[str]) -> str | None:
         """Search existing entries for an identifier and return the unique id."""
-        for entry in self._async_current_entries():
+        for entry in self._async_current_entries(include_ignore=True):
             if not all_identifiers.isdisjoint(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             ):
