@@ -344,6 +344,13 @@ class ConfigEntry:
         self._tries = 0
         self._setup_again_job: HassJob | None = None
 
+    def __repr__(self) -> str:
+        """Representation of ConfigEntry."""
+        return (
+            f"<ConfigEntry entry_id={self.entry_id} version={self.version} domain={self.domain} "
+            f"title={self.title} state={self.state} unique_id={self.unique_id}>"
+        )
+
     async def async_setup(
         self,
         hass: HomeAssistant,
@@ -1159,7 +1166,7 @@ class ConfigEntries:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries.values())
-        return self._entries.get_entries_for_domain(domain)
+        return list(self._entries.get_entries_for_domain(domain))
 
     @callback
     def async_entry_for_domain_unique_id(
