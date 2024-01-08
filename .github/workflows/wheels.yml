@@ -225,7 +225,6 @@ jobs:
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtaa"
-          pip: "'cython>=3.0.7'"
 
       - name: Build wheels (part 2)
         uses: home-assistant/wheels@2024.01.0
@@ -240,7 +239,6 @@ jobs:
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtab"
-          pip: "'cython>=3.0.7'"
 
       - name: Build wheels (part 3)
         uses: home-assistant/wheels@2024.01.0
@@ -255,4 +253,3 @@ jobs:
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtac"
-          pip: "'cython>=3.0.7'"
