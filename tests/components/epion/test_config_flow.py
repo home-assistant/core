@@ -13,17 +13,63 @@ from homeassistant.core import HomeAssistant
 API_KEY = "test-key-123"
 
 
-@pytest.fixture(name="test_api")
+@pytest.fixture(name="epion_api")
 def mock_controller():
     """Mock the Epion API."""
     api = Mock()
-    api.get_devices.return_value = {"devices": [{"deviceId": "abc", "deviceName": "Test Device"}]}
     with patch("epion.Epion", return_value=api):
         yield api
 
 
-async def test_user(hass: HomeAssistant, test_api: Mock) -> None:
-    """Test user initiated config."""
+async def test_user_flow(hass: HomeAssistant, epion_api: Mock) -> None:
+    """Test various error during user initiated flow."""
+
+    # Test with inactive / deactivated account
+    epion_api.get_current.return_value = {"devices": []}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_API_KEY: API_KEY},
+    )
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("errors") == {"base": "invalid_api_key"}
+
+    # Test with invalid auth
+    epion_api.get_current.side_effect = HTTPError(response=Mock(status_code=401))
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_API_KEY: API_KEY},
+    )
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("errors") == {"base": "invalid_api_key"}
+
+    # Test with connection timeout
+    epion_api.get_current.side_effect = ConnectTimeout()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_API_KEY: API_KEY},
+    )
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("errors") == {"base": "could_not_connect"}
+
+    # Test with an HTTPError
+    epion_api.get_current.side_effect = HTTPError()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_API_KEY: API_KEY},
+    )
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("errors") == {"base": "could_not_connect"}
+
+    # Test with valid data
+    epion_api.get_current.return_value = {
+        "devices": [{"deviceId": "abc", "deviceName": "Test Device"}]
+    }
+    epion_api.get_current.side_effect = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -40,48 +86,3 @@ async def test_user(hass: HomeAssistant, test_api: Mock) -> None:
     data = result.get("data")
     assert data
     assert data[CONF_API_KEY] == API_KEY
-
-
-async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
-    """Test various error during user initiated flow."""
-
-    # Test with inactive / deactivated account
-    test_api.get_devices.return_value = {"devices": []}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
-    )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_api_key"}
-
-    # Test with invalid auth
-    test_api.get_devices.side_effect = HTTPError(response=Mock(status_code=401))
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
-    )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_api_key"}
-
-    # Test with connection timeout
-    test_api.get_devices.side_effect = ConnectTimeout()
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
-    )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "could_not_connect"}
-
-    # Test with an HTTPError
-    test_api.get_devices.side_effect = HTTPError()
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
-    )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "could_not_connect"}

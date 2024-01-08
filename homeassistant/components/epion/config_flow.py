@@ -62,13 +62,9 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             return len(api.get_current()["devices"]) > 0
         except HTTPError as ex:
-            if ex.response.status_code == 401:
-                return False
-        except (ConnectTimeout, KeyError) as ex:
-            raise AbortFlow(
-                "Epion API unreachable or unexpected response, is your API key active?"
-            ) from ex
-
+            if ex.response is not None:
+                if ex.response.status_code == 401:
+                    return False
+            raise ex
         except Exception as ex:
-            _LOGGER.exception(ex)
-            raise AbortFlow("unknown_error") from ex
+            raise ex
