@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 import logging
 import math
-from typing import Any
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import voluptuous as vol
 import yeelight
@@ -65,6 +66,10 @@ from .const import (
 )
 from .device import YeelightDevice
 from .entity import YeelightEntity
+
+_YeelightBaseLightT = TypeVar("_YeelightBaseLightT", bound="YeelightBaseLight")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -238,10 +243,14 @@ def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
     return effects
 
 
-def _async_cmd(func):
+def _async_cmd(
+    func: Callable[Concatenate[_YeelightBaseLightT, _P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[_YeelightBaseLightT, _P], Coroutine[Any, Any, _R | None]]:
     """Define a wrapper to catch exceptions from the bulb."""
 
-    async def _async_wrap(self: YeelightBaseLight, *args, **kwargs):
+    async def _async_wrap(
+        self: _YeelightBaseLightT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         for attempts in range(2):
             try:
                 _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
@@ -269,6 +278,7 @@ def _async_cmd(func):
                     f"Error when calling {func.__name__} for bulb "
                     f"{self.device.name} at {self.device.host}: {str(ex) or type(ex)}"
                 ) from ex
+        return None
 
     return _async_wrap
 
