@@ -210,7 +210,7 @@ async def test_update_failed(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_cleanup_disconnected_locks(
+async def test_cleanup_removed_locks(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
     device_registry: dr.DeviceRegistry,
