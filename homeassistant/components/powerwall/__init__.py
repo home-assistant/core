@@ -213,12 +213,14 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
         power_wall.get_serial_numbers(),
     )
 
+    # Serial numbers MUST be sorted to ensure the unique_id is always the same
+    # for backwards compatibility.
     return PowerwallBaseInfo(
         gateway_din=gateway_din,
         site_info=site_info,
         status=status,
         device_type=device_type,
-        serial_numbers=serial_numbers,
+        serial_numbers=sorted(serial_numbers),
         url=f"https://{host}",
     )
 
