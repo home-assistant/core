@@ -29,6 +29,11 @@ def is_docker_env() -> bool:
     return Path("/.dockerenv").exists()
 
 
+def get_installed_versions(specifiers: set[str]) -> set[str]:
+    """Return a set of installed packages and versions."""
+    return {specifier for specifier in specifiers if is_installed(specifier)}
+
+
 def is_installed(requirement_str: str) -> bool:
     """Check if a package is installed and will be loaded when we import it.
 
