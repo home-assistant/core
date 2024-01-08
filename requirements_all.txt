@@ -2902,7 +2902,7 @@ zigpy-znp==0.12.1
 zigpy==0.60.4
 
 # homeassistant.components.zoneminder
-zm-py==0.5.3
+zm-py==0.5.4
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.3
