@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
+from functools import partial
 from itertools import chain
 import logging
 from types import ModuleType
@@ -20,8 +21,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
-    EntityServiceResponse,
     Event,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -225,13 +226,16 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
+        service_func: str | HassJob[..., Any]
+        service_func = func if isinstance(func, str) else HassJob(func)
+
         async def handle_service(
             call: ServiceCall,
         ) -> ServiceResponse:
             """Handle the service."""
 
             result = await service.entity_service_call(
-                self.hass, self._entities, func, call, required_features
+                self.hass, self._entities, service_func, call, required_features
             )
 
             if result:
@@ -259,16 +263,21 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(
-            call: ServiceCall,
-        ) -> EntityServiceResponse | None:
-            """Handle the service."""
-            return await service.entity_service_call(
-                self.hass, self._entities, func, call, required_features
-            )
+        service_func: str | HassJob[..., Any]
+        service_func = func if isinstance(func, str) else HassJob(func)
 
         self.hass.services.async_register(
-            self.domain, name, handle_service, schema, supports_response
+            self.domain,
+            name,
+            partial(
+                service.entity_service_call,
+                self.hass,
+                self._entities,
+                service_func,
+                required_features=required_features,
+            ),
+            schema,
+            supports_response,
         )
 
     async def async_setup_platform(
