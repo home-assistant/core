@@ -56,18 +56,16 @@ async def async_setup_entry(
         FRITZBOX_PHONEBOOK
     ]
 
-    phonebook_name: str = config_entry.title
     phonebook_id: int = config_entry.data[CONF_PHONEBOOK]
     prefixes: list[str] | None = config_entry.options.get(CONF_PREFIXES)
     serial_number: str = config_entry.data[SERIAL_NUMBER]
     host: str = config_entry.data[CONF_HOST]
     port: int = config_entry.data[CONF_PORT]
 
-    name = f"{fritzbox_phonebook.fph.modelname} Call Monitor {phonebook_name}"
     unique_id = f"{serial_number}-{phonebook_id}"
 
     sensor = FritzBoxCallSensor(
-        name=name,
+        phonebook_name=config_entry.title,
         unique_id=unique_id,
         fritzbox_phonebook=fritzbox_phonebook,
         prefixes=prefixes,
@@ -82,13 +80,14 @@ class FritzBoxCallSensor(SensorEntity):
     """Implementation of a Fritz!Box call monitor."""
 
     _attr_icon = ICON_PHONE
+    _attr_has_entity_name = True
     _attr_translation_key = DOMAIN
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = list(CallState)
 
     def __init__(
         self,
-        name: str,
+        phonebook_name: str,
         unique_id: str,
         fritzbox_phonebook: FritzBoxPhonebook,
         prefixes: list[str] | None,
@@ -103,7 +102,7 @@ class FritzBoxCallSensor(SensorEntity):
         self._monitor: FritzBoxCallMonitor | None = None
         self._attributes: dict[str, str | list[str]] = {}
 
-        self._attr_name = name.title()
+        self._attr_translation_placeholders = {"phonebook_name": phonebook_name}
         self._attr_unique_id = unique_id
         self._attr_native_value = CallState.IDLE
         self._attr_device_info = DeviceInfo(
