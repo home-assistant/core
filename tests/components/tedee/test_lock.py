@@ -217,7 +217,7 @@ async def test_cleanup_disconnected_locks(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure disconnected locks are cleaned up."""
+    """Ensure removed locks are cleaned up."""
 
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
