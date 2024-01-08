@@ -439,8 +439,8 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
     Maintains four additional indexes:
     - id -> entry
     - (domain, platform, unique_id) -> entity_id
-    - config_entry_id -> list[entry]
-    - device_id -> list[entry]
+    - config_entry_id -> set[key]
+    - device_id -> set[key]
     """
 
     def __init__(self) -> None:
@@ -448,8 +448,8 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
-        self._config_entry_id_index: dict[str, list[RegistryEntry]] = {}
-        self._device_id_index: dict[str, list[RegistryEntry]] = {}
+        self._config_entry_id_index: dict[str, set[str]] = {}
+        self._device_id_index: dict[str, set[str]] = {}
 
     def values(self) -> ValuesView[RegistryEntry]:
         """Return the underlying values to avoid __iter__ overhead."""
@@ -459,35 +459,34 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         """Add an item."""
         data = self.data
         if key in data:
-            self._unindex_entry(data[key])
+            self._unindex_entry(key)
         data[key] = entry
         self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
-        if entry.config_entry_id is not None:
-            self._config_entry_id_index.setdefault(entry.config_entry_id, []).append(
-                entry
-            )
-        if entry.device_id is not None:
-            self._device_id_index.setdefault(entry.device_id, []).append(entry)
+        if (config_entry_id := entry.config_entry_id) is not None:
+            self._config_entry_id_index.setdefault(config_entry_id, set()).add(key)
+        if (device_id := entry.device_id) is not None:
+            self._device_id_index.setdefault(device_id, set()).add(key)
 
-    def _unindex_entry(self, entry: RegistryEntry) -> None:
+    def _unindex_entry(self, key: str) -> None:
         """Unindex an entry."""
+        entry = self.data[key]
         del self._entry_ids[entry.id]
         del self._index[(entry.domain, entry.platform, entry.unique_id)]
-        if entry.config_entry_id is not None:
-            entries = self._config_entry_id_index[entry.config_entry_id]
-            entries.remove(entry)
+        if (config_entry_id := entry.config_entry_id) is not None:
+            entries = self._config_entry_id_index[config_entry_id]
+            entries.remove(key)
             if not entries:
-                del self._config_entry_id_index[entry.config_entry_id]
+                del self._config_entry_id_index[config_entry_id]
         if (device_id := entry.device_id) is not None:
             entries = self._device_id_index[device_id]
-            entries.remove(entry)
+            entries.remove(key)
             if not entries:
                 del self._device_id_index[device_id]
 
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
-        self._unindex_entry(self[key])
+        self._unindex_entry(key)
         super().__delitem__(key)
 
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
@@ -500,13 +499,16 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
 
     def get_entries_for_device_id(self, device_id: str) -> list[RegistryEntry]:
         """Get entries for device."""
-        return self._device_id_index.get(device_id, [])
+        return [self.data[key] for key in self._device_id_index.get(device_id, ())]
 
     def get_entries_for_config_entry_id(
         self, config_entry_id: str
     ) -> list[RegistryEntry]:
         """Get entries for config entry."""
-        return self._config_entry_id_index.get(config_entry_id, [])
+        return [
+            self.data[key]
+            for key in self._config_entry_id_index.get(config_entry_id, ())
+        ]
 
 
 class EntityRegistry:
