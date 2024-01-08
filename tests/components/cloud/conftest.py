@@ -109,6 +109,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
 
         is_connected = PropertyMock(side_effect=mock_is_connected)
         type(mock_cloud).is_connected = is_connected
+        type(mock_cloud.iot).connected = is_connected
 
         # Properties that we mock as attributes.
         mock_cloud.expiration_date = utcnow()
