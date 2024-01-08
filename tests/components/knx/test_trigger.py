@@ -51,10 +51,12 @@ async def test_telegram_trigger(
                     "trigger": {
                         "platform": "knx.telegram",
                         "id": "test-id",
-                        "destination": ["1/2/3", "1/2/4"],
+                        "destination": ["1/2/3", 2564],  # 2564 -> "1/2/4" in raw format
                         "group_value_write": True,
                         "group_value_response": False,
                         "group_value_read": False,
+                        "incoming": True,
+                        "outgoing": True,
                     },
                     "action": {
                         "service": "test.automation",

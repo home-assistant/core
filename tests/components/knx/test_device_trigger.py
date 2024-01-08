@@ -68,7 +68,10 @@ async def test_if_fires_on_telegram(
                         "device_id": device_entry.id,
                         "id": "test-id",
                         "type": "telegram",
-                        "destination": ["1/2/3", "1/2/4"],
+                        "destination": [
+                            "1/2/3",
+                            "1/516",  # "1/516" -> "1/2/4" in 2level format
+                        ],
                         "group_value_write": True,
                         "group_value_response": False,
                         "group_value_read": False,

@@ -2,6 +2,7 @@
 from typing import Final
 
 import voluptuous as vol
+from xknx.telegram.address import DeviceGroupAddress, parse_device_group_address
 
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
@@ -50,7 +51,10 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
     trigger_data = trigger_info["trigger_data"]
-    dst_addresses: list[str] = config.get(CONF_KNX_DESTINATION, [])
+    dst_addresses: list[DeviceGroupAddress] = [
+        parse_device_group_address(address)
+        for address in config.get(CONF_KNX_DESTINATION, [])
+    ]
     job = HassJob(action, f"KNX device trigger {trigger_info}")
 
     @callback
@@ -72,7 +76,10 @@ async def async_attach_trigger(
         elif config[CONF_KNX_OUTGOING] is False:
             return
 
-        if dst_addresses and telegram["destination"] not in dst_addresses:
+        if (
+            dst_addresses
+            and parse_device_group_address(telegram["destination"]) not in dst_addresses
+        ):
             return
 
         hass.async_run_hass_job(
