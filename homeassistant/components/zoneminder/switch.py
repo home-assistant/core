@@ -44,7 +44,9 @@ async def async_setup_platform(
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         monitors = await hass.async_add_executor_job(zm_client.get_monitors)
         if not monitors:
-            raise PlatformNotReady("Switch could not fetch any monitors from ZoneMinder")
+            raise PlatformNotReady(
+                "Switch could not fetch any monitors from ZoneMinder"
+            )
 
         for monitor in monitors:
             switches.append(ZMSwitchMonitors(monitor, on_state, off_state))
