@@ -34,7 +34,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             "service_deprecation",
             breaks_in_ha_version="2024.7.0",
             is_fixable=True,
-            is_persistent=False,
+            is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_deprecation",
         )
