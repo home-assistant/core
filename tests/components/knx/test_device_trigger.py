@@ -260,6 +260,8 @@ async def test_get_triggers(
         "group_value_write": True,
         "group_value_response": True,
         "group_value_read": True,
+        "incoming": True,
+        "outgoing": True,
     }
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -268,6 +270,77 @@ async def test_get_triggers(
 
 
 async def test_get_trigger_capabilities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    knx: KNXTestKit,
+) -> None:
+    """Test we get the expected capabilities telegram device trigger."""
+    await knx.setup_integration({})
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    )
+
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "type": "telegram",
+            "group_value_write": True,
+            "group_value_response": True,
+            "group_value_read": True,
+            "incoming": True,
+            "outgoing": True,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "destination",
+            "optional": True,
+            "selector": {
+                "select": {
+                    "custom_value": True,
+                    "mode": "dropdown",
+                    "multiple": True,
+                    "options": [],
+                    "sort": False,
+                },
+            },
+        },
+        {
+            "name": "group_value_write",
+            "required": True,
+            "selector": {"boolean": {}},
+        },
+        {
+            "name": "group_value_response",
+            "required": True,
+            "selector": {"boolean": {}},
+        },
+        {
+            "name": "group_value_read",
+            "required": True,
+            "selector": {"boolean": {}},
+        },
+        {
+            "name": "incoming",
+            "required": True,
+            "selector": {"boolean": {}},
+        },
+        {
+            "name": "outgoing",
+            "required": True,
+            "selector": {"boolean": {}},
+        },
+    ]
+
+
+async def test_legacy_get_trigger_capabilities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     knx: KNXTestKit,
@@ -304,21 +377,6 @@ async def test_get_trigger_capabilities(
                     "sort": False,
                 },
             },
-        },
-        {
-            "name": "group_value_write",
-            "required": True,
-            "selector": {"boolean": {}},
-        },
-        {
-            "name": "group_value_response",
-            "required": True,
-            "selector": {"boolean": {}},
-        },
-        {
-            "name": "group_value_read",
-            "required": True,
-            "selector": {"boolean": {}},
         },
     ]
 

@@ -22,12 +22,16 @@ CONF_KNX_DESTINATION = "destination"
 CONF_KNX_GROUP_VALUE_WRITE = "group_value_write"
 CONF_KNX_GROUP_VALUE_READ = "group_value_read"
 CONF_KNX_GROUP_VALUE_RESPONSE = "group_value_response"
+CONF_KNX_INCOMING = "incoming"
+CONF_KNX_OUTGOING = "outgoing"
 
 TELEGRAM_TRIGGER_SCHEMA = {
     vol.Optional(CONF_KNX_DESTINATION): ga_list_validator,
     vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
     vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
     vol.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
+    vol.Optional(CONF_KNX_INCOMING, default=True): cv.boolean,
+    vol.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
 }
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
@@ -52,16 +56,21 @@ async def async_attach_trigger(
     @callback
     def async_call_trigger_action(telegram: TelegramDict) -> None:
         """Filter Telegram and call trigger action."""
-        # use `config.get()` as device triggers pre 2024.2 didn't support group_value_*
         if telegram["telegramtype"] == "GroupValueWrite":
-            if config.get(CONF_KNX_GROUP_VALUE_WRITE) is False:
+            if config[CONF_KNX_GROUP_VALUE_WRITE] is False:
                 return
         elif telegram["telegramtype"] == "GroupValueResponse":
-            if config.get(CONF_KNX_GROUP_VALUE_RESPONSE) is False:
+            if config[CONF_KNX_GROUP_VALUE_RESPONSE] is False:
                 return
         elif telegram["telegramtype"] == "GroupValueRead":
-            if config.get(CONF_KNX_GROUP_VALUE_READ) is False:
+            if config[CONF_KNX_GROUP_VALUE_READ] is False:
                 return
+
+        if telegram["direction"] == "Incoming":
+            if config[CONF_KNX_INCOMING] is False:
+                return
+        elif config[CONF_KNX_OUTGOING] is False:
+            return
 
         if dst_addresses and telegram["destination"] not in dst_addresses:
             return
