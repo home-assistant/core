@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from pylutron import Button, Led, Lutron, Output
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -42,7 +44,11 @@ async def async_setup_entry(
 class LutronSwitch(LutronDevice, SwitchEntity):
     """Representation of a Lutron Switch."""
 
-    def __init__(self, area_name, lutron_device, controller) -> None:
+    _lutron_device: Output
+
+    def __init__(
+        self, area_name: str, lutron_device: Output, controller: Lutron
+    ) -> None:
         """Initialize the switch."""
         self._prev_state = None
         super().__init__(area_name, lutron_device, controller)
@@ -74,7 +80,16 @@ class LutronSwitch(LutronDevice, SwitchEntity):
 class LutronLed(LutronDevice, SwitchEntity):
     """Representation of a Lutron Keypad LED."""
 
-    def __init__(self, area_name, keypad_name, scene_device, led_device, controller):
+    _lutron_device: Led
+
+    def __init__(
+        self,
+        area_name: str,
+        keypad_name: str,
+        scene_device: Button,
+        led_device: Led,
+        controller: Lutron,
+    ) -> None:
         """Initialize the switch."""
         self._keypad_name = keypad_name
         self._scene_name = scene_device.name
