@@ -90,7 +90,7 @@ async def test_account_sensors(
 ) -> None:
     """Test Account sensors for the Electric Kiwi integration."""
 
-    await component_setup()
+    assert await component_setup()
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity = entity_registry.async_get(sensor)
