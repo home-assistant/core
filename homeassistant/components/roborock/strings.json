@@ -140,7 +140,7 @@
           "unknown": "Unknown",
           "locked": "Locked",
           "air_drying_stopping": "Air drying stopping",
-          "egg_attack": "Egg attack"
+          "egg_attack": "Cupid mode"
         }
       },
       "total_cleaning_time": {
@@ -195,7 +195,7 @@
           "clear_brush_exception": "Check that the water filter has been correctly installed",
           "clear_brush_exception_2": "Positioning button error",
           "filter_screen_exception": "Clean the dock water filter",
-          "mopping_roller_2": "Wash roller may be jammed",
+          "mopping_roller_2": "[%key:component::roborock::entity::sensor::vacuum_error::state::mopping_roller_1%]",
           "temperature_protection": "Unit temperature protection"
         }
       }
