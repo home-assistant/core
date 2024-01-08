@@ -436,9 +436,11 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
 class EntityRegistryItems(UserDict[str, RegistryEntry]):
     """Container for entity registry items, maps entity_id -> entry.
 
-    Maintains two additional indexes:
+    Maintains four additional indexes:
     - id -> entry
     - (domain, platform, unique_id) -> entity_id
+    - config_entry_id -> list[entry]
+    - device_id -> list[entry]
     """
 
     def __init__(self) -> None:
@@ -446,6 +448,8 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
+        self._config_entry_id_index: dict[str, list[RegistryEntry]] = {}
+        self._device_id_index: dict[str, list[RegistryEntry]] = {}
 
     def values(self) -> ValuesView[RegistryEntry]:
         """Return the underlying values to avoid __iter__ overhead."""
@@ -455,18 +459,33 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         """Add an item."""
         data = self.data
         if key in data:
-            old_entry = data[key]
-            del self._entry_ids[old_entry.id]
-            del self._index[(old_entry.domain, old_entry.platform, old_entry.unique_id)]
+            self._unindex_entry(data[key])
         data[key] = entry
         self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
+        if entry.config_entry_id is not None:
+            self._config_entry_id_index.setdefault(entry.config_entry_id, []).append(
+                entry
+            )
+        if entry.device_id is not None:
+            self._device_id_index.setdefault(entry.device_id, []).append(entry)
+
+    def _unindex_entry(self, entry: RegistryEntry) -> None:
+        """Unindex an entry."""
+        del self._entry_ids[entry.id]
+        del self._index[(entry.domain, entry.platform, entry.unique_id)]
+        if entry.config_entry_id is not None:
+            self._config_entry_id_index[entry.config_entry_id].remove(entry)
+            if not self._config_entry_id_index[entry.config_entry_id]:
+                del self._config_entry_id_index[entry.config_entry_id]
+        if entry.device_id is not None:
+            self._device_id_index[entry.device_id].remove(entry)
+            if not self._device_id_index[entry.device_id]:
+                del self._device_id_index[entry.device_id]
 
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
-        entry = self[key]
-        del self._entry_ids[entry.id]
-        del self._index[(entry.domain, entry.platform, entry.unique_id)]
+        self._unindex_entry(self[key])
         super().__delitem__(key)
 
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
@@ -476,6 +495,16 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
     def get_entry(self, key: str) -> RegistryEntry | None:
         """Get entry from id."""
         return self._entry_ids.get(key)
+
+    def get_entries_for_device_id(self, device_id: str) -> list[RegistryEntry]:
+        """Get entries for device."""
+        return self._device_id_index.get(device_id, [])
+
+    def get_entries_for_config_entry_id(
+        self, config_entry_id: str
+    ) -> list[RegistryEntry]:
+        """Get entries for config entry."""
+        return self._config_entry_id_index.get(config_entry_id, [])
 
 
 class EntityRegistry:
@@ -1217,9 +1246,8 @@ def async_entries_for_device(
     """Return entries that match a device."""
     return [
         entry
-        for entry in registry.entities.values()
-        if entry.device_id == device_id
-        and (not entry.disabled_by or include_disabled_entities)
+        for entry in registry.entities.get_entries_for_device_id(device_id)
+        if (not entry.disabled_by or include_disabled_entities)
     ]
 
 
@@ -1236,11 +1264,7 @@ def async_entries_for_config_entry(
     registry: EntityRegistry, config_entry_id: str
 ) -> list[RegistryEntry]:
     """Return entries that match a config entry."""
-    return [
-        entry
-        for entry in registry.entities.values()
-        if entry.config_entry_id == config_entry_id
-    ]
+    return registry.entities.get_entries_for_config_entry_id(config_entry_id)
 
 
 @callback
