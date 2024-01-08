@@ -582,6 +582,12 @@ async def _async_set_up_integrations(
             needed_requirements.update(itg.requirements)
 
         if manifest_deps:
+            # If there are dependencies, try to preload all
+            # the integrations manifest at once and add them
+            # to the list of requirements we need to install
+            # so we can try to check if they are already installed
+            # in a single call below which avoids each integration
+            # having to wait for the lock to do it individually
             deps = await loader.async_get_integrations(hass, manifest_deps)
             for dependant_itg in deps.values():
                 if isinstance(dependant_itg, loader.Integration):
