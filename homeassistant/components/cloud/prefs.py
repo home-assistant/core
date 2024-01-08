@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from typing import Any
+import uuid
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
@@ -33,6 +34,7 @@ from .const import (
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_GOOGLE_SETTINGS_VERSION,
+    PREF_INSTANCE_ID,
     PREF_REMOTE_DOMAIN,
     PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
@@ -89,6 +91,13 @@ class CloudPreferences:
                 {
                     **self._prefs,
                     PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+                }
+            )
+        if PREF_INSTANCE_ID not in self._prefs:
+            await self._save_prefs(
+                {
+                    **self._prefs,
+                    PREF_INSTANCE_ID: uuid.uuid4().hex,
                 }
             )
 
@@ -197,7 +206,7 @@ class CloudPreferences:
     @property
     def alexa_report_state(self) -> bool:
         """Return if Alexa report state is enabled."""
-        return self._prefs.get(PREF_ALEXA_REPORT_STATE, DEFAULT_ALEXA_REPORT_STATE)
+        return self._prefs.get(PREF_ALEXA_REPORT_STATE, DEFAULT_ALEXA_REPORT_STATE)  # type: ignore[no-any-return]
 
     @property
     def alexa_default_expose(self) -> list[str] | None:
@@ -210,7 +219,7 @@ class CloudPreferences:
     @property
     def alexa_entity_configs(self) -> dict[str, Any]:
         """Return Alexa Entity configurations."""
-        return self._prefs.get(PREF_ALEXA_ENTITY_CONFIGS, {})
+        return self._prefs.get(PREF_ALEXA_ENTITY_CONFIGS, {})  # type: ignore[no-any-return]
 
     @property
     def alexa_settings_version(self) -> int:
@@ -227,7 +236,7 @@ class CloudPreferences:
     @property
     def google_report_state(self) -> bool:
         """Return if Google report state is enabled."""
-        return self._prefs.get(PREF_GOOGLE_REPORT_STATE, DEFAULT_GOOGLE_REPORT_STATE)
+        return self._prefs.get(PREF_GOOGLE_REPORT_STATE, DEFAULT_GOOGLE_REPORT_STATE)  # type: ignore[no-any-return]
 
     @property
     def google_secure_devices_pin(self) -> str | None:
@@ -237,7 +246,7 @@ class CloudPreferences:
     @property
     def google_entity_configs(self) -> dict[str, dict[str, Any]]:
         """Return Google Entity configurations."""
-        return self._prefs.get(PREF_GOOGLE_ENTITY_CONFIGS, {})
+        return self._prefs.get(PREF_GOOGLE_ENTITY_CONFIGS, {})  # type: ignore[no-any-return]
 
     @property
     def google_settings_version(self) -> int:
@@ -262,12 +271,17 @@ class CloudPreferences:
     @property
     def cloudhooks(self) -> dict[str, Any]:
         """Return the published cloud webhooks."""
-        return self._prefs.get(PREF_CLOUDHOOKS, {})
+        return self._prefs.get(PREF_CLOUDHOOKS, {})  # type: ignore[no-any-return]
+
+    @property
+    def instance_id(self) -> str | None:
+        """Return the instance ID."""
+        return self._prefs.get(PREF_INSTANCE_ID)
 
     @property
     def tts_default_voice(self) -> tuple[str, str]:
         """Return the default TTS voice."""
-        return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)
+        return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)  # type: ignore[no-any-return]
 
     async def get_cloud_user(self) -> str:
         """Return ID of Home Assistant Cloud system user."""
@@ -320,6 +334,7 @@ class CloudPreferences:
             PREF_GOOGLE_ENTITY_CONFIGS: {},
             PREF_GOOGLE_SETTINGS_VERSION: GOOGLE_SETTINGS_VERSION,
             PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+            PREF_INSTANCE_ID: uuid.uuid4().hex,
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
             PREF_REMOTE_DOMAIN: None,
             PREF_USERNAME: username,

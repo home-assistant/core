@@ -7,7 +7,7 @@ import functools
 import logging
 import re
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -74,6 +74,7 @@ SUPPORTED_COMPONENTS = {
     "text",
     "update",
     "vacuum",
+    "valve",
     "water_heater",
 }
 
@@ -343,7 +344,8 @@ async def async_start(  # noqa: C901
             integration: str, msg: ReceiveMessage
         ) -> None:
             """Process the received message."""
-            assert mqtt_data.data_config_flow_lock
+            if TYPE_CHECKING:
+                assert mqtt_data.data_config_flow_lock
             key = f"{integration}_{msg.subscribed_topic}"
 
             # Lock to prevent initiating many parallel config flows.

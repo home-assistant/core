@@ -45,6 +45,8 @@ def json_encoder_default(obj: Any) -> Any:
 
     Hand other objects to the original method.
     """
+    if hasattr(obj, "json_fragment"):
+        return obj.json_fragment
     if isinstance(obj, (set, tuple)):
         return list(obj)
     if isinstance(obj, float):
@@ -114,8 +116,11 @@ def json_bytes_strip_null(data: Any) -> bytes:
     return json_bytes(_strip_null(orjson.loads(result)))
 
 
+json_fragment = orjson.Fragment
+
+
 def json_dumps(data: Any) -> str:
-    """Dump json string.
+    r"""Dump json string.
 
     orjson supports serializing dataclasses natively which
     eliminates the need to implement as_dict in many places
@@ -124,7 +129,7 @@ def json_dumps(data: Any) -> str:
     be serialized.
 
     If it turns out to be a problem we can disable this
-    with option |= orjson.OPT_PASSTHROUGH_DATACLASS and it
+    with option \|= orjson.OPT_PASSTHROUGH_DATACLASS and it
     will fallback to as_dict
     """
     return json_bytes(data).decode("utf-8")

@@ -36,14 +36,14 @@ from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class MotionBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[MotionSensor], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
@@ -51,14 +51,14 @@ class DeviceBaseEntityDescriptionMixin:
     extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None] | None] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboMotionSensorEntityDescription(
     SensorEntityDescription, MotionBaseEntityDescriptionMixin
 ):
     """Describes Sensibo Motion sensor entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboDeviceSensorEntityDescription(
     SensorEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
@@ -232,7 +232,7 @@ ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="ethanol",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Ethanol",
+        translation_key="ethanol",
         value_fn=lambda data: data.etoh,
         extra_fn=None,
     ),

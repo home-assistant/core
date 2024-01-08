@@ -15,7 +15,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.util.network import is_ipv4_address
 
 from .const import DOMAIN, INVALID_AUTH_ERRORS
 
@@ -43,12 +42,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an envoy flow."""
-        self.ip_address = None
+        self.ip_address: str | None = None
         self.username = None
         self.protovers: str | None = None
-        self._reauth_entry = None
+        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     @callback
     def _async_generate_schema(self) -> vol.Schema:
@@ -90,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        if not is_ipv4_address(discovery_info.host):
+        if discovery_info.ip_address.version != 4:
             return self.async_abort(reason="not_ipv4_address")
         serial = discovery_info.properties["serialnum"]
         self.protovers = discovery_info.properties.get("protovers")

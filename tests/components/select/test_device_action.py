@@ -116,10 +116,21 @@ async def test_get_actions_hidden_auxiliary(
 
 @pytest.mark.parametrize("action_type", ("select_first", "select_last"))
 async def test_action_select_first_last(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, action_type: str
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    action_type: str,
 ) -> None:
     """Test for select_first and select_last actions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -133,7 +144,7 @@ async def test_action_select_first_last(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": action_type,
                     },
@@ -154,10 +165,21 @@ async def test_action_select_first_last(
 
 @pytest.mark.parametrize("action_type", ("select_first", "select_last"))
 async def test_action_select_first_last_legacy(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, action_type: str
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    action_type: str,
 ) -> None:
     """Test for select_first and select_last actions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -171,7 +193,7 @@ async def test_action_select_first_last_legacy(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entry.entity_id,
                         "type": action_type,
                     },
@@ -191,10 +213,20 @@ async def test_action_select_first_last_legacy(
 
 
 async def test_action_select_option(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for select_option action."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -208,7 +240,7 @@ async def test_action_select_option(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "select_option",
                         "option": "option1",
@@ -230,10 +262,21 @@ async def test_action_select_option(
 
 @pytest.mark.parametrize("action_type", ["select_next", "select_previous"])
 async def test_action_select_next_previous(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, action_type: str
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    action_type: str,
 ) -> None:
     """Test for select_next and select_previous actions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -247,7 +290,7 @@ async def test_action_select_next_previous(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": action_type,
                         "cycle": False,

@@ -46,6 +46,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 
 from .test_common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -68,6 +69,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -1378,3 +1380,67 @@ async def test_unload_entry(
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            light.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "state_topic": "test-topic",
+                    "state_template": "{{ value_json.state }}",
+                    "brightness_template": "{{ value_json.brightness }}",
+                    "color_temp_template": "{{ value_json.color_temp }}",
+                    "effect_template": "{{ value_json.effect }}",
+                    "red_template": "{{ value_json.r }}",
+                    "green_template": "{{ value_json.g }}",
+                    "blue_template": "{{ value_json.b }}",
+                    "effect_list": ["effect1", "effect2"],
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", '{"state":"on"}', '{"state":"off"}'),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+        (
+            "test-topic",
+            '{"state":"on", "brightness":50}',
+            '{"state":"on", "brightness":100}',
+        ),
+        (
+            "test-topic",
+            '{"state":"on", "brightness":50,"color_temp":200}',
+            '{"state":"on", "brightness":50,"color_temp":1600}',
+        ),
+        (
+            "test-topic",
+            '{"state":"on", "r":128, "g":128, "b":128}',
+            '{"state":"on", "r":128, "g":128, "b":255}',
+        ),
+        (
+            "test-topic",
+            '{"state":"on", "effect":"effect1"}',
+            '{"state":"on", "effect":"effect2"}',
+        ),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)

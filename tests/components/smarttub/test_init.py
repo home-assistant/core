@@ -42,6 +42,7 @@ async def test_setup_auth_failed(
     config_entry.add_to_hass(hass)
     with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
         mock_flow_init.assert_called_with(
             DOMAIN,

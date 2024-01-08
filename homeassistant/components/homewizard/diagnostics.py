@@ -28,18 +28,23 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    meter_data = {
-        "device": asdict(coordinator.data.device),
-        "data": asdict(coordinator.data.data),
-        "state": asdict(coordinator.data.state)
-        if coordinator.data.state is not None
-        else None,
-        "system": asdict(coordinator.data.system)
-        if coordinator.data.system is not None
-        else None,
-    }
+    state: dict[str, Any] | None = None
+    if coordinator.data.state:
+        state = asdict(coordinator.data.state)
 
-    return {
-        "entry": async_redact_data(entry.data, TO_REDACT),
-        "data": async_redact_data(meter_data, TO_REDACT),
-    }
+    system: dict[str, Any] | None = None
+    if coordinator.data.system:
+        system = asdict(coordinator.data.system)
+
+    return async_redact_data(
+        {
+            "entry": async_redact_data(entry.data, TO_REDACT),
+            "data": {
+                "device": asdict(coordinator.data.device),
+                "data": asdict(coordinator.data.data),
+                "state": state,
+                "system": system,
+            },
+        },
+        TO_REDACT,
+    )

@@ -22,14 +22,14 @@ from . import PureEnergieData, PureEnergieDataUpdateCoordinator
 from .const import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class PureEnergieSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[PureEnergieData], int | float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PureEnergieSensorEntityDescription(
     SensorEntityDescription, PureEnergieSensorEntityDescriptionMixin
 ):

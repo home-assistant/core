@@ -1,7 +1,7 @@
 {
   "services": {
     "submit_movie_request": {
-      "name": "Sumbit movie request",
+      "name": "Submit movie request",
       "description": "Searches for a movie and requests the first result.",
       "fields": {
         "name": {

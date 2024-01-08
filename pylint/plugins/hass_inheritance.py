@@ -21,7 +21,7 @@ def _get_module_platform(module_name: str) -> str | None:
     return platform.lstrip(".") if platform else "__init__"
 
 
-class HassInheritanceChecker(BaseChecker):  # type: ignore[misc]
+class HassInheritanceChecker(BaseChecker):
     """Checker for invalid inheritance."""
 
     name = "hass_inheritance"

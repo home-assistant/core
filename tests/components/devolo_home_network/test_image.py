@@ -68,8 +68,8 @@ async def test_guest_wifi_qr(
 
     # Emulate device failure
     mock_device.device.async_get_wifi_guest_access.side_effect = DeviceUnavailable()
-    freezer.move_to(dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
-    async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
+    freezer.tick(SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -80,8 +80,8 @@ async def test_guest_wifi_qr(
     mock_device.device.async_get_wifi_guest_access = AsyncMock(
         return_value=GUEST_WIFI_CHANGED
     )
-    freezer.move_to(dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
-    async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
+    freezer.tick(SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)

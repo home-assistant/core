@@ -2,8 +2,9 @@
 from enum import StrEnum
 
 DOMAIN = "wallbox"
+UPDATE_INTERVAL = 30
 
-BIDIRECTIONAL_MODEL_PREFIXES = ["QSX"]
+BIDIRECTIONAL_MODEL_PREFIXES = ["QS"]
 
 CODE_KEY = "code"
 CONF_STATION = "station"

@@ -144,6 +144,7 @@ async def test_if_notification_notification_fires(
             "source": "node",
             "event": "notification",
             "nodeId": node.node_id,
+            "endpointIndex": 0,
             "ccId": 113,
             "args": {
                 "type": 6,
@@ -157,15 +158,13 @@ async def test_if_notification_notification_fires(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data[
-        "some"
-    ] == "event.notification.notification - device - zwave_js_notification - {}".format(
-        CommandClass.NOTIFICATION
+    assert (
+        calls[0].data["some"]
+        == f"event.notification.notification - device - zwave_js_notification - {CommandClass.NOTIFICATION}"
     )
-    assert calls[1].data[
-        "some"
-    ] == "event.notification.notification2 - device - zwave_js_notification - {}".format(
-        CommandClass.NOTIFICATION
+    assert (
+        calls[1].data["some"]
+        == f"event.notification.notification2 - device - zwave_js_notification - {CommandClass.NOTIFICATION}"
     )
 
 
@@ -273,6 +272,7 @@ async def test_if_entry_control_notification_fires(
             "source": "node",
             "event": "notification",
             "nodeId": node.node_id,
+            "endpointIndex": 0,
             "ccId": 111,
             "args": {
                 "eventType": 5,
@@ -286,15 +286,13 @@ async def test_if_entry_control_notification_fires(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data[
-        "some"
-    ] == "event.notification.notification - device - zwave_js_notification - {}".format(
-        CommandClass.ENTRY_CONTROL
+    assert (
+        calls[0].data["some"]
+        == f"event.notification.notification - device - zwave_js_notification - {CommandClass.ENTRY_CONTROL}"
     )
-    assert calls[1].data[
-        "some"
-    ] == "event.notification.notification2 - device - zwave_js_notification - {}".format(
-        CommandClass.ENTRY_CONTROL
+    assert (
+        calls[1].data["some"]
+        == f"event.notification.notification2 - device - zwave_js_notification - {CommandClass.ENTRY_CONTROL}"
     )
 
 
@@ -703,15 +701,13 @@ async def test_if_basic_value_notification_fires(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data[
-        "some"
-    ] == "event.value_notification.basic - device - zwave_js_value_notification - {}".format(
-        CommandClass.BASIC
+    assert (
+        calls[0].data["some"]
+        == f"event.value_notification.basic - device - zwave_js_value_notification - {CommandClass.BASIC}"
     )
-    assert calls[1].data[
-        "some"
-    ] == "event.value_notification.basic2 - device - zwave_js_value_notification - {}".format(
-        CommandClass.BASIC
+    assert (
+        calls[1].data["some"]
+        == f"event.value_notification.basic2 - device - zwave_js_value_notification - {CommandClass.BASIC}"
     )
 
 
@@ -886,15 +882,13 @@ async def test_if_central_scene_value_notification_fires(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data[
-        "some"
-    ] == "event.value_notification.central_scene - device - zwave_js_value_notification - {}".format(
-        CommandClass.CENTRAL_SCENE
+    assert (
+        calls[0].data["some"]
+        == f"event.value_notification.central_scene - device - zwave_js_value_notification - {CommandClass.CENTRAL_SCENE}"
     )
-    assert calls[1].data[
-        "some"
-    ] == "event.value_notification.central_scene2 - device - zwave_js_value_notification - {}".format(
-        CommandClass.CENTRAL_SCENE
+    assert (
+        calls[1].data["some"]
+        == f"event.value_notification.central_scene2 - device - zwave_js_value_notification - {CommandClass.CENTRAL_SCENE}"
     )
 
 
@@ -1062,15 +1056,13 @@ async def test_if_scene_activation_value_notification_fires(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data[
-        "some"
-    ] == "event.value_notification.scene_activation - device - zwave_js_value_notification - {}".format(
-        CommandClass.SCENE_ACTIVATION
+    assert (
+        calls[0].data["some"]
+        == f"event.value_notification.scene_activation - device - zwave_js_value_notification - {CommandClass.SCENE_ACTIVATION}"
     )
-    assert calls[1].data[
-        "some"
-    ] == "event.value_notification.scene_activation2 - device - zwave_js_value_notification - {}".format(
-        CommandClass.SCENE_ACTIVATION
+    assert (
+        calls[1].data["some"]
+        == f"event.value_notification.scene_activation2 - device - zwave_js_value_notification - {CommandClass.SCENE_ACTIVATION}"
     )
 
 

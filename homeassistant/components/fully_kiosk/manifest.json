@@ -1,6 +1,7 @@
 {
   "domain": "fully_kiosk",
   "name": "Fully Kiosk Browser",
+  "after_dependencies": ["mqtt"],
   "codeowners": ["@cgarwood"],
   "config_flow": true,
   "dhcp": [

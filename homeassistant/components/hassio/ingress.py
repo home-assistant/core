@@ -9,7 +9,7 @@ import logging
 from urllib.parse import quote
 
 import aiohttp
-from aiohttp import ClientTimeout, hdrs, web
+from aiohttp import ClientTimeout, ClientWebSocketResponse, hdrs, web
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPBadRequest
 from multidict import CIMultiDict
 from yarl import URL
@@ -46,7 +46,7 @@ MAX_SIMPLE_RESPONSE_SIZE = 4194000
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistant, host: str):
+def async_setup_ingress_view(hass: HomeAssistant, host: str) -> None:
     """Auth setup."""
     websession = async_get_clientsession(hass)
 
@@ -67,18 +67,20 @@ class HassIOIngress(HomeAssistantView):
         self._websession = websession
 
     @lru_cache
-    def _create_url(self, token: str, path: str) -> str:
+    def _create_url(self, token: str, path: str) -> URL:
         """Create URL to service."""
         base_path = f"/ingress/{token}/"
         url = f"http://{self._host}{base_path}{quote(path)}"
 
         try:
-            if not URL(url).path.startswith(base_path):
-                raise HTTPBadRequest()
+            target_url = URL(url)
         except ValueError as err:
             raise HTTPBadRequest() from err
 
-        return url
+        if not target_url.path.startswith(base_path):
+            raise HTTPBadRequest()
+
+        return target_url
 
     async def _handle(
         self, request: web.Request, token: str, path: str
@@ -128,7 +130,7 @@ class HassIOIngress(HomeAssistantView):
 
         # Support GET query
         if request.query_string:
-            url = f"{url}?{request.query_string}"
+            url = url.with_query(request.query_string)
 
         # Start proxy
         async with self._websession.ws_connect(
@@ -162,13 +164,18 @@ class HassIOIngress(HomeAssistantView):
             headers=source_header,
             params=request.query,
             allow_redirects=False,
-            data=request.content,
+            data=request.content if request.method != "GET" else None,
             timeout=ClientTimeout(total=None),
             skip_auto_headers={hdrs.CONTENT_TYPE},
         ) as result:
             headers = _response_header(result)
             content_length_int = 0
             content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
+            # Avoid parsing content_type in simple cases for better performance
+            if maybe_content_type := result.headers.get(hdrs.CONTENT_TYPE):
+                content_type: str = (maybe_content_type.partition(";"))[0].strip()
+            else:
+                content_type = result.content_type
             # Simple request
             if result.status in (204, 304) or (
                 content_length is not UNDEFINED
@@ -180,11 +187,12 @@ class HassIOIngress(HomeAssistantView):
                 simple_response = web.Response(
                     headers=headers,
                     status=result.status,
-                    content_type=result.content_type,
+                    content_type=content_type,
                     body=body,
+                    zlib_executor_size=32768,
                 )
                 if content_length_int > MIN_COMPRESSED_SIZE and should_compress(
-                    simple_response.content_type
+                    content_type or simple_response.content_type
                 ):
                     simple_response.enable_compression()
                 await simple_response.prepare(request)
@@ -198,7 +206,10 @@ class HassIOIngress(HomeAssistantView):
                 if should_compress(response.content_type):
                     response.enable_compression()
                 await response.prepare(request)
-                async for data in result.content.iter_chunked(8192):
+                # In testing iter_chunked, iter_any, and iter_chunks:
+                # iter_chunks was the best performing option since
+                # it does not have to do as much re-assembly
+                async for data, _ in result.content.iter_chunks():
                     await response.write(data)
 
             except (
@@ -270,7 +281,10 @@ def _is_websocket(request: web.Request) -> bool:
     )
 
 
-async def _websocket_forward(ws_from, ws_to):
+async def _websocket_forward(
+    ws_from: web.WebSocketResponse | ClientWebSocketResponse,
+    ws_to: web.WebSocketResponse | ClientWebSocketResponse,
+) -> None:
     """Handle websocket message directly."""
     try:
         async for msg in ws_from:
@@ -283,7 +297,7 @@ async def _websocket_forward(ws_from, ws_to):
             elif msg.type == aiohttp.WSMsgType.PONG:
                 await ws_to.pong()
             elif ws_to.closed:
-                await ws_to.close(code=ws_to.close_code, message=msg.extra)
+                await ws_to.close(code=ws_to.close_code, message=msg.extra)  # type: ignore[arg-type]
     except RuntimeError:
         _LOGGER.debug("Ingress Websocket runtime error")
     except ConnectionResetError:

@@ -5,11 +5,12 @@ from contextlib import contextmanager
 import itertools
 import time
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from bleak import BleakClient
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
+from habluetooth import BaseHaScanner, BluetoothManager, get_manager
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
@@ -17,10 +18,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     async_get_advertisement_callback,
-    models,
 )
-from homeassistant.components.bluetooth.base_scanner import BaseHaScanner
-from homeassistant.components.bluetooth.manager import BluetoothManager
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -37,6 +35,7 @@ __all__ = (
     "generate_advertisement_data",
     "generate_ble_device",
     "MockBleakClient",
+    "patch_bluetooth_time",
 )
 
 ADVERTISEMENT_DATA_DEFAULTS = {
@@ -54,6 +53,19 @@ BLE_DEVICE_DEFAULTS = {
     "rssi": -127,
     "details": None,
 }
+
+
+@contextmanager
+def patch_bluetooth_time(mock_time: float) -> None:
+    """Patch the bluetooth time."""
+    with patch(
+        "homeassistant.components.bluetooth.MONOTONIC_TIME", return_value=mock_time
+    ), patch(
+        "habluetooth.base_scanner.monotonic_time_coarse", return_value=mock_time
+    ), patch(
+        "habluetooth.manager.monotonic_time_coarse", return_value=mock_time
+    ), patch("habluetooth.scanner.monotonic_time_coarse", return_value=mock_time):
+        yield
 
 
 def generate_advertisement_data(**kwargs: Any) -> AdvertisementData:
@@ -88,7 +100,7 @@ def generate_ble_device(
 
 def _get_manager() -> BluetoothManager:
     """Return the bluetooth manager."""
-    return models.MANAGER
+    return get_manager()
 
 
 def inject_advertisement(

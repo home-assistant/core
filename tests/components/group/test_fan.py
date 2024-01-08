@@ -112,7 +112,9 @@ async def setup_comp(hass, config_count):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_state(hass: HomeAssistant, setup_comp) -> None:
+async def test_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp
+) -> None:
     """Test handling of state.
 
     The group state is on if at least one group member is on.
@@ -201,7 +203,6 @@ async def test_state(hass: HomeAssistant, setup_comp) -> None:
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Test entity registry integration
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(FAN_GROUP)
     assert entry
     assert entry.unique_id == "unique_identifier"

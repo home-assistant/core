@@ -15,9 +15,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from . import PoolSenseEntity
 from .const import DOMAIN
+from .entity import PoolSenseEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -28,8 +29,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="pH",
-        translation_key="ph",
         icon="mdi:pool",
+        device_class=SensorDeviceClass.PH,
     ),
     SensorEntityDescription(
         key="Battery",
@@ -93,6 +94,6 @@ class PoolSenseSensor(PoolSenseEntity, SensorEntity):
     """Sensor representing poolsense data."""
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """State of the sensor."""
         return self.coordinator.data[self.entity_description.key]

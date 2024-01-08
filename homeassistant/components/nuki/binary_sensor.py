@@ -12,22 +12,21 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NukiCoordinator, NukiEntity
-from .const import ATTR_NUKI_ID, DATA_COORDINATOR, DATA_LOCKS, DOMAIN as NUKI_DOMAIN
+from . import NukiEntity, NukiEntryData
+from .const import ATTR_NUKI_ID, DOMAIN as NUKI_DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nuki lock binary sensor."""
-    data = hass.data[NUKI_DOMAIN][entry.entry_id]
-    coordinator: NukiCoordinator = data[DATA_COORDINATOR]
+    entry_data: NukiEntryData = hass.data[NUKI_DOMAIN][entry.entry_id]
 
     entities = []
 
-    for lock in data[DATA_LOCKS]:
+    for lock in entry_data.locks:
         if lock.is_door_sensor_activated:
-            entities.extend([NukiDoorsensorEntity(coordinator, lock)])
+            entities.extend([NukiDoorsensorEntity(entry_data.coordinator, lock)])
 
     async_add_entities(entities)
 

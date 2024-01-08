@@ -1,9 +1,11 @@
 """Support for tracking people."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth import EVENT_USER_REMOVED
@@ -13,6 +15,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
 )
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,
@@ -47,9 +50,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -333,9 +333,6 @@ The following persons point at invalid users:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the person component."""
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
     entity_component = EntityComponent[Person](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
     yaml_collection = collection.YamlCollection(
@@ -391,11 +388,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, SERVICE_RELOAD, async_reload_yaml
     )
 
+    hass.http.register_view(ListPersonsView)
+
     return True
 
 
 class Person(collection.CollectionEntity, RestoreEntity):
     """Represent a tracked person."""
+
+    _entity_component_unrecorded_attributes = frozenset({ATTR_DEVICE_TRACKERS})
 
     _attr_should_poll = False
     editable: bool
@@ -573,3 +574,19 @@ def _get_latest(prev: State | None, curr: State):
     if prev is None or curr.last_updated > prev.last_updated:
         return curr
     return prev
+
+
+class ListPersonsView(HomeAssistantView):
+    """List all persons if request is made from a local network."""
+
+    requires_auth = False
+    url = "/api/person/list"
+    name = "api:person:list"
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Return a list of persons if request comes from a local IP."""
+        return self.json_message(
+            message="Not local",
+            status_code=HTTPStatus.BAD_REQUEST,
+            message_code="not_local",
+        )

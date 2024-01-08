@@ -5,7 +5,7 @@
       "name": "[%key:component::lawn_mower::title%]",
       "state": {
         "error": "Error",
-        "paused": "Paused",
+        "paused": "[%key:common::state::paused%]",
         "mowing": "Mowing",
         "docked": "Docked"
       }

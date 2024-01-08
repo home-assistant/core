@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import functools
 from typing import Any
 
 import voluptuous as vol
@@ -24,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
@@ -37,9 +36,13 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data
 
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -68,21 +71,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT switch through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttSwitch,
+        switch.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, switch.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT switch."""
-    async_add_entities([MqttSwitch(hass, config, config_entry, discovery_data)])
 
 
 class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
@@ -95,17 +92,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     _state_on: str
     _state_off: str
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT switch."""
-
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -125,6 +111,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         self._optimistic = (
             config[CONF_OPTIMISTIC] or config.get(CONF_STATE_TOPIC) is None
         )
+        self._attr_assumed_state = bool(self._optimistic)
 
         self._value_template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
@@ -135,6 +122,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_is_on"})
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT state messages."""
             payload = self._value_template(msg.payload)
@@ -144,8 +132,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                 self._attr_is_on = False
             elif payload == PAYLOAD_NONE:
                 self._attr_is_on = None
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -170,11 +156,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         if self._optimistic and (last_state := await self.async_get_last_state()):
             self._attr_is_on = last_state.state == STATE_ON
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on.

@@ -145,14 +145,14 @@ async def test_setup_zha_multipan(
     config_entry = hass.config_entries.async_entries("zha")[0]
     assert config_entry.data == {
         "device": {
-            "baudrate": 57600,  # ZHA default
-            "flow_control": "software",  # ZHA default
+            "baudrate": 115200,
+            "flow_control": None,
             "path": "socket://core-silabs-multiprotocol:9999",
         },
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "Yellow Multi-PAN"
+    assert config_entry.title == "Yellow Multiprotocol"
 
 
 async def test_setup_zha_multipan_other_device(

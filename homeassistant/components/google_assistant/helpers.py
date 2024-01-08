@@ -9,12 +9,13 @@ from functools import lru_cache
 from http import HTTPStatus
 import logging
 import pprint
+from typing import Any
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
 from yarl import URL
 
-from homeassistant.components import webhook
+from homeassistant.components import matter, webhook
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
@@ -58,7 +59,11 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry | None,]:
+) -> tuple[
+    er.RegistryEntry | None,
+    dr.DeviceEntry | None,
+    ar.AreaEntry | None,
+]:
     """Get registry entries."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -183,7 +188,9 @@ class AbstractConfig(ABC):
         """If an entity should have 2FA checked."""
         return True
 
-    async def async_report_state(self, message, agent_user_id: str):
+    async def async_report_state(
+        self, message: dict[str, Any], agent_user_id: str, event_id: str | None = None
+    ) -> HTTPStatus | None:
         """Send a state report to Google."""
         raise NotImplementedError
 
@@ -233,6 +240,33 @@ class AbstractConfig(ABC):
             )
         )
         return max(res, default=204)
+
+    async def async_sync_notification(
+        self, agent_user_id: str, event_id: str, payload: dict[str, Any]
+    ) -> HTTPStatus:
+        """Sync notifications to Google."""
+        # Remove any pending sync
+        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
+        status = await self.async_report_state(payload, agent_user_id, event_id)
+        assert status is not None
+        if status == HTTPStatus.NOT_FOUND:
+            await self.async_disconnect_agent_user(agent_user_id)
+        return status
+
+    async def async_sync_notification_all(
+        self, event_id: str, payload: dict[str, Any]
+    ) -> HTTPStatus:
+        """Sync notification to Google for all registered agents."""
+        if not self._store.agent_user_ids:
+            return HTTPStatus.NO_CONTENT
+
+        res = await gather(
+            *(
+                self.async_sync_notification(agent_user_id, event_id, payload)
+                for agent_user_id in self._store.agent_user_ids
+            )
+        )
+        return max(res, default=HTTPStatus.NO_CONTENT)
 
     @callback
     def async_schedule_google_sync(self, agent_user_id: str):
@@ -617,7 +651,6 @@ class GoogleEntity:
                 state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
             ),
         }
-
         # Add aliases
         if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
             entity_entry and entity_entry.aliases
@@ -639,16 +672,32 @@ class GoogleEntity:
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
 
+        # Add trait options
+        for trt in traits:
+            device.update(trt.sync_options())
+
         # Add roomhint
         if room := entity_config.get(CONF_ROOM_HINT):
             device["roomHint"] = room
         elif area_entry and area_entry.name:
             device["roomHint"] = area_entry.name
 
-        # Add deviceInfo
         if not device_entry:
             return device
 
+        # Add Matter info
+        if (
+            "matter" in self.hass.config.components
+            and any(x for x in device_entry.identifiers if x[0] == "matter")
+            and (
+                matter_info := matter.get_matter_device_info(self.hass, device_entry.id)
+            )
+        ):
+            device["matterUniqueId"] = matter_info["unique_id"]
+            device["matterOriginalVendorId"] = matter_info["vendor_id"]
+            device["matterOriginalProductId"] = matter_info["product_id"]
+
+        # Add deviceInfo
         device_info = {}
 
         if device_entry.manufacturer:
@@ -680,6 +729,16 @@ class GoogleEntity:
             deep_update(attrs, trt.query_attributes())
 
         return attrs
+
+    @callback
+    def notifications_serialize(self) -> dict[str, Any] | None:
+        """Serialize the payload for notifications to be sent."""
+        notifications: dict[str, Any] = {}
+
+        for trt in self.traits():
+            deep_update(notifications, trt.query_notifications() or {})
+
+        return notifications or None
 
     @callback
     def reachable_device_serialize(self):

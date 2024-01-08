@@ -84,7 +84,7 @@ def _user_schema_with_defaults(user_input: dict[str, Any]) -> vol.Schema:
 
 
 def _ordered_shared_schema(
-    schema_input: dict[str, Any]
+    schema_input: dict[str, Any],
 ) -> dict[vol.Required | vol.Optional, Any]:
     return {
         vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,

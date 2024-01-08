@@ -16,10 +16,10 @@
           "name": "Min length"
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "state": {
             "text": "Text",
-            "password": "Password"
+            "password": "[%key:common::config_flow::data::password%]"
           }
         },
         "pattern": {

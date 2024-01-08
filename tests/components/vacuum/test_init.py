@@ -5,7 +5,11 @@ from collections.abc import Generator
 
 import pytest
 
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntity
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    VacuumEntity,
+    VacuumEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -36,8 +40,30 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
         yield
 
 
+ISSUE_TRACKER = "https://blablabla.com"
+
+
+@pytest.mark.parametrize(
+    ("manifest_extra", "translation_key", "translation_placeholders_extra"),
+    [
+        (
+            {},
+            "deprecated_vacuum_base_class",
+            {},
+        ),
+        (
+            {"issue_tracker": ISSUE_TRACKER},
+            "deprecated_vacuum_base_class_url",
+            {"issue_tracker": ISSUE_TRACKER},
+        ),
+    ],
+)
 async def test_deprecated_base_class(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    manifest_extra: dict[str, str],
+    translation_key: str,
+    translation_placeholders_extra: dict[str, str],
 ) -> None:
     """Test warnings when adding VacuumEntity to the state machine."""
 
@@ -54,7 +80,9 @@ async def test_deprecated_base_class(
         MockModule(
             TEST_DOMAIN,
             async_setup_entry=async_setup_entry_init,
+            partial_manifest=manifest_extra,
         ),
+        built_in=False,
     )
 
     entity1 = VacuumEntity()
@@ -65,7 +93,7 @@ async def test_deprecated_base_class(
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test vacuum platform via config entry."""
         async_add_entities([entity1])
 
     mock_platform(
@@ -91,3 +119,29 @@ async def test_deprecated_base_class(
         VACUUM_DOMAIN, f"deprecated_vacuum_base_class_{TEST_DOMAIN}"
     )
     assert issue.issue_domain == TEST_DOMAIN
+    assert issue.issue_id == f"deprecated_vacuum_base_class_{TEST_DOMAIN}"
+    assert issue.translation_key == translation_key
+    assert (
+        issue.translation_placeholders
+        == {"platform": "test"} | translation_placeholders_extra
+    )
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockVacuumEntity(VacuumEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockVacuumEntity()
+    assert entity.supported_features_compat is VacuumEntityFeature(1)
+    assert "MockVacuumEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "VacuumEntityFeature.TURN_ON" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is VacuumEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

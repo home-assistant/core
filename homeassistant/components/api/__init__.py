@@ -1,6 +1,6 @@
 """Rest API for Home Assistant."""
 import asyncio
-from asyncio import timeout
+from asyncio import shield, timeout
 from functools import lru_cache
 from http import HTTPStatus
 import logging
@@ -16,6 +16,7 @@ from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.const import (
     CONTENT_TYPE_JSON,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,
@@ -38,9 +39,10 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.event import EventStateChangedData
+from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.util.json import json_loads
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,6 +59,7 @@ ATTR_VERSION = "version"
 DOMAIN = "api"
 STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
+SERVICE_WAIT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -202,16 +205,18 @@ class APIStatesView(HomeAssistantView):
         user: User = request["hass_user"]
         hass: HomeAssistant = request.app["hass"]
         if user.is_admin:
-            states = (state.as_dict_json() for state in hass.states.async_all())
+            states = (state.as_dict_json for state in hass.states.async_all())
         else:
             entity_perm = user.permissions.check_entity
             states = (
-                state.as_dict_json()
+                state.as_dict_json
                 for state in hass.states.async_all()
                 if entity_perm(state.entity_id, "read")
             )
         response = web.Response(
-            body=f'[{",".join(states)}]', content_type=CONTENT_TYPE_JSON
+            body=f'[{",".join(states)}]',
+            content_type=CONTENT_TYPE_JSON,
+            zlib_executor_size=32768,
         )
         response.enable_compression()
         return response
@@ -233,7 +238,7 @@ class APIEntityStateView(HomeAssistantView):
 
         if state := hass.states.get(entity_id):
             return web.Response(
-                body=state.as_dict_json(),
+                body=state.as_dict_json,
                 content_type=CONTENT_TYPE_JSON,
             )
         return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
@@ -270,7 +275,7 @@ class APIEntityStateView(HomeAssistantView):
 
         # Read the state back for our response
         status_code = HTTPStatus.CREATED if is_new_state else HTTPStatus.OK
-        resp = self.json(hass.states.get(entity_id), status_code)
+        resp = self.json(hass.states.get(entity_id).as_dict(), status_code)
 
         resp.headers.add("Location", f"/api/states/{entity_id}")
 
@@ -369,19 +374,30 @@ class APIDomainServicesView(HomeAssistantView):
             )
 
         context = self.context(request)
+        changed_states: list[json_fragment] = []
+
+        @ha.callback
+        def _async_save_changed_entities(
+            event: EventType[EventStateChangedData],
+        ) -> None:
+            if event.context == context and (state := event.data["new_state"]):
+                changed_states.append(state.json_fragment)
+
+        cancel_listen = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, _async_save_changed_entities, run_immediately=True
+        )
 
         try:
-            await hass.services.async_call(
-                domain, service, data, blocking=True, context=context
+            # shield the service call from cancellation on connection drop
+            await shield(
+                hass.services.async_call(
+                    domain, service, data, blocking=True, context=context
+                )
             )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest() from ex
-
-        changed_states = []
-
-        for state in hass.states.async_all():
-            if state.context is context:
-                changed_states.append(state)
+        finally:
+            cancel_listen()
 
         return self.json(changed_states)
 

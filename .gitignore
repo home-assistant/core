@@ -111,9 +111,6 @@ virtualization/vagrant/config
 !.vscode/tasks.json
 .env
 
-# Built docs
-docs/build
-
 # Windows Explorer
 desktop.ini
 /home-assistant.pyproj

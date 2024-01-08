@@ -14,3 +14,18 @@ process:
       example: homeassistant
       selector:
         conversation_agent:
+    conversation_id:
+      example: my_conversation_1
+      selector:
+        text:
+
+reload:
+  fields:
+    language:
+      example: NL
+      selector:
+        text:
+    agent_id:
+      example: homeassistant
+      selector:
+        conversation_agent:

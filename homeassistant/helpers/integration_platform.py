@@ -65,23 +65,10 @@ async def _async_process_single_integration_platform_component(
         )
 
 
-async def async_process_integration_platform_for_component(
+async def _async_process_integration_platform_for_component(
     hass: HomeAssistant, component_name: str
 ) -> None:
-    """Process integration platforms on demand for a component.
-
-    This function will load the integration platforms
-    for an integration instead of waiting for the EVENT_COMPONENT_LOADED
-    event to be fired for the integration.
-
-    When the integration will create entities before
-    it has finished setting up; call this function to ensure
-    that the integration platforms are loaded before the entities
-    are created.
-    """
-    if DATA_INTEGRATION_PLATFORMS not in hass.data:
-        # There are no integration platforms loaded yet
-        return
+    """Process integration platforms for a component."""
     integration_platforms: list[IntegrationPlatform] = hass.data[
         DATA_INTEGRATION_PLATFORMS
     ]
@@ -116,7 +103,7 @@ async def async_process_integration_platforms(
 
         async def _async_component_loaded(event: Event) -> None:
             """Handle a new component loaded."""
-            await async_process_integration_platform_for_component(
+            await _async_process_integration_platform_for_component(
                 hass, event.data[ATTR_COMPONENT]
             )
 

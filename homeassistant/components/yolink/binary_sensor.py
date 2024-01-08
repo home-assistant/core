@@ -28,7 +28,7 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """YoLink BinarySensorEntityDescription."""
 
@@ -136,3 +136,8 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
             state.get(self.entity_description.state_key)
         )
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true is device is available."""
+        return super().available and self.coordinator.dev_online

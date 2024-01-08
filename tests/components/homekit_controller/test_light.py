@@ -54,7 +54,7 @@ def create_lightbulb_service_with_color_temp(accessory):
     return service
 
 
-async def test_switch_change_light_state(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_change_light_state(hass: HomeAssistant) -> None:
     """Test that we can turn a HomeKit light on and off again."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_hs)
 
@@ -75,6 +75,22 @@ async def test_switch_change_light_state(hass: HomeAssistant, utcnow) -> None:
     )
 
     await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.testdevice", "brightness": 255, "color_temp": 300},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.LIGHTBULB,
+        {
+            CharacteristicsTypes.ON: True,
+            CharacteristicsTypes.BRIGHTNESS: 100,
+            CharacteristicsTypes.HUE: 27,
+            CharacteristicsTypes.SATURATION: 49,
+        },
+    )
+
+    await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.testdevice"}, blocking=True
     )
     helper.async_assert_service_values(
@@ -85,9 +101,7 @@ async def test_switch_change_light_state(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_switch_change_light_state_color_temp(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_switch_change_light_state_color_temp(hass: HomeAssistant) -> None:
     """Test that we can turn change color_temp."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
@@ -107,14 +121,14 @@ async def test_switch_change_light_state_color_temp(
     )
 
 
-async def test_switch_read_light_state_dimmer(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_read_light_state_dimmer(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service)
 
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -142,7 +156,7 @@ async def test_switch_read_light_state_dimmer(hass: HomeAssistant, utcnow) -> No
     assert state.state == "off"
 
 
-async def test_switch_push_light_state_dimmer(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_push_light_state_dimmer(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service)
 
@@ -170,15 +184,18 @@ async def test_switch_push_light_state_dimmer(hass: HomeAssistant, utcnow) -> No
     assert state.state == "off"
 
 
-async def test_switch_read_light_state_hs(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_read_light_state_hs(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_hs)
 
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+    assert state.attributes[ATTR_COLOR_MODE] is None
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Simulate that someone switched on the device in the real world not via HA
@@ -195,7 +212,10 @@ async def test_switch_read_light_state_hs(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["brightness"] == 255
     assert state.attributes["hs_color"] == (4, 5)
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Simulate that device switched off in the real world not via HA
@@ -207,8 +227,27 @@ async def test_switch_read_light_state_hs(hass: HomeAssistant, utcnow) -> None:
     )
     assert state.state == "off"
 
+    # Simulate that device switched on in the real world not via HA
+    state = await helper.async_update(
+        ServicesTypes.LIGHTBULB,
+        {
+            CharacteristicsTypes.ON: True,
+            CharacteristicsTypes.HUE: 6,
+            CharacteristicsTypes.SATURATION: 7,
+        },
+    )
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 255
+    assert state.attributes["hs_color"] == (6, 7)
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
-async def test_switch_push_light_state_hs(hass: HomeAssistant, utcnow) -> None:
+
+async def test_switch_push_light_state_hs(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_hs)
 
@@ -239,14 +278,14 @@ async def test_switch_push_light_state_hs(hass: HomeAssistant, utcnow) -> None:
     assert state.state == "off"
 
 
-async def test_switch_read_light_state_color_temp(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_read_light_state_color_temp(hass: HomeAssistant) -> None:
     """Test that we can read the color_temp of a  light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -267,7 +306,7 @@ async def test_switch_read_light_state_color_temp(hass: HomeAssistant, utcnow) -
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
 
-async def test_switch_push_light_state_color_temp(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_push_light_state_color_temp(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
@@ -288,9 +327,7 @@ async def test_switch_push_light_state_color_temp(hass: HomeAssistant, utcnow) -
     assert state.attributes["color_temp"] == 400
 
 
-async def test_light_becomes_unavailable_but_recovers(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_light_becomes_unavailable_but_recovers(hass: HomeAssistant) -> None:
     """Test transition to and from unavailable state."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
@@ -318,7 +355,7 @@ async def test_light_becomes_unavailable_but_recovers(
     assert state.attributes["color_temp"] == 400
 
 
-async def test_light_unloaded_removed(hass: HomeAssistant, utcnow) -> None:
+async def test_light_unloaded_removed(hass: HomeAssistant) -> None:
     """Test entity and HKDevice are correctly unloaded and removed."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
@@ -343,9 +380,10 @@ async def test_light_unloaded_removed(hass: HomeAssistant, utcnow) -> None:
     assert hass.states.get(helper.entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a we can migrate a light unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     light_entry = entity_registry.async_get_or_create(
         "light",
@@ -360,9 +398,10 @@ async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_only_migrate_once(hass: HomeAssistant, utcnow) -> None:
+async def test_only_migrate_once(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a we handle migration happening after an upgrade and than a downgrade and then an upgrade."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     old_light_entry = entity_registry.async_get_or_create(
         "light",

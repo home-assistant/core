@@ -1,10 +1,12 @@
 """Translation utils."""
 import argparse
+import json
 import os
 import pathlib
 import subprocess
+from typing import Any
 
-from .error import ExitApp
+from .error import ExitApp, JSONDecodeErrorWithPath
 
 
 def get_base_arg_parser() -> argparse.ArgumentParser:
@@ -55,3 +57,11 @@ def get_current_branch():
         .stdout.decode()
         .strip()
     )
+
+
+def load_json_from_path(path: pathlib.Path) -> Any:
+    """Load JSON from path."""
+    try:
+        return json.loads(path.read_text())
+    except json.JSONDecodeError as err:
+        raise JSONDecodeErrorWithPath(err.msg, err.doc, err.pos, path) from err
