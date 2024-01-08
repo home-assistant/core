@@ -17,6 +17,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PATH,
     CONF_SSL,
+    CONF_TOKEN,
+    CONF_URL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
@@ -53,8 +55,10 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {
+                vol.Required(CONF_URL): cv.string,
                 vol.Required(CONF_HOST): cv.string,
                 vol.Optional(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_TOKEN): cv.string,
                 vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_USERNAME): cv.string,
@@ -72,16 +76,21 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     protocol = "https" if conf[CONF_SSL] else "http"
 
-    url = urljoin(f"{protocol}://{conf[CONF_HOST]}", conf[CONF_PATH])
+    url = urljoin(f"{protocol}://{conf[CONF_URL]}", conf[CONF_PATH])
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
+    token = conf.get(CONF_TOKEN)
 
     publish_states_host = conf.get(CONF_PUBLISH_STATES_HOST)
 
     entities_filter = convert_include_exclude_filter(conf)
 
     try:
-        zapi = ZabbixAPI(url=url, user=username, password=password)
+        zapi = ZabbixAPI(server=url)
+        if token is not None:
+            zapi.login(api_token=token)
+        else:
+            zapi.login(user=username, password=password)
         _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
     except ZabbixAPIException as login_exception:
         _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
