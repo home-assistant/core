@@ -177,12 +177,14 @@ homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fully_kiosk.*
+homeassistant.components.generic_hygrostat.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.glances.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
+homeassistant.components.google_assistant_sdk.*
 homeassistant.components.google_sheets.*
 homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
@@ -192,9 +194,9 @@ homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
+homeassistant.components.history_stats.*
 homeassistant.components.holiday.*
-homeassistant.components.homeassistant.exposed_entities
-homeassistant.components.homeassistant.triggers.event
+homeassistant.components.homeassistant.*
 homeassistant.components.homeassistant_alerts.*
 homeassistant.components.homeassistant_green.*
 homeassistant.components.homeassistant_hardware.*
@@ -226,6 +228,7 @@ homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.input_text.*
 homeassistant.components.integration.*
+homeassistant.components.intent.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.islamic_prayer_times.*
@@ -265,6 +268,7 @@ homeassistant.components.matter.*
 homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
+homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*
@@ -285,6 +289,7 @@ homeassistant.components.netatmo.*
 homeassistant.components.network.*
 homeassistant.components.nextdns.*
 homeassistant.components.nfandroidtv.*
+homeassistant.components.nightscout.*
 homeassistant.components.nissan_leaf.*
 homeassistant.components.no_ip.*
 homeassistant.components.notify.*
@@ -376,6 +381,7 @@ homeassistant.components.switchbee.*
 homeassistant.components.switchbot_cloud.*
 homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
+homeassistant.components.system_health.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*

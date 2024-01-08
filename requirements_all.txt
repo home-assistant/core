@@ -398,7 +398,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==2.0.0
+aiowithings==2.1.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -2473,7 +2473,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.6.1
+sensorpush-ble==1.6.2
 
 # homeassistant.components.sentry
 sentry-sdk==1.37.1
@@ -2590,7 +2590,7 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.0.3
+sunweg==2.1.0
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
