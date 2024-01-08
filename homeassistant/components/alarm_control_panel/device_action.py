@@ -28,13 +28,7 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import ATTR_CODE_ARM_REQUIRED, DOMAIN
-from .const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-    SUPPORT_ALARM_TRIGGER,
-)
+from .const import AlarmControlPanelEntityFeature
 
 ACTION_TYPES: Final[set[str]] = {
     "arm_away",
@@ -82,16 +76,16 @@ async def async_get_actions(
         }
 
         # Add actions for each entity that belongs to this integration
-        if supported_features & SUPPORT_ALARM_ARM_AWAY:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_AWAY:
             actions.append({**base_action, CONF_TYPE: "arm_away"})
-        if supported_features & SUPPORT_ALARM_ARM_HOME:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_HOME:
             actions.append({**base_action, CONF_TYPE: "arm_home"})
-        if supported_features & SUPPORT_ALARM_ARM_NIGHT:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_NIGHT:
             actions.append({**base_action, CONF_TYPE: "arm_night"})
-        if supported_features & SUPPORT_ALARM_ARM_VACATION:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_VACATION:
             actions.append({**base_action, CONF_TYPE: "arm_vacation"})
         actions.append({**base_action, CONF_TYPE: "disarm"})
-        if supported_features & SUPPORT_ALARM_TRIGGER:
+        if supported_features & AlarmControlPanelEntityFeature.TRIGGER:
             actions.append({**base_action, CONF_TYPE: "trigger"})
 
     return actions

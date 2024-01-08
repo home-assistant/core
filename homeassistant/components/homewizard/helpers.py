@@ -16,7 +16,7 @@ _P = ParamSpec("_P")
 
 
 def homewizard_exception_handler(
-    func: Callable[Concatenate[_HomeWizardEntityT, _P], Coroutine[Any, Any, Any]]
+    func: Callable[Concatenate[_HomeWizardEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_HomeWizardEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate HomeWizard Energy calls to handle HomeWizardEnergy exceptions.
 

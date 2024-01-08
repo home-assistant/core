@@ -17,7 +17,7 @@ from .coordinator import TransmissionDataUpdateCoordinator
 _LOGGING = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class TransmissionSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -26,7 +26,7 @@ class TransmissionSwitchEntityDescriptionMixin:
     off_func: Callable[[TransmissionDataUpdateCoordinator], None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TransmissionSwitchEntityDescription(
     SwitchEntityDescription, TransmissionSwitchEntityDescriptionMixin
 ):

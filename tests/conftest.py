@@ -973,7 +973,7 @@ async def _mqtt_mock_entry(
     mock_mqtt_instance = None
 
     async def _setup_mqtt_entry(
-        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]]
+        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]],
     ) -> MagicMock:
         """Set up the MQTT config entry."""
         assert await setup_entry(hass, entry)

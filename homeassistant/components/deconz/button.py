@@ -23,7 +23,7 @@ from .deconz_device import DeconzDevice, DeconzSceneMixin
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DeconzButtonDescription(ButtonEntityDescription):
     """Class describing deCONZ button entities."""
 

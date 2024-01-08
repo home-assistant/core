@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from functools import partial
 import logging
 from typing import Any, Protocol, cast
 
@@ -55,6 +56,12 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -130,9 +137,16 @@ class IfAction(Protocol):
 
 # AutomationActionType, AutomationTriggerData,
 # and AutomationTriggerInfo are deprecated as of 2022.9.
-AutomationActionType = TriggerActionType
-AutomationTriggerData = TriggerData
-AutomationTriggerInfo = TriggerInfo
+# Can be removed in 2025.1
+_DEPRECATED_AutomationActionType = DeprecatedConstant(
+    TriggerActionType, "TriggerActionType", "2025.1"
+)
+_DEPRECATED_AutomationTriggerData = DeprecatedConstant(
+    TriggerData, "TriggerData", "2025.1"
+)
+_DEPRECATED_AutomationTriggerInfo = DeprecatedConstant(
+    TriggerInfo, "TriggerInfo", "2025.1"
+)
 
 
 @bind_hass
@@ -1091,3 +1105,11 @@ def websocket_config(
             "config": automation.raw_config,
         },
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

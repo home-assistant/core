@@ -49,14 +49,14 @@ class DataRateDirection(StrEnum):
     TX = "tx_rate"
 
 
-@dataclass
+@dataclass(frozen=True)
 class DevoloSensorRequiredKeysMixin(Generic[_CoordinatorDataT]):
     """Mixin for required keys."""
 
     value_func: Callable[[_CoordinatorDataT], float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DevoloSensorEntityDescription(
     SensorEntityDescription, DevoloSensorRequiredKeysMixin[_CoordinatorDataT]
 ):

@@ -71,7 +71,7 @@ ATTR_MODE = "mode"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioSelectDescription(SelectEntityDescription):
     """A class that describes select entities."""
 

@@ -91,9 +91,8 @@ async def test_sunwegdata_get_data_drop_threshold() -> None:
     data = SunWEGData(api, 123456)
     data.get_api_value = MagicMock()
     entity_description = SunWEGSensorEntityDescription(
-        api_variable_key="variable", key="key"
+        api_variable_key="variable", key="key", previous_value_drop_threshold=0.1
     )
-    entity_description.previous_value_drop_threshold = 0.1
     data.get_api_value.return_value = 3.0
     assert data.get_data(
         api_variable_key=entity_description.api_variable_key,
@@ -138,9 +137,8 @@ async def test_sunwegdata_get_data_never_reset() -> None:
     data = SunWEGData(api, 123456)
     data.get_api_value = MagicMock()
     entity_description = SunWEGSensorEntityDescription(
-        api_variable_key="variable", key="key"
+        api_variable_key="variable", key="key", never_resets=True
     )
-    entity_description.never_resets = True
     data.get_api_value.return_value = 3.0
     assert data.get_data(
         api_variable_key=entity_description.api_variable_key,

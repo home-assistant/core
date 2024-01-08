@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import (
-    ScreenlogicEntity,
+    ScreenLogicEntity,
     ScreenLogicEntityDescription,
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
@@ -32,14 +32,14 @@ from .util import cleanup_excluded_entity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ScreenLogicBinarySensorDescription(
     BinarySensorEntityDescription, ScreenLogicEntityDescription
 ):
     """A class that describes ScreenLogic binary sensor eneites."""
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ScreenLogicPushBinarySensorDescription(
     ScreenLogicBinarySensorDescription, ScreenLogicPushEntityDescription
 ):
@@ -232,7 +232,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
+class ScreenLogicBinarySensor(ScreenLogicEntity, BinarySensorEntity):
     """Representation of a ScreenLogic binary sensor entity."""
 
     entity_description: ScreenLogicBinarySensorDescription
