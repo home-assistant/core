@@ -59,19 +59,19 @@ CPU_SENSOR_PREFIXES = [
 
 _dataT = TypeVar(
     "_dataT",
-    bound=sdiskusage
-    | sswap
-    | svmem
-    | int
-    | float
-    | str
-    | tuple[float, float, float]
+    bound=bool
     | datetime
-    | bool
-    | dict[str, snetio]
-    | dict[str, list[snicaddr]]
-    | Iterator[psutil.Process]
     | dict[str, list[shwtemp]]
+    | dict[str, list[snicaddr]]
+    | dict[str, snetio]
+    | float
+    | int
+    | Iterator[psutil.Process]
+    | sswap
+    | str
+    | svmem
+    | tuple[float, float, float]
+    | sdiskusage
     | None,
 )
 
