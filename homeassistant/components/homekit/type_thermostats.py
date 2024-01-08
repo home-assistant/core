@@ -54,6 +54,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     PERCENTAGE,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
@@ -168,7 +169,7 @@ HEAT_COOL_DEADBAND = 5
 
 def _hk_hvac_mode_from_state(state: State) -> int | None:
     """Return the equivalent HomeKit HVAC mode for a given state."""
-    if (current_state := state.state) == STATE_UNKNOWN:
+    if (current_state := state.state) in (STATE_UNKNOWN, STATE_UNAVAILABLE):
         return None
     if not (hvac_mode := try_parse_enum(HVACMode, current_state)):
         _LOGGER.error(

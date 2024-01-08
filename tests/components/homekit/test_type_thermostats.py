@@ -2474,6 +2474,8 @@ async def test_thermostat_handles_unknown_state(
             HVACMode.HEAT,
         ],
     }
+
+    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
     hass.states.async_set(
         entity_id,
         HVACMode.OFF,
@@ -2529,14 +2531,44 @@ async def test_thermostat_handles_unknown_state(
     assert acc.available is True
     hass.states.async_set(
         entity_id,
-        STATE_UNKNOWN,
+        STATE_UNAVAILABLE,
         attrs,
     )
     await hass.async_block_till_done()
 
     assert heat_cool_char.value == HC_HEAT_COOL_OFF
+    assert acc.available is False
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: heat_cool_char.to_HAP()[HAP_REPR_IID],
+                    HAP_REPR_VALUE: HC_HEAT_COOL_HEAT,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert heat_cool_char.value == HC_HEAT_COOL_HEAT
+    assert acc.available is False
+    assert call_set_hvac_mode
+    assert call_set_hvac_mode[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVACMode.HEAT
+
+    hass.states.async_set(
+        entity_id,
+        STATE_UNKNOWN,
+        attrs,
+    )
+    await hass.async_block_till_done()
+
+    assert heat_cool_char.value == HC_HEAT_COOL_HEAT
     assert acc.available is True
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
 
     hk_driver.set_characteristics(
         {
@@ -2556,5 +2588,5 @@ async def test_thermostat_handles_unknown_state(
     assert heat_cool_char.value == HC_HEAT_COOL_HEAT
     assert acc.available is True
     assert call_set_hvac_mode
-    assert call_set_hvac_mode[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVACMode.HEAT
+    assert call_set_hvac_mode[1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_hvac_mode[1].data[ATTR_HVAC_MODE] == HVACMode.HEAT
