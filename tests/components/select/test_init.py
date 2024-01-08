@@ -1,4 +1,5 @@
 """The tests for the Select component."""
+import random
 from unittest.mock import MagicMock
 
 import pytest
@@ -80,14 +81,24 @@ async def test_select(hass: HomeAssistant) -> None:
     await select.async_select_option("option_two")
     assert select.select_option.call_args[0][0] == "option_two"
 
-    await select.async_random()
+    select._attr_current_option = "option_two"
+    await select.async_random(avoid_repeat=True)
+    assert select.select_option.call_args[0][0] in [
+        "option_one",
+        "option_three",
+    ]
+
+    select._attr_current_option = random.choice(
+        ["option_one", "option_two", "option_three"]
+    )
+    await select.async_random(avoid_repeat=False)
     assert select.select_option.call_args[0][0] in [
         "option_one",
         "option_two",
         "option_three",
     ]
 
-    assert select.select_option.call_count == 6
+    assert select.select_option.call_count == 7
 
     assert select.capability_attributes[ATTR_OPTIONS] == [
         "option_one",

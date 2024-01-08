@@ -2,6 +2,7 @@
 
 DOMAIN = "select"
 
+ATTR_AVOID_REPEAT = "avoid_repeat"
 ATTR_CYCLE = "cycle"
 ATTR_OPTIONS = "options"
 ATTR_OPTION = "option"

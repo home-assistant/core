@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_AVOID_REPEAT,
     ATTR_CYCLE,
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -47,6 +48,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 __all__ = [
+    "ATTR_AVOID_REPEAT",
     "ATTR_CYCLE",
     "ATTR_OPTION",
     "ATTR_OPTIONS",
@@ -105,7 +107,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SELECT_RANDOM,
-        {},
+        {vol.Optional(ATTR_AVOID_REPEAT, default=True): bool},
         SelectEntity.async_random.__name__,
     )
 
@@ -233,10 +235,17 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         await self._async_offset_index(1, cycle)
 
     @final
-    async def async_random(self) -> None:
+    async def async_random(self, avoid_repeat: bool) -> None:
         """Select a random option."""
-        random_index = random.randint(0, len(self.options) - 1)
-        await self._async_select_index(random_index)
+        if avoid_repeat:
+            options = [
+                option for option in self.options if option != self.current_option
+            ]
+        else:
+            options = self.options
+
+        random_option = random.choice(options)
+        await self.async_select_option(random_option)
 
     @final
     async def async_previous(self, cycle: bool) -> None:

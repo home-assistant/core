@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.input_select import (
+    ATTR_AVOID_REPEAT,
     ATTR_OPTION,
     ATTR_OPTIONS,
     CONF_INITIAL,
@@ -249,12 +250,22 @@ async def test_select_random(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SELECT_RANDOM,
-        {},
+        {ATTR_ENTITY_ID: entity_id, ATTR_AVOID_REPEAT: True},
         blocking=True,
     )
 
     state = hass.states.get(entity_id)
-    assert state.state in state.attributes.get(ATTR_OPTIONS)
+    assert state.state in ["first option", "last option"]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_RANDOM,
+        {ATTR_ENTITY_ID: entity_id, ATTR_AVOID_REPEAT: False},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state in ["first option", "middle option", "last option"]
 
 
 async def test_config_options(hass: HomeAssistant) -> None:

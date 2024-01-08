@@ -7,6 +7,7 @@ from typing import Any, Self, cast
 import voluptuous as vol
 
 from homeassistant.components.select import (
+    ATTR_AVOID_REPEAT,
     ATTR_CYCLE,
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -213,7 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SELECT_RANDOM,
-        {},
+        {vol.Optional(ATTR_AVOID_REPEAT, default=True): bool},
         InputSelect.async_random.__name__,
     )
 
