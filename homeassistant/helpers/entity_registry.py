@@ -439,8 +439,8 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
     Maintains four additional indexes:
     - id -> entry
     - (domain, platform, unique_id) -> entity_id
-    - config_entry_id -> set[key]
-    - device_id -> set[key]
+    - config_entry_id -> list[key]
+    - device_id -> list[key]
     """
 
     def __init__(self) -> None:
@@ -448,8 +448,8 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
-        self._config_entry_id_index: dict[str, set[str]] = {}
-        self._device_id_index: dict[str, set[str]] = {}
+        self._config_entry_id_index: dict[str, list[str]] = {}
+        self._device_id_index: dict[str, list[str]] = {}
 
     def values(self) -> ValuesView[RegistryEntry]:
         """Return the underlying values to avoid __iter__ overhead."""
@@ -464,9 +464,9 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
         if (config_entry_id := entry.config_entry_id) is not None:
-            self._config_entry_id_index.setdefault(config_entry_id, set()).add(key)
+            self._config_entry_id_index.setdefault(config_entry_id, []).append(key)
         if (device_id := entry.device_id) is not None:
-            self._device_id_index.setdefault(device_id, set()).add(key)
+            self._device_id_index.setdefault(device_id, []).append(key)
 
     def _unindex_entry(self, key: str) -> None:
         """Unindex an entry."""
