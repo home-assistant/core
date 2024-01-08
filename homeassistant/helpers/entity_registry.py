@@ -475,13 +475,15 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         del self._entry_ids[entry.id]
         del self._index[(entry.domain, entry.platform, entry.unique_id)]
         if entry.config_entry_id is not None:
-            self._config_entry_id_index[entry.config_entry_id].remove(entry)
-            if not self._config_entry_id_index[entry.config_entry_id]:
+            entries = self._config_entry_id_index[entry.config_entry_id]
+            entries.remove(entry)
+            if not entries:
                 del self._config_entry_id_index[entry.config_entry_id]
-        if entry.device_id is not None:
-            self._device_id_index[entry.device_id].remove(entry)
-            if not self._device_id_index[entry.device_id]:
-                del self._device_id_index[entry.device_id]
+        if (device_id := entry.device_id) is not None:
+            entries = self._device_id_index[device_id]
+            entries.remove(entry)
+            if not entries:
+                del self._device_id_index[device_id]
 
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
