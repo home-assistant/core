@@ -139,6 +139,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self._active = False
         self._latitude = None
         self._longitude = None
+        self._attr_available = False
 
     @callback
     def update_state(self) -> None:
@@ -149,6 +150,15 @@ class TadoDeviceTrackerEntity(TrackerEntity):
             self._device_id,
         )
         device = self._tado.data["mobile_device"][self._device_id]
+
+        self._attr_available = False
+        _LOGGER.debug(
+            "Tado device %s has geoTracking state %s",
+            device["name"],
+            device["settings"]["geoTrackingEnabled"],
+        )
+        if device["settings"]["geoTrackingEnabled"] is True:
+            self._attr_available = True
 
         self._active = False
         if device.get("location") is not None and device["location"]["atHome"]:
