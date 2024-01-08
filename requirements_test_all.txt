@@ -1898,6 +1898,12 @@ samsungctl[websocket]==0.7.1
 # homeassistant.components.samsungtv
 samsungtvws[async,encrypted]==2.6.0
 
+# homeassistant.components.sanix
+sanix==1.0.1
+
+# homeassistant.components.dhcp
+scapy==2.5.0
+
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.0
 

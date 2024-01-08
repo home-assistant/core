@@ -3,6 +3,8 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from sanix import Sanix
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -17,7 +19,6 @@ from .const import (
     ATTR_API_TIME,
     MANUFACTURER,
 )
-from .sanix import Sanix
 
 _LOGGER = logging.getLogger(__name__)
 

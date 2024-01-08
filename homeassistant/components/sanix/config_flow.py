@@ -2,6 +2,8 @@
 from http import HTTPStatus
 from typing import Any
 
+from sanix import Sanix
+from sanix.exceptions import SanixException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -9,7 +11,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERIAL_NO, CONF_TOKEN, DOMAIN, MANUFACTURER
-from .sanix import Sanix, SanixException
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {

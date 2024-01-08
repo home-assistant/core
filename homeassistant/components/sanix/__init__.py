@@ -1,4 +1,6 @@
 """The Sanix integration."""
+from sanix import Sanix
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -6,7 +8,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERIAL_NO, CONF_TOKEN, DOMAIN
 from .coordinator import SanixCoordinator
-from .sanix import Sanix
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
