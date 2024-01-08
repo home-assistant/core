@@ -239,7 +239,7 @@ class BluetoothMatcherIndexBase(Generic[_T]):
         matches = []
         if (name := service_info.name) and (
             local_name_matchers := self.local_name.get(
-                name[:LOCAL_NAME_MIN_MATCH_LENGTH:]
+                name[:LOCAL_NAME_MIN_MATCH_LENGTH]
             )
         ):
             for matcher in local_name_matchers:
@@ -353,7 +353,7 @@ def _local_name_to_index_key(local_name: str) -> str:
     if they try to setup a matcher that will is overly broad
     as would match too many devices and cause a performance hit.
     """
-    match_part = local_name[:LOCAL_NAME_MIN_MATCH_LENGTH:]
+    match_part = local_name[:LOCAL_NAME_MIN_MATCH_LENGTH]
     if "*" in match_part or "[" in match_part:
         raise ValueError(
             "Local name matchers may not have patterns in the first "
