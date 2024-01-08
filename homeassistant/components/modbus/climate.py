@@ -54,13 +54,21 @@ from .const import (
     CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_AUTO_TT_REG,
     CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_COOL_TT_REG,
     CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_DRY_TT_REG,
     CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_FAN_ONLY_TT_REG,
     CONF_HVAC_MODE_HEAT,
     CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_HEAT_COOL_TT_REG,
+    CONF_HVAC_MODE_HEAT_TT_REG,
     CONF_HVAC_MODE_OFF,
+    CONF_HVAC_MODE_OFF_TT_REG,
     CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_TT_REG_BY_VALUES,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
@@ -108,6 +116,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Initialize the modbus thermostat."""
         super().__init__(hass, hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
+        self._target_temperature_register_def = config[CONF_TARGET_TEMP]
         self._target_temperature_write_registers = config[
             CONF_TARGET_TEMP_WRITE_REGISTERS
         ]
@@ -133,6 +142,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_hvac_modes = cast(list[HVACMode], [])
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
+            self._hvac_mode_mapping_reg: set[tuple[int, HVACMode]] = set()
             self._hvac_mode_write_registers = mode_config[CONF_WRITE_REGISTERS]
             mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
 
@@ -153,6 +163,21 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                         self._hvac_mode_mapping.append((value, hvac_mode))
                     self._attr_hvac_modes.append(hvac_mode)
 
+            # Looking for specific target temperature registers (if any)
+            if CONF_HVAC_MODE_TT_REG_BY_VALUES in mode_config:
+                mode_TT_reg_config = mode_config[CONF_HVAC_MODE_TT_REG_BY_VALUES]
+                for hvac_mode_kwr, hvac_mode in (
+                    (CONF_HVAC_MODE_OFF_TT_REG, HVACMode.OFF),
+                    (CONF_HVAC_MODE_HEAT_TT_REG, HVACMode.HEAT),
+                    (CONF_HVAC_MODE_COOL_TT_REG, HVACMode.COOL),
+                    (CONF_HVAC_MODE_HEAT_COOL_TT_REG, HVACMode.HEAT_COOL),
+                    (CONF_HVAC_MODE_AUTO_TT_REG, HVACMode.AUTO),
+                    (CONF_HVAC_MODE_DRY_TT_REG, HVACMode.DRY),
+                    (CONF_HVAC_MODE_FAN_ONLY_TT_REG, HVACMode.FAN_ONLY),
+                ):
+                    if hvac_mode_kwr in mode_TT_reg_config:
+                        value = mode_TT_reg_config[hvac_mode_kwr]
+                        self._hvac_mode_mapping_reg.add((value, hvac_mode))
         else:
             # No HVAC modes defined
             self._hvac_mode_register = None
@@ -248,6 +273,18 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                             CALL_TYPE_WRITE_REGISTER,
                         )
                     break
+            # Set the specific register belonging the desired havc mode
+            if self._hvac_mode_mapping_reg is not None:
+                found = False
+                for value, mode_reg in self._hvac_mode_mapping_reg:
+                    if mode_reg == hvac_mode:
+                        self._target_temperature_register = value
+                        found = True
+                        break
+                if found is False:
+                    self._target_temperature_register = (
+                        self._target_temperature_register_def
+                    )
 
         await self.async_update()
 

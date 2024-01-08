@@ -77,13 +77,21 @@ from .const import (  # noqa: F401
     CONF_FAN_MODE_VALUES,
     CONF_FANS,
     CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_AUTO_TT_REG,
     CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_COOL_TT_REG,
     CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_DRY_TT_REG,
     CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_FAN_ONLY_TT_REG,
     CONF_HVAC_MODE_HEAT,
     CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_HEAT_COOL_TT_REG,
+    CONF_HVAC_MODE_HEAT_TT_REG,
     CONF_HVAC_MODE_OFF,
+    CONF_HVAC_MODE_OFF_TT_REG,
     CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_TT_REG_BY_VALUES,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
@@ -133,6 +141,7 @@ from .const import (  # noqa: F401
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
+    check_hvac_target_temp_registers,
     duplicate_entity_validator,
     duplicate_fan_mode_validator,
     duplicate_modbus_validator,
@@ -275,6 +284,15 @@ CLIMATE_SCHEMA = vol.All(
                             cv.positive_int, [cv.positive_int]
                         ),
                     },
+                    CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                        vol.Optional(CONF_HVAC_MODE_OFF_TT_REG): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_HEAT_TT_REG): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_COOL_TT_REG): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL_TT_REG): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_AUTO_TT_REG): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_DRY_TT_REG): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY_TT_REG): cv.positive_int,
+                    },
                     vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 }
             ),
@@ -298,8 +316,9 @@ CLIMATE_SCHEMA = vol.All(
                     duplicate_fan_mode_validator,
                 ),
             ),
-        }
+        },
     ),
+    check_hvac_target_temp_registers,
 )
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
