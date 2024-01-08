@@ -6,7 +6,6 @@ from collections.abc import Iterator
 from datetime import datetime
 import logging
 import os
-import socket
 from typing import TypeVar
 
 import psutil
@@ -22,43 +21,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-IO_COUNTER = {
-    "network_out": 0,
-    "network_in": 1,
-    "packets_out": 2,
-    "packets_in": 3,
-    "throughput_network_out": 0,
-    "throughput_network_in": 1,
-}
-IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INET6}
-# There might be additional keys to be added for different
-# platforms / hardware combinations.
-# Taken from last version of "glances" integration before they moved to
-# a generic temperature sensor logic.
-# https://github.com/home-assistant/core/blob/5e15675593ba94a2c11f9f929cdad317e27ce190/homeassistant/components/glances/sensor.py#L199
-CPU_SENSOR_PREFIXES = [
-    "amdgpu 1",
-    "aml_thermal",
-    "Core 0",
-    "Core 1",
-    "CPU Temperature",
-    "CPU",
-    "cpu-thermal 1",
-    "cpu_thermal 1",
-    "exynos-therm 1",
-    "Package id 0",
-    "Physical id 0",
-    "radeon 1",
-    "soc-thermal 1",
-    "soc_thermal 1",
-    "Tctl",
-    "cpu0-thermal",
-    "cpu0_thermal",
-    "k10temp 1",
-]
 
-_dataT = TypeVar(
-    "_dataT",
+dataT = TypeVar(
+    "dataT",
     bound=bool
     | datetime
     | dict[str, list[shwtemp]]
@@ -76,7 +41,7 @@ _dataT = TypeVar(
 )
 
 
-class MonitorCoordinator(DataUpdateCoordinator[_dataT]):
+class MonitorCoordinator(DataUpdateCoordinator[dataT]):
     """A System monitor Base Data Update Coordinator."""
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -89,12 +54,12 @@ class MonitorCoordinator(DataUpdateCoordinator[_dataT]):
             always_update=False,
         )
 
-    async def _async_update_data(self) -> _dataT:
+    async def _async_update_data(self) -> dataT:
         """Fetch data."""
         return await self.hass.async_add_executor_job(self.update_data)
 
     @abstractmethod
-    def update_data(self) -> _dataT:
+    def update_data(self) -> dataT:
         """To be extended by data update coordinators."""
 
 
