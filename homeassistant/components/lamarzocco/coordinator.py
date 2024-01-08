@@ -59,6 +59,14 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_init_client(self) -> None:
         """Initialize the La Marzocco Client."""
+
+        username = self.config_entry.data[CONF_USERNAME]
+        # only set when discovered via Bluetooth
+        mac_address: str = self.config_entry.data.get(CONF_MAC, "")
+        name: str = self.config_entry.data.get(CONF_NAME, "")
+        host: str = self.config_entry.data.get(CONF_HOST, "")
+
+        # Initialize cloud API
         _LOGGER.debug("Initializing Cloud API")
         await self._lm.init_cloud_api(
             credentials=self.config_entry.data,
@@ -66,12 +74,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         _LOGGER.debug("Model name: %s", self._lm.model_name)
 
-        username = self.config_entry.data[CONF_USERNAME]
-
-        # only set when discovered via Bluetooth
-        mac_address: str = self.config_entry.data.get(CONF_MAC, "")
-        name: str = self.config_entry.data.get(CONF_NAME, "")
-
+        # initialize Bluetooth
         if mac_address and name:
             # coming from discovery
             _LOGGER.debug("Initializing with known Bluetooth device")
@@ -91,17 +94,15 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                     bluetooth_scanner=bt_scanner,
                 )
 
-        if self._use_bluetooth:
-            _LOGGER.debug("Connecting to machine with Bluetooth")
-            # update the config entry with the MAC address
-            new_data = self.config_entry.data.copy()
-            new_data[CONF_MAC] = self._lm.lm_bluetooth.address
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data=new_data,
-            )
+                # update the config entry with the MAC address
+                new_data = self.config_entry.data.copy()
+                new_data[CONF_MAC] = self._lm.lm_bluetooth.address
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data=new_data,
+                )
 
-        host: str = self.config_entry.data.get(CONF_HOST, "")
+        # initialize local API
         if host:
             _LOGGER.debug("Initializing local API")
             await self._lm.init_local_api(host)

@@ -105,6 +105,7 @@ def mock_lamarzocco(
             (serial_number, model_name),
         ]
         lamarzocco.check_local_connection.return_value = True
+        lamarzocco.initialized = False
 
         lamarzocco.lm_bluetooth = MagicMock()
         lamarzocco.lm_bluetooth.address = "AA:BB:CC:DD:EE:FF"
