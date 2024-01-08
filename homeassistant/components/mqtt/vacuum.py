@@ -1,10 +1,19 @@
-"""Support for a State MQTT vacuum."""
+"""Support for MQTT vacuums."""
+
+# The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
+# and was removed with HA Core 2024.2.0
+# The use of the schema attribute with MQTT vacuum was deprecated with HA Core 2024.2
+# the attribute will be remove with HA Core 2024.8
+
 from __future__ import annotations
 
+from collections.abc import Callable
+import logging
 from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     ENTITY_ID_FORMAT,
     STATE_CLEANING,
@@ -21,58 +30,37 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PAUSED,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, async_get_hass, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import json_loads_object
 
-from .. import subscription
-from ..config import MQTT_BASE_SCHEMA
-from ..const import (
+from . import subscription
+from .config import MQTT_BASE_SCHEMA
+from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
+    CONF_SCHEMA,
     CONF_STATE_TOPIC,
+    DOMAIN,
 )
-from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
-from ..models import ReceiveMessage
-from ..util import valid_publish_topic
-from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
-from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
-
-SERVICE_TO_STRING: dict[VacuumEntityFeature, str] = {
-    VacuumEntityFeature.START: "start",
-    VacuumEntityFeature.PAUSE: "pause",
-    VacuumEntityFeature.STOP: "stop",
-    VacuumEntityFeature.RETURN_HOME: "return_home",
-    VacuumEntityFeature.FAN_SPEED: "fan_speed",
-    VacuumEntityFeature.BATTERY: "battery",
-    VacuumEntityFeature.STATUS: "status",
-    VacuumEntityFeature.SEND_COMMAND: "send_command",
-    VacuumEntityFeature.LOCATE: "locate",
-    VacuumEntityFeature.CLEAN_SPOT: "clean_spot",
-}
-
-STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
-
-
-DEFAULT_SERVICES = (
-    VacuumEntityFeature.START
-    | VacuumEntityFeature.STOP
-    | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.BATTERY
-    | VacuumEntityFeature.CLEAN_SPOT
+from .debug_info import log_messages
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+    write_state_on_attr_change,
 )
-ALL_SERVICES = (
-    DEFAULT_SERVICES
-    | VacuumEntityFeature.PAUSE
-    | VacuumEntityFeature.LOCATE
-    | VacuumEntityFeature.FAN_SPEED
-    | VacuumEntityFeature.SEND_COMMAND
-)
+from .models import ReceiveMessage
+from .util import valid_publish_topic
+
+LEGACY = "legacy"
+STATE = "state"
 
 BATTERY = "battery_level"
 FAN_SPEED = "fan_speed"
@@ -102,13 +90,59 @@ CONF_SEND_COMMAND_TOPIC = "send_command_topic"
 
 DEFAULT_NAME = "MQTT State Vacuum"
 DEFAULT_RETAIN = False
-DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES, SERVICE_TO_STRING)
+
 DEFAULT_PAYLOAD_RETURN_TO_BASE = "return_to_base"
 DEFAULT_PAYLOAD_STOP = "stop"
 DEFAULT_PAYLOAD_CLEAN_SPOT = "clean_spot"
 DEFAULT_PAYLOAD_LOCATE = "locate"
 DEFAULT_PAYLOAD_START = "start"
 DEFAULT_PAYLOAD_PAUSE = "pause"
+
+_LOGGER = logging.getLogger(__name__)
+
+SERVICE_TO_STRING: dict[VacuumEntityFeature, str] = {
+    VacuumEntityFeature.START: "start",
+    VacuumEntityFeature.PAUSE: "pause",
+    VacuumEntityFeature.STOP: "stop",
+    VacuumEntityFeature.RETURN_HOME: "return_home",
+    VacuumEntityFeature.FAN_SPEED: "fan_speed",
+    VacuumEntityFeature.BATTERY: "battery",
+    VacuumEntityFeature.STATUS: "status",
+    VacuumEntityFeature.SEND_COMMAND: "send_command",
+    VacuumEntityFeature.LOCATE: "locate",
+    VacuumEntityFeature.CLEAN_SPOT: "clean_spot",
+}
+
+STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
+DEFAULT_SERVICES = (
+    VacuumEntityFeature.START
+    | VacuumEntityFeature.STOP
+    | VacuumEntityFeature.RETURN_HOME
+    | VacuumEntityFeature.BATTERY
+    | VacuumEntityFeature.CLEAN_SPOT
+)
+ALL_SERVICES = (
+    DEFAULT_SERVICES
+    | VacuumEntityFeature.PAUSE
+    | VacuumEntityFeature.LOCATE
+    | VacuumEntityFeature.FAN_SPEED
+    | VacuumEntityFeature.SEND_COMMAND
+)
+
+
+def services_to_strings(
+    services: VacuumEntityFeature,
+    service_to_string: dict[VacuumEntityFeature, str],
+) -> list[str]:
+    """Convert SUPPORT_* service bitmask to list of service strings."""
+    return [
+        service_to_string[service]
+        for service in service_to_string
+        if service & services
+    ]
+
+
+DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES, SERVICE_TO_STRING)
 
 _FEATURE_PAYLOADS = {
     VacuumEntityFeature.START: CONF_PAYLOAD_START,
@@ -119,40 +153,105 @@ _FEATURE_PAYLOADS = {
     VacuumEntityFeature.RETURN_HOME: CONF_PAYLOAD_RETURN_TO_BASE,
 }
 
-PLATFORM_SCHEMA_STATE_MODERN = (
-    MQTT_BASE_SCHEMA.extend(
-        {
-            vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
-            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-            vol.Optional(
-                CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT
-            ): cv.string,
-            vol.Optional(
-                CONF_PAYLOAD_LOCATE, default=DEFAULT_PAYLOAD_LOCATE
-            ): cv.string,
-            vol.Optional(
-                CONF_PAYLOAD_RETURN_TO_BASE, default=DEFAULT_PAYLOAD_RETURN_TO_BASE
-            ): cv.string,
-            vol.Optional(CONF_PAYLOAD_START, default=DEFAULT_PAYLOAD_START): cv.string,
-            vol.Optional(CONF_PAYLOAD_PAUSE, default=DEFAULT_PAYLOAD_PAUSE): cv.string,
-            vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
-            vol.Optional(CONF_SEND_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_SET_FAN_SPEED_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_STATE_TOPIC): valid_publish_topic,
-            vol.Optional(
-                CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS
-            ): vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
-            vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        }
-    )
-    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-    .extend(MQTT_VACUUM_SCHEMA.schema)
+MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        vacuum.ATTR_BATTERY_ICON,
+        vacuum.ATTR_BATTERY_LEVEL,
+        vacuum.ATTR_FAN_SPEED,
+    }
 )
 
-DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
+
+
+def _fail_legacy_config(discovery: bool) -> Callable[[ConfigType], ConfigType]:
+    @callback
+    def _fail_legacy_config_callback(config: ConfigType) -> ConfigType:
+        """Fail the legacy schema."""
+        if CONF_SCHEMA not in config:
+            return config
+
+        if config[CONF_SCHEMA] == "legacy":
+            raise vol.Invalid(
+                "The support for the `legacy` MQTT vacuum schema has been removed"
+            )
+
+        if discovery:
+            return config
+
+        translation_key = "deprecation_mqtt_schema_vacuum_yaml"
+        hass = async_get_hass()
+        async_create_issue(
+            hass,
+            DOMAIN,
+            translation_key,
+            breaks_in_ha_version="2024.8.0",
+            is_fixable=False,
+            translation_key=translation_key,
+            learn_more_url=MQTT_VACUUM_DOCS_URL,
+            severity=IssueSeverity.WARNING,
+        )
+        return config
+
+    return _fail_legacy_config_callback
+
+
+VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
+        vol.Optional(
+            CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT
+        ): cv.string,
+        vol.Optional(CONF_PAYLOAD_LOCATE, default=DEFAULT_PAYLOAD_LOCATE): cv.string,
+        vol.Optional(
+            CONF_PAYLOAD_RETURN_TO_BASE, default=DEFAULT_PAYLOAD_RETURN_TO_BASE
+        ): cv.string,
+        vol.Optional(CONF_PAYLOAD_START, default=DEFAULT_PAYLOAD_START): cv.string,
+        vol.Optional(CONF_PAYLOAD_PAUSE, default=DEFAULT_PAYLOAD_PAUSE): cv.string,
+        vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
+        vol.Optional(CONF_SEND_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_SET_FAN_SPEED_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_STATE_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS): vol.All(
+            cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]
+        ),
+        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(CONF_SCHEMA): vol.All(vol.Lower, vol.Any(LEGACY, STATE)),
+    }
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+
+DISCOVERY_SCHEMA = vol.All(
+    _fail_legacy_config(discovery=True),
+    VACUUM_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
+    cv.deprecated(CONF_SCHEMA),
+)
+
+PLATFORM_SCHEMA_MODERN = vol.All(
+    _fail_legacy_config(discovery=False),
+    VACUUM_BASE_SCHEMA,
+    cv.deprecated(CONF_SCHEMA),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up MQTT vacuum through YAML and through MQTT discovery."""
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttStateVacuum,
+        vacuum.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
+    )
 
 
 class MqttStateVacuum(MqttEntity, StateVacuumEntity):
@@ -182,12 +281,22 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
-        return DISCOVERY_SCHEMA_STATE
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+
+        def _strings_to_services(
+            strings: list[str], string_to_service: dict[str, VacuumEntityFeature]
+        ) -> VacuumEntityFeature:
+            """Convert service strings to SUPPORT_* service bitmask."""
+            services = VacuumEntityFeature.STATE
+            for string in strings:
+                services |= string_to_service[string]
+            return services
+
         supported_feature_strings: list[str] = config[CONF_SUPPORTED_FEATURES]
-        self._attr_supported_features = VacuumEntityFeature.STATE | strings_to_services(
+        self._attr_supported_features = _strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
