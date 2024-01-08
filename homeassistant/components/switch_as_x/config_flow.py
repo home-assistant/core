@@ -41,11 +41,18 @@ CONFIG_FLOW = {
     )
 }
 
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(
+        vol.Schema({vol.Required(CONF_INVERT): selector.BooleanSelector()})
+    ),
+}
+
 
 class SwitchAsXConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for Switch as X."""
 
     config_flow = CONFIG_FLOW
+    options_flow = OPTIONS_FLOW
 
     VERSION = 1
     MINOR_VERSION = 2

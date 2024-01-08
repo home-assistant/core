@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.switch_as_x.const import (
     CONF_INVERT,
     CONF_TARGET_DOMAIN,
@@ -26,6 +26,22 @@ PLATFORMS_TO_TEST = (
     Platform.SIREN,
     Platform.VALVE,
 )
+ON_STATE = {
+    Platform.COVER: "open",
+    Platform.FAN: "on",
+    Platform.LIGHT: "on",
+    Platform.LOCK: "unlocked",
+    Platform.SIREN: "on",
+    Platform.VALVE: "open",
+}
+ON_STATE_INVERTED = {
+    Platform.COVER: "closed",
+    Platform.FAN: "on",
+    Platform.LIGHT: "on",
+    Platform.LOCK: "locked",
+    Platform.SIREN: "on",
+    Platform.VALVE: "closed",
+}
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -131,30 +147,79 @@ async def test_config_flow_registered_entity(
     assert switch_entity_entry.hidden_by == hidden_by_after
 
 
+def get_suggested(schema, key):
+    """Get suggested value for key in voluptuous schema."""
+    for k in schema:
+        if k == key:
+            if k.description is None or "suggested_value" not in k.description:
+                return None
+            return k.description["suggested_value"]
+    # Wanted key absent from schema
+    raise Exception
+
+
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_options(
     hass: HomeAssistant,
     target_domain: Platform,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reconfiguring."""
+    hass.states.async_set("switch.ceiling", "on")
     switch_as_x_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: "switch.ceiling",
+            CONF_INVERT: True,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=1,
+        minor_version=2,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    state = hass.states.get(f"{target_domain}.abc")
+    assert state.state == ON_STATE_INVERTED[target_domain]
+
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry
 
-    # Switch light has no options flow
-    with pytest.raises(data_entry_flow.UnknownHandler):
-        await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    assert get_suggested(schema, CONF_INVERT) is True
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INVERT: False,
+        },
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_ENTITY_ID: "switch.ceiling",
+        CONF_INVERT: False,
+        CONF_TARGET_DOMAIN: target_domain,
+    }
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        CONF_ENTITY_ID: "switch.ceiling",
+        CONF_INVERT: False,
+        CONF_TARGET_DOMAIN: target_domain,
+    }
+    assert config_entry.title == "ABC"
+
+    # Check config entry is reloaded with new options
+    await hass.async_block_till_done()
+
+    # Check the entity was updated, no new entity was created
+    assert len(hass.states.async_all()) == 2
+
+    # Check the state of the entity has changed as expected
+    state = hass.states.get(f"{target_domain}.abc")
+    assert state.state == ON_STATE[target_domain]
