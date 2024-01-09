@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Callable, Iterable, Mapping
+import asyncio
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
@@ -127,6 +128,7 @@ class FlowResult(TypedDict, total=False):
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
+    progress_coro: Callable[[], Coroutine[Any, Any, None]] | None
     reason: str
     required: bool
     result: Any
@@ -403,6 +405,8 @@ class FlowManager(abc.ABC):
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
         self._async_remove_flow_from_index(flow)
+        if flow.progress_task and not flow.progress_task.done():
+            flow.progress_task.cancel()
         try:
             flow.async_remove()
         except Exception as err:  # pylint: disable=broad-except
@@ -435,6 +439,22 @@ class FlowManager(abc.ABC):
                 ),
                 error_if_core=False,
             )
+
+        if result["type"] == FlowResultType.SHOW_PROGRESS and result["progress_coro"]:
+            flow_id = flow.flow_id
+
+            async def _resume_flow_when_done(awt: Awaitable[None]) -> None:
+                await awt
+                await self.async_configure(flow_id)
+
+            if not flow.progress_task:
+                flow.progress_task = self.hass.async_create_task(
+                    _resume_flow_when_done(result["progress_coro"]())
+                )
+        elif result["type"] != FlowResultType.SHOW_PROGRESS:
+            if flow.progress_task and not flow.progress_task.done():
+                flow.progress_task.cancel()
+                flow.progress_task = None
 
         if result["type"] in FLOW_NOT_COMPLETE_STEPS:
             self._raise_if_step_does_not_exist(flow, result["step_id"])
@@ -494,6 +514,8 @@ class FlowHandler:
     # Set by developer
     VERSION = 1
     MINOR_VERSION = 1
+
+    progress_task: asyncio.Task | None = None
 
     @property
     def source(self) -> str | None:
@@ -633,6 +655,7 @@ class FlowHandler:
         step_id: str,
         progress_action: str,
         description_placeholders: Mapping[str, str] | None = None,
+        progress_coro: Callable[[], Coroutine[Any, Any, None]] | None = None,
     ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
         return FlowResult(
@@ -642,6 +665,7 @@ class FlowHandler:
             step_id=step_id,
             progress_action=progress_action,
             description_placeholders=description_placeholders,
+            progress_coro=progress_coro,
         )
 
     @callback
