@@ -37,9 +37,7 @@ class Group:
     system_generated: bool = attr.ib(default=False)
 
 
-def _handle_permissions_change(
-    self: User, user_attr: Attribute, new: Any
-) -> list[Group]:
+def _handle_permissions_change(self: User, user_attr: Attribute, new: Any) -> Any:
     """Handle a change to a permissions."""
     self.invalidate_cache()
     return validate(self, user_attr, new)
