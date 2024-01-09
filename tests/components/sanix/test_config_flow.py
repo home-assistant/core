@@ -56,7 +56,7 @@ async def test_bad_request(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
-    assert result["errors"] == {"base": "bad_request"}
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_duplicate_error(

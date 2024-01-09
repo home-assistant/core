@@ -47,9 +47,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if err.status_code == HTTPStatus.UNAUTHORIZED:
                     errors["base"] = "unauthorized"
                 else:
-                    errors["base"] = "bad_request"
-
-            if len(errors.keys()) == 0:
+                    errors["base"] = "unknown"
+            else:
                 return self.async_create_entry(
                     title=f"{MANUFACTURER.upper()}-{user_input[CONF_SERIAL_NO]}",
                     data=user_input,

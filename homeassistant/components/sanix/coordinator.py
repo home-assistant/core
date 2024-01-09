@@ -1,5 +1,4 @@
 """Sanix Coordinator."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -32,23 +31,21 @@ class SanixCoordinator(DataUpdateCoordinator):
             hass, _LOGGER, name=MANUFACTURER, update_interval=timedelta(hours=1)
         )
         self._sanix_api = sanix_api
-        self._hass = hass
 
     async def _async_update_data(self) -> dict[str, str | float | int]:
         """Fetch data from API endpoint."""
         data: dict[str, str | float | int] = {}
         try:
-            async with asyncio.timeout(10):
-                response = await self._sanix_api.fetch_data()
-
-                data[ATTR_API_DEVICE_NO] = response.get("device_no")
-                data[ATTR_API_STATUS] = response.get("status")
-                data[ATTR_API_TIME] = response.get("time")
-                data[ATTR_API_SSID] = response.get("ssid")
-                data[ATTR_API_BATTERY] = response.get("battery")
-                data[ATTR_API_DISTANCE] = response.get("distance")
-                data[ATTR_API_FILL_PERCENTAGE] = response.get("fill_perc")
-                data[ATTR_API_SERVICE_DATE] = response.get("service_date")
-                return data
+            response = await self._sanix_api.fetch_data()
         except Exception as err:
             raise UpdateFailed("Error while communicating with the API") from err
+
+        data[ATTR_API_DEVICE_NO] = response.get("device_no")
+        data[ATTR_API_STATUS] = response.get("status")
+        data[ATTR_API_TIME] = response.get("time")
+        data[ATTR_API_SSID] = response.get("ssid")
+        data[ATTR_API_BATTERY] = response.get("battery")
+        data[ATTR_API_DISTANCE] = response.get("distance")
+        data[ATTR_API_FILL_PERCENTAGE] = response.get("fill_perc")
+        data[ATTR_API_SERVICE_DATE] = response.get("service_date")
+        return data

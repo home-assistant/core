@@ -51,7 +51,7 @@ SENSOR_TYPES: tuple[SanixSensorEntityDescription, ...] = (
     ),
     SanixSensorEntityDescription(
         key=ATTR_API_DISTANCE,
-        native_unit_of_measurement=UnitOfLength.CENTIMETERS.value,
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -90,7 +90,7 @@ async def async_setup_entry(
                 SanixSensor(coordinator, entry.title, str(entry.unique_id), description)
             )
 
-    async_add_entities(sensors, False)
+    async_add_entities(sensors)
 
 
 class SanixSensor(CoordinatorEntity[SanixCoordinator], SensorEntity):
@@ -116,7 +116,7 @@ class SanixSensor(CoordinatorEntity[SanixCoordinator], SensorEntity):
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, name)},
+            identifiers={(DOMAIN, serial_no)},
             manufacturer=MANUFACTURER,
             name=name,
             serial_number=serial_no,
@@ -145,4 +145,4 @@ class SanixSensor(CoordinatorEntity[SanixCoordinator], SensorEntity):
             self.coordinator.data[self.entity_description.key],
             self.entity_description.key,
         )
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
