@@ -209,6 +209,7 @@ class TadoConnector:
             _LOGGER.debug("No linked mobile devices found for home ID %s", self.home_id)
             return
 
+        # Make request at PyTado the library should fix it, so this can be removed
         if "errors" in mobile_devices and len(mobile_devices["errors"]) > 0:
             _LOGGER.error(
                 "Error for home ID %s while updating mobile devices: %s",
@@ -243,6 +244,7 @@ class TadoConnector:
             _LOGGER.debug("No linked devices found for home ID %s", self.home_id)
             return
 
+        # Make request at PyTado the library should fix it, so this can be removed
         if "errors" in devices and len(devices["errors"]) > 0:
             _LOGGER.error(
                 "Error for home ID %s while updating devices: %s",
