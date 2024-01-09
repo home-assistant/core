@@ -230,20 +230,11 @@ def get_load_15m(entity: SystemMonitorSensor[dataT]) -> float:
     return round(cast(tuple[float, float, float], entity.coordinator.data)[2], 2)
 
 
-@dataclass(frozen=True)
-class SysMonitorSensorEntityDescriptionMixin(Generic[dataT]):
-    """Mixin for System Monitor sensor entities."""
-
-    value_fn: Callable[[SystemMonitorSensor[dataT]], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class SysMonitorSensorEntityDescription(
-    SysMonitorSensorEntityDescriptionMixin[dataT],
-    SensorEntityDescription,
-):
+@dataclass(frozen=True, kw_only=True)
+class SysMonitorSensorEntityDescription(SensorEntityDescription, Generic[dataT]):
     """Describes System Monitor sensor entities."""
 
+    value_fn: Callable[[SystemMonitorSensor[dataT]], StateType | datetime]
     mandatory_arg: bool = False
     placeholder: str | None = None
 
