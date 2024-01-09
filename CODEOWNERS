@@ -45,8 +45,8 @@ build.json @home-assistant/supervisor
 /tests/components/airnow/ @asymworks
 /homeassistant/components/airq/ @Sibgatulin @dl2080
 /tests/components/airq/ @Sibgatulin @dl2080
-/homeassistant/components/airthings/ @danielhiversen
-/tests/components/airthings/ @danielhiversen
+/homeassistant/components/airthings/ @danielhiversen @LaStrada
+/tests/components/airthings/ @danielhiversen @LaStrada
 /homeassistant/components/airthings_ble/ @vincegio @LaStrada
 /tests/components/airthings_ble/ @vincegio @LaStrada
 /homeassistant/components/airtouch4/ @samsinnamon
