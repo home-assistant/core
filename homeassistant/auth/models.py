@@ -1,9 +1,10 @@
 """Auth models."""
 from __future__ import annotations
 
+import contextlib
 from datetime import datetime, timedelta
 import secrets
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 import uuid
 
 import attr
@@ -13,6 +14,12 @@ from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
 from .const import GROUP_ID_ADMIN
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"
@@ -29,7 +36,7 @@ class Group:
     system_generated: bool = attr.ib(default=False)
 
 
-@attr.s(slots=True)
+@attr.s(slots=False)
 class User:
     """A user."""
 
@@ -51,45 +58,28 @@ class User:
         factory=dict, eq=False, order=False
     )
 
-    _permissions: perm_mdl.PolicyPermissions | None = attr.ib(
-        init=False,
-        eq=False,
-        order=False,
-        default=None,
-    )
-
-    _is_admin: bool | None = attr.ib(init=False, default=None)
-
-    @property
+    @cached_property
     def permissions(self) -> perm_mdl.AbstractPermissions:
         """Return permissions object for user."""
         if self.is_owner:
             return perm_mdl.OwnerPermissions
-
-        if self._permissions is not None:
-            return self._permissions
-
-        self._permissions = perm_mdl.PolicyPermissions(
+        return perm_mdl.PolicyPermissions(
             perm_mdl.merge_policies([group.policy for group in self.groups]),
             self.perm_lookup,
         )
 
-        return self._permissions
-
-    @property
+    @cached_property
     def is_admin(self) -> bool:
         """Return if user is part of the admin group."""
-        if (is_admin := self._is_admin) is not None:
-            return is_admin
-        self._is_admin = self.is_owner or (
+        return self.is_owner or (
             self.is_active and any(gr.id == GROUP_ID_ADMIN for gr in self.groups)
         )
-        return self._is_admin
 
     def invalidate_cache(self) -> None:
         """Invalidate permission and is_admin cache."""
-        self._permissions = None
-        self._is_admin = None
+        for attr_to_invalidate in ("permissions", "is_admin"):
+            with contextlib.suppress(AttributeError):
+                delattr(self, attr_to_invalidate)
 
 
 @attr.s(slots=True)
