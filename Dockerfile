@@ -17,7 +17,6 @@ COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
 RUN \
     pip3 install \
-        --only-binary=:all: \
         -r homeassistant/requirements.txt
 
 COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
@@ -32,14 +31,12 @@ RUN \
         LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
         MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
         pip3 install \
-            --only-binary=:all: \
             -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
 RUN \
     pip3 install \
-        --only-binary=:all: \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant
