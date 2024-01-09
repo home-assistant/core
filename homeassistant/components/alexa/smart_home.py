@@ -7,7 +7,6 @@ from yarl import URL
 
 from homeassistant import core
 from homeassistant.auth.models import User
-from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.components.http import HomeAssistantRequest
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -26,14 +25,13 @@ from .const import (
     CONF_LOCALE,
     EVENT_ALEXA_SMART_HOME,
 )
+from .diagnostics import async_redact_auth_data
 from .errors import AlexaBridgeUnreachableError, AlexaError
 from .handlers import HANDLERS
 from .state_report import AlexaDirective
 
 _LOGGER = logging.getLogger(__name__)
 SMART_HOME_HTTP_ENDPOINT = "/api/alexa/smart_home"
-
-TO_REDACT = {"correlationToken", "token"}
 
 
 class AlexaConfig(AbstractConfig):
@@ -155,7 +153,7 @@ class SmartHomeView(HomeAssistantView):
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Received Alexa Smart Home request: %s",
-                async_redact_data(message, TO_REDACT),
+                async_redact_auth_data(message),
             )
 
         response = await async_handle_message(
@@ -164,7 +162,7 @@ class SmartHomeView(HomeAssistantView):
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Sending Alexa Smart Home response: %s",
-                async_redact_data(response, TO_REDACT),
+                async_redact_auth_data(response),
             )
 
         return b"" if response is None else self.json(response)

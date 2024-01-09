@@ -13,7 +13,6 @@ from uuid import uuid4
 import aiohttp
 
 from homeassistant.components import event
-from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -35,6 +34,7 @@ from .const import (
     DOMAIN,
     Cause,
 )
+from .diagnostics import async_redact_auth_data
 from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
 from .errors import AlexaInvalidEndpointError, NoTokenAvailable, RequireRelink
 
@@ -383,7 +383,7 @@ async def async_send_changereport_message(
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         _LOGGER.debug(
-            "Sent: %s", json.dumps(async_redact_data(message_serialized, TO_REDACT))
+            "Sent: %s", json.dumps(async_redact_auth_data(message_serialized))
         )
         _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
@@ -539,7 +539,7 @@ async def async_send_doorbell_event_message(
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         _LOGGER.debug(
-            "Sent: %s", json.dumps(async_redact_data(message_serialized, TO_REDACT))
+            "Sent: %s", json.dumps(async_redact_auth_data(message_serialized))
         )
         _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
