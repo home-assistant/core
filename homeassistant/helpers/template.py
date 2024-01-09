@@ -158,7 +158,7 @@ ORJSON_PASSTHROUGH_OPTIONS = (
 
 def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
     """Return a TemplateState for a state without collecting."""
-    template_state: TemplateState = CACHED_TEMPLATE_NO_COLLECT_LRU.get(state)
+    template_state: TemplateState | None = CACHED_TEMPLATE_NO_COLLECT_LRU.get(state)
     if template_state:
         return template_state
     template_state = _create_template_state_no_collect(hass, state)
@@ -168,7 +168,7 @@ def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateSta
 
 def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
     """Return a TemplateState for a state that collects."""
-    template_state: TemplateState = CACHED_TEMPLATE_LRU.get(state)
+    template_state: TemplateState | None = CACHED_TEMPLATE_LRU.get(state)
     if template_state:
         return template_state
     template_state = TemplateState(hass, state)
