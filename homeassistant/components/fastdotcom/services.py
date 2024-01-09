@@ -17,7 +17,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     def collect_coordinator() -> FastdotcomDataUpdateCoordindator:
         """Collect the coordinator Fastdotcom."""
         config_entries = hass.config_entries.async_entries(DOMAIN)
-        if len(config_entries) == 0:
+        if not config_entries:
             raise HomeAssistantError("No Fast.com config entries found")
 
         for config_entry in config_entries:
