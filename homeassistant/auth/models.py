@@ -1,7 +1,6 @@
 """Auth models."""
 from __future__ import annotations
 
-import contextlib
 from datetime import datetime, timedelta
 import secrets
 from typing import TYPE_CHECKING, Any, NamedTuple
@@ -90,8 +89,11 @@ class User:
     def invalidate_cache(self) -> None:
         """Invalidate permission and is_admin cache."""
         for attr_to_invalidate in ("permissions", "is_admin"):
-            with contextlib.suppress(AttributeError):
+            # try is must more efficient than suppress
+            try:  # noqa: SIM105
                 delattr(self, attr_to_invalidate)
+            except AttributeError:
+                pass
 
 
 @attr.s(slots=True)
