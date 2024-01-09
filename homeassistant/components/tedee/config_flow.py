@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN, NAME
 
@@ -33,7 +34,11 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 host = user_input[CONF_HOST]
             local_access_token = user_input[CONF_LOCAL_ACCESS_TOKEN]
-            tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
+            tedee_client = TedeeClient(
+                local_token=local_access_token,
+                local_ip=host,
+                session=async_get_clientsession(self.hass),
+            )
             try:
                 local_bridge = await tedee_client.get_local_bridge()
             except (TedeeAuthException, TedeeLocalAuthException):

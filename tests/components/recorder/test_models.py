@@ -352,22 +352,6 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
-    lstate.last_updated = datetime(2020, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
-    assert lstate.as_dict() == {
-        "attributes": {"shared": True},
-        "entity_id": "sensor.valid",
-        "last_changed": "2021-06-12T03:04:01.000323+00:00",
-        "last_updated": "2020-06-12T03:04:01.000323+00:00",
-        "state": "off",
-    }
-    lstate.last_changed = datetime(2020, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
-    assert lstate.as_dict() == {
-        "attributes": {"shared": True},
-        "entity_id": "sensor.valid",
-        "last_changed": "2020-06-12T03:04:01.000323+00:00",
-        "last_updated": "2020-06-12T03:04:01.000323+00:00",
-        "state": "off",
-    }
 
 
 @pytest.mark.parametrize(

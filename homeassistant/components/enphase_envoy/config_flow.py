@@ -10,7 +10,7 @@ from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
@@ -41,12 +41,12 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an envoy flow."""
-        self.ip_address = None
+        self.ip_address: str | None = None
         self.username = None
         self.protovers: str | None = None
-        self._reauth_entry = None
+        self._reauth_entry: ConfigEntry | None = None
 
     @callback
     def _async_generate_schema(self) -> vol.Schema:

@@ -7,7 +7,6 @@ from apyosoenergyapi import OSOEnergy
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_POLL,
     SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
@@ -26,7 +25,6 @@ class OSOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a OSO Energy config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     def __init__(self) -> None:
         """Initialize."""

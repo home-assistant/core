@@ -29,6 +29,7 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     CONF_BLE_SCANNER_MODE,
+    CONF_GEN,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
@@ -39,6 +40,7 @@ from .coordinator import async_reconnect_soon
 from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
+    get_device_entry_gen,
     get_info_auth,
     get_info_gen,
     get_model_name,
@@ -88,7 +90,7 @@ async def validate_input(
             "title": rpc_device.name,
             CONF_SLEEP_PERIOD: sleep_period,
             "model": rpc_device.shelly.get("model"),
-            "gen": gen,
+            CONF_GEN: gen,
         }
 
     # Gen1
@@ -103,7 +105,7 @@ async def validate_input(
         "title": block_device.name,
         CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
         "model": block_device.model,
-        "gen": gen,
+        CONF_GEN: gen,
     }
 
 
@@ -157,7 +159,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                                 **user_input,
                                 CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                                 "model": device_info["model"],
-                                "gen": device_info["gen"],
+                                CONF_GEN: device_info[CONF_GEN],
                             },
                         )
                     errors["base"] = "firmware_not_fully_provisioned"
@@ -194,7 +196,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_HOST: self.host,
                             CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                             "model": device_info["model"],
-                            "gen": device_info["gen"],
+                            CONF_GEN: device_info[CONF_GEN],
                         },
                     )
                 errors["base"] = "firmware_not_fully_provisioned"
@@ -292,7 +294,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                         "host": self.host,
                         CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
                         "model": self.device_info["model"],
-                        "gen": self.device_info["gen"],
+                        CONF_GEN: self.device_info[CONF_GEN],
                     },
                 )
             self._set_confirm_only()
@@ -327,7 +329,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
                 return self.async_abort(reason="reauth_unsuccessful")
 
-            if self.entry.data.get("gen", 1) != 1:
+            if get_device_entry_gen(self.entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
             try:
                 await validate_input(self.hass, host, info, user_input)
@@ -340,7 +342,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.async_reload(self.entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        if self.entry.data.get("gen", 1) in BLOCK_GENERATIONS:
+        if get_device_entry_gen(self.entry) in BLOCK_GENERATIONS:
             schema = {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
@@ -369,7 +371,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return (
-            config_entry.data.get("gen") in RPC_GENERATIONS
+            get_device_entry_gen(config_entry) in RPC_GENERATIONS
             and not config_entry.data.get(CONF_SLEEP_PERIOD)
             and config_entry.data.get("model") != MODEL_WALL_DISPLAY
         )

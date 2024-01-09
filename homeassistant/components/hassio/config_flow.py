@@ -1,7 +1,10 @@
 """Config flow for Home Assistant Supervisor integration."""
-import logging
+from __future__ import annotations
 
-from homeassistant.config_entries import ConfigFlow
+import logging
+from typing import Any
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from . import DOMAIN
 
@@ -13,7 +16,9 @@ class HassIoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_system(self, user_input=None):
+    async def async_step_system(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         # We only need one Hass.io config entry
         await self.async_set_unique_id(DOMAIN)

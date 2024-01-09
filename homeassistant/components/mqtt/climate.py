@@ -989,23 +989,17 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set a preset mode."""
-        if self._feature_preset_mode and self.preset_modes:
-            if preset_mode not in self.preset_modes and preset_mode is not PRESET_NONE:
-                _LOGGER.warning("'%s' is not a valid preset mode", preset_mode)
-                return
-            mqtt_payload = self._command_templates[CONF_PRESET_MODE_COMMAND_TEMPLATE](
-                preset_mode
-            )
-            await self._publish(
-                CONF_PRESET_MODE_COMMAND_TOPIC,
-                mqtt_payload,
-            )
+        mqtt_payload = self._command_templates[CONF_PRESET_MODE_COMMAND_TEMPLATE](
+            preset_mode
+        )
+        await self._publish(
+            CONF_PRESET_MODE_COMMAND_TOPIC,
+            mqtt_payload,
+        )
 
-            if self._optimistic_preset_mode:
-                self._attr_preset_mode = preset_mode
-                self.async_write_ha_state()
-
-            return
+        if self._optimistic_preset_mode:
+            self._attr_preset_mode = preset_mode
+            self.async_write_ha_state()
 
     # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
     # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9

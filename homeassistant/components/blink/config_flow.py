@@ -9,44 +9,15 @@ from blinkpy.auth import Auth, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_PIN,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaFlowFormStep,
-    SchemaOptionsFlowHandler,
-)
 
-from .const import DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
+from .const import DEVICE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-SIMPLE_OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(
-            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.BOX,
-                unit_of_measurement="seconds",
-            ),
-        ),
-    }
-)
-
-
-OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(next_step="simple_options"),
-    "simple_options": SchemaFlowFormStep(SIMPLE_OPTIONS_SCHEMA),
-}
 
 
 async def validate_input(auth: Auth) -> None:
@@ -76,14 +47,6 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the blink flow."""
         self.auth: Auth | None = None
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> SchemaOptionsFlowHandler:
-        """Get options flow for this handler."""
-        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

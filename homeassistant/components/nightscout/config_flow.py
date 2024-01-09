@@ -1,12 +1,13 @@
 """Config flow for Nightscout integration."""
 from asyncio import TimeoutError as AsyncIOTimeoutError
 import logging
+from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
 from py_nightscout import Api as NightscoutAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.exceptions import HomeAssistantError
 
@@ -18,10 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str, vol.Optional(CONF_API_KEY): str})
 
 
-async def _validate_input(data):
+async def _validate_input(data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
-    url = data[CONF_URL]
-    api_key = data.get(CONF_API_KEY)
+    url: str = data[CONF_URL]
+    api_key: str | None = data.get(CONF_API_KEY)
     try:
         api = NightscoutAPI(url, api_secret=api_key)
         status = await api.get_server_status()
@@ -41,9 +42,11 @@ class NightscoutConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             unique_id = hash_from_url(user_input[CONF_URL])
