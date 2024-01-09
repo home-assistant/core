@@ -207,16 +207,16 @@ def create_climate_entity(
         name,
         zone_id,
         zone_type,
+        supported_hvac_modes,
+        support_flags,
+        device_info,
         heat_min_temp,
         heat_max_temp,
         heat_step,
         cool_min_temp,
         cool_max_temp,
         cool_step,
-        supported_hvac_modes,
         supported_fan_modes,
-        support_flags,
-        device_info,
     )
     return entity
 
@@ -235,16 +235,16 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         zone_name: str,
         zone_id: int,
         zone_type: str,
-        heat_min_temp: float | None,
-        heat_max_temp: float | None,
-        heat_step: float | None,
-        cool_min_temp: float | None,
-        cool_max_temp: float | None,
-        cool_step: float | None,
         supported_hvac_modes: list[HVACMode],
-        supported_fan_modes: list[str] | None,
         support_flags: ClimateEntityFeature,
         device_info: dict[str, str],
+        heat_min_temp: Optional[float] = None,
+        heat_max_temp: Optional[float] = None,
+        heat_step: Optional[float] = None,
+        cool_min_temp: Optional[float] = None,
+        cool_max_temp: Optional[float] = None,
+        cool_step: Optional[float] = None,
+        supported_fan_modes: Optional[list[str]] = None,
     ) -> None:
         """Initialize of Tado climate entity."""
         self._tado = tado
@@ -287,7 +287,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_swing_mode = TADO_SWING_OFF
 
         self._tado_zone_data: PyTado.TadoZone = {}
-        self._tado_geofence_data: Optional[dict[str, Any]] = None
+        self._tado_geofence_data: Optional[dict[str, str]] = None
 
         self._tado_zone_temp_offset: dict[str, Any] = {}
 
