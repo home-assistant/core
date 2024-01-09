@@ -212,8 +212,6 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_unit_of_measurement: None = (
         None  # Subclasses of SensorEntity should not set this
     )
-    _invalid_state_class_reported = False
-    _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
     _sensor_option_display_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
@@ -563,28 +561,16 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Validate state class for sensors with a device class
         if (
             state_class
-            and not self._invalid_state_class_reported
             and device_class
             and (classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
             and state_class not in classes
         ):
-            self._invalid_state_class_reported = True
-            report_issue = self._suggest_report_issue()
-
-            # This should raise in Home Assistant Core 2023.6
-            _LOGGER.warning(
-                "Entity %s (%s) is using state class '%s' which "
-                "is impossible considering device class ('%s') it is using; "
-                "expected %s%s; "
-                "Please update your configuration if your entity is manually "
-                "configured, otherwise %s",
-                self.entity_id,
-                type(self),
-                state_class,
-                device_class,
-                "None or one of " if classes else "None",
-                ", ".join(f"'{value.value}'" for value in classes),
-                report_issue,
+            none_one_of_str = "None or one of " if classes else "None"
+            joined_state_classes = ", ".join(f"'{value.value}'" for value in classes)
+            raise ValueError(
+                f"Entity {self.entity_id} ({type(self)}) is using state class '{state_class}' which "
+                f"is impossible considering device class ('{device_class}') it is using; "
+                f"expected {none_one_of_str}{joined_state_classes}"
             )
 
         # Checks below only apply if there is a value
@@ -725,29 +711,17 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Validate unit of measurement used for sensors with a device class
         if (
-            not self._invalid_unit_of_measurement_reported
-            and device_class
+            device_class
             and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
             and native_unit_of_measurement not in units
         ):
-            self._invalid_unit_of_measurement_reported = True
-            report_issue = self._suggest_report_issue()
-
-            # This should raise in Home Assistant Core 2023.6
-            _LOGGER.warning(
-                (
-                    "Entity %s (%s) is using native unit of measurement '%s' which "
-                    "is not a valid unit for the device class ('%s') it is using; "
-                    "expected one of %s; "
-                    "Please update your configuration if your entity is manually "
-                    "configured, otherwise %s"
-                ),
-                self.entity_id,
-                type(self),
-                native_unit_of_measurement,
-                device_class,
-                [str(unit) if unit else "no unit of measurement" for unit in units],
-                report_issue,
+            units_str = [
+                str(unit) if unit else "no unit of measurement" for unit in units
+            ]
+            raise ValueError(
+                f"Entity {self.entity_id} ({type(self)}) is using native unit of "
+                f"measurement '{native_unit_of_measurement}' which is not a valid unit "
+                f"for the device class ('{device_class}') it is using; expected one of {units_str}"
             )
 
         return value

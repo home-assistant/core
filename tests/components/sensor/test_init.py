@@ -734,7 +734,7 @@ async def test_custom_unit(
             1.0,
             "1.0",
             "1.0",
-            SensorDeviceClass.POWER_FACTOR,
+            None,
         ),
         # Pressure
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
