@@ -287,7 +287,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_swing_mode = TADO_SWING_OFF
 
         self._tado_zone_data: PyTado.TadoZone = {}
-        self._tado_geofence_data = None
+        self._tado_geofence_data: Optional[dict[str, Any]] = None
 
         self._tado_zone_temp_offset: dict[str, Any] = {}
 
