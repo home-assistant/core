@@ -33,7 +33,7 @@ async def test_user_flow(hass: HomeAssistant, epion_api: Mock) -> None:
         data={CONF_API_KEY: API_KEY},
     )
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_api_key"}
+    assert result.get("errors") == {"base": "invalid_auth"}
 
     # Test with invalid auth
     epion_api.get_current.side_effect = HTTPError(response=Mock(status_code=401))
@@ -43,7 +43,7 @@ async def test_user_flow(hass: HomeAssistant, epion_api: Mock) -> None:
         data={CONF_API_KEY: API_KEY},
     )
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_api_key"}
+    assert result.get("errors") == {"base": "invalid_auth"}
 
     # Test with connection timeout
     epion_api.get_current.side_effect = ConnectTimeout()
@@ -53,7 +53,7 @@ async def test_user_flow(hass: HomeAssistant, epion_api: Mock) -> None:
         data={CONF_API_KEY: API_KEY},
     )
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "could_not_connect"}
+    assert result.get("errors") == {"base": "cannot_connect"}
 
     # Test with an HTTPError
     epion_api.get_current.side_effect = HTTPError()
@@ -63,7 +63,7 @@ async def test_user_flow(hass: HomeAssistant, epion_api: Mock) -> None:
         data={CONF_API_KEY: API_KEY},
     )
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "could_not_connect"}
+    assert result.get("errors") == {"base": "cannot_connect"}
 
     # Test with valid data
     epion_api.get_current.return_value = {

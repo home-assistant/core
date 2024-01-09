@@ -9,8 +9,8 @@
       }
     },
     "error": {
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "could_not_connect": "Could not connect to the Epion API"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {

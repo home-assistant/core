@@ -332,6 +332,7 @@ omit =
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
     homeassistant/components/epion/__init__.py
+    homeassistant/components/epion/coordinator.py
     homeassistant/components/epion/sensor.py
     homeassistant/components/epson/__init__.py
     homeassistant/components/epson/media_player.py

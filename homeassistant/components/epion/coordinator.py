@@ -1,0 +1,51 @@
+"""The Epion data coordinator."""
+
+import logging
+
+from epion import Epion
+from requests.exceptions import ConnectTimeout, HTTPError
+
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import REFRESH_INTERVAL
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class EpionCoordinator(DataUpdateCoordinator[dict]):
+    """Epion data update coordinator."""
+
+    def __init__(self, hass: HomeAssistant, epion_api: Epion) -> None:
+        """Initialize the Epion coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="Epion",
+            update_interval=REFRESH_INTERVAL,
+        )
+        self.epion_api = epion_api
+
+    async def _async_update_data(self):
+        """Fetch data from Epion API and construct a dictionary with device IDs as keys."""
+        try:
+            response = await self.hass.async_add_executor_job(
+                self.epion_api.get_current
+            )
+        except HTTPError as err:
+            _LOGGER.error("Could not retrieve details from Epion API")
+            if err.response is not None:
+                if err.response.status_code == 401:
+                    raise ConfigEntryAuthFailed from err
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+        except ConnectTimeout as err:
+            _LOGGER.error(
+                "Could not retrieve details from Epion API, connection timed out"
+            )
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+        else:
+            device_data = {}
+            for epion_device in response["devices"]:
+                device_data[epion_device["deviceId"]] = epion_device
+            return device_data

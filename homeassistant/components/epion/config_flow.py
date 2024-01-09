@@ -6,7 +6,7 @@ from typing import Any
 
 from epion import Epion
 from requests.exceptions import ConnectTimeout, HTTPError
-from voluptuous import Required, Schema
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_API_KEY
@@ -32,25 +32,22 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
                 key_valid = await self.hass.async_add_executor_job(
                     self._check_api_key, user_input[CONF_API_KEY]
                 )
+            except (HTTPError, ConnectTimeout):
+                _LOGGER.error("Unexpected problem when configuring Epion API")
+                errors["base"] = "cannot_connect"
+            else:
                 if key_valid:
                     return self.async_create_entry(
                         title="Epion integration",
-                        data={CONF_API_KEY: user_input[CONF_API_KEY]},
+                        data=user_input,
                     )
-                else:
-                    errors["base"] = "invalid_api_key"
-            except (HTTPError, ConnectTimeout, KeyError):
-                _LOGGER.error("Unexpected problem when configuring Epion API")
-                errors["base"] = "could_not_connect"
-        else:
-            user_input = {}
-            user_input[CONF_API_KEY] = ""
+                errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user",
-            data_schema=Schema(
+            data_schema=vol.Schema(
                 {
-                    Required(CONF_API_KEY, default=user_input[CONF_API_KEY]): str,
+                    vol.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
