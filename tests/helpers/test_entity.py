@@ -2446,8 +2446,6 @@ async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
             def _attr_attribution(self):
                 return "🤡"
 
-    assert 1 == 2
-
 
 async def test_entity_report_deprecated_supported_features_values(
     caplog: pytest.LogCaptureFixture,
