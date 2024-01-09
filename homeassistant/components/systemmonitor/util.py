@@ -5,7 +5,7 @@ import os
 import psutil
 from psutil._common import shwtemp
 
-from .sensor import CPU_SENSOR_PREFIXES
+from .const import CPU_SENSOR_PREFIXES
 
 _LOGGER = logging.getLogger(__name__)
 

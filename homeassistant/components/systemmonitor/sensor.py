@@ -508,31 +508,6 @@ IO_COUNTER = {
     "throughput_network_in": 1,
 }
 IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INET6}
-# There might be additional keys to be added for different
-# platforms / hardware combinations.
-# Taken from last version of "glances" integration before they moved to
-# a generic temperature sensor logic.
-# https://github.com/home-assistant/core/blob/5e15675593ba94a2c11f9f929cdad317e27ce190/homeassistant/components/glances/sensor.py#L199
-CPU_SENSOR_PREFIXES = [
-    "amdgpu 1",
-    "aml_thermal",
-    "Core 0",
-    "Core 1",
-    "CPU Temperature",
-    "CPU",
-    "cpu-thermal 1",
-    "cpu_thermal 1",
-    "exynos-therm 1",
-    "Package id 0",
-    "Physical id 0",
-    "radeon 1",
-    "soc-thermal 1",
-    "soc_thermal 1",
-    "Tctl",
-    "cpu0-thermal",
-    "cpu0_thermal",
-    "k10temp 1",
-]
 
 
 async def async_setup_platform(
