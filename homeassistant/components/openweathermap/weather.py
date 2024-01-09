@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import cast
 
 from homeassistant.components.weather import (
+    ATTR_FORECAST,
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_HUMIDITY,
@@ -16,7 +17,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST,
     Forecast,
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
@@ -53,6 +53,7 @@ from .const import (
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
+    ATTR_API_WEATHER,
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_GUST,
     ATTR_API_WIND_SPEED,
@@ -64,7 +65,6 @@ from .const import (
     FORECAST_MODE_DAILY,
     FORECAST_MODE_ONECALL_DAILY,
     MANUFACTURER,
-    ATTR_API_WEATHER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
