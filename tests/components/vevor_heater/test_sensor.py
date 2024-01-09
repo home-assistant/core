@@ -67,8 +67,6 @@ async def test_sensors_target_level(
             async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_UPDATE_INTERVAL)
             await hass.async_block_till_done()
 
-            await hass.data[DOMAIN][entry.entry_id].async_refresh()
-
             for sensor, value, unit in [
                 ("operational_mode", "OperationalMode.POWER_LEVEL", None),
                 ("operational_status", "OperationalStatus.HEATING", None),

@@ -28,9 +28,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_device(hass: HomeAssistant, address: str) -> dict[str, Any]:
     """Validate the given device."""
-    if not address:
-        raise CannotConnect()
-
     ble_device = bluetooth.async_ble_device_from_address(hass, address)
 
     if not ble_device:

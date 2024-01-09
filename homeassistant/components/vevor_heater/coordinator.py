@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 
 from bleak import BLEDevice
+import bluetooth_data_tools
 from vevor_heater_ble.heater import VevorDevice
 
 from homeassistant.core import HomeAssistant
@@ -22,7 +23,7 @@ class VevorHeaterUpdateCoordinator(DataUpdateCoordinator[VevorDevice]):
         self._ble_device = device
         self._vevor_device = VevorDevice(
             address=self._ble_device.address,
-            name=f"Vevor {self._ble_device.name or ''}",
+            name=f"Vevor {self._ble_device.name or bluetooth_data_tools.short_address(self._ble_device.address)}",
         )
         super().__init__(
             hass, logger=_LOGGER, name=DOMAIN, update_interval=DEFAULT_UPDATE_INTERVAL

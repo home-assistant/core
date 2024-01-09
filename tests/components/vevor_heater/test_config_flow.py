@@ -2,7 +2,6 @@
 from collections import defaultdict
 from unittest.mock import patch
 
-from bleak import BLEDevice
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 from vevor_heater_ble.heater import PowerStatus, VevorDevice, VevorHeaterStatus
@@ -11,6 +10,8 @@ from homeassistant import config_entries
 from homeassistant.components.vevor_heater.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.components.bluetooth import generate_ble_device
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -52,10 +53,9 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=BLEDevice(
+        return_value=generate_ble_device(
             address=FIXTURE_SERVICE_INFO.address,
             name=FIXTURE_SERVICE_INFO.name,
-            details=None,
             rssi=FIXTURE_SERVICE_INFO.rssi,
         ),
     ), patch.object(VevorDevice, "refresh_status", autospec=True) as refresh_status:
@@ -77,7 +77,7 @@ async def test_form_ok_with_name(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=BLEDevice(
+        return_value=generate_ble_device(
             address=FIXTURE_SERVICE_INFO.address,
             name=FIXTURE_SERVICE_INFO.name,
             details=defaultdict(str),
@@ -126,9 +126,9 @@ async def test_form_ok_without_name(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=BLEDevice(
-            address=service_info.address,
-            name=service_info.name,
+        return_value=generate_ble_device(
+            address=FIXTURE_SERVICE_INFO.address,
+            name=None,
             details=defaultdict(str),
             rssi=FIXTURE_SERVICE_INFO.rssi,
         ),
