@@ -195,6 +195,7 @@ class TadoConnector:
     def update(self):
         """Update the registered zones."""
         self.update_devices()
+        self.update_mobile_devices()
         self.update_zones()
         self.update_home()
 

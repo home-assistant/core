@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -22,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
+from . import TadoConnector
 from .const import (
     CONF_HOME_ID,
     DATA,
@@ -105,22 +105,22 @@ async def async_setup_entry(
 @callback
 def add_tracked_entities(
     hass: HomeAssistant,
-    tado: Any,
+    tado: TadoConnector,
     async_add_entities: AddEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new tracker entities from Tado."""
     _LOGGER.debug("Fetching Tado devices from API for (newly) tracked entities")
     new_tracked = []
-    for device in tado.mobile_devices:
-        if device["id"] in tracked:
+    for device_key, device in tado.data["mobile_device"].items():
+        if device_key in tracked:
             continue
 
         _LOGGER.debug(
-            "Adding Tado device %s with deviceID %s", device["name"], device["id"]
+            "Adding Tado device %s with deviceID %s", device["name"], device_key
         )
-        new_tracked.append(TadoDeviceTrackerEntity(device["id"], device["name"], tado))
-        tracked.add(device["id"])
+        new_tracked.append(TadoDeviceTrackerEntity(device_key, device["name"], tado))
+        tracked.add(device_key)
 
     async_add_entities(new_tracked)
 
@@ -134,7 +134,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self,
         device_id: str,
         device_name: str,
-        tado: Any,
+        tado: TadoConnector,
     ) -> None:
         """Initialize a Tado Device Tracker entity."""
         super().__init__()
@@ -154,11 +154,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
             self._device_name,
             self._device_id,
         )
-
-        for mobile_device in self._tado.mobile_devices:
-            if mobile_device["id"] == self._device_id:
-                device = mobile_device
-                break
+        device = self._tado.data["mobile_device"][self._device_id]
 
         self._active = False
         if device.get("location") is not None and device["location"]["atHome"]:
