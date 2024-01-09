@@ -6,42 +6,20 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
 from homeassistant.components.switch_as_x.const import (
     CONF_INVERT,
     CONF_TARGET_DOMAIN,
     DOMAIN,
 )
-from homeassistant.const import CONF_ENTITY_ID, Platform
+from homeassistant.const import CONF_ENTITY_ID, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from . import PLATFORMS_TO_TEST, STATE_MAP
 
-PLATFORMS_TO_TEST = (
-    Platform.COVER,
-    Platform.FAN,
-    Platform.LIGHT,
-    Platform.LOCK,
-    Platform.SIREN,
-    Platform.VALVE,
-)
-ON_STATE = {
-    Platform.COVER: "open",
-    Platform.FAN: "on",
-    Platform.LIGHT: "on",
-    Platform.LOCK: "unlocked",
-    Platform.SIREN: "on",
-    Platform.VALVE: "open",
-}
-ON_STATE_INVERTED = {
-    Platform.COVER: "closed",
-    Platform.FAN: "on",
-    Platform.LIGHT: "on",
-    Platform.LOCK: "locked",
-    Platform.SIREN: "on",
-    Platform.VALVE: "closed",
-}
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -164,7 +142,8 @@ async def test_options(
     target_domain: Platform,
 ) -> None:
     """Test reconfiguring."""
-    hass.states.async_set("switch.ceiling", "on")
+    switch_state = STATE_ON
+    hass.states.async_set("switch.ceiling", switch_state)
     switch_as_x_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -174,8 +153,8 @@ async def test_options(
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
-        version=1,
-        minor_version=2,
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
@@ -183,7 +162,7 @@ async def test_options(
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{target_domain}.abc")
-    assert state.state == ON_STATE_INVERTED[target_domain]
+    assert state.state == STATE_MAP[True][target_domain][switch_state]
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry
@@ -222,4 +201,4 @@ async def test_options(
 
     # Check the state of the entity has changed as expected
     state = hass.states.get(f"{target_domain}.abc")
-    assert state.state == ON_STATE[target_domain]
+    assert state.state == STATE_MAP[False][target_domain][switch_state]
