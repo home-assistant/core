@@ -25,6 +25,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "motionmount_is_moving": {
+        "name": "Moving"
+      }
+    },
     "number": {
       "motionmount_extension": {
         "name": "Extension"

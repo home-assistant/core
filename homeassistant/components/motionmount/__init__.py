@@ -13,10 +13,7 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, EMPTY_MAC
 
-PLATFORMS: list[Platform] = [
-    Platform.NUMBER,
-    Platform.SELECT,
-]
+PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SELECT, Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
