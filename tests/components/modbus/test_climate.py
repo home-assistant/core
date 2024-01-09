@@ -144,15 +144,6 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                             "state_fan_only": 5,
                             "state_auto": 6,
                         },
-                        CONF_HVAC_MODE_TT_REGISTERS: {
-                            "state_off_target_temp_register": 50,
-                            "state_heat_target_temp_register": 51,
-                            "state_cool_target_temp_register": 52,
-                            "state_heat_cool_target_temp_register": 53,
-                            "state_auto_target_temp_register": 54,
-                            "state_dry_target_temp_register": 55,
-                            "state_fan_only_target_temp_register": 56,
-                        },
                     },
                 }
             ],
