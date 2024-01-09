@@ -1552,28 +1552,19 @@ ACCUMULATED_PRECIPITATION: Final = "accumulated_precipitation"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
+
 # The degree of precision for platforms
-PRECISION_WHOLE: Final = 1
-PRECISION_HALVES: Final = 0.5
-PRECISION_TENTHS: Final = 0.1
-
-
 class Precision(Enum):
     """Precision of a platform."""
 
-    WHOLE = PRECISION_WHOLE
-    HALVES = PRECISION_HALVES
-    TENTHS = PRECISION_TENTHS
+    WHOLE = 1
+    HALVES = 0.5
+    TENTHS = 0.1
 
 
-# The round mode when using precision for platforms
-class RoundMode(StrEnum):
-    """Rounding mode of a platform."""
-
-    NEAREST = "nearest"
-    DOWN = "down"
-    UP = "up"
-
+PRECISION_WHOLE: Final = DeprecatedConstantEnum(Precision.WHOLE, "2025.1")
+PRECISION_HALVES: Final = DeprecatedConstantEnum(Precision.HALVES, "2025.1")
+PRECISION_TENTHS: Final = DeprecatedConstantEnum(Precision.TENTHS, "2025.1")
 
 # Static list of entities that will never be exposed to
 # cloud, alexa, or google_home components

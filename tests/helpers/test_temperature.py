@@ -1,7 +1,7 @@
 """Tests Home Assistant temperature helpers."""
 import pytest
 
-from homeassistant.const import Precision, RoundMode, UnitOfTemperature
+from homeassistant.const import Precision, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.temperature import display_temp
 
@@ -35,18 +35,6 @@ def test_precision_invalid(hass: HomeAssistant) -> None:
         assert expected_message == str(exception.value)
 
 
-def test_round_mode_invalid(hass: HomeAssistant) -> None:
-    """Test that invalid round_mode values result in an exception."""
-    for round_mode in ["Nearest", "flooR", "Foo"]:
-        with pytest.raises(Exception) as exception:
-            display_temp(hass, TEMP, UnitOfTemperature.CELSIUS, 1, round_mode)
-
-        expected_message = (
-            f"RoundMode not in [{', '.join(map(str, RoundMode))}]: {round_mode}"
-        )
-        assert expected_message == str(exception.value)
-
-
 def test_temperature_default_precision(hass: HomeAssistant) -> None:
     """Test default precision when a false value is given."""
 
@@ -57,55 +45,31 @@ def test_temperature_default_precision(hass: HomeAssistant) -> None:
 def test_temperature_celsius_celsius(hass: HomeAssistant) -> None:
     """Test temperature celsius to celsius."""
 
-    cases: dict[(Precision, RoundMode), float] = {
-        (Precision.WHOLE, RoundMode.NEAREST): 25,
-        (Precision.WHOLE, RoundMode.DOWN): 24,
-        (Precision.WHOLE, RoundMode.UP): 25,
-        (Precision.HALVES, RoundMode.NEAREST): 24.5,
-        (Precision.HALVES, RoundMode.DOWN): 24.5,
-        (Precision.HALVES, RoundMode.UP): 25.0,
-        (Precision.TENTHS, RoundMode.NEAREST): 24.6,
-        (Precision.TENTHS, RoundMode.DOWN): 24.6,
-        (Precision.TENTHS, RoundMode.UP): 24.7,
+    cases: dict[Precision, float] = {
+        Precision.WHOLE: 25,
+        Precision.HALVES: 24.5,
+        Precision.TENTHS: 24.6,
     }
 
     for precision in Precision:
-        for round_mode in RoundMode:
-            temp = cases[(precision, round_mode)]
-            assert (
-                display_temp(
-                    hass, TEMP, UnitOfTemperature.CELSIUS, precision, round_mode
-                )
-                == temp
-            )
+        temp = cases[precision]
+        assert display_temp(hass, TEMP, UnitOfTemperature.CELSIUS, precision) == temp
 
 
 def test_temperature_fahrenheit_fahrenheit(hass: HomeAssistant) -> None:
     """Test temperature fahrenheit to fahrenheit."""
 
-    cases: dict[(Precision, RoundMode), float] = {
-        (Precision.WHOLE, RoundMode.NEAREST): 25,
-        (Precision.WHOLE, RoundMode.DOWN): 24,
-        (Precision.WHOLE, RoundMode.UP): 25,
-        (Precision.HALVES, RoundMode.NEAREST): 24.5,
-        (Precision.HALVES, RoundMode.DOWN): 24.5,
-        (Precision.HALVES, RoundMode.UP): 25.0,
-        (Precision.TENTHS, RoundMode.NEAREST): 24.6,
-        (Precision.TENTHS, RoundMode.DOWN): 24.6,
-        (Precision.TENTHS, RoundMode.UP): 24.7,
+    cases: dict[Precision, float] = {
+        Precision.WHOLE: 25,
+        Precision.HALVES: 24.5,
+        Precision.TENTHS: 24.6,
     }
 
     hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     for precision in Precision:
-        for round_mode in RoundMode:
-            temp = cases[(precision, round_mode)]
-            assert (
-                display_temp(
-                    hass, TEMP, UnitOfTemperature.FAHRENHEIT, precision, round_mode
-                )
-                == temp
-            )
+        temp = cases[precision]
+        assert display_temp(hass, TEMP, UnitOfTemperature.FAHRENHEIT, precision) == temp
 
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -113,54 +77,30 @@ def test_temperature_fahrenheit_fahrenheit(hass: HomeAssistant) -> None:
 def test_temperature_fahrenheit_to_celsius(hass: HomeAssistant) -> None:
     """Test temperature fahrenheit to celsius. 24.6366 fahrenheit ~ -4.0908 celsius."""
 
-    cases: dict[(Precision, RoundMode), float] = {
-        (Precision.WHOLE, RoundMode.NEAREST): -4,
-        (Precision.WHOLE, RoundMode.DOWN): -5,
-        (Precision.WHOLE, RoundMode.UP): -4,
-        (Precision.HALVES, RoundMode.NEAREST): -4,
-        (Precision.HALVES, RoundMode.DOWN): -4.5,
-        (Precision.HALVES, RoundMode.UP): -4,
-        (Precision.TENTHS, RoundMode.NEAREST): -4.1,
-        (Precision.TENTHS, RoundMode.DOWN): -4.1,
-        (Precision.TENTHS, RoundMode.UP): -4,
+    cases: dict[Precision, float] = {
+        Precision.WHOLE: -4,
+        Precision.HALVES: -4,
+        Precision.TENTHS: -4.1,
     }
 
     for precision in Precision:
-        for round_mode in RoundMode:
-            temp = cases[(precision, round_mode)]
-            assert (
-                display_temp(
-                    hass, TEMP, UnitOfTemperature.FAHRENHEIT, precision, round_mode
-                )
-                == temp
-            )
+        temp = cases[precision]
+        assert display_temp(hass, TEMP, UnitOfTemperature.FAHRENHEIT, precision) == temp
 
 
 def test_temperature_celsius_to_fahrenheit(hass: HomeAssistant) -> None:
     """Test temperature celsius to fahrenheit: 24.6366 celsius ~ 76.34588 fahrenheit."""
 
-    cases: dict[(Precision, RoundMode), float] = {
-        (Precision.WHOLE, RoundMode.NEAREST): 76,
-        (Precision.WHOLE, RoundMode.DOWN): 76,
-        (Precision.WHOLE, RoundMode.UP): 77,
-        (Precision.HALVES, RoundMode.NEAREST): 76.5,
-        (Precision.HALVES, RoundMode.DOWN): 76,
-        (Precision.HALVES, RoundMode.UP): 76.5,
-        (Precision.TENTHS, RoundMode.NEAREST): 76.3,
-        (Precision.TENTHS, RoundMode.DOWN): 76.3,
-        (Precision.TENTHS, RoundMode.UP): 76.4,
+    cases: dict[Precision, float] = {
+        Precision.WHOLE: 76,
+        Precision.HALVES: 76.5,
+        Precision.TENTHS: 76.3,
     }
 
     hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     for precision in Precision:
-        for round_mode in RoundMode:
-            temp = cases[(precision, round_mode)]
-            assert (
-                display_temp(
-                    hass, TEMP, UnitOfTemperature.CELSIUS, precision, round_mode
-                )
-                == temp
-            )
+        temp = cases[precision]
+        assert display_temp(hass, TEMP, UnitOfTemperature.CELSIUS, precision) == temp
 
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
