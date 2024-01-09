@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_MACHINE, DOMAIN
@@ -124,7 +125,10 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         # initialize local API
         if host:
             _LOGGER.debug("Initializing local API")
-            await self._lm.init_local_api(host)
+            await self._lm.init_local_api(
+                host=host,
+                client=get_async_client(self.hass),
+            )
 
             _LOGGER.debug("Init WebSocket in Background Task")
 
