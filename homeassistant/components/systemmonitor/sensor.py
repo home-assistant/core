@@ -1,7 +1,7 @@
 """Support for monitoring the local system."""
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
@@ -151,7 +151,7 @@ def get_processor_temperature(entity: SystemMonitorSensor[dataT]) -> float | Non
 def get_process(entity: SystemMonitorSensor[dataT]) -> str:
     """Return process."""
     state = STATE_OFF
-    for proc in cast(Iterator[psutil.Process], entity.coordinator.data):
+    for proc in cast(list[psutil.Process], entity.coordinator.data):
         _LOGGER.debug("process %s for argument %s", proc.name(), entity.argument)
         try:
             if entity.argument == proc.name():
