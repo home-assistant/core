@@ -9,6 +9,7 @@ from typing import Any
 
 import aiohttp
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -26,6 +27,13 @@ STORAGE_VERSION = 1
 STORAGE_EXPIRE_TIME = "expire_time"
 STORAGE_ACCESS_TOKEN = "access_token"
 STORAGE_REFRESH_TOKEN = "refresh_token"
+
+TO_REDACT = {
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    STORAGE_ACCESS_TOKEN,
+    STORAGE_REFRESH_TOKEN,
+}
 
 
 class Auth:
@@ -56,7 +64,7 @@ class Auth:
         }
         _LOGGER.debug(
             "Calling LWA to get the access token (first time), with: %s",
-            json.dumps(lwa_params),
+            json.dumps(async_redact_data(lwa_params, TO_REDACT)),
         )
 
         return await self._async_request_new_token(lwa_params)
@@ -133,7 +141,9 @@ class Auth:
             return None
 
         response_json = await response.json()
-        _LOGGER.debug("LWA response body  : %s", response_json)
+        _LOGGER.debug(
+            "LWA response body  : %s", async_redact_data(response_json, TO_REDACT)
+        )
 
         access_token: str = response_json["access_token"]
         refresh_token: str = response_json["refresh_token"]

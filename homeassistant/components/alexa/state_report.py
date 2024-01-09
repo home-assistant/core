@@ -13,6 +13,7 @@ from uuid import uuid4
 import aiohttp
 
 from homeassistant.components import event
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -42,6 +43,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10
+
+TO_REDACT = {"correlationToken", "token"}
 
 
 class AlexaDirective:
@@ -379,7 +382,9 @@ async def async_send_changereport_message(
     response_text = await response.text()
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
+        _LOGGER.debug(
+            "Sent: %s", json.dumps(async_redact_data(message_serialized, TO_REDACT))
+        )
         _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status == HTTPStatus.ACCEPTED:
@@ -533,7 +538,9 @@ async def async_send_doorbell_event_message(
     response_text = await response.text()
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
+        _LOGGER.debug(
+            "Sent: %s", json.dumps(async_redact_data(message_serialized, TO_REDACT))
+        )
         _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status == HTTPStatus.ACCEPTED:
