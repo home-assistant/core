@@ -88,7 +88,7 @@ async def test_sensors2(
             value,
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.VOLUME,
-                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_STATE_CLASS: SensorStateClass.TOTAL,
                 ATTR_UNIT_OF_MEASUREMENT: "L",
             },
         )
@@ -105,7 +105,7 @@ async def test_sensors2(
         assert state.attributes.get(key) == value
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLUME
     assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "L"
 
     entity = entity_registry.async_get(f"sensor.sensor_group_{sensor_type}")
