@@ -199,6 +199,7 @@ homeassistant.components.history_stats.*
 homeassistant.components.holiday.*
 homeassistant.components.homeassistant.*
 homeassistant.components.homeassistant_alerts.*
+homeassistant.components.homeassistant_analytics.*
 homeassistant.components.homeassistant_green.*
 homeassistant.components.homeassistant_hardware.*
 homeassistant.components.homeassistant_sky_connect.*

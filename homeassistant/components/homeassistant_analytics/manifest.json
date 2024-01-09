@@ -1,0 +1,10 @@
+{
+  "domain": "homeassistant_analytics",
+  "name": "Homeassistant Analytics",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/homeassistant_analytics",
+  "iot_class": "cloud_polling",
+  "loggers": ["python-homeassistant-analytics"],
+  "requirements": ["python-homeassistant-analytics==0.1.1"]
+}
