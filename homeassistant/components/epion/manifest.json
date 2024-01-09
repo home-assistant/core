@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["epion"],
-  "requirements": ["epion==0.0.1", "stringcase==1.2.0"]
+  "requirements": ["epion==0.0.2", "stringcase==1.2.0"]
 }
