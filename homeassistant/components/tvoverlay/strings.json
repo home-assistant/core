@@ -21,6 +21,9 @@
     "invalid_url": {
       "message": "Invalid url \"{url}\""
     },
+    "invalid_file": {
+      "message": "Invalid file \"{filename}\""
+    },
     "remote_url_not_allowed": {
       "message": "Cannot send TvOverlay notification with image url \"{url}\" which is not secure to load data from. Only url's added to `{allow_url_list}` are accessible. See {help_url} for more information."
     },
