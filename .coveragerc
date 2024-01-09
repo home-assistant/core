@@ -998,6 +998,7 @@ omit =
     homeassistant/components/qbittorrent/__init__.py
     homeassistant/components/qbittorrent/coordinator.py
     homeassistant/components/qbittorrent/sensor.py
+    homeassistant/components/qbittorrent/switch.py
     homeassistant/components/qnap/__init__.py
     homeassistant/components/qnap/coordinator.py
     homeassistant/components/qnap/sensor.py
