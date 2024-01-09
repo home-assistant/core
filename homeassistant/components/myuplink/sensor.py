@@ -22,7 +22,7 @@ from .coordinator import CoordinatorData
 from .entity import MyUplinkEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class MyUplinkDeviceSensorEntityDescription(SensorEntityDescription):
     """Describes MyUplink device sensor entity."""
 
