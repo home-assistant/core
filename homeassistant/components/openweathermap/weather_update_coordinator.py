@@ -176,6 +176,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_FORECAST_PRESSURE: entry.pressure.get("press"),
             ATTR_API_FORECAST_WIND_SPEED: entry.wind().get("speed"),
             ATTR_API_FORECAST_WIND_BEARING: entry.wind().get("deg"),
+            ATTR_API_WEATHER: entry.detailed_status,
             ATTR_API_FORECAST_CONDITION: self._get_condition(
                 entry.weather_code, entry.reference_time("unix")
             ),

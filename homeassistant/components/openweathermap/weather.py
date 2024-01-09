@@ -16,6 +16,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST,
     Forecast,
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
@@ -63,6 +64,7 @@ from .const import (
     FORECAST_MODE_DAILY,
     FORECAST_MODE_ONECALL_DAILY,
     MANUFACTURER,
+    ATTR_API_WEATHER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
@@ -79,6 +81,7 @@ FORECAST_MAP = {
     ATTR_API_FORECAST_CLOUDS: ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_API_FORECAST_HUMIDITY: ATTR_FORECAST_HUMIDITY,
     ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE: ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_API_WEATHER: ATTR_FORECAST,
 }
 
 

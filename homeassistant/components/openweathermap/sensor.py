@@ -167,6 +167,10 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Condition",
     ),
     SensorEntityDescription(
+        key=ATTR_API_WEATHER,
+        name="Weather",
+    ),
+    SensorEntityDescription(
         key=ATTR_API_FORECAST_PRECIPITATION,
         name="Precipitation",
         device_class=SensorDeviceClass.PRECIPITATION,
