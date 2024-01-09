@@ -1666,9 +1666,7 @@ def multiply(value, amount, default=_SENTINEL):
 def absolute(value, default=_SENTINEL):
     """Filter and function to get absolute value."""
     try:
-        # abs() is defined for integers, floating point values,
-        # and complex numbers. Other types will raise a TyperError.
-        return abs(value)
+        return abs(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
             raise_no_default("abs", value)

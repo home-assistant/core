@@ -718,7 +718,15 @@ def test_multiply(hass: HomeAssistant) -> None:
 
 def test_absolute(hass: HomeAssistant) -> None:
     """Test absolute."""
-    tests = [(5, 5), (0, 0), (-5, 5), (5.0, 5.0), (0.0, 0.0), (-5.0, 5.0)]
+    tests = [
+        (5, 5),
+        (0, 0),
+        (-5, 5),
+        (5.0, 5.0),
+        (0.0, 0.0),
+        (-5.0, 5.0),
+        ("-5.0", 5.0),
+    ]
 
     for value, expected in tests:
         assert (
