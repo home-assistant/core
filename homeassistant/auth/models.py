@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, NamedTuple
 import uuid
 
 import attr
+from attr import Attribute
+from attr.setters import validate
 
 from homeassistant.const import __version__
 from homeassistant.util import dt as dt_util
@@ -36,6 +38,14 @@ class Group:
     system_generated: bool = attr.ib(default=False)
 
 
+def _handle_groups_change(
+    self: User, groups_attr: Attribute, new: list[Group]
+) -> list[Group]:
+    """Handle a change to a groups."""
+    self.invalidate_cache()
+    return validate(self, groups_attr, new)
+
+
 @attr.s(slots=False)
 class User:
     """A user."""
@@ -48,7 +58,9 @@ class User:
     system_generated: bool = attr.ib(default=False)
     local_only: bool = attr.ib(default=False)
 
-    groups: list[Group] = attr.ib(factory=list, eq=False, order=False)
+    groups: list[Group] = attr.ib(
+        factory=list, eq=False, order=False, on_setattr=_handle_groups_change
+    )
 
     # List of credentials of a user.
     credentials: list[Credentials] = attr.ib(factory=list, eq=False, order=False)

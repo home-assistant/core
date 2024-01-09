@@ -26,3 +26,20 @@ def test_permissions_merged() -> None:
     assert user.permissions.check_entity("switch.bla", "read") is True
     assert user.permissions.check_entity("light.kitchen", "read") is True
     assert user.permissions.check_entity("light.not_kitchen", "read") is False
+
+
+def test_cache_cleared_on_group_change() -> None:
+    """Test we clear the cache when a group changes."""
+    group = models.Group(
+        name="Test Group", policy={"entities": {"domains": {"switch": True}}}
+    )
+    user = models.User(name="Test User", perm_lookup=None, groups=[group])
+    # Make sure we cache instance
+    assert user.permissions is user.permissions
+
+    # Make sure we cache is_admin
+    assert user.is_admin is user.is_admin
+
+    user.groups = []
+
+    assert user.groups == []
