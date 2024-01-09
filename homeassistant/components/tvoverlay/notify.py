@@ -118,11 +118,17 @@ class TvOverlayNotificationService(BaseNotificationService):
         """Check if a file exists on disk and is in allowlist_external_dirs."""
 
         file_path = Path(filename).parent
-        if (
-            os.path.exists(file_path)
-            and os.path.isfile(filename)
-            and self.hass.config.is_allowed_path(str(file_path))
-        ):
+        if not os.path.exists(file_path) or not os.path.isfile(filename):
+            raise ServiceValidationError(
+                f"Invalid file '{filename}'",
+                translation_domain=DOMAIN,
+                translation_key="invalid_file",
+                translation_placeholders={
+                    "filename": filename,
+                },
+            )
+
+        if self.hass.config.is_allowed_path(filename):
             return True
 
         allow_file_list = "allowlist_external_dirs"
@@ -145,11 +151,11 @@ class TvOverlayNotificationService(BaseNotificationService):
 
     async def _validate_image(self, image_data: str) -> str | None:
         """Validate image_data is valid and in allowed list."""
-        if await self._is_valid_url(image_data):
-            return image_data
         if image_data.startswith("mdi:"):
             return image_data
-        if await self._is_valid_file(image_data):
+        if image_data.startswith("http") and await self._is_valid_url(image_data):
+            return image_data
+        if "." in image_data and await self._is_valid_file(image_data):
             return image_data
         return None
 

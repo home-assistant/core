@@ -1,4 +1,5 @@
 """Test TvOverlay notify."""
+from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
@@ -8,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.tvoverlay.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from . import (
     CONF_CONFIG_FLOW,
@@ -39,13 +41,6 @@ from . import (
         (
             "message",
             "title",
-            {"image": {"url": "example/image.png"}},
-            "message",
-            {"title": "title", "image": None},
-        ),
-        (
-            "message",
-            "title",
             {"app_icon": "/temp/image.png"},
             "message",
             {"title": "title", "appIcon": "/temp/image.png"},
@@ -53,7 +48,7 @@ from . import (
         (
             "message",
             "title",
-            {"app_icon": "/temp/image.png"},
+            {"app_icon": ""},
             "message",
             {"title": "title", "appIcon": None},
         ),
@@ -81,7 +76,7 @@ from . import (
         (
             "message",
             "title",
-            {"position": "top_middle"},
+            {"position": "top_right"},
             "message",
             {"title": "title", "corner": "top_right"},
         ),
@@ -127,8 +122,11 @@ async def test_notify(
             user_input=CONF_CONFIG_FLOW,
         )
         await hass.async_block_till_done()
-
-    with mocked_send_notification() as mock_notify:
+    hass.config.allowlist_external_urls.add("http://example.com/image.png")
+    hass.config.allowlist_external_dirs.add(Path("/temp").resolve())
+    with mocked_send_notification() as mock_notify, patch(
+        "os.path.exists", return_value=True
+    ), patch("os.path.isfile", return_value=True):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             SERICVE_NAME,
@@ -206,7 +204,9 @@ async def test_notify_local_path(
 
     with mocked_send_notification() as mock_notify, patch(
         "os.path.isfile", return_value=isfile
-    ), patch.object(hass.config, "is_allowed_path", return_value=is_allowed_path):
+    ), patch("os.path.exists", return_value=True), patch.object(
+        hass.config, "is_allowed_path", return_value=is_allowed_path
+    ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             SERICVE_NAME,
@@ -246,7 +246,7 @@ async def test_notify_persistent(
                 "title": "Title",
                 "data": {
                     "is_persistent": "true",
-                    "shape": "triangle",
+                    "shape": "circle",
                 },
             },
             blocking=True,
@@ -328,3 +328,151 @@ async def test_notify_url(
         assert mock_notify.mock_calls[0].kwargs["title"] == expected_title
         assert mock_notify.mock_calls[0].kwargs["image"].url == expected_image
         assert mock_notify.mock_calls[0].kwargs["appIcon"] == expected_app_icon
+
+
+@pytest.mark.parametrize(
+    (
+        "message",
+        "title",
+        "data",
+        "is_allowed_external_url",
+        "expected_translation_key",
+    ),
+    [
+        (
+            "Message",
+            "Title",
+            {"image": {"url": "example.com/image.png"}},
+            True,
+            "invalid_url",
+        ),
+        (
+            "Message",
+            "Title",
+            {"image": {"url": "http://example.com/image.png"}},
+            False,
+            "remote_url_not_allowed",
+        ),
+    ],
+)
+async def test_notify_invalid_url(
+    hass: HomeAssistant,
+    message: str,
+    title: str,
+    data: Any,
+    is_allowed_external_url: bool,
+    expected_translation_key: str,
+) -> None:
+    """Test service call notify image url."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    with mocked_tvoverlay_info():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_CONFIG_FLOW,
+        )
+        await hass.async_block_till_done()
+
+    with mocked_send_notification(), patch.object(
+        hass.config, "is_allowed_external_url", return_value=is_allowed_external_url
+    ), pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERICVE_NAME,
+            {"message": message, "title": title, "data": data},
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == expected_translation_key
+    assert exc.value.translation_domain == DOMAIN
+
+
+@pytest.mark.parametrize(
+    (
+        "message",
+        "title",
+        "data",
+        "is_allowed_path",
+        "is_valid_file",
+        "expected_translation_key",
+    ),
+    [
+        (
+            "Message",
+            "Title",
+            {"image": {"path": "/temp/image.png"}},
+            True,
+            False,
+            "invalid_file",
+        ),
+        (
+            "Message",
+            "Title",
+            {"image": {"path": "/temp/image.png"}},
+            False,
+            True,
+            "remote_file_not_allowed",
+        ),
+        (
+            "Message",
+            "Title",
+            {"position": "top_middle"},
+            True,
+            True,
+            "invalid_positon_value",
+        ),
+        (
+            "Message",
+            "Title",
+            {"shape": "triangle"},
+            True,
+            True,
+            "invalid_shape_value",
+        ),
+        (
+            "Message",
+            "Title",
+            {"image": {"foo": "bar"}},
+            True,
+            True,
+            "invalid_image",
+        ),
+    ],
+)
+async def test_notify_invalid_file(
+    hass: HomeAssistant,
+    message: str,
+    title: str,
+    data: Any,
+    is_allowed_path: bool,
+    is_valid_file: bool,
+    expected_translation_key: str,
+) -> None:
+    """Test service call notify image url."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    with mocked_tvoverlay_info():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_CONFIG_FLOW,
+        )
+        await hass.async_block_till_done()
+
+    with mocked_send_notification(), patch.object(
+        hass.config, "is_allowed_path", return_value=is_allowed_path
+    ), patch("os.path.exists", return_value=is_valid_file), patch(
+        "os.path.isfile", return_value=is_valid_file
+    ), pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERICVE_NAME,
+            {"message": message, "title": title, "data": data},
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == expected_translation_key
+    assert exc.value.translation_domain == DOMAIN
