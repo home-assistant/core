@@ -66,32 +66,6 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MyUplinkDeviceSensor(MyUplinkEntity, SensorEntity):
-    """Representation of a myUplink device sensor."""
-
-    entity_description: MyUplinkDeviceSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: MyUplinkDataCoordinator,
-        device_id: str,
-        entity_description: MyUplinkDeviceSensorEntityDescription,
-        unique_id_suffix: str,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            device_id=device_id,
-            unique_id_suffix=unique_id_suffix,
-        )
-        self.entity_description = entity_description
-
-    @property
-    def native_value(self) -> StateType:
-        """Sensor state value."""
-        return self.entity_description.value_fn(self.coordinator.data, self.device_id)
-
-
 class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
     """Representation of a myUplink device point sensor."""
 
