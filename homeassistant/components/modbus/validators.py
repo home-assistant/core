@@ -277,6 +277,17 @@ def duplicate_entity_validator(config: dict) -> dict:
                     a = str(entry[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS])
                     a += "_" + str(inx)
                     entry_addrs.add(a)
+                if (
+                    CONF_HVAC_MODE_REGISTER in entry
+                    and CONF_HVAC_MODE_TT_REGISTERS in entry[CONF_HVAC_MODE_REGISTER]
+                ):
+                    regs = entry[CONF_HVAC_MODE_REGISTER].get(
+                        CONF_HVAC_MODE_TT_REGISTERS
+                    )
+                    for _key, reg in regs.items():
+                        a = str(reg)
+                        a += "_" + str(inx)
+                        entry_addrs.add(a)
                 if CONF_FAN_MODE_REGISTER in entry:
                     a = str(entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS])
                     a += "_" + str(inx)

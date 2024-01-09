@@ -515,6 +515,12 @@ async def test_duplicate_entity_validator(do_config) -> None:
                                 CONF_HVAC_MODE_COOL: 0,
                                 CONF_HVAC_MODE_HEAT: 1,
                             },
+                            CONF_HVAC_MODE_TT_REGISTERS: {
+                                CONF_HVAC_MODE_COOL_TT_REG: 130,
+                                CONF_HVAC_MODE_HEAT_COOL_TT_REG: 132,
+                                CONF_HVAC_MODE_HEAT_TT_REG: 131,
+                                CONF_HVAC_MODE_DRY_TT_REG: 133,
+                            },
                         },
                     },
                     {
@@ -526,6 +532,12 @@ async def test_duplicate_entity_validator(do_config) -> None:
                             CONF_HVAC_MODE_VALUES: {
                                 CONF_HVAC_MODE_COOL: 0,
                                 CONF_HVAC_MODE_HEAT: 1,
+                            },
+                            CONF_HVAC_MODE_TT_REGISTERS: {
+                                CONF_HVAC_MODE_COOL_TT_REG: 130,
+                                CONF_HVAC_MODE_HEAT_COOL_TT_REG: 119,
+                                CONF_HVAC_MODE_HEAT_TT_REG: 131,
+                                CONF_HVAC_MODE_DRY_TT_REG: 117,
                             },
                         },
                     },
