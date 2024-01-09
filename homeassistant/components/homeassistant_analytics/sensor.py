@@ -54,6 +54,6 @@ class HomeassistantAnalyticsSensor(
         self._integration_domain = integration_domain
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
-        return self.coordinator.data[self._integration_domain]
+        return self.coordinator.data.get(self._integration_domain)
