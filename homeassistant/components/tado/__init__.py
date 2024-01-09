@@ -210,7 +210,7 @@ class TadoConnector:
             return
 
         # Make request at PyTado the library should fix it, so this can be removed
-        if "errors" in mobile_devices and len(mobile_devices["errors"]) > 0:
+        if "errors" in mobile_devices and mobile_devices["errors"]:
             _LOGGER.error(
                 "Error for home ID %s while updating mobile devices: %s",
                 self.home_id,
