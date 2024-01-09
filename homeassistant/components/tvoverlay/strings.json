@@ -16,5 +16,25 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "exceptions": {
+    "invalid_url": {
+      "message": "Invalid url \"{url}\""
+    },
+    "remote_url_not_allowed": {
+      "message": "Cannot send TvOverlay notification with image url \"{url}\" which is not secure to load data from. Only url's added to `{allow_url_list}` are accessible. See {help_url} for more information."
+    },
+    "remote_file_not_allowed": {
+      "message": "Cannot send TvOverlay notification with image file \"{file_name}\" from directory \"{file_path}\" which is not secure to load data from. Only folders added to `{allow_file_list}` are accessible. See {help_url} for more information."
+    },
+    "invalid_positon_value": {
+      "message": "Invalid position value \"{position}\", Has to be one of {positions_values}."
+    },
+    "invalid_shape_value": {
+      "message": "Invalid shape value \"{shape}\", Has to be one of {shape_values}."
+    },
+    "invalid_image": {
+      "message": "Invalid notification image. No valid URL, local_path or mdi_icon found in image attributes."
+    }
   }
 }

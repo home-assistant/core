@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os.path
+from pathlib import Path
 from typing import Any
 import uuid
 
@@ -25,8 +26,11 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 DEFAULT_DURATION = "5"
 
@@ -81,30 +85,63 @@ class TvOverlayNotificationService(BaseNotificationService):
         """Check if a valid url and in allowlist_external_urls."""
         try:
             cv.url(url)
-        except vol.Invalid:
-            _LOGGER.warning("Invalid URL: %s", url)
-            return False
+        except vol.Invalid as err:
+            raise ServiceValidationError(
+                f"Invalid url '{url}'",
+                translation_domain=DOMAIN,
+                translation_key="invalid_url",
+                translation_placeholders={
+                    "url": url,
+                },
+            ) from err
 
         if self.hass.config.is_allowed_external_url(url):
             return True
 
-        _LOGGER.warning(
-            "URL is not allowed: %s, check allowlist_external_urls in configuration.yaml",
-            url,
+        allow_url_list = "allowlist_external_urls"
+        help_url = "https://www.home-assistant.io/docs/configuration/basic/"
+
+        raise ServiceValidationError(
+            f"Cannot send TvOverlay notification with image url '{url}' which is not secure to load data from."
+            f"Only url's added to `{allow_url_list}` are accessible. "
+            f"See {help_url} for more information.",
+            translation_domain=DOMAIN,
+            translation_key="remote_url_not_allowed",
+            translation_placeholders={
+                "url": url,
+                "allow_url_list": allow_url_list,
+                "help_url": help_url,
+            },
         )
-        return False
 
     async def _is_valid_file(self, filename: str) -> bool:
         """Check if a file exists on disk and is in allowlist_external_dirs."""
-        if not self.hass.config.is_allowed_path(filename) or not os.path.isfile(
-            filename
+
+        file_path = Path(filename).parent
+        if (
+            os.path.exists(file_path)
+            and os.path.isfile(filename)
+            and self.hass.config.is_allowed_path(str(file_path))
         ):
-            _LOGGER.warning(
-                "Validation failed for file: %s. Check allowlist_external_dirs in configuration.yaml",
-                filename,
-            )
-            return False
-        return True
+            return True
+
+        allow_file_list = "allowlist_external_dirs"
+        file_name = os.path.basename(filename)
+        help_url = "https://www.home-assistant.io/docs/configuration/basic/"
+        raise ServiceValidationError(
+            f"Cannot send TvOverlay notification with image file '{file_name}' "
+            f"from directory '{str(file_path)}' which is not secure to load data from. "
+            f"Only folders added to `{allow_file_list}` are accessible. "
+            f"See {help_url} for more information.",
+            translation_domain=DOMAIN,
+            translation_key="remote_file_not_allowed",
+            translation_placeholders={
+                "allow_file_list": allow_file_list,
+                "file_path": str(file_path),
+                "file_name": file_name,
+                "help_url": help_url,
+            },
+        )
 
     async def _validate_image(self, image_data: str) -> str | None:
         """Validate image_data is valid and in allowed list."""
@@ -122,8 +159,8 @@ class TvOverlayNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA) or {}
         _LOGGER.debug("Notification additional data attributes: %s", data)
         message_id = data.get(ATTR_ID, str(uuid.uuid1()))
-        app_title = data.get(ATTR_APP_TITLE) or DEFAULT_APP_NAME
-        source_name = data.get(ATTR_SOURCE_NAME) or DEFAULT_SOURCE_NAME
+        app_title = data.get(ATTR_APP_TITLE, DEFAULT_APP_NAME)
+        source_name = data.get(ATTR_SOURCE_NAME, DEFAULT_SOURCE_NAME)
         app_icon: str | ImageUrlSource | None = None
         app_icon_data = data.get(ATTR_APP_ICON)
         if isinstance(app_icon_data, str):
@@ -133,19 +170,21 @@ class TvOverlayNotificationService(BaseNotificationService):
                 await self._populate_image(app_icon_data) if app_icon_data else None
             )
 
-        badge_icon = data.get(ATTR_BADGE_ICON) or DEFAULT_SMALL_ICON
-        badge_color = data.get(ATTR_BADGE_COLOR) or COLOR_GREEN
-        position = (
-            data.get(ATTR_POSITION, Positions.TOP_RIGHT.value)
-            or Positions.TOP_RIGHT.value
-        )
+        badge_icon = data.get(ATTR_BADGE_ICON, DEFAULT_SMALL_ICON)
+        badge_color = data.get(ATTR_BADGE_COLOR, COLOR_GREEN)
+        position = data.get(ATTR_POSITION, Positions.TOP_RIGHT.value)
+        positions_values = [member.value for member in Positions]
 
-        if position not in [member.value for member in Positions]:
-            position = Positions.TOP_RIGHT.value
-            _LOGGER.warning(
-                "Invalid position value: %s. Has to be one of: %s",
-                position,
-                [member.value for member in Positions],
+        if position not in positions_values:
+            raise ServiceValidationError(
+                f"Invalid position value '{position}', "
+                f"Has to be one of {str(positions_values)}.",
+                translation_domain=DOMAIN,
+                translation_key="invalid_positon_value",
+                translation_placeholders={
+                    "position": position,
+                    "positions_values": str(positions_values),
+                },
             )
 
         duration: str = (str(data.get(ATTR_DURATION))) or DEFAULT_DURATION
@@ -163,14 +202,19 @@ class TvOverlayNotificationService(BaseNotificationService):
         message_color = data.get(ATTR_MESSAGE_COLOR)
         border_color = data.get(ATTR_BORDER_COLOR)
         bg_color = data.get(ATTR_BG_COLOR)
-        shape = data.get(ATTR_SHAPE, Shapes.CIRCLE.value) or Shapes.CIRCLE.value
+        shape = data.get(ATTR_SHAPE, Shapes.CIRCLE.value)
+        shape_values = [member.value for member in Shapes]
 
-        if shape not in [member.value for member in Shapes]:
-            shape = Shapes.CIRCLE.value
-            _LOGGER.warning(
-                "Invalid shape value: %s. Has to be one of: %s",
-                shape,
-                [member.value for member in Shapes],
+        if shape not in shape_values:
+            raise ServiceValidationError(
+                f"Invalid shape value '{shape}', "
+                f"Has to be one of {str(shape_values)}.",
+                translation_domain=DOMAIN,
+                translation_key="invalid_shape_value",
+                translation_placeholders={
+                    "shape": shape,
+                    "shape_values": str(shape_values),
+                },
             )
 
         visible = cv.boolean(data.get(ATTR_VISIBLE, True))
@@ -232,7 +276,8 @@ class TvOverlayNotificationService(BaseNotificationService):
                 _LOGGER.debug("Using MDI icon: %s", mdi_icon)
                 return mdi_icon
 
-        _LOGGER.warning(
-            "No valid URL, local_path or mdi_icon found in image attributes"
+        raise ServiceValidationError(
+            "Invalid notification image. No valid URL, local_path or mdi_icon found in image attributes.",
+            translation_domain=DOMAIN,
+            translation_key="invalid_image",
         )
-        return None
