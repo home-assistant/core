@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from contextlib import suppress
+from collections.abc import Awaitable, Coroutine
+import contextlib
 import logging
 from typing import Any
 
@@ -12,7 +13,11 @@ from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, RemoveNodeReason
-from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
+from zwave_js_server.exceptions import (
+    BaseZwaveJSServerError,
+    InvalidServerVersion,
+    NotConnected,
+)
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
@@ -25,7 +30,7 @@ from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.components.persistent_notification import async_create
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
@@ -132,7 +137,7 @@ from .services import ZWaveServices
 CONNECT_TIMEOUT = 10
 DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 DATA_DRIVER_EVENTS = "driver_events"
-DATA_START_CLIENT_TASK = "start_client_task"
+LISTEN_READY_TIMEOUT = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -196,53 +201,83 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
 
     async_delete_issue(hass, DOMAIN, "invalid_server_version")
-    LOGGER.info("Connected to Zwave JS Server")
+    LOGGER.debug("Connected to Zwave JS Server")
 
     # Set up websocket API
     async_register_api(hass)
-    entry.runtime_data = {}
 
-    # Create a task to allow the config entry to be unloaded before the driver is ready.
-    # Unloading the config entry is needed if the client listen task errors.
-    start_client_task = hass.async_create_task(start_client(hass, entry, client))
-    entry.runtime_data[DATA_START_CLIENT_TASK] = start_client_task
-
-    return True
-
-
-async def start_client(
-    hass: HomeAssistant, entry: ConfigEntry, client: ZwaveClient
-) -> None:
-    """Start listening with the client."""
-    entry.runtime_data[DATA_CLIENT] = client
-    driver_events = entry.runtime_data[DATA_DRIVER_EVENTS] = DriverEvents(hass, entry)
+    driver_ready = asyncio.Event()
+    listen_task = hass.async_create_background_task(
+        client_listen(hass, entry, client, driver_ready),
+        f"{DOMAIN}_{entry.title}_client_listen",
+    )
 
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
-        await disconnect_client(hass, entry)
+        await client.disconnect()
 
-    listen_task = asyncio.create_task(
-        client_listen(hass, entry, client, driver_events.ready)
-    )
-    entry.runtime_data[DATA_CLIENT_LISTEN_TASK] = listen_task
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
     )
 
+    driver_ready_task = hass.async_create_task(driver_ready.wait())
     try:
-        await driver_events.ready.wait()
-    except asyncio.CancelledError:
-        LOGGER.debug("Cancelling start client")
-        return
+        async with asyncio.timeout(LISTEN_READY_TIMEOUT):
+            done, _ = await asyncio.wait(
+                (driver_ready_task, listen_task), return_when=asyncio.FIRST_COMPLETED
+            )
+    except asyncio.TimeoutError as err:
+        driver_ready_task.cancel()
+        listen_task.cancel()
+        raise ConfigEntryNotReady("Driver ready timed out") from err
 
-    LOGGER.info("Connection to Zwave JS Server initialized")
+    if listen_task in done:
+        # If the listen task is already done, we need to raise ConfigEntryNotReady
+        listen_error = listen_task.exception()
+        driver_ready_task.cancel()
+        raise ConfigEntryNotReady(listen_error) from listen_error
 
-    assert client.driver
-    async_dispatcher_send(
-        hass, f"{DOMAIN}_{client.driver.controller.home_id}_connected_to_server"
+    LOGGER.debug("Connection to Zwave JS Server initialized")
+
+    entry_runtime_data = entry.runtime_data = {
+        DATA_CLIENT: client,
+        DATA_CLIENT_LISTEN_TASK: listen_task,
+    }
+    entry_runtime_data[DATA_DRIVER_EVENTS] = driver_events = DriverEvents(hass, entry)
+
+    driver = client.driver
+    # When the driver is ready we know it's set on the client.
+    assert driver is not None
+
+    with contextlib.suppress(NotConnected):
+        # If the client isn't connected the listen task will have an exception
+        # and we'll handle the clean up below.
+        await driver_events.setup(driver)
+
+    # If the listen task is already failed, we need to raise ConfigEntryNotReady
+    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
+        tasks: list[Coroutine] = [
+            hass.config_entries.async_forward_entry_unload(entry, platform)
+            for platform, task in driver_events.platform_setup_tasks.items()
+            if not task.cancel()
+        ]
+        if tasks:
+            await asyncio.gather(*tasks)
+        hass.data[DOMAIN].pop(entry.entry_id)
+        try:
+            await client.disconnect()
+        finally:
+            raise ConfigEntryNotReady(listen_error) from listen_error
+
+    # Re-attach trigger listeners.
+    # Schedule this call to make sure the config entry is loaded first.
+    hass.async_add_job(
+        async_dispatcher_send,
+        hass,
+        f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
     )
 
-    await driver_events.setup(client.driver)
+    return True
 
 
 class DriverEvents:
@@ -256,7 +291,6 @@ class DriverEvents:
         self.dev_reg = dr.async_get(hass)
         self.hass = hass
         self.platform_setup_tasks: dict[str, asyncio.Task] = {}
-        self.ready = asyncio.Event()
         # Make sure to not pass self to ControllerEvents until all attributes are set.
         self.controller_events = ControllerEvents(hass, self)
 
@@ -930,63 +964,52 @@ async def client_listen(
     driver_ready: asyncio.Event,
 ) -> None:
     """Listen with the client."""
-    should_reload = True
     try:
         await client.listen(driver_ready)
-    except asyncio.CancelledError:
-        should_reload = False
     except BaseZwaveJSServerError as err:
+        if entry.state != ConfigEntryState.LOADED:
+            raise
         LOGGER.error("Failed to listen: %s", err)
     except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
+        if entry.state != ConfigEntryState.LOADED:
+            raise
 
     # The entry needs to be reloaded since a new driver state
     # will be acquired on reconnect.
     # All model instances will be replaced when the new state is acquired.
-    if should_reload:
-        LOGGER.info("Disconnected from server. Reloading integration")
+    if not hass.is_stopping:
+        LOGGER.debug("Disconnected from server. Reloading integration")
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
-
-
-async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Disconnect client."""
-    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
-    listen_task: asyncio.Task = entry.runtime_data[DATA_CLIENT_LISTEN_TASK]
-    start_client_task: asyncio.Task = entry.runtime_data[DATA_START_CLIENT_TASK]
-    driver_events: DriverEvents = entry.runtime_data[DATA_DRIVER_EVENTS]
-    listen_task.cancel()
-    start_client_task.cancel()
-    platform_setup_tasks = driver_events.platform_setup_tasks.values()
-    for task in platform_setup_tasks:
-        task.cancel()
-
-    tasks = (listen_task, start_client_task, *platform_setup_tasks)
-    await asyncio.gather(*tasks, return_exceptions=True)
-    for task in tasks:
-        with suppress(asyncio.CancelledError):
-            await task
-
-    if client.connected:
-        await client.disconnect()
-        LOGGER.info("Disconnected from Zwave JS Server")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
-    driver_events: DriverEvents = entry.runtime_data[DATA_DRIVER_EVENTS]
-    platforms = [
-        platform
-        for platform, task in driver_events.platform_setup_tasks.items()
-        if not task.cancel()
-    ]
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
+    entry_runtime_data = entry.runtime_data
+    client: ZwaveClient = entry_runtime_data[DATA_CLIENT]
+    driver_events: DriverEvents = entry_runtime_data[DATA_DRIVER_EVENTS]
 
-    if client.connected and client.driver:
-        await async_disable_server_logging_if_needed(hass, entry, client.driver)
-    if DATA_CLIENT_LISTEN_TASK in entry.runtime_data:
-        await disconnect_client(hass, entry)
+    setup_tasks: list[Awaitable] = []
+    unload_tasks: list[Awaitable] = []
+
+    for platform, task in driver_events.platform_setup_tasks.items():
+        if not task.cancel():
+            unload_tasks.append(
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+            )
+        else:
+            setup_tasks.append(task)
+
+    unload_ok = all(await asyncio.gather(*unload_tasks)) if unload_tasks else True
+    await asyncio.gather(*setup_tasks)
+
+    if client.connected and (driver := client.driver):
+        await async_disable_server_logging_if_needed(hass, entry, driver)
+
+    listen_task: asyncio.Task[None] = entry_runtime_data[DATA_CLIENT_LISTEN_TASK]
+    listen_task.cancel()
+    await client.disconnect()
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
