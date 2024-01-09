@@ -11,7 +11,7 @@ import sys
 from typing import Any, Generic, Literal, cast
 
 import psutil
-from psutil._common import sdiskusage, snetio, snicaddr, sswap
+from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
 from psutil._pslinux import svmem
 import voluptuous as vol
 
@@ -141,15 +141,18 @@ def get_processor_use(entity: SystemMonitorSensor[dataT]) -> int:
     return round(cast(float, entity.coordinator.data))
 
 
-def get_processor_temperature(entity: SystemMonitorSensor[dataT]) -> float:
+def get_processor_temperature(entity: SystemMonitorSensor[dataT]) -> float | None:
     """Return processor temperature."""
-    return cast(float, entity.coordinator.data)
+    temps = cast(dict[str, list[shwtemp]], entity.coordinator.data)
+    temp = read_cpu_temperature(temps)
+    return temp
 
 
 def get_process(entity: SystemMonitorSensor[dataT]) -> str:
     """Return process."""
     state = STATE_OFF
     for proc in cast(Iterator[psutil.Process], entity.coordinator.data):
+        _LOGGER.debug("process %s for argument %s", proc.name(), entity.argument)
         try:
             if entity.argument == proc.name():
                 state = STATE_ON
@@ -557,7 +560,8 @@ async def async_setup_entry(  # noqa: C901
     loaded_resources: set[str] = set()
     disk_arguments = await hass.async_add_executor_job(get_all_disk_mounts)
     network_arguments = await hass.async_add_executor_job(get_all_network_interfaces)
-    cpu_temperature = await hass.async_add_executor_job(read_cpu_temperature)
+    temps = await hass.async_add_executor_job(psutil.sensors_temperatures)
+    cpu_temperature = await hass.async_add_executor_job(read_cpu_temperature, temps)
 
     disk_coordinators: dict[str, SystemMonitorDiskCoordinator] = {}
     for argument in disk_arguments:
