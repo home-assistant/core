@@ -129,7 +129,7 @@ async def test_exposed_areas(
 
     # This should be an error because the lights in that area are not exposed
     assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
     # But we can still ask questions about the bedroom, even with no exposed entities
     result = await conversation.async_converse(
@@ -455,6 +455,38 @@ async def test_error_missing_area(hass: HomeAssistant, init_components) -> None:
     assert result.response.speech["plain"]["speech"] == "No area named missing area"
 
 
+async def test_error_no_exposed_for_domain(
+    hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
+) -> None:
+    """Test error message when no entities for a domain are exposed in an area."""
+    area_registry.async_get_or_create("kitchen")
+    result = await conversation.async_converse(
+        hass, "turn on the lights in the kitchen", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"] == "kitchen does not contain a light"
+    )
+
+
+async def test_error_no_exposed_for_device_class(
+    hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
+) -> None:
+    """Test error message when no entities of a device class are exposed in an area."""
+    area_registry.async_get_or_create("bedroom")
+    result = await conversation.async_converse(
+        hass, "open bedroom windows", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"] == "bedroom does not contain a window"
+    )
+
+
 async def test_error_match_failure(hass: HomeAssistant, init_components) -> None:
     """Test response with complete match failure."""
     with patch(
@@ -468,6 +500,31 @@ async def test_error_match_failure(hass: HomeAssistant, init_components) -> None
         assert result.response.response_type == intent.IntentResponseType.ERROR
         assert (
             result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+        )
+
+
+async def test_no_states_matched_default_error(
+    hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
+) -> None:
+    """Test default response when no states match and slots are missing."""
+    area_registry.async_get_or_create("kitchen")
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.intent.async_handle",
+        side_effect=intent.NoStatesMatchedError(None, None, None, None),
+    ):
+        result = await conversation.async_converse(
+            hass, "turn on lights in the kitchen", None, Context(), None
+        )
+
+        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert (
+            result.response.error_code
+            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+        )
+        assert (
+            result.response.speech["plain"]["speech"]
+            == "Sorry, I couldn't understand that"
         )
 
 
