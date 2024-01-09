@@ -40,7 +40,7 @@ from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
-from lru import LRU
+from lru import LRU  # pylint: disable=no-name-in-module
 import orjson
 import voluptuous as vol
 
@@ -158,7 +158,8 @@ ORJSON_PASSTHROUGH_OPTIONS = (
 
 def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
     """Return a TemplateState for a state without collecting."""
-    if template_state := CACHED_TEMPLATE_NO_COLLECT_LRU.get(state):
+    template_state: TemplateState = CACHED_TEMPLATE_NO_COLLECT_LRU.get(state)
+    if template_state:
         return template_state
     template_state = _create_template_state_no_collect(hass, state)
     CACHED_TEMPLATE_NO_COLLECT_LRU[state] = template_state
@@ -167,7 +168,8 @@ def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateSta
 
 def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
     """Return a TemplateState for a state that collects."""
-    if template_state := CACHED_TEMPLATE_LRU.get(state):
+    template_state: TemplateState = CACHED_TEMPLATE_LRU.get(state)
+    if template_state:
         return template_state
     template_state = TemplateState(hass, state)
     CACHED_TEMPLATE_LRU[state] = template_state
@@ -1661,6 +1663,18 @@ def multiply(value, amount, default=_SENTINEL):
         return default
 
 
+def absolute(value, default=_SENTINEL):
+    """Filter and function to get absolute value."""
+    try:
+        # abs() is defined for integers, floating point values,
+        # and complex numbers. Other types will raise a TyperError.
+        return abs(value)
+    except (ValueError, TypeError):
+        if default is _SENTINEL:
+            raise_no_default("abs", value)
+        return default
+
+
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
@@ -2430,6 +2444,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("jinja2.ext.loopcontrols")
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
+        self.filters["abs"] = absolute
         self.filters["log"] = logarithm
         self.filters["sin"] = sine
         self.filters["cos"] = cosine
@@ -2474,6 +2489,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
         self.filters["contains"] = contains
+        self.globals["abs"] = absolute
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
