@@ -4,7 +4,7 @@ from __future__ import annotations
 import contextlib
 from datetime import datetime, timedelta
 import secrets
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 import uuid
 
 import attr
@@ -38,12 +38,12 @@ class Group:
     system_generated: bool = attr.ib(default=False)
 
 
-def _handle_groups_change(
-    self: User, groups_attr: Attribute, new: list[Group]
+def _handle_permissions_change(
+    self: User, user_attr: Attribute, new: Any
 ) -> list[Group]:
-    """Handle a change to a groups."""
+    """Handle a change to a permissions."""
     self.invalidate_cache()
-    return validate(self, groups_attr, new)
+    return validate(self, user_attr, new)
 
 
 @attr.s(slots=False)
@@ -53,13 +53,13 @@ class User:
     name: str | None = attr.ib()
     perm_lookup: perm_mdl.PermissionLookup = attr.ib(eq=False, order=False)
     id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
-    is_owner: bool = attr.ib(default=False)
-    is_active: bool = attr.ib(default=False)
+    is_owner: bool = attr.ib(default=False, on_setattr=_handle_permissions_change)
+    is_active: bool = attr.ib(default=False, on_setattr=_handle_permissions_change)
     system_generated: bool = attr.ib(default=False)
     local_only: bool = attr.ib(default=False)
 
     groups: list[Group] = attr.ib(
-        factory=list, eq=False, order=False, on_setattr=_handle_groups_change
+        factory=list, eq=False, order=False, on_setattr=_handle_permissions_change
     )
 
     # List of credentials of a user.
