@@ -769,6 +769,7 @@ async def async_setup_entry(  # noqa: C901
                     )
                 )
 
+    # No gathering to avoid swamping the executor
     for coordinator in disk_coordinators.values():
         await coordinator.async_request_refresh()
     await boot_time_coordinator.async_request_refresh()
