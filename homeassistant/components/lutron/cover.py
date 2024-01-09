@@ -5,6 +5,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from pylutron import Output
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverEntity,
@@ -14,7 +16,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from . import DOMAIN, LutronData
+from .entity import LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,11 +32,14 @@ async def async_setup_entry(
     Adds shades from the Main Repeater associated with the config_entry as
     cover entities.
     """
-    entities = []
-    for area_name, device in hass.data[LUTRON_DEVICES]["cover"]:
-        entity = LutronCover(area_name, device, hass.data[LUTRON_CONTROLLER])
-        entities.append(entity)
-    async_add_entities(entities, True)
+    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        [
+            LutronCover(area_name, device, entry_data.client)
+            for area_name, device in entry_data.covers
+        ],
+        True,
+    )
 
 
 class LutronCover(LutronDevice, CoverEntity):
@@ -44,6 +50,7 @@ class LutronCover(LutronDevice, CoverEntity):
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.SET_POSITION
     )
+    _lutron_device: Output
 
     @property
     def is_closed(self) -> bool:

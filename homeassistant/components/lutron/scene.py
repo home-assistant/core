@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from pylutron import Button, Led, Lutron
+
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from . import DOMAIN, LutronData
+from .entity import LutronDevice
 
 
 async def async_setup_entry(
@@ -21,20 +24,30 @@ async def async_setup_entry(
     Adds scenes from the Main Repeater associated with the config_entry as
     scene entities.
     """
-    entities = []
-    for scene_data in hass.data[LUTRON_DEVICES]["scene"]:
-        (area_name, keypad_name, device, led) = scene_data
-        entity = LutronScene(
-            area_name, keypad_name, device, led, hass.data[LUTRON_CONTROLLER]
-        )
-        entities.append(entity)
-    async_add_entities(entities, True)
+    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+
+    async_add_entities(
+        [
+            LutronScene(area_name, keypad_name, device, led, entry_data.client)
+            for area_name, keypad_name, device, led in entry_data.scenes
+        ],
+        True,
+    )
 
 
 class LutronScene(LutronDevice, Scene):
     """Representation of a Lutron Scene."""
 
-    def __init__(self, area_name, keypad_name, lutron_device, lutron_led, controller):
+    _lutron_device: Button
+
+    def __init__(
+        self,
+        area_name: str,
+        keypad_name: str,
+        lutron_device: Button,
+        lutron_led: Led,
+        controller: Lutron,
+    ) -> None:
         """Initialize the scene/button."""
         super().__init__(area_name, lutron_device, controller)
         self._keypad_name = keypad_name
