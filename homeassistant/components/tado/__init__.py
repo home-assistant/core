@@ -213,6 +213,14 @@ class TadoConnector:
             )
             return
 
+        if mobile_devices.get("errors"):
+            _LOGGER.error(
+                "Error for home ID %s while updating mobile devices: %s",
+                self.home_id,
+                mobile_devices["errors"],
+            )
+            return
+
         for mobile_device in mobile_devices:
             self.data["mobile_device"][mobile_device["id"]] = mobile_device
             _LOGGER.debug(
@@ -239,6 +247,14 @@ class TadoConnector:
 
         if len(devices) == 0:
             _LOGGER.warning("No linked devices found for home ID %s", self.home_id)
+            return
+
+        if devices.get("errors"):
+            _LOGGER.error(
+                "Error for home ID %s while updating devices: %s",
+                self.home_id,
+                devices["errors"],
+            )
             return
 
         for device in devices:
