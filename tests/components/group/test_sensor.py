@@ -473,7 +473,7 @@ async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> Non
         {
             "device_class": SensorDeviceClass.ENERGY,
             "state_class": SensorStateClass.TOTAL,
-            "unit_of_measurement": "USD",
+            "unit_of_measurement": "kWh",
         },
     )
     await hass.async_block_till_done()
@@ -485,7 +485,24 @@ async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> Non
     assert state.state == str(float(sum(VALUES)))
     assert state.attributes.get("device_class") == "energy"
     assert state.attributes.get("state_class") == "total"
-    assert state.attributes.get("unit_of_measurement") is None
+    assert state.attributes.get("unit_of_measurement") == "kWh"
+
+    hass.states.async_set(
+        entity_ids[2],
+        12,
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL,
+        },
+        True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("device_class") == "energy"
+    assert state.attributes.get("state_class") == "total"
+    assert state.attributes.get("unit_of_measurement") == "kWh"
 
 
 async def test_last_sensor(hass: HomeAssistant) -> None:
