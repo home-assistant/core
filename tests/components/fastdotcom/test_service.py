@@ -61,3 +61,27 @@ async def test_service_unloaded_entry(hass: HomeAssistant) -> None:
         await hass.services.async_call(DOMAIN, SERVICE_NAME, blocking=True)
 
     assert "Fast.com is not loaded" in str(exc)
+
+
+async def test_service_removed_entry(hass: HomeAssistant) -> None:
+    """Test service called when config entry was removed and HA was not restarted yet."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="UNIQUE_TEST_ID",
+        title=DEFAULT_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=0
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(DOMAIN, SERVICE_NAME, blocking=True)
+
+    assert "No Fastdotcom config entries found" in str(exc)
