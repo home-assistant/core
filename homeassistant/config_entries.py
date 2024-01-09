@@ -16,7 +16,7 @@ from . import data_entry_flow, loader
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HassJob, HomeAssistant, callback
-from .data_entry_flow import FlowResult
+from .data_entry_flow import FlowResult, FlowResultType
 from .exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -828,9 +828,16 @@ current_entry: ContextVar[ConfigEntry | None] = ContextVar(
 )
 
 
+class ConfigFlowResultType(FlowResultType):
+    """Types result dict for config entry."""
+
+    CREATE_ENTRY = "create_entry"
+
+
 class ConfigFlowResult(FlowResult):
     """Types result dict for config entry."""
 
+    type: ConfigFlowResultType
     version: int
     minor_version: int
 
