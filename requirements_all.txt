@@ -263,7 +263,7 @@ aiohomekit==3.1.2
 aiohttp-fast-url-dispatcher==0.3.0
 
 # homeassistant.components.http
-aiohttp-zlib-ng==0.3.0
+aiohttp-zlib-ng==0.3.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -398,7 +398,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==2.0.0
+aiowithings==2.1.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -443,7 +443,7 @@ anthemav==1.4.1
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.6.0
+apprise==1.7.1
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -550,7 +550,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.4
+blinkpy==0.22.5
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -1090,7 +1090,7 @@ ical==6.1.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.4
+idasen-ha==2.5
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -1246,7 +1246,7 @@ maxcube-api==0.4.3
 mbddns==0.1.2
 
 # homeassistant.components.minecraft_server
-mcstatus==11.0.0
+mcstatus==11.1.1
 
 # homeassistant.components.meater
 meater-python==0.0.8
@@ -1554,7 +1554,7 @@ pushover_complete==1.1.1
 pvo==2.1.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.4
+py-aosmith==1.0.6
 
 # homeassistant.components.canary
 py-canary==0.5.3
@@ -1918,7 +1918,7 @@ pymediaroom==0.6.5.4
 pymelcloud==2.5.8
 
 # homeassistant.components.meteoclimatic
-pymeteoclimatic==0.0.6
+pymeteoclimatic==0.1.0
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2141,7 +2141,7 @@ pytankerkoenig==0.0.6
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.6
+pytedee-async==0.2.10
 
 # homeassistant.components.tfiac
 pytfiac==0.4
@@ -2328,7 +2328,7 @@ pyweatherflowudp==1.4.5
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==1.3.0
+pywemo==1.4.0
 
 # homeassistant.components.wilight
 pywilight==0.0.74
@@ -2388,7 +2388,7 @@ renault-api==0.2.1
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.5
+reolink-aio==0.8.6
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2473,7 +2473,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.6.1
+sensorpush-ble==1.6.2
 
 # homeassistant.components.sentry
 sentry-sdk==1.37.1
@@ -2590,7 +2590,7 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.0.3
+sunweg==2.1.0
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
@@ -2902,7 +2902,7 @@ zigpy-znp==0.12.1
 zigpy==0.60.4
 
 # homeassistant.components.zoneminder
-zm-py==0.5.3
+zm-py==0.5.4
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.3
