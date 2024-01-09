@@ -226,10 +226,11 @@ class TadoConnector:
                 self.home_id,
                 mobile_device,
             )
-            dispatcher_send(
-                self.hass,
-                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(self.home_id),
-            )
+
+        dispatcher_send(
+            self.hass,
+            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(self.home_id),
+        )
 
         dispatcher_send(self.hass, SIGNAL_TADO_MOBILE_DEVICES_UPDATE)
 
