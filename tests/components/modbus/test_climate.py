@@ -41,7 +41,7 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_MODE_HEAT_TT_REG,
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_TT_REG_BY_VALUES,
+    CONF_HVAC_MODE_TT_REGISTERS,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_TARGET_TEMP,
@@ -144,7 +144,7 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                             "state_fan_only": 5,
                             "state_auto": 6,
                         },
-                        CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                        CONF_HVAC_MODE_TT_REGISTERS: {
                             "state_off_target_temp_register": 50,
                             "state_heat_target_temp_register": 51,
                             "state_cool_target_temp_register": 52,
@@ -177,7 +177,7 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                             "state_fan_only": 5,
                             "state_auto": 6,
                         },
-                        CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                        CONF_HVAC_MODE_TT_REGISTERS: {
                             "state_off_target_temp_register": 50,
                             "state_heat_target_temp_register": 51,
                             "state_cool_target_temp_register": 52,
@@ -217,7 +217,7 @@ async def test_config_climate(hass: HomeAssistant, mock_modbus) -> None:
                             CONF_HVAC_MODE_AUTO: 4,
                             CONF_HVAC_MODE_FAN_ONLY: 5,
                         },
-                        CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                        CONF_HVAC_MODE_TT_REGISTERS: {
                             CONF_HVAC_MODE_HEAT_TT_REG: 51,
                             CONF_HVAC_MODE_COOL_TT_REG: 52,
                         },
@@ -630,7 +630,7 @@ async def test_service_climate_set_temperature(
                                 CONF_HVAC_MODE_COOL: 1,
                                 CONF_HVAC_MODE_HEAT: 2,
                             },
-                            CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                            CONF_HVAC_MODE_TT_REGISTERS: {
                                 CONF_HVAC_MODE_HEAT_TT_REG: 51,
                                 CONF_HVAC_MODE_COOL_TT_REG: 52,
                             },
@@ -655,7 +655,7 @@ async def test_service_climate_set_temperature(
                                 CONF_HVAC_MODE_COOL: 1,
                                 CONF_HVAC_MODE_HEAT: 2,
                             },
-                            CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                            CONF_HVAC_MODE_TT_REGISTERS: {
                                 CONF_HVAC_MODE_HEAT_TT_REG: 51,
                                 CONF_HVAC_MODE_COOL_TT_REG: 52,
                             },
@@ -681,7 +681,7 @@ async def test_service_climate_set_temperature(
                                 CONF_HVAC_MODE_COOL: 1,
                                 CONF_HVAC_MODE_HEAT: 2,
                             },
-                            CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                            CONF_HVAC_MODE_TT_REGISTERS: {
                                 CONF_HVAC_MODE_HEAT_TT_REG: 51,
                                 CONF_HVAC_MODE_COOL_TT_REG: 52,
                             },
@@ -708,7 +708,7 @@ async def test_service_climate_set_temperature(
                                 CONF_HVAC_MODE_COOL: 1,
                                 CONF_HVAC_MODE_HEAT: 2,
                             },
-                            CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                            CONF_HVAC_MODE_TT_REGISTERS: {
                                 CONF_HVAC_MODE_HEAT_TT_REG: 51,
                                 CONF_HVAC_MODE_COOL_TT_REG: 52,
                             },

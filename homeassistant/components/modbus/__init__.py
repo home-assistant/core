@@ -91,7 +91,7 @@ from .const import (  # noqa: F401
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_OFF_TT_REG,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_TT_REG_BY_VALUES,
+    CONF_HVAC_MODE_TT_REGISTERS,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
@@ -284,7 +284,7 @@ CLIMATE_SCHEMA = vol.All(
                             cv.positive_int, [cv.positive_int]
                         ),
                     },
-                    CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                    CONF_HVAC_MODE_TT_REGISTERS: {
                         vol.Optional(CONF_HVAC_MODE_OFF_TT_REG): cv.positive_int,
                         vol.Optional(CONF_HVAC_MODE_HEAT_TT_REG): cv.positive_int,
                         vol.Optional(CONF_HVAC_MODE_COOL_TT_REG): cv.positive_int,

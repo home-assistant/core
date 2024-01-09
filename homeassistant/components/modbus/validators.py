@@ -29,7 +29,7 @@ from .const import (
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_TT_REG_BY_VALUES,
+    CONF_HVAC_MODE_TT_REGISTERS,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_SLAVE_COUNT,
@@ -356,7 +356,7 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
 def check_hvac_target_temp_registers(config: dict) -> dict:
     """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes."""
     if CONF_HVAC_MODE_REGISTER in config:
-        if CONF_HVAC_MODE_TT_REG_BY_VALUES in config[CONF_HVAC_MODE_REGISTER]:
+        if CONF_HVAC_MODE_TT_REGISTERS in config[CONF_HVAC_MODE_REGISTER]:
             errors = []
             addresses: list[int] = []
             name = config[CONF_NAME]
@@ -366,14 +366,12 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
             if CONF_FAN_MODE_REGISTER in config:
                 addresses.append(int(config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]))
             for key, value in config[CONF_HVAC_MODE_REGISTER][
-                CONF_HVAC_MODE_TT_REG_BY_VALUES
+                CONF_HVAC_MODE_TT_REGISTERS
             ].items():
                 if value in addresses:
                     wrn = f"In {name} Register {value} already as {CONF_HVAC_ONOFF_REGISTER} or {CONF_HVAC_MODE_REGISTER} or {CONF_FAN_MODE_REGISTER}. {key} is not loaded! "
                     _LOGGER.warning(wrn)
                     errors.append(key)
             for key in reversed(errors):
-                del config[CONF_HVAC_MODE_REGISTER][CONF_HVAC_MODE_TT_REG_BY_VALUES][
-                    key
-                ]
+                del config[CONF_HVAC_MODE_REGISTER][CONF_HVAC_MODE_TT_REGISTERS][key]
     return config

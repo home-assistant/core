@@ -54,7 +54,7 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_MODE_HEAT,
     CONF_HVAC_MODE_HEAT_TT_REG,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_TT_REG_BY_VALUES,
+    CONF_HVAC_MODE_TT_REGISTERS,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
@@ -619,7 +619,7 @@ async def test_duplicate_entity_validator_with_climate(do_config) -> None:
                         CONF_HVAC_MODE_COOL: 0,
                         CONF_HVAC_MODE_HEAT: 1,
                     },
-                    CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                    CONF_HVAC_MODE_TT_REGISTERS: {
                         CONF_HVAC_MODE_COOL_TT_REG: 119,
                         CONF_HVAC_MODE_HEAT_TT_REG: 100,
                     },
@@ -639,7 +639,7 @@ async def test_duplicate_entity_validator_with_climate(do_config) -> None:
                         CONF_HVAC_MODE_COOL: 0,
                         CONF_HVAC_MODE_HEAT: 1,
                     },
-                    CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                    CONF_HVAC_MODE_TT_REGISTERS: {
                         CONF_HVAC_MODE_COOL_TT_REG: 119,
                         CONF_HVAC_MODE_HEAT_TT_REG: 100,
                     },
@@ -659,7 +659,7 @@ async def test_duplicate_entity_validator_with_climate(do_config) -> None:
                         CONF_HVAC_MODE_COOL: 0,
                         CONF_HVAC_MODE_HEAT: 1,
                     },
-                    CONF_HVAC_MODE_TT_REG_BY_VALUES: {
+                    CONF_HVAC_MODE_TT_REGISTERS: {
                         CONF_HVAC_MODE_COOL_TT_REG: 119,
                         CONF_HVAC_MODE_HEAT_TT_REG: 117,
                     },
@@ -676,7 +676,7 @@ async def test_climate_conflict_addresses(do_config) -> None:
     """Test conflicts among the addresses of target temp."""
     check_hvac_target_temp_registers(do_config[0])
     regs = do_config[0].get(CONF_HVAC_MODE_REGISTER)
-    assert len(regs[CONF_HVAC_MODE_TT_REG_BY_VALUES]) == 1
+    assert len(regs[CONF_HVAC_MODE_TT_REGISTERS]) == 1
 
 
 @pytest.mark.parametrize(

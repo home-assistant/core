@@ -68,7 +68,7 @@ from .const import (
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_OFF_TT_REG,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_TT_REG_BY_VALUES,
+    CONF_HVAC_MODE_TT_REGISTERS,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
@@ -164,8 +164,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     self._attr_hvac_modes.append(hvac_mode)
 
             # Looking for specific target temperature registers (if any)
-            if CONF_HVAC_MODE_TT_REG_BY_VALUES in mode_config:
-                mode_TT_reg_config = mode_config[CONF_HVAC_MODE_TT_REG_BY_VALUES]
+            if CONF_HVAC_MODE_TT_REGISTERS in mode_config:
+                mode_TT_reg_config = mode_config[CONF_HVAC_MODE_TT_REGISTERS]
                 for hvac_mode_kwr, hvac_mode in (
                     (CONF_HVAC_MODE_OFF_TT_REG, HVACMode.OFF),
                     (CONF_HVAC_MODE_HEAT_TT_REG, HVACMode.HEAT),
