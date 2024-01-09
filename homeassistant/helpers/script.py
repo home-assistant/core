@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
 from copy import copy
@@ -157,7 +157,12 @@ def action_trace_append(variables, path):
 
 
 @asynccontextmanager
-async def trace_action(hass, script_run, stop, variables):
+async def trace_action(
+    hass: HomeAssistant,
+    script_run: _ScriptRun,
+    stop: asyncio.Event,
+    variables: dict[str, Any],
+) -> AsyncGenerator[TraceElement, None]:
     """Trace action execution."""
     path = trace_path_get()
     trace_element = action_trace_append(variables, path)
@@ -362,6 +367,8 @@ class _StopScript(_HaltScript):
 class _ScriptRun:
     """Manage Script sequence run."""
 
+    _action: dict[str, Any]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -376,7 +383,6 @@ class _ScriptRun:
         self._context = context
         self._log_exceptions = log_exceptions
         self._step = -1
-        self._action: dict[str, Any] | None = None
         self._stop = asyncio.Event()
         self._stopped = asyncio.Event()
 
@@ -446,11 +452,13 @@ class _ScriptRun:
 
         return ScriptRunResult(response, self._variables)
 
-    async def _async_step(self, log_exceptions):
+    async def _async_step(self, log_exceptions: bool) -> None:
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
 
         with trace_path(str(self._step)):
-            async with trace_action(self._hass, self, self._stop, self._variables):
+            async with trace_action(
+                self._hass, self, self._stop, self._variables
+            ) as trace_element:
                 if self._stop.is_set():
                     return
 
@@ -466,6 +474,7 @@ class _ScriptRun:
                 try:
                     handler = f"_async_{action}_step"
                     await getattr(self, handler)()
+                    trace_element.update_variables(self._variables)
                 except Exception as ex:  # pylint: disable=broad-except
                     self._handle_exception(
                         ex, continue_on_error, self._log_exceptions or log_exceptions

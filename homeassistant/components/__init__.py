@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.helpers.group import expand_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
     If there is no entity id given we will check all.
     """
     if entity_id:
-        entity_ids = hass.components.group.expand_entity_ids([entity_id])
+        entity_ids = expand_entity_ids(hass, [entity_id])
     else:
         entity_ids = hass.states.entity_ids()
 

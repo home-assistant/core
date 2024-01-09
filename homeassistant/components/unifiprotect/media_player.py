@@ -110,7 +110,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState.IDLE
 
         is_connected = self.data.last_update_success and (
-            updated_device.state == StateType.CONNECTED
+            updated_device.state is StateType.CONNECTED
             or (not updated_device.is_adopted_by_us and updated_device.can_adopt)
         )
         self._attr_available = is_connected and updated_device.feature_flags.has_speaker
@@ -133,6 +133,17 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             or self._attr_volume_level != previous_volume_level
             or self._attr_available != previous_available
         ):
+            _LOGGER.debug(
+                "Updating state [%s (%s)] %s (%s, %s) -> %s (%s, %s)",
+                device.name,
+                device.mac,
+                previous_state,
+                previous_available,
+                previous_volume_level,
+                self._attr_state,
+                self._attr_available,
+                self._attr_volume_level,
+            )
             self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume: float) -> None:

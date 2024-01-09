@@ -18,13 +18,13 @@ _P = ParamSpec("_P")
 
 
 def async_refresh_after(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Define a wrapper to refresh after."""
 
     async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         await func(self, *args, **kwargs)
-        await self.coordinator.async_request_refresh_without_children()
+        await self.coordinator.async_request_refresh()
 
     return _async_wrap
 
