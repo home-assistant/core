@@ -1,4 +1,10 @@
 """Constants for the cloud component."""
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.helpers.dispatcher import SignalType
+
 DOMAIN = "cloud"
 DATA_PLATFORMS_SETUP = "cloud_platforms_setup"
 REQUEST_TIMEOUT = 10
@@ -64,6 +70,6 @@ CONF_SERVICEHANDLERS_SERVER = "servicehandlers_server"
 MODE_DEV = "development"
 MODE_PROD = "production"
 
-DISPATCHER_REMOTE_UPDATE = "cloud_remote_update"
+DISPATCHER_REMOTE_UPDATE: SignalType[Any] = SignalType("cloud_remote_update")
 
 STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"

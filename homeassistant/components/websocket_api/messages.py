@@ -116,7 +116,7 @@ def _partial_cached_event_message(event: Event) -> str:
     in cached_event_message.
     """
     return (
-        _message_to_json_or_none({"type": "event", "event": event.as_dict()})
+        _message_to_json_or_none({"type": "event", "event": event.json_fragment})
         or INVALID_JSON_PARTIAL_MESSAGE
     )
 
