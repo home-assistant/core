@@ -22,7 +22,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_HOME_ID, DATA, DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
+from .const import (
+    CONF_HOME_ID,
+    DATA,
+    DOMAIN,
+    SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+    SIGNAL_TADO_MOBILE_DEVICES_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +96,7 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+            SIGNAL_TADO_MOBILE_DEVICES_UPDATE,
             update_devices,
         )
     )
@@ -104,17 +110,17 @@ def add_tracked_entities(
     tracked: set[str],
 ) -> None:
     """Add new tracker entities from Tado."""
-    _LOGGER.debug("Fetching Tado devices from API")
+    _LOGGER.debug("Fetching Tado devices from API for (newly) tracked entities")
     new_tracked = []
-    for device_key, device in tado.data["mobile_device"].items():
-        if device_key in tracked:
+    for device in tado.mobile_devices:
+        if device["id"] in tracked:
             continue
 
         _LOGGER.debug(
-            "Adding Tado device %s with deviceID %s", device["name"], device_key
+            "Adding Tado device %s with deviceID %s", device["name"], device["id"]
         )
-        new_tracked.append(TadoDeviceTrackerEntity(device_key, device["name"], tado))
-        tracked.add(device_key)
+        new_tracked.append(TadoDeviceTrackerEntity(device["id"], device["name"], tado))
+        tracked.add(device["id"])
 
     async_add_entities(new_tracked)
 
@@ -148,7 +154,11 @@ class TadoDeviceTrackerEntity(TrackerEntity):
             self._device_name,
             self._device_id,
         )
-        device = self._tado.data["mobile_device"][self._device_id]
+
+        for mobile_device in self._tado.mobile_devices:
+            if mobile_device["id"] == self._device_id:
+                device = mobile_device
+                break
 
         self._active = False
         if device.get("location") is not None and device["location"]["atHome"]:
@@ -169,7 +179,9 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(
+                    self._tado.home_id, self._device_id
+                ),
                 self.on_demand_update,
             )
         )

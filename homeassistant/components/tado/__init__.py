@@ -27,6 +27,7 @@ from .const import (
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
     SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+    SIGNAL_TADO_MOBILE_DEVICES_UPDATE,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TEMP_OFFSET,
     UPDATE_LISTENER,
@@ -161,6 +162,7 @@ class TadoConnector:
         self.tado = None
         self.zones = None
         self.devices = None
+        self.mobile_devices = None
         self.data = {
             "device": {},
             "mobile_device": {},
@@ -180,13 +182,14 @@ class TadoConnector:
         # Load zones and devices
         self.zones = self.tado.get_zones()
         self.devices = self.tado.get_devices()
+        self.mobile_devices = self.tado.get_mobile_devices()
         tado_home = self.tado.get_me()["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
 
     def get_mobile_devices(self):
         """Return the Tado mobile devices."""
-        return self.tado.getMobileDevices()
+        return self.tado.get_mobile_devices()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -205,16 +208,19 @@ class TadoConnector:
 
         for mobile_device in mobile_devices:
             self.data["mobile_device"][mobile_device["id"]] = mobile_device
+            _LOGGER.debug(
+                "Dispatching update to %s mobile device: %s",
+                self.home_id,
+                mobile_device,
+            )
+            dispatcher_send(
+                self.hass,
+                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(
+                    self.home_id, mobile_device["id"]
+                ),
+            )
 
-        _LOGGER.debug(
-            "Dispatching update to %s mobile devices: %s",
-            self.home_id,
-            mobile_devices,
-        )
-        dispatcher_send(
-            self.hass,
-            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
-        )
+        dispatcher_send(self.hass, SIGNAL_TADO_MOBILE_DEVICES_UPDATE)
 
     def update_devices(self):
         """Update the device data from Tado."""
