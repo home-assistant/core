@@ -175,9 +175,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(
-                    self._tado.home_id, self._device_id
-                ),
+                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(self._tado.home_id),
                 self.on_demand_update,
             )
         )

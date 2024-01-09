@@ -162,7 +162,6 @@ class TadoConnector:
         self.tado = None
         self.zones = None
         self.devices = None
-        self.mobile_devices = None
         self.data = {
             "device": {},
             "mobile_device": {},
@@ -182,7 +181,6 @@ class TadoConnector:
         # Load zones and devices
         self.zones = self.tado.get_zones()
         self.devices = self.tado.get_devices()
-        self.mobile_devices = self.tado.get_mobile_devices()
         tado_home = self.tado.get_me()["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
@@ -208,9 +206,7 @@ class TadoConnector:
             return
 
         if len(mobile_devices) == 0:
-            _LOGGER.warning(
-                "No linked mobile devices found for home ID %s", self.home_id
-            )
+            _LOGGER.debug("No linked mobile devices found for home ID %s", self.home_id)
             return
 
         if "errors" in mobile_devices and len(mobile_devices["errors"]) > 0:
@@ -230,9 +226,7 @@ class TadoConnector:
             )
             dispatcher_send(
                 self.hass,
-                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(
-                    self.home_id, mobile_device["id"]
-                ),
+                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(self.home_id),
             )
 
         dispatcher_send(self.hass, SIGNAL_TADO_MOBILE_DEVICES_UPDATE)
@@ -246,7 +240,7 @@ class TadoConnector:
             return
 
         if len(devices) == 0:
-            _LOGGER.warning("No linked devices found for home ID %s", self.home_id)
+            _LOGGER.debug("No linked devices found for home ID %s", self.home_id)
             return
 
         if "errors" in devices and len(devices["errors"]) > 0:
