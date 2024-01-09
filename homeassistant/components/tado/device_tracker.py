@@ -123,6 +123,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     """A Tado Device Tracker entity."""
 
     _attr_should_poll = False
+    _attr_available = False
 
     def __init__(
         self,
@@ -139,7 +140,6 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self._active = False
         self._latitude = None
         self._longitude = None
-        self._attr_available = False
 
     @callback
     def update_state(self) -> None:
@@ -157,9 +157,11 @@ class TadoDeviceTrackerEntity(TrackerEntity):
             device["name"],
             device["settings"]["geoTrackingEnabled"],
         )
-        if device["settings"]["geoTrackingEnabled"] is True:
-            self._attr_available = True
 
+        if device["settings"]["geoTrackingEnabled"] is False:
+            return
+
+        self._attr_available = True
         self._active = False
         if device.get("location") is not None and device["location"]["atHome"]:
             _LOGGER.debug("Tado device %s is at home", device["name"])
