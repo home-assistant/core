@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -28,30 +28,6 @@ class MyUplinkDeviceSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[CoordinatorData, str], StateType]
 
-
-DEVICE_SENSORS: tuple[MyUplinkDeviceSensorEntityDescription, ...] = (
-    MyUplinkDeviceSensorEntityDescription(
-        key="firmware_current",
-        name="Firmware Current",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data, device_id: data.devices[device_id].firmwareCurrent,
-    ),
-    MyUplinkDeviceSensorEntityDescription(
-        key="firmware_desired",
-        name="Firmware Desired",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data, device_id: data.devices[device_id].firmwareDesired,
-    ),
-    MyUplinkDeviceSensorEntityDescription(
-        key="connection_state",
-        name="Connection state",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data, device_id: data.devices[device_id].connectionState,
-    ),
-)
 
 DEVICE_POINT_DESCRIPTIONS = {
     "°C": SensorEntityDescription(
@@ -71,18 +47,6 @@ async def async_setup_entry(
     """Set up myUplink sensor."""
     entities: list[SensorEntity] = []
     coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    # Setup device sensors
-    for device_id in coordinator.data.devices:
-        for description in DEVICE_SENSORS:
-            entities.append(
-                MyUplinkDeviceSensor(
-                    coordinator=coordinator,
-                    device_id=device_id,
-                    entity_description=description,
-                    unique_id_suffix=description.key,
-                ),
-            )
 
     # Setup device point sensors
     for device_id, point_data in coordinator.data.points.items():
