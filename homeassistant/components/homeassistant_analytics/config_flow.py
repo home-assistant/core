@@ -20,8 +20,6 @@ from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN
 class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Homeassistant Analytics."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

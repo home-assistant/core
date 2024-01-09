@@ -10,6 +10,7 @@ from python_homeassistant_analytics import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN, LOGGER
@@ -22,9 +23,7 @@ class HomeassistantAnalyticsDataUpdateCoordinator(
 
     config_entry: ConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, client: HomeassistantAnalyticsClient
-    ) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Homeassistant Analytics data coordinator."""
         super().__init__(
             hass,
@@ -32,7 +31,9 @@ class HomeassistantAnalyticsDataUpdateCoordinator(
             name=DOMAIN,
             update_interval=timedelta(hours=12),
         )
-        self._client = client
+        self._client = HomeassistantAnalyticsClient(
+            session=async_get_clientsession(hass)
+        )
         self._tracked_integrations = self.config_entry.options[
             CONF_TRACKED_INTEGRATIONS
         ]
