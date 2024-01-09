@@ -36,7 +36,7 @@ class PermRequired(int, Enum):
     DELETE = 3
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     """Mixin for required keys."""
 
@@ -101,7 +101,7 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
         return bool(get_nested_attr(obj, ufp_required_field))
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for events."""
 
@@ -127,7 +127,7 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
         return value
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectSetableKeysMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for settable values."""
 

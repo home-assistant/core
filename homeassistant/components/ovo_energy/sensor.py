@@ -33,7 +33,7 @@ KEY_LAST_ELECTRICITY_COST: Final = "last_electricity_cost"
 KEY_LAST_GAS_COST: Final = "last_gas_cost"
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class OVOEnergySensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 

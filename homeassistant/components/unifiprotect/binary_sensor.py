@@ -42,14 +42,14 @@ _LOGGER = logging.getLogger(__name__)
 _KEY_DOOR = "door"
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ProtectBinaryEntityDescription(
     ProtectRequiredKeysMixin, BinarySensorEntityDescription
 ):
     """Describes UniFi Protect Binary Sensor entity."""
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ProtectBinaryEventEntityDescription(
     ProtectEventMixin, BinarySensorEntityDescription
 ):
@@ -643,4 +643,15 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             or self._attr_extra_state_attributes != previous_extra_state_attributes
             or self._attr_available != previous_available
         ):
+            _LOGGER.debug(
+                "Updating state [%s (%s)] %s (%s, %s) -> %s (%s, %s)",
+                device.name,
+                device.mac,
+                previous_is_on,
+                previous_available,
+                previous_extra_state_attributes,
+                self._attr_is_on,
+                self._attr_available,
+                self._attr_extra_state_attributes,
+            )
             self.async_write_ha_state()

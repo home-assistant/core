@@ -43,7 +43,7 @@ MODES: dict[str, list[str] | None] = {
 }
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class TransmissionSensorEntityDescription(SensorEntityDescription):
     """Entity description class for Transmission sensors."""
 

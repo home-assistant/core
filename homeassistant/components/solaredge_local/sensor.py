@@ -50,7 +50,7 @@ INVERTER_MODES = (
 )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class SolarEdgeLocalSensorEntityDescription(SensorEntityDescription):
     """Describes SolarEdge-local sensor entity."""
 

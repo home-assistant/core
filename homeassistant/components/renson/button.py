@@ -21,14 +21,14 @@ from .const import DOMAIN
 from .entity import RensonEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonButtonEntityDescriptionMixin:
     """Action function called on press."""
 
     action_fn: Callable[[RensonVentilation], None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonButtonEntityDescription(
     ButtonEntityDescription, RensonButtonEntityDescriptionMixin
 ):

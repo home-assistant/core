@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import (
-    ScreenlogicEntity,
+    ScreenLogicEntity,
     ScreenLogicEntityDescription,
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
@@ -35,21 +35,21 @@ from .util import cleanup_excluded_entity, get_ha_unit
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ScreenLogicSensorMixin:
     """Mixin for SecreenLogic sensor entity."""
 
     value_mod: Callable[[int | str], int | str] | None = None
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ScreenLogicSensorDescription(
     ScreenLogicSensorMixin, SensorEntityDescription, ScreenLogicEntityDescription
 ):
     """Describes a ScreenLogic sensor."""
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ScreenLogicPushSensorDescription(
     ScreenLogicSensorDescription, ScreenLogicPushEntityDescription
 ):
@@ -295,7 +295,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
+class ScreenLogicSensor(ScreenLogicEntity, SensorEntity):
     """Representation of a ScreenLogic sensor entity."""
 
     entity_description: ScreenLogicSensorDescription

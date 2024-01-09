@@ -132,7 +132,7 @@ def async_device_outlet_supported_fn(controller: UniFiController, obj_id: str) -
     return controller.api.devices[obj_id].outlet_ac_power_budget is not None
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiSensorEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
@@ -145,7 +145,7 @@ def async_device_state_value_fn(controller: UniFiController, device: Device) -> 
     return DEVICE_STATES[device.state]
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiSensorEntityDescription(
     SensorEntityDescription,
     UnifiEntityDescription[HandlerT, ApiItemT],

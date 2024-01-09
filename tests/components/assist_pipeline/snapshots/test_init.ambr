@@ -48,14 +48,14 @@
             'card': dict({
             }),
             'data': dict({
-              'code': 'no_intent_match',
+              'code': 'no_valid_targets',
             }),
             'language': 'en',
             'response_type': 'error',
             'speech': dict({
               'plain': dict({
                 'extra_data': None,
-                'speech': "Sorry, I couldn't understand that",
+                'speech': 'No device or entity named test transcript',
               }),
             }),
           }),
@@ -67,7 +67,7 @@
       'data': dict({
         'engine': 'test',
         'language': 'en-US',
-        'tts_input': "Sorry, I couldn't understand that",
+        'tts_input': 'No device or entity named test transcript',
         'voice': 'james_earl_jones',
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,
@@ -75,9 +75,9 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=james_earl_jones",
+          'media_id': 'media-source://tts/test?message=No+device+or+entity+named+test+transcript&language=en-US&voice=james_earl_jones',
           'mime_type': 'audio/mpeg',
-          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+          'url': '/api/tts_proxy/e5e8e318b536f0a5455f993243a34521e7ad4d6d_en-us_031e2ec052_test.mp3',
         }),
       }),
       'type': <PipelineEventType.TTS_END: 'tts-end'>,
@@ -137,14 +137,14 @@
             'card': dict({
             }),
             'data': dict({
-              'code': 'no_intent_match',
+              'code': 'no_valid_targets',
             }),
             'language': 'en-US',
             'response_type': 'error',
             'speech': dict({
               'plain': dict({
                 'extra_data': None,
-                'speech': "Sorry, I couldn't understand that",
+                'speech': 'No device or entity named test transcript',
               }),
             }),
           }),
@@ -156,7 +156,7 @@
       'data': dict({
         'engine': 'test',
         'language': 'en-US',
-        'tts_input': "Sorry, I couldn't understand that",
+        'tts_input': 'No device or entity named test transcript',
         'voice': 'Arnold Schwarzenegger',
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,
@@ -164,9 +164,9 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=Arnold+Schwarzenegger",
+          'media_id': 'media-source://tts/test?message=No+device+or+entity+named+test+transcript&language=en-US&voice=Arnold+Schwarzenegger',
           'mime_type': 'audio/mpeg',
-          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_2657c1a8ee_test.mp3',
+          'url': '/api/tts_proxy/e5e8e318b536f0a5455f993243a34521e7ad4d6d_en-us_2657c1a8ee_test.mp3',
         }),
       }),
       'type': <PipelineEventType.TTS_END: 'tts-end'>,
@@ -226,14 +226,14 @@
             'card': dict({
             }),
             'data': dict({
-              'code': 'no_intent_match',
+              'code': 'no_valid_targets',
             }),
             'language': 'en-US',
             'response_type': 'error',
             'speech': dict({
               'plain': dict({
                 'extra_data': None,
-                'speech': "Sorry, I couldn't understand that",
+                'speech': 'No device or entity named test transcript',
               }),
             }),
           }),
@@ -245,7 +245,7 @@
       'data': dict({
         'engine': 'test',
         'language': 'en-US',
-        'tts_input': "Sorry, I couldn't understand that",
+        'tts_input': 'No device or entity named test transcript',
         'voice': 'Arnold Schwarzenegger',
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,
@@ -253,9 +253,9 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=Arnold+Schwarzenegger",
+          'media_id': 'media-source://tts/test?message=No+device+or+entity+named+test+transcript&language=en-US&voice=Arnold+Schwarzenegger',
           'mime_type': 'audio/mpeg',
-          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_2657c1a8ee_test.mp3',
+          'url': '/api/tts_proxy/e5e8e318b536f0a5455f993243a34521e7ad4d6d_en-us_2657c1a8ee_test.mp3',
         }),
       }),
       'type': <PipelineEventType.TTS_END: 'tts-end'>,
@@ -338,14 +338,14 @@
             'card': dict({
             }),
             'data': dict({
-              'code': 'no_intent_match',
+              'code': 'no_valid_targets',
             }),
             'language': 'en',
             'response_type': 'error',
             'speech': dict({
               'plain': dict({
                 'extra_data': None,
-                'speech': "Sorry, I couldn't understand that",
+                'speech': 'No device or entity named test transcript',
               }),
             }),
           }),
@@ -357,7 +357,7 @@
       'data': dict({
         'engine': 'test',
         'language': 'en-US',
-        'tts_input': "Sorry, I couldn't understand that",
+        'tts_input': 'No device or entity named test transcript',
         'voice': 'james_earl_jones',
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,
@@ -365,9 +365,9 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=james_earl_jones",
+          'media_id': 'media-source://tts/test?message=No+device+or+entity+named+test+transcript&language=en-US&voice=james_earl_jones',
           'mime_type': 'audio/mpeg',
-          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+          'url': '/api/tts_proxy/e5e8e318b536f0a5455f993243a34521e7ad4d6d_en-us_031e2ec052_test.mp3',
         }),
       }),
       'type': <PipelineEventType.TTS_END: 'tts-end'>,

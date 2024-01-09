@@ -22,14 +22,14 @@ from .common import get_coordinator
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzEntityDescriptionMixinBinarySensor(FritzEntityDescriptionMixinBase):
     """BinarySensor description mixin for Fritz!Smarthome entities."""
 
     is_on: Callable[[FritzhomeDevice], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzBinarySensorEntityDescription(
     BinarySensorEntityDescription, FritzEntityDescriptionMixinBinarySensor
 ):

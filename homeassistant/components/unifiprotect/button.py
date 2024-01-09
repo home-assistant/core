@@ -28,7 +28,7 @@ from .utils import async_dispatch_id as _ufpd
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectButtonEntityDescription(
     ProtectSetableKeysMixin[T], ButtonEntityDescription
 ):
@@ -206,4 +206,11 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
         previous_available = self._attr_available
         self._async_update_device_from_protect(device)
         if self._attr_available != previous_available:
+            _LOGGER.debug(
+                "Updating state [%s (%s)] %s -> %s",
+                device.name,
+                device.mac,
+                previous_available,
+                self._attr_available,
+            )
             self.async_write_ha_state()

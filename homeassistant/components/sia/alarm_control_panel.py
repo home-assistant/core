@@ -29,7 +29,7 @@ from .sia_entity_base import SIABaseEntity, SIAEntityDescription
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SIAAlarmControlPanelEntityDescription(
     AlarmControlPanelEntityDescription,
     SIAEntityDescription,
