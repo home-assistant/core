@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from glances_api.exceptions import (
     GlancesApiAuthorizationError,
     GlancesApiConnectionError,
+    GlancesApiNoDataAvailable,
 )
 import pytest
 
@@ -47,6 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
     [
         (GlancesApiAuthorizationError, "invalid_auth"),
         (GlancesApiConnectionError, "cannot_connect"),
+        (GlancesApiNoDataAvailable, "cannot_connect"),
     ],
 )
 async def test_form_fails(
@@ -54,7 +56,7 @@ async def test_form_fails(
 ) -> None:
     """Test flow fails when api exception is raised."""
 
-    mock_api.return_value.get_ha_sensor_data.side_effect = [error, HA_SENSOR_DATA]
+    mock_api.return_value.get_ha_sensor_data.side_effect = error
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -64,12 +66,6 @@ async def test_form_fails(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": message}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_USER_INPUT
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:

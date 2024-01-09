@@ -55,12 +55,14 @@ async def async_get_scanner(
         translation_key = "import_aborted"
         if import_result.get("reason") == "import_failed":
             translation_key = "import_failed"
+        if import_result.get("reason") == "import_failed_invalid_auth":
+            translation_key = "import_failed_invalid_auth"
 
     async_create_issue(
         hass,
         DOMAIN,
         "deprecated_yaml_import_device_tracker",
-        breaks_in_ha_version="2024.6.0",
+        breaks_in_ha_version="2024.7.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
@@ -121,6 +123,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     """A Tado Device Tracker entity."""
 
     _attr_should_poll = False
+    _attr_available = False
 
     def __init__(
         self,
@@ -148,6 +151,17 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         )
         device = self._tado.data["mobile_device"][self._device_id]
 
+        self._attr_available = False
+        _LOGGER.debug(
+            "Tado device %s has geoTracking state %s",
+            device["name"],
+            device["settings"]["geoTrackingEnabled"],
+        )
+
+        if device["settings"]["geoTrackingEnabled"] is False:
+            return
+
+        self._attr_available = True
         self._active = False
         if device.get("location") is not None and device["location"]["atHome"]:
             _LOGGER.debug("Tado device %s is at home", device["name"])
