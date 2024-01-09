@@ -27,7 +27,6 @@ from .const import (
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
     SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
-    SIGNAL_TADO_MOBILE_DEVICES_UPDATE,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TEMP_OFFSET,
     UPDATE_LISTENER,
@@ -231,8 +230,6 @@ class TadoConnector:
             self.hass,
             SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(self.home_id),
         )
-
-        dispatcher_send(self.hass, SIGNAL_TADO_MOBILE_DEVICES_UPDATE)
 
     def update_devices(self):
         """Update the device data from Tado."""

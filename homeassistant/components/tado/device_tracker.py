@@ -22,13 +22,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType
 
 from . import TadoConnector
-from .const import (
-    CONF_HOME_ID,
-    DATA,
-    DOMAIN,
-    SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
-    SIGNAL_TADO_MOBILE_DEVICES_UPDATE,
-)
+from .const import CONF_HOME_ID, DATA, DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +90,7 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            SIGNAL_TADO_MOBILE_DEVICES_UPDATE,
+            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(tado.home_id),
             update_devices,
         )
     )
