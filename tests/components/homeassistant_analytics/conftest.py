@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry, load_fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.homeassistant_analytics.coordinator.async_setup_entry",
+        "homeassistant.components.homeassistant_analytics.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
