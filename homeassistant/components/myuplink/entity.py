@@ -7,7 +7,7 @@ from .const import DOMAIN
 from .coordinator import MyUplinkDataCoordinator
 
 
-class MyUplinkEntity(CoordinatorEntity[MyUplinkDataCoordinator], Entity):
+class MyUplinkEntity(CoordinatorEntity[MyUplinkDataCoordinator]):
     """Representation of a sensor."""
 
     _attr_has_entity_name = True
