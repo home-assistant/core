@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any
 
 import zigpy.exceptions
 from zigpy.ota.image import BaseOTAImage
-from zigpy.ota.manager import update_firmware
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.update import (
@@ -23,7 +22,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.start import async_at_start
 
 from .core import discovery
 from .core.const import CLUSTER_HANDLER_OTA, SIGNAL_ADD_ENTITIES
@@ -91,7 +89,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
 
     @callback
     def device_ota_update_available(self, image: BaseOTAImage) -> None:
-        """Handle update available."""
+        """Handle ota update available signal from Zigpy."""
         self._latest_version_firmware = image
         self._attr_latest_version = f"0x{image.header.file_version:08x}"
         self.async_write_ha_state()
@@ -112,7 +110,9 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         if write_state:
             self.async_write_ha_state()
 
-    async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
+    async def _async_check_for_update(
+        self, _: HomeAssistant | datetime | None = None
+    ) -> None:
         """Update the entity."""
         if self.zha_device.is_mains_powered:
             await self._ota_cluster_handler.image_notify(
@@ -133,11 +133,11 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         self.async_write_ha_state()
 
         try:
-            self._result = await update_firmware(
-                self.zha_device.device,
+            self._result = await self.zha_device.device.update_firmware(
                 self._latest_version_firmware,
                 self._update_progress,
             )
+        # TODO: do we want to catch all exceptions here?
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self._reset_progress()
             raise HomeAssistantError(ex) from ex
@@ -163,8 +163,6 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
-        # this is used to look for available firmware updates when HA starts
-        self.async_on_remove(async_at_start(self.hass, self._async_update))
         self.zha_device.device.add_listener(self)
 
     async def async_will_remove_from_hass(self) -> None:
