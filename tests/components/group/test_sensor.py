@@ -88,7 +88,7 @@ async def test_sensors(
             value,
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.VOLUME,
-                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_STATE_CLASS: SensorStateClass.TOTAL,
                 ATTR_UNIT_OF_MEASUREMENT: "L",
             },
         )
@@ -105,7 +105,7 @@ async def test_sensors(
         assert state.attributes.get(key) == value
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLUME
     assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "L"
 
     entity = entity_registry.async_get(f"sensor.sensor_group_{sensor_type}")
@@ -334,7 +334,7 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
         VALUES[0],
         {
             "device_class": SensorDeviceClass.ENERGY,
-            "state_class": SensorStateClass.MEASUREMENT,
+            "state_class": SensorStateClass.TOTAL_INCREASING,
             "unit_of_measurement": "kWh",
         },
     )
@@ -343,7 +343,7 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
         VALUES[1],
         {
             "device_class": SensorDeviceClass.ENERGY,
-            "state_class": SensorStateClass.MEASUREMENT,
+            "state_class": SensorStateClass.TOTAL_INCREASING,
             "unit_of_measurement": "kWh",
         },
     )
@@ -352,7 +352,7 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_sum")
     assert state.state == str(float(sum([VALUES[0], VALUES[1]])))
     assert state.attributes.get("device_class") == "energy"
-    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get("state_class") == "total_increasing"
     assert state.attributes.get("unit_of_measurement") == "kWh"
 
     hass.states.async_set(
