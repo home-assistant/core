@@ -6,7 +6,7 @@ import enum
 import functools
 import numbers
 import random
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, NamedTuple, Self
 
 from zigpy import types
 
@@ -486,6 +486,14 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)))
 
 
+class SmartEnergyMeteringClassMap(NamedTuple):
+    """Helper class for mapping state class, device class and unit of measurement."""
+
+    unit_of_measurement: str
+    device_class: SensorDeviceClass | None
+    state_class: SensorStateClass | None
+
+
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
     stop_on_match_group=CLUSTER_HANDLER_SMARTENERGY_METERING,
@@ -496,34 +504,80 @@ class SmartEnergyMetering(PollableSensor):
 
     _use_custom_polling: bool = False
     _attribute_name = "instantaneous_demand"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key: str = "instantaneous_demand"
 
-    unit_of_measure_map = {
-        0x00: UnitOfPower.WATT,
-        0x01: UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        0x02: UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-        0x03: f"100 {UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR}",
-        0x04: f"US {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
-        0x05: f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
-        0x06: UnitOfPower.BTU_PER_HOUR,
-        0x07: f"l/{UnitOfTime.HOURS}",
-        0x08: UnitOfPressure.KPA,  # gauge
-        0x09: UnitOfPressure.KPA,  # absolute
-        0x0A: f"1000 {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
-        0x0B: "unitless",
-        0x0C: f"MJ/{UnitOfTime.SECONDS}",
+    _map = {
+        0x00: SmartEnergyMeteringClassMap(
+            UnitOfPower.WATT, SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT
+        ),
+        0x01: SmartEnergyMeteringClassMap(
+            UnitOfVolume.CUBIC_METERS,
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x02: SmartEnergyMeteringClassMap(
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x03: SmartEnergyMeteringClassMap(
+            f"100 {UnitOfVolume.CUBIC_FEET}",
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x04: SmartEnergyMeteringClassMap(
+            f"US {UnitOfVolume.GALLONS}",
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x05: SmartEnergyMeteringClassMap(
+            f"IMP {UnitOfVolume.GALLONS}",
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x06: SmartEnergyMeteringClassMap("BTU", None, None),
+        0x07: SmartEnergyMeteringClassMap(
+            f"l/{UnitOfTime.HOURS}",
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.MEASUREMENT,
+        ),
+        0x08: SmartEnergyMeteringClassMap(
+            UnitOfPressure.KPA, SensorDeviceClass.PRESSURE, SensorStateClass.MEASUREMENT
+        ),  # gauge
+        0x09: SmartEnergyMeteringClassMap(
+            UnitOfPressure.KPA, SensorDeviceClass.PRESSURE, SensorStateClass.MEASUREMENT
+        ),  # absolute
+        0x0A: SmartEnergyMeteringClassMap(
+            f"1000 {UnitOfVolume.CUBIC_FEET}",
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x0B: SmartEnergyMeteringClassMap("unitless", None, None),
+        0x0C: SmartEnergyMeteringClassMap(
+            "MJ", SensorDeviceClass.ENERGY, SensorStateClass.MEASUREMENT
+        ),
     }
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> None:
+        """Init."""
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+        if (
+            class_map := self._map.get(self._cluster_handler.unit_of_measurement)
+        ) is not None:
+            self._attr_native_unit_of_measurement = class_map.unit_of_measurement
+            self._attr_state_class = class_map.state_class
+            self._attr_device_class = class_map.device_class
 
     def formatter(self, value: int) -> int | float:
         """Pass through cluster handler formatter."""
         return self._cluster_handler.demand_formatter(value)
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return Unit of measurement."""
-        return self.unit_of_measure_map.get(self._cluster_handler.unit_of_measurement)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -551,24 +605,54 @@ class SmartEnergySummation(SmartEnergyMetering):
 
     _attribute_name = "current_summ_delivered"
     _unique_id_suffix = "summation_delivered"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENERGY
-    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_translation_key: str = "summation_delivered"
 
-    unit_of_measure_map = {
-        0x00: UnitOfEnergy.KILO_WATT_HOUR,
-        0x01: UnitOfVolume.CUBIC_METERS,
-        0x02: UnitOfVolume.CUBIC_FEET,
-        0x03: f"100 {UnitOfVolume.CUBIC_FEET}",
-        0x04: f"US {UnitOfVolume.GALLONS}",
-        0x05: f"IMP {UnitOfVolume.GALLONS}",
-        0x06: "BTU",
-        0x07: UnitOfVolume.LITERS,
-        0x08: UnitOfPressure.KPA,  # gauge
-        0x09: UnitOfPressure.KPA,  # absolute
-        0x0A: f"1000 {UnitOfVolume.CUBIC_FEET}",
-        0x0B: "unitless",
-        0x0C: "MJ",
+    _map = {
+        0x00: SmartEnergyMeteringClassMap(
+            UnitOfEnergy.KILO_WATT_HOUR,
+            SensorDeviceClass.ENERGY,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x01: SmartEnergyMeteringClassMap(
+            UnitOfVolume.CUBIC_METERS,
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x02: SmartEnergyMeteringClassMap(
+            UnitOfVolume.CUBIC_FEET,
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x03: SmartEnergyMeteringClassMap(f"100 {UnitOfVolume.CUBIC_FEET}", None, None),
+        0x04: SmartEnergyMeteringClassMap(
+            f"US {UnitOfVolume.GALLONS}",
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x05: SmartEnergyMeteringClassMap(
+            f"IMP {UnitOfVolume.GALLONS}",
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x06: SmartEnergyMeteringClassMap("BTU", None, None),
+        0x07: SmartEnergyMeteringClassMap(
+            UnitOfVolume.LITERS,
+            SensorDeviceClass.VOLUME,
+            SensorStateClass.TOTAL_INCREASING,
+        ),
+        0x08: SmartEnergyMeteringClassMap(
+            UnitOfPressure.KPA, SensorDeviceClass.PRESSURE, SensorStateClass.MEASUREMENT
+        ),  # gauge
+        0x09: SmartEnergyMeteringClassMap(
+            UnitOfPressure.KPA, SensorDeviceClass.PRESSURE, SensorStateClass.MEASUREMENT
+        ),  # absolute
+        0x0A: SmartEnergyMeteringClassMap(
+            f"1000 {UnitOfVolume.CUBIC_FEET}", None, None
+        ),
+        0x0B: SmartEnergyMeteringClassMap("unitless", None, None),
+        0x0C: SmartEnergyMeteringClassMap(
+            "MJ", SensorDeviceClass.ENERGY, SensorStateClass.TOTAL_INCREASING
+        ),
     }
 
     def formatter(self, value: int) -> int | float:

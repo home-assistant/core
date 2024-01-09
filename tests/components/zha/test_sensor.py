@@ -169,7 +169,7 @@ async def async_test_smart_energy_summation(hass, cluster, entity_id):
     assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
     assert (
         hass.states.get(entity_id).attributes[ATTR_DEVICE_CLASS]
-        == SensorDeviceClass.ENERGY
+        == SensorDeviceClass.VOLUME
     )
 
 
