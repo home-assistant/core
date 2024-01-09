@@ -84,4 +84,4 @@ async def test_service_removed_entry(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(DOMAIN, SERVICE_NAME, blocking=True)
 
-    assert "No Fastdotcom config entries found" in str(exc)
+    assert "No Fast.com config entries found" in str(exc)
