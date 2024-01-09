@@ -549,13 +549,23 @@ async def async_setup_entry(  # noqa: C901
     entities: list[SystemMonitorSensor] = []
     legacy_resources: set[str] = set(entry.options.get("resources", []))
     loaded_resources: set[str] = set()
-    disk_arguments = await hass.async_add_executor_job(get_all_disk_mounts)
-    network_arguments = await hass.async_add_executor_job(get_all_network_interfaces)
-    temps = await hass.async_add_executor_job(psutil.sensors_temperatures)
-    cpu_temperature = await hass.async_add_executor_job(read_cpu_temperature, temps)
+
+    def get_arguments() -> dict[str, Any]:
+        """Return startup information."""
+        disk_arguments = get_all_disk_mounts()
+        network_arguments = get_all_network_interfaces()
+        temps = psutil.sensors_temperatures()
+        cpu_temperature = read_cpu_temperature(temps)
+        return {
+            "disk_arguments": disk_arguments,
+            "network_arguments": network_arguments,
+            "cpu_temperature": cpu_temperature,
+        }
+
+    startup_arguments = await hass.async_add_executor_job(get_arguments)
 
     disk_coordinators: dict[str, SystemMonitorDiskCoordinator] = {}
-    for argument in disk_arguments:
+    for argument in startup_arguments["disk_arguments"]:
         disk_coordinators[argument] = SystemMonitorDiskCoordinator(hass, argument)
     swap_coordinator = SystemMonitorSwapCoordinator(hass)
     memory_coordinator = SystemMonitorMemoryCoordinator(hass)
@@ -567,14 +577,14 @@ async def async_setup_entry(  # noqa: C901
     process_coordinator = SystemMonitorProcessCoordinator(hass)
     cpu_temp_coordinator = SystemMonitorCPUtempCoordinator(hass)
 
-    for argument in disk_arguments:
+    for argument in startup_arguments["disk_arguments"]:
         disk_coordinators[argument] = SystemMonitorDiskCoordinator(hass, argument)
 
     _LOGGER.debug("Setup from options %s", entry.options)
 
     for _type, sensor_description in SENSOR_TYPES.items():
         if _type.startswith("disk_"):
-            for argument in disk_arguments:
+            for argument in startup_arguments["disk_arguments"]:
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
@@ -591,7 +601,7 @@ async def async_setup_entry(  # noqa: C901
             continue
 
         if _type.startswith("ipv"):
-            for argument in network_arguments:
+            for argument in startup_arguments["network_arguments"]:
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
@@ -652,7 +662,7 @@ async def async_setup_entry(  # noqa: C901
             )
 
         if _type in NET_IO_TYPES:
-            for argument in network_arguments:
+            for argument in startup_arguments["network_arguments"]:
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
@@ -699,7 +709,7 @@ async def async_setup_entry(  # noqa: C901
             continue
 
         if _type == "processor_temperature":
-            if not cpu_temperature:
+            if not startup_arguments["cpu_temperature"]:
                 # Don't load processor temperature sensor if we can't read it.
                 continue
             argument = ""
