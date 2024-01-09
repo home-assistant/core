@@ -2406,6 +2406,47 @@ async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> No
         assert getattr(ent[1], property) == values[0]
 
 
+async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
+    """Test overriding cached _attr_ raises."""
+
+    class EntityWithClassAttribute1(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution: str
+
+    class EntityWithClassAttribute2(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution = "blabla"
+
+    class EntityWithClassAttribute3(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution: str = "blabla"
+
+    class EntityWithClassAttribute4(entity.Entity):
+        @property
+        def _attr_not_cached(self):
+            return "blabla"
+
+    class EntityWithClassAttribute5(entity.Entity):
+        def _attr_not_cached(self):
+            return "blabla"
+
+    with pytest.raises(TypeError):
+
+        class EntityWithClassAttribute6(entity.Entity):
+            @property
+            def _attr_attribution(self):
+                return "🤡"
+
+    with pytest.raises(TypeError):
+
+        class EntityWithClassAttribute7(entity.Entity):
+            def _attr_attribution(self):
+                return "🤡"
+
+
 async def test_entity_report_deprecated_supported_features_values(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
