@@ -507,12 +507,19 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
-        key="ess_power",
-        translation_key="ess_power",
+        key="ess_power_current",
+        translation_key="ess_power_current",
         native_unit_of_measurement=UnitOfPower.WATT,
         value_getter=lambda api: api.getElectricalEnergySystemPower(),
         unit_getter=lambda api: api.getElectricalEnergySystemPowerUnit(),
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_state",
+        translation_key="ess_state",
+        value_getter=lambda api: api.getElectricalEnergySystemOperationState(),
+        device_class=SensorDeviceClass.ENUM,
+        options=["charge", "discharge", "standby"],
     ),
     ViCareSensorEntityDescription(
         key="pcc_transfer_power_exchange",
@@ -523,21 +530,21 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
-        key="photovoltaic_production_current",
-        translation_key="photovoltaic_production_current",
+        key="photovoltaic_power_production_current",
+        translation_key="photovoltaic_power_production_current",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value_getter=lambda api: api.getPhotovoltaicProductionCurrent(),
         unit_getter=lambda api: api.getPhotovoltaicProductionCurrentUnit(),
-        device_class=SensorDeviceClass.POWER,
+        # device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
-        key="photovoltaic_production_today",
-        translation_key="photovoltaic_production_today",
+        key="photovoltaic_energy_production_today",
+        translation_key="photovoltaic_energy_production_today",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentDay(),
         unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
-        device_class=SensorDeviceClass.ENERGY,
+        # device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
@@ -546,13 +553,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getPhotovoltaicStatus(),
         device_class=SensorDeviceClass.ENUM,
         options=["nothing", "ready", "production", "unknown"],
-    ),
-    ViCareSensorEntityDescription(
-        key="ess_state",
-        translation_key="ess_state",
-        value_getter=lambda api: api.getElectricalEnergySystemOperationState(),
-        device_class=SensorDeviceClass.ENUM,
-        options=["charge", "discharge", "standby"],
     ),
 )
 
