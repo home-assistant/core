@@ -52,6 +52,10 @@ def component_translation_path(
     domain = parts[0]
     is_platform = len(parts) == 2
 
+    # When mocking integrations they might not have a path
+    if integration.file_path is None:
+        return None
+
     # If it's a component that is just one file, we don't support translations
     # Example custom_components/my_component.py
     if integration.file_path.name != domain:

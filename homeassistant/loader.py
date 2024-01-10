@@ -631,7 +631,7 @@ class Integration:
         self,
         hass: HomeAssistant,
         pkg_path: str,
-        file_path: pathlib.Path,
+        file_path: pathlib.Path | None,
         manifest: Manifest,
     ) -> None:
         """Initialize an integration."""

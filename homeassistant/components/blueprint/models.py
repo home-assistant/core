@@ -363,6 +363,7 @@ class DomainBlueprints:
             if self.blueprint_folder.exists():
                 return
 
+            assert integration.file_path
             shutil.copytree(
                 integration.file_path / BLUEPRINT_FOLDER,
                 self.blueprint_folder / HA_DOMAIN,

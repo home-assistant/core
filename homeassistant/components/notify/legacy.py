@@ -279,6 +279,7 @@ class BaseNotificationService:
 
         # Load service descriptions from notify/services.yaml
         integration = await async_get_integration(hass, DOMAIN)
+        assert integration.file_path
         services_yaml = integration.file_path / "services.yaml"
         self.services_dict = await hass.async_add_executor_job(
             load_yaml_dict, str(services_yaml)
