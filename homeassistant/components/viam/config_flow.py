@@ -25,6 +25,8 @@ from .const import (
     CONF_ROBOT,
     CONF_ROBOT_ID,
     CONF_SECRET,
+    CRED_TYPE_API_KEY,
+    CRED_TYPE_LOCATION_SECRET,
     DOMAIN,
 )
 
@@ -36,9 +38,9 @@ STEP_AUTH_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_CREDENTIAL_TYPE): SelectSelector(
             SelectSelectorConfig(
                 options=[
-                    SelectOptionDict(value="api-key", label="Org API Key"),
+                    SelectOptionDict(value=CRED_TYPE_API_KEY, label="Org API Key"),
                     SelectOptionDict(
-                        value="robot-location-secret", label="Robot Location Secret"
+                        value=CRED_TYPE_LOCATION_SECRET, label="Robot Location Secret"
                     ),
                 ],
                 translation_key=CONF_CREDENTIAL_TYPE,
@@ -68,7 +70,7 @@ async def validate_input(data: dict[str, Any]) -> tuple[str, ViamClient]:
     credential_type = data[CONF_CREDENTIAL_TYPE]
     auth_entity = data[CONF_API_ID]
     secret = data[CONF_API_KEY]
-    if credential_type == "robot-location-secret":
+    if credential_type == CRED_TYPE_LOCATION_SECRET:
         auth_entity = data[CONF_ADDRESS]
         secret = data[CONF_SECRET]
 
@@ -93,11 +95,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
         self._title = ""
         self._client: ViamClient | None = None
-        self._data = {}
+        self._data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -132,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_robot()
 
         schema = STEP_AUTH_ROBOT_DATA_SCHEMA
-        if self._data.get(CONF_CREDENTIAL_TYPE) == "api-key":
+        if self._data.get(CONF_CREDENTIAL_TYPE) == CRED_TYPE_API_KEY:
             schema = STEP_AUTH_ORG_DATA_SCHEMA
 
         return self.async_show_form(
