@@ -76,7 +76,9 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up buttons")
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
-    entities_list = [FritzButton(avm_wrapper, entry.title, button) for button in BUTTONS]
+    entities_list: list[ButtonEntity] = [
+        FritzButton(avm_wrapper, entry.title, button) for button in BUTTONS
+    ]
 
     if avm_wrapper.mesh_role == MeshRoles.SLAVE:
         async_add_entities(entities_list)
