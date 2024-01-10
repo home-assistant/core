@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
@@ -405,8 +405,7 @@ class FlowManager(abc.ABC):
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
         self._async_remove_flow_from_index(flow)
-        if flow.progress_task and not flow.progress_task.done():
-            flow.progress_task.cancel()
+        flow.async_cancel_progress()
         try:
             flow.async_remove()
         except Exception as err:  # pylint: disable=broad-except
@@ -443,20 +442,10 @@ class FlowManager(abc.ABC):
         if result["type"] == FlowResultType.SHOW_PROGRESS and (
             progress_coro := result.pop("progress_coro", None)
         ):
-            flow_id = flow.flow_id
+            flow.async_start_progress(progress_coro, self.async_configure)
 
-            async def _resume_flow_when_done(awt: Awaitable[None]) -> None:
-                await awt
-                await self.async_configure(flow_id)
-
-            if not flow.progress_task:
-                flow.progress_task = self.hass.async_create_task(
-                    _resume_flow_when_done(progress_coro())
-                )
         elif result["type"] != FlowResultType.SHOW_PROGRESS:
-            if flow.progress_task and not flow.progress_task.done():
-                flow.progress_task.cancel()
-            flow.progress_task = None
+            flow.async_cancel_progress()
 
         if result["type"] in FLOW_NOT_COMPLETE_STEPS:
             self._raise_if_step_does_not_exist(flow, result["step_id"])
@@ -517,7 +506,8 @@ class FlowHandler:
     VERSION = 1
     MINOR_VERSION = 1
 
-    progress_task: asyncio.Task | None = None
+    __progress_task: asyncio.Task | None = None
+    progress_fut: asyncio.Future[None] | None = None
 
     @property
     def source(self) -> str | None:
@@ -709,6 +699,36 @@ class FlowHandler:
     @staticmethod
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview."""
+
+    @callback
+    def async_cancel_progress(self) -> None:
+        """Cancel in progress task."""
+        if self.__progress_task and not self.__progress_task.done():
+            self.__progress_task.cancel()
+        self.__progress_task = None
+        self.progress_fut = None
+
+    @callback
+    def async_start_progress(
+        self,
+        progress_job: Callable[[], Coroutine[Any, Any, None]],
+        progress_done: Callable[..., Coroutine[Any, Any, Any]],
+    ) -> None:
+        """Start in progress task if not started."""
+
+        async def _resume_flow_when_done(fut: asyncio.Future[None]) -> None:
+            if not fut.done():
+                try:
+                    await fut
+                except Exception as err:  # pylint: disable=broad-exception-caught
+                    fut.set_exception(err)
+            await progress_done(self.flow_id)
+
+        if not self.progress_fut:
+            self.progress_fut = asyncio.ensure_future(progress_job())
+            self.__progress_task = self.hass.async_create_task(
+                _resume_flow_when_done(self.progress_fut)
+            )
 
 
 @callback

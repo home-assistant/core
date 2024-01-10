@@ -140,8 +140,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception(exception)
                 return self.async_abort(reason="could_not_register")
 
-        if self.progress_task and self.progress_task.done():
-            if self.progress_task.exception():
+        if self.progress_fut and self.progress_fut.done():
+            if self.progress_fut.exception():
                 return self.async_show_progress_done(next_step_id="could_not_register")
             return self.async_show_progress_done(next_step_id="repositories")
 
