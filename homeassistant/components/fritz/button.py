@@ -163,6 +163,7 @@ class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
         self._name = f"{device.hostname} Wake on LAN"
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
         self._attr_entity_category = EntityCategory.CONFIG
+        self._is_available = True
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, self._mac)},
             default_manufacturer="AVM",
@@ -173,11 +174,6 @@ class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
                 avm_wrapper.unique_id,
             ),
         )
-
-    @property
-    def available(self) -> bool:
-        """Return availability of the button."""
-        return super().available
 
     async def async_press(self) -> None:
         """Press the button."""
