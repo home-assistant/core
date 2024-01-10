@@ -27,11 +27,12 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 def mock_analytics_client() -> Generator[AsyncMock, None, None]:
     """Mock a Homeassistant Analytics client."""
     with patch(
-        "homeassistant.components.homeassistant_analytics.coordinator.HomeassistantAnalyticsClient.get_analytics",
-        return_value=Analytics.from_json(
-            load_fixture("homeassistant_analytics/data.json")
-        ),
+        "homeassistant.components.homeassistant_analytics.coordinator.HomeassistantAnalyticsClient",
+        return_value=AsyncMock(),
     ) as mock_client:
+        mock_client.return_value.get_analytics.return_value = Analytics.from_json(
+            load_fixture("homeassistant_analytics/data.json")
+        )
         yield mock_client
 
 

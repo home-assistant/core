@@ -27,7 +27,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match()
         if user_input is not None:
             return self.async_create_entry(
-                title="Homeassistant Analytics", data={}, options=user_input
+                title="Home Assistant analytics", data={}, options=user_input
             )
 
         client = HomeassistantAnalyticsClient(

@@ -2476,7 +2476,7 @@
       "iot_class": "cloud_polling"
     },
     "homeassistant_analytics": {
-      "name": "Homeassistant Analytics",
+      "name": "Home Assistant analytics",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"

@@ -1,6 +1,6 @@
 {
   "domain": "homeassistant_analytics",
-  "name": "Homeassistant Analytics",
+  "name": "Home Assistant analytics",
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_analytics",
