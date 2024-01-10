@@ -33,8 +33,7 @@ class NotificationCoordinator:
 
     def remove_coordinator(self, serial: str) -> None:
         """Remove NASwebCoordinator from possible notification targets."""
-        if self._coordinators.pop(serial, None) is None:
-            _LOGGER.warning("Trying to remove nonexistent NASwebCoordinator")
+        self._coordinators.pop(serial)
         _LOGGER.debug("Removed NASwebCoordinator for NASweb[%s]", serial)
 
     def has_coordinators(self) -> bool:
