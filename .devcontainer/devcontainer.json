@@ -47,8 +47,5 @@
         }
       }
     }
-  },
-  "mounts": [
-    "source=/home/arie/dev/pyenphase,target=/workspaces/pyenphase,type=bind,consistency=cached"
-  ]
+  }
 }
