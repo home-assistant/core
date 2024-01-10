@@ -720,7 +720,8 @@ class FlowHandler:
         async def _send_event_when_done(fut: asyncio.Future[None]) -> None:
             with suppress(BaseException):
                 await fut
-            await progress_done(self.flow_id)
+            with suppress(UnknownFlow):
+                await progress_done(self.flow_id)
 
         if not asyncio.iscoroutine(progress_job):
             raise TypeError
