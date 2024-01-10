@@ -277,6 +277,27 @@
       },
       "compressor_phase": {
         "name": "Compressor phase"
+      },
+      "ess_state_of_charge": {
+        "name": "Battery"
+      },
+      "ess_power": {
+        "name": "Battery power"
+      },
+      "ess_state": {
+        "name": "Battery state"
+      },
+      "pcc_transfer_power_exchange": {
+        "name": "PCC transfer"
+      },
+      "photovoltaic_production_current": {
+        "name": "Solar power"
+      },
+      "photovoltaic_production_today": {
+        "name": "Solar energy production today"
+      },
+      "photovoltaic_status": {
+        "name": "Solar state"
       }
     },
     "water_heater": {
