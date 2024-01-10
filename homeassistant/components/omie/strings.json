@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "spot_price_pt": {
+        "name": "Marginal Price - Portugal"
+      },
+      "spot_price_es": {
+        "name": "Marginal Price - Spain"
+      }
+    }
+  }
+}

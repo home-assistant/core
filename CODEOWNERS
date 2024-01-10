@@ -903,6 +903,8 @@ build.json @home-assistant/supervisor
 /tests/components/octoprint/ @rfleming71
 /homeassistant/components/ohmconnect/ @robbiet480
 /homeassistant/components/ombi/ @larssont
+/homeassistant/components/omie/ @luuuis
+/tests/components/omie/ @luuuis
 /homeassistant/components/omnilogic/ @oliver84 @djtimca @gentoosu
 /tests/components/omnilogic/ @oliver84 @djtimca @gentoosu
 /homeassistant/components/onboarding/ @home-assistant/core
