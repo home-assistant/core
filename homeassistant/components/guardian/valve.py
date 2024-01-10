@@ -45,7 +45,7 @@ class GuardianValveState(StrEnum):
     START_OPENING = "start_opening"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ValveControllerValveDescription(
     ValveEntityDescription, ValveControllerEntityDescription
 ):
