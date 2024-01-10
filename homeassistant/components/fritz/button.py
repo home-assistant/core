@@ -68,21 +68,6 @@ BUTTONS: Final = [
 ]
 
 
-async def async_all_entities_list(
-    avm_wrapper: AvmWrapper,
-    device_friendly_name: str,
-    data_fritz: FritzData,
-) -> list[Entity]:
-    """Get a list of all entities."""
-    if avm_wrapper.mesh_role == MeshRoles.SLAVE:
-        return []
-
-    return [
-        *[FritzButton(avm_wrapper, device_friendly_name, button) for button in BUTTONS],
-        *await _async_wol_buttons_list(avm_wrapper, data_fritz),
-    ]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -91,13 +76,15 @@ async def async_setup_entry(
     """Set buttons for device."""
     _LOGGER.debug("Setting up buttons")
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
 
-    entities_list = await async_all_entities_list(
-        avm_wrapper,
-        entry.title,
-        data_fritz,
-    )
+    entities_list = [FritzButton(avm_wrapper, entry.title, button) for button in BUTTONS]
+
+    if avm_wrapper.mesh_role == MeshRoles.SLAVE:
+        async_add_entities(entities_list)
+        return
+
+    data_fritz: FritzData = hass.data[DATA_FRITZ]
+    entities_list += await _async_wol_buttons_list(avm_wrapper, data_fritz)
 
     async_add_entities(entities_list)
 
