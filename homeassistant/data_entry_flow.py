@@ -440,7 +440,9 @@ class FlowManager(abc.ABC):
                 error_if_core=False,
             )
 
-        if result["type"] == FlowResultType.SHOW_PROGRESS and result["progress_coro"]:
+        if result["type"] == FlowResultType.SHOW_PROGRESS and (
+            progress_coro := result.pop("progress_coro", None)
+        ):
             flow_id = flow.flow_id
 
             async def _resume_flow_when_done(awt: Awaitable[None]) -> None:
@@ -449,7 +451,7 @@ class FlowManager(abc.ABC):
 
             if not flow.progress_task:
                 flow.progress_task = self.hass.async_create_task(
-                    _resume_flow_when_done(result["progress_coro"]())
+                    _resume_flow_when_done(progress_coro())
                 )
         elif result["type"] != FlowResultType.SHOW_PROGRESS:
             if flow.progress_task and not flow.progress_task.done():
