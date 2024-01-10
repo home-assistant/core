@@ -260,6 +260,13 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_enabled="is_contact_sensor_enabled",
     ),
     ProtectBinaryEntityDescription(
+        key="leak",
+        name="Leak",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        ufp_value="is_leak_detected",
+        ufp_enabled="is_leak_sensor_enabled",
+    ),
+    ProtectBinaryEntityDescription(
         key="battery_low",
         name="Battery low",
         device_class=BinarySensorDeviceClass.BATTERY,
