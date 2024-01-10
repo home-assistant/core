@@ -293,6 +293,148 @@ PRODUCTION_PHASE_SENSORS = (
 
 
 @dataclass(frozen=True)
+class EnvoyProductionPhaseSensorEntityDescription(
+    EnvoyProductionSensorEntityDescription
+):
+    """Describes an Envoy production phase sensor entity."""
+
+    on_phase: PhaseNames = PhaseNames.PHASE_1
+
+
+PRODUCTION_PHASE_SENSORS = (
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="production_l1",
+        translation_key="current_power_production_l1",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=3,
+        value_fn=lambda production: production.watts_now,
+        on_phase=PhaseNames.PHASE_1,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="daily_production_l1",
+        translation_key="daily_production_l1",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        value_fn=lambda production: production.watt_hours_today,
+        on_phase=PhaseNames.PHASE_1,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="seven_days_production_l1",
+        translation_key="seven_days_production_l1",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda production: production.watt_hours_last_7_days,
+        on_phase=PhaseNames.PHASE_1,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="lifetime_production_l1",
+        translation_key="lifetime_production_l1",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda production: production.watt_hours_lifetime,
+        on_phase=PhaseNames.PHASE_1,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="production_l2",
+        translation_key="current_power_production_l2",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=3,
+        value_fn=lambda production: production.watts_now,
+        on_phase=PhaseNames.PHASE_2,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="daily_production_l2",
+        translation_key="daily_production_l2",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        value_fn=lambda production: production.watt_hours_today,
+        on_phase=PhaseNames.PHASE_2,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="seven_days_production_l2",
+        translation_key="seven_days_production_l2",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda production: production.watt_hours_last_7_days,
+        on_phase=PhaseNames.PHASE_2,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="lifetime_production_l2",
+        translation_key="lifetime_production_l2",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda production: production.watt_hours_lifetime,
+        on_phase=PhaseNames.PHASE_2,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="production_l3",
+        translation_key="current_power_production_l3",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=3,
+        value_fn=lambda production: production.watts_now,
+        on_phase=PhaseNames.PHASE_3,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="daily_production_l3",
+        translation_key="daily_production_l3",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        value_fn=lambda production: production.watt_hours_today,
+        on_phase=PhaseNames.PHASE_3,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="seven_days_production_l3",
+        translation_key="seven_days_production_l3",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda production: production.watt_hours_last_7_days,
+        on_phase=PhaseNames.PHASE_3,
+    ),
+    EnvoyProductionPhaseSensorEntityDescription(
+        key="lifetime_production_l3",
+        translation_key="lifetime_production_l3",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda production: production.watt_hours_lifetime,
+        on_phase=PhaseNames.PHASE_3,
+    ),
+)
+
+
+@dataclass(frozen=True)
 class EnvoyConsumptionRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -499,6 +641,148 @@ CONSUMPTION_PHASE_SENSORS = (
         value_fn=lambda consumption: consumption.watt_hours_lifetime,
         on_phase=PhaseNames.PHASE_3,
         translation_placeholders={"phase_name": "l3"},
+    ),
+)
+
+
+@dataclass(frozen=True)
+class EnvoyConsumptionPhaseSensorEntityDescription(
+    EnvoyConsumptionSensorEntityDescription
+):
+    """Describes an Envoy consumption phase sensor entity."""
+
+    on_phase: PhaseNames = PhaseNames.PHASE_1
+
+
+CONSUMPTION_PHASE_SENSORS = (
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="consumption_l1",
+        translation_key="current_power_consumption_l1",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=3,
+        value_fn=lambda consumption: consumption.watts_now,
+        on_phase=PhaseNames.PHASE_1,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="daily_consumption_l1",
+        translation_key="daily_consumption_l1",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        value_fn=lambda consumption: consumption.watt_hours_today,
+        on_phase=PhaseNames.PHASE_1,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="seven_days_consumption_l1",
+        translation_key="seven_days_consumption_l1",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda consumption: consumption.watt_hours_last_7_days,
+        on_phase=PhaseNames.PHASE_1,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="lifetime_consumption_l1",
+        translation_key="lifetime_consumption_l1",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda consumption: consumption.watt_hours_lifetime,
+        on_phase=PhaseNames.PHASE_1,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="consumption_l2",
+        translation_key="current_power_consumption_l2",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=3,
+        value_fn=lambda consumption: consumption.watts_now,
+        on_phase=PhaseNames.PHASE_2,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="daily_consumption_l2",
+        translation_key="daily_consumption_l2",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        value_fn=lambda consumption: consumption.watt_hours_today,
+        on_phase=PhaseNames.PHASE_2,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="seven_days_consumption_l2",
+        translation_key="seven_days_consumption_l2",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda consumption: consumption.watt_hours_last_7_days,
+        on_phase=PhaseNames.PHASE_2,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="lifetime_consumption_l2",
+        translation_key="lifetime_consumption_l2",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda consumption: consumption.watt_hours_lifetime,
+        on_phase=PhaseNames.PHASE_2,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="consumption_l3",
+        translation_key="current_power_consumption_l3",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=3,
+        value_fn=lambda consumption: consumption.watts_now,
+        on_phase=PhaseNames.PHASE_3,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="daily_consumption_l3",
+        translation_key="daily_consumption_l3",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        value_fn=lambda consumption: consumption.watt_hours_today,
+        on_phase=PhaseNames.PHASE_3,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="seven_days_consumption_l3",
+        translation_key="seven_days_consumption_l3",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda consumption: consumption.watt_hours_last_7_days,
+        on_phase=PhaseNames.PHASE_3,
+    ),
+    EnvoyConsumptionPhaseSensorEntityDescription(
+        key="lifetime_consumption_l3",
+        translation_key="lifetime_consumption_l3",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda consumption: consumption.watt_hours_lifetime,
+        on_phase=PhaseNames.PHASE_3,
     ),
 )
 
