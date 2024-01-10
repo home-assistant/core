@@ -268,7 +268,7 @@
       },
       "photovoltaic_status": {
         "name": "Solar state"
-      }
+      },
       "supply_temperature": {
         "name": "Supply temperature"
       },
@@ -304,7 +304,7 @@
       },
       "compressor_phase": {
         "name": "Compressor phase"
-      },
+      }
     },
     "water_heater": {
       "domestic_hot_water": {
