@@ -29,6 +29,15 @@ async def async_setup_entry(
         else:
             entities.append(TedeeLockEntity(lock, coordinator))
 
+    def _async_add_new_lock(lock_id: int) -> None:
+        lock = coordinator.data[lock_id]
+        if lock.is_enabled_pullspring:
+            async_add_entities([TedeeLockWithLatchEntity(lock, coordinator)])
+        else:
+            async_add_entities([TedeeLockEntity(lock, coordinator)])
+
+    coordinator.new_lock_callbacks.append(_async_add_new_lock)
+
     async_add_entities(entities)
 
 
@@ -64,11 +73,6 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
         return self._lock.is_state_jammed
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self._lock.is_connected
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door."""

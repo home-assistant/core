@@ -1626,7 +1626,12 @@
             ]),
             'area_id': None,
             'capabilities': dict({
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
               'supported_color_modes': list([
+                <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
             }),
@@ -1656,10 +1661,17 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Aqara Hub-1563 Lightbulb-1563',
               'hs_color': None,
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
+                <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -2014,7 +2026,12 @@
             ]),
             'area_id': None,
             'capabilities': dict({
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
               'supported_color_modes': list([
+                <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
             }),
@@ -2044,10 +2061,17 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'ArloBabyA0 Nightlight',
               'hs_color': None,
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
+                <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -2453,7 +2477,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2481,7 +2505,7 @@
             'attributes': dict({
               'device_class': 'energy',
               'friendly_name': 'InWall Outlet-0394DE Energy kWh',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
               'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
             }),
             'entity_id': 'sensor.inwall_outlet_0394de_energy_kwh',
@@ -2494,7 +2518,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2522,7 +2546,7 @@
             'attributes': dict({
               'device_class': 'energy',
               'friendly_name': 'InWall Outlet-0394DE Energy kWh',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
               'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
             }),
             'entity_id': 'sensor.inwall_outlet_0394de_energy_kwh_2',
@@ -9279,7 +9303,12 @@
             ]),
             'area_id': None,
             'capabilities': dict({
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
               'supported_color_modes': list([
+                <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
             }),
@@ -9309,10 +9338,17 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Laundry Smoke ED78',
               'hs_color': None,
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
+                <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -11535,7 +11571,12 @@
             ]),
             'area_id': None,
             'capabilities': dict({
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
               'supported_color_modes': list([
+                <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
             }),
@@ -11565,10 +11606,17 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'Koogeek-LS1-20833F Light Strip',
               'hs_color': None,
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
+                <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -16318,7 +16366,12 @@
             ]),
             'area_id': None,
             'capabilities': dict({
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
               'supported_color_modes': list([
+                <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
             }),
@@ -16348,17 +16401,24 @@
             'attributes': dict({
               'brightness': 127.5,
               'color_mode': <ColorMode.HS: 'hs'>,
+              'color_temp': None,
+              'color_temp_kelvin': None,
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b Mood Light',
               'hs_color': tuple(
                 120.0,
                 100.0,
               ),
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
               'rgb_color': tuple(
                 0,
                 255,
                 0,
               ),
               'supported_color_modes': list([
+                <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,

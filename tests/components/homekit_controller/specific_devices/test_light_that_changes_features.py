@@ -39,4 +39,7 @@ async def test_light_add_feature_at_runtime(
     await device_config_changed(hass, accessories)
 
     light_state = hass.states.get("light.laundry_smoke_ed78")
-    assert light_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+    assert light_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
