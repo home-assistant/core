@@ -531,20 +531,21 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self.async_write_ha_state()
 
     def _normalize_target_temp_for_hvac_mode(self) -> None:
+        def adjust_temp(min_temp, max_temp):
+            if max_temp is not None and self._target_temp > max_temp:
+                return max_temp
+            if min_temp is not None and self._target_temp < min_temp:
+                return min_temp
+            return self._target_temp
+
         # Set a target temperature if we don't have any
         # This can happen when we switch from Off to On
-        if self._target_temp is None or isinstance(self._target_temp, float):
+        if self._target_temp is None or not isinstance(self._target_temp, float):
             self._target_temp = self._tado_zone_data.current_temp
         elif self._current_tado_hvac_mode == CONST_MODE_COOL:
-            if self._target_temp > self._cool_max_temp:
-                self._target_temp = self._cool_max_temp
-            elif self._target_temp < self._cool_min_temp:
-                self._target_temp = self._cool_min_temp
+            self._target_temp = adjust_temp(self._cool_min_temp, self._cool_max_temp)
         elif self._current_tado_hvac_mode == CONST_MODE_HEAT:
-            if self._target_temp > self._heat_max_temp:
-                self._target_temp = self._heat_max_temp
-            elif self._target_temp < self._heat_min_temp:
-                self._target_temp = self._heat_min_temp
+            self._target_temp = adjust_temp(self._heat_min_temp, self._heat_max_temp)
 
     def _control_hvac(
         self,
