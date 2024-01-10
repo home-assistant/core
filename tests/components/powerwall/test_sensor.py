@@ -1,6 +1,8 @@
 """The sensor tests for the powerwall platform."""
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
+from tesla_powerwall import MetersAggregatesResponse
 from tesla_powerwall.error import MissingAttributeError
 
 from homeassistant.components.powerwall.const import DOMAIN
@@ -11,13 +13,15 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS,
     PERCENTAGE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+import homeassistant.util.dt as dt_util
 
 from .mocks import _mock_powerwall_with_fixtures
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensors(
@@ -43,7 +47,7 @@ async def test_sensors(
         identifiers={("powerwall", "TG0123456789AB_TG9876543210BA")},
     )
     assert reg_device.model == "PowerWall 2 (GW1)"
-    assert reg_device.sw_version == "1.45.1"
+    assert reg_device.sw_version == "1.50.1 c58c2df3"
     assert reg_device.manufacturer == "Tesla"
     assert reg_device.name == "MySite"
 
@@ -118,13 +122,23 @@ async def test_sensors(
     for key, value in expected_attributes.items():
         assert state.attributes[key] == value
 
+    mock_powerwall.get_meters.return_value = MetersAggregatesResponse.from_dict({})
+    mock_powerwall.get_backup_reserve_percentage.return_value = None
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mysite_load_power").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.mysite_load_frequency").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.mysite_backup_reserve").state == STATE_UNKNOWN
+
 
 async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
     """Confirm that backup reserve sensor is not added if data is unavailable from the device."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
-    mock_powerwall.get_backup_reserve_percentage = Mock(
-        side_effect=MissingAttributeError(Mock(), "backup_reserve_percent", "operation")
+    mock_powerwall.get_backup_reserve_percentage.side_effect = MissingAttributeError(
+        Mock(), "backup_reserve_percent", "operation"
     )
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
@@ -140,3 +154,22 @@ async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.powerwall_backup_reserve")
     assert state is None
+
+
+async def test_sensors_with_empty_meters(hass: HomeAssistant) -> None:
+    """Test creation of the sensors with empty meters."""
+
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass, empty_meters=True)
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ), patch(
+        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mysite_solar_power") is None
