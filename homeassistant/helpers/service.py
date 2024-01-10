@@ -545,6 +545,9 @@ async def async_extract_config_entry_ids(
 
 def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
     """Load services file for an integration."""
+    if integration.file_path is None:
+        return {}
+
     try:
         return cast(
             JSON_TYPE,
