@@ -80,13 +80,14 @@ async def _mock_powerwall_site_name(hass, site_name):
     async with Powerwall("1.2.3.4") as powerwall:
         powerwall_mock = MagicMock(powerwall)
 
-        site_info_resp = SiteInfoResponse(
+        site_info_resp = SiteInfoResponse.from_dict(
             await _async_load_json_fixture(hass, "site_info.json")
         )
         # Sets site_info_resp.site_name to return site_name
-        site_info_resp.response["site_name"] = site_name
-        powerwall_mock.get_site_info = AsyncMock(return_value=site_info_resp)
-        powerwall_mock.get_gateway_din = AsyncMock(return_value=MOCK_GATEWAY_DIN)
+        site_info_resp._raw["site_name"] = site_name
+        site_info_resp.site_name = site_name
+        powerwall_mock.get_site_info.return_value = site_info_resp
+        powerwall_mock.get_gateway_din.return_value = MOCK_GATEWAY_DIN
 
         return powerwall_mock
 
