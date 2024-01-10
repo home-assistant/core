@@ -91,6 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.info(
             "Discovered Switcher device - id: %s, name: %s, type: %s (%s)",
             device.device_id,
+            device.device_key,
             device.name,
             device.device_type.value,
             device.device_type.hex_rep,
@@ -156,6 +157,11 @@ class SwitcherDataUpdateCoordinator(
     def device_id(self) -> str:
         """Switcher device id."""
         return self.data.device_id  # type: ignore[no-any-return]
+
+    @property
+    def device_key(self) -> str:
+        """Switcher device key."""
+        return self.data.device_key  # type: ignore[no-any-return]
 
     @property
     def mac_address(self) -> str:
