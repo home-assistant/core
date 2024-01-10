@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from random import randrange
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from pyatv import connect, exceptions, scan
 from pyatv.conf import AppleTV
@@ -95,10 +95,14 @@ class AppleTVEntity(Entity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, name: str, identifier: str, manager: "AppleTVManager") -> None:
+    def __init__(
+        self, name: str, identifier: str | None, manager: "AppleTVManager"
+    ) -> None:
         """Initialize device."""
         self.atv: AppleTV | None = None
         self.manager = manager
+        if TYPE_CHECKING:
+            assert identifier is not None
         self._attr_unique_id = identifier
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
