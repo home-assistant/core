@@ -67,7 +67,7 @@ async def test_cleanup_on_shutdown(
     mock_config_entry: MockConfigEntry,
     mock_tedee: MagicMock,
 ) -> None:
-    """Test the socket is cleaned up on shutdown."""
+    """Test the webhook is cleaned up on shutdown."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -76,7 +76,46 @@ async def test_cleanup_on_shutdown(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    mock_tedee.delete_webhooks.assert_called_once()
+    mock_tedee.delete_webhook.assert_called_once()
+
+
+async def test_webhook_cleanup_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the webhook is cleaned up on shutdown."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_tedee.delete_webhook.side_effect = TedeeWebhookException("")
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    mock_tedee.delete_webhook.assert_called_once()
+    assert "Failed to unregister Tedee webhook" in caplog.text
+
+
+async def test_webhook_registration_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the webhook is cleaned up on shutdown."""
+    mock_tedee.register_webhook.side_effect = TedeeWebhookException("")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_tedee.register_webhook.assert_called_once()
+    assert "Failed to register Tedee webhook" in caplog.text
 
 
 async def test_bridge_device(

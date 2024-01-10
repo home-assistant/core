@@ -54,6 +54,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         self._next_get_locks = time.time()
         self._locks_last_update: set[int] = set()
         self.new_lock_callbacks: list[Callable[[int], None]] = []
+        self.tedee_webhook_id: int | None = None
 
     @property
     def bridge(self) -> TedeeBridge:
