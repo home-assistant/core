@@ -131,7 +131,7 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
         return f"{self.base_unique_id}_powerwall_charging"
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Powerwall is charging."""
         meter = self.data.meters.get_meter(MeterType.BATTERY)
         # Meter cannot be None because of the available property
