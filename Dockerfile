@@ -15,6 +15,7 @@ WORKDIR /usr/src
 ## Setup Home Assistant Core dependencies
 COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
+RUN apk add alpine-sdk autoconf bluez-dev libffi-dev openssl-dev glib-dev eudev-dev libxml2-dev libxslt-dev libpng-dev libjpeg-turbo-dev tiff-dev cups-dev gmp-dev mpfr-dev mpc1-dev ffmpeg-dev gammu-dev yaml-dev openblas-dev fftw-dev lapack-dev gfortran blas-dev eigen-dev freetype-dev glew-dev harfbuzz-dev hdf5-dev libdc1394-dev libtbb-dev mesa-dev openexr-dev openjpeg-dev uchardet-dev
 RUN \
     pip3 install \
         -r homeassistant/requirements.txt
