@@ -113,7 +113,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version == 1:
         options = {**config_entry.options}
         if config_entry.minor_version < 2:
-            options[CONF_INVERT] = False
+            options.setdefault(CONF_INVERT, False)
         config_entry.version = 1
         config_entry.minor_version = 2
         hass.config_entries.async_update_entry(config_entry, options=options)
