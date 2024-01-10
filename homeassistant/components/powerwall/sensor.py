@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
 
 from tesla_powerwall import MeterResponse, MeterType
 
@@ -49,22 +48,22 @@ class PowerwallSensorEntityDescription(
 
 def _get_meter_power(meter: MeterResponse) -> float:
     """Get the current value in kW."""
-    return cast(float, meter.get_power(precision=3))
+    return meter.get_power(precision=3)
 
 
 def _get_meter_frequency(meter: MeterResponse) -> float:
     """Get the current value in Hz."""
-    return round(cast(float, meter.frequency), 1)
+    return round(meter.frequency, 1)
 
 
 def _get_meter_total_current(meter: MeterResponse) -> float:
     """Get the current value in A."""
-    return cast(float, meter.get_instant_total_current())
+    return meter.get_instant_total_current()
 
 
 def _get_meter_average_voltage(meter: MeterResponse) -> float:
     """Get the current value in V."""
-    return round(cast(float, meter.instant_average_voltage), 1)
+    return round(meter.instant_average_voltage, 1)
 
 
 POWERWALL_INSTANT_SENSORS = (
@@ -172,9 +171,13 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
         self._attr_unique_id = f"{self.base_unique_id}_{meter.value}_{description.key}"
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Get the current value."""
-        return self.entity_description.value_fn(self.data.meters.get_meter(self._meter))
+        meter = self.data.meters.get_meter(self._meter)
+        if meter is not None:
+            return self.entity_description.value_fn(meter)
+
+        return None
 
 
 class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
@@ -228,7 +231,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
         return super().available and self.native_value != 0
 
     @property
-    def meter(self) -> MeterResponse:
+    def meter(self) -> MeterResponse | None:
         """Get the meter for the sensor."""
         return self.data.meters.get_meter(self._meter)
 
@@ -245,9 +248,12 @@ class PowerWallExportSensor(PowerWallEnergyDirectionSensor):
         super().__init__(powerwall_data, meter, _METER_DIRECTION_EXPORT)
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Get the current value in kWh."""
-        return cast(float, self.meter.get_energy_exported())
+        if self.meter is not None:
+            return self.meter.get_energy_exported()
+
+        return None
 
 
 class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
@@ -262,6 +268,9 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
         super().__init__(powerwall_data, meter, _METER_DIRECTION_IMPORT)
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Get the current value in kWh."""
-        return cast(float, self.meter.get_energy_imported())
+        if self.meter is not None:
+            return self.meter.get_energy_imported()
+
+        return None

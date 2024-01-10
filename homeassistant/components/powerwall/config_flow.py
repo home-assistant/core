@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aiohttp import CookieJar
 from tesla_powerwall import (
@@ -42,9 +42,8 @@ async def _login_and_fetch_site_info(
     if password is not None:
         await power_wall.login(password)
 
-    return cast(
-        tuple[SiteInfoResponse, str],
-        await asyncio.gather(power_wall.get_site_info(), power_wall.get_gateway_din()),
+    return await asyncio.gather(
+        power_wall.get_site_info(), power_wall.get_gateway_din()
     )
 
 

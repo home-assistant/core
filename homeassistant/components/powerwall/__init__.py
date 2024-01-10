@@ -5,7 +5,7 @@ import asyncio
 import contextlib
 from datetime import timedelta
 import logging
-from typing import Optional, cast
+from typing import Optional
 
 from aiohttp import CookieJar
 from tesla_powerwall import (
@@ -230,7 +230,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
 
     async def get_backup_reserve_percentage() -> Optional[float]:
         try:
-            return cast(float, await power_wall.get_backup_reserve_percentage())
+            return await power_wall.get_backup_reserve_percentage()
         except MissingAttributeError:
             return None
 
