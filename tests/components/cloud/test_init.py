@@ -230,6 +230,7 @@ async def test_async_get_or_create_cloudhook(
     """Test async_get_or_create_cloudhook."""
     assert await async_setup_component(hass, "cloud", {"cloud": {}})
     await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
 
     webhook_id = "mock-webhook-id"
     cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
@@ -262,7 +263,7 @@ async def test_async_get_or_create_cloudhook(
         async_create_cloudhook_mock.assert_not_called()
 
     # Simulate logged out
-    cloud.id_token = None
+    await cloud.logout()
 
     # Not logged in
     with pytest.raises(CloudNotAvailable):
