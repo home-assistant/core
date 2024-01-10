@@ -3,6 +3,8 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 from pyenphase import EnvoyAuthenticationError, EnvoyError
+from pyenphase.const import PhaseNames, SupportedFeatures
+from pyenphase.models.meters import CtType, EnvoyPhaseMode
 import pytest
 
 from homeassistant import config_entries
@@ -361,3 +363,55 @@ async def test_reauth(hass: HomeAssistant, config_entry, setup_enphase_envoy) ->
     )
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_phase_data(hass: HomeAssistant, setup_enphase_envoy) -> None:
+    """Test we can setup from zeroconf and get data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234", "protovers": "7.0.0"},
+            type="mock_type",
+        ),
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+    assert result2["result"].unique_id == "1234"
+
+    envoy = hass.data[DOMAIN][result2["result"].entry_id].envoy
+    result3 = envoy.data
+    assert result3.inverters["1"].serial_number == "1"
+    assert result3.inverters["1"].last_report_watts == 1
+    assert result3.system_consumption.watt_hours_today == 1234
+    assert result3.system_production.watt_hours_today == 1234
+    assert (
+        result3.system_consumption_phases[PhaseNames.PHASE_2].watt_hours_lifetime
+        == 2322
+    )
+    assert (
+        result3.system_production_phases[PhaseNames.PHASE_2].watt_hours_lifetime == 2232
+    )
+    assert envoy.supported_features == SupportedFeatures(
+        SupportedFeatures.INVERTERS
+        | SupportedFeatures.PRODUCTION
+        | SupportedFeatures.PRODUCTION
+        | SupportedFeatures.METERING
+        | SupportedFeatures.THREEPHASE
+    )
+    assert envoy.phase_mode == EnvoyPhaseMode.THREE
+    assert envoy.phase_count == 3
+    assert envoy.active_phase_count == 3
+    assert envoy.consumption_meter_type == CtType.NET_CONSUMPTION
+    assert envoy.ct_meter_count == 2
