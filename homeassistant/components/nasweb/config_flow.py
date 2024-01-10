@@ -14,9 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .commons import get_hass_address_from_entry, initialize_notification_coordinator
 from .const import CONF_HA_ADDRESS, DOMAIN, NASWEB_SCHEMA_IMG_URL, NOTIFY_COORDINATOR
 from .coordinator import NASwebCoordinator, NotificationCoordinator
+from .helper import get_hass_address_from_entry, initialize_notification_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 

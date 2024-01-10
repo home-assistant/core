@@ -1,4 +1,4 @@
-"""Common utility functions for NASweb integration."""
+"""Helper functions for NASweb integration."""
 
 from collections.abc import Mapping
 import logging
