@@ -1,6 +1,10 @@
 """The Intent integration."""
-import logging
+from __future__ import annotations
 
+import logging
+from typing import Any, Protocol
+
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import http
@@ -67,6 +71,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
+
+
+class IntentPlatformProtocol(Protocol):
+    """Define the format that intent platforms can have."""
+
+    async def async_setup_intents(self, hass: HomeAssistant) -> None:
+        """Set up platform intents."""
 
 
 class OnOffIntentHandler(intent.ServiceIntentHandler):
@@ -249,7 +260,9 @@ class NevermindIntentHandler(intent.IntentHandler):
         return intent_obj.create_response()
 
 
-async def _async_process_intent(hass: HomeAssistant, domain: str, platform):
+async def _async_process_intent(
+    hass: HomeAssistant, domain: str, platform: IntentPlatformProtocol
+) -> None:
     """Process the intents of an integration."""
     await platform.async_setup_intents(hass)
 
@@ -268,9 +281,9 @@ class IntentHandleView(http.HomeAssistantView):
             }
         )
     )
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle intent with name/data."""
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
         language = hass.config.language
 
         try:
@@ -286,7 +299,7 @@ class IntentHandleView(http.HomeAssistantView):
             intent_result.async_set_speech(str(err))
 
         if intent_result is None:
-            intent_result = intent.IntentResponse(language=language)
+            intent_result = intent.IntentResponse(language=language)  # type: ignore[unreachable]
             intent_result.async_set_speech("Sorry, I couldn't handle that")
 
         return self.json(intent_result)

@@ -32,6 +32,9 @@ async def async_setup_entry(
 class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     """KMtronic Switch Entity."""
 
+    _attr_translation_key = "relay"
+    _attr_has_entity_name = True
+
     def __init__(self, hub, coordinator, relay, reverse, config_entry_id):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
@@ -46,7 +49,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
             configuration_url=hub.host,
         )
 
-        self._attr_name = f"Relay{relay.id}"
+        self._attr_translation_placeholders = {"relay_id": relay.id}
         self._attr_unique_id = f"{config_entry_id}_relay{relay.id}"
 
     @property
