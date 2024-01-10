@@ -97,7 +97,7 @@ async def test_webhook_cleanup_errors(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     mock_tedee.delete_webhook.assert_called_once()
-    assert "Failed to unregister Tedee webhook" in caplog.text
+    assert "Failed to unregister Tedee webhook from bridge" in caplog.text
 
 
 async def test_webhook_registration_errors(
@@ -115,7 +115,7 @@ async def test_webhook_registration_errors(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     mock_tedee.register_webhook.assert_called_once()
-    assert "Failed to register Tedee webhook" in caplog.text
+    assert "Failed to register Tedee webhook from bridge" in caplog.text
 
 
 async def test_bridge_device(

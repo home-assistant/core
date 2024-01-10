@@ -61,7 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         coordinator.tedee_webhook_id
                     )
                 except TedeeWebhookException as ex:
-                    _LOGGER.warning("Failed to unregister Tedee webhook: %s", ex)
+                    _LOGGER.warning(
+                        "Failed to unregister Tedee webhook from bridge: %s", ex
+                    )
                 webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
                 _LOGGER.debug("Unregistered Tedee webhook")
 
@@ -87,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     await coordinator.tedee_client.register_webhook(webhook_url)
                 )
             except TedeeWebhookException as ex:
-                _LOGGER.warning("Failed to register Tedee webhook: %s", ex)
+                _LOGGER.warning("Failed to register Tedee webhook from bridge: %s", ex)
             else:
                 entry.async_on_unload(
                     hass.bus.async_listen_once(
