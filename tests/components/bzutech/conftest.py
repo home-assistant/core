@@ -1,4 +1,4 @@
-"""Common fixtures for the Bzu Tech tests."""
+"""Common fixtures for the BZUTech tests."""
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
