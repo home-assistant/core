@@ -138,6 +138,7 @@ homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
 homeassistant.components.discovergy.*
 homeassistant.components.dlna_dmr.*
+homeassistant.components.dlna_dms.*
 homeassistant.components.dnsip.*
 homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
@@ -397,6 +398,7 @@ homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*
 homeassistant.components.time.*
 homeassistant.components.time_date.*
+homeassistant.components.tod.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*
 homeassistant.components.tplink.*
