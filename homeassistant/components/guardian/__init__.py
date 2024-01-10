@@ -76,7 +76,13 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
     },
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
 
 @dataclass
