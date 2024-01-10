@@ -360,6 +360,7 @@ async def test_dhcp_discovery_update_ip_address(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     mock_powerwall = MagicMock(login=MagicMock(side_effect=PowerwallUnreachableError))
+    mock_powerwall.__aenter__.return_value = mock_powerwall
 
     with patch(
         "homeassistant.components.powerwall.config_flow.Powerwall",

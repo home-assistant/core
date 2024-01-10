@@ -64,7 +64,7 @@ def _get_meter_total_current(meter: MeterResponse) -> float:
 
 def _get_meter_average_voltage(meter: MeterResponse) -> float:
     """Get the current value in V."""
-    return round(cast(float, meter.average_voltage), 1)
+    return round(cast(float, meter.instant_average_voltage), 1)
 
 
 POWERWALL_INSTANT_SENSORS = (

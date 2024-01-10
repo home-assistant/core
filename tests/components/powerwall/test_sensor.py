@@ -43,7 +43,7 @@ async def test_sensors(
         identifiers={("powerwall", "TG0123456789AB_TG9876543210BA")},
     )
     assert reg_device.model == "PowerWall 2 (GW1)"
-    assert reg_device.sw_version == "1.45.1"
+    assert reg_device.sw_version == "1.50.1 c58c2df3"
     assert reg_device.manufacturer == "Tesla"
     assert reg_device.name == "MySite"
 

@@ -43,7 +43,7 @@ async def test_entity_registry(
 ) -> None:
     """Test powerwall off-grid switch device."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.CONNECTED
 
     assert ENTITY_ID in entity_registry.entities
 
@@ -51,7 +51,7 @@ async def test_entity_registry(
 async def test_initial(hass: HomeAssistant, mock_powerwall) -> None:
     """Test initial grid status without off grid switch selected."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.CONNECTED
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -60,7 +60,7 @@ async def test_initial(hass: HomeAssistant, mock_powerwall) -> None:
 async def test_on(hass: HomeAssistant, mock_powerwall) -> None:
     """Test state once offgrid switch has been turned on."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.ISLANDED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.ISLANDED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -76,7 +76,7 @@ async def test_on(hass: HomeAssistant, mock_powerwall) -> None:
 async def test_off(hass: HomeAssistant, mock_powerwall) -> None:
     """Test state once offgrid switch has been turned off."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.CONNECTED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
