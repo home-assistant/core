@@ -2,8 +2,7 @@
 
 import logging
 
-from epion import Epion
-from requests.exceptions import ConnectTimeout, HTTPError
+from epion import Epion, EpionAuthenticationError, EpionConnectionError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -33,16 +32,11 @@ class EpionCoordinator(DataUpdateCoordinator[dict]):
             response = await self.hass.async_add_executor_job(
                 self.epion_api.get_current
             )
-        except HTTPError as err:
-            _LOGGER.error("Could not retrieve details from Epion API")
-            if err.response is not None:
-                if err.response.status_code == 401:
-                    raise ConfigEntryAuthFailed from err
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-        except ConnectTimeout as err:
-            _LOGGER.error(
-                "Could not retrieve details from Epion API, connection timed out"
-            )
+        except EpionAuthenticationError as err:
+            _LOGGER.error("Authentication error with Epion API")
+            raise ConfigEntryAuthFailed from err
+        except EpionConnectionError as err:
+            _LOGGER.error("Epion API connection problem")
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
             device_data = {}

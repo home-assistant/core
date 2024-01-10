@@ -4,8 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from epion import Epion
-from requests.exceptions import ConnectTimeout, HTTPError
+from epion import Epion, EpionAuthenticationError, EpionConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -32,7 +31,7 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
                 key_valid = await self.hass.async_add_executor_job(
                     self._check_api_key, user_input[CONF_API_KEY]
                 )
-            except (HTTPError, ConnectTimeout):
+            except EpionConnectionError:
                 _LOGGER.error("Unexpected problem when configuring Epion API")
                 errors["base"] = "cannot_connect"
             else:
@@ -58,10 +57,5 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
         api = Epion(api_key)
         try:
             return len(api.get_current()["devices"]) > 0
-        except HTTPError as ex:
-            if ex.response is not None:
-                if ex.response.status_code == 401:
-                    return False
-            raise ex
-        except Exception as ex:
-            raise ex
+        except EpionAuthenticationError:
+            return False

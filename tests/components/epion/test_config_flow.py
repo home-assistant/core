@@ -1,8 +1,8 @@
 """Tests for the Epion config flow."""
 from unittest.mock import Mock, patch
 
+from epion import EpionAuthenticationError, EpionConnectionError
 import pytest
-from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.epion.const import DOMAIN
@@ -36,7 +36,7 @@ async def test_user_flow(hass: HomeAssistant, epion_api: Mock) -> None:
     assert result.get("errors") == {"base": "invalid_auth"}
 
     # Test with invalid auth
-    epion_api.get_current.side_effect = HTTPError(response=Mock(status_code=401))
+    epion_api.get_current.side_effect = EpionAuthenticationError("Invalid API key")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -46,17 +46,7 @@ async def test_user_flow(hass: HomeAssistant, epion_api: Mock) -> None:
     assert result.get("errors") == {"base": "invalid_auth"}
 
     # Test with connection timeout
-    epion_api.get_current.side_effect = ConnectTimeout()
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
-    )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "cannot_connect"}
-
-    # Test with an HTTPError
-    epion_api.get_current.side_effect = HTTPError()
+    epion_api.get_current.side_effect = EpionConnectionError("Timeout problem")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},

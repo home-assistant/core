@@ -788,7 +788,7 @@ env-canada==0.6.0
 ephem==4.1.5
 
 # homeassistant.components.epion
-epion==0.0.2
+epion==0.0.3
 
 # homeassistant.components.epson
 epson-projector==0.5.1
