@@ -129,7 +129,7 @@ class FlowResult(TypedDict, total=False):
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
-    progress_coro: Coroutine[Any, Any, None] | None
+    progress_coro: Coroutine[Any, Any, Any] | None
     reason: str
     required: bool
     result: Any
@@ -508,7 +508,7 @@ class FlowHandler:
     MINOR_VERSION = 1
 
     __progress_task: asyncio.Task | None = None
-    progress_task: asyncio.Task[None] | None = None
+    progress_task: asyncio.Task[Any] | None = None
 
     @property
     def source(self) -> str | None:
@@ -712,12 +712,12 @@ class FlowHandler:
     @callback
     def async_start_progress(
         self,
-        progress_job: Coroutine[Any, Any, None],
+        progress_job: Coroutine[Any, Any, Any],
         progress_done: Callable[..., Coroutine[Any, Any, Any]],
     ) -> None:
         """Start in progress task if not started."""
 
-        async def _send_event_when_done(fut: asyncio.Future[None]) -> None:
+        async def _send_event_when_done(fut: asyncio.Task[Any]) -> None:
             with suppress(BaseException):
                 await fut
             with suppress(UnknownFlow):
