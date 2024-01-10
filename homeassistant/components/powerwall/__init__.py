@@ -152,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady from err
 
     gateway_din = base_info.gateway_din
-    if is_ip_address(entry.unique_id):
+    if entry.unique_id is not None and is_ip_address(entry.unique_id):
         hass.config_entries.async_update_entry(entry, unique_id=gateway_din)
 
     runtime_data = PowerwallRuntimeData(
