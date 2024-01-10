@@ -11,9 +11,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platfor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .commons import get_hass_address_from_entry, initialize_notification_coordinator
 from .const import DOMAIN, MANUFACTURER, NASWEB_CONFIG_URL, NOTIFY_COORDINATOR
 from .coordinator import NASwebCoordinator, NotificationCoordinator
+from .helper import get_hass_address_from_entry, initialize_notification_coordinator
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
