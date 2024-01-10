@@ -715,7 +715,13 @@ class FlowHandler:
         progress_job: Coroutine[Any, Any, Any],
         progress_done: Callable[..., Coroutine[Any, Any, Any]],
     ) -> None:
-        """Start in progress task if not started."""
+        """Start in progress task if not started.
+
+        We need to keep track of both the task passed to us from a flow, and the
+        outer task which awaits that task and then notifies frontend. If we only
+        keep track of the outer task, we introduce a race where frontend calls
+        configure before the outer task is done.
+        """
 
         async def _send_event_when_done(fut: asyncio.Task[Any]) -> None:
             with suppress(BaseException):
