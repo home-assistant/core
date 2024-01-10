@@ -80,6 +80,9 @@
       },
       "comfort_temperature": {
         "name": "Comfort temperature"
+      },
+      "dhw_secondary_temperature": {
+        "name": "DHW secondary temperature"
       }
     },
     "sensor": {
