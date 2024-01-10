@@ -1,6 +1,7 @@
 """Offer state listening automation rules."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 
@@ -114,7 +115,7 @@ async def async_attach_trigger(
     match_all = all(
         item not in config for item in (CONF_FROM, CONF_NOT_FROM, CONF_NOT_TO, CONF_TO)
     )
-    unsub_track_same = {}
+    unsub_track_same: dict[str, Callable[[], None]] = {}
     period: dict[str, timedelta] = {}
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action, f"state trigger {trigger_info}")
@@ -158,7 +159,7 @@ async def async_attach_trigger(
             return
 
         @callback
-        def call_action():
+        def call_action() -> None:
             """Call action with right context."""
             hass.async_run_hass_job(
                 job,
@@ -201,7 +202,7 @@ async def async_attach_trigger(
             )
             return
 
-        def _check_same_state(_, _2, new_st: State | None) -> bool:
+        def _check_same_state(_: str, _2: State | None, new_st: State | None) -> bool:
             if new_st is None:
                 return False
 
@@ -227,7 +228,7 @@ async def async_attach_trigger(
     unsub = async_track_state_change_event(hass, entity_ids, state_automation_listener)
 
     @callback
-    def async_remove():
+    def async_remove() -> None:
         """Remove state listeners async."""
         unsub()
         for async_remove in unsub_track_same.values():
