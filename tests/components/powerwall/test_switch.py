@@ -1,5 +1,5 @@
 """Test for Powerwall off-grid switch."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from tesla_powerwall import GridStatus, PowerwallError
@@ -95,9 +95,7 @@ async def test_exception_on_powerwall_error(
     """Ensure that an exception in the tesla_powerwall library causes a HomeAssistantError."""
 
     with pytest.raises(HomeAssistantError, match="Setting off-grid operation to"):
-        mock_powerwall.set_island_mode = Mock(
-            side_effect=PowerwallError("Mock exception")
-        )
+        mock_powerwall.set_island_mode.side_effect = PowerwallError("Mock exception")
 
         await hass.services.async_call(
             SWITCH_DOMAIN,

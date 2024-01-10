@@ -123,8 +123,8 @@ async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
     """Confirm that backup reserve sensor is not added if data is unavailable from the device."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
-    mock_powerwall.get_backup_reserve_percentage = Mock(
-        side_effect=MissingAttributeError(Mock(), "backup_reserve_percent", "operation")
+    mock_powerwall.get_backup_reserve_percentage.side_effect = MissingAttributeError(
+        Mock(), "backup_reserve_percent", "operation"
     )
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
