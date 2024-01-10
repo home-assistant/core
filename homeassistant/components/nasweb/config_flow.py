@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import voluptuous as vol
 from webio_api import WebioAPI
@@ -41,7 +41,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth from e
 
     hass.data.setdefault(DOMAIN, {})
-    notifi_coordinator: Optional[NotificationCoordinator] = hass.data[DOMAIN].get(
+    notifi_coordinator: NotificationCoordinator | None = hass.data[DOMAIN].get(
         NOTIFY_COORDINATOR
     )
     if notifi_coordinator is None:

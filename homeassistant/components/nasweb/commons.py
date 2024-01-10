@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from homeassistant.components.http import ApiConfig
 from homeassistant.core import HomeAssistant
@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def initialize_notification_coordinator(
     hass: HomeAssistant,
-) -> Optional[NotificationCoordinator]:
+) -> NotificationCoordinator | None:
     """Initialize and set up NotificationCoordinator instance."""
     notifi_coordinator = NotificationCoordinator()
     try:
@@ -34,10 +34,10 @@ def initialize_notification_coordinator(
 
 def get_hass_address_from_entry(
     hass: HomeAssistant, data: Mapping[str, Any]
-) -> Optional[str]:
+) -> str | None:
     """Return HA address for use in NASweb push api."""
     hass_address = data.get(CONF_HA_ADDRESS)
-    api_config: Optional[ApiConfig] = hass.config.api
+    api_config: ApiConfig | None = hass.config.api
     if api_config is None:
         _LOGGER.error("Cannot determine whether to use ssl: hass.config.api is None")
         return None
