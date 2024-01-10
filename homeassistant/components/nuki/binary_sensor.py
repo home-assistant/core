@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NukiEntity, NukiEntryData
-from .const import ATTR_NUKI_ID, ATTR_RING_TIMESTAMP, DOMAIN as NUKI_DOMAIN
+from .const import ATTR_NUKI_ID, DOMAIN as NUKI_DOMAIN
 
 
 async def async_setup_entry(
@@ -95,16 +95,10 @@ class NukiRingactionEntity(NukiEntity[NukiDevice], BinarySensorEntity):
         """Return the device specific state attributes."""
         data = {
             ATTR_NUKI_ID: self._nuki_device.nuki_id,
-            ATTR_RING_TIMESTAMP: self._nuki_device.ring_action_timestamp,
         }
         return data
 
     @property
-    def ring_action_state(self):
-        """Return the state of the ring action."""
-        return self._nuki_device.ring_action_state
-
-    @property
     def is_on(self) -> bool:
         """Return the value of the ring action state."""
-        return self.ring_action_state
+        return self._nuki_device.ring_action_state
