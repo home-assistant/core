@@ -201,12 +201,11 @@ class FlowManager(abc.ABC):
         If match_context is passed, only return flows with a context that is a
         superset of match_context.
         """
-        match_context_items = match_context.items()
-        for progress in self._handler_progress_index.get(handler, ()):
-            if (
-                match_context_items <= progress.context.items()
-                and progress.init_data == data
-            ):
+        if not (flows := self._handler_progress_index.get(handler)):
+            return False
+        match_items = match_context.items()
+        for progress in flows:
+            if match_items <= progress.context.items() and progress.init_data == data:
                 return True
         return False
 
