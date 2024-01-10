@@ -74,7 +74,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder
+from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -505,6 +505,11 @@ def load_json_object_fixture(
 ) -> JsonObjectType:
     """Load a JSON object from a fixture."""
     return json_loads_object(load_fixture(filename, integration))
+
+
+def json_round_trip(obj: Any) -> Any:
+    """Round trip an object to JSON."""
+    return json_loads(json_dumps(obj))
 
 
 def mock_state_change_event(
@@ -1316,8 +1321,13 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
 @contextmanager
 def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
     """Mock a config flow handler."""
-    with patch.dict(config_entries.HANDLERS, {domain: config_flow}):
-        yield
+    original_handler = config_entries.HANDLERS.get(domain)
+    config_entries.HANDLERS[domain] = config_flow
+    _LOGGER.info("Adding mock config flow: %s", domain)
+    yield
+    config_entries.HANDLERS.pop(domain)
+    if original_handler:
+        config_entries.HANDLERS[domain] = original_handler
 
 
 def mock_integration(
