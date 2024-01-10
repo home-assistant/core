@@ -1,6 +1,8 @@
 """The Tesla Powerwall integration."""
 from __future__ import annotations
 
+import asyncio
+from contextlib import AsyncExitStack
 from datetime import timedelta
 import logging
 from typing import Optional
