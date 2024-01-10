@@ -530,6 +530,22 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
+        key="pcc_energy_consumption",
+        translation_key="pcc_energy_consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        value_getter=lambda api: api.getPointOfCommonCouplingTransferConsumptionTotal(),
+        unit_getter=lambda api: api.getPointOfCommonCouplingTransferConsumptionTotalUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="pcc_energy_feed_in",
+        translation_key="pcc_energy_feed_in",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        value_getter=lambda api: api.getPointOfCommonCouplingTransferFeedInTotal(),
+        unit_getter=lambda api: api.getPointOfCommonCouplingTransferFeedInTotalUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
         key="photovoltaic_power_production_current",
         translation_key="photovoltaic_power_production_current",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
