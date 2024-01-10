@@ -20,10 +20,11 @@ from tests.common import load_fixture
 MOCK_GATEWAY_DIN = "111-0----2-000000000FFA"
 
 
-async def _mock_powerwall_with_fixtures(hass):
+async def _mock_powerwall_with_fixtures(hass, empty_meters: bool = False) -> MagicMock:
     """Mock data used to build powerwall state."""
     async with asyncio.TaskGroup() as tg:
-        meters = tg.create_task(_async_load_json_fixture(hass, "meters.json"))
+        meters_file = "meters_empty.json" if empty_meters else "meters.json"
+        meters = tg.create_task(_async_load_json_fixture(hass, meters_file))
         sitemaster = tg.create_task(_async_load_json_fixture(hass, "sitemaster.json"))
         site_info = tg.create_task(_async_load_json_fixture(hass, "site_info.json"))
         status = tg.create_task(_async_load_json_fixture(hass, "status.json"))

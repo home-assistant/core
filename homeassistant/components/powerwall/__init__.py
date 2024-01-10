@@ -221,15 +221,16 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
     )
 
 
+async def get_backup_reserve_percentage(power_wall: Powerwall) -> Optional[float]:
+    """Return the backup reserve percentage."""
+    try:
+        return await power_wall.get_backup_reserve_percentage()
+    except MissingAttributeError:
+        return None
+
+
 async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     """Process and update powerwall data."""
-
-    async def get_backup_reserve_percentage() -> Optional[float]:
-        try:
-            return await power_wall.get_backup_reserve_percentage()
-        except MissingAttributeError:
-            return None
-
     (
         backup_reserve,
         charge,
@@ -238,7 +239,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         grid_services_active,
         grid_status,
     ) = await asyncio.gather(
-        get_backup_reserve_percentage(),
+        get_backup_reserve_percentage(power_wall),
         power_wall.get_charge(),
         power_wall.get_sitemaster(),
         power_wall.get_meters(),

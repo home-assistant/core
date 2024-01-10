@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from tesla_powerwall import MeterResponse, MeterType
 
@@ -228,7 +229,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
         we do not want to include in statistics and its a
         transient data error.
         """
-        return super().available and self.native_value != 0
+        return super().available and self.meter is not None
 
     @property
     def meter(self) -> MeterResponse | None:
@@ -250,10 +251,10 @@ class PowerWallExportSensor(PowerWallEnergyDirectionSensor):
     @property
     def native_value(self) -> float | None:
         """Get the current value in kWh."""
-        if self.meter is not None:
-            return self.meter.get_energy_exported()
-
-        return None
+        meter = self.meter
+        if TYPE_CHECKING:
+            assert meter is not None
+        return meter.get_energy_exported()
 
 
 class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
@@ -270,7 +271,7 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
     @property
     def native_value(self) -> float | None:
         """Get the current value in kWh."""
-        if self.meter is not None:
-            return self.meter.get_energy_imported()
-
-        return None
+        meter = self.meter
+        if TYPE_CHECKING:
+            assert meter is not None
+        return meter.get_energy_imported()
