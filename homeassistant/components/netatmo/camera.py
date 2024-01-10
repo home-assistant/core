@@ -97,6 +97,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._camera = cast(NaModules.Camera, netatmo_device.device)
         self._id = self._camera.entity_id
         self._home_id = self._camera.home.entity_id
+        self._attr_name = self._camera.name
         self._device_name = self._camera.name
         self._model = self._camera.device_type
         self._config_url = CONF_URL_SECURITY
