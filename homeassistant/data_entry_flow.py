@@ -4,6 +4,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable, Mapping
+from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
@@ -507,7 +508,7 @@ class FlowHandler:
     MINOR_VERSION = 1
 
     __progress_task: asyncio.Task | None = None
-    progress_fut: asyncio.Future[None] | None = None
+    progress_task: asyncio.Task[None] | None = None
 
     @property
     def source(self) -> str | None:
@@ -706,7 +707,7 @@ class FlowHandler:
         if self.__progress_task and not self.__progress_task.done():
             self.__progress_task.cancel()
         self.__progress_task = None
-        self.progress_fut = None
+        self.progress_task = None
 
     @callback
     def async_start_progress(
@@ -717,17 +718,17 @@ class FlowHandler:
         """Start in progress task if not started."""
 
         async def _send_event_when_done(fut: asyncio.Future[None]) -> None:
-            if not fut.done():
-                try:
-                    await fut
-                except Exception as err:  # pylint: disable=broad-exception-caught
-                    fut.set_exception(err)
+            with suppress(BaseException):
+                await fut
             await progress_done(self.flow_id)
 
-        if not self.progress_fut or self.progress_fut.done():
-            self.progress_fut = asyncio.ensure_future(progress_job)
+        if not asyncio.iscoroutine(progress_job):
+            raise TypeError
+
+        if not self.progress_task or self.progress_task.done():
+            self.progress_task = self.hass.async_create_task(progress_job)
             self.__progress_task = self.hass.async_create_task(
-                _send_event_when_done(self.progress_fut)
+                _send_event_when_done(self.progress_task)
             )
 
 

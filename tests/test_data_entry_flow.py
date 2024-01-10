@@ -368,7 +368,7 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
             progress_coro: Coroutine | None = None
             if not task_one_evt.is_set():
                 progress_action = "task_one"
-                if not self.progress_fut:
+                if not self.progress_task:
                     progress_coro = long_running_task_one()
             elif not task_two_evt.is_set():
                 progress_action = "task_two"
@@ -455,10 +455,10 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
                 raise TypeError
 
             progress_coro: Coroutine | None = None
-            if not self.progress_fut:
+            if not self.progress_task:
                 progress_coro = long_running_task()
-            if self.progress_fut and self.progress_fut.done():
-                if self.progress_fut.exception():
+            if self.progress_task and self.progress_task.done():
+                if self.progress_task.exception():
                     return self.async_show_progress_done(next_step_id="error")
                 return self.async_show_progress_done(next_step_id="no_error")
             return self.async_show_progress(

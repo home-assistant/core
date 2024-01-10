@@ -140,8 +140,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception(exception)
                 return self.async_abort(reason="could_not_register")
 
-        if self.progress_fut and self.progress_fut.done():
-            if self.progress_fut.exception():
+        if self.progress_task and self.progress_task.done():
+            if self.progress_task.exception():
                 return self.async_show_progress_done(next_step_id="could_not_register")
             return self.async_show_progress_done(next_step_id="repositories")
 
@@ -156,7 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "url": OAUTH_USER_LOGIN,
                 "code": self._login_device.user_code,
             },
-            progress_coro=_wait_for_login() if not self.progress_fut else None,
+            progress_coro=_wait_for_login() if not self.progress_task else None,
         )
 
     async def async_step_repositories(
