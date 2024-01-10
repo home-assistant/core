@@ -17,11 +17,11 @@ def initialize_notification_coordinator(
     hass: HomeAssistant,
 ) -> NotificationCoordinator | None:
     """Initialize and set up NotificationCoordinator instance."""
-    notifi_coordinator = NotificationCoordinator()
+    notify_coordinator = NotificationCoordinator()
     try:
         _LOGGER.debug("Adding push notification handler")
         hass.http.app.router.add_post(
-            PUSH_API_ENDPOINT, notifi_coordinator.handle_notification
+            PUSH_API_ENDPOINT, notify_coordinator.handle_notification
         )
     except RuntimeError:
         _LOGGER.error(
@@ -29,7 +29,7 @@ def initialize_notification_coordinator(
             "Home Assistant restart should fix this issue"
         )
         return None
-    return notifi_coordinator
+    return notify_coordinator
 
 
 def get_hass_address_from_entry(

@@ -24,13 +24,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NASweb from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    notifi_coordinator = hass.data[DOMAIN].get(NOTIFY_COORDINATOR)
-    if notifi_coordinator is None:
-        notifi_coordinator = initialize_notification_coordinator(hass)
-        if notifi_coordinator is None:
+    notify_coordinator = hass.data[DOMAIN].get(NOTIFY_COORDINATOR)
+    if notify_coordinator is None:
+        notify_coordinator = initialize_notification_coordinator(hass)
+        if notify_coordinator is None:
             _LOGGER.error("Failed to initialize coordinator")
             return False
-        hass.data[DOMAIN][NOTIFY_COORDINATOR] = notifi_coordinator
+        hass.data[DOMAIN][NOTIFY_COORDINATOR] = notify_coordinator
 
     webio_api = WebioAPI(
         entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, webio_api, name=f"NASweb[{webio_api.get_name()}]"
     )
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    notifi_coordinator.add_coordinator(webio_serial, coordinator)
+    notify_coordinator.add_coordinator(webio_serial, coordinator)
 
     hass_address = get_hass_address_from_entry(hass, entry.data)
     if hass_address is None:
@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to subscribe for status updates from webio")
         return False
 
-    if not await notifi_coordinator.check_connection(webio_serial):
+    if not await notify_coordinator.check_connection(webio_serial):
         _LOGGER.error(
             "Wasn't able to confirm connection with webio. Check form data and try again"
         )
@@ -81,14 +81,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        notifi_coordinator: NotificationCoordinator = hass.data[DOMAIN].get(
+        notify_coordinator: NotificationCoordinator = hass.data[DOMAIN].get(
             NOTIFY_COORDINATOR
         )
         coordinator: NASwebCoordinator = hass.data[DOMAIN].get(entry.entry_id)
         if coordinator is not None:
             serial = coordinator.webio_api.get_serial_number()
-            if notifi_coordinator is not None and serial is not None:
-                notifi_coordinator.remove_coordinator(serial)
+            if notify_coordinator is not None and serial is not None:
+                notify_coordinator.remove_coordinator(serial)
                 hass_address = get_hass_address_from_entry(hass, entry.data)
                 if hass_address is None:
                     api_config: ApiConfig | None = hass.config.api

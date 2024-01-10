@@ -41,14 +41,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth from e
 
     hass.data.setdefault(DOMAIN, {})
-    notifi_coordinator: NotificationCoordinator | None = hass.data[DOMAIN].get(
+    notify_coordinator: NotificationCoordinator | None = hass.data[DOMAIN].get(
         NOTIFY_COORDINATOR
     )
-    if notifi_coordinator is None:
-        notifi_coordinator = initialize_notification_coordinator(hass)
-        if notifi_coordinator is None:
+    if notify_coordinator is None:
+        notify_coordinator = initialize_notification_coordinator(hass)
+        if notify_coordinator is None:
             raise RuntimeError("Cannot initialize coordinator")
-        hass.data[DOMAIN][NOTIFY_COORDINATOR] = notifi_coordinator
+        hass.data[DOMAIN][NOTIFY_COORDINATOR] = notify_coordinator
 
     webio_serial = webio_api.get_serial_number()
     if webio_serial is None:
@@ -61,14 +61,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             "Cannot determine home assistant address. Try filling 'Home Assistant Address'"
         )
 
-    notifi_coordinator.add_coordinator(webio_serial, coordinator)
+    notify_coordinator.add_coordinator(webio_serial, coordinator)
     subscription = await webio_api.status_subscription(hass_address, True)
     if not subscription:
-        notifi_coordinator.remove_coordinator(webio_serial)
+        notify_coordinator.remove_coordinator(webio_serial)
         raise MissingNASwebData("Failed to subscribe for status updates from device")
 
-    result = await notifi_coordinator.check_connection(webio_serial)
-    notifi_coordinator.remove_coordinator(webio_serial)
+    result = await notify_coordinator.check_connection(webio_serial)
+    notify_coordinator.remove_coordinator(webio_serial)
     if not result:
         if subscription:
             await webio_api.status_subscription(hass_address, False)
