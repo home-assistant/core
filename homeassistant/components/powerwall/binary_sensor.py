@@ -132,4 +132,8 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Powerwall is charging."""
         # is_sending_to returns true for values greater than 100 watts
-        return self.data.meters.get_meter(MeterType.BATTERY).is_sending_to()
+        meter = self.data.meters.get_meter(MeterType.BATTERY)
+        if meter is not None:
+            return meter.is_sending_to()
+
+        return False

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 from contextlib import AsyncExitStack
 from datetime import timedelta
 import logging
@@ -14,7 +13,6 @@ from tesla_powerwall import (
     ApiError,
     MissingAttributeError,
     Powerwall,
-    PowerwallError,
     PowerwallUnreachableError,
 )
 
@@ -197,14 +195,6 @@ async def _login_and_fetch_base_info(
 async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo:
     """Return PowerwallBaseInfo for the device."""
 
-    async def get_gateway_din() -> str:
-        # Make sure the serial numbers always have the same order
-        gateway_din: str
-        with contextlib.suppress(AssertionError, PowerwallError):
-            gateway_din = await power_wall.get_gateway_din()
-
-        return gateway_din.upper()
-
     (
         gateway_din,
         site_info,
@@ -212,7 +202,7 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
         device_type,
         serial_numbers,
     ) = await asyncio.gather(
-        get_gateway_din(),
+        power_wall.get_gateway_din(),
         power_wall.get_site_info(),
         power_wall.get_status(),
         power_wall.get_device_type(),
@@ -222,7 +212,7 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
     # Serial numbers MUST be sorted to ensure the unique_id is always the same
     # for backwards compatibility.
     return PowerwallBaseInfo(
-        gateway_din=gateway_din,
+        gateway_din=gateway_din.upper(),
         site_info=site_info,
         status=status,
         device_type=device_type,
