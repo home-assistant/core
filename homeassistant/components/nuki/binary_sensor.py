@@ -82,7 +82,7 @@ class NukiRingactionEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     """Representation of a Nuki Opener Ringaction."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_translation_key = "ring_action"
     _attr_icon = "mdi:bell-ring"
 
     @property
