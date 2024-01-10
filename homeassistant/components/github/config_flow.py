@@ -156,7 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "url": OAUTH_USER_LOGIN,
                 "code": self._login_device.user_code,
             },
-            progress_coro=_wait_for_login,
+            progress_coro=_wait_for_login() if not self.progress_fut else None,
         )
 
     async def async_step_repositories(

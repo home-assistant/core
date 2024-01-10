@@ -128,7 +128,7 @@ class FlowResult(TypedDict, total=False):
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
-    progress_coro: Callable[[], Coroutine[Any, Any, None]] | None
+    progress_coro: Coroutine[Any, Any, None] | None
     reason: str
     required: bool
     result: Any
@@ -647,7 +647,7 @@ class FlowHandler:
         step_id: str,
         progress_action: str,
         description_placeholders: Mapping[str, str] | None = None,
-        progress_coro: Callable[[], Coroutine[Any, Any, None]] | None = None,
+        progress_coro: Coroutine[Any, Any, None] | None = None,
     ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
         return FlowResult(
@@ -711,12 +711,12 @@ class FlowHandler:
     @callback
     def async_start_progress(
         self,
-        progress_job: Callable[[], Coroutine[Any, Any, None]],
+        progress_job: Coroutine[Any, Any, None],
         progress_done: Callable[..., Coroutine[Any, Any, Any]],
     ) -> None:
         """Start in progress task if not started."""
 
-        async def _resume_flow_when_done(fut: asyncio.Future[None]) -> None:
+        async def _send_event_when_done(fut: asyncio.Future[None]) -> None:
             if not fut.done():
                 try:
                     await fut
@@ -724,10 +724,10 @@ class FlowHandler:
                     fut.set_exception(err)
             await progress_done(self.flow_id)
 
-        if not self.progress_fut:
-            self.progress_fut = asyncio.ensure_future(progress_job())
+        if not self.progress_fut or self.progress_fut.done():
+            self.progress_fut = asyncio.ensure_future(progress_job)
             self.__progress_task = self.hass.async_create_task(
-                _resume_flow_when_done(self.progress_fut)
+                _send_event_when_done(self.progress_fut)
             )
 
 
