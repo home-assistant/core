@@ -949,7 +949,7 @@ goslide-api==0.5.1
 gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
-govee-ble==0.24.0
+govee-ble==0.26.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1750,7 +1750,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.15.2
+pyenphase==1.16.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
