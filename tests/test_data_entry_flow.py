@@ -546,6 +546,14 @@ async def test_async_has_matching_flow(
 ) -> None:
     """Test we can check for matching flows."""
     manager.hass = hass
+    assert (
+        manager.async_has_matching_flow(
+            "test",
+            {"source": config_entries.SOURCE_HOMEKIT},
+            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+        is False
+    )
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
