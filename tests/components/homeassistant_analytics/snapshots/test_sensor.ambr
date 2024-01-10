@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'integration_$spotify_active_installations',
+    'unique_id': 'spotify_active_installations',
     'unit_of_measurement': 'active installations',
   })
 # ---
@@ -43,7 +43,7 @@
     'entity_id': 'sensor.homeassistant_analytics_spotify',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '24331',
+    'state': '24388',
   })
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_youtube-entry]
@@ -75,7 +75,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'integration_$youtube_active_installations',
+    'unique_id': 'youtube_active_installations',
     'unit_of_measurement': 'active installations',
   })
 # ---
@@ -90,7 +90,7 @@
     'entity_id': 'sensor.homeassistant_analytics_youtube',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '337',
+    'state': '339',
   })
 # ---
 # name: test_all_entities[sensor.mock_title_spotify-entry]

@@ -40,12 +40,12 @@ class HomeassistantAnalyticsDataUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[str, int]:
         try:
-            data = await self._client.get_analytics()
+            data = await self._client.get_current_analytics()
         except HomeassistantAnalyticsConnectionError as err:
             raise UpdateFailed(
                 "Error communicating with Homeassistant Analytics"
             ) from err
         return {
-            integration: data.current.integrations[integration]
+            integration: data.integrations[integration]
             for integration in self._tracked_integrations
         }

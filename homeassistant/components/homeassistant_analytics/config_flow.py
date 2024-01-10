@@ -34,7 +34,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass)
         )
         try:
-            analytics = await client.get_analytics()
+            analytics = await client.get_current_analytics()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
             return self.async_abort(reason="cannot_connect")
@@ -44,7 +44,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
-                            options=list(analytics.current.integrations),
+                            options=list(analytics.integrations),
                             multiple=True,
                             sort=True,
                         )

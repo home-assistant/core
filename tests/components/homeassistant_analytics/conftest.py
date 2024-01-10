@@ -3,7 +3,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from python_homeassistant_analytics import Analytics
+from python_homeassistant_analytics import CurrentAnalytics
 
 from homeassistant.components.homeassistant_analytics import DOMAIN
 from homeassistant.components.homeassistant_analytics.const import (
@@ -30,8 +30,10 @@ def mock_analytics_client() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.homeassistant_analytics.coordinator.HomeassistantAnalyticsClient",
         return_value=AsyncMock(),
     ) as mock_client:
-        mock_client.return_value.get_analytics.return_value = Analytics.from_json(
-            load_fixture("homeassistant_analytics/data.json")
+        mock_client.return_value.get_current_analytics.return_value = (
+            CurrentAnalytics.from_json(
+                load_fixture("homeassistant_analytics/current_data.json")
+            )
         )
         yield mock_client
 
