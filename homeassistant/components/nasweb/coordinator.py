@@ -27,7 +27,7 @@ class NotificationCoordinator:
         self._coordinators: dict[str, NASwebCoordinator] = {}
 
     def add_coordinator(self, serial: str, cord: "NASwebCoordinator") -> None:
-        """Remove NASwebCoordinator to possible notification targets."""
+        """Add NASwebCoordinator to possible notification targets."""
         self._coordinators[serial] = cord
         _LOGGER.debug("Added NASwebCoordinator for NASweb[%s]", serial)
 
