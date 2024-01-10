@@ -456,7 +456,7 @@ class FlowManager(abc.ABC):
         elif result["type"] != FlowResultType.SHOW_PROGRESS:
             if flow.progress_task and not flow.progress_task.done():
                 flow.progress_task.cancel()
-                flow.progress_task = None
+            flow.progress_task = None
 
         if result["type"] in FLOW_NOT_COMPLETE_STEPS:
             self._raise_if_step_does_not_exist(flow, result["step_id"])
