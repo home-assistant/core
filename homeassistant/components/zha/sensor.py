@@ -342,12 +342,16 @@ class ElectricalMeasurement(PollableSensor):
 
     def formatter(self, value: int) -> int | float:
         """Return 'normalized' value."""
-        multiplier = getattr(
-            self._cluster_handler, f"{self._div_mul_prefix}_multiplier", self._multiplier
-        )
-        divisor = getattr(
-            self._cluster_handler, f"{self._div_mul_prefix}_divisor", self._divisor
-        )
+        if _div_mul_prefix != None:
+            multiplier = getattr(
+                self._cluster_handler, f"{self._div_mul_prefix}_multiplier"
+            )
+            divisor = getattr(
+                self._cluster_handler, f"{self._div_mul_prefix}_divisor"
+            )
+        else:
+            multiplier = self._multiplier
+            divisor = self._divisor
         value = float(value * multiplier) / divisor
         if value < 100 and divisor > 1:
             return round(value, self._decimals)
