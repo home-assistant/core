@@ -24,7 +24,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 0
     inject_bluetooth_service_info(hass, TP357_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     temp_sensor = hass.states.get("sensor.tp357_2142_temperature")
     temp_sensor_attribtes = temp_sensor.attributes

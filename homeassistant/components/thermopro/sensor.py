@@ -59,6 +59,12 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    (SensorDeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
+        key=f"{SensorDeviceClass.BATTERY}_{Units.PERCENTAGE}",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=Units.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
