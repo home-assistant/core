@@ -1,6 +1,8 @@
 """Coordinator for La Marzocco API."""
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
+from typing import Any
 
 from bleak.backends.device import BLEDevice
 from lmcloud import LMCloud as LaMarzoccoClient
@@ -51,16 +53,9 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             await self._async_init_client()
 
         _LOGGER.debug("Update coordinator: Updating data")
-        try:
-            await self._lm.update_local_machine_status(force_update=True)
-
-        except AuthFail as ex:
-            msg = "Authentication failed."
-            _LOGGER.debug(msg, exc_info=True)
-            raise ConfigEntryAuthFailed(msg) from ex
-        except RequestNotSuccessful as ex:
-            _LOGGER.debug(ex, exc_info=True)
-            raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
+        await self._async_handle_request(
+            self._lm.update_local_machine_status, force_update=True
+        )
 
         _LOGGER.debug("Current status: %s", str(self._lm.current_status))
 
@@ -76,20 +71,12 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
         # Initialize cloud API
         _LOGGER.debug("Initializing Cloud API")
-        try:
-            await self._lm.init_cloud_api(
-                credentials=self.config_entry.data,
-                machine_serial=self.config_entry.data[CONF_MACHINE],
-            )
-        except AuthFail as ex:
-            msg = "Authentication failed."
-            _LOGGER.debug(msg, exc_info=True)
-            raise ConfigEntryAuthFailed(msg) from ex
-        except RequestNotSuccessful as ex:
-            _LOGGER.debug(ex, exc_info=True)
-            raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
+        await self._async_handle_request(
+            self._lm.init_cloud_api,
+            credentials=self.config_entry.data,
+            machine_serial=self.config_entry.data[CONF_MACHINE],
+        )
         _LOGGER.debug("Model name: %s", self._lm.model_name)
-
         # initialize Bluetooth
         if mac_address and name:
             # coming from discovery
@@ -101,7 +88,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             count = bluetooth.async_scanner_count(self.hass, connectable=True)
             if count > 0:
                 _LOGGER.debug("Found Bluetooth adapters, initializing with Bluetooth")
-                self._use_bluetooth = True
+
                 bt_scanner = bluetooth.async_get_scanner(self.hass)
 
                 try:
@@ -112,15 +99,15 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                     )
                 except (BluetoothConnectionFailed, BluetoothDeviceNotFound) as ex:
                     _LOGGER.debug(ex, exc_info=True)
-                    self._use_bluetooth = False
                 else:
-                    # update the config entry with the MAC address
+                    # found a device, add MAC address to config entry
                     new_data = self.config_entry.data.copy()
                     new_data[CONF_MAC] = self._lm.lm_bluetooth.address
                     self.hass.config_entries.async_update_entry(
                         self.config_entry,
                         data=new_data,
                     )
+                    self._use_bluetooth = True
 
         # initialize local API
         if host:
@@ -153,3 +140,20 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         return bluetooth.async_ble_device_from_address(
             self.hass, self._lm.lm_bluetooth.address, connectable=True
         )
+
+    async def _async_handle_request(
+        self,
+        func: Callable[..., Coroutine[None, None, None]],
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        """Handle a request to the API."""
+        try:
+            await func(*args, **kwargs)
+        except AuthFail as ex:
+            msg = "Authentication failed."
+            _LOGGER.debug(msg, exc_info=True)
+            raise ConfigEntryAuthFailed(msg) from ex
+        except RequestNotSuccessful as ex:
+            _LOGGER.debug(ex, exc_info=True)
+            raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
