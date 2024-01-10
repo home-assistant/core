@@ -114,17 +114,8 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.parsed_data["inMotion"]:
-            # Only update opening/closing status if there was a change in position since the last update.
-            if self.parsed_data["position"] != self._attr_current_cover_position:
-                self._attr_is_opening = (
-                    self.parsed_data["position"] > self._attr_current_cover_position
-                )
-                self._attr_is_closing = (
-                    self.parsed_data["position"] < self._attr_current_cover_position
-                )
-        else:
-            self._attr_is_closing = self._attr_is_opening = False
+        self._attr_is_closing = self._device.is_closing()
+        self._attr_is_opening = self._device.is_opening()
         self._attr_current_cover_position = self.parsed_data["position"]
         self._attr_is_closed = self.parsed_data["position"] <= 20
 
