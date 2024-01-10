@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from webio_api import WebioAPI
 
@@ -92,7 +91,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 notifi_coordinator.remove_coordinator(serial)
                 hass_address = get_hass_address_from_entry(hass, entry.data)
                 if hass_address is None:
-                    api_config: Optional[ApiConfig] = hass.config.api
+                    api_config: ApiConfig | None = hass.config.api
                     if api_config is not None:
                         hass_address = f"{api_config.host}:{api_config.port}"
                 if hass_address is not None:

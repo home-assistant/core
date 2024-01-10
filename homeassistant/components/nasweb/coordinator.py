@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import time
-from typing import Any, Optional
+from typing import Any
 
 from aiohttp import web
 from webio_api import Output as NASwebOutput, WebioAPI
@@ -82,10 +82,10 @@ class NASwebCoordinator(DataUpdateCoordinator):
         """Initialize NASweb coordinator."""
         super().__init__(hass, _LOGGER, name=name)
         self._hass = hass
-        self._last_update: Optional[float] = None
+        self._last_update: float | None = None
         self.update_interval = timedelta(seconds=STATUS_UPDATE_MAX_TIME_INTERVAL)
         self.webio_api: WebioAPI = webio_api
-        self.async_add_switch_callback: Optional[AddEntitiesCallback] = None
+        self.async_add_switch_callback: AddEntitiesCallback | None = None
         data: dict[str, Any] = {}
         data[KEY_OUTPUTS] = self.webio_api.outputs
         self.async_set_updated_data(data)
