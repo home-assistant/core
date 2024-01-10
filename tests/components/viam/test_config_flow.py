@@ -13,6 +13,7 @@ from homeassistant.components.viam.const import (
     CONF_CREDENTIAL_TYPE,
     CONF_ROBOT,
     CONF_ROBOT_ID,
+    CRED_TYPE_API_KEY,
     DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY
@@ -66,7 +67,7 @@ async def test_user_form(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_CREDENTIAL_TYPE: "api-key",
+            CONF_CREDENTIAL_TYPE: CRED_TYPE_API_KEY,
         },
     )
     assert result["type"] == FlowResultType.FORM
@@ -104,7 +105,7 @@ async def test_user_form(
         CONF_API_ID: "someTestId",
         CONF_API_KEY: "randomSecureAPIKey",
         CONF_ROBOT_ID: 1234,
-        CONF_CREDENTIAL_TYPE: "api-key",
+        CONF_CREDENTIAL_TYPE: CRED_TYPE_API_KEY,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -125,7 +126,7 @@ async def test_form_cannot_connect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_CREDENTIAL_TYPE: "api-key",
+            CONF_CREDENTIAL_TYPE: CRED_TYPE_API_KEY,
         },
     )
     assert result["type"] == FlowResultType.FORM
@@ -157,7 +158,7 @@ async def test_form_exception(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_CREDENTIAL_TYPE: "api-key",
+            CONF_CREDENTIAL_TYPE: CRED_TYPE_API_KEY,
         },
     )
     assert result["type"] == FlowResultType.FORM
