@@ -201,11 +201,13 @@ class FlowManager(abc.ABC):
         If match_context is passed, only return flows with a context that is a
         superset of match_context.
         """
-        return any(
-            flow
-            for flow in self._async_progress_by_handler(handler, match_context)
-            if flow.init_data == data
-        )
+        if not (flows := self._handler_progress_index.get(handler)):
+            return False
+        match_items = match_context.items()
+        for progress in flows:
+            if match_items <= progress.context.items() and progress.init_data == data:
+                return True
+        return False
 
     @callback
     def async_get(self, flow_id: str) -> FlowResult:
@@ -265,11 +267,11 @@ class FlowManager(abc.ABC):
         is a superset of match_context.
         """
         if not match_context:
-            return list(self._handler_progress_index.get(handler, []))
+            return list(self._handler_progress_index.get(handler, ()))
         match_context_items = match_context.items()
         return [
             progress
-            for progress in self._handler_progress_index.get(handler, set())
+            for progress in self._handler_progress_index.get(handler, ())
             if match_context_items <= progress.context.items()
         ]
 
