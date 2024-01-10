@@ -98,26 +98,98 @@
       "current_power_production": {
         "name": "Current power production"
       },
+      "current_power_production_l1": {
+        "name": "Current power production l1"
+      },
+      "current_power_production_l2": {
+        "name": "Current power production l2"
+      },
+      "current_power_production_l3": {
+        "name": "Current power production l3"
+      },
       "daily_production": {
         "name": "Energy production today"
+      },
+      "daily_production_l1": {
+        "name": "Energy production today l1"
+      },
+      "daily_production_l2": {
+        "name": "Energy production today l2"
+      },
+      "daily_production_l3": {
+        "name": "Energy production today l3"
       },
       "seven_days_production": {
         "name": "Energy production last seven days"
       },
+      "seven_days_production_l1": {
+        "name": "Energy production last seven days l1"
+      },
+      "seven_days_production_l2": {
+        "name": "Energy production last seven days l2"
+      },
+      "seven_days_production_l3": {
+        "name": "Energy production last seven days l3"
+      },
       "lifetime_production": {
         "name": "Lifetime energy production"
+      },
+      "lifetime_production_l1": {
+        "name": "Lifetime energy production l1"
+      },
+      "lifetime_production_l2": {
+        "name": "Lifetime energy production l2"
+      },
+      "lifetime_production_l3": {
+        "name": "Lifetime energy production l3"
       },
       "current_power_consumption": {
         "name": "Current power consumption"
       },
+      "current_power_consumption_l1": {
+        "name": "Current power consumption l1"
+      },
+      "current_power_consumption_l2": {
+        "name": "Current power consumption l2"
+      },
+      "current_power_consumption_l3": {
+        "name": "Current power consumption l3"
+      },
       "daily_consumption": {
         "name": "Energy consumption today"
+      },
+      "daily_consumption_l1": {
+        "name": "Energy consumption today l1"
+      },
+      "daily_consumption_l2": {
+        "name": "Energy consumption today l2"
+      },
+      "daily_consumption_l3": {
+        "name": "Energy consumption today l3"
       },
       "seven_days_consumption": {
         "name": "Energy consumption last seven days"
       },
+      "seven_days_consumption_l1": {
+        "name": "Energy consumption last seven days l1"
+      },
+      "seven_days_consumption_l2": {
+        "name": "Energy consumption last seven days l2"
+      },
+      "seven_days_consumption_l3": {
+        "name": "Energy consumption last seven days l3"
+      },
       "lifetime_consumption": {
         "name": "Lifetime energy consumption"
+      },
+      "lifetime_consumption_l1": {
+        "name": "Lifetime energy consumption l1"
+      },
+      "lifetime_consumption_l2": {
+        "name": "Lifetime energy consumption l2"
+      },
+      "lifetime_consumption_l3": {
+        "name": "Lifetime energy consumption l3"
       },
       "reserve_soc": {
         "name": "Reserve battery level"
