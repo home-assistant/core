@@ -225,18 +225,19 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     async def _async_set_color_temp(
         self, color_temp: float | int, brightness: int | None, transition: int | None
     ) -> None:
+        device = self.device
+        valid_temperature_range = device.valid_temperature_range
+        requested_color_temp = round(color_temp)
         # Clamp color temp to valid range
         # since if the light in a group we will
         # get requests for color temps for the range
         # of the group and not the light
-        device = self.device
-        valid_temperature_range = device.valid_temperature_range
-        requested_color_temp = round(color_temp)
+        clamped_color_temp = min(
+            valid_temperature_range.max,
+            max(valid_temperature_range.min, requested_color_temp),
+        )
         await device.set_color_temp(
-            min(
-                valid_temperature_range.max,
-                max(valid_temperature_range.min, requested_color_temp),
-            ),
+            clamped_color_temp,
             brightness=brightness,
             transition=transition,
         )
