@@ -2405,6 +2405,22 @@ def test_bitwise_or(hass: HomeAssistant) -> None:
     assert tpl.async_render() == 8 | 2
 
 
+@pytest.mark.parametrize(
+    ("value", "xor_value", "expected"),
+    [(8, 8, 0), (10, 2, 8), (0x8000, 0xFAFA, 31482), (True, False, 1), (True, True, 0)],
+)
+def test_bitwise_xor(
+    hass: HomeAssistant, value: Any, xor_value: Any, expected: int
+) -> None:
+    """Test bitwise_xor method."""
+    assert (
+        template.Template("{{ value | bitwise_xor(xor_value) }}", hass).async_render(
+            {"value": value, "xor_value": xor_value}
+        )
+        == expected
+    )
+
+
 def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test struct pack method."""
 
