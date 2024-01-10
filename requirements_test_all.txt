@@ -1991,7 +1991,7 @@ temescal==0.5
 temperusb==1.6.1
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.19
+tesla-powerwall==0.5.0
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2
