@@ -178,7 +178,7 @@ async def test_sensors_with_empty_meters(hass: HomeAssistant) -> None:
 async def test_unique_id_migrate(
     hass: HomeAssistant, entity_registry_enabled_by_default: None
 ) -> None:
-    """Test creation of the sensors."""
+    """Test we can migrate unique ids of the sensors."""
     device_registry = dr.async_get(hass)
     ent_reg = er.async_get(hass)
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
