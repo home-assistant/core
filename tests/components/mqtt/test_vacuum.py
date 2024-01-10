@@ -7,13 +7,14 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import mqtt, vacuum
+from homeassistant.components.mqtt import vacuum as mqttvacuum
 from homeassistant.components.mqtt.const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
-from homeassistant.components.mqtt.vacuum import CONF_SCHEMA, schema_state as mqttvacuum
-from homeassistant.components.mqtt.vacuum.const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
-from homeassistant.components.mqtt.vacuum.schema import services_to_strings
-from homeassistant.components.mqtt.vacuum.schema_state import (
+from homeassistant.components.mqtt.vacuum import (
     ALL_SERVICES,
+    CONF_SCHEMA,
+    MQTT_VACUUM_ATTRIBUTES_BLOCKED,
     SERVICE_TO_STRING,
+    services_to_strings,
 )
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
@@ -586,7 +587,7 @@ async def test_discovery_update_unchanged_vacuum(
     """Test update of discovered vacuum."""
     data1 = '{ "schema": "state", "name": "Beer", "command_topic": "test_topic"}'
     with patch(
-        "homeassistant.components.mqtt.vacuum.schema_state.MqttStateVacuum.discovery_update"
+        "homeassistant.components.mqtt.vacuum.MqttStateVacuum.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,
