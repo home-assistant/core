@@ -478,6 +478,12 @@ class ConfigEntry:
         if self.domain != integration.domain:
             return
 
+        #
+        # It is important that this function does not yield to the
+        # event loop by using `await` or `async with` or similar until
+        # after the state has been set. Otherwise we risk that any `call_soon`s
+        # created by an integration will be executed before the state is set.
+        #
         if result:
             self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
