@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN
+from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN, LOGGER
 
 
 class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,6 +36,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             analytics = await client.get_analytics()
         except HomeassistantAnalyticsConnectionError:
+            LOGGER.exception("Error connecting to Home Assistant analytics")
             return self.async_abort(reason="cannot_connect")
         return self.async_show_form(
             step_id="user",
