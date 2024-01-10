@@ -744,6 +744,8 @@ def test_absolute(hass: HomeAssistant) -> None:
         template.Template("{{ invalid | abs }}", hass).async_render()
     with pytest.raises(TemplateError):
         template.Template("{{ abs(invalid) }}", hass).async_render()
+    with pytest.raises(TemplateError, match="no default was specified"):
+        render(hass, "{{ 'no_number' | abs }}")
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | abs(1) }}") == 1
