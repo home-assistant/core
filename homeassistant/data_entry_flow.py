@@ -17,6 +17,7 @@ from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -58,10 +59,6 @@ _DEPRECATED_RESULT_TYPE_SHOW_PROGRESS_DONE = DeprecatedConstantEnum(
     FlowResultType.SHOW_PROGRESS_DONE, "2025.1"
 )
 _DEPRECATED_RESULT_TYPE_MENU = DeprecatedConstantEnum(FlowResultType.MENU, "2025.1")
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
@@ -204,11 +201,13 @@ class FlowManager(abc.ABC):
         If match_context is passed, only return flows with a context that is a
         superset of match_context.
         """
-        return any(
-            flow
-            for flow in self._async_progress_by_handler(handler, match_context)
-            if flow.init_data == data
-        )
+        if not (flows := self._handler_progress_index.get(handler)):
+            return False
+        match_items = match_context.items()
+        for progress in flows:
+            if match_items <= progress.context.items() and progress.init_data == data:
+                return True
+        return False
 
     @callback
     def async_get(self, flow_id: str) -> FlowResult:
@@ -268,11 +267,11 @@ class FlowManager(abc.ABC):
         is a superset of match_context.
         """
         if not match_context:
-            return list(self._handler_progress_index.get(handler, []))
+            return list(self._handler_progress_index.get(handler, ()))
         match_context_items = match_context.items()
         return [
             progress
-            for progress in self._handler_progress_index.get(handler, set())
+            for progress in self._handler_progress_index.get(handler, ())
             if match_context_items <= progress.context.items()
         ]
 
@@ -700,3 +699,11 @@ def _create_abort_data(
         reason=reason,
         description_placeholders=description_placeholders,
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

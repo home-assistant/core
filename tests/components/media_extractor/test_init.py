@@ -1,4 +1,6 @@
 """The tests for Media Extractor integration."""
+import os
+import os.path
 from typing import Any
 from unittest.mock import patch
 
@@ -209,3 +211,60 @@ async def test_query_error(
         await hass.async_block_till_done()
 
     assert len(calls) == 0
+
+
+async def test_cookiefile_detection(
+    hass: HomeAssistant,
+    mock_youtube_dl: MockYoutubeDL,
+    empty_media_extractor_config: dict[str, Any],
+    calls: list[ServiceCall],
+    snapshot: SnapshotAssertion,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test cookie file detection."""
+
+    await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
+    await hass.async_block_till_done()
+
+    cookies_dir = os.path.join(hass.config.config_dir, "media_extractor")
+    cookies_file = os.path.join(cookies_dir, "cookies.txt")
+
+    if not os.path.exists(cookies_dir):
+        os.makedirs(cookies_dir)
+
+    f = open(cookies_file, "w+", encoding="utf-8")
+    f.write(
+        """# Netscape HTTP Cookie File
+
+        .youtube.com TRUE / TRUE 1701708706 GPS 1
+        """
+    )
+    f.close()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            "entity_id": "media_player.bedroom",
+            "media_content_type": "VIDEO",
+            "media_content_id": YOUTUBE_PLAYLIST,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert "Media extractor loaded cookies file" in caplog.text
+
+    os.remove(cookies_file)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            "entity_id": "media_player.bedroom",
+            "media_content_type": "VIDEO",
+            "media_content_id": YOUTUBE_PLAYLIST,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert "Media extractor didn't find cookies file" in caplog.text
