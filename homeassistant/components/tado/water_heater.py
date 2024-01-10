@@ -190,20 +190,12 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return (
-            self._min_temperature
-            if self._min_temperature is not None
-            else TADO_DEFAULT_MIN_TEMP
-        )
+        return self._min_temperature
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return (
-            self._max_temperature
-            if self._max_temperature is not None
-            else TADO_DEFAULT_MAX_TEMP
-        )
+        return self._max_temperature
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""

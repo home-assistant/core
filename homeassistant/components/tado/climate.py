@@ -482,10 +482,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         """Return temperature offset."""
         state_attr: dict[str, Any] = self._tado_zone_temp_offset
         state_attr[
-            str(HA_TERMINATION_TYPE)
+            HA_TERMINATION_TYPE
         ] = self._tado_zone_data.default_overlay_termination_type
         state_attr[
-            str(HA_TERMINATION_DURATION)
+            HA_TERMINATION_DURATION
         ] = self._tado_zone_data.default_overlay_termination_duration
         return state_attr
 
@@ -540,7 +540,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         # Set a target temperature if we don't have any
         # This can happen when we switch from Off to On
-        if self._target_temp is None or not isinstance(self._target_temp, float):
+        if self._target_temp is None:
             self._target_temp = self._tado_zone_data.current_temp
         elif self._current_tado_hvac_mode == CONST_MODE_COOL:
             self._target_temp = adjust_temp(self._cool_min_temp, self._cool_max_temp)
