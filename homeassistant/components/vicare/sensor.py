@@ -503,6 +503,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         value_getter=lambda api: api.getElectricalEnergySystemSOC(),
         unit_getter=lambda api: api.getElectricalEnergySystemSOCUnit(),
+        device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
