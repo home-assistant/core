@@ -1177,8 +1177,11 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
 
     Async friendly but not a coroutine.
     """
-    if hass.config.config_dir not in sys.path:
-        sys.path.insert(0, hass.config.config_dir)
+
+    sys.path.insert(0, hass.config.config_dir)
+    with suppress(ImportError):
+        import custom_components  # pylint: disable=import-outside-toplevel  # noqa: F401
+    sys.path.remove(hass.config.config_dir)
 
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:
