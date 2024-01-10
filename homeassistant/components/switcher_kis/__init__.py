@@ -159,11 +159,6 @@ class SwitcherDataUpdateCoordinator(
         return self.data.device_id  # type: ignore[no-any-return]
 
     @property
-    def device_key(self) -> str:
-        """Switcher device key."""
-        return self.data.device_key  # type: ignore[no-any-return]
-
-    @property
     def mac_address(self) -> str:
         """Switcher device mac address."""
         return self.data.mac_address  # type: ignore[no-any-return]
