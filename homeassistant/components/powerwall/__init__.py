@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from contextlib import AsyncExitStack
 from datetime import timedelta
 import logging
 from typing import Optional
@@ -124,27 +125,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     http_session = async_create_clientsession(
         hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
     )
-    power_wall = Powerwall(ip_address, http_session=http_session, verify_ssl=False)
-    try:
-        base_info = await _login_and_fetch_base_info(power_wall, ip_address, password)
-    except PowerwallUnreachableError as err:
-        await power_wall.close()
-        raise ConfigEntryNotReady from err
-    except MissingAttributeError as err:
-        await power_wall.close()
-        # The error might include some important information about what exactly changed.
-        _LOGGER.error("The powerwall api has changed: %s", str(err))
-        persistent_notification.async_create(
-            hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
-        )
-        return False
-    except AccessDeniedError as err:
-        _LOGGER.debug("Authentication failed", exc_info=err)
-        await power_wall.close()
-        raise ConfigEntryAuthFailed from err
-    except ApiError as err:
-        await power_wall.close()
-        raise ConfigEntryNotReady from err
+
+    async with AsyncExitStack() as stack:
+        power_wall = Powerwall(ip_address, http_session=http_session, verify_ssl=False)
+        stack.push_async_callback(power_wall.close)
+
+        try:
+            base_info = await _login_and_fetch_base_info(
+                power_wall, ip_address, password
+            )
+
+            # Cancel closing power_wall on success
+            stack.pop_all()
+        except PowerwallUnreachableError as err:
+            raise ConfigEntryNotReady from err
+        except MissingAttributeError as err:
+            # The error might include some important information about what exactly changed.
+            _LOGGER.error("The powerwall api has changed: %s", str(err))
+            persistent_notification.async_create(
+                hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
+            )
+            return False
+        except AccessDeniedError as err:
+            _LOGGER.debug("Authentication failed", exc_info=err)
+            raise ConfigEntryAuthFailed from err
+        except ApiError as err:
+            raise ConfigEntryNotReady from err
 
     gateway_din = base_info.gateway_din
     if gateway_din and entry.unique_id is not None and is_ip_address(entry.unique_id):
