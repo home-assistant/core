@@ -138,13 +138,13 @@ PRODUCTION_SENSORS = (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class EnvoyProductionPhaseSensorEntityDescription(
     EnvoyProductionSensorEntityDescription
 ):
     """Describes an Envoy production phase sensor entity."""
 
-    on_phase: PhaseNames = PhaseNames.PHASE_1
+    on_phase: PhaseNames
 
 
 PRODUCTION_PHASE_SENSORS = (
@@ -337,13 +337,13 @@ CONSUMPTION_SENSORS = (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class EnvoyConsumptionPhaseSensorEntityDescription(
     EnvoyConsumptionSensorEntityDescription
 ):
     """Describes an Envoy consumption phase sensor entity."""
 
-    on_phase: PhaseNames = PhaseNames.PHASE_1
+    on_phase: PhaseNames
 
 
 CONSUMPTION_PHASE_SENSORS = (
