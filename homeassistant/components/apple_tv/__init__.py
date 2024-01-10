@@ -99,7 +99,7 @@ class AppleTVEntity(Entity):
         self, name: str, identifier: str | None, manager: "AppleTVManager"
     ) -> None:
         """Initialize device."""
-        self.atv: AppleTV = None  # type: ignore[assignment]
+        self.atv: AppleTVInterface = None  # type: ignore[assignment]
         self.manager = manager
         if TYPE_CHECKING:
             assert identifier is not None
