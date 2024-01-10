@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
+from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -29,6 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     elevation = hass.config.elevation
     is_metric = hass.config.units is METRIC_SYSTEM
     assert address is not None
+
+    await close_stale_connections_by_address(address)
 
     ble_device = bluetooth.async_ble_device_from_address(hass, address)
 

@@ -89,7 +89,6 @@ async def test_availability_with_shared_state_topic(
         "friendly_name",
         "device_name",
         "assert_log",
-        "issue_events",
     ),
     [
         (  # default_entity_name_without_device_name
@@ -106,7 +105,6 @@ async def test_availability_with_shared_state_topic(
             DEFAULT_SENSOR_NAME,
             None,
             True,
-            0,
         ),
         (  # default_entity_name_with_device_name
             {
@@ -122,7 +120,6 @@ async def test_availability_with_shared_state_topic(
             "Test MQTT Sensor",
             "Test",
             False,
-            0,
         ),
         (  # name_follows_device_class
             {
@@ -139,7 +136,6 @@ async def test_availability_with_shared_state_topic(
             "Test Humidity",
             "Test",
             False,
-            0,
         ),
         (  # name_follows_device_class_without_device_name
             {
@@ -156,7 +152,6 @@ async def test_availability_with_shared_state_topic(
             "Humidity",
             None,
             True,
-            0,
         ),
         (  # name_overrides_device_class
             {
@@ -174,7 +169,6 @@ async def test_availability_with_shared_state_topic(
             "Test MySensor",
             "Test",
             False,
-            0,
         ),
         (  # name_set_no_device_name_set
             {
@@ -192,7 +186,6 @@ async def test_availability_with_shared_state_topic(
             "MySensor",
             None,
             True,
-            0,
         ),
         (  # none_entity_name_with_device_name
             {
@@ -210,7 +203,6 @@ async def test_availability_with_shared_state_topic(
             "Test",
             "Test",
             False,
-            0,
         ),
         (  # none_entity_name_without_device_name
             {
@@ -228,7 +220,6 @@ async def test_availability_with_shared_state_topic(
             "mqtt veryunique",
             None,
             True,
-            0,
         ),
         (  # entity_name_and_device_name_the_same
             {
@@ -245,11 +236,10 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.hello_world",
-            "Hello world",
+            "sensor.hello_world_hello_world",
+            "Hello world Hello world",
             "Hello world",
             False,
-            1,
         ),
         (  # entity_name_startswith_device_name1
             {
@@ -266,11 +256,10 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.world_automation",
-            "World automation",
+            "sensor.world_world_automation",
+            "World World automation",
             "World",
             False,
-            1,
         ),
         (  # entity_name_startswith_device_name2
             {
@@ -287,11 +276,10 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.world_automation",
-            "world automation",
+            "sensor.world_world_automation",
+            "world world automation",
             "world",
             False,
-            1,
         ),
     ],
     ids=[
@@ -320,7 +308,6 @@ async def test_default_entity_and_device_name(
     friendly_name: str,
     device_name: str | None,
     assert_log: bool,
-    issue_events: int,
 ) -> None:
     """Test device name setup with and without a device_class set.
 
@@ -349,8 +336,8 @@ async def test_default_entity_and_device_name(
         "MQTT device information always needs to include a name" in caplog.text
     ) is assert_log
 
-    # Assert that an issues ware registered
-    assert len(events) == issue_events
+    # Assert that no issues ware registered
+    assert len(events) == 0
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])

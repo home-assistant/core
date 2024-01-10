@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     cancel_listener = entry.add_update_listener(_update_listener)
 
-    async def _async_on_stop(event):
+    async def _async_on_stop(event: Event) -> None:
         await data.shutdown()
 
     cancel_stop = hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
@@ -56,11 +56,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _migrate_old_unique_ids(
     hass: HomeAssistant, entry_id: str, data: HarmonyData
-):
+) -> None:
     names_to_ids = {activity["label"]: activity["id"] for activity in data.activities}
 
     @callback
-    def _async_migrator(entity_entry: er.RegistryEntry):
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
         # Old format for switches was {remote_unique_id}-{activity_name}
         # New format is activity_{activity_id}
         parts = entity_entry.unique_id.split("-", 1)
@@ -82,7 +82,9 @@ async def _migrate_old_unique_ids(
 
 
 @callback
-def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
+def _async_import_options_from_data_if_missing(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     options = dict(entry.options)
     modified = 0
     for importable_option in (ATTR_ACTIVITY, ATTR_DELAY_SECS):

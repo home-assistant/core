@@ -12,6 +12,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.shelly.const import (
+    CONF_GEN,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -30,7 +31,7 @@ MOCK_MAC = "123456789ABC"
 
 async def init_integration(
     hass: HomeAssistant,
-    gen: int,
+    gen: int | None,
     model=MODEL_25,
     sleep_period=0,
     options: dict[str, Any] | None = None,
@@ -41,8 +42,9 @@ async def init_integration(
         CONF_HOST: "192.168.1.37",
         CONF_SLEEP_PERIOD: sleep_period,
         "model": model,
-        "gen": gen,
     }
+    if gen is not None:
+        data[CONF_GEN] = gen
 
     entry = MockConfigEntry(
         domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options
