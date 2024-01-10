@@ -544,12 +544,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="photovoltaic_status",
         translation_key="photovoltaic_status",
         value_getter=lambda api: api.getPhotovoltaicStatus(),
+        SensorDeviceClass.ENUM,
         options=["nothing", "ready", "production", "unknown"],
     ),
     ViCareSensorEntityDescription(
         key="ess_state",
         translation_key="ess_state",
         value_getter=lambda api: api.getElectricalEnergySystemOperationState(),
+        SensorDeviceClass.ENUM,
         options=["charge", "discharge", "standby"],
     ),
 )
