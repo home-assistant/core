@@ -32,11 +32,6 @@ def _create_mocked_romy(
 
     type(mocked_romy).set_name = AsyncMock(side_effect=mock_set_name)
 
-    async def mock_async_update():
-        return
-
-    type(mocked_romy).async_update = AsyncMock(side_effect=mock_async_update)
-
     return mocked_romy
 
 

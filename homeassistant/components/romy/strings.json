@@ -25,7 +25,7 @@
         }
       },
       "zeroconf_confirm": {
-        "description": "Do you want to add ROMY Vacuum Cleaner {name} to Home Asssistant?"
+        "description": "Do you want to add ROMY Vacuum Cleaner {name} to Home Assistant?"
       }
     }
   },
