@@ -8,6 +8,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AnalyticsData
 from .const import DOMAIN
 from .coordinator import HomeassistantAnalyticsDataUpdateCoordinator
 
@@ -19,13 +20,14 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the entries."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    analytics_data: AnalyticsData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         HomeassistantAnalyticsSensor(
-            coordinator,
+            analytics_data.coordinator,
             integration_domain,
+            analytics_data.names[integration_domain],
         )
-        for integration_domain in coordinator.data
+        for integration_domain in analytics_data.coordinator.data
     )
 
 
@@ -42,10 +44,11 @@ class HomeassistantAnalyticsSensor(
         self,
         coordinator: HomeassistantAnalyticsDataUpdateCoordinator,
         integration_domain: str,
+        name: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = integration_domain
+        self._attr_name = name
         self._attr_unique_id = f"{integration_domain}_active_installations"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, DOMAIN)},

@@ -70,7 +70,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'youtube',
+    'original_name': 'YouTube',
     'platform': 'homeassistant_analytics',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -82,7 +82,7 @@
 # name: test_all_entities[sensor.homeassistant_analytics_youtube-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics youtube',
+      'friendly_name': 'Homeassistant Analytics YouTube',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'active installations',
     }),
@@ -91,99 +91,5 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '339',
-  })
-# ---
-# name: test_all_entities[sensor.mock_title_spotify-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_title_spotify',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'spotify',
-    'platform': 'homeassistant_analytics',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'integration_$spotify_active_installations',
-    'unit_of_measurement': 'active installations',
-  })
-# ---
-# name: test_all_entities[sensor.mock_title_spotify-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title spotify',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'active installations',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_spotify',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '24331',
-  })
-# ---
-# name: test_all_entities[sensor.mock_title_youtube-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_title_youtube',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'youtube',
-    'platform': 'homeassistant_analytics',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'integration_$youtube_active_installations',
-    'unit_of_measurement': 'active installations',
-  })
-# ---
-# name: test_all_entities[sensor.mock_title_youtube-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title youtube',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'active installations',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_youtube',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '337',
   })
 # ---

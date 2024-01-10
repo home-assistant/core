@@ -4,13 +4,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from python_homeassistant_analytics import CurrentAnalytics
+from python_homeassistant_analytics.models import Integration
 
 from homeassistant.components.homeassistant_analytics import DOMAIN
 from homeassistant.components.homeassistant_analytics.const import (
     CONF_TRACKED_INTEGRATIONS,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture
@@ -27,7 +28,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 def mock_analytics_client() -> Generator[AsyncMock, None, None]:
     """Mock a Homeassistant Analytics client."""
     with patch(
-        "homeassistant.components.homeassistant_analytics.coordinator.HomeassistantAnalyticsClient",
+        "homeassistant.components.homeassistant_analytics.HomeassistantAnalyticsClient",
         return_value=AsyncMock(),
     ) as mock_client:
         mock_client.return_value.get_current_analytics.return_value = (
@@ -35,6 +36,12 @@ def mock_analytics_client() -> Generator[AsyncMock, None, None]:
                 load_fixture("homeassistant_analytics/current_data.json")
             )
         )
+        integrations = load_json_object_fixture(
+            "homeassistant_analytics/integrations.json"
+        )
+        mock_client.return_value.get_integrations.return_value = {
+            key: Integration.from_dict(value) for key, value in integrations.items()
+        }
         yield mock_client
 
 
