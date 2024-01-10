@@ -342,7 +342,7 @@ class ElectricalMeasurement(PollableSensor):
 
     def formatter(self, value: int) -> int | float:
         """Return 'normalized' value."""
-        if self._div_mul_prefix != None:
+        if self._div_mul_prefix:
             multiplier = getattr(
                 self._cluster_handler, f"{self._div_mul_prefix}_multiplier"
             )
