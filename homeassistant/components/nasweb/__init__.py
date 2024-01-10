@@ -5,7 +5,6 @@ import logging
 
 from webio_api import WebioAPI
 
-from homeassistant.components.http import ApiConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -90,10 +89,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if notify_coordinator is not None and serial is not None:
                 notify_coordinator.remove_coordinator(serial)
                 hass_address = get_hass_address_from_entry(hass, entry.data)
-                if hass_address is None:
-                    api_config: ApiConfig | None = hass.config.api
-                    if api_config is not None:
-                        hass_address = f"{api_config.host}:{api_config.port}"
                 if hass_address is not None:
                     await coordinator.webio_api.status_subscription(hass_address, False)
         hass.data[DOMAIN].pop(entry.entry_id)
