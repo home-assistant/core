@@ -83,14 +83,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         notify_coordinator: NotificationCoordinator = hass.data[DOMAIN].get(
             NOTIFY_COORDINATOR
         )
-        coordinator: NASwebCoordinator = hass.data[DOMAIN].get(entry.entry_id)
-        if coordinator is not None:
-            serial = coordinator.webio_api.get_serial_number()
-            if notify_coordinator is not None and serial is not None:
-                notify_coordinator.remove_coordinator(serial)
-                hass_address = get_hass_address_from_entry(hass, entry.data)
-                if hass_address is not None:
-                    await coordinator.webio_api.status_subscription(hass_address, False)
-        hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator: NASwebCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        serial = coordinator.webio_api.get_serial_number()
+        if notify_coordinator is not None and serial is not None:
+            notify_coordinator.remove_coordinator(serial)
+            hass_address = get_hass_address_from_entry(hass, entry.data)
+            if hass_address is not None:
+                await coordinator.webio_api.status_subscription(hass_address, False)
 
     return unload_ok
