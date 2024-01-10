@@ -500,6 +500,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="ess_state_of_charge",
         translation_key="ess_state_of_charge",
+        icon="mdi:home-battery",
         native_unit_of_measurement=PERCENTAGE,
         value_getter=lambda api: api.getElectricalEnergySystemSOC(),
         unit_getter=lambda api: api.getElectricalEnergySystemSOCUnit(),
