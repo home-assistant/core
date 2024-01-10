@@ -1,9 +1,6 @@
 # serializer version: 1
 # name: test_entry_diagnostics
   dict({
-    'active_phasecount': 3,
-    'ct_consumption_meter': 'net-consumption',
-    'ct_count': 2,
     'data': dict({
       'varies_by': 'firmware_version',
     }),
@@ -29,13 +26,5 @@
       'version': 1,
     }),
     'envoy_firmware': '7.1.2',
-    'phase_count': 3,
-    'phase_mode': 'three',
-    'supported_features': list([
-      'INVERTERS',
-      'METERING',
-      'PRODUCTION',
-      'THREEPHASE',
-    ]),
   })
 # ---
