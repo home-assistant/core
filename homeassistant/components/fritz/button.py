@@ -160,9 +160,8 @@ class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize Fritz!Box WOL button."""
         super().__init__(avm_wrapper, device)
-        self._name = f"{device.hostname} Wake on LAN"
+        self._name = f"{self.hostname} Wake on LAN"
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
-        self._attr_entity_category = EntityCategory.CONFIG
         self._is_available = True
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, self._mac)},
