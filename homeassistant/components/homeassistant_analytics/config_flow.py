@@ -37,14 +37,15 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
             analytics = await client.get_analytics()
         except HomeassistantAnalyticsConnectionError:
             return self.async_abort(reason="cannot_connect")
-        integrations = list(analytics.current.integrations)
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
-                            options=integrations, multiple=True, sort=True
+                            options=list(analytics.current.integrations),
+                            multiple=True,
+                            sort=True,
                         )
                     ),
                 }
