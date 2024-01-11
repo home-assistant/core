@@ -3968,6 +3968,43 @@ def test_closest_function_to_state(hass: HomeAssistant) -> None:
     )
 
 
+def test_async_render_to_info_with_compare_is_is_state(hass: HomeAssistant) -> None:
+    """Test async_render_to_info with compare to is_state."""
+    hass.states.async_set("light.a", "off")
+
+    info = render_to_info(
+        hass,
+        """
+{{ "light.a" is is_state("off") }}
+""",
+    )
+
+    assert_result_info(info, True, {"light.a"}, set())
+
+    info = render_to_info(
+        hass,
+        """
+{{ "light.a" is is_state("on") }}
+""",
+    )
+
+    assert_result_info(info, False, {"light.a"}, set())
+
+
+def test_async_render_to_info_with_filter(hass: HomeAssistant) -> None:
+    """Test async_render_to_info with filter."""
+    hass.states.async_set("light.a", "off")
+
+    info = render_to_info(
+        hass,
+        """
+{{ "light.a" | states }}
+""",
+    )
+
+    assert_result_info(info, "off", {"light.a"}, set())
+
+
 def test_closest_function_invalid_state(hass: HomeAssistant) -> None:
     """Test closest function invalid state."""
     hass.states.async_set(
