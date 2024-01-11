@@ -2099,6 +2099,11 @@ def bitwise_or(first_value, second_value):
     return first_value | second_value
 
 
+def bitwise_xor(first_value, second_value):
+    """Perform a bitwise xor operation."""
+    return first_value ^ second_value
+
+
 def struct_pack(value: Any | None, format_string: str) -> bytes | None:
     """Pack an object into a bytes object."""
     try:
@@ -2462,6 +2467,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
+        self.filters["bitwise_xor"] = bitwise_xor
         self.filters["pack"] = struct_pack
         self.filters["unpack"] = struct_unpack
         self.filters["ord"] = ord
