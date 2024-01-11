@@ -268,7 +268,6 @@ FLOWS = {
         "led_ble",
         "lg_soundbar",
         "lidarr",
-        "life360",
         "lifx",
         "linear_garage_door",
         "litejet",
