@@ -24,10 +24,24 @@ API_URL = "https://app.amber.com.au/developers"
 def generate_site_selector_name(site: Site) -> str:
     """Generate the name to show in the site drop down in the configuration flow."""
     if site.status == SiteStatus.CLOSED:
-        return site.nmi + " (Closed: " + site.closed_on.isoformat() + ")"
+        return site.nmi + " (Closed: " + site.closed_on.isoformat() + ")"  # type: ignore[no-any-return]
     if site.status == SiteStatus.PENDING:
-        return site.nmi + " (Pending)"
-    return site.nmi
+        return site.nmi + " (Pending)"  # type: ignore[no-any-return]
+    return site.nmi  # type: ignore[no-any-return]
+
+
+def filter_sites(sites: list[Site]) -> list[Site]:
+    """Deduplicates the list of sites."""
+    filtered: list[Site] = []
+
+    for site in sorted(sites, key=lambda site: site.status.value):
+        if (
+            site.status == SiteStatus.ACTIVE
+            or len([s for s in filtered if s.nmi == site.nmi]) == 0
+        ):
+            filtered.append(site)
+
+    return filtered
 
 
 class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -46,7 +60,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         api: amber_api.AmberApi = amber_api.AmberApi.create(configuration)
 
         try:
-            sites: list[Site] = api.get_sites()
+            sites: list[Site] = filter_sites(api.get_sites())
             if len(sites) == 0:
                 self._errors[CONF_API_TOKEN] = "no_site"
                 return None

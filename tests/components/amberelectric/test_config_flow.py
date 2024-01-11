@@ -9,6 +9,7 @@ from amberelectric.model.site import Site, SiteStatus
 import pytest
 
 from homeassistant import data_entry_flow
+from homeassistant.components.amberelectric.config_flow import filter_sites
 from homeassistant.components.amberelectric.const import (
     CONF_SITE_ID,
     CONF_SITE_NAME,
@@ -103,7 +104,16 @@ def mock_single_site_rejoin_api() -> Generator:
         date(2003, 1, 1),
         None,
     )
-    instance.get_sites.return_value = [site_1, site_2]
+    site_3 = Site(
+        "01FG0AGP818PXK0DWHXJRRT2DH",
+        "11111111112",
+        [],
+        "Jemena",
+        SiteStatus.CLOSED,
+        date(2003, 1, 1),
+        date(2003, 6, 1),
+    )
+    instance.get_sites.return_value = [site_1, site_2, site_3]
 
     with patch("amberelectric.api.AmberApi.create", return_value=instance):
         yield instance
@@ -268,3 +278,15 @@ async def test_unknown_error(hass: HomeAssistant, api_error: Mock) -> None:
     # Goes back to the user step
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"api_token": "unknown_error"}
+
+
+async def test_site_deduplication(single_site_rejoin_api: Mock) -> None:
+    """Test site deduplication."""
+    filtered = filter_sites(single_site_rejoin_api.get_sites())
+    assert len(filtered) == 2
+    assert (
+        next(s for s in filtered if s.nmi == "11111111111").status == SiteStatus.ACTIVE
+    )
+    assert (
+        next(s for s in filtered if s.nmi == "11111111112").status == SiteStatus.CLOSED
+    )
