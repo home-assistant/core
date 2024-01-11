@@ -3968,27 +3968,38 @@ def test_closest_function_to_state(hass: HomeAssistant) -> None:
     )
 
 
-def test_async_render_to_info_with_compare_is_is_state(hass: HomeAssistant) -> None:
+def test_async_render_to_info_with_compare_is_state(hass: HomeAssistant) -> None:
     """Test async_render_to_info with compare to is_state."""
     hass.states.async_set("light.a", "off")
-
-    info = render_to_info(
-        hass,
-        """
-{{ "light.a" is is_state("off") }}
-""",
-    )
+    template_str = '{{ "light.a" is is_state("off") }}'
+    info = render_to_info(hass, template_str)
 
     assert_result_info(info, True, {"light.a"}, set())
+    template_str = '{{ "light.a" is is_state("on") }}'
 
     info = render_to_info(
         hass,
-        """
-{{ "light.a" is is_state("on") }}
-""",
+        template_str,
     )
 
     assert_result_info(info, False, {"light.a"}, set())
+
+
+@pytest.mark.xfail(reason="fails on second render")
+def test_async_render_to_info_with_compare_is_state_multiple_times(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_render_to_info with is_state multiple times."""
+    hass.states.async_set("light.a", "off")
+    template_str = '{{ "light.a" is is_state("off") }}'
+    tmp = template.Template(template_str, hass)
+    info = tmp.async_render_to_info()
+    assert info.entities == {"light.a"}
+    assert info.result() is True
+    hass.states.async_set("light.a", "on")
+    info2 = tmp.async_render_to_info()
+    assert info2.result() is False
+    assert info2.entities == {"light.a"}
 
 
 def test_async_render_to_info_with_filter(hass: HomeAssistant) -> None:
