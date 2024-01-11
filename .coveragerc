@@ -664,10 +664,6 @@ omit =
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/__init__.py
     homeassistant/components/lg_soundbar/media_player.py
-    homeassistant/components/life360/__init__.py
-    homeassistant/components/life360/button.py
-    homeassistant/components/life360/coordinator.py
-    homeassistant/components/life360/device_tracker.py
     homeassistant/components/lightwave/*
     homeassistant/components/limitlessled/light.py
     homeassistant/components/linksys_smart/device_tracker.py
