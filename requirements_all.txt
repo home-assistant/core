@@ -504,6 +504,9 @@ auroranoaa==0.0.3
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.7
 
+# homeassistant.components.husqvarna_automower_ble
+automower-ble==0.1.32
+
 # homeassistant.components.avea
 # avea==1.5.1
 
