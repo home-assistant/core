@@ -1309,6 +1309,56 @@ async def test_render_template_renders_template(
     }
 
 
+@pytest.mark.xfail(reason="Entities are missing when using a filter")
+async def test_render_template_with_filter(
+    hass: HomeAssistant, websocket_client
+) -> None:
+    """Test simple template with a filter is rendered and updated."""
+    hass.states.async_set("light.test", "on")
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": "State is: {{ 'light.test' | states }}",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {
+        "result": "State is: on",
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["light.test"],
+            "time": False,
+        },
+    }
+
+    hass.states.async_set("light.test", "off")
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {
+        "result": "State is: off",
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["light.test"],
+            "time": False,
+        },
+    }
+
+
 async def test_render_template_with_timeout_and_variables(
     hass: HomeAssistant, websocket_client
 ) -> None:
