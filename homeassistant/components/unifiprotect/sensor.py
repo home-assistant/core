@@ -781,7 +781,7 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
         EventEntityMixin._async_update_device_from_protect(self, device)
         event = self._event
         entity_description = self.entity_description
-        is_on = self.entity_description.get_is_on(self.device, self._event)
+        is_on = entity_description.get_is_on(self.device, self._event)
         is_license_plate = (
             entity_description.ufp_event_obj == "last_license_plate_detect_event"
         )
