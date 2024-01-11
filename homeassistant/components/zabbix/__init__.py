@@ -7,7 +7,7 @@ import queue
 import threading
 import time
 from urllib.error import HTTPError
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 from pyzabbix import ZabbixAPI, ZabbixAPIException, ZabbixMetric, ZabbixSender
 import voluptuous as vol
@@ -55,8 +55,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {
-                vol.Required(CONF_URL): cv.string,
                 vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_URL): cv.string,
                 vol.Optional(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_TOKEN): cv.string,
                 vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
@@ -76,7 +76,47 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     protocol = "https" if conf[CONF_SSL] else "http"
 
-    url = urljoin(f"{protocol}://{conf[CONF_URL]}", conf[CONF_PATH])
+    url = None
+    if conf[CONF_URL]:  # Validate URL
+        t_url = conf[CONF_URL]
+        if not t_url.startswith("http://", "https://"):
+            t_url = f"{ protocol }://{ t_url }"
+        try:
+            url_parts = urlsplit(t_url)
+            _ = url_parts.port  # raises ValueError if port is invalid
+
+        except ValueError:
+            _LOGGER.error(
+                "Validation error in configuration.yaml for url/host: %s",
+                conf[CONF_URL],
+            )
+            return False
+        path = conf[CONF_PATH] if (url_parts.path in ("/", "")) else url_parts.path
+        url = urljoin(f"{ url_parts.scheme }://{url_parts.netloc}", path)
+
+    host = conf[CONF_HOST]  # Validate HOST
+    if not host.startswith("http://", "https://"):
+        host = f"{ protocol }://{ host }"
+    try:
+        url_parts = urlsplit(host)
+        _ = url_parts.port  # raises ValueError if port is invalid
+    except ValueError:
+        _LOGGER.error(
+            "Validation error in configuration.yaml for host: %s", conf[CONF_HOST]
+        )
+        return False
+
+    if url:  # if already set, derive trapper host:port from it
+        url_parts = urlsplit(url)
+        zabbix_server = url_parts.hostname
+        zabbix_port = int(url_parts.port) if url_parts.port else 10051
+    else:  # url not set. Derive trapper host from CONF_HOST
+        url_parts = urlsplit(host)
+        path = conf[CONF_PATH] if (url_parts.path in ("/", "")) else url_parts.path
+        url = urljoin(f"{ url_parts.scheme }://{ url_parts.netloc }", path)
+        zabbix_server = url_parts.hostname
+        zabbix_port = 10051
+
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
     token = conf.get(CONF_TOKEN)
@@ -167,7 +207,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return metrics
 
     if publish_states_host:
-        zabbix_sender = ZabbixSender(zabbix_server=conf[CONF_HOST])
+        zabbix_sender = ZabbixSender(
+            zabbix_server=zabbix_server, zabbix_port=zabbix_port
+        )
         instance = ZabbixThread(hass, zabbix_sender, event_to_metrics)
         instance.setup(hass)
 
