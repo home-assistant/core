@@ -845,8 +845,8 @@ async def test_unsupported_attributes_sensor(
         (
             5,
             102456,
-            "10.246",
-            UnitOfEnergy.KILO_WATT_HOUR,
+            "10.25",
+            "IMP gal",
         ),
     ),
 )
