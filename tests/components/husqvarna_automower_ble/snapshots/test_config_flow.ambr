@@ -1,0 +1,142 @@
+# serializer version: 1
+# name: test_bluetooth
+  FlowResultSnapshot({
+    'context': dict({
+      'confirm_only': True,
+      'source': 'bluetooth',
+      'title_placeholders': dict({
+        'name': 'Husqvarna Automower',
+      }),
+      'unique_id': '00000000-0000-0000-0000-000000000003',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'step_id': 'confirm',
+  })
+# ---
+# name: test_bluetooth_invalid
+  FlowResultSnapshot({
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'reason': 'no_devices_found',
+    'type': <FlowResultType.ABORT: 'abort'>,
+  })
+# ---
+# name: test_failed_connect
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'address',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': None,
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_failed_connect.1
+  FlowResultSnapshot({
+    'data_schema': None,
+    'description_placeholders': dict({
+      'name': 'Husqvarna Automower',
+    }),
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_failed_is_connected
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'address',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': None,
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_failed_is_connected.1
+  FlowResultSnapshot({
+    'description_placeholders': dict({
+      'error': '',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'reason': 'cannot_connect',
+    'type': <FlowResultType.ABORT: 'abort'>,
+  })
+# ---
+# name: test_no_devices
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'address',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': None,
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_user_selection
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'address',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': None,
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_user_selection.1
+  FlowResultSnapshot({
+    'data_schema': None,
+    'description_placeholders': dict({
+      'name': 'Husqvarna Automower',
+    }),
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
