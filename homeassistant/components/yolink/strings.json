@@ -86,8 +86,8 @@
           "description": "SpeakerHub Device"
         },
         "message": {
-          "name": "Text Message",
-          "description": "Text Message"
+          "name": "Text message",
+          "description": "Text message"
         },
         "tone": {
           "name": "Tone",
@@ -99,8 +99,18 @@
         },
         "repeat": {
           "name": "Repeat",
-          "description": "Repeat Times"
+          "description": "The amount of times the text will be repeated."
         }
+      }
+    }
+  },
+  "selector": {
+    "speaker_tone": {
+      "options": {
+        "emergency": "Emergency",
+        "alert": "Alert",
+        "warn": "Warn",
+        "tip": "Tip"
       }
     }
   }

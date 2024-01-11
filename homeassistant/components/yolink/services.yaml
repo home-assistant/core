@@ -17,14 +17,15 @@ play_on_speaker_hub:
         text:
     tone:
       required: true
-      default: "Tip"
+      default: "tip"
       selector:
         select:
           options:
-            - "Emergency"
-            - "Alert"
-            - "Warn"
-            - "Tip"
+            - "emergency"
+            - "alert"
+            - "warn"
+            - "tip"
+          translation_key: speaker_tone
     volume:
       required: true
       default: 8
