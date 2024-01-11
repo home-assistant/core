@@ -787,4 +787,8 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
         is a change.
         """
 
-        return (self._attr_available, self._attr_native_value, self._attr_extra_state_attributes)
+        return (
+            self._attr_available,
+            self._attr_native_value,
+            self._attr_extra_state_attributes,
+        )

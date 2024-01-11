@@ -584,6 +584,7 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
 
         return (self._attr_available, self._attr_is_on, self._attr_device_class)
 
+
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
     """A UniFi Protect NVR Disk Binary Sensor."""
 
@@ -660,4 +661,8 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         is a change.
         """
 
-        return (self._attr_available, self._attr_is_on, self._attr_extra_state_attributes)
+        return (
+            self._attr_available,
+            self._attr_is_on,
+            self._attr_extra_state_attributes,
+        )
