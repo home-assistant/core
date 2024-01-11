@@ -5,6 +5,7 @@ from typing import Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -49,6 +50,20 @@ def is_supported(
         _LOGGER.debug("Attribute Error %s: %s", name, error)
         return False
     return True
+
+
+def get_device_list(
+    hass: HomeAssistant, entry_data: Mapping[str, Any]
+) -> list[PyViCareDeviceConfig]:
+    """Return the list of devices."""
+    vicare_api = login(hass, entry_data)
+
+    for device in vicare_api.devices:
+        _LOGGER.info(
+            "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
+        )
+
+    return vicare_api.devices
 
 
 def get_burners(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
