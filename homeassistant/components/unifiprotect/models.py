@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 from pyunifiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.util import dt as dt_util
 
 from .utils import get_nested_attr
 
@@ -114,17 +113,10 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
             return cast(Event, getattr(obj, self.ufp_event_obj, None))
         return None
 
-    def get_is_on(self, event: Event | None) -> bool:
+    def get_is_on(self, obj: T, event: Event | None) -> bool:
         """Return value if event is active."""
-        if event is None:
-            return False
 
-        now = dt_util.utcnow()
-        value = now > event.start
-        if value and event.end is not None and now > event.end:
-            value = False
-
-        return value
+        return event is not None and self.get_ufp_value(obj)
 
 
 @dataclass(frozen=True)
