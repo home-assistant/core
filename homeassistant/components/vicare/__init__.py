@@ -1,14 +1,13 @@
 """The ViCare integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
 import os
 from typing import Any
 
-from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
@@ -16,25 +15,24 @@ from PyViCare.PyViCareUtils import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_HEATING_TYPE,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     HEATING_TYPE_TO_CREATOR_METHOD,
     PLATFORMS,
     VICARE_API,
     VICARE_DEVICE_CONFIG,
     VICARE_DEVICE_CONFIG_LIST,
+    VICARE_TOKEN_FILENAME,
     HeatingType,
 )
+from .utils import login
 
 _LOGGER = logging.getLogger(__name__)
-_TOKEN_FILENAME = "vicare_token.save"
 
 
 @dataclass(frozen=True)
@@ -68,22 +66,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare:
-    """Login via PyVicare API."""
-    vicare_api = PyViCare()
-    vicare_api.setCacheDuration(DEFAULT_SCAN_INTERVAL)
-    vicare_api.initWithCredentials(
-        entry_data[CONF_USERNAME],
-        entry_data[CONF_PASSWORD],
-        entry_data[CONF_CLIENT_ID],
-        hass.config.path(STORAGE_DIR, _TOKEN_FILENAME),
-    )
-    return vicare_api
-
-
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
-    vicare_api = vicare_login(hass, entry.data)
+    vicare_api = login(hass, entry.data)
 
     for device in vicare_api.devices:
         _LOGGER.info(
@@ -109,7 +94,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     with suppress(FileNotFoundError):
         await hass.async_add_executor_job(
-            os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+            os.remove, hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
         )
 
     return unload_ok
