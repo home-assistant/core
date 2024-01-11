@@ -73,9 +73,8 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
                 color_modes.add(ColorMode.RGB)
             if GoveeLightCapability.COLOR_KELVIN_TEMPERATURE in capabilities:
                 color_modes.add(ColorMode.COLOR_TEMP)
-                if ColorMode.COLOR_TEMP in color_modes:
-                    self._attr_max_color_temp_kelvin = 9000
-                    self._attr_min_color_temp_kelvin = 2000
+                self._attr_max_color_temp_kelvin = 9000
+                self._attr_min_color_temp_kelvin = 2000
             if GoveeLightCapability.BRIGHTNESS in capabilities:
                 color_modes.add(ColorMode.BRIGHTNESS)
         else:

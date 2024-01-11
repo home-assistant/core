@@ -49,7 +49,6 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     devices_count = len(controller.devices)
     controller.cleanup()
-    controller = None
 
     return devices_count > 0
 

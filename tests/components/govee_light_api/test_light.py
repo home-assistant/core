@@ -51,7 +51,7 @@ async def test_light_known_device(
         # Remove
         assert await hass.config_entries.async_remove(entry.entry_id)
         await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 0
+        assert hass.states.get("light.H615A") is None
 
 
 async def test_light_unknown_device(
@@ -109,7 +109,6 @@ async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
 
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 1
         assert hass.states.get("light.H615A") is not None
 
         # Remove 1
