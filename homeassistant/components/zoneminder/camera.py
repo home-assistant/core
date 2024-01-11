@@ -46,18 +46,17 @@ class ZoneMinderCamera(MjpegCamera):
 
     def __init__(self, monitor: Monitor, verify_ssl: bool) -> None:
         """Initialize as a subclass of MjpegCamera."""
+        zmname = monitor.name.casefold().replace(" ", "")
         super().__init__(
             name=monitor.name,
             mjpeg_url=monitor.mjpeg_image_url,
             still_image_url=monitor.still_image_url,
             verify_ssl=verify_ssl,
+            unique_id=f"{ZONEMINDER_DOMAIN}-{zmname}-{monitor.id}",
         )
         self._attr_is_recording = False
         self._attr_available = False
         self._monitor = monitor
-
-        zmname = monitor.name.casefold().replace(" ", "")
-        self._attr_unique_id = f"{ZONEMINDER_DOMAIN}-{zmname}-mid{monitor.id}"
 
     def update(self) -> None:
         """Update our recording state from the ZM API."""
