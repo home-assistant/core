@@ -14,7 +14,7 @@ from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar
 from urllib.parse import urlparse
 
 from awesomeversion import AwesomeVersion
@@ -1228,12 +1228,13 @@ async def async_process_component_and_handle_errors(
     async_handle_component_errors(
         hass, integration_config_info, integration, raise_on_failure
     )
-    return async_drop_config_annotations(integration_config_info)
+    return async_drop_config_annotations(integration_config_info, integration)
 
 
 @callback
 def async_drop_config_annotations(
     integration_config_info: IntegrationConfigInfo,
+    integration: Integration,
 ) -> ConfigType | None:
     """Remove file and line annotations from str items in component configuration."""
     if (config := integration_config_info.config) is None:
@@ -1258,7 +1259,11 @@ def async_drop_config_annotations(
 
         return node
 
-    return cast(ConfigType, drop_config_annotations_rec(config))
+    # Don't drop annotations from the homeassistant integration because it may
+    # have configuration for other integrations as packages.
+    if integration.domain in config and integration.domain != CONF_CORE:
+        drop_config_annotations_rec(config[integration.domain])
+    return config
 
 
 @callback

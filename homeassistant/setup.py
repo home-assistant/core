@@ -257,7 +257,9 @@ async def _async_setup_component(
         hass, config, integration
     )
     conf_util.async_handle_component_errors(hass, integration_config_info, integration)
-    processed_config = conf_util.async_drop_config_annotations(integration_config_info)
+    processed_config = conf_util.async_drop_config_annotations(
+        integration_config_info, integration
+    )
     for platform_exception in integration_config_info.exception_info_list:
         if platform_exception.translation_key not in NOTIFY_FOR_TRANSLATION_KEYS:
             continue
