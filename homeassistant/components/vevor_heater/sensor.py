@@ -39,12 +39,9 @@ _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class _VevorSensorEntityDescription(SensorEntityDescription, Generic[T]):
-    # This will be always set to a VevorHeaterStatus -> T function but
-    # needs a default because of the parent class implementation and
-    # https://peps.python.org/pep-0557/#inheritance, hence the None.
-    extractor: Callable[[VevorHeaterStatus], T | None] = lambda status: None
+    extractor: Callable[[VevorHeaterStatus], T]
 
 
 SENSORS: tuple = (

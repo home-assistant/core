@@ -36,7 +36,7 @@ async def validate_device(hass: HomeAssistant, address: str) -> dict[str, Any]:
     heater = VevorDevice(address=ble_device.address)
     await heater.refresh_status(ble_device)
     if not heater.status:
-        raise CannotConnect()
+        raise ProtocolError()
 
     return {
         "title": "Vevor "
@@ -77,6 +77,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_device(self.hass, address)
                 self._discovered_devices[address] = discovery_info.name
             except CannotConnect:
+                return self.async_abort(reason="cannot_connect")
+            except ProtocolError:
                 return self.async_abort(reason="not_supported")
 
         if not self._discovered_devices:
@@ -117,4 +119,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    """Error to indicate we cannot establish BT connection with the device."""
+
+
+class ProtocolError(HomeAssistantError):
+    """Error to indicate we don't know how to communicate with the device."""
