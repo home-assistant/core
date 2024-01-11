@@ -33,7 +33,8 @@ from .utils import (
 CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES
-    if (not d.name.startswith("Detections:")
+    if (
+        not d.name.startswith("Detections:")
         and d.name != "SSH Enabled"
         and d.name != "Color Night Vision"
     )
