@@ -3,6 +3,7 @@ import logging
 
 from tesla_fleet_api import Teslemetry
 from tesla_fleet_api.exceptions import InvalidToken, TeslaFleetError
+from tesla_fleet_api.vehiclespecific import VehicleSpecific
 from teslemetry_stream import TeslemetryStream
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +13,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .models import TeslemetryData
+from .coordinator import TeslemetryVehicleDataCoordinator
+from .models import TeslemetryVehicleData
 
 PLATFORMS = [
     Platform.CLIMATE,
@@ -32,22 +34,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         access_token=access_token,
     )
     try:
-        vehicles = await api.vehicle.create()
+        products = (await api.products())["response"]
     except InvalidToken as e:
         raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
         _LOGGER.error("Setup failed, unable to connect to Teslemetry: %s", e)
         return False
 
+    # Setup Coordinator for Polling
+
     # Create SSE stream
     data = []
-    for vehicle_api in vehicles:
+    for product in products:
+        if "vin" not in product:
+            continue
+        vin = product["vin"]
+
+        api = VehicleSpecific(api, vin)
+        coordinator = TeslemetryVehicleDataCoordinator(hass, api)
         stream = TeslemetryStream(
             session=async_get_clientsession(hass),
-            vin=vehicle_api.vin,
+            vin=vin,
             access_token=access_token,
         )
-        data.append(TeslemetryData(api=vehicle_api, stream=stream))
+        data.append(
+            TeslemetryVehicleData(api=api, coordinator=coordinator, stream=stream)
+        )
 
     # Setup Platforms
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data

@@ -1,10 +1,10 @@
 {
-    "domain": "teslemetry",
-    "name": "Teslemetry",
-    "codeowners": ["@Bre77"],
-    "config_flow": true,
-    "documentation": "https://www.home-assistant.io/integrations/teslemetry",
-    "iot_class": "cloud_push",
-    "loggers": ["teslemetry"],
-    "requirements": ["tesla-fleet-api==0.0.4", "teslemetry-stream==0.0.4"]
+  "domain": "teslemetry",
+  "name": "Teslemetry",
+  "codeowners": ["@Bre77"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/teslemetry",
+  "iot_class": "cloud_polling",
+  "loggers": ["teslemetry"],
+  "requirements": ["tesla-fleet-api==0.1.0", "teslemetry-stream==0.0.4"]
 }
