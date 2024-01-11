@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial, wraps
@@ -29,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     EntityServiceResponse,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -191,11 +192,14 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
+    __slots__ = ("entity_ids", "device_ids", "area_ids")
+
     def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
-        entity_ids: str | list | None = service_call.data.get(ATTR_ENTITY_ID)
-        device_ids: str | list | None = service_call.data.get(ATTR_DEVICE_ID)
-        area_ids: str | list | None = service_call.data.get(ATTR_AREA_ID)
+        service_call_data = service_call.data
+        entity_ids: str | list | None = service_call_data.get(ATTR_ENTITY_ID)
+        device_ids: str | list | None = service_call_data.get(ATTR_DEVICE_ID)
+        area_ids: str | list | None = service_call_data.get(ATTR_AREA_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
@@ -516,7 +520,7 @@ def async_extract_referenced_entity_ids(
 @bind_hass
 async def async_extract_config_entry_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
-) -> set:
+) -> set[str]:
     """Extract referenced config entry ids from a service call."""
     referenced = async_extract_referenced_entity_ids(hass, service_call, expand_group)
     ent_reg = entity_registry.async_get(hass)
@@ -790,7 +794,7 @@ def _get_permissible_entity_candidates(
 async def entity_service_call(
     hass: HomeAssistant,
     registered_entities: dict[str, Entity],
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
+    func: str | HassJob,
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
 ) -> EntityServiceResponse | None:
@@ -926,7 +930,7 @@ async def entity_service_call(
 async def _handle_entity_call(
     hass: HomeAssistant,
     entity: Entity,
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
+    func: str | HassJob,
     data: dict | ServiceCall,
     context: Context,
 ) -> ServiceResponse:
@@ -935,11 +939,11 @@ async def _handle_entity_call(
 
     task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
-        task = hass.async_run_job(
-            partial(getattr(entity, func), **data)  # type: ignore[arg-type]
+        task = hass.async_run_hass_job(
+            HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
         )
     else:
-        task = hass.async_run_job(func, entity, data)
+        task = hass.async_run_hass_job(func, entity, data)
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.

@@ -173,7 +173,7 @@ aioairzone-cloud==0.3.8
 aioairzone==0.7.2
 
 # homeassistant.components.ambient_station
-aioambient==2023.04.0
+aioambient==2024.01.0
 
 # homeassistant.components.apcupsd
 aioapcaccess==0.4.2
@@ -239,7 +239,7 @@ aiohomekit==3.1.2
 aiohttp-fast-url-dispatcher==0.3.0
 
 # homeassistant.components.http
-aiohttp-zlib-ng==0.3.0
+aiohttp-zlib-ng==0.3.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -332,7 +332,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==7.0.0
+aioshelly==7.1.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -344,7 +344,7 @@ aioslimproto==2.3.3
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.3.0
+aioswitcher==3.4.1
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -371,7 +371,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==2.0.0
+aiowithings==2.1.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -469,7 +469,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.4
+blinkpy==0.22.5
 
 # homeassistant.components.blue_current
 bluecurrent-api==1.0.6
@@ -508,7 +508,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.3.1
+bthome-ble==3.4.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -766,7 +766,7 @@ googlemaps==2.5.1
 gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
-govee-ble==0.24.0
+govee-ble==0.27.2
 
 # homeassistant.components.gree
 greeclimate==1.4.1
@@ -874,7 +874,7 @@ ical==6.1.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.4
+idasen-ha==2.5
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -982,7 +982,7 @@ maxcube-api==0.4.3
 mbddns==0.1.2
 
 # homeassistant.components.minecraft_server
-mcstatus==11.0.0
+mcstatus==11.1.1
 
 # homeassistant.components.meater
 meater-python==0.0.8
@@ -1334,7 +1334,7 @@ pyeconet==0.1.22
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.15.2
+pyenphase==1.16.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1463,7 +1463,7 @@ pymata-express==1.19
 pymelcloud==2.5.8
 
 # homeassistant.components.meteoclimatic
-pymeteoclimatic==0.0.6
+pymeteoclimatic==0.1.0
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -1644,7 +1644,7 @@ pytankerkoenig==0.0.6
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.6
+pytedee-async==0.2.11
 
 # homeassistant.components.motionmount
 python-MotionMount==0.3.1
@@ -1702,7 +1702,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==0.38.0
+python-roborock==0.39.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -1741,7 +1741,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.22.5
+pyunifiprotect==4.23.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1768,7 +1768,7 @@ pyweatherflowudp==1.4.5
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==1.3.0
+pywemo==1.4.0
 
 # homeassistant.components.wilight
 pywilight==0.0.74
@@ -1813,7 +1813,7 @@ renault-api==0.2.1
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.5
+reolink-aio==0.8.6
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -1868,7 +1868,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.6.1
+sensorpush-ble==1.6.2
 
 # homeassistant.components.sentry
 sentry-sdk==1.37.1
@@ -1913,7 +1913,7 @@ solax==0.3.2
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonos
-sonos-websocket==0.1.2
+sonos-websocket==0.1.3
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
@@ -1967,7 +1967,7 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.0.3
+sunweg==2.1.0
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
@@ -1991,7 +1991,7 @@ temescal==0.5
 temperusb==1.6.1
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.19
+tesla-powerwall==0.5.0
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2
