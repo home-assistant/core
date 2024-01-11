@@ -492,35 +492,7 @@ class DefaultAgent(AbstractConversationAgent):
         # en-US, en_US, en, ...
         language_variations = list(_get_language_variations(language))
 
-        # Check if any new components have been loaded
         intents_changed = False
-        for component in hass_components:
-            if component in loaded_components:
-                continue
-
-            # Don't check component again
-            loaded_components.add(component)
-
-            # Check for intents for this component with the target language.
-            # Try en-US, en, etc.
-            for language_variation in language_variations:
-                component_intents = get_intents(
-                    component, language_variation, json_load=json_load
-                )
-                if component_intents:
-                    # Merge sentences into existing dictionary
-                    merge_dict(intents_dict, component_intents)
-
-                    # Will need to recreate graph
-                    intents_changed = True
-                    _LOGGER.debug(
-                        "Loaded intents component=%s, language=%s (%s)",
-                        component,
-                        language,
-                        language_variation,
-                    )
-                    break
-
         # Check for custom sentences in <config>/custom_sentences/<language>/
         if lang_intents is None:
             # Only load custom sentences once, otherwise they will be re-loaded
@@ -558,6 +530,34 @@ class DefaultAgent(AbstractConversationAgent):
                         )
 
                     # Stop after first matched language variation
+                    break
+
+        # Check if any new components have been loaded
+        for component in hass_components:
+            if component in loaded_components:
+                continue
+
+            # Don't check component again
+            loaded_components.add(component)
+
+            # Check for intents for this component with the target language.
+            # Try en-US, en, etc.
+            for language_variation in language_variations:
+                component_intents = get_intents(
+                    component, language_variation, json_load=json_load
+                )
+                if component_intents:
+                    # Merge sentences into existing dictionary
+                    merge_dict(intents_dict, component_intents)
+
+                    # Will need to recreate graph
+                    intents_changed = True
+                    _LOGGER.debug(
+                        "Loaded intents component=%s, language=%s (%s)",
+                        component,
+                        language,
+                        language_variation,
+                    )
                     break
 
             # Load sentences from HA config for default language only
