@@ -1741,7 +1741,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.23.1
+pyunifiprotect==4.23.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
