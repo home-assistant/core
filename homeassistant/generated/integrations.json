@@ -2475,8 +2475,8 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "homeassistant_analytics": {
-      "name": "Home Assistant analytics",
+    "homeassistant_analytics_consumer": {
+      "name": "Home Assistant analytics sensor",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"

@@ -6,8 +6,8 @@ import pytest
 from python_homeassistant_analytics import CurrentAnalytics
 from python_homeassistant_analytics.models import Integration
 
-from homeassistant.components.homeassistant_analytics import DOMAIN
-from homeassistant.components.homeassistant_analytics.const import (
+from homeassistant.components.homeassistant_analytics_consumer import DOMAIN
+from homeassistant.components.homeassistant_analytics_consumer.const import (
     CONF_TRACKED_INTEGRATIONS,
 )
 
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.homeassistant_analytics.async_setup_entry",
+        "homeassistant.components.homeassistant_analytics_consumer.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
@@ -28,16 +28,16 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 def mock_analytics_client() -> Generator[AsyncMock, None, None]:
     """Mock a Homeassistant Analytics client."""
     with patch(
-        "homeassistant.components.homeassistant_analytics.HomeassistantAnalyticsClient",
+        "homeassistant.components.homeassistant_analytics_consumer.HomeassistantAnalyticsClient",
         return_value=AsyncMock(),
     ) as mock_client:
         mock_client.return_value.get_current_analytics.return_value = (
             CurrentAnalytics.from_json(
-                load_fixture("homeassistant_analytics/current_data.json")
+                load_fixture("homeassistant_analytics_consumer/current_data.json")
             )
         )
         integrations = load_json_object_fixture(
-            "homeassistant_analytics/integrations.json"
+            "homeassistant_analytics_consumer/integrations.json"
         )
         mock_client.return_value.get_integrations.return_value = {
             key: Integration.from_dict(value) for key, value in integrations.items()

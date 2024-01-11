@@ -1,9 +1,9 @@
 {
-  "domain": "homeassistant_analytics",
-  "name": "Home Assistant analytics",
+  "domain": "homeassistant_analytics_consumer",
+  "name": "Home Assistant analytics sensor",
   "codeowners": ["@joostlek"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/homeassistant_analytics",
+  "documentation": "https://www.home-assistant.io/integrations/homeassistant_analytics_consumer",
   "iot_class": "cloud_polling",
   "loggers": ["python-homeassistant-analytics"],
   "requirements": ["python-homeassistant-analytics==0.3.0"]

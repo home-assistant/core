@@ -24,7 +24,8 @@ async def test_all_entities(
 ) -> None:
     """Test all entities."""
     with patch(
-        "homeassistant.components.homeassistant_analytics.PLATFORMS", [Platform.SENSOR]
+        "homeassistant.components.homeassistant_analytics_consumer.PLATFORMS",
+        [Platform.SENSOR],
     ):
         await setup_integration(hass, mock_config_entry)
         entity_entries = er.async_entries_for_config_entry(

@@ -1,7 +1,7 @@
 """Constants for the Homeassistant Analytics integration."""
 import logging
 
-DOMAIN = "homeassistant_analytics"
+DOMAIN = "homeassistant_analytics_consumer"
 
 CONF_TRACKED_INTEGRATIONS = "tracked_integrations"
 
