@@ -65,7 +65,7 @@ class ProtectSensorEntityDescription(
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
         value = super().get_ufp_value(obj)
-        if self.precision and isinstance(value, float):
+        if self.precision and value is not None:
             return round(value, self.precision)
         return value
 
