@@ -5,6 +5,7 @@ from python_homeassistant_analytics import (
     CurrentAnalytics,
     HomeassistantAnalyticsConnectionError,
 )
+from python_homeassistant_analytics.models import Integration
 
 from homeassistant import config_entries
 from homeassistant.components.homeassistant_analytics_consumer.const import (
@@ -14,16 +15,25 @@ from homeassistant.components.homeassistant_analytics_consumer.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
+    integration_dicts = load_json_object_fixture(
+        "homeassistant_analytics_consumer/integrations.json"
+    )
+    integrations = {
+        key: Integration.from_dict(value) for key, value in integration_dicts.items()
+    }
     with patch(
         "homeassistant.components.homeassistant_analytics_consumer.config_flow.HomeassistantAnalyticsClient.get_current_analytics",
         return_value=CurrentAnalytics.from_json(
             load_fixture("homeassistant_analytics_consumer/current_data.json")
         ),
+    ), patch(
+        "homeassistant.components.homeassistant_analytics_consumer.config_flow.HomeassistantAnalyticsClient.get_integrations",
+        return_value=integrations,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -12,7 +12,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
 from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN, LOGGER
 
@@ -35,16 +39,31 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             analytics = await client.get_current_analytics()
+            integrations = await client.get_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
             return self.async_abort(reason="cannot_connect")
+
+        def get_integration_name(integration: str) -> str:
+            """Return the name of an integration or the domain if not found."""
+            if integration in integrations:
+                return integrations[integration].title
+            return integration
+
+        options = [
+            SelectOptionDict(
+                value=integration,
+                label=get_integration_name(integration),
+            )
+            for integration in analytics.integrations
+        ]
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
-                            options=list(analytics.integrations),
+                            options=options,
                             multiple=True,
                             sort=True,
                         )
