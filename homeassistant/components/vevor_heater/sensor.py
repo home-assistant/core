@@ -41,7 +41,7 @@ T = TypeVar("T")
 
 @dataclass(frozen=True, kw_only=True)
 class _VevorSensorEntityDescription(SensorEntityDescription, Generic[T]):
-    extractor: Callable[[VevorHeaterStatus], T]
+    value_fn: Callable[[VevorHeaterStatus], T]
 
 
 SENSORS: tuple = (
@@ -50,14 +50,14 @@ SENSORS: tuple = (
         name="Operational Mode",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extractor=lambda status: status.operational_mode,
+        value_fn=lambda status: status.operational_mode,
     ),
     _VevorSensorEntityDescription[OperationalStatus](
         key="operational_status",
         name="Operational Status",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extractor=lambda status: status.operational_status,
+        value_fn=lambda status: status.operational_status,
     ),
     _VevorSensorEntityDescription[float](
         key="input_voltage",
@@ -66,7 +66,7 @@ SENSORS: tuple = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extractor=lambda status: status.input_voltage,
+        value_fn=lambda status: status.input_voltage,
     ),
     _VevorSensorEntityDescription[float](
         key="elevation",
@@ -75,7 +75,7 @@ SENSORS: tuple = (
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extractor=lambda status: status.elevation,
+        value_fn=lambda status: status.elevation,
     ),
     _VevorSensorEntityDescription[int](
         key="target_temperature",
@@ -84,21 +84,21 @@ SENSORS: tuple = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extractor=lambda status: status.target_temperature,
+        value_fn=lambda status: status.target_temperature,
     ),
     _VevorSensorEntityDescription[int](
         key="target_power_level",
         name="Target Power Level",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extractor=lambda status: status.target_power_level,
+        value_fn=lambda status: status.target_power_level,
     ),
     _VevorSensorEntityDescription[int](
         key="current_power_level",
         name="Current Power Level",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extractor=lambda status: status.current_power_level,
+        value_fn=lambda status: status.current_power_level,
     ),
     _VevorSensorEntityDescription[int](
         key="combustion_temperature",
@@ -107,7 +107,7 @@ SENSORS: tuple = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extractor=lambda status: status.combustion_temperature,
+        value_fn=lambda status: status.combustion_temperature,
     ),
     _VevorSensorEntityDescription[int](
         key="room_temperature",
@@ -116,14 +116,14 @@ SENSORS: tuple = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extractor=lambda status: status.room_temperature,
+        value_fn=lambda status: status.room_temperature,
     ),
     _VevorSensorEntityDescription[HeaterError](
         key="error",
         name="Error",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extractor=lambda status: status.error,
+        value_fn=lambda status: status.error,
     ),
 )
 
@@ -170,7 +170,7 @@ class VevorHeaterSensor(CoordinatorEntity[VevorHeaterUpdateCoordinator], SensorE
     def _propagate_value(self) -> None:
         """Update attrs from device."""
         if self.coordinator.data.status is not None:
-            self._attr_native_value = self.entity_description.extractor(
+            self._attr_native_value = self.entity_description.value_fn(
                 self.coordinator.data.status
             )
         else:
