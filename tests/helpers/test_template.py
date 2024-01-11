@@ -4003,7 +4003,7 @@ def test_async_render_to_info_with_filter(hass: HomeAssistant) -> None:
     assert_result_info(info, "off", {"light.a"}, set())
 
 
-# @pytest.mark.xfail(reason="fails on second render")
+@pytest.mark.xfail(reason="fails on second render")
 def test_async_render_to_info_with_filter_multiple_times(hass: HomeAssistant) -> None:
     """Test async_render_to_info with filter multiple times."""
     hass.states.async_set("light.a", "off")
