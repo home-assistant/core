@@ -1,12 +1,13 @@
 """Sensors on Zigbee Home Automation networks."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import enum
 import functools
 import numbers
 import random
-from typing import TYPE_CHECKING, Any, NamedTuple, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
 
@@ -14,6 +15,7 @@ from homeassistant.components.climate import HVACAction
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -486,12 +488,12 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)))
 
 
-class SmartEnergyMeteringClassMap(NamedTuple):
-    """Helper class for mapping state class, device class, unit of measurement and scaling."""
+@dataclass(frozen=True, kw_only=True)
+class SmartEnergyMeteringEntityDescription(SensorEntityDescription):
+    """Dataclass that describes a Zigbee smart energy metering entity."""
 
-    unit_of_measurement: str
-    device_class: SensorDeviceClass | None
-    state_class: SensorStateClass | None
+    key: str = "instantaneous_demand"
+    state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT
     scale: int = 1
 
 
@@ -507,71 +509,60 @@ class SmartEnergyMetering(PollableSensor):
     _attribute_name = "instantaneous_demand"
     _attr_translation_key: str = "instantaneous_demand"
 
-    _map = {
-        0x00: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfPower.WATT,
+    _ENTITY_DESCRIPTION_MAP = {
+        0x00: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
         ),
-        0x01: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        0x01: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
             device_class=None,  # volume flow rate is not supported yet
-            state_class=SensorStateClass.MEASUREMENT,
         ),
-        0x02: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        0x02: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
             device_class=None,  # volume flow rate is not supported yet
-            state_class=SensorStateClass.MEASUREMENT,
         ),
-        0x03: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        0x03: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
             device_class=None,  # volume flow rate is not supported yet
-            state_class=SensorStateClass.MEASUREMENT,
             scale=100,
         ),
-        0x04: SmartEnergyMeteringClassMap(
-            unit_of_measurement=f"{UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",  # US gallons per hour
+        0x04: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",  # US gallons per hour
             device_class=None,  # volume flow rate is not supported yet
-            state_class=SensorStateClass.MEASUREMENT,
         ),
-        0x05: SmartEnergyMeteringClassMap(
-            unit_of_measurement=f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",  # IMP gallons per hour
+        0x05: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",  # IMP gallons per hour
             device_class=None,  # needs to be None as imperial gallons are not supported
-            state_class=SensorStateClass.MEASUREMENT,
         ),
-        0x06: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfPower.BTU_PER_HOUR,
+        0x06: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPower.BTU_PER_HOUR,
             device_class=None,
             state_class=None,
         ),
-        0x07: SmartEnergyMeteringClassMap(
-            unit_of_measurement=f"l/{UnitOfTime.HOURS}",
+        0x07: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"l/{UnitOfTime.HOURS}",
             device_class=None,  # volume flow rate is not supported yet
-            state_class=SensorStateClass.MEASUREMENT,
         ),
-        0x08: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfPressure.KPA,
+        0x08: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
             device_class=SensorDeviceClass.PRESSURE,
-            state_class=SensorStateClass.MEASUREMENT,
         ),  # gauge
-        0x09: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfPressure.KPA,
+        0x09: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
             device_class=SensorDeviceClass.PRESSURE,
-            state_class=SensorStateClass.MEASUREMENT,
         ),  # absolute
-        0x0A: SmartEnergyMeteringClassMap(
-            unit_of_measurement=f"{UnitOfVolume.CUBIC_FEET}/{UnitOfTime.HOURS}",  # cubic feet per hour
+        0x0A: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"{UnitOfVolume.CUBIC_FEET}/{UnitOfTime.HOURS}",  # cubic feet per hour
             device_class=None,  # volume flow rate is not supported yet
-            state_class=SensorStateClass.MEASUREMENT,
             scale=1000,
         ),
-        0x0B: SmartEnergyMeteringClassMap(
-            unit_of_measurement="unitless", device_class=None, state_class=None
+        0x0B: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement="unitless", device_class=None, state_class=None
         ),
-        0x0C: SmartEnergyMeteringClassMap(
-            unit_of_measurement=f"{UnitOfEnergy.MEGA_JOULE}/{UnitOfTime.SECONDS}",
+        0x0C: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"{UnitOfEnergy.MEGA_JOULE}/{UnitOfTime.SECONDS}",
             device_class=None,  # needs to be None as MJ/s is not supported
-            state_class=SensorStateClass.MEASUREMENT,
         ),
     }
 
@@ -585,12 +576,11 @@ class SmartEnergyMetering(PollableSensor):
         """Init."""
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-        if (
-            class_map := self._map.get(self._cluster_handler.unit_of_measurement)
-        ) is not None:
-            self._attr_native_unit_of_measurement = class_map.unit_of_measurement
-            self._attr_state_class = class_map.state_class
-            self._attr_device_class = class_map.device_class
+        entity_description = self._ENTITY_DESCRIPTION_MAP.get(
+            self._cluster_handler.unit_of_measurement
+        )
+        if entity_description is not None:
+            self.entity_description = entity_description
 
     def formatter(self, value: int) -> int | float:
         """Pass through cluster handler formatter."""
@@ -615,11 +605,21 @@ class SmartEnergyMetering(PollableSensor):
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         state = super().native_value
-        class_map = self._map.get(self._cluster_handler.unit_of_measurement)
+        class_map = self._ENTITY_DESCRIPTION_MAP.get(
+            self._cluster_handler.unit_of_measurement
+        )
         if class_map is not None and state is not None:
             return float(state) * class_map.scale
 
         return state
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmartEnergySummationEntityDescription(SmartEnergyMeteringEntityDescription):
+    """Dataclass that describes a Zigbee smart energy summation entity."""
+
+    key: str = "summation_delivered"
+    state_class: SensorStateClass | None = SensorStateClass.TOTAL_INCREASING
 
 
 @MULTI_MATCH(
@@ -634,67 +634,60 @@ class SmartEnergySummation(SmartEnergyMetering):
     _unique_id_suffix = "summation_delivered"
     _attr_translation_key: str = "summation_delivered"
 
-    _map = {
-        0x00: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    _ENTITY_DESCRIPTION_MAP = {
+        0x00: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
-        0x01: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        0x01: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
             device_class=SensorDeviceClass.VOLUME,
-            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
-        0x02: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfVolume.CUBIC_FEET,
+        0x02: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_FEET,
             device_class=SensorDeviceClass.VOLUME,
-            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
-        0x03: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfVolume.CUBIC_FEET,
+        0x03: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_FEET,
             device_class=SensorDeviceClass.VOLUME,
-            state_class=SensorStateClass.TOTAL_INCREASING,
             scale=100,
         ),
-        0x04: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfVolume.GALLONS,  # US gallons
+        0x04: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.GALLONS,  # US gallons
             device_class=SensorDeviceClass.VOLUME,
-            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
-        0x05: SmartEnergyMeteringClassMap(
-            unit_of_measurement=f"IMP {UnitOfVolume.GALLONS}",
+        0x05: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=f"IMP {UnitOfVolume.GALLONS}",
             device_class=None,  # needs to be None as imperial gallons are not supported
-            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
-        0x06: SmartEnergyMeteringClassMap(
-            unit_of_measurement="BTU", device_class=None, state_class=None
+        0x06: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement="BTU", device_class=None, state_class=None
         ),
-        0x07: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfVolume.LITERS,
+        0x07: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.LITERS,
             device_class=SensorDeviceClass.VOLUME,
-            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
-        0x08: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfPressure.KPA,
+        0x08: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
             device_class=SensorDeviceClass.PRESSURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),  # gauge
-        0x09: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfPressure.KPA,
+        0x09: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
             device_class=SensorDeviceClass.PRESSURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),  # absolute
-        0x0A: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfVolume.CUBIC_FEET,
+        0x0A: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_FEET,
             device_class=SensorDeviceClass.VOLUME,
-            state_class=SensorStateClass.TOTAL_INCREASING,
             scale=1000,
         ),
-        0x0B: SmartEnergyMeteringClassMap("unitless", None, None),
-        0x0C: SmartEnergyMeteringClassMap(
-            unit_of_measurement=UnitOfEnergy.MEGA_JOULE,
+        0x0B: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement="unitless", device_class=None, state_class=None
+        ),
+        0x0C: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfEnergy.MEGA_JOULE,
             device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     }
 

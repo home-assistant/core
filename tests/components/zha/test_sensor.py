@@ -848,6 +848,12 @@ async def test_unsupported_attributes_sensor(
             "10.25",
             "IMP gal",
         ),
+        (
+            7,
+            50124,
+            "5.01",
+            UnitOfVolume.LITERS,
+        ),
     ),
 )
 async def test_se_summation_uom(
