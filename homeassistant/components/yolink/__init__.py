@@ -36,6 +36,7 @@ PLATFORMS = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
