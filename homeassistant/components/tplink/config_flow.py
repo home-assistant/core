@@ -7,9 +7,11 @@ from typing import Any, Optional
 from kasa import (
     AuthenticationException,
     Credentials,
+    DeviceConfig,
     Discover,
     SmartDevice,
     SmartDeviceException,
+    TimeoutException,
 )
 import voluptuous as vol
 
@@ -31,7 +33,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_discover_devices, get_credentials, set_credentials
+from . import async_discover_devices, get_credentials, mac_alias, set_credentials
 from .const import CONF_DEVICE_CONFIG, CONNECT_TIMEOUT, DOMAIN
 
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
@@ -146,7 +148,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_discovery_confirm()
 
         placeholders = {
-            "name": self._discovered_device.alias,
+            "name": self._discovered_device.alias
+            or mac_alias(self._discovered_device.mac),
             "model": self._discovered_device.model,
             "host": self._discovered_device.host,
         }
@@ -265,7 +268,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices = await async_discover_devices(self.hass)
         devices_name = {
             formatted_mac: (
-                f"{device.alias} {device.model} ({device.host}) {formatted_mac}"
+                f"{device.alias or mac_alias(device.mac)} {device.model} ({device.host}) {formatted_mac}"
             )
             for formatted_mac, device in self._discovered_devices.items()
             if formatted_mac not in configured_devices
@@ -314,14 +317,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         raise_on_progress: bool,
     ) -> SmartDevice:
         """Try to connect."""
-        self._discovered_device = await Discover.discover_single(
-            host, credentials=credentials
-        )
-        if self._discovered_device.config.uses_http:
-            self._discovered_device.config.http_client = create_async_httpx_client(
-                self.hass, verify_ssl=False
+        try:
+            self._discovered_device = await Discover.discover_single(
+                host, credentials=credentials
             )
-        await self._discovered_device.update()
+            if self._discovered_device.config.uses_http:
+                self._discovered_device.config.http_client = create_async_httpx_client(
+                    self.hass, verify_ssl=False
+                )
+        except TimeoutException:
+            # Try connect() to legacy devices if discovery fails
+            self._discovered_device = await SmartDevice.connect(
+                config=DeviceConfig(host)
+            )
+        else:
+            await self._discovered_device.update()
         await self.async_set_unique_id(
             dr.format_mac(self._discovered_device.mac),
             raise_on_progress=raise_on_progress,

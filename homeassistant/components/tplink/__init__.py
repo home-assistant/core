@@ -69,7 +69,7 @@ def async_trigger_discovery(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={
-                CONF_ALIAS: device.alias,
+                CONF_ALIAS: device.alias or mac_alias(device.mac),
                 CONF_HOST: device.host,
                 CONF_MAC: formatted_mac,
                 CONF_DEVICE_CONFIG: device.config.to_dict(
@@ -151,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_config_dict = device.config.to_dict(
         credentials_hash=device.credentials_hash, exclude_credentials=True
     )
-    updates = {}
+    updates: dict[str, Any] = {}
     if device_config_dict != config_dict:
         updates[CONF_DEVICE_CONFIG] = device_config_dict
     if entry.data.get(CONF_ALIAS) != device.alias:
@@ -234,3 +234,8 @@ async def set_credentials(hass: HomeAssistant, username: str, password: str) -> 
         CONF_PASSWORD: password,
     }
     hass.data.setdefault(DOMAIN, {})[CONF_AUTHENTICATION] = auth
+
+
+def mac_alias(mac: str) -> str:
+    """Convert a MAC address to a short address."""
+    return mac.replace(":", "")[-4:].upper()

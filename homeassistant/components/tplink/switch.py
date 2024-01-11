@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any, Optional, cast
 
 from kasa import SmartDevice, SmartPlug
 
@@ -88,7 +88,7 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
-    _attr_name = None
+    _attr_name: Optional[str] = None
 
     def __init__(
         self,
