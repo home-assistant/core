@@ -1,6 +1,5 @@
 """Test the flow classes."""
 import asyncio
-from collections.abc import Coroutine
 import dataclasses
 import logging
 from unittest.mock import Mock, patch
@@ -355,6 +354,7 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
         VERSION = 5
         data = None
         start_task_two = False
+        progress_task: asyncio.Task[None] | None = None
 
         async def async_step_init(self, user_input=None):
             async def long_running_task_one() -> None:
@@ -365,21 +365,20 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
                 await task_two_evt.wait()
                 self.data = {"title": "Hello"}
 
-            progress_coro: Coroutine | None = None
             if not task_one_evt.is_set():
                 progress_action = "task_one"
                 if not self.progress_task:
-                    progress_coro = long_running_task_one()
+                    self.progress_task = hass.async_create_task(long_running_task_one())
             elif not task_two_evt.is_set():
                 progress_action = "task_two"
                 if self.start_task_two:
-                    progress_coro = long_running_task_two()
+                    self.progress_task = hass.async_create_task(long_running_task_two())
                     self.start_task_two = False
             if not task_one_evt.is_set() or not task_two_evt.is_set():
                 return self.async_show_progress(
                     step_id="init",
                     progress_action=progress_action,
-                    progress_coro=progress_coro,
+                    progress_task=self.progress_task,
                 )
 
             return self.async_show_progress_done(next_step_id="finish")
@@ -448,21 +447,20 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
         data = None
-        start_task_two = False
+        progress_task: asyncio.Task[None] | None = None
 
         async def async_step_init(self, user_input=None):
             async def long_running_task() -> None:
                 raise TypeError
 
-            progress_coro: Coroutine | None = None
             if not self.progress_task:
-                progress_coro = long_running_task()
+                self.progress_task = hass.async_create_task(long_running_task())
             if self.progress_task and self.progress_task.done():
                 if self.progress_task.exception():
                     return self.async_show_progress_done(next_step_id="error")
                 return self.async_show_progress_done(next_step_id="no_error")
             return self.async_show_progress(
-                step_id="init", progress_action="task", progress_coro=progress_coro
+                step_id="init", progress_action="task", progress_task=self.progress_task
             )
 
         async def async_step_error(self, user_input=None):

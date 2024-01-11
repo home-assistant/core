@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import suppress
 import copy
 from dataclasses import dataclass
@@ -129,7 +129,7 @@ class FlowResult(TypedDict, total=False):
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
-    progress_coro: Coroutine[Any, Any, Any] | None
+    progress_task: asyncio.Task[Any] | None
     reason: str
     required: bool
     result: Any
@@ -406,7 +406,7 @@ class FlowManager(abc.ABC):
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
         self._async_remove_flow_from_index(flow)
-        flow.async_cancel_progress()
+        flow.async_cancel_progress_task()
         try:
             flow.async_remove()
         except Exception as err:  # pylint: disable=broad-except
@@ -440,13 +440,24 @@ class FlowManager(abc.ABC):
                 error_if_core=False,
             )
 
-        if result["type"] == FlowResultType.SHOW_PROGRESS and (
-            progress_coro := result.pop("progress_coro", None)
+        if (
+            result["type"] == FlowResultType.SHOW_PROGRESS
+            and (progress_task := result.pop("progress_task", None))
+            and progress_task != flow.async_get_progress_task()
         ):
-            flow.async_start_progress(progress_coro, self.async_configure)
+            # The flow's progress task was changed, register a callback on it
+            async def call_configure() -> None:
+                with suppress(UnknownFlow):
+                    await self.async_configure(flow.flow_id)
+
+            def schedule_configure(_: asyncio.Future) -> None:
+                self.hass.async_create_task(call_configure())
+
+            progress_task.add_done_callback(schedule_configure)
+            flow.async_set_progress_task(progress_task)
 
         elif result["type"] != FlowResultType.SHOW_PROGRESS:
-            flow.async_cancel_progress()
+            flow.async_cancel_progress_task()
 
         if result["type"] in FLOW_NOT_COMPLETE_STEPS:
             self._raise_if_step_does_not_exist(flow, result["step_id"])
@@ -507,8 +518,7 @@ class FlowHandler:
     VERSION = 1
     MINOR_VERSION = 1
 
-    __progress_task: asyncio.Task | None = None
-    progress_task: asyncio.Task[Any] | None = None
+    __progress_task: asyncio.Task[Any] | None = None
 
     @property
     def source(self) -> str | None:
@@ -648,7 +658,7 @@ class FlowHandler:
         step_id: str,
         progress_action: str,
         description_placeholders: Mapping[str, str] | None = None,
-        progress_coro: Coroutine[Any, Any, None] | None = None,
+        progress_task: asyncio.Task[Any] | None = None,
     ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
         return FlowResult(
@@ -658,7 +668,7 @@ class FlowHandler:
             step_id=step_id,
             progress_action=progress_action,
             description_placeholders=description_placeholders,
-            progress_coro=progress_coro,
+            progress_task=progress_task,
         )
 
     @callback
@@ -702,38 +712,24 @@ class FlowHandler:
         """Set up preview."""
 
     @callback
-    def async_cancel_progress(self) -> None:
+    def async_cancel_progress_task(self) -> None:
         """Cancel in progress task."""
         if self.__progress_task and not self.__progress_task.done():
             self.__progress_task.cancel()
         self.__progress_task = None
-        self.progress_task = None
 
     @callback
-    def async_start_progress(
+    def async_get_progress_task(self) -> asyncio.Task[Any] | None:
+        """Get in progress task."""
+        return self.__progress_task
+
+    @callback
+    def async_set_progress_task(
         self,
-        progress_job: Coroutine[Any, Any, Any],
-        progress_done: Callable[..., Coroutine[Any, Any, Any]],
+        progress_task: asyncio.Task[Any],
     ) -> None:
-        """Start in progress task if not started.
-
-        We need to keep track of both the task passed to us from a flow, and the
-        outer task which awaits that task and then notifies frontend. If we only
-        keep track of the outer task, we introduce a race where frontend calls
-        configure before the outer task is done.
-        """
-
-        async def _send_event_when_done(fut: asyncio.Task[Any]) -> None:
-            with suppress(BaseException):
-                await fut
-            with suppress(UnknownFlow):
-                await progress_done(self.flow_id)
-
-        if not self.progress_task or self.progress_task.done():
-            self.progress_task = self.hass.async_create_task(progress_job)
-            self.__progress_task = self.hass.async_create_task(
-                _send_event_when_done(self.progress_task)
-            )
+        """Set in progress task."""
+        self.__progress_task = progress_task
 
 
 @callback
