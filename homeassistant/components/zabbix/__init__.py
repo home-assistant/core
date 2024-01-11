@@ -106,12 +106,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         return False
 
-    if url:  # if already set, derive trapper host:port from it
-        url_parts = urlsplit(url)
+    if url:  # if already set, derive trapper host:port from CONF_HOST
         zabbix_server = url_parts.hostname
         zabbix_port = int(url_parts.port) if url_parts.port else 10051
-    else:  # url not set. Derive trapper host from CONF_HOST
-        url_parts = urlsplit(host)
+    else:  # url not set. Derive trapper host from CONF_HOST and set url
         path = conf[CONF_PATH] if (url_parts.path in ("/", "")) else url_parts.path
         url = urljoin(f"{ url_parts.scheme }://{ url_parts.netloc }", path)
         zabbix_server = url_parts.hostname
