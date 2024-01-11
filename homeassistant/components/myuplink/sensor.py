@@ -1,6 +1,4 @@
 """Sensor for myUplink."""
-from collections.abc import Callable
-from dataclasses import dataclass
 
 from myuplink.models import DevicePoint
 
@@ -18,16 +16,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import MyUplinkDataCoordinator
 from .const import DOMAIN
-from .coordinator import CoordinatorData
 from .entity import MyUplinkEntity
-
-
-@dataclass(frozen=True, kw_only=True)
-class MyUplinkDeviceSensorEntityDescription(SensorEntityDescription):
-    """Describes MyUplink device sensor entity."""
-
-    value_fn: Callable[[CoordinatorData, str], StateType]
-
 
 DEVICE_POINT_DESCRIPTIONS = {
     "°C": SensorEntityDescription(
