@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
 
 from electrickiwi_api.model import AccountBalance, Hop
 
@@ -27,10 +26,8 @@ from .coordinator import (
     ElectricKiwiHOPDataCoordinator,
 )
 
-_LOGGER = logging.getLogger(DOMAIN)
-
-ATTR_EK_HOP_START = "hop_sensor_start"
-ATTR_EK_HOP_END = "hop_sensor_end"
+ATTR_EK_HOP_START = "hop_power_start"
+ATTR_EK_HOP_END = "hop_power_end"
 ATTR_TOTAL_RUNNING_BALANCE = "total_running_balance"
 ATTR_TOTAL_CURRENT_BALANCE = "total_account_balance"
 ATTR_NEXT_BILLING_DATE = "next_billing_date"
@@ -54,7 +51,7 @@ class ElectricKiwiAccountSensorEntityDescription(
 ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
     ElectricKiwiAccountSensorEntityDescription(
         key=ATTR_TOTAL_RUNNING_BALANCE,
-        translation_key="totalrunningbalance",
+        translation_key="total_running_balance",
         icon="mdi:currency-usd",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
@@ -63,7 +60,7 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
     ),
     ElectricKiwiAccountSensorEntityDescription(
         key=ATTR_TOTAL_CURRENT_BALANCE,
-        translation_key="totalcurrentbalance",
+        translation_key="total_current_balance",
         icon="mdi:currency-usd",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
@@ -72,7 +69,7 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
     ),
     ElectricKiwiAccountSensorEntityDescription(
         key=ATTR_NEXT_BILLING_DATE,
-        translation_key="nextbillingdate",
+        translation_key="next_billing_date",
         icon="mdi:calendar",
         device_class=SensorDeviceClass.DATE,
         value_func=lambda account_balance: datetime.strptime(
@@ -81,7 +78,7 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
     ),
     ElectricKiwiAccountSensorEntityDescription(
         key=ATTR_HOP_PERCENTAGE,
-        translation_key="hoppowersavings",
+        translation_key="hop_power_savings",
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -129,13 +126,13 @@ def _check_and_move_time(hop: Hop, time: str) -> datetime:
 HOP_SENSOR_TYPES: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
     ElectricKiwiHOPSensorEntityDescription(
         key=ATTR_EK_HOP_START,
-        translation_key="hopfreepowerstart",
+        translation_key="hop_free_power_start",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_func=lambda hop: _check_and_move_time(hop, hop.start.start_time),
     ),
     ElectricKiwiHOPSensorEntityDescription(
         key=ATTR_EK_HOP_END,
-        translation_key="hopfreepowerend",
+        translation_key="hop_free_power_end",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_func=lambda hop: _check_and_move_time(hop, hop.end.end_time),
     ),
@@ -146,13 +143,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Electric Kiwi Sensors Setup."""
-    account_coordinator: ElectricKiwiAccountDataCoordinator = hass.data[DOMAIN][entry.entry_id][
-        ACCOUNT_COORDINATOR
-    ]
+    account_coordinator: ElectricKiwiAccountDataCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ][ACCOUNT_COORDINATOR]
 
     entities: list[SensorEntity] = [
         ElectricKiwiAccountEntity(
-            coordinator,
+            account_coordinator,
             description,
         )
         for description in ACCOUNT_SENSOR_TYPES

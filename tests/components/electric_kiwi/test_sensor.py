@@ -8,12 +8,12 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.electric_kiwi.const import ATTRIBUTION
-from homeassistant.components.electric_kiwi.sensor import (
-    ACCOUNT_SENSOR_TYPES,
-    ElectricKiwiAccountSensorEntityDescription,
-    _check_and_move_time,
+from homeassistant.components.electric_kiwi.sensor import _check_and_move_time
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
 )
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
@@ -72,10 +72,25 @@ async def test_hop_sensors(
 @pytest.mark.parametrize(
     ("sensor", "sensor_state", "device_class", "state_class"),
     [
-        ("sensor.total_running_balance", "184.09"),
-        ("sensor.total_current_balance", "-102.22"),
-        ("sensor.next_billing_date", "2020-11-03T00:00:00"),
-        ("sensor.hour_of_power_savings", "3.5"),
+        (
+            "sensor.total_running_balance",
+            "184.09",
+            SensorDeviceClass.MONETARY,
+            SensorStateClass.TOTAL,
+        ),
+        (
+            "sensor.total_current_balance",
+            "-102.22",
+            SensorDeviceClass.MONETARY,
+            SensorStateClass.TOTAL,
+        ),
+        (
+            "sensor.next_billing_date",
+            "2020-11-03T00:00:00",
+            SensorDeviceClass.DATE,
+            None,
+        ),
+        ("sensor.hour_of_power_savings", "3.5", None, SensorStateClass.MEASUREMENT),
     ],
 )
 async def test_account_sensors(
@@ -87,6 +102,8 @@ async def test_account_sensors(
     component_setup: ComponentSetup,
     sensor: str,
     sensor_state: str,
+    device_class: str,
+    state_class: str,
 ) -> None:
     """Test Account sensors for the Electric Kiwi integration."""
 
@@ -96,16 +113,11 @@ async def test_account_sensors(
     entity = entity_registry.async_get(sensor)
     assert entity
 
-    api = ek_api(Mock())
-    account_data = await api.get_account_balance()
-    assert account_data
-
-
     state = hass.states.get(sensor)
     assert state
     assert state.state == sensor_state
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == .device_class
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
     assert state.attributes.get(ATTR_STATE_CLASS) == state_class
 
 
