@@ -1182,6 +1182,7 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
     with suppress(ImportError):
         import custom_components  # pylint: disable=import-outside-toplevel  # noqa: F401
     sys.path.remove(hass.config.config_dir)
+    sys.path_importer_cache.pop(hass.config.config_dir, None)
 
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:
