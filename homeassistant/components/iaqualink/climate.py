@@ -10,6 +10,7 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -72,6 +73,22 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
             await await_or_reraise(self.dev.turn_off())
         else:
             _LOGGER.warning("Unknown operation mode: %s", hvac_mode)
+
+    @property                                    
+    def hvac_action(self) -> HVACAction:         
+        """Return the current HVAC action."""    
+        if self.dev.is_on is False:    
+            return HVACAction.OFF
+        if self.current_temperature is not None \
+            and float(self.dev.current_temperature) < self.target_temperature:
+            return HVACAction.HEATING
+        # some IAqualinkThermostat entities may not have a current temperature
+        # (i.e., climate.spa), so assume they are in a heating state when hvac mode
+        # is set to heat
+        elif self.current_temperature is None and self.hvac_mode == HVACMode.HEAT:
+            return HVACAction.HEATING
+        else:
+            return HVACAction.IDLE
 
     @property
     def target_temperature(self) -> float:
