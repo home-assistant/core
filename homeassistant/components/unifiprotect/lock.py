@@ -71,6 +71,22 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
         self._attr_name = f"{self.device.display_name} Lock"
 
     @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (
+            self._attr_available,
+            self._attr_is_locked,
+            self._attr_is_locking,
+            self._attr_is_unlocking,
+            self._attr_is_jammed,
+        )
+
+    @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
         lock_status = self.device.lock_status

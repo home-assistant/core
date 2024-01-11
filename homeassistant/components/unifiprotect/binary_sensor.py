@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+from typing import Any
 
 from pyunifiprotect.data import (
     NVR,
@@ -573,6 +574,16 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
         else:
             self._attr_device_class = self.entity_description.device_class
 
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available, self._attr_is_on, self._attr_device_class)
+
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
     """A UniFi Protect NVR Disk Binary Sensor."""
@@ -617,6 +628,16 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
 
         self._attr_is_on = not self._disk.is_healthy
 
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available, self._attr_is_on)
+
 
 class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     """A UniFi Protect Device Binary Sensor for events."""
@@ -633,32 +654,15 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_updated_event(self, device: ProtectModelWithId) -> None:
-        """Call back for incoming data that only writes when state has changed.
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
 
-        Only the is_on, _attr_extra_state_attributes, and available are ever
-        updated for these entities, and since the websocket update for the
-        device will trigger an update for all entities connected to the device,
-        we want to avoid writing state unless something has actually changed.
+        Called before and after updating entity and state is only written if there
+        is a change.
         """
-        previous_is_on = self._attr_is_on
-        previous_available = self._attr_available
-        previous_extra_state_attributes = self._attr_extra_state_attributes
-        self._async_update_device_from_protect(device)
-        if (
-            self._attr_is_on != previous_is_on
-            or self._attr_extra_state_attributes != previous_extra_state_attributes
-            or self._attr_available != previous_available
-        ):
-            _LOGGER.debug(
-                "Updating state [%s (%s)] %s (%s, %s) -> %s (%s, %s)",
-                device.name,
-                device.mac,
-                previous_is_on,
-                previous_available,
-                previous_extra_state_attributes,
-                self._attr_is_on,
-                self._attr_available,
-                self._attr_extra_state_attributes,
-            )
-            self.async_write_ha_state()
+
+        return (
+            self._attr_available,
+            self._attr_is_on,
+            self._attr_extra_state_attributes,
+        )
