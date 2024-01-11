@@ -729,9 +729,6 @@ class FlowHandler:
             with suppress(UnknownFlow):
                 await progress_done(self.flow_id)
 
-        if not asyncio.iscoroutine(progress_job):
-            raise TypeError
-
         if not self.progress_task or self.progress_task.done():
             self.progress_task = self.hass.async_create_task(progress_job)
             self.__progress_task = self.hass.async_create_task(
