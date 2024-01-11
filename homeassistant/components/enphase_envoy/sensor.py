@@ -47,14 +47,14 @@ INVERTERS_KEY = "inverters"
 LAST_REPORTED_KEY = "last_reported"
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyInverterRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyInverter], datetime.datetime | float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyInverterSensorEntityDescription(
     SensorEntityDescription, EnvoyInverterRequiredKeysMixin
 ):
@@ -80,14 +80,14 @@ INVERTER_SENSORS = (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyProductionRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoySystemProduction], int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyProductionSensorEntityDescription(
     SensorEntityDescription, EnvoyProductionRequiredKeysMixin
 ):
@@ -137,14 +137,14 @@ PRODUCTION_SENSORS = (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyConsumptionRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoySystemConsumption], int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyConsumptionSensorEntityDescription(
     SensorEntityDescription, EnvoyConsumptionRequiredKeysMixin
 ):
@@ -194,28 +194,28 @@ CONSUMPTION_SENSORS = (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnchargeRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyEncharge], datetime.datetime | int | float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnchargeSensorEntityDescription(
     SensorEntityDescription, EnvoyEnchargeRequiredKeysMixin
 ):
     """Describes an Envoy Encharge sensor entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnchargePowerRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyEnchargePower], int | float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnchargePowerSensorEntityDescription(
     SensorEntityDescription, EnvoyEnchargePowerRequiredKeysMixin
 ):
@@ -259,14 +259,14 @@ ENCHARGE_POWER_SENSORS = (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnpowerRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyEnpower], datetime.datetime | int | float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnpowerSensorEntityDescription(
     SensorEntityDescription, EnvoyEnpowerRequiredKeysMixin
 ):
@@ -289,14 +289,14 @@ ENPOWER_SENSORS = (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnchargeAggregateRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyEnchargeAggregate], int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnchargeAggregateSensorEntityDescription(
     SensorEntityDescription, EnvoyEnchargeAggregateRequiredKeysMixin
 ):
@@ -479,10 +479,20 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity):
         )
 
     @property
-    def native_value(self) -> datetime.datetime | float:
+    def native_value(self) -> datetime.datetime | float | None:
         """Return the state of the sensor."""
         inverters = self.data.inverters
         assert inverters is not None
+        # Some envoy fw versions return an empty inverter array every 4 hours when
+        # no production is taking place. Prevent collection failure due to this
+        # as other data seems fine. Inverters will show unknown during this cycle.
+        if self._serial_number not in inverters:
+            _LOGGER.debug(
+                "Inverter %s not in returned inverters array (size: %s)",
+                self._serial_number,
+                len(inverters),
+            )
+            return None
         return self.entity_description.value_fn(inverters[self._serial_number])
 
 

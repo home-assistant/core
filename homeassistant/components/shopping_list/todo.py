@@ -1,6 +1,6 @@
 """A shopping list todo platform."""
 
-from typing import Any, cast
+from typing import cast
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -55,11 +55,10 @@ class ShoppingTodoListEntity(TodoListEntity):
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list."""
-        data: dict[str, Any] = {}
-        if item.summary:
-            data["name"] = item.summary
-        if item.status:
-            data["complete"] = item.status == TodoItemStatus.COMPLETED
+        data = {
+            "name": item.summary,
+            "complete": item.status == TodoItemStatus.COMPLETED,
+        }
         try:
             await self._data.async_update(item.uid, data)
         except NoMatchingShoppingListItem as err:

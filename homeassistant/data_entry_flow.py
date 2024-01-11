@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import abc
+import asyncio
 from collections.abc import Callable, Iterable, Mapping
+from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any, Required, TypedDict
@@ -14,6 +17,12 @@ import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .helpers.frame import report
 from .util import uuid as uuid_util
 
@@ -34,17 +43,36 @@ class FlowResultType(StrEnum):
 
 
 # RESULT_TYPE_* is deprecated, to be removed in 2022.9
-RESULT_TYPE_FORM = "form"
-RESULT_TYPE_CREATE_ENTRY = "create_entry"
-RESULT_TYPE_ABORT = "abort"
-RESULT_TYPE_EXTERNAL_STEP = "external"
-RESULT_TYPE_EXTERNAL_STEP_DONE = "external_done"
-RESULT_TYPE_SHOW_PROGRESS = "progress"
-RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
-RESULT_TYPE_MENU = "menu"
+_DEPRECATED_RESULT_TYPE_FORM = DeprecatedConstantEnum(FlowResultType.FORM, "2025.1")
+_DEPRECATED_RESULT_TYPE_CREATE_ENTRY = DeprecatedConstantEnum(
+    FlowResultType.CREATE_ENTRY, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_ABORT = DeprecatedConstantEnum(FlowResultType.ABORT, "2025.1")
+_DEPRECATED_RESULT_TYPE_EXTERNAL_STEP = DeprecatedConstantEnum(
+    FlowResultType.EXTERNAL_STEP, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_EXTERNAL_STEP_DONE = DeprecatedConstantEnum(
+    FlowResultType.EXTERNAL_STEP_DONE, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_SHOW_PROGRESS = DeprecatedConstantEnum(
+    FlowResultType.SHOW_PROGRESS, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_SHOW_PROGRESS_DONE = DeprecatedConstantEnum(
+    FlowResultType.SHOW_PROGRESS_DONE, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_MENU = DeprecatedConstantEnum(FlowResultType.MENU, "2025.1")
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
+
+FLOW_NOT_COMPLETE_STEPS = {
+    FlowResultType.FORM,
+    FlowResultType.EXTERNAL_STEP,
+    FlowResultType.EXTERNAL_STEP_DONE,
+    FlowResultType.SHOW_PROGRESS,
+    FlowResultType.SHOW_PROGRESS_DONE,
+    FlowResultType.MENU,
+}
 
 
 @dataclass(slots=True)
@@ -94,9 +122,11 @@ class FlowResult(TypedDict, total=False):
     handler: Required[str]
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
+    minor_version: int
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
+    progress_task: asyncio.Task[Any] | None
     reason: str
     required: bool
     result: Any
@@ -174,11 +204,13 @@ class FlowManager(abc.ABC):
         If match_context is passed, only return flows with a context that is a
         superset of match_context.
         """
-        return any(
-            flow
-            for flow in self._async_progress_by_handler(handler, match_context)
-            if flow.init_data == data
-        )
+        if not (flows := self._handler_progress_index.get(handler)):
+            return False
+        match_items = match_context.items()
+        for progress in flows:
+            if match_items <= progress.context.items() and progress.init_data == data:
+                return True
+        return False
 
     @callback
     def async_get(self, flow_id: str) -> FlowResult:
@@ -238,11 +270,11 @@ class FlowManager(abc.ABC):
         is a superset of match_context.
         """
         if not match_context:
-            return list(self._handler_progress_index.get(handler, []))
+            return list(self._handler_progress_index.get(handler, ()))
         match_context_items = match_context.items()
         return [
             progress
-            for progress in self._handler_progress_index.get(handler, set())
+            for progress in self._handler_progress_index.get(handler, ())
             if match_context_items <= progress.context.items()
         ]
 
@@ -373,6 +405,7 @@ class FlowManager(abc.ABC):
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
         self._async_remove_flow_from_index(flow)
+        flow.async_cancel_progress_task()
         try:
             flow.async_remove()
         except Exception as err:  # pylint: disable=broad-except
@@ -406,14 +439,26 @@ class FlowManager(abc.ABC):
                 error_if_core=False,
             )
 
-        if result["type"] in (
-            FlowResultType.FORM,
-            FlowResultType.EXTERNAL_STEP,
-            FlowResultType.EXTERNAL_STEP_DONE,
-            FlowResultType.SHOW_PROGRESS,
-            FlowResultType.SHOW_PROGRESS_DONE,
-            FlowResultType.MENU,
+        if (
+            result["type"] == FlowResultType.SHOW_PROGRESS
+            and (progress_task := result.pop("progress_task", None))
+            and progress_task != flow.async_get_progress_task()
         ):
+            # The flow's progress task was changed, register a callback on it
+            async def call_configure() -> None:
+                with suppress(UnknownFlow):
+                    await self.async_configure(flow.flow_id)
+
+            def schedule_configure(_: asyncio.Task) -> None:
+                self.hass.async_create_task(call_configure())
+
+            progress_task.add_done_callback(schedule_configure)
+            flow.async_set_progress_task(progress_task)
+
+        elif result["type"] != FlowResultType.SHOW_PROGRESS:
+            flow.async_cancel_progress_task()
+
+        if result["type"] in FLOW_NOT_COMPLETE_STEPS:
             self._raise_if_step_does_not_exist(flow, result["step_id"])
             flow.cur_step = result
             return result
@@ -470,6 +515,9 @@ class FlowHandler:
 
     # Set by developer
     VERSION = 1
+    MINOR_VERSION = 1
+
+    __progress_task: asyncio.Task[Any] | None = None
 
     @property
     def source(self) -> str | None:
@@ -549,6 +597,7 @@ class FlowHandler:
         """Finish flow."""
         flow_result = FlowResult(
             version=self.VERSION,
+            minor_version=self.MINOR_VERSION,
             type=FlowResultType.CREATE_ENTRY,
             flow_id=self.flow_id,
             handler=self.handler,
@@ -608,6 +657,7 @@ class FlowHandler:
         step_id: str,
         progress_action: str,
         description_placeholders: Mapping[str, str] | None = None,
+        progress_task: asyncio.Task[Any] | None = None,
     ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
         return FlowResult(
@@ -617,6 +667,7 @@ class FlowHandler:
             step_id=step_id,
             progress_action=progress_action,
             description_placeholders=description_placeholders,
+            progress_task=progress_task,
         )
 
     @callback
@@ -659,6 +710,26 @@ class FlowHandler:
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview."""
 
+    @callback
+    def async_cancel_progress_task(self) -> None:
+        """Cancel in progress task."""
+        if self.__progress_task and not self.__progress_task.done():
+            self.__progress_task.cancel()
+        self.__progress_task = None
+
+    @callback
+    def async_get_progress_task(self) -> asyncio.Task[Any] | None:
+        """Get in progress task."""
+        return self.__progress_task
+
+    @callback
+    def async_set_progress_task(
+        self,
+        progress_task: asyncio.Task[Any],
+    ) -> None:
+        """Set in progress task."""
+        self.__progress_task = progress_task
+
 
 @callback
 def _create_abort_data(
@@ -675,3 +746,11 @@ def _create_abort_data(
         reason=reason,
         description_placeholders=description_placeholders,
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

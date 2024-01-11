@@ -48,6 +48,7 @@ from .const import (
     CONF_RADIO_TYPE,
     CONF_USE_THREAD,
     CONF_ZIGPY,
+    DATA_ZHA,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
@@ -302,6 +303,10 @@ class ZHAGateway:
                     if dev.is_mains_powered
                 )
             )
+            _LOGGER.debug(
+                "completed fetching current state for mains powered devices - allowing polled requests"
+            )
+            self.hass.data[DATA_ZHA].allow_polling = True
 
         # background the fetching of state for mains powered devices
         self.config_entry.async_create_background_task(

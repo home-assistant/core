@@ -9,17 +9,20 @@ from asyncio import Future
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
-from habluetooth import BluetoothScanningMode
+from habluetooth import (
+    BaseHaScanner,
+    BluetoothScannerDevice,
+    BluetoothScanningMode,
+    HaBleakScannerWrapper,
+)
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
-from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import DATA_MANAGER
 from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher
 from .models import BluetoothCallback, BluetoothChange, ProcessAdvertisementCallback
-from .wrappers import HaBleakScannerWrapper
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -178,13 +181,10 @@ def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
 def async_register_scanner(
     hass: HomeAssistant,
     scanner: BaseHaScanner,
-    connectable: bool,
     connection_slots: int | None = None,
 ) -> CALLBACK_TYPE:
     """Register a BleakScanner."""
-    return _get_manager(hass).async_register_scanner(
-        scanner, connectable, connection_slots
-    )
+    return _get_manager(hass).async_register_scanner(scanner, connection_slots)
 
 
 @hass_callback

@@ -20,7 +20,7 @@ from homeassistant.components.todo import (
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -146,15 +146,19 @@ async def create_mock_platform(
     return config_entry
 
 
+@pytest.fixture(name="test_entity_items")
+def mock_test_entity_items() -> list[TodoItem]:
+    """Fixture that creates the items returned by the test entity."""
+    return [
+        TodoItem(summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+        TodoItem(summary="Item #2", uid="2", status=TodoItemStatus.COMPLETED),
+    ]
+
+
 @pytest.fixture(name="test_entity")
-def mock_test_entity() -> TodoListEntity:
+def mock_test_entity(test_entity_items: list[TodoItem]) -> TodoListEntity:
     """Fixture that creates a test TodoList entity with mock service calls."""
-    entity1 = MockTodoListEntity(
-        [
-            TodoItem(summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION),
-            TodoItem(summary="Item #2", uid="2", status=TodoItemStatus.COMPLETED),
-        ]
-    )
+    entity1 = MockTodoListEntity(test_entity_items)
     entity1.entity_id = "todo.entity1"
     entity1._attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
@@ -343,12 +347,12 @@ async def test_add_item_service_raises(
         ({"item": ""}, vol.Invalid, "length of value must be at least 1"),
         (
             {"item": "Submit forms", "description": "Submit tax forms"},
-            ValueError,
+            ServiceValidationError,
             "does not support setting field 'description'",
         ),
         (
             {"item": "Submit forms", "due_date": "2023-11-17"},
-            ValueError,
+            ServiceValidationError,
             "does not support setting field 'due_date'",
         ),
         (
@@ -356,7 +360,7 @@ async def test_add_item_service_raises(
                 "item": "Submit forms",
                 "due_datetime": f"2023-11-17T17:00:00{TEST_OFFSET}",
             },
-            ValueError,
+            ServiceValidationError,
             "does not support setting field 'due_datetime'",
         ),
     ],
@@ -504,7 +508,7 @@ async def test_update_todo_item_service_by_id_status_only(
     item = args.kwargs.get("item")
     assert item
     assert item.uid == "1"
-    assert item.summary is None
+    assert item.summary == "Item #1"
     assert item.status == TodoItemStatus.COMPLETED
 
 
@@ -530,7 +534,7 @@ async def test_update_todo_item_service_by_id_rename(
     assert item
     assert item.uid == "1"
     assert item.summary == "Updated item"
-    assert item.status is None
+    assert item.status == TodoItemStatus.NEEDS_ACTION
 
 
 async def test_update_todo_item_service_raises(
@@ -607,7 +611,7 @@ async def test_update_todo_item_service_by_summary_only_status(
     assert item
     assert item.uid == "1"
     assert item.summary == "Something else"
-    assert item.status is None
+    assert item.status == TodoItemStatus.NEEDS_ACTION
 
 
 async def test_update_todo_item_service_by_summary_not_found(
@@ -618,7 +622,7 @@ async def test_update_todo_item_service_by_summary_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(ValueError, match="Unable to find"):
+    with pytest.raises(ServiceValidationError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "update_item",
@@ -677,7 +681,7 @@ async def test_update_todo_item_field_unsupported(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(ValueError, match="does not support"):
+    with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
             "update_item",
@@ -693,20 +697,32 @@ async def test_update_todo_item_field_unsupported(
         (
             TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
             {"due_date": "2023-11-13"},
-            TodoItem(uid="1", due=datetime.date(2023, 11, 13)),
+            TodoItem(
+                uid="1",
+                summary="Item #1",
+                status=TodoItemStatus.NEEDS_ACTION,
+                due=datetime.date(2023, 11, 13),
+            ),
         ),
         (
             TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
             {"due_datetime": f"2023-11-13T17:00:00{TEST_OFFSET}"},
             TodoItem(
                 uid="1",
+                summary="Item #1",
+                status=TodoItemStatus.NEEDS_ACTION,
                 due=datetime.datetime(2023, 11, 13, 17, 0, 0, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
             TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
             {"description": "Submit revised draft"},
-            TodoItem(uid="1", description="Submit revised draft"),
+            TodoItem(
+                uid="1",
+                summary="Item #1",
+                status=TodoItemStatus.NEEDS_ACTION,
+                description="Submit revised draft",
+            ),
         ),
     ),
 )
@@ -720,6 +736,96 @@ async def test_update_todo_item_extended_fields(
     """Test updating an item in a To-do list."""
 
     test_entity._attr_supported_features |= supported_entity_feature
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        "update_item",
+        {"item": "1", **update_data},
+        target={"entity_id": "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_update_todo_item.call_args
+    assert args
+    item = args.kwargs.get("item")
+    assert item == expected_update
+
+
+@pytest.mark.parametrize(
+    ("test_entity_items", "update_data", "expected_update"),
+    (
+        (
+            [TodoItem(uid="1", summary="Summary", description="description")],
+            {"description": "Submit revised draft"},
+            TodoItem(uid="1", summary="Summary", description="Submit revised draft"),
+        ),
+        (
+            [TodoItem(uid="1", summary="Summary", description="description")],
+            {"description": ""},
+            TodoItem(uid="1", summary="Summary", description=""),
+        ),
+        (
+            [TodoItem(uid="1", summary="Summary", description="description")],
+            {"description": None},
+            TodoItem(uid="1", summary="Summary"),
+        ),
+        (
+            [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
+            {"due_date": datetime.date(2024, 1, 2)},
+            TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 2)),
+        ),
+        (
+            [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
+            {"due_date": None},
+            TodoItem(uid="1", summary="Summary"),
+        ),
+        (
+            [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
+            {"due_datetime": datetime.datetime(2024, 1, 1, 10, 0, 0)},
+            TodoItem(
+                uid="1",
+                summary="Summary",
+                due=datetime.datetime(
+                    2024, 1, 1, 10, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="America/Regina")
+                ),
+            ),
+        ),
+        (
+            [
+                TodoItem(
+                    uid="1",
+                    summary="Summary",
+                    due=datetime.datetime(2024, 1, 1, 10, 0, 0),
+                )
+            ],
+            {"due_datetime": None},
+            TodoItem(uid="1", summary="Summary"),
+        ),
+    ),
+    ids=[
+        "overwrite_description",
+        "overwrite_empty_description",
+        "clear_description",
+        "overwrite_due_date",
+        "clear_due_date",
+        "overwrite_due_date_with_time",
+        "clear_due_date_time",
+    ],
+)
+async def test_update_todo_item_extended_fields_overwrite_existing_values(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    update_data: dict[str, Any],
+    expected_update: TodoItem,
+) -> None:
+    """Test updating an item in a To-do list."""
+
+    test_entity._attr_supported_features |= (
+        TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+        | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+        | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+    )
     await create_mock_platform(hass, [test_entity])
 
     await hass.services.async_call(
@@ -825,7 +931,7 @@ async def test_remove_todo_item_service_by_summary_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(ValueError, match="Unable to find"):
+    with pytest.raises(ServiceValidationError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "remove_item",
@@ -1038,6 +1144,7 @@ async def test_add_item_intent(
     assert len(entity1.items) == 1
     assert len(entity2.items) == 0
     assert entity1.items[0].summary == "beer"
+    assert entity1.items[0].status == TodoItemStatus.NEEDS_ACTION
     entity1.items.clear()
 
     # Add to second list
@@ -1052,6 +1159,7 @@ async def test_add_item_intent(
     assert len(entity1.items) == 0
     assert len(entity2.items) == 1
     assert entity2.items[0].summary == "cheese"
+    assert entity2.items[0].status == TodoItemStatus.NEEDS_ACTION
 
     # List name is case insensitive
     response = await intent.async_handle(
@@ -1065,6 +1173,7 @@ async def test_add_item_intent(
     assert len(entity1.items) == 0
     assert len(entity2.items) == 2
     assert entity2.items[1].summary == "wine"
+    assert entity2.items[1].status == TodoItemStatus.NEEDS_ACTION
 
     # Missing list
     with pytest.raises(intent.IntentHandleError):

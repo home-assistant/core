@@ -913,6 +913,7 @@ async def test_bootstrap_dependencies(
         """Mock the MQTT config flow."""
 
         VERSION = 1
+        MINOR_VERSION = 1
 
     entry = MockConfigEntry(domain="mqtt", data={"broker": "test-broker"})
     entry.add_to_hass(hass)

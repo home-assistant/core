@@ -48,7 +48,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuisbaasjeSensorEntityDescription(SensorEntityDescription):
     """Class describing Airly sensor entities."""
 

@@ -38,7 +38,7 @@ def tariff_transform(value):
     return "high"
 
 
-@dataclass
+@dataclass(frozen=True)
 class DSMRReaderSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for DSMR Reader."""
 

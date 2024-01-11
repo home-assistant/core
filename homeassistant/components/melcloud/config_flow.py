@@ -63,7 +63,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     entry: config_entries.ConfigEntry | None = None
 
-    async def _create_entry(self, username: str, token: str):
+    async def _create_entry(self, username: str, token: str) -> FlowResult:
         """Register new entry."""
         await self.async_set_unique_id(username)
         try:
@@ -81,7 +81,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         *,
         password: str | None = None,
         token: str | None = None,
-    ):
+    ) -> FlowResult:
         """Create client."""
         try:
             async with asyncio.timeout(10):
@@ -113,7 +113,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._create_entry(username, acquired_token)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """User initiated config flow."""
         if user_input is None:
             return self.async_show_form(
@@ -125,7 +127,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         return await self._create_client(username, password=user_input[CONF_PASSWORD])
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
         result = await self._create_client(
             user_input[CONF_USERNAME], token=user_input[CONF_TOKEN]
