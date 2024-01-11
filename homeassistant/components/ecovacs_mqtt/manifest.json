@@ -1,0 +1,11 @@
+{
+  "domain": "ecovacs_mqtt",
+  "name": "Ecovacs MQTT",
+  "codeowners": ["@edenhaus"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ecovacs_mqtt",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["deebot_client"],
+  "requirements": ["deebot-client==4.1.0", "numpy==1.26.0"]
+}

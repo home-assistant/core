@@ -680,6 +680,9 @@ debugpy==1.8.0
 # homeassistant.components.decora
 # decora==0.6
 
+# homeassistant.components.ecovacs_mqtt
+deebot-client==4.1.0
+
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
@@ -1372,6 +1375,7 @@ nuheat==1.0.1
 numato-gpio==0.10.0
 
 # homeassistant.components.compensation
+# homeassistant.components.ecovacs_mqtt
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.stream

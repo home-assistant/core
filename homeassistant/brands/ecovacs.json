@@ -1,0 +1,5 @@
+{
+  "domain": "ecovacs",
+  "name": "Ecovacs",
+  "integrations": ["ecovacs", "ecovacs_mqtt"]
+}

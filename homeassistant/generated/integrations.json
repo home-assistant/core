@@ -1380,9 +1380,20 @@
     },
     "ecovacs": {
       "name": "Ecovacs",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
+      "integrations": {
+        "ecovacs": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Ecovacs"
+        },
+        "ecovacs_mqtt": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Ecovacs MQTT"
+        }
+      }
     },
     "ecowitt": {
       "name": "Ecowitt",

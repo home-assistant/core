@@ -147,6 +147,7 @@ homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
+homeassistant.components.ecovacs_mqtt.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*

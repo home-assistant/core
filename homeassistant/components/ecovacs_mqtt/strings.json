@@ -1,0 +1,89 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Already configured",
+      "no_supported_devices_found": "No supported devices found",
+      "reauth_successful": "Re-authentication was successful"
+    },
+    "error": {
+      "cannot_connect": "Can't connect to the ecovacs API. Please check the logs",
+      "invalid_auth": "Invalid username or password",
+      "select_robots": "Please select at least 1 robot",
+      "unknown": "Unknown error. Please check the logs"
+    },
+    "step": {
+      "options": {
+        "data": {
+          "devices": "Devices"
+        },
+        "data_description": {
+          "devices": "Please select all devices, which you want to use."
+        }
+      },
+      "auth": {
+        "data": {
+          "country": "Country",
+          "password": "Password",
+          "username": "E-mail or ShortID"
+        }
+      },
+      "user": {
+        "data": {
+          "mode": "Mode"
+        },
+        "data_description": {
+          "mode": "Please select \"Self hosted\" ONLY if you already have a working instance running. Otherwise, select \"Cloud\" please."
+        }
+      }
+    }
+  },
+  "entity": {
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "max": "Max",
+              "max_plus": "Max+",
+              "normal": "Normal",
+              "quiet": "Quiet"
+            }
+          },
+          "rooms": {
+            "name": "Rooms"
+          }
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "cannot_connect": "Can't connect to the ecovacs API. Please check the logs",
+      "invalid_auth": "Authentication failed. Please reauthenticate first",
+      "no_supported_devices_found": "No supported devices found",
+      "unknown_get_devices": "Unknown error on getting all devices. Please check the logs"
+    },
+    "error": {
+      "select_robots": "Please select at least 1 robot",
+      "unknown": "Unknown error. Please check the logs"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "devices": "Devices"
+        },
+        "data_description": {
+          "devices": "Please select all devices, which you want to use in HA."
+        }
+      }
+    }
+  },
+  "selector": {
+    "mode": {
+      "options": {
+        "cloud": "Cloud (recommended)",
+        "self_hosted": "Self hosted"
+      }
+    }
+  }
+}

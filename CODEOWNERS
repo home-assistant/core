@@ -322,6 +322,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/econet/ @w1ll1am23
 /tests/components/econet/ @w1ll1am23
 /homeassistant/components/ecovacs/ @OverloadUT @mib1185
+/homeassistant/components/ecovacs_mqtt/ @edenhaus
 /homeassistant/components/ecowitt/ @pvizeli
 /tests/components/ecowitt/ @pvizeli
 /homeassistant/components/efergy/ @tkdrob
