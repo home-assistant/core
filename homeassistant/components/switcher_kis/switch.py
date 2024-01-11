@@ -105,7 +105,9 @@ class SwitcherBaseSwitchEntity(
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
-        _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
+        _LOGGER.debug(
+            "Calling api for %s, api: '%s', args: %s", self.coordinator.name, api, args
+        )
         response: SwitcherBaseResponse = None
         error = None
 
