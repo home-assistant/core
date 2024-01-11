@@ -450,7 +450,7 @@ class FlowManager(abc.ABC):
                 with suppress(UnknownFlow):
                     await self.async_configure(flow.flow_id)
 
-            def schedule_configure(_: asyncio.Future) -> None:
+            def schedule_configure(_: asyncio.Task) -> None:
                 self.hass.async_create_task(call_configure())
 
             progress_task.add_done_callback(schedule_configure)
