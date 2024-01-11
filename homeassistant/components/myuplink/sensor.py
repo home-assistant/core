@@ -20,7 +20,7 @@ from .entity import MyUplinkEntity
 
 DEVICE_POINT_DESCRIPTIONS = {
     "°C": SensorEntityDescription(
-        key="data_point",
+        key="celsius",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
