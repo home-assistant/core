@@ -41,7 +41,6 @@ DEVICE_CONFIG_DESCRIPTIONS: tuple[YoLinkNumberTypeConfigEntityDescription, ...] 
     YoLinkNumberTypeConfigEntityDescription(
         key=OPTIONS_VALUME,
         translation_key="config_volume",
-        device_class=None,
         native_min_value=1,
         native_max_value=16,
         mode=NumberMode.SLIDER,
@@ -94,9 +93,7 @@ class YoLinkNumberTypeConfigEntity(YoLinkEntity, NumberEntity):
         """Init YoLink device number type config entities."""
         super().__init__(config_entry, coordinator)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.device.device_id} {self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{coordinator.device.device_id} {description.key}"
 
     @callback
     def update_entity_state(self, state: dict) -> None:
