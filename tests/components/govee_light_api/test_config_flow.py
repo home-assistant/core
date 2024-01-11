@@ -13,7 +13,7 @@ from .conftest import DEFAULT_CAPABILITEIS
 async def test_creating_entry_has_no_devices(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_govee_api: AsyncMock
 ) -> None:
-    """Test setting up Gree creates the climate components."""
+    """Test setting up Govee with no devices."""
 
     mock_govee_api.devices = []
 
@@ -42,7 +42,7 @@ async def test_creating_entry_has_with_devices(
     mock_setup_entry: AsyncMock,
     mock_govee_api: AsyncMock,
 ) -> None:
-    """Test setting up Gree creates the climate components."""
+    """Test setting up Govee with devices."""
 
     mock_govee_api.devices = [
         GoveeDevice(

@@ -1,11 +1,13 @@
 """Test GoveeLocalApi light."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from govee_local_api import GoveeDevice
 
 from homeassistant.components.govee_light_api.const import DOMAIN
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import DEFAULT_CAPABILITEIS
@@ -115,6 +117,28 @@ async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
         assert await hass.config_entries.async_remove(entry.entry_id)
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
+
+
+async def test_light_setup_retry(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test adding an unknown device."""
+
+    mock_govee_api.devices = []
+
+    with patch(
+        "homeassistant.components.govee_light_api.coordinator.GoveeController",
+        return_value=mock_govee_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
+
+        with patch(
+            "homeassistant.components.govee_light_api.asyncio.timeout",
+            side_effect=asyncio.TimeoutError,
+        ):
+            await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:
