@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock
+from homeassistant.setup import async_setup_component
 
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
@@ -161,6 +162,7 @@ async def init_entry(
     ufp: MockUFPFixture,
     devices: Sequence[ProtectAdoptableDeviceModel],
     regenerate_ids: bool = True,
+    debug: bool = False
 ) -> None:
     """Initialize Protect entry with given devices."""
 
@@ -168,6 +170,14 @@ async def init_entry(
     for device in devices:
         add_device(ufp.api.bootstrap, device, regenerate_ids)
 
+    if debug:
+        assert await async_setup_component(hass, "logger", {"logger": {}})
+        await hass.services.async_call(
+            "logger",
+            "set_level",
+            {"homeassistant.components.unifiprotect": "DEBUG"},
+            blocking=True,
+        )
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 

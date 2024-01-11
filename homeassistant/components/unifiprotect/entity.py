@@ -273,17 +273,19 @@ class ProtectDeviceEntity(Entity):
         self._async_update_device_from_protect(device)
         current_attrs = self._async_get_state_attrs()
         if previous_attrs != current_attrs:
-            device_name = device.name
-            if hasattr(self, "entity_description") and self.entity_description.name:
-                device_name += f" {self.entity_description.name}"
 
-            _LOGGER.debug(
-                "Updating state [%s (%s)] %s -> %s",
-                device_name,
-                device.mac,
-                previous_attrs,
-                current_attrs,
-            )
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                device_name = device.name
+                if hasattr(self, "entity_description") and self.entity_description.name:
+                    device_name += f" {self.entity_description.name}"
+
+                _LOGGER.debug(
+                    "Updating state [%s (%s)] %s -> %s",
+                    device_name,
+                    device.mac,
+                    previous_attrs,
+                    current_attrs,
+                )
             self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
