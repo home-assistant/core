@@ -7,7 +7,7 @@
   "iot_class": "local_polling",
   "loggers": ["roborock"],
   "requirements": [
-    "python-roborock==0.36.2",
+    "python-roborock==0.39.0",
     "vacuum-map-parser-roborock==0.1.1"
   ]
 }

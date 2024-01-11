@@ -27,7 +27,7 @@ from .coordinator import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class GardenaBluetoothSensorEntityDescription(SensorEntityDescription):
     """Description of entity."""
 

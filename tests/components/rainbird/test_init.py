@@ -239,6 +239,14 @@ async def test_fix_unique_id_duplicate(
             f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
             f"{MAC_ADDRESS_UNIQUE_ID}-1",
         ),
+        (
+            SERIAL_NUMBER,
+            SERIAL_NUMBER,
+            SERIAL_NUMBER,
+            SERIAL_NUMBER,
+            MAC_ADDRESS_UNIQUE_ID,
+            MAC_ADDRESS_UNIQUE_ID,
+        ),
         ("0", 0, "0", "0", MAC_ADDRESS_UNIQUE_ID, MAC_ADDRESS_UNIQUE_ID),
         (
             "0",
@@ -268,6 +276,7 @@ async def test_fix_unique_id_duplicate(
     ids=(
         "serial-number",
         "serial-number-with-suffix",
+        "serial-number-int",
         "zero-serial",
         "zero-serial-suffix",
         "new-format",

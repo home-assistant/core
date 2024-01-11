@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import time
-from unittest.mock import patch
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
@@ -16,6 +15,7 @@ from tests.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
     inject_bluetooth_service_info_bleak,
+    patch_bluetooth_time,
 )
 
 MAC_RPA_VALID_1 = "40:01:02:0a:c4:a6"
@@ -70,9 +70,8 @@ async def async_inject_broadcast(
 
 async def async_move_time_forwards(hass: HomeAssistant, offset: float):
     """Mock time advancing from now to now+offset."""
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=time.monotonic() + offset,
+    with patch_bluetooth_time(
+        time.monotonic() + offset,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=offset))
         await hass.async_block_till_done()

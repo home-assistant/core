@@ -6,6 +6,9 @@
         "description": "If you leave the host empty, discovery will be used to find devices.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Yeelight Wi-Fi bulb."
         }
       },
       "pick_device": {

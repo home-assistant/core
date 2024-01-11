@@ -89,7 +89,7 @@ class OurGroceriesTodoListEntity(
         if item.summary:
             api_items = self.coordinator.data[self._list_id]["list"]["items"]
             category = next(
-                api_item["categoryId"]
+                api_item.get("categoryId")
                 for api_item in api_items
                 if api_item["id"] == item.uid
             )

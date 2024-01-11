@@ -18,14 +18,13 @@ from homeassistant.components.mqtt import (
     ReceivePayloadType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_BAUD_RATE,
-    CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,

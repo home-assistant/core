@@ -1,80 +1,39 @@
 """Support for Streamlabs Water Monitor Away Mode."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 
-from . import DOMAIN as STREAMLABSWATER_DOMAIN
-
-DEPENDS = ["streamlabswater"]
-
-MIN_TIME_BETWEEN_LOCATION_UPDATES = timedelta(seconds=60)
-
-ATTR_LOCATION_ID = "location_id"
-NAME_AWAY_MODE = "Water Away Mode"
+from . import StreamlabsCoordinator
+from .const import DOMAIN
+from .entity import StreamlabsWaterEntity
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_devices: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the StreamLabsWater mode sensor."""
-    client = hass.data[STREAMLABSWATER_DOMAIN]["client"]
-    location_id = hass.data[STREAMLABSWATER_DOMAIN]["location_id"]
-    location_name = hass.data[STREAMLABSWATER_DOMAIN]["location_name"]
+    """Set up Streamlabs water binary sensor from a config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    streamlabs_location_data = StreamlabsLocationData(location_id, client)
-    streamlabs_location_data.update()
-
-    add_devices([StreamlabsAwayMode(location_name, streamlabs_location_data)])
+    async_add_entities(
+        StreamlabsAwayMode(coordinator, location_id) for location_id in coordinator.data
+    )
 
 
-class StreamlabsLocationData:
-    """Track and query location data."""
-
-    def __init__(self, location_id, client):
-        """Initialize the location data."""
-        self._location_id = location_id
-        self._client = client
-        self._is_away = None
-
-    @Throttle(MIN_TIME_BETWEEN_LOCATION_UPDATES)
-    def update(self):
-        """Query and store location data."""
-        location = self._client.get_location(self._location_id)
-        self._is_away = location["homeAway"] == "away"
-
-    def is_away(self):
-        """Return whether away more is enabled."""
-        return self._is_away
-
-
-class StreamlabsAwayMode(BinarySensorEntity):
+class StreamlabsAwayMode(StreamlabsWaterEntity, BinarySensorEntity):
     """Monitor the away mode state."""
 
-    def __init__(self, location_name, streamlabs_location_data):
+    _attr_translation_key = "away_mode"
+
+    def __init__(self, coordinator: StreamlabsCoordinator, location_id: str) -> None:
         """Initialize the away mode device."""
-        self._location_name = location_name
-        self._streamlabs_location_data = streamlabs_location_data
-        self._is_away = None
+        super().__init__(coordinator, location_id, "away_mode")
 
     @property
-    def name(self):
-        """Return the name for away mode."""
-        return f"{self._location_name} {NAME_AWAY_MODE}"
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if away mode is on."""
-        return self._streamlabs_location_data.is_away()
-
-    def update(self) -> None:
-        """Retrieve the latest location data and away mode state."""
-        self._streamlabs_location_data.update()
+        return self.location_data.is_away

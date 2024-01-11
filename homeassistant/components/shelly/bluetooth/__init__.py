@@ -14,7 +14,6 @@ from aioshelly.ble.const import (
 
 from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
-    async_get_advertisement_callback,
     async_register_scanner,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
@@ -36,18 +35,15 @@ async def async_connect_scanner(
     device = coordinator.device
     entry = coordinator.entry
     source = format_mac(coordinator.mac).upper()
-    new_info_callback = async_get_advertisement_callback(hass)
     connector = HaBluetoothConnector(
         # no active connections to shelly yet
         client=None,  # type: ignore[arg-type]
         source=source,
         can_connect=lambda: False,
     )
-    scanner = ShellyBLEScanner(
-        hass, source, entry.title, new_info_callback, connector, False
-    )
+    scanner = ShellyBLEScanner(source, entry.title, connector, False)
     unload_callbacks = [
-        async_register_scanner(hass, scanner, False),
+        async_register_scanner(hass, scanner),
         scanner.async_setup(),
         coordinator.async_subscribe_events(scanner.async_on_event),
     ]

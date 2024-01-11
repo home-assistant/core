@@ -11,10 +11,10 @@ from voluptuous import Required, Schema
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_ID, CONF_NAME, DEV_ID, DEV_MODEL, DEV_NAME, DOMAIN
+from .const import DEV_ID, DEV_MODEL, DEV_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

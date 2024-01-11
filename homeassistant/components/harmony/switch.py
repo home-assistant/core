@@ -23,16 +23,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up harmony activity switches."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_switches",
-        breaks_in_ha_version="2023.8.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_switches",
-    )
-    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
+    data: HarmonyData = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     activities = data.activities
 
     switches = []
@@ -58,17 +49,35 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
         self._attr_device_info = self._data.device_info(DOMAIN)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if the current activity is the one for this switch."""
         _, activity_name = self._data.current_activity
         return activity_name == self._activity_name
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start this activity."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_switches",
+            breaks_in_ha_version="2024.6.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_switches",
+        )
         await self._data.async_start_activity(self._activity_name)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop this activity."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_switches",
+            breaks_in_ha_version="2024.6.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_switches",
+        )
         await self._data.async_power_off()
 
     async def async_added_to_hass(self) -> None:
@@ -91,7 +100,7 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
                 self.hass,
                 DOMAIN,
                 f"deprecated_switches_{self.entity_id}_{item}",
-                breaks_in_ha_version="2023.8.0",
+                breaks_in_ha_version="2024.6.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_switches_entity",
@@ -102,5 +111,5 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
             )
 
     @callback
-    def _async_activity_update(self, activity_info: tuple):
+    def _async_activity_update(self, activity_info: tuple) -> None:
         self.async_write_ha_state()

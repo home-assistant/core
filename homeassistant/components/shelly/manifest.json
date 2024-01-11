@@ -9,7 +9,7 @@
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
   "quality_scale": "platinum",
-  "requirements": ["aioshelly==6.1.0"],
+  "requirements": ["aioshelly==7.1.0"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

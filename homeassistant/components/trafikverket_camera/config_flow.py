@@ -14,12 +14,12 @@ from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_ID
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_LOCATION
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import TextSelector
 
-from .const import CONF_LOCATION, DOMAIN
+from .const import DOMAIN
 
 
 class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -90,7 +90,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_API_KEY): cv.string,
+                    vol.Required(CONF_API_KEY): TextSelector(),
                 }
             ),
             errors=errors,
@@ -123,8 +123,8 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_API_KEY): cv.string,
-                    vol.Required(CONF_LOCATION): cv.string,
+                    vol.Required(CONF_API_KEY): TextSelector(),
+                    vol.Required(CONF_LOCATION): TextSelector(),
                 }
             ),
             errors=errors,

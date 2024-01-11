@@ -27,9 +27,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    EntityCategory,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_get_hass, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -139,7 +138,6 @@ CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
     "available",
-    "context_recent_time",
     "device_class",
     "device_info",
     "entity_category",
@@ -206,62 +204,6 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
         "Device must have at least one identifying value in "
         "'identifiers' and/or 'connections'"
     )
-
-
-def validate_sensor_entity_category(
-    domain: str, discovery: bool
-) -> Callable[[ConfigType], ConfigType]:
-    """Check the sensor's entity category is not set to `config` which is invalid for sensors."""
-
-    # A guard was added to the core sensor platform with HA core 2023.11.0
-    # See: https://github.com/home-assistant/core/pull/101471
-    # A developers blog from october 2021 explains the correct uses of the entity category
-    # See:
-    # https://developers.home-assistant.io/blog/2021/10/26/config-entity/?_highlight=entity_category#entity-categories
-    #
-    # To limitate the impact of the change we use a grace period
-    # of 3 months for user to update there configs.
-
-    def _validate(config: ConfigType) -> ConfigType:
-        if (
-            CONF_ENTITY_CATEGORY in config
-            and config[CONF_ENTITY_CATEGORY] == EntityCategory.CONFIG
-        ):
-            config_str: str
-            if not discovery:
-                config_str = yaml_dump(config)
-            config.pop(CONF_ENTITY_CATEGORY)
-            _LOGGER.warning(
-                "Entity category `config` is invalid for sensors, ignoring. "
-                "This stops working from HA Core 2024.2.0"
-            )
-            # We only open an issue if the user can fix it
-            if discovery:
-                return config
-            config_file = getattr(config, "__config_file__", "?")
-            line = getattr(config, "__line__", "?")
-            hass = async_get_hass()
-            async_create_issue(
-                hass,
-                domain=DOMAIN,
-                issue_id="invalid_entity_category",
-                breaks_in_ha_version="2024.2.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="invalid_entity_category",
-                learn_more_url=(
-                    f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
-                ),
-                translation_placeholders={
-                    "domain": domain,
-                    "config": config_str,
-                    "config_file": config_file,
-                    "line": line,
-                },
-            )
-        return config
-
-    return _validate
 
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
@@ -1136,7 +1078,7 @@ class MqttDiscoveryUpdate(Entity):
 
 
 def device_info_from_specifications(
-    specifications: dict[str, Any] | None
+    specifications: dict[str, Any] | None,
 ) -> DeviceInfo | None:
     """Return a device description for device registry."""
     if not specifications:
@@ -1216,7 +1158,6 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
-    _issue_key: str | None
 
     def __init__(
         self,
@@ -1254,7 +1195,6 @@ class MqttEntity(
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
-        self.collect_issues()
         await super().async_added_to_hass()
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
@@ -1327,7 +1267,6 @@ class MqttEntity(
 
     def _set_entity_name(self, config: ConfigType) -> None:
         """Help setting the entity name if needed."""
-        self._issue_key = None
         entity_name: str | None | UndefinedType = config.get(CONF_NAME, UNDEFINED)
         # Only set _attr_name if it is needed
         if entity_name is not UNDEFINED:
@@ -1340,50 +1279,13 @@ class MqttEntity(
             # don't set the name attribute and derive
             # the name from the device_class
             delattr(self, "_attr_name")
-        if CONF_DEVICE in config:
-            device_name: str
-            if CONF_NAME not in config[CONF_DEVICE]:
-                _LOGGER.info(
-                    "MQTT device information always needs to include a name, got %s, "
-                    "if device information is shared between multiple entities, the device "
-                    "name must be included in each entity's device configuration",
-                    config,
-                )
-            elif (device_name := config[CONF_DEVICE][CONF_NAME]) == entity_name:
-                self._attr_name = None
-                if not self._discovery:
-                    self._issue_key = "entity_name_is_device_name_yaml"
-                _LOGGER.warning(
-                    "MQTT device name is equal to entity name in your config %s, "
-                    "this is not expected. Please correct your configuration. "
-                    "The entity name will be set to `null`",
-                    config,
-                )
-            elif isinstance(entity_name, str) and entity_name.startswith(device_name):
-                self._attr_name = (
-                    new_entity_name := entity_name[len(device_name) :].lstrip()
-                )
-                if device_name[:1].isupper():
-                    # Ensure a capital if the device name first char is a capital
-                    new_entity_name = new_entity_name[:1].upper() + new_entity_name[1:]
-                if not self._discovery:
-                    self._issue_key = "entity_name_startswith_device_name_yaml"
-                _LOGGER.warning(
-                    "MQTT entity name starts with the device name in your config %s, "
-                    "this is not expected. Please correct your configuration. "
-                    "The device name prefix will be stripped off the entity name "
-                    "and becomes '%s'",
-                    config,
-                    new_entity_name,
-                )
-
-    def collect_issues(self) -> None:
-        """Process issues for MQTT entities."""
-        if self._issue_key is None:
-            return
-        mqtt_data = get_mqtt_data(self.hass)
-        issues = mqtt_data.issues.setdefault(self._issue_key, set())
-        issues.add(self.entity_id)
+        if CONF_DEVICE in config and CONF_NAME not in config[CONF_DEVICE]:
+            _LOGGER.info(
+                "MQTT device information always needs to include a name, got %s, "
+                "if device information is shared between multiple entities, the device "
+                "name must be included in each entity's device configuration",
+                config,
+            )
 
     def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the common attributes for the entity."""

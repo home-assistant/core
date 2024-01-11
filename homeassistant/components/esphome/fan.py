@@ -105,6 +105,10 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
             key=self._key, direction=_FAN_DIRECTIONS.from_hass(direction)
         )
 
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan."""
+        await self._client.fan_command(key=self._key, preset_mode=preset_mode)
+
     @property
     @esphome_state_property
     def is_on(self) -> bool | None:
@@ -144,6 +148,17 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         """Return the current fan direction."""
         return _FAN_DIRECTIONS.from_esphome(self._state.direction)
 
+    @property
+    @esphome_state_property
+    def preset_mode(self) -> str | None:
+        """Return the current fan preset mode."""
+        return self._state.preset_mode
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return the supported fan preset modes."""
+        return self._static_info.supported_preset_modes
+
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
@@ -156,4 +171,6 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
             flags |= FanEntityFeature.SET_SPEED
         if static_info.supports_direction:
             flags |= FanEntityFeature.DIRECTION
+        if static_info.supported_preset_modes:
+            flags |= FanEntityFeature.PRESET_MODE
         self._attr_supported_features = flags

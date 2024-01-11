@@ -59,11 +59,6 @@ CONSTRAINT_BASE = """
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
 
-# Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
-# Temporary setting an upper bound, to prevent compat issues with urllib3>=2
-# https://github.com/home-assistant/core/issues/97248
-urllib3>=1.26.5,<2
-
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
 httplib2>=0.19.0
@@ -103,9 +98,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.0.0
+anyio==4.1.0
 h11==0.14.0
-httpcore==0.18.0
+httpcore==1.0.2
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -179,6 +174,14 @@ get-mac==1000000000.0.0
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
 charset-normalizer==3.2.0
+
+# lxml 5.0.0 currently does not build on alpine 3.18
+# https://bugs.launchpad.net/lxml/+bug/2047718
+lxml==4.9.4
+
+# dacite: Ensure we have a version that is able to handle type unions for
+# Roborock, NAM, Brother, and GIOS.
+dacite>=1.7.0
 """
 
 GENERATED_MESSAGE = (
