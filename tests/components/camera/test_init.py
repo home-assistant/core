@@ -27,7 +27,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_turbo_jpeg
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 STREAM_SOURCE = "rtsp://127.0.0.1/stream"
@@ -963,6 +963,15 @@ async def test_use_stream_for_stills(
 
 
 @pytest.mark.parametrize(
+    "module",
+    [camera, camera.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
     "enum",
     list(camera.const.StreamType),
 )
@@ -993,3 +1002,23 @@ def test_deprecated_support_constants(
     import_and_test_deprecated_constant_enum(
         caplog, camera, entity_feature, "SUPPORT_", "2025.1"
     )
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockCamera(camera.Camera):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockCamera()
+    assert entity.supported_features_compat is camera.CameraEntityFeature(1)
+    assert "MockCamera" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "CameraEntityFeature.ON_OFF" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is camera.CameraEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text
