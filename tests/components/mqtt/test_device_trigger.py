@@ -275,7 +275,7 @@ async def test_update_remove_triggers(
 async def test_if_fires_on_mqtt_message(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing."""
@@ -351,10 +351,115 @@ async def test_if_fires_on_mqtt_message(
     assert calls[1].data["some"] == "long_press"
 
 
+async def test_if_fires_with_template_vars(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    calls: list[ServiceCall],
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test triggers firing with template vars."""
+    await mqtt_mock_entry()
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "short_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger_variables": {
+                        "discovery_id": "bla1",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "{{ discovery_id }}",
+                        "type": "{{ type }}",
+                        "subtype": "{{ sub_type }}",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Fake short press.
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "short_press"
+
+
+async def test_fails_with_invalid_template_vars(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attaching triggers fails with invalid template vars."""
+    await mqtt_mock_entry()
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "short_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger_variables": {
+                        "discovery_id": "100",
+                    },
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "{{ discovery_id / 0 }}",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert "Unable to render template for option discovery_id failed" in caplog.text
+
+
 async def test_if_fires_on_mqtt_message_template(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing."""
@@ -435,7 +540,7 @@ async def test_if_fires_on_mqtt_message_template(
 async def test_if_fires_on_mqtt_message_late_discover(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing of MQTT device triggers discovered after setup."""
@@ -519,10 +624,85 @@ async def test_if_fires_on_mqtt_message_late_discover(
     assert calls[1].data["some"] == "long_press"
 
 
+async def test_if_fires_on_late_discovery_with_template_vars(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    calls: list[ServiceCall],
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test triggers firing with template vars on late discover."""
+    await mqtt_mock_entry()
+    data0 = (
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }'
+    )
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "short_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    # Initial create the trigger to get the device_entry ID
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla0/config", data0)
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry_id = device_entry.id
+
+    # Remove
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger_variables": {
+                        "discovery_id": "bla1",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry_id,
+                        "discovery_id": "{{ discovery_id }}",
+                        "type": "{{ type }}",
+                        "subtype": "{{ sub_type }}",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Fake short press without config
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Late discover
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    # Fake short press.
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "short_press"
+
+
 async def test_if_fires_on_mqtt_message_after_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing after update."""
@@ -649,7 +829,7 @@ async def test_no_resubscribe_same_topic(
 async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers not firing after removal."""
@@ -715,7 +895,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers not firing after removal."""
@@ -1472,7 +1652,7 @@ async def test_trigger_debug_info(
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    calls,
+    calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
 ) -> None:
