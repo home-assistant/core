@@ -1,6 +1,6 @@
 {
   "domain": "ecovacs",
-  "name": "Ecovacs",
+  "name": "Ecovacs Legacy",
   "codeowners": ["@OverloadUT", "@mib1185"],
   "documentation": "https://www.home-assistant.io/integrations/ecovacs",
   "iot_class": "cloud_push",

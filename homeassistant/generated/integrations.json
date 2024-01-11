@@ -1385,7 +1385,7 @@
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "cloud_push",
-          "name": "Ecovacs"
+          "name": "Ecovacs Legacy"
         },
         "ecovacs_mqtt": {
           "integration_type": "hub",
