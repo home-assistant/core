@@ -25,6 +25,27 @@ add_item:
       example: "Submit income tax return"
       selector:
         text:
+    due_date:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+      example: "2023-11-17"
+      selector:
+        date:
+    due_datetime:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+      example: "2023-11-17 13:30:00"
+      selector:
+        datetime:
+    description:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+      example: "A more complete description of the to-do item than that provided by the summary."
+      selector:
+        text:
 update_item:
   target:
     entity:
@@ -49,6 +70,27 @@ update_item:
           options:
             - needs_action
             - completed
+    due_date:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+      example: "2023-11-17"
+      selector:
+        date:
+    due_datetime:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+      example: "2023-11-17 13:30:00"
+      selector:
+        datetime:
+    description:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+      example: "A more complete description of the to-do item than that provided by the summary."
+      selector:
+        text:
 remove_item:
   target:
     entity:
@@ -60,3 +102,10 @@ remove_item:
       required: true
       selector:
         text:
+
+remove_completed_items:
+  target:
+    entity:
+      domain: todo
+      supported_features:
+        - todo.TodoListEntityFeature.DELETE_TODO_ITEM

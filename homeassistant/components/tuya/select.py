@@ -75,6 +75,16 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:thermometer-lines",
         ),
     ),
+    # Smart Water Timer
+    "sfkzq": (
+        # Irrigation will not be run within this set delay period
+        SelectEntityDescription(
+            key=DPCode.WEATHER_DELAY,
+            translation_key="weather_delay",
+            icon="mdi:weather-cloudy-clock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (

@@ -49,7 +49,7 @@ DEFAULT_COLOR_TYPE_DATA_V2 = ColorTypeData(
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaLightEntityDescription(LightEntityDescription):
     """Describe an Tuya light entity."""
 
@@ -116,6 +116,18 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.SWITCH_1,
             translation_key="light",
             brightness=DPCode.BRIGHT_VALUE_1,
+        ),
+    ),
+    # Filament Light
+    # Based on data from https://github.com/home-assistant/core/issues/106703
+    # Product category mentioned in https://developer.tuya.com/en/docs/iot/oemapp-light?id=Kb77kja5woao6
+    # As at 30/12/23 not documented in https://developer.tuya.com/en/docs/iot/lighting?id=Kaiuyzxq30wmc
+    "dsd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
         ),
     ),
     # Ceiling Fan Light

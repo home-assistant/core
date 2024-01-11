@@ -3,14 +3,18 @@ import asyncio
 from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
+from enum import IntFlag
 import logging
 import threading
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
@@ -29,7 +33,6 @@ from tests.common import (
     MockEntityPlatform,
     MockModule,
     MockPlatform,
-    get_test_home_assistant,
     mock_integration,
     mock_registry,
 )
@@ -56,6 +59,17 @@ def test_generate_entity_id_given_keys() -> None:
             "test.{}", "overwrite hidden true", current_ids=["test.another_entity"]
         )
         == "test.overwrite_hidden_true"
+    )
+
+
+async def test_generate_entity_id_given_hass(hass: HomeAssistant) -> None:
+    """Test generating an entity id given hass object."""
+    hass.states.async_set("test.overwrite_hidden_true", "test")
+
+    fmt = "test.{}"
+    assert (
+        entity.generate_entity_id(fmt, "overwrite hidden true", hass=hass)
+        == "test.overwrite_hidden_true_2"
     )
 
 
@@ -93,40 +107,19 @@ async def test_async_update_support(hass: HomeAssistant) -> None:
     assert len(async_update) == 1
 
 
-class TestHelpersEntity:
-    """Test homeassistant.helpers.entity module."""
+async def test_device_class(hass: HomeAssistant) -> None:
+    """Test device class attribute."""
+    ent = entity.Entity()
+    ent.entity_id = "test.overwrite_hidden_true"
+    ent.hass = hass
+    ent.async_write_ha_state()
+    state = hass.states.get(ent.entity_id)
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.entity = entity.Entity()
-        self.entity.entity_id = "test.overwrite_hidden_true"
-        self.hass = self.entity.hass = get_test_home_assistant()
-        self.entity.schedule_update_ha_state()
-        self.hass.block_till_done()
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_generate_entity_id_given_hass(self):
-        """Test generating an entity id given hass object."""
-        fmt = "test.{}"
-        assert (
-            entity.generate_entity_id(fmt, "overwrite hidden true", hass=self.hass)
-            == "test.overwrite_hidden_true_2"
-        )
-
-    def test_device_class(self):
-        """Test device class attribute."""
-        state = self.hass.states.get(self.entity.entity_id)
-        assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-        with patch(
-            "homeassistant.helpers.entity.Entity.device_class", new="test_class"
-        ):
-            self.entity.schedule_update_ha_state()
-            self.hass.block_till_done()
-        state = self.hass.states.get(self.entity.entity_id)
-        assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
+    ent._attr_device_class = "test_class"
+    ent.async_write_ha_state()
+    state = hass.states.get(ent.entity_id)
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
 
 
 async def test_warn_slow_update(
@@ -662,10 +655,9 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
     """Test setting context."""
     context = Context()
 
-    with patch.object(
-        entity.Entity, "context_recent_time", new_callable=PropertyMock
-    ) as recent:
-        recent.return_value = timedelta(seconds=-5)
+    with patch(
+        "homeassistant.helpers.entity.CONTEXT_RECENT_TIME", timedelta(seconds=-5)
+    ):
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
@@ -966,7 +958,7 @@ async def test_entity_description_fallback() -> None:
     ent_with_description = entity.Entity()
     ent_with_description.entity_description = entity.EntityDescription(key="test")
 
-    for field in dataclasses.fields(entity.EntityDescription):
+    for field in dataclasses.fields(entity.EntityDescription._dataclass):
         if field.name == "key":
             continue
 
@@ -1143,6 +1135,203 @@ async def test_friendly_name_description_device_class_name(
             ent,
             expected_friendly_name,
         )
+
+
+@pytest.mark.parametrize(
+    (
+        "has_entity_name",
+        "translation_key",
+        "translations",
+        "placeholders",
+        "expected_friendly_name",
+    ),
+    (
+        (False, None, None, None, "Entity Blu"),
+        (True, None, None, None, "Device Bla Entity Blu"),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "English ent"
+                },
+            },
+            None,
+            "Device Bla English ent",
+        ),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                },
+            },
+            {"placeholder": "special"},
+            "Device Bla special English ent",
+        ),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "English ent {placeholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "Device Bla English ent special",
+        ),
+    ),
+)
+async def test_entity_name_translation_placeholders(
+    hass: HomeAssistant,
+    has_entity_name: bool,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    expected_friendly_name: str | None,
+) -> None:
+    """Test friendly name when the entity name translation has placeholders."""
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        has_entity_name=has_entity_name,
+        translation_key=translation_key,
+        name="Entity Blu",
+    )
+    if placeholders is not None:
+        ent._attr_translation_placeholders = placeholders
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(hass, ent, expected_friendly_name)
+
+
+@pytest.mark.parametrize(
+    (
+        "translation_key",
+        "translations",
+        "placeholders",
+        "release_channel",
+        "expected_error",
+    ),
+    (
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "stable",
+            (
+                "has translation placeholders '{'placeholder': 'special'}' which do "
+                "not match the name '{placeholder} English ent {2ndplaceholder}'"
+            ),
+        ),
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "beta",
+            "HomeAssistantError: Missing placeholder '2ndplaceholder'",
+        ),
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                },
+            },
+            None,
+            "stable",
+            (
+                "has translation placeholders '{}' which do "
+                "not match the name '{placeholder} English ent'"
+            ),
+        ),
+    ),
+)
+async def test_entity_name_translation_placeholder_errors(
+    hass: HomeAssistant,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    release_channel: str,
+    expected_error: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test entity name translation has placeholder issues."""
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([ent])
+        return True
+
+    ent = MockEntity(
+        unique_id="qwer",
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        has_entity_name=True,
+        translation_key=translation_key,
+        name="Entity Blu",
+    )
+    if placeholders is not None:
+        ent._attr_translation_placeholders = placeholders
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    caplog.clear()
+
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ), patch(
+        "homeassistant.helpers.entity.get_release_channel", return_value=release_channel
+    ):
+        await entity_platform.async_setup_entry(config_entry)
+
+    assert expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1400,8 +1589,8 @@ async def test_translation_key(hass: HomeAssistant) -> None:
     assert mock_entity2.translation_key == "from_entity_description"
 
 
-async def test_repr_using_stringify_state() -> None:
-    """Test that repr uses stringify state."""
+async def test_repr(hass) -> None:
+    """Test Entity.__repr__."""
 
     class MyEntity(MockEntity):
         """Mock entity."""
@@ -1411,8 +1600,19 @@ async def test_repr_using_stringify_state() -> None:
             """Return the state."""
             raise ValueError("Boom")
 
-    entity = MyEntity(entity_id="test.test", available=False)
-    assert str(entity) == "<entity test.test=unavailable>"
+    platform = MockEntityPlatform(hass, domain="hello")
+    my_entity = MyEntity(entity_id="test.test", available=False)
+
+    # Not yet added
+    assert str(my_entity) == "<entity unknown.unknown=unknown>"
+
+    # Added
+    await platform.async_add_entities([my_entity])
+    assert str(my_entity) == "<entity test.test=unavailable>"
+
+    # Removed
+    await platform.async_remove_entity(my_entity.entity_id)
+    assert str(my_entity) == "<entity unknown.unknown=unknown>"
 
 
 async def test_warn_using_async_update_ha_state(
@@ -1657,3 +1857,616 @@ async def test_change_entity_id(
     assert len(result) == 2
     assert len(ent.added_calls) == 3
     assert len(ent.remove_calls) == 2
+
+
+def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
+    """Test EntityDescription behaves like a dataclass."""
+
+    obj = entity.EntityDescription("blah", device_class="test")
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        obj.name = "mutate"
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        delattr(obj, "name")
+
+    assert dataclasses.is_dataclass(obj)
+    assert obj == snapshot
+    assert obj == entity.EntityDescription("blah", device_class="test")
+    assert repr(obj) == snapshot
+
+
+def test_extending_entity_description(snapshot: SnapshotAssertion):
+    """Test extending entity descriptions."""
+
+    @dataclasses.dataclass(frozen=True)
+    class FrozenEntityDescription(entity.EntityDescription):
+        extra: str = None
+
+    obj = FrozenEntityDescription("blah", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == FrozenEntityDescription("blah", extra="foo", name="name")
+    assert repr(obj) == snapshot
+
+    # Try mutating
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        obj.name = "mutate"
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        delattr(obj, "name")
+
+    @dataclasses.dataclass
+    class ThawedEntityDescription(entity.EntityDescription):
+        extra: str = None
+
+    obj = ThawedEntityDescription("blah", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == ThawedEntityDescription("blah", extra="foo", name="name")
+    assert repr(obj) == snapshot
+
+    # Try mutating
+    obj.name = "mutate"
+    assert obj.name == "mutate"
+    delattr(obj, "key")
+    assert not hasattr(obj, "key")
+
+    # Try multiple levels of FrozenOrThawed
+    class ExtendedEntityDescription(entity.EntityDescription, frozen_or_thawed=True):
+        extension: str = None
+
+    @dataclasses.dataclass(frozen=True)
+    class MyExtendedEntityDescription(ExtendedEntityDescription):
+        extra: str = None
+
+    obj = MyExtendedEntityDescription("blah", extension="ext", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == MyExtendedEntityDescription(
+        "blah", extension="ext", extra="foo", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    # Try multiple direct parents
+    @dataclasses.dataclass(frozen=True)
+    class MyMixin1:
+        mixin: str
+
+    @dataclasses.dataclass
+    class MyMixin2:
+        mixin: str
+
+    @dataclasses.dataclass(frozen=True)
+    class MyMixin3:
+        mixin: str = None
+
+    @dataclasses.dataclass
+    class MyMixin4:
+        mixin: str = None
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription1A(MyMixin1, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription1A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription1A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription1B(entity.EntityDescription, MyMixin1):
+        extra: str = None
+
+    obj = ComplexEntityDescription1B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription1B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True)
+    class ComplexEntityDescription1C(MyMixin1, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription1C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription1C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True)
+    class ComplexEntityDescription1D(entity.EntityDescription, MyMixin1):
+        extra: str = None
+
+    obj = ComplexEntityDescription1D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription1D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription2A(MyMixin2, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription2A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription2B(entity.EntityDescription, MyMixin2):
+        extra: str = None
+
+    obj = ComplexEntityDescription2B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass
+    class ComplexEntityDescription2C(MyMixin2, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription2C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass
+    class ComplexEntityDescription2D(entity.EntityDescription, MyMixin2):
+        extra: str = None
+
+    obj = ComplexEntityDescription2D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription3A(MyMixin3, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription3A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription3A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription3B(entity.EntityDescription, MyMixin3):
+        extra: str = None
+
+    obj = ComplexEntityDescription3B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription3B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass(frozen=True)
+        class ComplexEntityDescription3C(MyMixin3, entity.EntityDescription):
+            extra: str = None
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass(frozen=True)
+        class ComplexEntityDescription3D(entity.EntityDescription, MyMixin3):
+            extra: str = None
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription4A(MyMixin4, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription4A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription4A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription4B(entity.EntityDescription, MyMixin4):
+        extra: str = None
+
+    obj = ComplexEntityDescription4B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription4B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass
+        class ComplexEntityDescription4C(MyMixin4, entity.EntityDescription):
+            extra: str = None
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass
+        class ComplexEntityDescription4D(entity.EntityDescription, MyMixin4):
+            extra: str = None
+
+    # Try inheriting with custom init
+    @dataclasses.dataclass
+    class CustomInitEntityDescription(entity.EntityDescription):
+        def __init__(self, extra, *args, **kwargs) -> None:
+            super().__init__(*args, **kwargs)
+            self.extra: str = extra
+
+    obj = CustomInitEntityDescription(key="blah", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == CustomInitEntityDescription(key="blah", extra="foo", name="name")
+    assert repr(obj) == snapshot
+
+
+async def test_update_capabilities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity capabilities are updated automatically."""
+    platform = MockEntityPlatform(hass)
+
+    ent = MockEntity(unique_id="qwer")
+    await platform.async_add_entities([ent])
+
+    entry = entity_registry.async_get(ent.entity_id)
+    assert entry.capabilities is None
+    assert entry.device_class is None
+    assert entry.supported_features == 0
+
+    ent._values["capability_attributes"] = {"bla": "blu"}
+    ent._values["device_class"] = "some_class"
+    ent._values["supported_features"] = 127
+    ent.async_write_ha_state()
+    entry = entity_registry.async_get(ent.entity_id)
+    assert entry.capabilities == {"bla": "blu"}
+    assert entry.original_device_class == "some_class"
+    assert entry.supported_features == 127
+
+    ent._values["capability_attributes"] = None
+    ent._values["device_class"] = None
+    ent._values["supported_features"] = None
+    ent.async_write_ha_state()
+    entry = entity_registry.async_get(ent.entity_id)
+    assert entry.capabilities is None
+    assert entry.original_device_class is None
+    assert entry.supported_features == 0
+
+    # Device class can be overridden by user, make sure that does not break the
+    # automatic updating.
+    entity_registry.async_update_entity(ent.entity_id, device_class="set_by_user")
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(ent.entity_id)
+    assert entry.capabilities is None
+    assert entry.original_device_class is None
+    assert entry.supported_features == 0
+
+    # This will not trigger a state change because the device class is shadowed
+    # by the entity registry
+    ent._values["device_class"] = "some_class"
+    ent.async_write_ha_state()
+    entry = entity_registry.async_get(ent.entity_id)
+    assert entry.capabilities is None
+    assert entry.original_device_class == "some_class"
+    assert entry.supported_features == 0
+
+
+async def test_update_capabilities_no_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity capabilities are updated automatically."""
+    platform = MockEntityPlatform(hass)
+
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+
+    assert entity_registry.async_get(ent.entity_id) is None
+
+    ent._values["capability_attributes"] = {"bla": "blu"}
+    ent._values["supported_features"] = 127
+    ent.async_write_ha_state()
+    assert entity_registry.async_get(ent.entity_id) is None
+
+
+async def test_update_capabilities_too_often(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity capabilities are updated automatically."""
+    capabilities_too_often_warning = "is updating its capabilities too often"
+    platform = MockEntityPlatform(hass)
+
+    ent = MockEntity(unique_id="qwer")
+    await platform.async_add_entities([ent])
+
+    entry = entity_registry.async_get(ent.entity_id)
+    assert entry.capabilities is None
+    assert entry.device_class is None
+    assert entry.supported_features == 0
+
+    for supported_features in range(1, entity.CAPABILITIES_UPDATE_LIMIT + 1):
+        ent._values["capability_attributes"] = {"bla": "blu"}
+        ent._values["device_class"] = "some_class"
+        ent._values["supported_features"] = supported_features
+        ent.async_write_ha_state()
+        entry = entity_registry.async_get(ent.entity_id)
+        assert entry.capabilities == {"bla": "blu"}
+        assert entry.original_device_class == "some_class"
+        assert entry.supported_features == supported_features
+
+    assert capabilities_too_often_warning not in caplog.text
+
+    ent._values["capability_attributes"] = {"bla": "blu"}
+    ent._values["device_class"] = "some_class"
+    ent._values["supported_features"] = supported_features + 1
+    ent.async_write_ha_state()
+    entry = entity_registry.async_get(ent.entity_id)
+    assert entry.capabilities == {"bla": "blu"}
+    assert entry.original_device_class == "some_class"
+    assert entry.supported_features == supported_features + 1
+
+    assert capabilities_too_often_warning in caplog.text
+
+
+async def test_update_capabilities_too_often_cooldown(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entity capabilities are updated automatically."""
+    capabilities_too_often_warning = "is updating its capabilities too often"
+    platform = MockEntityPlatform(hass)
+
+    ent = MockEntity(unique_id="qwer")
+    await platform.async_add_entities([ent])
+
+    entry = entity_registry.async_get(ent.entity_id)
+    assert entry.capabilities is None
+    assert entry.device_class is None
+    assert entry.supported_features == 0
+
+    for supported_features in range(1, entity.CAPABILITIES_UPDATE_LIMIT + 1):
+        ent._values["capability_attributes"] = {"bla": "blu"}
+        ent._values["device_class"] = "some_class"
+        ent._values["supported_features"] = supported_features
+        ent.async_write_ha_state()
+        entry = entity_registry.async_get(ent.entity_id)
+        assert entry.capabilities == {"bla": "blu"}
+        assert entry.original_device_class == "some_class"
+        assert entry.supported_features == supported_features
+
+    assert capabilities_too_often_warning not in caplog.text
+
+    freezer.tick(timedelta(minutes=60) + timedelta(seconds=1))
+
+    ent._values["capability_attributes"] = {"bla": "blu"}
+    ent._values["device_class"] = "some_class"
+    ent._values["supported_features"] = supported_features + 1
+    ent.async_write_ha_state()
+    entry = entity_registry.async_get(ent.entity_id)
+    assert entry.capabilities == {"bla": "blu"}
+    assert entry.original_device_class == "some_class"
+    assert entry.supported_features == supported_features + 1
+
+    assert capabilities_too_often_warning not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("property", "default_value", "values"), [("attribution", None, ["abcd", "efgh"])]
+)
+async def test_cached_entity_properties(
+    hass: HomeAssistant, property: str, default_value: Any, values: Any
+) -> None:
+    """Test entity properties are cached."""
+    ent1 = entity.Entity()
+    ent2 = entity.Entity()
+    assert getattr(ent1, property) == default_value
+    assert getattr(ent2, property) == default_value
+
+    # Test set
+    setattr(ent1, f"_attr_{property}", values[0])
+    assert getattr(ent1, property) == values[0]
+    assert getattr(ent2, property) == default_value
+
+    # Test update
+    setattr(ent1, f"_attr_{property}", values[1])
+    assert getattr(ent1, property) == values[1]
+    assert getattr(ent2, property) == default_value
+
+    # Test delete
+    delattr(ent1, f"_attr_{property}")
+    assert getattr(ent1, property) == default_value
+    assert getattr(ent2, property) == default_value
+
+
+async def test_cached_entity_property_delete_attr(hass: HomeAssistant) -> None:
+    """Test deleting an _attr corresponding to a cached property."""
+    property = "has_entity_name"
+
+    ent = entity.Entity()
+    assert not hasattr(ent, f"_attr_{property}")
+    with pytest.raises(AttributeError):
+        delattr(ent, f"_attr_{property}")
+    assert getattr(ent, property) is False
+
+    with pytest.raises(AttributeError):
+        delattr(ent, f"_attr_{property}")
+    assert not hasattr(ent, f"_attr_{property}")
+    assert getattr(ent, property) is False
+
+    setattr(ent, f"_attr_{property}", True)
+    assert getattr(ent, property) is True
+
+    delattr(ent, f"_attr_{property}")
+    assert not hasattr(ent, f"_attr_{property}")
+    assert getattr(ent, property) is False
+
+
+async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> None:
+    """Test entity properties on class level work in derived classes."""
+    property = "attribution"
+    values = ["abcd", "efgh"]
+
+    class EntityWithClassAttribute1(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution = values[0]
+
+    class EntityWithClassAttribute2(entity.Entity, cached_properties={property}):
+        """A derived class which overrides an _attr_ from a parent.
+
+        This class also redundantly marks the overridden _attr_ as cached.
+        """
+
+        _attr_attribution = values[0]
+
+    class EntityWithClassAttribute3(entity.Entity, cached_properties={property}):
+        """A derived class which overrides an _attr_ from a parent.
+
+        This class overrides the attribute property.
+        """
+
+        def __init__(self):
+            self._attr_attribution = values[0]
+
+        @cached_property
+        def attribution(self) -> str | None:
+            """Return the attribution."""
+            return self._attr_attribution
+
+    class EntityWithClassAttribute4(entity.Entity, cached_properties={property}):
+        """A derived class which overrides an _attr_ from a parent.
+
+        This class overrides the attribute property and the _attr_.
+        """
+
+        _attr_attribution = values[0]
+
+        @cached_property
+        def attribution(self) -> str | None:
+            """Return the attribution."""
+            return self._attr_attribution
+
+    classes = (
+        EntityWithClassAttribute1,
+        EntityWithClassAttribute2,
+        EntityWithClassAttribute3,
+        EntityWithClassAttribute4,
+    )
+
+    entities: list[tuple[entity.Entity, entity.Entity]] = []
+    for cls in classes:
+        entities.append((cls(), cls()))
+
+    for ent in entities:
+        assert getattr(ent[0], property) == values[0]
+        assert getattr(ent[1], property) == values[0]
+
+    # Test update
+    for ent in entities:
+        setattr(ent[0], f"_attr_{property}", values[1])
+    for ent in entities:
+        assert getattr(ent[0], property) == values[1]
+        assert getattr(ent[1], property) == values[0]
+
+
+async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
+    """Test overriding cached _attr_ raises."""
+
+    class EntityWithClassAttribute1(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution: str
+
+    class EntityWithClassAttribute2(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution = "blabla"
+
+    class EntityWithClassAttribute3(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution: str = "blabla"
+
+    class EntityWithClassAttribute4(entity.Entity):
+        @property
+        def _attr_not_cached(self):
+            return "blabla"
+
+    class EntityWithClassAttribute5(entity.Entity):
+        def _attr_not_cached(self):
+            return "blabla"
+
+    with pytest.raises(TypeError):
+
+        class EntityWithClassAttribute6(entity.Entity):
+            @property
+            def _attr_attribution(self):
+                return "🤡"
+
+    with pytest.raises(TypeError):
+
+        class EntityWithClassAttribute7(entity.Entity):
+            def _attr_attribution(self):
+                return "🤡"
+
+
+async def test_entity_report_deprecated_supported_features_values(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test reporting deprecated supported feature values only happens once."""
+    ent = entity.Entity()
+
+    class MockEntityFeatures(IntFlag):
+        VALUE1 = 1
+        VALUE2 = 2
+
+    ent._report_deprecated_supported_features_values(MockEntityFeatures(2))
+    assert (
+        "is using deprecated supported features values which will be removed"
+        in caplog.text
+    )
+    assert "MockEntityFeatures.VALUE2" in caplog.text
+
+    caplog.clear()
+    ent._report_deprecated_supported_features_values(MockEntityFeatures(2))
+    assert (
+        "is using deprecated supported features values which will be removed"
+        not in caplog.text
+    )

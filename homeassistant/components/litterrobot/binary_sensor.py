@@ -22,14 +22,14 @@ from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot binary sensor entity required keys."""
 
     is_on_fn: Callable[[_RobotT], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotBinarySensorEntityDescription(
     BinarySensorEntityDescription, RequiredKeysMixin[_RobotT]
 ):

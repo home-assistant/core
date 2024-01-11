@@ -1,0 +1,28 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'door1': dict({
+        'disabled': 0,
+        'door_id': 'door1',
+        'index': 0,
+        'lockup': 0,
+        'status': 'open',
+      }),
+      'door2': dict({
+        'disabled': 0,
+        'door_id': 'door2',
+        'index': 1,
+        'lockup': 0,
+        'status': 'open',
+      }),
+    }),
+    'dev_id': '_3c_e9_e_6d_21_84_',
+    'door_num': 2,
+    'fw_ver': '10.10',
+    'led_brightness': 100,
+    'night_mode_en': 0,
+    'product': 'iQ3',
+    'proto_ver': '0.1',
+  })
+# ---

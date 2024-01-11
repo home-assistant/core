@@ -41,7 +41,7 @@ UNIT_PLAYERS_MAX = "players"
 UNIT_PLAYERS_ONLINE = "players"
 
 
-@dataclass
+@dataclass(frozen=True)
 class MinecraftServerEntityDescriptionMixin:
     """Mixin values for Minecraft Server entities."""
 
@@ -50,7 +50,7 @@ class MinecraftServerEntityDescriptionMixin:
     supported_server_types: set[MinecraftServerType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MinecraftServerSensorEntityDescription(
     SensorEntityDescription, MinecraftServerEntityDescriptionMixin
 ):
@@ -61,7 +61,7 @@ def get_extra_state_attributes_players_list(
     data: MinecraftServerData,
 ) -> dict[str, list[str]]:
     """Return players list as extra state attributes, if available."""
-    extra_state_attributes = {}
+    extra_state_attributes: dict[str, Any] = {}
     players_list = data.players_list
 
     if players_list is not None and len(players_list) != 0:

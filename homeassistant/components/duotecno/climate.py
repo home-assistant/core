@@ -1,6 +1,9 @@
 """Support for Duotecno climate devices."""
+from __future__ import annotations
+
 from typing import Any, Final
 
+from duotecno.controller import PyDuotecno
 from duotecno.unit import SensUnit
 
 from homeassistant.components.climate import (
@@ -33,7 +36,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Duotecno climate based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]
+    cntrl: PyDuotecno = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         DuotecnoClimate(channel) for channel in cntrl.get_units(["SensUnit"])
     )
@@ -52,7 +55,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     _attr_translation_key = "duotecno"
 
     @property
-    def current_temperature(self) -> int | None:
+    def current_temperature(self) -> float | None:
         """Get the current temperature."""
         return self._unit.get_cur_temp()
 

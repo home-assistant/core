@@ -52,6 +52,7 @@ from .browse_media import (
     media_source_content_filter,
 )
 from .const import (
+    CONF_HTTPS,
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
@@ -126,6 +127,7 @@ async def async_setup_entry(
     password = config.get(CONF_PASSWORD)
     host = config[CONF_HOST]
     port = config[CONF_PORT]
+    https = config.get(CONF_HTTPS, False)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
@@ -134,7 +136,7 @@ async def async_setup_entry(
 
     session = async_get_clientsession(hass)
     _LOGGER.debug("Creating LMS object for %s", host)
-    lms = Server(session, host, port, username, password)
+    lms = Server(session, host, port, username, password, https=https)
 
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
