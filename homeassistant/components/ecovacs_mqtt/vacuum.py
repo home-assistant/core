@@ -7,14 +7,7 @@ from typing import Any
 
 from deebot_client.capabilities import Capabilities
 from deebot_client.device import Device
-from deebot_client.events import (
-    BatteryEvent,
-    CustomCommandEvent,
-    FanSpeedEvent,
-    ReportStatsEvent,
-    RoomsEvent,
-    StateEvent,
-)
+from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
 
 from homeassistant.components.vacuum import (
@@ -33,10 +26,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from .const import DOMAIN, EVENT_CLEANING_JOB, EVENT_CUSTOM_COMMAND
+from .const import DOMAIN
 from .controller import EcovacsController
 from .entity import EcovacsEntity
-from .util import dataclass_to_dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,15 +102,9 @@ class EcovacsVacuum(
             self._attr_battery_level = event.value
             self.async_write_ha_state()
 
-        async def on_custom_command(event: CustomCommandEvent) -> None:
-            self.hass.bus.fire(EVENT_CUSTOM_COMMAND, dataclass_to_dict(event))
-
         async def on_fan_speed(event: FanSpeedEvent) -> None:
             self._attr_fan_speed = event.speed.display_name
             self.async_write_ha_state()
-
-        async def on_report_stats(event: ReportStatsEvent) -> None:
-            self.hass.bus.fire(EVENT_CLEANING_JOB, dataclass_to_dict(event))
 
         async def on_rooms(event: RoomsEvent) -> None:
             self._rooms = event.rooms
@@ -130,11 +116,8 @@ class EcovacsVacuum(
 
         self._subscribe(self._capability.battery.event, on_battery)
         self._subscribe(self._capability.fan_speed.event, on_fan_speed)
-        self._subscribe(self._capability.stats.report.event, on_report_stats)
         self._subscribe(self._capability.state.event, on_status)
 
-        if custom := self._capability.custom:
-            self._subscribe(custom.event, on_custom_command)
         if map_caps := self._capability.map:
             self._subscribe(map_caps.rooms.event, on_rooms)
 

@@ -29,7 +29,3 @@ SELF_HOSTED_CONFIGURATION = {
 }
 
 DEEBOT_DEVICES = f"{DOMAIN}_devices"
-
-
-EVENT_CLEANING_JOB = "{DOMAIN}_cleaning_job"
-EVENT_CUSTOM_COMMAND = "{DOMAIN}_custom_command"
