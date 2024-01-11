@@ -1311,7 +1311,7 @@ async def test_render_template_renders_template(
 
 @pytest.mark.xfail(reason="Entities are missing when using a filter")
 async def test_render_template_with_filter(
-    hass: HomeAssistant, websocket_client
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
     """Test simple template with a filter is rendered and updated."""
     hass.states.async_set("light.test", "on")
