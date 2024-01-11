@@ -87,15 +87,15 @@
         },
         "message": {
           "name": "Text message",
-          "description": "Text message"
+          "description": "Text message to be played."
         },
         "tone": {
           "name": "Tone",
-          "description": "Tone"
+          "description": "Tone before playing audio."
         },
         "volume": {
           "name": "Volume",
-          "description": "Volume"
+          "description": "Speaker volume during playback."
         },
         "repeat": {
           "name": "Repeat",
