@@ -146,7 +146,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Electric Kiwi Sensors Setup."""
-    coordinator: ElectricKiwiAccountDataCoordinator = hass.data[DOMAIN][entry.entry_id][
+    account_coordinator: ElectricKiwiAccountDataCoordinator = hass.data[DOMAIN][entry.entry_id][
         ACCOUNT_COORDINATOR
     ]
 
