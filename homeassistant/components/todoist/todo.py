@@ -34,19 +34,20 @@ async def async_setup_entry(
 
 def _task_api_data(item: TodoItem) -> dict[str, Any]:
     """Convert a TodoItem to the set of add or update arguments."""
-    item_data: dict[str, Any] = {}
-    if summary := item.summary:
-        item_data["content"] = summary
+    item_data: dict[str, Any] = {
+        "content": item.summary,
+        # Description needs to be empty string to be cleared
+        "description": item.description or "",
+    }
     if due := item.due:
         if isinstance(due, datetime.datetime):
-            item_data["due"] = {
-                "date": due.date().isoformat(),
-                "datetime": due.isoformat(),
-            }
+            item_data["due_datetime"] = due.isoformat()
         else:
-            item_data["due"] = {"date": due.isoformat()}
-    if description := item.description:
-        item_data["description"] = description
+            item_data["due_date"] = due.isoformat()
+    else:
+        # Special flag "no date" clears the due date/datetime.
+        # See https://developer.todoist.com/rest/v2/#update-a-task for more.
+        item_data["due_string"] = "no date"
     return item_data
 
 
@@ -128,10 +129,16 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
         if update_data := _task_api_data(item):
             await self.coordinator.api.update_task(task_id=uid, **update_data)
         if item.status is not None:
-            if item.status == TodoItemStatus.COMPLETED:
-                await self.coordinator.api.close_task(task_id=uid)
-            else:
-                await self.coordinator.api.reopen_task(task_id=uid)
+            # Only update status if changed
+            for existing_item in self._attr_todo_items or ():
+                if existing_item.uid != item.uid:
+                    continue
+
+                if item.status != existing_item.status:
+                    if item.status == TodoItemStatus.COMPLETED:
+                        await self.coordinator.api.close_task(task_id=uid)
+                    else:
+                        await self.coordinator.api.reopen_task(task_id=uid)
         await self.coordinator.async_refresh()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:

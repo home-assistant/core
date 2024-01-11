@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/velux",
   "iot_class": "local_polling",
   "loggers": ["pyvlx"],
-  "requirements": ["pyvlx==0.2.20"]
+  "requirements": ["pyvlx==0.2.21"]
 }

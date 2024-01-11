@@ -146,7 +146,7 @@ def _int_value_or_none(field: str) -> Callable[[dict[str, Any]], int | None]:
     return convert
 
 
-@dataclass
+@dataclass(frozen=True)
 class FitbitSensorEntityDescription(SensorEntityDescription):
     """Describes Fitbit sensor entity."""
 

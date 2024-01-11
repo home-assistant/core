@@ -20,13 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Class to manage fetching OurGroceries data."""
 
-    def __init__(
-        self, hass: HomeAssistant, og: OurGroceries, lists: list[dict]
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, og: OurGroceries) -> None:
         """Initialize global OurGroceries data updater."""
         self.og = og
-        self.lists = lists
-        self._ids = [sl["id"] for sl in lists]
+        self.lists: list[dict] = []
+        self._cache: dict[str, dict] = {}
         interval = timedelta(seconds=SCAN_INTERVAL)
         super().__init__(
             hass,
@@ -35,13 +33,16 @@ class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             update_interval=interval,
         )
 
+    async def _update_list(self, list_id: str, version_id: str) -> None:
+        old_version = self._cache.get(list_id, {}).get("list", {}).get("versionId", "")
+        if old_version == version_id:
+            return
+        self._cache[list_id] = await self.og.get_list_items(list_id=list_id)
+
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch data from OurGroceries."""
-        return dict(
-            zip(
-                self._ids,
-                await asyncio.gather(
-                    *[self.og.get_list_items(list_id=id) for id in self._ids]
-                ),
-            )
+        self.lists = (await self.og.get_my_lists())["shoppingLists"]
+        await asyncio.gather(
+            *[self._update_list(sl["id"], sl["versionId"]) for sl in self.lists]
         )
+        return self._cache

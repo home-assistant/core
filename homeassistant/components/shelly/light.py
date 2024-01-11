@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_BULB
+from aioshelly.const import MODEL_BULB, RPC_GENERATIONS
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -53,7 +53,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up lights for device."""
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
     return async_setup_block_entry(hass, config_entry, async_add_entities)

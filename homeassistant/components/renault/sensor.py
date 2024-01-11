@@ -43,7 +43,7 @@ from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultSensorRequiredKeysMixin(Generic[T]):
     """Mixin for required keys."""
 
@@ -51,7 +51,7 @@ class RenaultSensorRequiredKeysMixin(Generic[T]):
     entity_class: type[RenaultSensor[T]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultSensorEntityDescription(
     SensorEntityDescription,
     RenaultDataEntityDescription,
