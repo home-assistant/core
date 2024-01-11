@@ -45,7 +45,7 @@ def require_admin(
     """Home Assistant API decorator to require user to be an admin."""
 
     def decorator_require_admin(
-        func: _FuncType[_HomeAssistantViewT, _P]
+        func: _FuncType[_HomeAssistantViewT, _P],
     ) -> _FuncType[_HomeAssistantViewT, _P]:
         """Wrap the provided with_admin function."""
 

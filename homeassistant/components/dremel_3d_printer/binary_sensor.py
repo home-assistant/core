@@ -19,14 +19,14 @@ from .const import DOMAIN
 from .entity import Dremel3DPrinterEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class Dremel3DPrinterBinarySensorEntityMixin:
     """Mixin for Dremel 3D Printer binary sensor."""
 
     value_fn: Callable[[Dremel3DPrinter], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Dremel3DPrinterBinarySensorEntityDescription(
     BinarySensorEntityDescription, Dremel3DPrinterBinarySensorEntityMixin
 ):

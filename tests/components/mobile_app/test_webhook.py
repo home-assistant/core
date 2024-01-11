@@ -962,7 +962,7 @@ async def test_reregister_sensor(
                 "state": 100,
                 "type": "sensor",
                 "unique_id": "abcd",
-                "state_class": "total",
+                "state_class": "measurement",
                 "device_class": "battery",
                 "entity_category": "diagnostic",
                 "icon": "mdi:new-icon",

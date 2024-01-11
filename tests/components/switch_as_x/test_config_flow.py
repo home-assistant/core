@@ -20,6 +20,7 @@ PLATFORMS_TO_TEST = (
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SIREN,
+    Platform.VALVE,
 )
 
 

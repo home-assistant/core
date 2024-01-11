@@ -17,7 +17,7 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class PlugwiseSelectEntityDescription(SelectEntityDescription):
     """Class describing Plugwise Select entities."""
 

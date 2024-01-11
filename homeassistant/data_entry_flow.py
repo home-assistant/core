@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterable, Mapping
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any, Required, TypedDict
@@ -14,6 +15,12 @@ import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .helpers.frame import report
 from .util import uuid as uuid_util
 
@@ -34,17 +41,36 @@ class FlowResultType(StrEnum):
 
 
 # RESULT_TYPE_* is deprecated, to be removed in 2022.9
-RESULT_TYPE_FORM = "form"
-RESULT_TYPE_CREATE_ENTRY = "create_entry"
-RESULT_TYPE_ABORT = "abort"
-RESULT_TYPE_EXTERNAL_STEP = "external"
-RESULT_TYPE_EXTERNAL_STEP_DONE = "external_done"
-RESULT_TYPE_SHOW_PROGRESS = "progress"
-RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
-RESULT_TYPE_MENU = "menu"
+_DEPRECATED_RESULT_TYPE_FORM = DeprecatedConstantEnum(FlowResultType.FORM, "2025.1")
+_DEPRECATED_RESULT_TYPE_CREATE_ENTRY = DeprecatedConstantEnum(
+    FlowResultType.CREATE_ENTRY, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_ABORT = DeprecatedConstantEnum(FlowResultType.ABORT, "2025.1")
+_DEPRECATED_RESULT_TYPE_EXTERNAL_STEP = DeprecatedConstantEnum(
+    FlowResultType.EXTERNAL_STEP, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_EXTERNAL_STEP_DONE = DeprecatedConstantEnum(
+    FlowResultType.EXTERNAL_STEP_DONE, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_SHOW_PROGRESS = DeprecatedConstantEnum(
+    FlowResultType.SHOW_PROGRESS, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_SHOW_PROGRESS_DONE = DeprecatedConstantEnum(
+    FlowResultType.SHOW_PROGRESS_DONE, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_MENU = DeprecatedConstantEnum(FlowResultType.MENU, "2025.1")
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
+
+FLOW_NOT_COMPLETE_STEPS = {
+    FlowResultType.FORM,
+    FlowResultType.EXTERNAL_STEP,
+    FlowResultType.EXTERNAL_STEP_DONE,
+    FlowResultType.SHOW_PROGRESS,
+    FlowResultType.SHOW_PROGRESS_DONE,
+    FlowResultType.MENU,
+}
 
 
 @dataclass(slots=True)
@@ -175,11 +201,13 @@ class FlowManager(abc.ABC):
         If match_context is passed, only return flows with a context that is a
         superset of match_context.
         """
-        return any(
-            flow
-            for flow in self._async_progress_by_handler(handler, match_context)
-            if flow.init_data == data
-        )
+        if not (flows := self._handler_progress_index.get(handler)):
+            return False
+        match_items = match_context.items()
+        for progress in flows:
+            if match_items <= progress.context.items() and progress.init_data == data:
+                return True
+        return False
 
     @callback
     def async_get(self, flow_id: str) -> FlowResult:
@@ -239,11 +267,11 @@ class FlowManager(abc.ABC):
         is a superset of match_context.
         """
         if not match_context:
-            return list(self._handler_progress_index.get(handler, []))
+            return list(self._handler_progress_index.get(handler, ()))
         match_context_items = match_context.items()
         return [
             progress
-            for progress in self._handler_progress_index.get(handler, set())
+            for progress in self._handler_progress_index.get(handler, ())
             if match_context_items <= progress.context.items()
         ]
 
@@ -407,14 +435,7 @@ class FlowManager(abc.ABC):
                 error_if_core=False,
             )
 
-        if result["type"] in (
-            FlowResultType.FORM,
-            FlowResultType.EXTERNAL_STEP,
-            FlowResultType.EXTERNAL_STEP_DONE,
-            FlowResultType.SHOW_PROGRESS,
-            FlowResultType.SHOW_PROGRESS_DONE,
-            FlowResultType.MENU,
-        ):
+        if result["type"] in FLOW_NOT_COMPLETE_STEPS:
             self._raise_if_step_does_not_exist(flow, result["step_id"])
             flow.cur_step = result
             return result
@@ -678,3 +699,11 @@ def _create_abort_data(
         reason=reason,
         description_placeholders=description_placeholders,
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
