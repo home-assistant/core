@@ -30,20 +30,15 @@ from .utils import async_dispatch_id as _ufpd
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class NumberKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class ProtectNumberEntityDescription(
+    ProtectSetableKeysMixin[T], NumberEntityDescription
+):
+    """Describes UniFi Protect Number entity."""
 
     ufp_max: int | float
     ufp_min: int | float
     ufp_step: int | float
-
-
-@dataclass(frozen=True)
-class ProtectNumberEntityDescription(
-    ProtectSetableKeysMixin[T], NumberEntityDescription, NumberKeysMixin
-):
-    """Describes UniFi Protect Number entity."""
 
 
 def _get_pir_duration(obj: Light) -> int:
