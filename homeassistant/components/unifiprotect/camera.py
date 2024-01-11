@@ -189,7 +189,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         is a change.
         """
 
-        return (self._attr_available, self._attr_is_recording, self._attr_motion_detection_enabled)
+        return (
+            self._attr_available,
+            self._attr_is_recording,
+            self._attr_motion_detection_enabled,
+        )
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
