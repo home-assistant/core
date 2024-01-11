@@ -4003,15 +4003,19 @@ def test_async_render_to_info_with_filter(hass: HomeAssistant) -> None:
     assert_result_info(info, "off", {"light.a"}, set())
 
 
-@pytest.mark.xfail(reason="fails on second render")
+# @pytest.mark.xfail(reason="fails on second render")
 def test_async_render_to_info_with_filter_multiple_times(hass: HomeAssistant) -> None:
     """Test async_render_to_info with filter multiple times."""
+    hass.states.async_set("light.a", "off")
     template_str = '{{ "light.a" | states }}'
     tmp = template.Template(template_str, hass)
     info = tmp.async_render_to_info()
     assert info.entities == {"light.a"}
+    assert info.result() == "off"
+    hass.states.async_set("light.a", "on")
     info2 = tmp.async_render_to_info()
     assert info2.entities == {"light.a"}
+    assert info2.result() == "on"
 
 
 def test_closest_function_invalid_state(hass: HomeAssistant) -> None:
