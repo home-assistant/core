@@ -29,8 +29,8 @@ OPTIONS_VALUME = "options_volume"
 class YoLinkNumberTypeConfigEntityDescription(NumberEntityDescription):
     """YoLink NumberEntity description."""
 
-    exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-    value: Callable = lambda state: state
+    exists_fn: Callable[[YoLinkDevice], bool]
+    value: Callable
 
 
 NUMBER_TYPE_CONF_SUPPORT_DEVICES = [ATTR_DEVICE_SPEAKER_HUB]
