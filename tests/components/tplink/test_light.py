@@ -264,6 +264,26 @@ async def test_color_temp_light(
     bulb.set_color_temp.assert_called_with(6666, brightness=None, transition=None)
     bulb.set_color_temp.reset_mock()
 
+    # Verify color temp is clamped to the valid range
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 20000},
+        blocking=True,
+    )
+    bulb.set_color_temp.assert_called_with(9000, brightness=None, transition=None)
+    bulb.set_color_temp.reset_mock()
+
+    # Verify color temp is clamped to the valid range
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 1},
+        blocking=True,
+    )
+    bulb.set_color_temp.assert_called_with(4000, brightness=None, transition=None)
+    bulb.set_color_temp.reset_mock()
+
 
 async def test_brightness_only_light(hass: HomeAssistant) -> None:
     """Test a light."""

@@ -42,7 +42,7 @@ def auth_ok_message() -> dict[str, str]:
 
 def auth_required_message() -> dict[str, str]:
     """Return an auth_required message."""
-    return {"type": TYPE_AUTH_REQUIRED, "ha_version": __version__}
+    return {"type": TYPE_AUTH_REQUIRED}
 
 
 def auth_invalid_message(message: str) -> dict[str, str]:
