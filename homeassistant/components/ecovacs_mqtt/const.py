@@ -27,5 +27,3 @@ SELF_HOSTED_CONFIGURATION = {
     CONF_USERNAME: "username",
     CONF_VERIFY_SSL: False,  # required it is using self signed certificates
 }
-
-DEEBOT_DEVICES = f"{DOMAIN}_devices"
