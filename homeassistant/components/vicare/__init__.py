@@ -30,7 +30,7 @@ from .const import (
     VICARE_TOKEN_FILENAME,
     HeatingType,
 )
-from .utils import get_device_list
+from .utils import get_device_list, get_serial
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +47,33 @@ class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
     """Mixin for required keys with setter."""
 
     value_setter: Callable[[Device], bool]
+
+
+def _get_active_device_list(hass: HomeAssistant, entry: ConfigEntry) -> list[str]:
+    device_list = get_device_list(hass, entry.data)
+    # Currently we only support a single device
+    return [get_serial(device_list[0])]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    if entry.version == 1:
+        _LOGGER.debug("Migrating from version %s", entry.version)
+        serials = await hass.async_add_executor_job(
+            _get_active_device_list, hass, entry
+        )
+        entry.version = 2
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                "active_devices": serials,
+            },
+        )
+        _LOGGER.debug("Migration to version %s successful", entry.version)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
