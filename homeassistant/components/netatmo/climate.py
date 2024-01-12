@@ -214,10 +214,10 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._selected_schedule = None
 
         self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
-        if self.device_description[1] is NA_THERM:
+        if self.device_type is NA_THERM:
             self._attr_hvac_modes.append(HVACMode.OFF)
 
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_description[1]}"
+        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -316,7 +316,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported."""
-        if self.device_description[1] != NA_VALVE and self._boilerstatus is not None:
+        if self.device_type != NA_VALVE and self._boilerstatus is not None:
             return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
         # Maybe it is a valve
         if (
@@ -338,7 +338,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         """Set new preset mode."""
         if (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
-            and self.device_description[1] == NA_VALVE
+            and self.device_type == NA_VALVE
             and self._attr_hvac_mode == HVACMode.HEAT
         ):
             await self.device.async_therm_set(
@@ -346,7 +346,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             )
         elif (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
-            and self.device_description[1] == NA_VALVE
+            and self.device_type == NA_VALVE
         ):
             await self.device.async_therm_set(
                 STATE_NETATMO_MANUAL,
@@ -375,7 +375,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
-        if self.device_description[1] == NA_VALVE:
+        if self.device_type == NA_VALVE:
             await self.device.async_therm_set(
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MIN_TEMP,
@@ -421,7 +421,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             ATTR_SELECTED_SCHEDULE
         ] = self._selected_schedule
 
-        if self.device_description[1] == NA_VALVE:
+        if self.device_type == NA_VALVE:
             self._attr_extra_state_attributes[
                 ATTR_HEATING_POWER_REQUEST
             ] = self.device.heating_power_request
