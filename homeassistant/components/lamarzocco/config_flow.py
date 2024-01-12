@@ -7,8 +7,7 @@ from lmcloud import LMCloud as LaMarzoccoClient
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -24,7 +23,7 @@ from .const import CONF_MACHINE, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for La Marzocco."""
 
     def __init__(self) -> None:
