@@ -179,7 +179,7 @@ class NmapDeviceScanner:
                 seconds=cv.positive_float(config[CONF_CONSIDER_HOME])
             )
         self._scan_lock = asyncio.Lock()
-        if self._hass.state == CoreState.running:
+        if self._hass.state is CoreState.running:
             await self._async_start_scanner()
             return
 
