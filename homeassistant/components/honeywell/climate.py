@@ -504,12 +504,10 @@ class HoneywellUSThermostat(ClimateEntity):
                 ClientConnectionError,
                 AscConnectionError,
                 asyncio.TimeoutError,
+                APIRateLimited,
             ):
                 self._retry += 1
                 self._attr_available = self._retry <= RETRY
-                return
-
-            except APIRateLimited:
                 return
 
             self._attr_available = True
