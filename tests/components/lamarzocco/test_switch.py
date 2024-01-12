@@ -113,6 +113,10 @@ async def test_auto_on_off(
     mock_lamarzocco.set_auto_on_off_global.assert_called_with(enable=True)
 
 
+@pytest.mark.parametrize(
+    "device_fixture",
+    [LaMarzoccoModel.GS3_AV, LaMarzoccoModel.LINEA_MINI, LaMarzoccoModel.LINEA_MICRA],
+)
 async def test_prebrew(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
@@ -124,10 +128,6 @@ async def test_prebrew(
     serial_number = mock_lamarzocco.serial_number
 
     state = hass.states.get(f"switch.{serial_number}_prebrew")
-
-    if mock_lamarzocco.model_name == LaMarzoccoModel.GS3_MP:
-        assert state is None
-        return
     assert state
     assert state == snapshot
 
@@ -165,6 +165,22 @@ async def test_prebrew(
     mock_lamarzocco.set_prebrew.assert_called_with(enabled=True)
 
 
+@pytest.mark.parametrize("device_fixture", [LaMarzoccoModel.GS3_MP])
+async def test_prebrew_none(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Assert prebrew switch is None for unsupported models."""
+    serial_number = mock_lamarzocco.serial_number
+
+    state = hass.states.get(f"switch.{serial_number}_prebrew")
+    assert state is None
+
+
+@pytest.mark.parametrize(
+    "device_fixture",
+    [LaMarzoccoModel.GS3_AV, LaMarzoccoModel.LINEA_MINI, LaMarzoccoModel.LINEA_MICRA],
+)
 async def test_preinfusion(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
@@ -176,11 +192,6 @@ async def test_preinfusion(
     serial_number = mock_lamarzocco.serial_number
 
     state = hass.states.get(f"switch.{serial_number}_preinfusion")
-
-    if mock_lamarzocco.model_name == LaMarzoccoModel.GS3_MP:
-        assert state is None
-        return
-
     assert state
     assert state == snapshot
 
@@ -216,6 +227,18 @@ async def test_preinfusion(
 
     assert len(mock_lamarzocco.set_preinfusion.mock_calls) == 2
     mock_lamarzocco.set_preinfusion.assert_called_with(enabled=False)
+
+
+@pytest.mark.parametrize("device_fixture", [LaMarzoccoModel.GS3_MP])
+async def test_preinfusion_none(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Assert preinfusion switch is None for unsupported models."""
+    serial_number = mock_lamarzocco.serial_number
+
+    state = hass.states.get(f"switch.{serial_number}_preinfusion")
+    assert state is None
 
 
 async def test_steam_boiler_enable(

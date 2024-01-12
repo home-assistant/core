@@ -39,19 +39,18 @@ async def init_integration(
     return mock_config_entry
 
 
-@pytest.fixture(
-    params=[
-        LaMarzoccoModel.GS3_AV,
-        LaMarzoccoModel.GS3_MP,
-        LaMarzoccoModel.LINEA_MICRA,
-        LaMarzoccoModel.LINEA_MINI,
-    ]
-)
+@pytest.fixture
+def device_fixture() -> LaMarzoccoModel:
+    """Return the device fixture for a specific device."""
+    return LaMarzoccoModel.GS3_AV
+
+
+@pytest.fixture
 def mock_lamarzocco(
-    request: pytest.FixtureRequest,
+    request: pytest.FixtureRequest, device_fixture: LaMarzoccoModel
 ) -> Generator[MagicMock, None, None]:
     """Return a mocked LM client."""
-    model_name = request.param
+    model_name = device_fixture
 
     if model_name == LaMarzoccoModel.GS3_AV:
         serial_number = "GS01234"

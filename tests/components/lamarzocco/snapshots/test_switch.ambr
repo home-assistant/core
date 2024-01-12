@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_auto_on_off[GS3 AV]
+# name: test_auto_on_off
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Auto on/off',
@@ -12,7 +12,7 @@
     'state': 'on',
   })
 # ---
-# name: test_auto_on_off[GS3 AV].1
+# name: test_auto_on_off.1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -43,7 +43,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_auto_on_off[GS3 AV].2
+# name: test_auto_on_off.2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -71,223 +71,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_auto_on_off[GS3 MP]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Auto on/off',
-      'icon': 'mdi:alarm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.gs01234_auto_on_off',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_auto_on_off[GS3 MP].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.gs01234_auto_on_off',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:alarm',
-    'original_name': 'Auto on/off',
-    'platform': 'lamarzocco',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'auto_on_off',
-    'unique_id': 'GS01234_auto_on_off',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_auto_on_off[GS3 MP].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lamarzocco',
-        'GS01234',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'La Marzocco',
-    'model': 'GS3 MP',
-    'name': 'GS01234',
-    'name_by_user': None,
-    'serial_number': 'GS01234',
-    'suggested_area': None,
-    'sw_version': '1.1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_auto_on_off[Linea Mini]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LM01234 Auto on/off',
-      'icon': 'mdi:alarm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.lm01234_auto_on_off',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_auto_on_off[Linea Mini].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.lm01234_auto_on_off',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:alarm',
-    'original_name': 'Auto on/off',
-    'platform': 'lamarzocco',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'auto_on_off',
-    'unique_id': 'LM01234_auto_on_off',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_auto_on_off[Linea Mini].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lamarzocco',
-        'LM01234',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'La Marzocco',
-    'model': 'Linea Mini',
-    'name': 'LM01234',
-    'name_by_user': None,
-    'serial_number': 'LM01234',
-    'suggested_area': None,
-    'sw_version': '1.1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_auto_on_off[Micra]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'MR01234 Auto on/off',
-      'icon': 'mdi:alarm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mr01234_auto_on_off',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_auto_on_off[Micra].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mr01234_auto_on_off',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:alarm',
-    'original_name': 'Auto on/off',
-    'platform': 'lamarzocco',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'auto_on_off',
-    'unique_id': 'MR01234_auto_on_off',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_auto_on_off[Micra].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lamarzocco',
-        'MR01234',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'La Marzocco',
-    'model': 'Linea Micra',
-    'name': 'MR01234',
-    'name_by_user': None,
-    'serial_number': 'MR01234',
-    'suggested_area': None,
-    'sw_version': '1.1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_main[GS3 AV]
+# name: test_main
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Main',
@@ -300,7 +84,7 @@
     'state': 'on',
   })
 # ---
-# name: test_main[GS3 AV].1
+# name: test_main.1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -331,7 +115,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_main[GS3 AV].2
+# name: test_main.2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -354,222 +138,6 @@
     'name': 'GS01234',
     'name_by_user': None,
     'serial_number': 'GS01234',
-    'suggested_area': None,
-    'sw_version': '1.1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_main[GS3 MP]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Main',
-      'icon': 'mdi:power',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.gs01234_main',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_main[GS3 MP].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.gs01234_main',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:power',
-    'original_name': 'Main',
-    'platform': 'lamarzocco',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'main',
-    'unique_id': 'GS01234_main',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_main[GS3 MP].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lamarzocco',
-        'GS01234',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'La Marzocco',
-    'model': 'GS3 MP',
-    'name': 'GS01234',
-    'name_by_user': None,
-    'serial_number': 'GS01234',
-    'suggested_area': None,
-    'sw_version': '1.1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_main[Linea Mini]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LM01234 Main',
-      'icon': 'mdi:power',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.lm01234_main',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_main[Linea Mini].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.lm01234_main',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:power',
-    'original_name': 'Main',
-    'platform': 'lamarzocco',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'main',
-    'unique_id': 'LM01234_main',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_main[Linea Mini].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lamarzocco',
-        'LM01234',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'La Marzocco',
-    'model': 'Linea Mini',
-    'name': 'LM01234',
-    'name_by_user': None,
-    'serial_number': 'LM01234',
-    'suggested_area': None,
-    'sw_version': '1.1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_main[Micra]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'MR01234 Main',
-      'icon': 'mdi:power',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mr01234_main',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_main[Micra].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.mr01234_main',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:power',
-    'original_name': 'Main',
-    'platform': 'lamarzocco',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'main',
-    'unique_id': 'MR01234_main',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_main[Micra].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lamarzocco',
-        'MR01234',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'La Marzocco',
-    'model': 'Linea Micra',
-    'name': 'MR01234',
-    'name_by_user': None,
-    'serial_number': 'MR01234',
     'suggested_area': None,
     'sw_version': '1.1',
     'via_device_id': None,
@@ -1007,7 +575,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_steam_boiler_enable[GS3 AV]
+# name: test_steam_boiler_enable
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Steam boiler',
@@ -1020,7 +588,7 @@
     'state': 'on',
   })
 # ---
-# name: test_steam_boiler_enable[GS3 AV].1
+# name: test_steam_boiler_enable.1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1051,7 +619,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_steam_boiler_enable[GS3 AV].2
+# name: test_steam_boiler_enable.2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -1074,222 +642,6 @@
     'name': 'GS01234',
     'name_by_user': None,
     'serial_number': 'GS01234',
-    'suggested_area': None,
-    'sw_version': '1.1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_steam_boiler_enable[GS3 MP]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Steam boiler',
-      'icon': 'mdi:water-boiler',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.gs01234_steam_boiler',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_steam_boiler_enable[GS3 MP].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.gs01234_steam_boiler',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water-boiler',
-    'original_name': 'Steam boiler',
-    'platform': 'lamarzocco',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'steam_boiler',
-    'unique_id': 'GS01234_steam_boiler_enable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_steam_boiler_enable[GS3 MP].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lamarzocco',
-        'GS01234',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'La Marzocco',
-    'model': 'GS3 MP',
-    'name': 'GS01234',
-    'name_by_user': None,
-    'serial_number': 'GS01234',
-    'suggested_area': None,
-    'sw_version': '1.1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_steam_boiler_enable[Linea Mini]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LM01234 Steam boiler',
-      'icon': 'mdi:water-boiler',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.lm01234_steam_boiler',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_steam_boiler_enable[Linea Mini].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.lm01234_steam_boiler',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water-boiler',
-    'original_name': 'Steam boiler',
-    'platform': 'lamarzocco',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'steam_boiler',
-    'unique_id': 'LM01234_steam_boiler_enable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_steam_boiler_enable[Linea Mini].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lamarzocco',
-        'LM01234',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'La Marzocco',
-    'model': 'Linea Mini',
-    'name': 'LM01234',
-    'name_by_user': None,
-    'serial_number': 'LM01234',
-    'suggested_area': None,
-    'sw_version': '1.1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_steam_boiler_enable[Micra]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'MR01234 Steam boiler',
-      'icon': 'mdi:water-boiler',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mr01234_steam_boiler',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_steam_boiler_enable[Micra].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.mr01234_steam_boiler',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water-boiler',
-    'original_name': 'Steam boiler',
-    'platform': 'lamarzocco',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'steam_boiler',
-    'unique_id': 'MR01234_steam_boiler_enable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_steam_boiler_enable[Micra].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lamarzocco',
-        'MR01234',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'La Marzocco',
-    'model': 'Linea Micra',
-    'name': 'MR01234',
-    'name_by_user': None,
-    'serial_number': 'MR01234',
     'suggested_area': None,
     'sw_version': '1.1',
     'via_device_id': None,
