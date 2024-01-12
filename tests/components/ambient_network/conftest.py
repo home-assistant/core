@@ -73,8 +73,8 @@ def config_entry_fixture() -> MockConfigEntry:
     """Create a new config entry."""
     return MockConfigEntry(
         domain=ambient_network.DOMAIN,
-        title="virtual_station",
-        data={"station_name": "virtual_station", "mac_address": "AA:AA:AA:AA:AA:AA"},
+        title="Station A1",
+        data={"station_name": "Station A1", "mac_address": "AA:AA:AA:AA:AA:AA"},
     )
 
 

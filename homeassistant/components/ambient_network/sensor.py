@@ -1,8 +1,7 @@
 """Support for Ambient Weather Network sensors."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from typing import Any
+from datetime import datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, ENTITY_STATION_NAME
+from .const import DOMAIN, ENTITY_MAC_ADDRESS, ENTITY_STATION_NAME
 from .coordinator import AmbientNetworkDataUpdateCoordinator
 from .entity import AmbientNetworkEntity
 
@@ -278,10 +277,10 @@ async def async_setup_entry(
                 coordinator,
                 description,
                 coordinator.config_entry.data[ENTITY_STATION_NAME],
+                coordinator.config_entry.data[ENTITY_MAC_ADDRESS],
             )
             for description in SENSOR_DESCRIPTIONS
-            if AmbientNetworkSensor.get_sensor_value(coordinator.data, description.key)
-            is not None
+            if coordinator.data.get(description.key) is not None
         )
 
 
@@ -293,40 +292,19 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         coordinator: AmbientNetworkDataUpdateCoordinator,
         description: SensorEntityDescription,
         station_name: str,
+        mac_address: str,
     ) -> None:
         """Initialize a sensor object."""
 
-        super().__init__(coordinator, description, station_name)
-        self._attr_suggested_display_precision = description.suggested_display_precision
+        super().__init__(coordinator, description, station_name, mac_address)
 
     def _update_attrs(self) -> None:
         """Update sensor attributes."""
 
-        value = AmbientNetworkSensor.get_sensor_value(
-            self.coordinator.data, self.entity_description.key
-        )
+        value = self.coordinator.data.get(self.entity_description.key)
 
         # Treatments for special units.
         if value is not None and self.device_class == SensorDeviceClass.TIMESTAMP:
             value = datetime.fromtimestamp(value / 1000, tz=dt_util.DEFAULT_TIME_ZONE)
 
         self._attr_native_value = value
-
-    @staticmethod
-    def get_sensor_value(station_data: dict[str, Any], sensor_key: str) -> Any | None:
-        """Return the sensor value from a station if available.
-
-        Eliminates data from stations that haven't been updated for a while.
-        """
-
-        if (created_at := station_data.get("created_at")) is None:
-            return None  # pragma: no cover
-
-        # Eliminate data that has been generated more than an hour ago. The station is
-        # probably offline.
-        if int(created_at / 1000) < int(
-            (datetime.now() - timedelta(hours=1)).timestamp()
-        ):
-            return None  # pragma: no cover
-
-        return station_data.get(sensor_key)

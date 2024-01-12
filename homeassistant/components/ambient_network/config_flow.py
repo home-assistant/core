@@ -19,9 +19,14 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
+    API_LAST_DATA,
+    API_STATION_COORDS,
+    API_STATION_INDOOR,
     API_STATION_INFO,
+    API_STATION_LOCATION,
     API_STATION_MAC_ADDRESS,
     API_STATION_NAME,
+    API_STATION_TYPE,
     DOMAIN,
     ENTITY_MAC_ADDRESS,
     ENTITY_STATION_NAME,
@@ -40,7 +45,6 @@ CONFIG_LOCATION_RADIUS_DEFAULT = DistanceConverter.convert(
 )
 
 CONFIG_STATION = "station"
-CONFIG_STATION_NAME = "station_name"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,7 +58,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._longitude = 0.0
         self._latitude = 0.0
         self._radius = 0.0
-        self._station: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -95,6 +98,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @staticmethod
+    def get_station_name(station: dict[str, Any]) -> str:
+        """Pick a station name.
+
+        Station names can be empty, in which case we construct the name from
+        the location and device type.
+        """
+        if name := station.get(API_STATION_INFO, {}).get(API_STATION_NAME):
+            return str(name)
+        location = (
+            station.get(API_STATION_INFO, {})
+            .get(API_STATION_COORDS, {})
+            .get(API_STATION_LOCATION)
+        )
+        station_type = station.get(API_LAST_DATA, {}).get(API_STATION_TYPE)
+        return f"{location}{'' if location is None or station_type is None else ' '}{station_type}"
+
     async def async_step_station(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -102,33 +122,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-
-            def parse_station(station: str) -> dict[str, str]:
-                mac_address, station_name = station.split(",")
-                return {
+            mac_address, station_name = user_input[CONFIG_STATION].split(",")
+            await self.async_set_unique_id(mac_address)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=station_name,
+                data={
                     ENTITY_STATION_NAME: station_name,
                     ENTITY_MAC_ADDRESS: mac_address,
-                }
-
-            self._station = parse_station(user_input[CONFIG_STATION])
-            return await self.async_step_station_name()
+                },
+            )
 
         client: OpenAPI = OpenAPI()
         stations: list[dict[str, Any]] = await client.get_devices_by_location(
             self._latitude, self._longitude, radius=self._radius
         )
 
+        # Filter out indoor stations
+        stations = list(
+            filter(
+                lambda station: not station.get(API_STATION_INFO, {}).get(
+                    API_STATION_INDOOR, False
+                ),
+                stations,
+            )
+        )
+
         if len(stations) == 0:
             return self.async_abort(reason="no_stations_found")
 
         options: list[SelectOptionDict] = list[SelectOptionDict]()
-        for station in sorted(
-            stations, key=lambda s: s[API_STATION_INFO][API_STATION_NAME]
-        ):
-            station_name: str = station[API_STATION_INFO][API_STATION_NAME]
+        for station in sorted(stations, key=ConfigFlow.get_station_name):
+            name: str = ConfigFlow.get_station_name(station)
             option: SelectOptionDict = SelectOptionDict(
-                label=f"{station_name}",
-                value=f"{station[API_STATION_MAC_ADDRESS]},{station_name}",
+                label=f"{name}",
+                value=f"{station[API_STATION_MAC_ADDRESS]},{name}",
             )
             options.append(option)
 
@@ -145,41 +173,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id=CONFIG_STATION,
-            data_schema=schema,
-            errors=errors,
-        )
-
-    async def async_step_station_name(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the third step to assign a station name."""
-
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            if not user_input[CONFIG_STATION_NAME]:
-                return self.async_abort(reason="no_station_name_defined")
-
-            await self.async_set_unique_id(self._station[ENTITY_MAC_ADDRESS])
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=f"{user_input[CONFIG_STATION_NAME]}",
-                data={
-                    ENTITY_STATION_NAME: user_input[CONFIG_STATION_NAME],
-                    ENTITY_MAC_ADDRESS: self._station[ENTITY_MAC_ADDRESS],
-                },
-            )
-
-        schema: vol.Schema = vol.Schema(
-            {
-                vol.Required(
-                    CONFIG_STATION_NAME,
-                    default=self._station[ENTITY_STATION_NAME],
-                ): str
-            }
-        )
-
-        return self.async_show_form(
-            step_id=CONFIG_STATION_NAME,
             data_schema=schema,
             errors=errors,
         )

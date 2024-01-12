@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any, cast
 
 from aioambient import OpenAPI
@@ -10,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, ENTITY_MAC_ADDRESS, LOGGER, SCAN_INTERVAL
+from .const import API_LAST_DATA, DOMAIN, ENTITY_MAC_ADDRESS, LOGGER, SCAN_INTERVAL
 
 
 class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -22,6 +23,7 @@ class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
         """Initialize the coordinator."""
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
         self.api = api
+        self.data = {}
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the latest data from the Ambient Network."""
@@ -30,8 +32,19 @@ class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
             self.config_entry.data[ENTITY_MAC_ADDRESS]
         )
 
-        if response is None or (last_data := response.get("lastData")) is None:
-            # Return previous data
-            return self.data  # pragma: no cover
+        if (last_data := response.get(API_LAST_DATA)) is None:
+            # Use previous data
+            last_data = self.data  # pragma: no cover
+
+        # Eliminate data if the station hasn't been updated for a while.
+        if (created_at := last_data.get("created_at")) is None:
+            return {}  # pragma: no cover
+
+        # Eliminate data that has been generated more than an hour ago. The station is
+        # probably offline.
+        if int(created_at / 1000) < int(
+            (datetime.now() - timedelta(hours=1)).timestamp()
+        ):
+            return {}  # pragma: no cover
 
         return cast(dict[str, Any], last_data)
