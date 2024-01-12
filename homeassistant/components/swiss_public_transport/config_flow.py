@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Swiss public transport config flow."""
 
-    VERSION = 2
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

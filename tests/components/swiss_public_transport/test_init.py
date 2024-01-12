@@ -45,11 +45,6 @@ CONNECTIONS = [
 ]
 
 
-def side_effect_async_get_data(x):
-    """Side effect on calling async get data which fills the connections attribute."""
-    x.connections = CONNECTIONS
-
-
 async def test_migration_1_to_2(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -65,6 +60,7 @@ async def test_migration_1_to_2(
             domain=DOMAIN,
             data=MOCK_DATA_STEP,
             title="MIGRATION_TEST",
+            minor_version=1,
         )
         config_entry_faulty.add_to_hass(hass)
 
@@ -78,7 +74,7 @@ async def test_migration_1_to_2(
         )
 
         # Check change in config entry
-        assert config_entry_faulty.version == 2
+        assert config_entry_faulty.minor_version == 2
         assert config_entry_faulty.unique_id == "test_start test_destination"
 
         # Check "None" is gone

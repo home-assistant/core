@@ -74,11 +74,11 @@ async def async_migrate_entry(
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version > 3:
+    if config_entry.minor_version > 3:
         # This means the user has downgraded from a future version
         return False
 
-    if config_entry.version == 1:
+    if config_entry.minor_version == 1:
         # Remove wrongly registered devices and entries
         new_unique_id = (
             f"{config_entry.data[CONF_START]} {config_entry.data[CONF_DESTINATION]}"
@@ -106,9 +106,9 @@ async def async_migrate_entry(
 
         # Set a valid unique id for config entries
         config_entry.unique_id = new_unique_id
-        config_entry.version = 2
+        config_entry.minor_version = 2
         hass.config_entries.async_update_entry(config_entry)
 
-    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+    _LOGGER.debug("Migration to minor version %s successful", config_entry.minor_version)
 
     return True
