@@ -109,6 +109,8 @@ async def async_migrate_entry(
         config_entry.minor_version = 2
         hass.config_entries.async_update_entry(config_entry)
 
-    _LOGGER.debug("Migration to minor version %s successful", config_entry.minor_version)
+    _LOGGER.debug(
+        "Migration to minor version %s successful", config_entry.minor_version
+    )
 
     return True
