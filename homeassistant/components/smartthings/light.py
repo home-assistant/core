@@ -183,21 +183,21 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
 
     async def async_update(self) -> None:
         """Update entity attributes when the device status has changed."""
+        status = get_device_status(self._device, self._component_id)
+
         # Brightness and transition
         if brightness_supported(self._attr_supported_color_modes):
-            self._attr_brightness = int(
-                convert_scale(self._device.status.level, 100, 255, 0)
-            )
+            self._attr_brightness = int(convert_scale(status.level, 100, 255, 0))
         # Color Temperature
         if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
             self._attr_color_temp = color_util.color_temperature_kelvin_to_mired(
-                self._device.status.color_temperature
+                status.color_temperature
             )
         # Color
         if ColorMode.HS in self._attr_supported_color_modes:
             self._attr_hs_color = (
-                convert_scale(self._device.status.hue, 100, 360),
-                self._device.status.saturation,
+                convert_scale(status.hue, 100, 360),
+                status.saturation,
             )
 
     async def async_set_color(self, hs_color):
