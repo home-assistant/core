@@ -101,6 +101,7 @@ class GdacsSensor(SensorEntity):
 
     def _update_from_status_info(self, status_info):
         """Update the internal state from the provided information."""
+        _LOGGER.debug("in update from status info")
         self._status = status_info.status
         self._last_update = (
             dt_util.as_utc(status_info.last_update) if status_info.last_update else None
@@ -125,6 +126,7 @@ class GdacsSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
+        _LOGGER.debug("in extra state attributes method")
         attributes = {}
         for key, value in (
             (ATTR_STATUS, self._status),
@@ -135,6 +137,7 @@ class GdacsSensor(SensorEntity):
             (ATTR_UPDATED, self._updated),
             (ATTR_REMOVED, self._removed),
         ):
-            if value or isinstance(value, bool):
+            if value or isinstance(value, bool) or value == 0:
                 attributes[key] = value
+
         return attributes
