@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
-from tesla_fleet_api.teslemetry import VehicleSpecific
+from tesla_fleet_api.vehiclespecific import VehicleSpecific
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -34,7 +34,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except TeslaFleetError as e:
             raise UpdateFailed from e
 
-        return self._flatten(data)
+        return self._flatten(data["response"])
 
     def _flatten(
         self, data: dict[str, Any], parent: str | None = None
