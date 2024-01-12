@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from roborock import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.vacuum import (
@@ -20,6 +21,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from tests.common import MockConfigEntry
@@ -122,3 +124,22 @@ async def test_issues(
     issue = issue_registry.async_get_issue("roborock", issue_id)
     assert issue.is_fixable is True
     assert issue.is_persistent is True
+
+
+async def test_failed_user_command(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test that when a user sends an invalid command, we raise HomeAssistantError."""
+    data = {ATTR_ENTITY_ID: ENTITY_ID, **{"command": "fake_command"}}
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command",
+        side_effect=RoborockException(),
+    ), pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            Platform.VACUUM,
+            SERVICE_SEND_COMMAND,
+            data,
+            blocking=True,
+        )
