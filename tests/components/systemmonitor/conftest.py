@@ -168,9 +168,9 @@ def mock_util() -> Mock:
 @pytest.fixture
 def mock_os() -> Mock:
     """Mock os."""
-    with patch(
-        "homeassistant.components.systemmonitor.sensor.os",
-        autospec=True,
-    ) as mock_os:
+    with patch("homeassistant.components.systemmonitor.sensor.os") as mock_os, patch(
+        "homeassistant.components.systemmonitor.util.os"
+    ) as mock_os_util:
+        mock_os_util.name = "nt"
         mock_os.getloadavg.return_value = (1, 2, 3)
         yield mock_os

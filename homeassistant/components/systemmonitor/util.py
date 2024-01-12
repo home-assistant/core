@@ -14,7 +14,8 @@ def get_all_disk_mounts() -> set[str]:
     """Return all disk mount points on system."""
     disks: set[str] = set()
     for part in psutil.disk_partitions(all=True):
-        if os.name == "nt":
+        os_name = os.name
+        if os_name == "nt":
             if "cdrom" in part.opts or part.fstype == "":
                 # skip cd-rom drives with no disk in it; they may raise
                 # ENOENT, pop-up a Windows GUI error for a non-ready
