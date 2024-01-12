@@ -500,11 +500,11 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self._device.refresh()
 
             except (
-                AuthError,
-                ClientConnectionError,
                 AscConnectionError,
                 asyncio.TimeoutError,
                 APIRateLimited,
+                AuthError,
+                ClientConnectionError,
             ):
                 self._retry += 1
                 self._attr_available = self._retry <= RETRY
@@ -520,10 +520,10 @@ class HoneywellUSThermostat(ClimateEntity):
             await _login()
             return
         except (
-            APIRateLimited,
             AscConnectionError,
-            ClientConnectionError,
             asyncio.TimeoutError,
+            APIRateLimited,
+            ClientConnectionError,
         ):
             self._retry += 1
             self._attr_available = self._retry <= RETRY
