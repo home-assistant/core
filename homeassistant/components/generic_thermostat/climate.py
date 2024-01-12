@@ -270,7 +270,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             ):
                 self.hass.create_task(self._check_switch_initial_state())
 
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             _async_startup()
         else:
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
