@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from functools import partial
 from typing import Final
 
 import voluptuous as vol
@@ -34,6 +35,12 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumetricFlux,
+)
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
@@ -451,9 +458,15 @@ STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
 
 # STATE_CLASS* is deprecated as of 2021.12
 # use the SensorStateClass enum instead.
-STATE_CLASS_MEASUREMENT: Final = "measurement"
-STATE_CLASS_TOTAL: Final = "total"
-STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
+_DEPRECATED_STATE_CLASS_MEASUREMENT: Final = DeprecatedConstantEnum(
+    SensorStateClass.MEASUREMENT, "2025.1"
+)
+_DEPRECATED_STATE_CLASS_TOTAL: Final = DeprecatedConstantEnum(
+    SensorStateClass.TOTAL, "2025.1"
+)
+_DEPRECATED_STATE_CLASS_TOTAL_INCREASING: Final = DeprecatedConstantEnum(
+    SensorStateClass.TOTAL_INCREASING, "2025.1"
+)
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
@@ -615,3 +628,10 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.WEIGHT: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.WIND_SPEED: {SensorStateClass.MEASUREMENT},
 }
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

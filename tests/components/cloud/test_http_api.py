@@ -46,6 +46,26 @@ PIPELINE_DATA_LEGACY = {
     "preferred_item": "12345",
 }
 
+PIPELINE_DATA = {
+    "items": [
+        {
+            "conversation_engine": "homeassistant",
+            "conversation_language": "language_1",
+            "id": "12345",
+            "language": "language_1",
+            "name": "Home Assistant Cloud",
+            "stt_engine": "stt.home_assistant_cloud",
+            "stt_language": "language_1",
+            "tts_engine": "cloud",
+            "tts_language": "language_1",
+            "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": None,
+            "wake_word_id": None,
+        },
+    ],
+    "preferred_item": "12345",
+}
+
 PIPELINE_DATA_OTHER = {
     "items": [
         {
@@ -127,7 +147,34 @@ async def test_google_actions_sync_fails(
         assert mock_request_sync.call_count == 1
 
 
-@pytest.mark.parametrize("pipeline_data", [PIPELINE_DATA_LEGACY])
+async def test_login_view_missing_stt_entity(
+    hass: HomeAssistant,
+    setup_cloud: None,
+    entity_registry: er.EntityRegistry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in when the cloud stt entity is missing."""
+    # Make sure that the cloud stt entity does not exist.
+    entity_registry.async_remove("stt.home_assistant_cloud")
+    await hass.async_block_till_done()
+
+    cloud_client = await hass_client()
+
+    # We assume the user needs to login again for some reason.
+    with patch(
+        "homeassistant.components.cloud.assist_pipeline.async_create_default_pipeline",
+    ) as create_pipeline_mock:
+        req = await cloud_client.post(
+            "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+        )
+
+    assert req.status == HTTPStatus.OK
+    result = await req.json()
+    assert result == {"success": True, "cloud_pipeline": None}
+    create_pipeline_mock.assert_not_awaited()
+
+
+@pytest.mark.parametrize("pipeline_data", [PIPELINE_DATA, PIPELINE_DATA_LEGACY])
 async def test_login_view_existing_pipeline(
     hass: HomeAssistant,
     cloud: MagicMock,
@@ -195,7 +242,7 @@ async def test_login_view_create_pipeline(
     assert result == {"success": True, "cloud_pipeline": "12345"}
     create_pipeline_mock.assert_awaited_once_with(
         hass,
-        stt_engine_id="cloud",
+        stt_engine_id="stt.home_assistant_cloud",
         tts_engine_id="cloud",
         pipeline_name="Home Assistant Cloud",
     )
@@ -234,7 +281,7 @@ async def test_login_view_create_pipeline_fail(
     assert result == {"success": True, "cloud_pipeline": None}
     create_pipeline_mock.assert_awaited_once_with(
         hass,
-        stt_engine_id="cloud",
+        stt_engine_id="stt.home_assistant_cloud",
         tts_engine_id="cloud",
         pipeline_name="Home Assistant Cloud",
     )

@@ -136,7 +136,11 @@
           "washing_the_mop": "Washing the mop",
           "going_to_wash_the_mop": "Going to wash the mop",
           "charging_complete": "Charging complete",
-          "device_offline": "Device offline"
+          "device_offline": "Device offline",
+          "unknown": "Unknown",
+          "locked": "Locked",
+          "air_drying_stopping": "Air drying stopping",
+          "egg_attack": "Cupid mode"
         }
       },
       "total_cleaning_time": {
@@ -174,7 +178,25 @@
           "filter_blocked": "Filter blocked",
           "invisible_wall_detected": "Invisible wall detected",
           "cannot_cross_carpet": "Cannot cross carpet",
-          "internal_error": "Internal error"
+          "internal_error": "Internal error",
+          "strainer_error": "Filter is wet or blocked",
+          "compass_error": "Strong magnetic field detected",
+          "dock": "Dock not connected to power",
+          "visual_sensor": "Camera error",
+          "light_touch": "Wall sensor error",
+          "collect_dust_error_3": "Clean auto-empty dock",
+          "collect_dust_error_4": "Auto empty dock voltage error",
+          "mopping_roller_1": "Wash roller may be jammed",
+          "mopping_roller_error_2": "Wash roller not lowered properly",
+          "clear_water_box_hoare": "Check the clean water tank",
+          "dirty_water_box_hoare": "Check the dirty water tank",
+          "sink_strainer_hoare": "Reinstall the water filter",
+          "clear_water_box_exception": "Clean water tank empty",
+          "clear_brush_exception": "Check that the water filter has been correctly installed",
+          "clear_brush_exception_2": "Positioning button error",
+          "filter_screen_exception": "Clean the dock water filter",
+          "mopping_roller_2": "[%key:component::roborock::entity::sensor::vacuum_error::state::mopping_roller_1%]",
+          "temperature_protection": "Unit temperature protection"
         }
       }
     },

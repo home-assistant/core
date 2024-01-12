@@ -59,6 +59,7 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    help_test_all,
     import_and_test_deprecated_constant,
     mock_restore_cache,
 )
@@ -2569,6 +2570,11 @@ async def test_websocket_config(
     assert msg["error"]["code"] == "not_found"
 
 
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(automation)
+
+
 @pytest.mark.parametrize(
     ("constant_name", "replacement"),
     [
@@ -2582,7 +2588,7 @@ def test_deprecated_constants(
     constant_name: str,
     replacement: Any,
 ) -> None:
-    """Test deprecated binary sensor device classes."""
+    """Test deprecated automation constants."""
     import_and_test_deprecated_constant(
         caplog, automation, constant_name, replacement.__name__, replacement, "2025.1"
     )

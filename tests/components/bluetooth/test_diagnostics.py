@@ -457,9 +457,9 @@ async def test_diagnostics_remote_adapter(
         connector = (
             HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
         )
-        scanner = FakeScanner("esp32", "esp32", connector, False)
+        scanner = FakeScanner("esp32", "esp32", connector, True)
         unsetup = scanner.async_setup()
-        cancel = manager.async_register_scanner(scanner, True)
+        cancel = manager.async_register_scanner(scanner)
 
         scanner.inject_advertisement(switchbot_device, switchbot_adv)
         inject_advertisement(hass, switchbot_device, switchbot_adv)
@@ -511,7 +511,7 @@ async def test_diagnostics_remote_adapter(
                             -127,
                             [],
                         ],
-                        "connectable": False,
+                        "connectable": True,
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
                             "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
@@ -537,7 +537,7 @@ async def test_diagnostics_remote_adapter(
                             [],
                             -127,
                             -127,
-                            [[]],
+                            [],
                         ],
                         "connectable": True,
                         "device": {
@@ -551,7 +551,7 @@ async def test_diagnostics_remote_adapter(
                         "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
-                        "source": "local",
+                        "source": "esp32",
                         "time": ANY,
                     }
                 ],
@@ -595,7 +595,7 @@ async def test_diagnostics_remote_adapter(
                         "type": "FakeHaScanner",
                     },
                     {
-                        "connectable": False,
+                        "connectable": True,
                         "discovered_device_timestamps": {"44:44:33:11:23:45": ANY},
                         "discovered_devices_and_advertisement_data": [
                             {

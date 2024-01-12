@@ -6,7 +6,7 @@ from datetime import timedelta
 from enum import StrEnum
 import logging
 import re
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -32,6 +32,11 @@ from .const import (
     DOMAIN,
     SERVICE_SET_VALUE,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -107,7 +112,16 @@ class TextEntityDescription(EntityDescription, frozen_or_thawed=True):
     pattern: str | None = None
 
 
-class TextEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "mode",
+    "native_value",
+    "native_min",
+    "native_max",
+    "pattern",
+}
+
+
+class TextEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Text entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
@@ -156,7 +170,7 @@ class TextEntity(Entity):
             )
         return self.native_value
 
-    @property
+    @cached_property
     def mode(self) -> TextMode:
         """Return the mode of the entity."""
         if hasattr(self, "_attr_mode"):
@@ -165,7 +179,7 @@ class TextEntity(Entity):
             return self.entity_description.mode
         return TextMode.TEXT
 
-    @property
+    @cached_property
     def native_min(self) -> int:
         """Return the minimum length of the value."""
         if hasattr(self, "_attr_native_min"):
@@ -180,7 +194,7 @@ class TextEntity(Entity):
         """Return the minimum length of the value."""
         return max(self.native_min, 0)
 
-    @property
+    @cached_property
     def native_max(self) -> int:
         """Return the maximum length of the value."""
         if hasattr(self, "_attr_native_max"):
@@ -206,7 +220,7 @@ class TextEntity(Entity):
             self.__pattern_cmp = re.compile(self.pattern)
         return self.__pattern_cmp
 
-    @property
+    @cached_property
     def pattern(self) -> str | None:
         """Return the regex pattern that the value must match."""
         if hasattr(self, "_attr_pattern"):
@@ -215,7 +229,7 @@ class TextEntity(Entity):
             return self.entity_description.pattern
         return None
 
-    @property
+    @cached_property
     def native_value(self) -> str | None:
         """Return the value reported by the text."""
         return self._attr_native_value

@@ -14,7 +14,8 @@ def mock_config_entry(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"host": "http://example.com", "username": "dummy", "password": "dummypw"},
-        version=2,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     return entry
