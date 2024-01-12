@@ -1194,54 +1194,28 @@ def test_as_datetime_from_timestamp(
 
 
 @pytest.mark.parametrize(
-    ("input", "output"),
+    ("input", "default", "output"),
     [
-        (
-            "{% set dt = as_datetime('2024-01-01 16:00:00-08:00') %}",
-            "2024-01-01 16:00:00-08:00",
-        ),
-        (
-            "{% set dt = as_datetime('2024-01-01').date() %}",
-            "2024-01-01 00:00:00",
-        ),
+        (1469119144, 123, "2016-07-21 16:39:04+00:00"),
+        ('"invalid"', ["default output"], ["default output"]),
+        (["a", "list"], 0, 0),
+        ({"a": "dict"}, None, None),
     ],
 )
-def test_as_datetime_from_datetime(
-    hass: HomeAssistant, input: str, output: str
+def test_as_datetime_default(
+    hass: HomeAssistant, input: Any, default: Any, output: str
 ) -> None:
-    """Test converting a datetime.datetime or datetime.date to a date object."""
-
-    assert (
-        template.Template(f"{input}{{{{ dt | as_datetime }}}}", hass).async_render()
-        == output
-    )
-
-    assert (
-        template.Template(f"{input}{{{{ as_datetime(dt) }}}}", hass).async_render()
-        == output
-    )
-
-
-@pytest.mark.parametrize(
-    ("input", "output"),
-    [
-        ('"invalid"', ["default output"]),
-        (["a", "list"], 0),
-        ({"a": "dict"}, None),
-    ],
-)
-def test_as_datetime_default(hass: HomeAssistant, input: Any, output: str) -> None:
     """Test invalid input and return default value."""
 
     assert (
         template.Template(
-            f"{{{{ as_datetime({input}, default={output}) }}}}", hass
+            f"{{{{ as_datetime({input}, default={default}) }}}}", hass
         ).async_render()
         == output
     )
     assert (
         template.Template(
-            f"{{{{ {input} | as_datetime({output}) }}}}", hass
+            f"{{{{ {input} | as_datetime({default}) }}}}", hass
         ).async_render()
         == output
     )

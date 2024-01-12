@@ -1837,11 +1837,15 @@ def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
         return dt_util.utc_from_timestamp(timestamp)
     except (ValueError, TypeError):
         # convert value parsed to string to datetime
-        if (
-            parsed := dt_util.parse_datetime(str(value))
-        ) is not None or default is _SENTINEL:
-            return parsed
-        return default
+        try:
+            return dt_util.parse_datetime(value, raise_on_error=True)
+        except (ValueError, TypeError):
+            if default is _SENTINEL:
+                # Return None on string input
+                if isinstance(value, str):
+                    return None
+                raise_no_default("as_datetime", value)
+            return default
 
 
 def as_timedelta(value: str) -> timedelta | None:
