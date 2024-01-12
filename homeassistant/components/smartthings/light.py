@@ -103,12 +103,13 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         self._component_id = component_id
         self._external_component_id = "main" if component_id is None else component_id
 
-        self._attr_name = format_component_name(
-            device.label, Platform.LIGHT, component_id
-        )
-        self._attr_unique_id = format_component_name(
-            device.device_id, Platform.LIGHT, component_id, "."
-        )
+        if component_id is not None:
+            self._attr_name = format_component_name(
+                device.label, Platform.LIGHT, component_id
+            )
+            self._attr_unique_id = format_component_name(
+                device.device_id, Platform.LIGHT, component_id, "."
+            )
 
         self._attr_supported_color_modes = self._determine_color_modes()
         self._attr_supported_features = self._determine_features()

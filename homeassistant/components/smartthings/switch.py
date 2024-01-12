@@ -61,12 +61,13 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         self._component_id = component_id
         self._external_component_id = "main" if component_id is None else component_id
 
-        self._attr_name = format_component_name(
-            device.label, Platform.SWITCH, component_id
-        )
-        self._attr_unique_id = format_component_name(
-            device.device_id, Platform.SWITCH, component_id, "."
-        )
+        if component_id is not None:
+            self._attr_name = format_component_name(
+                device.label, Platform.SWITCH, component_id
+            )
+            self._attr_unique_id = format_component_name(
+                device.device_id, Platform.SWITCH, component_id, "."
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
