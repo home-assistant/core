@@ -151,14 +151,14 @@ class Enigma2Device(MediaPlayerEntity):
         else:
             name = entry.options[CONF_HOST]
 
-        self._attr_name = "Player"
+        self._attr_translation_key = "player"
         self._attr_unique_id = device.mac_address
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.mac_address)},
             manufacturer=about["info"]["brand"],
             model=about["info"]["model"],
-            configuration_url=device._base,
+            configuration_url=device.base,
             name=name,
         )
 
