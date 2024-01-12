@@ -380,7 +380,6 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
                     self.start_task_two = False
             if not task_one_evt.is_set() or not task_two_evt.is_set():
                 return self.async_show_progress(
-                    step_id="init",
                     progress_action=progress_action,
                     progress_task=self.progress_task,
                 )
@@ -464,7 +463,7 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
                     return self.async_show_progress_done(next_step_id="error")
                 return self.async_show_progress_done(next_step_id="no_error")
             return self.async_show_progress(
-                step_id="init", progress_action="task", progress_task=self.progress_task
+                progress_action="task", progress_task=self.progress_task
             )
 
         async def async_step_error(self, user_input=None):

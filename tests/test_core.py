@@ -413,7 +413,7 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
         await hass.async_stop()
 
-    assert hass.state == CoreState.stopped
+    assert hass.state is CoreState.stopped
 
 
 async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:

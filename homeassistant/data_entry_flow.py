@@ -75,6 +75,10 @@ FLOW_NOT_COMPLETE_STEPS = {
     FlowResultType.MENU,
 }
 
+STEP_ID_OPTIONAL_STEPS = {
+    FlowResultType.SHOW_PROGRESS,
+}
+
 
 @dataclass(slots=True)
 class BaseServiceInfo:
@@ -459,6 +463,10 @@ class FlowManager(abc.ABC):
         elif result["type"] != FlowResultType.SHOW_PROGRESS:
             flow.async_cancel_progress_task()
 
+        if result["type"] in STEP_ID_OPTIONAL_STEPS:
+            if "step_id" not in result:
+                result["step_id"] = step_id
+
         if result["type"] in FLOW_NOT_COMPLETE_STEPS:
             self._raise_if_step_does_not_exist(flow, result["step_id"])
             flow.cur_step = result
@@ -656,7 +664,7 @@ class FlowHandler:
     def async_show_progress(
         self,
         *,
-        step_id: str,
+        step_id: str | None = None,
         progress_action: str,
         description_placeholders: Mapping[str, str] | None = None,
         progress_task: asyncio.Task[Any] | None = None,
@@ -677,15 +685,17 @@ class FlowHandler:
                 report_issue,
             )
 
-        return FlowResult(
+        result = FlowResult(
             type=FlowResultType.SHOW_PROGRESS,
             flow_id=self.flow_id,
             handler=self.handler,
-            step_id=step_id,
             progress_action=progress_action,
             description_placeholders=description_placeholders,
             progress_task=progress_task,
         )
+        if step_id is not None:
+            result["step_id"] = step_id
+        return result
 
     @callback
     def async_show_progress_done(self, *, next_step_id: str) -> FlowResult:
