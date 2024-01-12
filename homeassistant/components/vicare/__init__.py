@@ -20,6 +20,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
+    CONF_ACTIVE_DEVICES,
     CONF_HEATING_TYPE,
     DOMAIN,
     HEATING_TYPE_TO_CREATOR_METHOD,
@@ -68,7 +69,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             data={
                 **entry.data,
-                "active_devices": serials,
+                CONF_ACTIVE_DEVICES: serials,
             },
         )
         _LOGGER.debug("Migration to version %s successful", entry.version)

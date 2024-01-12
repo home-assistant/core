@@ -22,6 +22,7 @@ VICARE_TOKEN_FILENAME = "vicare_token.save"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
+CONF_ACTIVE_DEVICES = "active_devices"
 
 DEFAULT_SCAN_INTERVAL = 60
 
