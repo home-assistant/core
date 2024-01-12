@@ -12,9 +12,6 @@ from homeassistant.util.aiohttp import MockRequest
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
-
 COMMON_RESPONSE = {
     "user_id": "91763b24c43d3e344f424e8d",
     "home_id": "91763b24c43d3e344f424e8b",
@@ -25,8 +22,6 @@ COMMON_RESPONSE = {
 FAKE_WEBHOOK_ACTIVATION = {
     "push_type": "webhook_activation",
 }
-
-DEFAULT_PLATFORMS = ["camera", "climate", "light", "sensor"]
 
 
 async def fake_post_request(*args: Any, **kwargs: Any):
