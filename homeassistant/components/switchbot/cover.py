@@ -77,27 +77,27 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Open the curtain."""
 
         _LOGGER.debug("Switchbot to open curtain %s", self._address)
-        self._attr_is_opening = True
-        self._attr_is_closing = False
         self._last_run_success = bool(await self._device.open())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
 
         _LOGGER.debug("Switchbot to close the curtain %s", self._address)
-        self._attr_is_opening = False
-        self._attr_is_closing = True
         self._last_run_success = bool(await self._device.close())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
 
         _LOGGER.debug("Switchbot to stop %s", self._address)
-        self._attr_is_opening = False
-        self._attr_is_closing = False
         self._last_run_success = bool(await self._device.stop())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -105,10 +105,9 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         position = kwargs.get(ATTR_POSITION)
 
         _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
-        if position is not None:
-            self._attr_is_opening = position > self._attr_current_cover_position
-            self._attr_is_closing = position < self._attr_current_cover_position
         self._last_run_success = bool(await self._device.set_position(position))
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     @callback
