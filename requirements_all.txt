@@ -167,7 +167,7 @@ afsapi==0.2.7
 agent-py==0.0.23
 
 # homeassistant.components.geo_json_events
-aio-geojson-generic-client==0.3
+aio-geojson-generic-client==0.4
 
 # homeassistant.components.geonetnz_quakes
 aio-geojson-geonetnz-quakes==0.15
