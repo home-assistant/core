@@ -6,7 +6,7 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import RPC_GENERATIONS
+from aioshelly.const import MODEL_DW_2, MODEL_HT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -169,7 +169,22 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
         platforms = BLOCK_SLEEPING_PLATFORMS
 
-        if not entry.data.get(CONF_SLEEP_PERIOD):
+        sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
+
+        if sleep_period == 21600 and entry.data["model"] in [MODEL_HT, MODEL_DW_2]:
+            device_sleep_period = 42300
+            if device_sleep_period != sleep_period:
+                LOGGER.warning(
+                    "Updating stored sleep period for %s: from %s to %s",
+                    entry.title,
+                    sleep_period,
+                    device_sleep_period,
+                )
+                data = {**entry.data}
+                data[CONF_SLEEP_PERIOD] = sleep_period = device_sleep_period
+                hass.config_entries.async_update_entry(entry, data=data)
+
+        if not sleep_period:
             shelly_entry_data.rest = ShellyRestCoordinator(hass, device, entry)
             platforms = BLOCK_PLATFORMS
 
