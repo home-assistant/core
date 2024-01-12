@@ -949,7 +949,7 @@ goslide-api==0.5.1
 gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
-govee-ble==0.27.2
+govee-ble==0.27.3
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
