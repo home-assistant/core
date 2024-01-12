@@ -5,7 +5,6 @@ from lmcloud.const import LaMarzoccoModel
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -14,8 +13,6 @@ from homeassistant.components.switch import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -53,7 +50,7 @@ async def test_main(
     )
 
     assert len(mock_lamarzocco.set_power.mock_calls) == 1
-    mock_lamarzocco.set_power.assert_called_once_with(False, None)
+    mock_lamarzocco.set_power.assert_called_once_with(False)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -65,7 +62,7 @@ async def test_main(
     )
 
     assert len(mock_lamarzocco.set_power.mock_calls) == 2
-    mock_lamarzocco.set_power.assert_called_with(True, None)
+    mock_lamarzocco.set_power.assert_called_with(True)
 
 
 async def test_auto_on_off(
@@ -254,7 +251,7 @@ async def test_steam_boiler_enable(
     )
 
     assert len(mock_lamarzocco.set_steam.mock_calls) == 1
-    mock_lamarzocco.set_steam.assert_called_once_with(False, None)
+    mock_lamarzocco.set_steam.assert_called_once_with(False)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -266,27 +263,4 @@ async def test_steam_boiler_enable(
     )
 
     assert len(mock_lamarzocco.set_steam.mock_calls) == 2
-    mock_lamarzocco.set_steam.assert_called_with(True, None)
-
-
-async def test_call_without_bluetooth_works(
-    hass: HomeAssistant,
-    mock_lamarzocco: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that if not using bluetooth, the switch still works."""
-    serial_number = mock_lamarzocco.serial_number
-    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-    coordinator._use_bluetooth = False
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {
-            ATTR_ENTITY_ID: f"switch.{serial_number}_steam_boiler",
-        },
-        blocking=True,
-    )
-
-    assert len(mock_lamarzocco.set_steam.mock_calls) == 1
-    mock_lamarzocco.set_steam.assert_called_once_with(False, None)
+    mock_lamarzocco.set_steam.assert_called_with(True)

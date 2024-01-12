@@ -15,11 +15,6 @@ from . import USER_INPUT
 from tests.common import MockConfigEntry, load_fixture
 
 
-@pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
-    """Auto mock bluetooth."""
-
-
 @pytest.fixture
 def mock_config_entry(mock_lamarzocco: MagicMock) -> MockConfigEntry:
     """Return the default mocked config entry."""
@@ -106,8 +101,5 @@ def mock_lamarzocco(
         ]
         lamarzocco.check_local_connection.return_value = True
         lamarzocco.initialized = False
-
-        lamarzocco.lm_bluetooth = MagicMock()
-        lamarzocco.lm_bluetooth.address = "AA:BB:CC:DD:EE:FF"
 
         yield lamarzocco

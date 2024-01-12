@@ -8,15 +8,8 @@ from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -37,7 +30,6 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
 
-        self._discovered: dict[str, str] = {}
         self.reauth_entry: ConfigEntry | None = None
         self._config: dict[str, Any] = {}
         self._machines: list[tuple[str, str]] = []
@@ -56,7 +48,6 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data = {
                 **data,
                 **user_input,
-                **self._discovered,
             }
 
             lm = LaMarzoccoClient()
@@ -81,18 +72,6 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         self.reauth_entry.entry_id
                     )
                     return self.async_abort(reason="reauth_successful")
-                if self._discovered:
-                    serials = [machine[0] for machine in self._machines]
-                    if self._discovered[CONF_MACHINE] not in serials:
-                        errors["base"] = "machine_not_found"
-                    else:
-                        self._config = data
-                        return self.async_show_form(
-                            step_id="machine_selection",
-                            data_schema=vol.Schema(
-                                {vol.Optional(CONF_HOST): cv.string}
-                            ),
-                        )
 
             if not errors:
                 self._config = data
@@ -115,12 +94,9 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Let user select machine to connect to."""
         errors: dict[str, str] = {}
         if user_input:
-            if not self._discovered:
-                serial_number = user_input[CONF_MACHINE]
-                await self.async_set_unique_id(serial_number)
-                self._abort_if_unique_id_configured()
-            else:
-                serial_number = self._discovered[CONF_MACHINE]
+            serial_number = user_input[CONF_MACHINE]
+            await self.async_set_unique_id(serial_number)
+            self._abort_if_unique_id_configured()
 
             # validate local connection if host is provided
             if user_input.get(CONF_HOST):
@@ -165,30 +141,6 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=machine_selection_schema,
             errors=errors,
         )
-
-    async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
-    ) -> FlowResult:
-        """Handle a flow initialized by discovery over Bluetooth."""
-        address = discovery_info.address
-        name = discovery_info.name
-
-        _LOGGER.debug(
-            "Discovered La Marzocco machine %s through Bluetooth at address %s",
-            name,
-            address,
-        )
-
-        self._discovered[CONF_NAME] = name
-        self._discovered[CONF_MAC] = address
-
-        serial = name.split("_")[1]
-        self._discovered[CONF_MACHINE] = serial
-
-        await self.async_set_unique_id(serial)
-        self._abort_if_unique_id_configured()
-
-        return await self.async_step_user()
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
