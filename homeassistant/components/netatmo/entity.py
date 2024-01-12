@@ -32,10 +32,9 @@ class NetatmoBaseEntity(Entity):
     _attr_attribution = DEFAULT_ATTRIBUTION
     _attr_has_entity_name = True
 
-    def __init__(self, data_handler: NetatmoDataHandler, device: NetatmoBase) -> None:
+    def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
-        self.device = device
         self._publishers: list[dict[str, Any]] = []
         self._attr_extra_state_attributes = {}
 
@@ -90,6 +89,15 @@ class NetatmoBaseEntity(Entity):
         """Update the entity's state."""
         raise NotImplementedError
 
+
+class NetatmoDeviceEntity(NetatmoBaseEntity):
+    """Netatmo entity base class."""
+
+    def __init__(self, data_handler: NetatmoDataHandler, device: NetatmoBase) -> None:
+        """Set up Netatmo entity base."""
+        super().__init__(data_handler)
+        self.device = device
+
     @property
     @abstractmethod
     def device_type(self) -> DeviceType:
@@ -110,7 +118,7 @@ class NetatmoBaseEntity(Entity):
         return self.device.home
 
 
-class NetatmoRoomEntity(NetatmoBaseEntity):
+class NetatmoRoomEntity(NetatmoDeviceEntity):
     """Netatmo room entity base class."""
 
     device: Room
@@ -143,7 +151,7 @@ class NetatmoRoomEntity(NetatmoBaseEntity):
         return self.device.climate_type
 
 
-class NetatmoModuleEntity(NetatmoBaseEntity):
+class NetatmoModuleEntity(NetatmoDeviceEntity):
     """Netatmo module entity base class."""
 
     device: Module
