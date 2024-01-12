@@ -144,7 +144,6 @@ async def async_api_accept_grant(
     Async friendly.
     """
     auth_code: str = directive.payload["grant"]["code"]
-    _LOGGER.debug("AcceptGrant code: %s", auth_code)
 
     if config.supports_auth:
         await config.async_accept_grant(auth_code)

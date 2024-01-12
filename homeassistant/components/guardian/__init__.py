@@ -76,7 +76,13 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
     },
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
 
 @dataclass
@@ -390,17 +396,10 @@ class PairedSensorEntity(GuardianEntity):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ValveControllerEntityDescriptionMixin:
-    """Define an entity description mixin for valve controller entities."""
+class ValveControllerEntityDescription(EntityDescription):
+    """Describe a Guardian valve controller entity."""
 
     api_category: str
-
-
-@dataclass(frozen=True, kw_only=True)
-class ValveControllerEntityDescription(
-    EntityDescription, ValveControllerEntityDescriptionMixin
-):
-    """Describe a Guardian valve controller entity."""
 
 
 class ValveControllerEntity(GuardianEntity):
