@@ -534,7 +534,7 @@ async def test_device_remove_devices(
         await hass.async_block_till_done()
 
     climate_entity_livingroom = "climate.livingroom"
-    entity = entity_registry.entities[climate_entity_livingroom]
+    entity = entity_registry.async_get(climate_entity_livingroom)
 
     device_entry = device_registry.async_get(entity.device_id)
     assert (
