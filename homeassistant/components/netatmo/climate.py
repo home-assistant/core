@@ -213,7 +213,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         self._config_url = CONF_URL_ENERGY
 
-        self._attr_name = self._room.name
+        self._device_name = self._room.name
         self._away: bool | None = None
         self._connected: bool | None = None
 

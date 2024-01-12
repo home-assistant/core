@@ -64,8 +64,6 @@ async def async_setup_entry(
 class NetatmoCameraLight(NetatmoBase, LightEntity):
     """Representation of a Netatmo Presence camera light."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         netatmo_device: NetatmoDevice,
@@ -164,7 +162,6 @@ class NetatmoLight(NetatmoBase, LightEntity):
         self._id = self._dimmer.entity_id
         self._home_id = self._dimmer.home.entity_id
         self._device_name = self._dimmer.name
-        self._attr_name = f"{self._device_name}"
         self._model = self._dimmer.device_type
         self._config_url = CONF_URL_CONTROL
         self._attr_brightness = 0

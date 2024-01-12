@@ -52,6 +52,7 @@ class NetatmoCover(NetatmoBase, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
     _attr_device_class = CoverDeviceClass.SHUTTER
+    _attr_has_entity_name = True
 
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize the Netatmo device."""
@@ -60,7 +61,7 @@ class NetatmoCover(NetatmoBase, CoverEntity):
         self._cover = cast(NaModules.Shutter, netatmo_device.device)
 
         self._id = self._cover.entity_id
-        self._attr_name = self._device_name = self._cover.name
+        self._device_name = self._cover.name
         self._model = self._cover.device_type
         self._config_url = CONF_URL_CONTROL
 

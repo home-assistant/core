@@ -65,7 +65,6 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
         )
 
         self._device_name = self._home.name
-        self._attr_name = f"{self._device_name}"
 
         self._model = DeviceType.NATherm1
         self._config_url = CONF_URL_ENERGY

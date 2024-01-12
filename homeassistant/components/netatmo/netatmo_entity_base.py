@@ -22,6 +22,7 @@ class NetatmoBase(Entity):
     """Netatmo entity base class."""
 
     _attr_attribution = DEFAULT_ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
