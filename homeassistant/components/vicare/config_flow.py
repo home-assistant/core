@@ -33,7 +33,7 @@ from .const import (
     VICARE_NAME,
     HeatingType,
 )
-from .utils import get_device_list, login
+from .utils import get_device_config_list, login
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ USER_SCHEMA = REAUTH_SCHEMA.extend(
 def _get_option_list(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> list[SelectOptionDict]:
-    device_list = get_device_list(hass, entry.data)
+    device_list = get_device_config_list(hass, entry.data)
     return [
         # we cannot always use device_config.getConfig().serial as it returns the gateway serial for all connected devices
         SelectOptionDict(

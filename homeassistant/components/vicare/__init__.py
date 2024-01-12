@@ -32,7 +32,7 @@ from .const import (
     VICARE_TOKEN_FILENAME,
     HeatingType,
 )
-from .utils import get_device_list, get_serial
+from .utils import get_device_config_list, get_serial
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,8 @@ class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
 
 
 def _get_active_device_list(hass: HomeAssistant, entry: ConfigEntry) -> list[str]:
-    device_list = get_device_list(hass, entry.data)
+    """Return the serial of the first element of the device config list (migration helper)."""
+    device_list = get_device_config_list(hass, entry.data)
     # Currently we only support a single device
     return [get_serial(device_list[0])]
 
@@ -97,7 +98,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
-    device_list = get_configured_devices(get_device_list(hass, entry.data), entry)
+    device_list = get_configured_devices(
+        get_device_config_list(hass, entry.data), entry
+    )
 
     # Currently we only support a single device
     device = device_list[0]

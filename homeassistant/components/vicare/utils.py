@@ -52,17 +52,15 @@ def is_supported(
     return True
 
 
-def get_device_list(
+def get_device_config_list(
     hass: HomeAssistant, entry_data: Mapping[str, Any]
 ) -> list[PyViCareDeviceConfig]:
-    """Return the list of devices."""
+    """Return the list of device configs."""
     api = login(hass, entry_data)
-
     for device in api.devices:
         _LOGGER.info(
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
-
     return api.devices
 
 
