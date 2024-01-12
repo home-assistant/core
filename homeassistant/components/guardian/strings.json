@@ -42,6 +42,9 @@
       "instantaneous_current_ddt": {
         "name": "Instantaneous current (DDT)"
       },
+      "travel_count": {
+        "name": "Travel count"
+      },
       "uptime": {
         "name": "Uptime"
       }
