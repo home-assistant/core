@@ -52,7 +52,7 @@ async def async_setup_entry(
             if attributes is None or Platform.SWITCH in attributes:
                 entities.append(SmartThingsLight(device, component_id))
 
-    async_add_entities(entities)
+    async_add_entities(entities, True)
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
