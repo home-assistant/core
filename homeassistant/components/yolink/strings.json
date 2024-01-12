@@ -69,6 +69,11 @@
           "disabled": "[%key:common::state::disabled%]"
         }
       }
+    },
+    "number": {
+      "config_volume": {
+        "name": "Volume"
+      }
     }
   }
 }

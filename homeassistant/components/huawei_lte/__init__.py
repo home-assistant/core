@@ -13,7 +13,6 @@ from xml.parsers.expat import ExpatError
 
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
-from huawei_lte_api.enums.device import ControlModeEnum
 from huawei_lte_api.exceptions import (
     LoginErrorInvalidCredentialsException,
     ResponseErrorException,
@@ -51,7 +50,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -59,8 +57,6 @@ from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
     ATTR_CONFIG_ENTRY_ID,
-    BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
-    BUTTON_KEY_RESTART,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
@@ -84,8 +80,6 @@ from .const import (
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
     NOTIFY_SUPPRESS_TIMEOUT,
-    SERVICE_CLEAR_TRAFFIC_STATISTICS,
-    SERVICE_REBOOT,
     SERVICE_RESUME_INTEGRATION,
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
@@ -533,45 +527,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("%s: router %s unavailable", service.service, url)
             return
 
-        if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
-            create_issue(
-                hass,
-                DOMAIN,
-                "service_clear_traffic_statistics_moved_to_button",
-                breaks_in_ha_version="2024.2.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="service_changed_to_button",
-                translation_placeholders={
-                    "service": service.service,
-                    "button": BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
-                },
-            )
-            if router.suspended:
-                _LOGGER.debug("%s: ignored, integration suspended", service.service)
-                return
-            result = router.client.monitoring.set_clear_traffic()
-            _LOGGER.debug("%s: %s", service.service, result)
-        elif service.service == SERVICE_REBOOT:
-            create_issue(
-                hass,
-                DOMAIN,
-                "service_reboot_moved_to_button",
-                breaks_in_ha_version="2024.2.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="service_changed_to_button",
-                translation_placeholders={
-                    "service": service.service,
-                    "button": BUTTON_KEY_RESTART,
-                },
-            )
-            if router.suspended:
-                _LOGGER.debug("%s: ignored, integration suspended", service.service)
-                return
-            result = router.client.device.set_control(ControlModeEnum.REBOOT)
-            _LOGGER.debug("%s: %s", service.service, result)
-        elif service.service == SERVICE_RESUME_INTEGRATION:
+        if service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
             router.suspended = False
             _LOGGER.debug("%s: %s", service.service, "done")
@@ -616,16 +572,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-@dataclass
 class HuaweiLteBaseEntity(Entity):
     """Huawei LTE entity base class."""
 
-    router: Router
-
-    _available: bool = field(default=True, init=False)
-    _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
-    _attr_has_entity_name: bool = field(default=True, init=False)
+    _available = True
+    _attr_has_entity_name = True
     _attr_should_poll = False
+
+    def __init__(self, router: Router) -> None:
+        """Initialize."""
+        self.router = router
+        self._unsub_handlers: list[Callable] = []
 
     @property
     def _device_unique_id(self) -> str:

@@ -2,7 +2,15 @@
 
 from datetime import datetime
 
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
 import homeassistant.util.dt as dt_util
+
+MOCK_USER_INPUT = {
+    CONF_NAME: "Home",
+    CONF_LOCATION: {CONF_LATITUDE: 12.34, CONF_LONGITUDE: 23.45},
+}
+
+MOCK_CONFIG = {CONF_LATITUDE: 12.34, CONF_LONGITUDE: 23.45}
 
 PRAYER_TIMES = {
     "Fajr": "2020-01-01T06:10:00+00:00",

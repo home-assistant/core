@@ -2,21 +2,28 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, cast
+from functools import wraps
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, cast
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
+
+if TYPE_CHECKING:
+    from . import GuardianEntity
+
+    _GuardianEntityT = TypeVar("_GuardianEntityT", bound=GuardianEntity)
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 
@@ -29,9 +36,6 @@ class EntityDomainReplacementStrategy:
 
     old_domain: str
     old_unique_id: str
-    replacement_entity_id: str
-    breaks_in_ha_version: str
-    remove_old_entity: bool = True
 
 
 @callback
@@ -55,9 +59,8 @@ def async_finish_entity_domain_replacements(
             continue
 
         old_entity_id = registry_entry.entity_id
-        if strategy.remove_old_entity:
-            LOGGER.info('Removing old entity: "%s"', old_entity_id)
-            ent_reg.async_remove(old_entity_id)
+        LOGGER.info('Removing old entity: "%s"', old_entity_id)
+        ent_reg.async_remove(old_entity_id)
 
 
 class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
@@ -72,7 +75,7 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         entry: ConfigEntry,
         client: Client,
         api_name: str,
-        api_coro: Callable[..., Awaitable],
+        api_coro: Callable[..., Coroutine[Any, Any, dict[str, Any]]],
         api_lock: asyncio.Lock,
         valve_controller_uid: str,
     ) -> None:
@@ -116,3 +119,27 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
                 self.hass, self.signal_reboot_requested, async_reboot_requested
             )
         )
+
+
+_P = ParamSpec("_P")
+
+
+@callback
+def convert_exceptions_to_homeassistant_error(
+    func: Callable[Concatenate[_GuardianEntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_GuardianEntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate to handle exceptions from the Guardian API."""
+
+    @wraps(func)
+    async def wrapper(
+        entity: _GuardianEntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
+        """Wrap the provided function."""
+        try:
+            await func(entity, *args, **kwargs)
+        except GuardianError as err:
+            raise HomeAssistantError(
+                f"Error while calling {func.__name__}: {err}"
+            ) from err
+
+    return wrapper
