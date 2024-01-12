@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/lamarzocco",
   "iot_class": "cloud_polling",
   "loggers": ["lmcloud"],
-  "requirements": ["lmcloud==0.4.27"]
+  "requirements": ["lmcloud==0.4.28"]
 }
