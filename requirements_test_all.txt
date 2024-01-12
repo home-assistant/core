@@ -2172,6 +2172,9 @@ whois==0.9.27
 # homeassistant.components.wiffi
 wiffi==1.1.2
 
+# homeassistant.components.wittiot
+wittiot==1.0.3
+
 # homeassistant.components.wled
 wled==0.17.0
 

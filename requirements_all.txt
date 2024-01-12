@@ -2843,6 +2843,9 @@ wiffi==1.1.2
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
 
+# homeassistant.components.wittiot
+wittiot==1.0.3
+
 # homeassistant.components.wled
 wled==0.17.0
 
