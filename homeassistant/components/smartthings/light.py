@@ -185,6 +185,9 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         """Update entity attributes when the device status has changed."""
         status = get_device_status(self._device, self._component_id)
 
+        if status is None:
+            return
+
         # Brightness and transition
         if brightness_supported(self._attr_supported_color_modes):
             self._attr_brightness = int(convert_scale(status.level, 100, 255, 0))
@@ -205,17 +208,30 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         hue = convert_scale(float(hs_color[0]), 360, 100)
         hue = max(min(hue, 100.0), 0.0)
         saturation = max(min(float(hs_color[1]), 100.0), 0.0)
-        await self._device.set_color(
-            hue, saturation, set_status=True, component_id=self._external_component_id
-        )
+
+        if self._component_id is None:
+            await self._device.set_color(hue, saturation, set_status=True)
+
+        else:
+            await self._device.set_color(
+                hue,
+                saturation,
+                set_status=True,
+                component_id=self._external_component_id,
+            )
 
     async def async_set_color_temp(self, value: float):
         """Set the color temperature of the device."""
         kelvin = color_util.color_temperature_mired_to_kelvin(value)
         kelvin = max(min(kelvin, 30000), 1)
-        await self._device.set_color_temperature(
-            kelvin, set_status=True, component_id=self._external_component_id
-        )
+
+        if self._component_id is None:
+            await self._device.set_color_temperature(kelvin, set_status=True)
+
+        else:
+            await self._device.set_color_temperature(
+                kelvin, set_status=True, component_id=self._external_component_id
+            )
 
     async def async_set_level(self, brightness: int, transition: int):
         """Set the brightness of the light over transition."""
@@ -225,9 +241,17 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         level = 1 if level == 0 and brightness > 0 else level
         level = max(min(level, 100), 0)
         duration = int(transition)
-        await self._device.set_level(
-            level, duration, set_status=True, component_id=self._external_component_id
-        )
+
+        if self._component_id is None:
+            await self._device.set_level(level, duration, set_status=True)
+
+        else:
+            await self._device.set_level(
+                level,
+                duration,
+                set_status=True,
+                component_id=self._external_component_id,
+            )
 
     @property
     def color_mode(self) -> ColorMode:
