@@ -23,6 +23,7 @@ class AmbientNetworkEntity(CoordinatorEntity[AmbientNetworkDataUpdateCoordinator
         coordinator: AmbientNetworkDataUpdateCoordinator,
         description: EntityDescription,
         station_name: str,
+        mac_address: str,
     ) -> None:
         """Initialize the Ambient network entity."""
 
@@ -32,17 +33,14 @@ class AmbientNetworkEntity(CoordinatorEntity[AmbientNetworkDataUpdateCoordinator
         self._device_id = station_name
         self._attr_unique_id = f"{station_name}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, station_name)},
+            identifiers={(DOMAIN, mac_address)},
             manufacturer="Ambient Weather",
-            name=self._device_id,
         )
         self._update_attrs()
 
     @abstractmethod
     def _update_attrs(self) -> None:
         """Update state attributes."""
-
-        return  # pragma: no cover
 
     @callback
     def _handle_coordinator_update(self) -> None:

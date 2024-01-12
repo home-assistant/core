@@ -15,13 +15,6 @@
         "data": {
           "station": "Station"
         }
-      },
-      "station_name": {
-        "title": "Station Name",
-        "description": "Create a distinctive name for the weather station, which will be incorporated into all sensor names.",
-        "data": {
-          "station_name": "Station Name"
-        }
       }
     },
     "error": {
@@ -31,7 +24,6 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_station_name_defined": "You need to define a non-empty station name.",
       "no_stations_found": "Did not find any stations in the selected region."
     }
   },
