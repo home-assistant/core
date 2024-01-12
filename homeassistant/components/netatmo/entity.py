@@ -18,7 +18,7 @@ from .const import DATA_DEVICE_IDS, DEFAULT_ATTRIBUTION, DOMAIN, SIGNAL_NAME
 from .data_handler import PUBLIC, NetatmoDataHandler
 
 
-class NetatmoBase(Entity):
+class NetatmoBaseEntity(Entity):
     """Netatmo entity base class."""
 
     _attr_attribution = DEFAULT_ATTRIBUTION
