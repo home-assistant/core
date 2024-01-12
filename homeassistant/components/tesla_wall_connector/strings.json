@@ -30,8 +30,23 @@
       }
     },
     "sensor": {
+      "state": {
+        "name": "Status",
+        "state": {
+          "booting": "Booting",
+          "not_connected": "Vehicule not connected",
+          "connected": "Vehicule connected",
+          "ready": "Ready to charge",
+          "negociating": "Negociating connection",
+          "error": "Error",
+          "charging_finished": "Charging finished",
+          "waiting_car": "Waiting for car",
+          "charging_reduced": "Charging (reduced)",
+          "charging": "Charging"
+        }
+      },
       "evse_state": {
-        "name": "State"
+        "name": "Raw state"
       },
       "handle_temp_c": {
         "name": "Handle temperature"
