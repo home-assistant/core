@@ -77,7 +77,7 @@ async def mock_added_config_entry(
 def mock_psutil() -> Mock:
     """Mock psutil."""
     with patch(
-        "homeassistant.components.systemmonitor.coordinator.psutil",
+        "homeassistant.components.systemmonitor.sensor.psutil",
         autospec=True,
     ) as mock_psutil:
         mock_psutil.disk_usage.return_value = sdiskusage(
@@ -167,7 +167,7 @@ def mock_util() -> Mock:
 def mock_os() -> Mock:
     """Mock os."""
     with patch(
-        "homeassistant.components.systemmonitor.coordinator.os",
+        "homeassistant.components.systemmonitor.sensor.os",
         autospec=True,
     ) as mock_os:
         mock_os.getloadavg.return_value = (1, 2, 3)
