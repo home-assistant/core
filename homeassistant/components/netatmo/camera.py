@@ -99,7 +99,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
         self._config_url = CONF_URL_SECURITY
         self._attr_unique_id = (
-            f"{netatmo_device.device.entity_id}-{self.device_description[1]}"
+            f"{netatmo_device.device.entity_id}-{self.device_type}"
         )
         self._light_state = None
 
@@ -183,7 +183,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
         supported_features = CameraEntityFeature.ON_OFF
-        if self.device_description[1] != "NDB":
+        if self.device_type != "NDB":
             supported_features |= CameraEntityFeature.STREAM
         return supported_features
 
