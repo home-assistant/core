@@ -39,11 +39,7 @@ from .const import (
     CONDITION_ARMED_VACATION,
     CONDITION_DISARMED,
     CONDITION_TRIGGERED,
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
+    AlarmControlPanelEntityFeature,
 )
 
 CONDITION_TYPES: Final[set[str]] = {
@@ -90,15 +86,15 @@ async def async_get_conditions(
             {**base_condition, CONF_TYPE: CONDITION_DISARMED},
             {**base_condition, CONF_TYPE: CONDITION_TRIGGERED},
         ]
-        if supported_features & SUPPORT_ALARM_ARM_HOME:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_HOME:
             conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_HOME})
-        if supported_features & SUPPORT_ALARM_ARM_AWAY:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_AWAY:
             conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_AWAY})
-        if supported_features & SUPPORT_ALARM_ARM_NIGHT:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_NIGHT:
             conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_NIGHT})
-        if supported_features & SUPPORT_ALARM_ARM_VACATION:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_VACATION:
             conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_VACATION})
-        if supported_features & SUPPORT_ALARM_ARM_CUSTOM_BYPASS:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS:
             conditions.append(
                 {**base_condition, CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS}
             )

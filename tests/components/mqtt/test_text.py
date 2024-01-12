@@ -124,6 +124,63 @@ async def test_controlling_state_via_topic(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
+                    "min": 5,
+                    "max": 5,
+                }
+            }
+        }
+    ],
+)
+async def test_forced_text_length(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a text entity that only allows a fixed length."""
+    await mqtt_mock_entry()
+
+    state = hass.states.get("text.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "state-topic", "12345")
+    state = hass.states.get("text.test")
+    assert state.state == "12345"
+
+    caplog.clear()
+    # Text too long
+    async_fire_mqtt_message(hass, "state-topic", "123456")
+    state = hass.states.get("text.test")
+    assert state.state == "12345"
+    assert (
+        "ValueError: Entity text.test provides state 123456 "
+        "which is too long (maximum length 5)" in caplog.text
+    )
+
+    caplog.clear()
+    # Text too short
+    async_fire_mqtt_message(hass, "state-topic", "1")
+    state = hass.states.get("text.test")
+    assert state.state == "12345"
+    assert (
+        "ValueError: Entity text.test provides state 1 "
+        "which is too short (minimum length 5)" in caplog.text
+    )
+    # Valid update
+    async_fire_mqtt_message(hass, "state-topic", "54321")
+    state = hass.states.get("text.test")
+    assert state.state == "54321"
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                text.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
                     "mode": "text",
                     "min": 2,
                     "max": 10,
@@ -211,7 +268,7 @@ async def test_attribute_validation_max_greater_then_min(
 ) -> None:
     """Test the validation of min and max configuration attributes."""
     assert await mqtt_mock_entry()
-    assert "text length min must be >= max" in caplog.text
+    assert "text length min must be <= max" in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -68,7 +68,7 @@ _P = ParamSpec("_P")
 
 
 def _require_authentication(
-    func: Callable[Concatenate[_WallboxCoordinatorT, _P], Any]
+    func: Callable[Concatenate[_WallboxCoordinatorT, _P], Any],
 ) -> Callable[Concatenate[_WallboxCoordinatorT, _P], Any]:
     """Authenticate with decorator using Wallbox API."""
 
