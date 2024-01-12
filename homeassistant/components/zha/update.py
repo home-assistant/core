@@ -61,7 +61,6 @@ async def async_setup_entry(
 class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     """Representation of a ZHA firmware update entity."""
 
-    _attribute_name = "firmware_update"
     _unique_id_suffix = "firmware_update"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = UpdateDeviceClass.FIRMWARE
@@ -85,6 +84,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         ]
         self._attr_installed_version: str = self.zha_device.sw_version or "unknown"
         self._latest_version_firmware: BaseOTAImage = None
+        self._attr_name = "Firmware"
         self._result = None
 
     @callback
