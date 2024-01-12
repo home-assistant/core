@@ -106,5 +106,4 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         if status is None:
             return False
 
-        else:
-            return status.is_on(self._attribute)
+        return status.is_on(self._attribute)

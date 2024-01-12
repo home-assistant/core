@@ -94,5 +94,4 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         if status is None:
             return False
 
-        else:
-            return status.switch
+        return status.switch
