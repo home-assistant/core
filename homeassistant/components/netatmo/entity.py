@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Any
 
-from pyatmo import DeviceType, Home, Room
+from pyatmo import DeviceType, Home, Module, Room
 from pyatmo.modules.base_class import NetatmoBase
 from pyatmo.modules.device_types import (
     DEVICE_DESCRIPTION_MAP,
@@ -23,7 +23,7 @@ from .const import (
     DOMAIN,
     SIGNAL_NAME,
 )
-from .data_handler import PUBLIC, NetatmoDataHandler, NetatmoRoom
+from .data_handler import PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
 
 
 class NetatmoBaseEntity(Entity):
@@ -104,6 +104,11 @@ class NetatmoBaseEntity(Entity):
             netatmo_device = getattr(NetatmoDeviceType, self.device_type)
         return DEVICE_DESCRIPTION_MAP[netatmo_device]
 
+    @property
+    def home(self) -> Home:
+        """Return the home this room belongs to."""
+        return self.device.home
+
 
 class NetatmoRoomEntity(NetatmoBaseEntity):
     """Netatmo room entity base class."""
@@ -137,7 +142,23 @@ class NetatmoRoomEntity(NetatmoBaseEntity):
         assert self.device.climate_type
         return self.device.climate_type
 
+
+class NetatmoModuleEntity(NetatmoBaseEntity):
+    """Netatmo module entity base class."""
+
+    device: Module
+
+    def __init__(self, device: NetatmoDevice) -> None:
+        """Set up a Netatmo module entity."""
+        super().__init__(device.data_handler, device.device)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.device.entity_id)},
+            name=device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+        )
+
     @property
-    def home(self) -> Home:
-        """Return the home this room belongs to."""
-        return self.device.home
+    def device_type(self) -> DeviceType:
+        """Return the device type."""
+        return self.device.device_type
