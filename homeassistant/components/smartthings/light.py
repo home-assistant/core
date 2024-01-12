@@ -245,4 +245,8 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         """Return true if light is on."""
         status = get_device_status(self._device, self._component_id)
 
-        return status.switch
+        if status is None:
+            return False
+
+        else:
+            return status.switch

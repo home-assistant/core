@@ -103,4 +103,8 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         status = get_device_status(self._device, self._component_id)
 
-        return status.is_on(self._attribute)
+        if status is None:
+            return False
+
+        else:
+            return status.is_on(self._attribute)
