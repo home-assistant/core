@@ -233,6 +233,7 @@ homeassistant.components.input_select.*
 homeassistant.components.input_text.*
 homeassistant.components.integration.*
 homeassistant.components.intent.*
+homeassistant.components.ios.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.islamic_prayer_times.*
