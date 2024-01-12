@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Request a refresh."""
         await coordinator.async_request_refresh()
 
-    if hass.state == CoreState.running:
+    if hass.state is CoreState.running:
         await coordinator.async_config_entry_first_refresh()
     else:
         # Running a speed test during startup can prevent

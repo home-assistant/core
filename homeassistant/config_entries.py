@@ -455,7 +455,7 @@ class ConfigEntry:
                 wait_time,
             )
 
-            if hass.state == CoreState.running:
+            if hass.state is CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
                     hass, wait_time, self._async_get_setup_again_job(hass)
                 )
