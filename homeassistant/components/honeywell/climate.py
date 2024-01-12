@@ -521,9 +521,12 @@ class HoneywellUSThermostat(ClimateEntity):
         except UnauthorizedError:
             await _login()
             return
-        except APIRateLimited:
-            return
-        except (AscConnectionError, ClientConnectionError, asyncio.TimeoutError):
+        except (
+            APIRateLimited,
+            AscConnectionError,
+            ClientConnectionError,
+            asyncio.TimeoutError,
+        ):
             self._retry += 1
             self._attr_available = self._retry <= RETRY
             return
