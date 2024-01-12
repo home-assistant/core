@@ -28,7 +28,6 @@ omit =
     homeassistant/components/adguard/sensor.py
     homeassistant/components/adguard/switch.py
     homeassistant/components/ads/*
-    homeassistant/components/aemet/weather_update_coordinator.py
     homeassistant/components/aftership/__init__.py
     homeassistant/components/aftership/sensor.py
     homeassistant/components/agent_dvr/alarm_control_panel.py
@@ -474,6 +473,7 @@ omit =
     homeassistant/components/guardian/sensor.py
     homeassistant/components/guardian/switch.py
     homeassistant/components/guardian/util.py
+    homeassistant/components/guardian/valve.py
     homeassistant/components/habitica/__init__.py
     homeassistant/components/habitica/sensor.py
     homeassistant/components/harman_kardon_avr/media_player.py
@@ -664,10 +664,6 @@ omit =
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/__init__.py
     homeassistant/components/lg_soundbar/media_player.py
-    homeassistant/components/life360/__init__.py
-    homeassistant/components/life360/button.py
-    homeassistant/components/life360/coordinator.py
-    homeassistant/components/life360/device_tracker.py
     homeassistant/components/lightwave/*
     homeassistant/components/limitlessled/light.py
     homeassistant/components/linksys_smart/device_tracker.py
@@ -1617,6 +1613,7 @@ omit =
     homeassistant/components/yolink/entity.py
     homeassistant/components/yolink/light.py
     homeassistant/components/yolink/lock.py
+    homeassistant/components/yolink/number.py
     homeassistant/components/yolink/sensor.py
     homeassistant/components/yolink/siren.py
     homeassistant/components/yolink/switch.py

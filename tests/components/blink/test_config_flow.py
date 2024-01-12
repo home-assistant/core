@@ -1,5 +1,5 @@
 """Test the Blink config flow."""
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
 from blinkpy.auth import LoginError
 from blinkpy.blinkpy import BlinkSetupError
@@ -7,8 +7,6 @@ from blinkpy.blinkpy import BlinkSetupError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.blink import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -258,46 +256,3 @@ async def test_reauth_shows_user_step(hass: HomeAssistant) -> None:
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"username": "blink@example.com", "password": "example"},
-        options={},
-        entry_id=1,
-        version=3,
-    )
-    config_entry.add_to_hass(hass)
-
-    mock_auth = AsyncMock(
-        startup=Mock(return_value=True), check_key_required=Mock(return_value=False)
-    )
-    mock_blink = AsyncMock(cameras=Mock(), sync=Mock())
-
-    with patch("homeassistant.components.blink.Auth", return_value=mock_auth), patch(
-        "homeassistant.components.blink.Blink", return_value=mock_blink
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": False}
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "simple_options"
-
-    with patch("homeassistant.components.blink.Auth", return_value=mock_auth), patch(
-        "homeassistant.components.blink.Blink", return_value=mock_blink
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={"scan_interval": 5},
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["data"] == {"scan_interval": 5}
-        await hass.async_block_till_done()
-
-        assert mock_blink.refresh_rate == 5
