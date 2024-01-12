@@ -388,6 +388,7 @@ homeassistant.components.switchbot_cloud.*
 homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.system_health.*
+homeassistant.components.system_log.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
