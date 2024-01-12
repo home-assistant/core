@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from iaqualink.device import AqualinkThermostat
+from iaqualink.systems.iaqua.device import AqualinkState
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
@@ -77,18 +78,13 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """Return the current HVAC action."""
-        if self.dev.is_on is False:
-            return HVACAction.OFF
-
-        # some IAqualinkThermostat entities may not have a current temperature
-        # (i.e., climate.spa), so assume they are in a heating state when hvac mode
-        # is set to heat
-        if self.current_temperature is None and self.hvac_mode == HVACMode.HEAT:
-            return HVACAction.HEATING
-        elif self.current_temperature < self.target_temperature:
-            return HVACAction.HEATING
-        else:
+        state = AqualinkState(self.dev._heater.state)
+        if state == AqualinkState.ON:
+            return HVACAction.ON
+        elif state == AqualinkState.ENABLED:
             return HVACAction.IDLE
+        else:
+            return HVACAction.OFF
 
     @property
     def target_temperature(self) -> float:
