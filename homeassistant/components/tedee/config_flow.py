@@ -6,6 +6,7 @@ from pytedee_async import (
     TedeeAuthException,
     TedeeClient,
     TedeeClientException,
+    TedeeDataUpdateException,
     TedeeLocalAuthException,
 )
 import voluptuous as vol
@@ -46,6 +47,8 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
             except TedeeClientException:
                 errors[CONF_HOST] = "invalid_host"
+            except TedeeDataUpdateException:
+                errors["base"] = "cannot_connect"
             else:
                 if self.reauth_entry:
                     self.hass.config_entries.async_update_entry(
