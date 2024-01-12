@@ -33,13 +33,12 @@ def generate_site_selector_name(site: Site) -> str:
 def filter_sites(sites: list[Site]) -> list[Site]:
     """Deduplicates the list of sites."""
     filtered: list[Site] = []
+    filtered_nmi: set[str] = set()
 
     for site in sorted(sites, key=lambda site: site.status.value):
-        if (
-            site.status == SiteStatus.ACTIVE
-            or len([s for s in filtered if s.nmi == site.nmi]) == 0
-        ):
+        if site.status == SiteStatus.ACTIVE or site.nmi not in filtered_nmi:
             filtered.append(site)
+            filtered_nmi.add(site.nmi)
 
     return filtered
 
