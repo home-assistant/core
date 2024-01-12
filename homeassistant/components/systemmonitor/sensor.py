@@ -405,7 +405,7 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.add(slugify(f"{_type}_{argument}"))
+                loaded_resources.add(f"{_type}_{slugify(argument)}")
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -425,7 +425,7 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.add(slugify(f"{_type}_{argument}"))
+                loaded_resources.add(f"{_type}_{slugify(argument)}")
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -449,7 +449,7 @@ async def async_setup_entry(
                 sensor_registry[(_type, argument)] = SensorData(
                     argument, None, None, None, None
                 )
-                loaded_resources.add(slugify(f"{_type}_{argument}"))
+                loaded_resources.add(f"{_type}_{slugify(argument)}")
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -463,7 +463,7 @@ async def async_setup_entry(
 
         sensor_registry[(_type, "")] = SensorData("", None, None, None, None)
         is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
-        loaded_resources.add(slugify(f"{_type}_"))
+        loaded_resources.add(f"{_type}_")
         entities.append(
             SystemMonitorSensor(
                 sensor_registry,
@@ -478,12 +478,13 @@ async def async_setup_entry(
     # of mount points automatically discovered
     for resource in legacy_resources:
         if resource.startswith("disk_"):
+            check_resource = slugify(resource)
             _LOGGER.debug(
                 "Check resource %s already loaded in %s",
-                slugify(resource),
+                check_resource,
                 loaded_resources,
             )
-            if slugify(resource) not in loaded_resources:
+            if check_resource not in loaded_resources:
                 split_index = resource.rfind("_")
                 _type = resource[:split_index]
                 argument = resource[split_index + 1 :]
