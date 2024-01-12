@@ -13,6 +13,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
+from types import FunctionType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -374,6 +375,9 @@ class CachedProperties(type):
             # Check if an _attr_ class attribute exits and move it to __attr_. We check
             # __dict__ here because we don't care about _attr_ class attributes in parents.
             if attr_name in cls.__dict__:
+                attr = getattr(cls, attr_name)
+                if isinstance(attr, (FunctionType, property)):
+                    raise TypeError(f"Can't override {attr_name} in subclass")
                 setattr(cls, private_attr_name, getattr(cls, attr_name))
                 annotations = cls.__annotations__
                 if attr_name in annotations:
