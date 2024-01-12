@@ -779,7 +779,7 @@ async def test_unsupported_attributes_sensor(
         (
             1,
             1232000,
-            "123.2",
+            "123.20",
             UnitOfVolume.CUBIC_METERS,
         ),
         (

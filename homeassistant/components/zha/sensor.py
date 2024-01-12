@@ -494,7 +494,7 @@ class SmartEnergyMeteringEntityDescription(SensorEntityDescription):
 
     key: str = "instantaneous_demand"
     state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT
-    scale: int = 1
+    scale: int | None = None
 
 
 @MULTI_MATCH(
@@ -608,7 +608,7 @@ class SmartEnergyMetering(PollableSensor):
         description = self._ENTITY_DESCRIPTION_MAP.get(
             self._cluster_handler.unit_of_measurement
         )
-        if description is not None and state is not None:
+        if description and description.scale and state:
             return float(state) * description.scale
 
         return state
