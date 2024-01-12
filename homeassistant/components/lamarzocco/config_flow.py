@@ -124,7 +124,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         machine_selection_schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_MACHINE, default=machine_options[0]["label"]
+                    CONF_MACHINE, default=machine_options[0]["value"]
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=machine_options,
