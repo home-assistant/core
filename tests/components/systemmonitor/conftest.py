@@ -18,9 +18,13 @@ from tests.common import MockConfigEntry
 class Process:
     """Mock a Process class."""
 
-    def name():
+    def __init__(self, name: str) -> None:
+        """Initialize the process."""
+        self._name = name
+
+    def name(self):
         """Return a name."""
-        return "python3"
+        return self._name
 
 
 @pytest.fixture
@@ -41,11 +45,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={},
         options={
-            "sensor": {
-                "process": [
-                    "python3",
-                ]
-            },
+            "sensor": {"process": ["python3", "pip"]},
             "resources": [
                 "disk_use_percent_/",
                 "disk_use_percent_/home/notexist/",
@@ -125,8 +125,9 @@ def mock_psutil() -> Mock:
         }
         mock_psutil.cpu_percent.return_value = 10.0
         mock_psutil.boot_time.return_value = 1703973338.0
-        _process = Process
-        mock_psutil.process_iter.return_value = [_process]
+        _process_python = Process("python3")
+        _process_pip = Process("pip")
+        mock_psutil.process_iter.return_value = [_process_python, _process_pip]
         mock_psutil.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
@@ -150,14 +151,15 @@ def mock_util() -> Mock:
                 )
             ]
         }
-        _process = Process()
-        mock_util.process_iter.return_value = [_process]
+        _process_python = Process("python3")
+        mock_util.process_iter.return_value = [_process_python]
         mock_util.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
         mock_util.disk_partitions.return_value = [
             sdiskpart("test", "/", "ext4", "", 1, 1),
             sdiskpart("test2", "/media/share", "ext4", "", 1, 1),
+            sdiskpart("test3", "/incorrect", "", "", 1, 1),
         ]
         mock_util.disk_usage.return_value = sdiskusage(10, 10, 0, 0)
         yield mock_util
