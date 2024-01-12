@@ -8,9 +8,9 @@ import logging
 from typing import Any
 
 from roborock import RoborockException, RoborockInvalidCredentials
-from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
+from roborock.web_api import RoborockApiClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME

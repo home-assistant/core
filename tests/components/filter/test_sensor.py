@@ -276,14 +276,14 @@ async def test_setup(
                 "icon": "mdi:test",
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
-                ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
             },
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         assert state.attributes["icon"] == "mdi:test"
         assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
-        assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+        assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
         assert state.state == "1.0"
 
         entity_id = entity_registry.async_get_entity_id(

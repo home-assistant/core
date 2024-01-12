@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
@@ -155,7 +155,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         if TYPE_CHECKING:
             return None
 
-    async def _update_entity_state(self, now) -> None:
+    async def _update_entity_state(self, now: datetime | None = None) -> None:
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()
@@ -197,11 +197,11 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         if await self._switch(self._command_on) and not self._command_state:
             self._attr_is_on = True
             self.async_schedule_update_ha_state()
-        await self._update_entity_state(None)
+        await self._update_entity_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if await self._switch(self._command_off) and not self._command_state:
             self._attr_is_on = False
             self.async_schedule_update_ha_state()
-        await self._update_entity_state(None)
+        await self._update_entity_state()

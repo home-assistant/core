@@ -67,6 +67,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda settings, status, measurements, history: status["battery"],
     ),
     AirVisualProMeasurementDescription(
@@ -80,6 +81,7 @@ SENSOR_DESCRIPTIONS = (
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda settings, status, measurements, history: measurements[
             "humidity"
         ],

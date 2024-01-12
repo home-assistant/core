@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial, wraps
@@ -29,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     EntityServiceResponse,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -53,12 +54,12 @@ from . import (
     template,
     translation,
 )
+from .group import expand_entity_ids
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
 
 if TYPE_CHECKING:
     from .entity import Entity
-    from .entity_platform import EntityPlatform
 
     _EntityT = TypeVar("_EntityT", bound=Entity)
 
@@ -88,6 +89,7 @@ def _base_components() -> dict[str, ModuleType]:
         media_player,
         remote,
         siren,
+        todo,
         update,
         vacuum,
         water_heater,
@@ -106,6 +108,7 @@ def _base_components() -> dict[str, ModuleType]:
         "media_player": media_player,
         "remote": remote,
         "siren": siren,
+        "todo": todo,
         "update": update,
         "vacuum": vacuum,
         "water_heater": water_heater,
@@ -189,11 +192,14 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
+    __slots__ = ("entity_ids", "device_ids", "area_ids")
+
     def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
-        entity_ids: str | list | None = service_call.data.get(ATTR_ENTITY_ID)
-        device_ids: str | list | None = service_call.data.get(ATTR_DEVICE_ID)
-        area_ids: str | list | None = service_call.data.get(ATTR_AREA_ID)
+        service_call_data = service_call.data
+        entity_ids: str | list | None = service_call_data.get(ATTR_ENTITY_ID)
+        device_ids: str | list | None = service_call_data.get(ATTR_DEVICE_ID)
+        area_ids: str | list | None = service_call_data.get(ATTR_AREA_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
@@ -458,9 +464,9 @@ def async_extract_referenced_entity_ids(
     if not selector.has_any_selector:
         return selected
 
-    entity_ids = selector.entity_ids
+    entity_ids: set[str] | list[str] = selector.entity_ids
     if expand_group:
-        entity_ids = hass.components.group.expand_entity_ids(entity_ids)
+        entity_ids = expand_entity_ids(hass, entity_ids)
 
     selected.referenced.update(entity_ids)
 
@@ -514,7 +520,7 @@ def async_extract_referenced_entity_ids(
 @bind_hass
 async def async_extract_config_entry_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
-) -> set:
+) -> set[str]:
     """Extract referenced config entry ids from a service call."""
     referenced = async_extract_referenced_entity_ids(hass, service_call, expand_group)
     ent_reg = entity_registry.async_get(hass)
@@ -739,7 +745,7 @@ def async_set_service_schema(
 
 def _get_permissible_entity_candidates(
     call: ServiceCall,
-    platforms: Iterable[EntityPlatform],
+    entities: dict[str, Entity],
     entity_perms: None | (Callable[[str, str], bool]),
     target_all_entities: bool,
     all_referenced: set[str] | None,
@@ -752,9 +758,8 @@ def _get_permissible_entity_candidates(
             # is allowed to control.
             return [
                 entity
-                for platform in platforms
-                for entity in platform.entities.values()
-                if entity_perms(entity.entity_id, POLICY_CONTROL)
+                for entity_id, entity in entities.items()
+                if entity_perms(entity_id, POLICY_CONTROL)
             ]
 
         assert all_referenced is not None
@@ -769,30 +774,27 @@ def _get_permissible_entity_candidates(
                 )
 
     elif target_all_entities:
-        return [
-            entity for platform in platforms for entity in platform.entities.values()
-        ]
+        return list(entities.values())
 
     # We have already validated they have permissions to control all_referenced
     # entities so we do not need to check again.
-    assert all_referenced is not None
-    if single_entity := len(all_referenced) == 1 and list(all_referenced)[0]:
-        for platform in platforms:
-            if (entity := platform.entities.get(single_entity)) is not None:
-                return [entity]
+    if TYPE_CHECKING:
+        assert all_referenced is not None
+    if (
+        len(all_referenced) == 1
+        and (single_entity := list(all_referenced)[0])
+        and (entity := entities.get(single_entity)) is not None
+    ):
+        return [entity]
 
-    return [
-        platform.entities[entity_id]
-        for platform in platforms
-        for entity_id in all_referenced.intersection(platform.entities)
-    ]
+    return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
-    platforms: Iterable[EntityPlatform],
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
+    registered_entities: dict[str, Entity],
+    func: str | HassJob,
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
 ) -> EntityServiceResponse | None:
@@ -830,7 +832,7 @@ async def entity_service_call(
     # A list with entities to call the service on.
     entity_candidates = _get_permissible_entity_candidates(
         call,
-        platforms,
+        registered_entities,
         entity_perms,
         target_all_entities,
         all_referenced,
@@ -928,7 +930,7 @@ async def entity_service_call(
 async def _handle_entity_call(
     hass: HomeAssistant,
     entity: Entity,
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
+    func: str | HassJob,
     data: dict | ServiceCall,
     context: Context,
 ) -> ServiceResponse:
@@ -937,11 +939,11 @@ async def _handle_entity_call(
 
     task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
-        task = hass.async_run_job(
-            partial(getattr(entity, func), **data)  # type: ignore[arg-type]
+        task = hass.async_run_hass_job(
+            HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
         )
     else:
-        task = hass.async_run_job(func, entity, data)
+        task = hass.async_run_hass_job(func, entity, data)
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
@@ -998,7 +1000,7 @@ def verify_domain_control(
     """Ensure permission to access any entity under domain in service call."""
 
     def decorator(
-        service_handler: Callable[[ServiceCall], Any]
+        service_handler: Callable[[ServiceCall], Any],
     ) -> Callable[[ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):

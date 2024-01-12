@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
-from typing import final
+from typing import TYPE_CHECKING, final
 
 import voluptuous as vol
 
@@ -21,6 +21,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SERVICE_PRESS
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -78,7 +83,12 @@ class ButtonEntityDescription(EntityDescription, frozen_or_thawed=True):
     device_class: ButtonDeviceClass | None = None
 
 
-class ButtonEntity(RestoreEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+}
+
+
+class ButtonEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Button entity."""
 
     entity_description: ButtonEntityDescription
@@ -94,7 +104,7 @@ class ButtonEntity(RestoreEntity):
         """
         return self.device_class is not None
 
-    @property
+    @cached_property
     def device_class(self) -> ButtonDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
