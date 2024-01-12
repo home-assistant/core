@@ -11,6 +11,12 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+USER_INPUT: dict[str, str] = {
+    CONF_HOST: "192.168.1.1",
+    CONF_USERNAME: "admin",
+    CONF_PASSWORD: "secret",
+}
+
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
@@ -25,22 +31,13 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            result["flow_id"], USER_INPUT
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
+    assert result["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -57,12 +54,7 @@ async def test_form_invalid_auth(
         side_effect=InvalidAuth,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            result["flow_id"], USER_INPUT
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -76,22 +68,13 @@ async def test_form_invalid_auth(
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            result["flow_id"], USER_INPUT
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
+    assert result["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -108,12 +91,7 @@ async def test_form_cannot_connect(
         side_effect=CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            result["flow_id"], USER_INPUT
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -128,20 +106,11 @@ async def test_form_cannot_connect(
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            result["flow_id"], USER_INPUT
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
+    assert result["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
