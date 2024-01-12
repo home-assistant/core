@@ -285,7 +285,7 @@ class AsyncuaCoordinator(DataUpdateCoordinator):
         """Add new sensors to the sensor list."""
         self._sensors.extend(sensors)
         for _idx_sensor, val_sensor in enumerate(self._sensors):
-            self._node_key_pair[val_sensor[CONF_NODE_NAME]] = val_sensor[CONF_NODE_ID]
+            self._node_key_pair[val_sensor[CONF_NODE_NAME]] = str(val_sensor[CONF_NODE_ID])
         return True
 
     async def _async_update_data(self) -> Union[dict[str, Any], None]:
