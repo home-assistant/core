@@ -282,6 +282,7 @@ homeassistant.components.mopeka.*
 homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
 homeassistant.components.mysensors.*
+homeassistant.components.myuplink.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*
 homeassistant.components.neato.*
