@@ -9,6 +9,7 @@ import os
 from typing import Any
 
 from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
@@ -96,7 +97,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
-    device_list = get_device_list(hass, entry.data)
+    device_list = get_configured_devices(get_device_list(hass, entry.data), entry)
+
     # Currently we only support a single device
     device = device_list[0]
     hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG_LIST] = device_list
@@ -119,3 +121,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return unload_ok
+
+
+def get_configured_devices(
+    devices: list[PyViCareDeviceConfig],
+    entry: ConfigEntry,
+) -> list[PyViCareDeviceConfig]:
+    """Return list of configured devices."""
+    return [
+        device_config
+        for device_config in devices
+        if get_serial(device_config) in entry.data[CONF_ACTIVE_DEVICES]
+    ]
