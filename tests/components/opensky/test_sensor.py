@@ -6,37 +6,15 @@ from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.opensky.const import (
-    DOMAIN,
     EVENT_OPENSKY_ENTRY,
     EVENT_OPENSKY_EXIT,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PLATFORM, CONF_RADIUS, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
 
 from . import get_states_response_fixture
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-LEGACY_CONFIG = {Platform.SENSOR: [{CONF_PLATFORM: DOMAIN, CONF_RADIUS: 10.0}]}
-
-
-async def test_legacy_migration(hass: HomeAssistant) -> None:
-    """Test migration from yaml to config flow."""
-    with patch(
-        "python_opensky.OpenSky.get_states",
-        return_value=get_states_response_fixture("opensky/states.json"),
-    ):
-        assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)
-        await hass.async_block_till_done()
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(entries) == 1
-        assert entries[0].state is ConfigEntryState.LOADED
-        issue_registry = ir.async_get(hass)
-        assert len(issue_registry.issues) == 1
 
 
 async def test_sensor(
