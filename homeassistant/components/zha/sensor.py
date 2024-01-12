@@ -605,11 +605,11 @@ class SmartEnergyMetering(PollableSensor):
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         state = super().native_value
-        class_map = self._ENTITY_DESCRIPTION_MAP.get(
+        description = self._ENTITY_DESCRIPTION_MAP.get(
             self._cluster_handler.unit_of_measurement
         )
-        if class_map is not None and state is not None:
-            return float(state) * class_map.scale
+        if description is not None and state is not None:
+            return float(state) * description.scale
 
         return state
 
