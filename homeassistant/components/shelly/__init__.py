@@ -171,18 +171,19 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
         sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
 
+        # Some old firmware have a wrong sleep period hardcoded value.
+        # Following code block will force the right value for affected devices
         if sleep_period == 21600 and entry.data["model"] in [MODEL_HT, MODEL_DW_2]:
-            device_sleep_period = 42300
-            if device_sleep_period != sleep_period:
-                LOGGER.warning(
-                    "Updating stored sleep period for %s: from %s to %s",
-                    entry.title,
-                    sleep_period,
-                    device_sleep_period,
-                )
-                data = {**entry.data}
-                data[CONF_SLEEP_PERIOD] = sleep_period = device_sleep_period
-                hass.config_entries.async_update_entry(entry, data=data)
+            expected_sleep_period = 42300
+            LOGGER.warning(
+                "Updating stored sleep period for %s: from %s to %s",
+                entry.title,
+                sleep_period,
+                expected_sleep_period,
+            )
+            data = {**entry.data}
+            data[CONF_SLEEP_PERIOD] = sleep_period = expected_sleep_period
+            hass.config_entries.async_update_entry(entry, data=data)
 
         if not sleep_period:
             shelly_entry_data.rest = ShellyRestCoordinator(hass, device, entry)
