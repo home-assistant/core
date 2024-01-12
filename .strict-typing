@@ -110,10 +110,12 @@ homeassistant.components.bond.*
 homeassistant.components.braviatv.*
 homeassistant.components.brother.*
 homeassistant.components.browser.*
+homeassistant.components.bthome.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
+homeassistant.components.cert_expiry.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
 homeassistant.components.climate.*
@@ -147,6 +149,7 @@ homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
+homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
@@ -283,6 +286,7 @@ homeassistant.components.mopeka.*
 homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
 homeassistant.components.mysensors.*
+homeassistant.components.myuplink.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*
 homeassistant.components.neato.*

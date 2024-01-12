@@ -23,7 +23,7 @@ def async_create_flow(
     dispatcher: FlowDispatcher | None = None
     if DISCOVERY_FLOW_DISPATCHER in hass.data:
         dispatcher = hass.data[DISCOVERY_FLOW_DISPATCHER]
-    elif hass.state != CoreState.running:
+    elif hass.state is not CoreState.running:
         dispatcher = hass.data[DISCOVERY_FLOW_DISPATCHER] = FlowDispatcher(hass)
         dispatcher.async_setup()
 
