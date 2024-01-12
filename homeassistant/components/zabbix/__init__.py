@@ -79,7 +79,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     url = None
     if conf[CONF_URL]:  # Validate URL
         t_url = conf[CONF_URL]
-        if not t_url.startswith("http://", "https://"):
+        if not t_url.startswith(("http://", "https://")):
             t_url = f"{ protocol }://{ t_url }"
         try:
             url_parts = urlsplit(t_url)
@@ -95,7 +95,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         url = urljoin(f"{ url_parts.scheme }://{url_parts.netloc}", path)
 
     host = conf[CONF_HOST]  # Validate HOST
-    if not host.startswith("http://", "https://"):
+    if not host.startswith(("http://", "https://")):
         host = f"{ protocol }://{ host }"
     try:
         url_parts = urlsplit(host)
