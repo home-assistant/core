@@ -200,12 +200,12 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         """Initialize the sensor."""
         super().__init__(room)
 
-        self._signal_name = f"{HOME}-{self.device.home.entity_id}"
+        self._signal_name = f"{HOME}-{self.home.entity_id}"
         self._publishers.extend(
             [
                 {
                     "name": HOME,
-                    "home_id": self.device.home.entity_id,
+                    "home_id": self.home.entity_id,
                     SIGNAL_NAME: self._signal_name,
                 },
             ]
