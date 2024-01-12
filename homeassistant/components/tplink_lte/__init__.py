@@ -94,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     tasks = [_setup_lte(hass, conf) for conf in domain_config]
     if tasks:
-        await asyncio.wait(tasks)
+        await asyncio.gather(*tasks)
 
     for conf in domain_config:
         for notify_conf in conf.get(CONF_NOTIFY, []):

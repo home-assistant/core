@@ -45,6 +45,8 @@ def json_encoder_default(obj: Any) -> Any:
 
     Hand other objects to the original method.
     """
+    if hasattr(obj, "json_fragment"):
+        return obj.json_fragment
     if isinstance(obj, (set, tuple)):
         return list(obj)
     if isinstance(obj, float):
@@ -112,6 +114,9 @@ def json_bytes_strip_null(data: Any) -> bytes:
     # We work on the processed result so we don't need to worry about
     # Home Assistant extensions which allows encoding sets, tuples, etc.
     return json_bytes(_strip_null(orjson.loads(result)))
+
+
+json_fragment = orjson.Fragment
 
 
 def json_dumps(data: Any) -> str:

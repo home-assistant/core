@@ -5,7 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Collection, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -940,7 +940,6 @@ class TemplateStateBase(State):
         self._hass = hass
         self._collect = collect
         self._entity_id = entity_id
-        self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     def _collect_state(self) -> None:
         if self._collect and (render_info := _render_info.get()):
@@ -2100,6 +2099,11 @@ def bitwise_or(first_value, second_value):
     return first_value | second_value
 
 
+def bitwise_xor(first_value, second_value):
+    """Perform a bitwise xor operation."""
+    return first_value ^ second_value
+
+
 def struct_pack(value: Any | None, format_string: str) -> bytes | None:
     """Pack an object into a bytes object."""
     try:
@@ -2463,6 +2467,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
+        self.filters["bitwise_xor"] = bitwise_xor
         self.filters["pack"] = struct_pack
         self.filters["unpack"] = struct_unpack
         self.filters["ord"] = ord
@@ -2474,8 +2479,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
         self.filters["contains"] = contains
-        self.filters["median"] = median
-        self.filters["statistical_mode"] = statistical_mode
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2511,8 +2514,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
-        self.globals["median"] = median
-        self.globals["statistical_mode"] = statistical_mode
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set
