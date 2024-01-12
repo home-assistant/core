@@ -8,7 +8,8 @@
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
           "client_id": "Client ID",
-          "heating_type": "Heating type"
+          "heating_type": "Heating type",
+          "active_devices": "Device"
         }
       },
       "reauth_confirm": {
@@ -294,6 +295,20 @@
     },
     "program_not_deactivated": {
       "message": "Unable to deactivate ViCare program {program}"
+    }
+  },
+  "options": {
+    "flow_title": "{name} ({host})",
+    "step": {
+      "init": {
+        "description": "Select the serial number of the device to connect. The serial number can be found on the device or in the settings of the VICare app.",
+        "data": {
+          "active_devices": "Device"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   },
   "services": {
