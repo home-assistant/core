@@ -1,14 +1,10 @@
 """The ViCare integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import suppress
-from dataclasses import dataclass
 import logging
 import os
-from typing import Any
 
-from PyViCare.PyViCareDevice import Device
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
@@ -35,20 +31,6 @@ from .const import (
 from .utils import get_device_config_list, get_serial
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class ViCareRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_getter: Callable[[Device], Any]
-
-
-@dataclass(frozen=True)
-class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
-    """Mixin for required keys with setter."""
-
-    value_setter: Callable[[Device], bool]
 
 
 def _get_active_device_list(hass: HomeAssistant, entry: ConfigEntry) -> list[str]:

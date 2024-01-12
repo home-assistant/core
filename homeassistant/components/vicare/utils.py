@@ -15,8 +15,8 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from . import ViCareRequiredKeysMixin
 from .const import DEFAULT_SCAN_INTERVAL, VICARE_TOKEN_FILENAME
+from .types import ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
