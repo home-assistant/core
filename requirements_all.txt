@@ -96,7 +96,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.43.0
+PySwitchbot==0.44.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -1190,9 +1190,6 @@ librouteros==3.2.0
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.8
-
-# homeassistant.components.life360
-life360==6.0.1
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
