@@ -565,7 +565,7 @@ async def async_setup_entry(
     for device in broker.devices.values():
         device_components = get_device_attributes(device)
 
-        for component_id in device_components:
+        for component_id in list(device_components.keys()):
             attributes = device_components[component_id]
 
             entities.extend(
@@ -581,14 +581,15 @@ async def async_setup_entry(
 def _get_device_sensor_entities(
     broker, device, component_id: str | None, component_attributes: list[str] | None
 ) -> list[SensorEntity]:
-    entities = []
+    entities: list[SensorEntity] = []
     for capability in broker.get_assigned(device.device_id, Platform.SENSOR):
         if capability == Capability.three_axis:
             entities.extend(
                 [
                     SmartThingsThreeAxisSensor(device, index, component_id)
                     for index in range(len(THREE_AXIS_NAMES))
-                    if component_attributes is None or index in component_attributes
+                    if component_attributes is None
+                    or THREE_AXIS_NAMES[index] in component_attributes
                 ]
             )
         elif capability == Capability.power_consumption_report:
@@ -635,7 +636,7 @@ def _get_device_sensor_entities(
 def _get_device_switch_entities(
     broker, device, component_id: str | None, component_attributes: list[str] | None
 ) -> list[SensorEntity]:
-    entities = []
+    entities: list[SensorEntity] = []
 
     if broker.any_assigned(device.device_id, Platform.SWITCH):
         for capability in (Capability.energy_meter, Capability.power_meter):
@@ -721,7 +722,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
 class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
     """Define a SmartThings Three Axis Sensor."""
 
-    def __init__(self, device, index, component_id: str | None):
+    def __init__(self, device, index, component_id: str | None) -> None:
         """Init the class."""
         super().__init__(device)
 

@@ -46,7 +46,7 @@ async def async_setup_entry(
 
         device_components = get_device_attributes(device)
 
-        for component_id in device_components:
+        for component_id in list(device_components.keys()):
             attributes = device_components[component_id]
 
             if attributes is None or Platform.SWITCH in attributes:
@@ -97,7 +97,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
     # highest kelvin found supported across 20+ handlers.
     _attr_min_mireds = 111  # 9000K
 
-    def __init__(self, device, component_id: str | None = None):
+    def __init__(self, device, component_id: str | None = None) -> None:
         """Init the class."""
         super().__init__(device)
         self._component_id = component_id

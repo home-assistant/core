@@ -28,9 +28,9 @@ def get_device_status(device, component_id: str | None) -> DeviceStatusBase:
     return status
 
 
-def get_device_attributes(device) -> dict[str, list[str]]:
+def get_device_attributes(device) -> dict[str | None, list[str] | None]:
     """Construct list of components related to a device."""
-    result = {}
+    result: dict[str | None, list[str] | None] = {}
     device_components_keys = list(device.status.components.keys())
 
     components_keys = [None]
