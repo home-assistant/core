@@ -1,9 +1,11 @@
+"""Shared functionality to serve multiple HA components."""
 from pysmartthings import DeviceStatusBase
 
 
 def format_component_name(
     prefix: str, suffix: str, component_id: str | None, delimiter: str = " "
 ) -> str:
+    """Format component name according to convention."""
     parts = [prefix]
 
     if component_id is not None:
@@ -17,6 +19,7 @@ def format_component_name(
 
 
 def get_device_status(device, component_id: str | None) -> DeviceStatusBase:
+    """Choose the status object based on device and component id."""
     status = device.status
 
     if component_id is not None:
@@ -26,6 +29,7 @@ def get_device_status(device, component_id: str | None) -> DeviceStatusBase:
 
 
 def get_device_attributes(device) -> dict[str, list[str]]:
+    """Construct list of components related to a device."""
     result = {}
     device_components_keys = list(device.status.components.keys())
 

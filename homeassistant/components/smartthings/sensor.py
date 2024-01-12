@@ -569,16 +569,16 @@ async def async_setup_entry(
             attributes = device_components[component_id]
 
             entities.extend(
-                get_device_sensor_entities(broker, device, component_id, attributes)
+                _get_device_sensor_entities(broker, device, component_id, attributes)
             )
             entities.extend(
-                get_device_switch_entities(broker, device, component_id, attributes)
+                _get_device_switch_entities(broker, device, component_id, attributes)
             )
 
     async_add_entities(entities)
 
 
-def get_device_sensor_entities(
+def _get_device_sensor_entities(
     broker, device, component_id: str | None, component_attributes: list[str] | None
 ) -> list[SensorEntity]:
     entities = []
@@ -632,7 +632,7 @@ def get_device_sensor_entities(
     return entities
 
 
-def get_device_switch_entities(
+def _get_device_switch_entities(
     broker, device, component_id: str | None, component_attributes: list[str] | None
 ) -> list[SensorEntity]:
     entities = []
