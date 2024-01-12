@@ -23,15 +23,15 @@ _LOGGER = logging.getLogger(__name__)
 
 def login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare:
     """Login via PyVicare API."""
-    vicare_api = PyViCare()
-    vicare_api.setCacheDuration(DEFAULT_SCAN_INTERVAL)
-    vicare_api.initWithCredentials(
+    api = PyViCare()
+    api.setCacheDuration(DEFAULT_SCAN_INTERVAL)
+    api.initWithCredentials(
         entry_data[CONF_USERNAME],
         entry_data[CONF_PASSWORD],
         entry_data[CONF_CLIENT_ID],
         hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME),
     )
-    return vicare_api
+    return api
 
 
 def is_supported(
@@ -56,14 +56,14 @@ def get_device_list(
     hass: HomeAssistant, entry_data: Mapping[str, Any]
 ) -> list[PyViCareDeviceConfig]:
     """Return the list of devices."""
-    vicare_api = login(hass, entry_data)
+    api = login(hass, entry_data)
 
-    for device in vicare_api.devices:
+    for device in api.devices:
         _LOGGER.info(
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
 
-    return vicare_api.devices
+    return api.devices
 
 
 def get_burners(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
