@@ -26,8 +26,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from . import FlexitCoordinator
 
 from .const import DOMAIN
+from ...helpers.update_coordinator import CoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -252,6 +254,10 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
 #   operation_mode
 #   ventilation_mode
 
+# Comfort button state: shows true or false if the hvac is in mode HOME or AWAY, and is probably not needed as a sensor
+# room humidity 1,2,3: gives readings id extra wireless hardware is installed (so not needed)
+# If the sensor with bacnet address 59 is non existent use 95 AND 96 for in machine humidity sensors
+
 # These attributes exist in flexit_bacnet but seem too redundant as sensors since they almost never change
 #   air_temp_setpoint_away
 #   air_temp_setpoint_home
@@ -274,19 +280,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Flexit (bacnet) sensor from a config entry."""
+    coordinator: FlexitCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    _LOGGER.debug("Setting up Flexit (bacnet) sensor from a config entry")
+    _LOGGER.info("Setting up Flexit (bacnet) sensor from a config entry")
     entity = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         [
-            FlexitSensor(entity, description, config_entry.entry_id)
+            FlexitSensor(
+                coordinator,
+                description,
+                config_entry.entry_id
+            )
             for description in SENSOR_TYPES
         ]
     )
 
+    # TODO: unsubscribe on remove
 
-class FlexitSensor(SensorEntity):
+
+class FlexitSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Flexit Sensor."""
 
     # Should it have a name?
@@ -295,37 +308,28 @@ class FlexitSensor(SensorEntity):
     # Should it have a entity_name?
     # _attr_has_entity_name = True
 
-    # Should it be polled?
-    # _attr_should_poll = False
+    # Poll is default
 
     entity_description: FlexitSensorEntityDescription
 
     def __init__(
         self,
-        device: FlexitBACnet,
+        coordinator: FlexitCoordinator,
         entity_description: FlexitSensorEntityDescription,
         entry_id: str,
     ) -> None:
         """Initialize Flexit (bacnet) sensor."""
+        super().__init__(coordinator)
+
+        _LOGGER.info("Initialize Flexit (bacnet) sensor {}".format(entity_description.key))
+
         self.entity_description = entity_description
         self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(
-            device.device_name, entity_description.key
+            coordinator.device.device_name, entity_description.key
         )
         self._attr_unique_id = f"{entry_id}-{entity_description.key}"
-        self._device = device
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry_id)},
-            name=device.device_name,
-            manufacturer="Flexit",
-            model="Nordic",
-            serial_number=device.serial_number,
-        )
-
-    async def async_update(self) -> None:
-        """Refresh unit state."""
-        await self._device.update()
 
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.entity_description.value_fn(self._device)
+        return self.entity_description.value_fn(self.coordinator.data)
