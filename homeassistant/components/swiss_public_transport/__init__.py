@@ -99,7 +99,7 @@ async def async_migrate_entry(
                 entity_id=entity_id,
                 new_unique_id=f"{new_unique_id}_departure",
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Faulty entity with unique_id 'None_departure' migrated to new unique_id '%s'",
                 f"{new_unique_id}_departure",
             )
