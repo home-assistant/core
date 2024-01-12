@@ -13,7 +13,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     """Test all sensors."""
 
     entity_and_expected_values = [
-        EntityAndExpectedValues("sensor.tesla_wall_connector_state", "1", "2"),
+        EntityAndExpectedValues("sensor.tesla_wall_connector_raw_state", "1", "2"),
         EntityAndExpectedValues(
             "sensor.tesla_wall_connector_handle_temperature", "25.5", "-1.4"
         ),
@@ -43,6 +43,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
         ),
         EntityAndExpectedValues(
             "sensor.tesla_wall_connector_phase_c_voltage", "232.1", "230"
+        ),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_status", "not_connected", "connected"
         ),
     ]
 
