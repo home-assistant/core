@@ -12,11 +12,12 @@ from homeassistant.core import HomeAssistant
 
 from .common import FAKE_WEBHOOK_ACTIVATION, selected_platforms, simulate_webhook
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
 async def test_camera_light_setup_and_services(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test camera ligiht setup and services."""
     with selected_platforms(["light"]):
@@ -127,7 +128,7 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
 
 
 async def test_light_setup_and_services(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test setup and services."""
     with selected_platforms(["light"]):

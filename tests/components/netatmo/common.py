@@ -1,16 +1,16 @@
 """Common methods used across tests for Netatmo."""
 from contextlib import contextmanager
 import json
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.webhook import async_handle_webhook
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.util.aiohttp import MockRequest
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMockResponse
-
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
 
 COMMON_RESPONSE = {
     "user_id": "91763b24c43d3e344f424e8d",
@@ -19,16 +19,12 @@ COMMON_RESPONSE = {
     "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
 }
 
-TEST_TIME = 1559347200.0
-
 FAKE_WEBHOOK_ACTIVATION = {
     "push_type": "webhook_activation",
 }
 
-DEFAULT_PLATFORMS = ["camera", "climate", "light", "sensor"]
 
-
-async def fake_post_request(*args, **kwargs):
+async def fake_post_request(*args: Any, **kwargs: Any):
     """Return fake data."""
     if "endpoint" not in kwargs:
         return "{}"
@@ -62,7 +58,7 @@ async def fake_post_request(*args, **kwargs):
     )
 
 
-async def fake_get_image(*args, **kwargs):
+async def fake_get_image(*args: Any, **kwargs: Any) -> bytes | str:
     """Return fake data."""
     if "endpoint" not in kwargs:
         return "{}"
@@ -73,12 +69,7 @@ async def fake_get_image(*args, **kwargs):
         return b"test stream image bytes"
 
 
-async def fake_post_request_no_data(*args, **kwargs):
-    """Fake error during requesting backend data."""
-    return "{}"
-
-
-async def simulate_webhook(hass, webhook_id, response):
+async def simulate_webhook(hass: HomeAssistant, webhook_id: str, response) -> None:
     """Simulate a webhook event."""
     request = MockRequest(
         method="POST",
@@ -90,7 +81,7 @@ async def simulate_webhook(hass, webhook_id, response):
 
 
 @contextmanager
-def selected_platforms(platforms):
+def selected_platforms(platforms: list[Platform]) -> AsyncMock:
     """Restrict loaded platforms to list given."""
     with patch(
         "homeassistant.components.netatmo.data_handler.PLATFORMS", platforms

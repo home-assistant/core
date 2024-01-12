@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -54,7 +54,9 @@ FAKE_WEBHOOK = {
 }
 
 
-async def test_setup_component(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_component(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test setup and teardown of the netatmo component."""
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
@@ -86,7 +88,9 @@ async def test_setup_component(hass: HomeAssistant, config_entry) -> None:
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_setup_component_with_config(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_component_with_config(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test setup of the netatmo component with dev account."""
     fake_post_hits = 0
 
@@ -127,7 +131,9 @@ async def test_setup_component_with_webhook(
     hass: HomeAssistant, config_entry, netatmo_auth
 ) -> None:
     """Test setup and teardown of the netatmo component with webhook registration."""
-    with selected_platforms(["camera", "climate", "light", "sensor"]):
+    with selected_platforms(
+        [Platform.CAMERA, Platform.CLIMATE, Platform.LIGHT, Platform.SENSOR]
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -155,7 +161,7 @@ async def test_setup_component_with_webhook(
 
 
 async def test_setup_without_https(
-    hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test if set up with cloud link and without https."""
     hass.config.components.add("cloud")
@@ -182,7 +188,9 @@ async def test_setup_without_https(
     assert "https and port 443 is required to register the webhook" in caplog.text
 
 
-async def test_setup_with_cloud(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_with_cloud(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test if set up with active cloud subscription."""
     await mock_cloud(hass)
     await hass.async_block_till_done()
@@ -296,7 +304,9 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
         assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_setup_component_with_delay(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_component_with_delay(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test setup of the netatmo component with delayed startup."""
     hass.state = CoreState.not_running
 
@@ -404,7 +414,9 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
         await hass.config_entries.async_remove(config_entry.entry_id)
 
 
-async def test_setup_component_invalid_token(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_component_invalid_token(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test handling of invalid token."""
 
     async def fake_ensure_valid_token(*args, **kwargs):
