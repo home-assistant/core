@@ -1,36 +1,45 @@
 """Support for Lutron shades."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
+
+from pylutron import Output
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverEntity,
     CoverEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from . import DOMAIN, LutronData
+from .entity import LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Lutron shades."""
-    devs = []
-    for area_name, device in hass.data[LUTRON_DEVICES]["cover"]:
-        dev = LutronCover(area_name, device, hass.data[LUTRON_CONTROLLER])
-        devs.append(dev)
+    """Set up the Lutron cover platform.
 
-    add_entities(devs, True)
+    Adds shades from the Main Repeater associated with the config_entry as
+    cover entities.
+    """
+    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        [
+            LutronCover(area_name, device, entry_data.client)
+            for area_name, device in entry_data.covers
+        ],
+        True,
+    )
 
 
 class LutronCover(LutronDevice, CoverEntity):
@@ -41,6 +50,7 @@ class LutronCover(LutronDevice, CoverEntity):
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.SET_POSITION
     )
+    _lutron_device: Output
 
     @property
     def is_closed(self) -> bool:
@@ -73,6 +83,6 @@ class LutronCover(LutronDevice, CoverEntity):
         _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, level)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}

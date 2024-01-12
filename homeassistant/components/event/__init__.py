@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, Self, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -155,17 +154,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     ) -> None:
         """Process a new event."""
         if event_type not in self.event_types:
-            event_types: str = ", ".join(self.event_types)
-            raise HomeAssistantError(
-                f"Invalid event type {event_type} for {self.entity_id}",
-                translation_key="invalid_event_type",
-                translation_domain=DOMAIN,
-                translation_placeholders={
-                    "event_type": event_type,
-                    "event_types": event_types,
-                    "entity_id": self.entity_id,
-                },
-            )
+            raise ValueError(f"Invalid event type {event_type} for {self.entity_id}")
         self.__last_event_triggered = dt_util.utcnow()
         self.__last_event_type = event_type
         self.__last_event_attributes = event_attributes

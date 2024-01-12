@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -32,6 +33,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -68,10 +70,6 @@ class LockEntityFeature(IntFlag):
 # The SUPPORT_OPEN constant is deprecated as of Home Assistant 2022.5.
 # Please use the LockEntityFeature enum instead.
 _DEPRECATED_SUPPORT_OPEN = DeprecatedConstantEnum(LockEntityFeature.OPEN, "2025.1")
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
@@ -152,8 +150,16 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not code:
             code = self._lock_option_default_code
         if self.code_format_cmp and not self.code_format_cmp.match(code):
-            raise ValueError(
-                f"Code '{code}' for locking {self.entity_id} doesn't match pattern {self.code_format}"
+            if TYPE_CHECKING:
+                assert self.code_format
+            raise ServiceValidationError(
+                f"The code for {self.entity_id} doesn't match pattern {self.code_format}",
+                translation_domain=DOMAIN,
+                translation_key="add_default_code",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_format": self.code_format,
+                },
             )
         if code:
             data[ATTR_CODE] = code
@@ -269,7 +275,12 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @cached_property
     def supported_features(self) -> LockEntityFeature:
         """Return the list of supported features."""
-        return self._attr_supported_features
+        features = self._attr_supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = LockEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
@@ -301,3 +312,11 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         self._lock_option_default_code = ""
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

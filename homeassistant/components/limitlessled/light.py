@@ -1,8 +1,9 @@
 """Support for LimitlessLED bulbs."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from limitlessled import Color
 from limitlessled.bridge import Bridge
@@ -37,6 +38,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.color import color_hs_to_RGB, color_temperature_mired_to_kelvin
+
+_LimitlessLEDGroupT = TypeVar("_LimitlessLEDGroupT", bound="LimitlessLEDGroup")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,16 +175,25 @@ def setup_platform(
     add_entities(lights)
 
 
-def state(new_state):
+def state(
+    new_state: bool,
+) -> Callable[
+    [Callable[Concatenate[_LimitlessLEDGroupT, int, Pipeline, _P], Any]],
+    Callable[Concatenate[_LimitlessLEDGroupT, _P], None],
+]:
     """State decorator.
 
     Specify True (turn on) or False (turn off).
     """
 
-    def decorator(function):
+    def decorator(
+        function: Callable[Concatenate[_LimitlessLEDGroupT, int, Pipeline, _P], Any],
+    ) -> Callable[Concatenate[_LimitlessLEDGroupT, _P], None]:
         """Set up the decorator function."""
 
-        def wrapper(self: LimitlessLEDGroup, **kwargs: Any) -> None:
+        def wrapper(
+            self: _LimitlessLEDGroupT, *args: _P.args, **kwargs: _P.kwargs
+        ) -> None:
             """Wrap a group state change."""
             pipeline = Pipeline()
             transition_time = DEFAULT_TRANSITION
@@ -189,9 +202,9 @@ def state(new_state):
             self._attr_effect = None  # pylint: disable=protected-access
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
-                transition_time = int(kwargs[ATTR_TRANSITION])
+                transition_time = int(cast(float, kwargs[ATTR_TRANSITION]))
             # Do group type-specific work.
-            function(self, transition_time, pipeline, **kwargs)
+            function(self, transition_time, pipeline, *args, **kwargs)
             # Update state.
             self._attr_is_on = new_state  # pylint: disable=protected-access
             self.group.enqueue(pipeline)
