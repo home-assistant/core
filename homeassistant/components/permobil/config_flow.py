@@ -148,7 +148,6 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_code"
             except MyPermobilEulaException:
                 # The user has not accepted the EULA
-                _LOGGER.exception("Error EULA not signed")
                 errors["base"] = "unsigned_eula"
 
         if errors or not user_input:

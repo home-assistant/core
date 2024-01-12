@@ -149,6 +149,21 @@ async def test_config_flow_unsigned_eula(
     assert result["step_id"] == "email_code"
     assert result["errors"]["base"] == "unsigned_eula"
 
+    # Retry to submit the code again, but this time the user has signed the EULA
+    with patch.object(
+        my_permobil,
+        "request_application_token",
+        return_value=MOCK_TOKEN,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_CODE: MOCK_CODE},
+        )
+
+    # Now the method should not raise an exception, and you can proceed with your assertions
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == VALID_DATA
+
 
 async def test_config_flow_incorrect_region(
     hass: HomeAssistant, my_permobil: Mock
