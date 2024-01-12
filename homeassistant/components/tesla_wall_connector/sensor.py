@@ -56,6 +56,7 @@ WALL_CONNECTOR_SENSORS = [
         translation_key="evse_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].evse_state,
+        entity_registry_enabled_default=False,
     ),
     WallConnectorSensorDescription(
         key="state",
