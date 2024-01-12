@@ -26,6 +26,12 @@
     "sensor": {
       "departure": {
         "name": "Departure"
+      },
+      "next_departure": {
+        "name": "Next Departure"
+      },
+      "next_on_departure": {
+        "name": "Next On Departure"
       }
     }
   },

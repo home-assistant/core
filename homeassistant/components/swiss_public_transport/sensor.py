@@ -54,7 +54,11 @@ async def async_setup_entry(
         assert unique_id
 
     async_add_entities(
-        [SwissPublicTransportSensor(coordinator, unique_id)],
+        [
+            SwissPublicTransportDepartureSensor(coordinator, unique_id),
+            SwissPublicTransportNextDepartureSensor(coordinator, unique_id),
+            SwissPublicTransportNextOnDepartureSensor(coordinator, unique_id),
+        ],
     )
 
 
@@ -102,30 +106,44 @@ async def async_setup_platform(
         )
 
 
-class SwissPublicTransportSensor(
+class SwissPublicTransportTimestampSensor(
     CoordinatorEntity[SwissPublicTransportDataUpdateCoordinator], SensorEntity
 ):
-    """Implementation of a Swiss public transport sensor."""
+    """Implementation of a Swiss public transport timestamp sensor."""
 
     _attr_attribution = "Data provided by transport.opendata.ch"
     _attr_icon = "mdi:bus"
-    _attr_has_entity_name = True
-    _attr_translation_key = "departure"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
+
+    _native_key: str
 
     def __init__(
         self,
         coordinator: SwissPublicTransportDataUpdateCoordinator,
         unique_id: str,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the departure sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{unique_id}_departure"
+        self._attr_unique_id = f"{unique_id}_{self._native_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer="Opendata.ch",
             entry_type=DeviceEntryType.SERVICE,
         )
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the state of the timestamp sensor."""
+        return self.coordinator.data["native"][self._native_key]  # type: ignore [literal-required]
+
+
+class SwissPublicTransportDepartureSensor(SwissPublicTransportTimestampSensor):
+    """Implementation of a Swiss public transport departure sensor."""
+
+    _attr_translation_key = "departure"
+
+    _native_key = "departure"
 
     async def async_added_to_hass(self) -> None:
         """Prepare the extra attributes at start."""
@@ -141,13 +159,22 @@ class SwissPublicTransportSensor(
     @callback
     def _async_update_attrs(self) -> None:
         """Update the extra state attributes based on the coordinator data."""
-        self._attr_extra_state_attributes = {
-            key: value
-            for key, value in self.coordinator.data.items()
-            if key not in {"departure"}
-        }
+        self._attr_extra_state_attributes = dict(
+            self.coordinator.data["attributes"].items()
+        )
 
-    @property
-    def native_value(self) -> datetime | None:
-        """Return the state of the sensor."""
-        return self.coordinator.data["departure"]
+
+class SwissPublicTransportNextDepartureSensor(SwissPublicTransportTimestampSensor):
+    """Implementation of a Swiss public transport next departure sensor."""
+
+    _attr_translation_key = "next_departure"
+
+    _native_key = "next_departure"
+
+
+class SwissPublicTransportNextOnDepartureSensor(SwissPublicTransportTimestampSensor):
+    """Implementation of a Swiss public transport next on departure sensor."""
+
+    _attr_translation_key = "next_on_departure"
+
+    _native_key = "next_on_departure"
