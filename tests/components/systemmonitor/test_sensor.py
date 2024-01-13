@@ -7,11 +7,13 @@ from freezegun.api import FrozenDateTimeFactory
 from psutil._common import shwtemp, snetio, snicaddr
 from psutil._pslinux import svmem
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.systemmonitor.sensor import get_cpu_icon
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockProcess
@@ -20,7 +22,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor(
-    hass: HomeAssistant, mock_added_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_added_config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the sensor."""
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
@@ -37,6 +43,13 @@ async def test_sensor(
     process_sensor = hass.states.get("sensor.system_monitor_process_python3")
     assert process_sensor is not None
     assert process_sensor.state == STATE_ON
+
+    for entity in er.async_entries_for_config_entry(
+        entity_registry, mock_added_config_entry.entry_id
+    ):
+        state = hass.states.get(entity.entity_id)
+        assert state.state == snapshot(name=f"{state.name} - state")
+        assert state.attributes == snapshot(name=f"{state.name} - attributes")
 
 
 async def test_sensor_not_loading_veth_networks(
