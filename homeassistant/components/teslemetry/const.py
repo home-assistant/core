@@ -13,10 +13,8 @@ MODELS = {
 }
 
 
-class TeslemetryClimateKeeper(StrEnum):
+class TeslemetryClimateSide(StrEnum):
     """Teslemetry Climate Keeper Modes."""
 
-    OFF = "off"
-    ON = "on"
-    DOG = "dog"
-    CAMP = "camp"
+    DRIVER = "driver"
+    PASSENGER = "passenger"

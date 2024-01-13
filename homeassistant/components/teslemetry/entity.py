@@ -2,13 +2,12 @@
 
 from typing import Any
 
-from tesla_fleet_api.teslemetry import VehicleSpecific
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODELS
 from .coordinator import TeslemetryVehicleDataCoordinator
+from .models import TeslemetryVehicleData
 
 
 class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator]):
@@ -18,28 +17,27 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
 
     def __init__(
         self,
-        coordinator: TeslemetryVehicleDataCoordinator,
-        api: VehicleSpecific,
+        vehicle: TeslemetryVehicleData,
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
-        super().__init__(coordinator)
+        super().__init__(vehicle.coordinator)
         self.key = key
-        self._api = api
+        self.api = vehicle.api
 
-        car_type = coordinator.data["vehicle_config_car_type"]
+        car_type = self.coordinator.data["vehicle_config_car_type"]
 
         self._attr_translation_key = key
-        self._attr_unique_id = f"{api.vin}-{key}"
+        self._attr_unique_id = f"{self.api.vin}-{key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, api.vin)},
+            identifiers={(DOMAIN, self.api.vin)},
             manufacturer="Tesla",
             configuration_url="https://teslemetry.com/console",
-            name=coordinator.data["display_name"],
+            name=self.coordinator.data["display_name"],
             model=MODELS.get(car_type, car_type),
-            sw_version=coordinator.data["vehicle_state_car_version"].split(" ")[0],
-            hw_version=coordinator.data["vehicle_config_driver_assist"],
-            serial_number=api.vin,
+            sw_version=self.coordinator.data["vehicle_state_car_version"].split(" ")[0],
+            hw_version=self.coordinator.data["vehicle_config_driver_assist"],
+            serial_number=self.api.vin,
         )
 
     @property

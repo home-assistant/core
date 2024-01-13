@@ -1,5 +1,6 @@
 """Teslemetry integration."""
 import logging
+from typing import Final
 
 from tesla_fleet_api import Teslemetry
 from tesla_fleet_api.exceptions import InvalidToken, TeslaFleetError
@@ -16,7 +17,7 @@ from .const import DOMAIN
 from .coordinator import TeslemetryVehicleDataCoordinator
 from .models import TeslemetryVehicleData
 
-PLATFORMS = [
+PLATFORMS: Final = [
     Platform.CLIMATE,
 ]
 

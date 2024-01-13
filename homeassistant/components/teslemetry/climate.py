@@ -3,12 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from teslemetry_api import (
-    set_climate_keeper_mode,
-    set_temperature,
-    start_climate_preconditioning,
-    stop_climate,
-)
+from tesla_fleet_api.const import ClimateKeeperMode
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -20,9 +15,8 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TeslemetryClimateKeeper
-from .coordinator import TeslemetryStateUpdateCoordinator
-from .entity import TeslemetryEntity
+from .const import DOMAIN, TeslemetryClimateSide
+from .entity import TeslemetryVehicleEntity
 
 
 async def async_setup_entry(
@@ -32,11 +26,13 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TeslemetryClimateEntity(vehicle.state_coordinator) for vehicle in data
+        TeslemetryClimateEntity(vehicle, side)
+        for side in (TeslemetryClimateSide.DRIVER, TeslemetryClimateSide.PASSENGER)
+        for vehicle in data
     )
 
 
-class TeslemetryClimateEntity(TeslemetryEntity, ClimateEntity):
+class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     """Vehicle Location Climate Class."""
 
     _attr_precision = PRECISION_HALVES
@@ -47,19 +43,12 @@ class TeslemetryClimateEntity(TeslemetryEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_preset_modes: list = [
-        TeslemetryClimateKeeper.OFF,
-        TeslemetryClimateKeeper.ON,
-        TeslemetryClimateKeeper.DOG,
-        TeslemetryClimateKeeper.CAMP,
+    _attr_preset_modes = [
+        ClimateKeeperMode.OFF,
+        ClimateKeeperMode.ON,
+        ClimateKeeperMode.DOG,
+        ClimateKeeperMode.CAMP,
     ]
-
-    def __init__(
-        self,
-        coordinator: TeslemetryStateUpdateCoordinator,
-    ) -> None:
-        """Initialize the Climate entity."""
-        super().__init__(coordinator, "primary")
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -76,7 +65,7 @@ class TeslemetryClimateEntity(TeslemetryEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.get("climate_state_driver_temp_setting")
+        return self.get(f"climate_state_{self.key}_temp_setting")
 
     @property
     def max_temp(self) -> float:
@@ -95,12 +84,12 @@ class TeslemetryClimateEntity(TeslemetryEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
-        await self.run(start_climate_preconditioning)
+        await self.api.auto_conditioning_start()
         self.set(("climate_state_is_climate_on", True))
 
     async def async_turn_off(self) -> None:
         """Set the climate state to off."""
-        await self.run(stop_climate)
+        await self.api.auto_conditioning_stop()
         self.set(
             ("climate_state_is_climate_on", False),
             ("climate_state_climate_keeper_mode", "off"),
@@ -109,8 +98,9 @@ class TeslemetryClimateEntity(TeslemetryEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
         temp = kwargs[ATTR_TEMPERATURE]
-        await self.run(set_temperature, temperature=temp)
-        self.set(("climate_state_driver_temp_setting", temp))
+        args = {f"{self.key}_temp": temp}
+        await self.api.set_temps(**args)
+        self.set((f"climate_state_{self.key}_temp_setting", temp))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
@@ -121,9 +111,7 @@ class TeslemetryClimateEntity(TeslemetryEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the climate preset mode."""
-        await self.run(
-            set_climate_keeper_mode, mode=self._attr_preset_modes.index(preset_mode)
-        )
+        await self.api.set_climate_keeper_mode(mode=preset_mode)
         self.set(
             (
                 "climate_state_climate_keeper_mode",
@@ -131,6 +119,6 @@ class TeslemetryClimateEntity(TeslemetryEntity, ClimateEntity):
             ),
             (
                 "climate_state_is_climate_on",
-                preset_mode != self._attr_preset_modes[0],
+                preset_mode != ClimateKeeperMode.OFF,
             ),
         )
