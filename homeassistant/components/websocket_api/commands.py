@@ -113,9 +113,11 @@ def _forward_events_check_permissions(
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
     permissions = user.permissions
-    if not permissions.access_all_entities(
-        POLICY_READ
-    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+    if (
+        not user.is_admin
+        and not permissions.access_all_entities(POLICY_READ)
+        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+    ):
         return
     send_message(messages.cached_event_message(msg_id, event))
 
@@ -306,7 +308,8 @@ async def handle_call_service(
 def _async_get_allowed_states(
     hass: HomeAssistant, connection: ActiveConnection
 ) -> list[State]:
-    if connection.user.permissions.access_all_entities(POLICY_READ):
+    user = connection.user
+    if user.is_admin or user.permissions.access_all_entities(POLICY_READ):
         return hass.states.async_all()
     entity_perm = connection.user.permissions.check_entity
     return [
@@ -372,9 +375,11 @@ def _forward_entity_changes(
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
     permissions = user.permissions
-    if not permissions.access_all_entities(
-        POLICY_READ
-    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+    if (
+        not user.is_admin
+        and not permissions.access_all_entities(POLICY_READ)
+        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+    ):
         return
     send_message(messages.cached_state_diff_message(msg_id, event))
 
