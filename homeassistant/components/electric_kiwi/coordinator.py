@@ -26,9 +26,7 @@ class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            # Name of the data. For logging purposes.
             name="Electric Kiwi Account Data",
-            # Polling interval. Will only be polled if there are subscribers.
             update_interval=ACCOUNT_SCAN_INTERVAL,
         )
         self._ek_api = ek_api
