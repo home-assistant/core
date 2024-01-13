@@ -527,6 +527,10 @@ class OnOffConfigurationClusterHandler(ClusterHandler):
 class OtaClientClusterHandler(ClientClusterHandler):
     """OTA cluster handler."""
 
+    ZCL_INIT_ATTRS = {
+        "current_file_version": True,
+    }
+
     BIND: bool = False
 
     @callback
