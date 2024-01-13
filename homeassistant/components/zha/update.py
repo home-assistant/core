@@ -141,9 +141,9 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
             self.async_write_ha_state()
 
     async def async_update(self) -> None:
-        """Update the entity."""
+        """Handle the update entity service call to manually check for available firmware updates."""
         await super().async_update()
-        if self._attr_available:
+        if self.zha_device.available:
             await self._ota_cluster_handler.async_check_for_update()
 
     async def async_install(
