@@ -42,9 +42,8 @@ class FlexitEntity(CoordinatorEntity[FlexitCoordinator]):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: FlexitCoordinator) -> None:
-        """Initialize an Elgato entity."""
+        """Initialize a Flexit Nordic (BACnet) entity."""
         super().__init__(coordinator=coordinator)
-        self._attr_unique_id = coordinator.device.serial_number
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, coordinator.device.serial_number),

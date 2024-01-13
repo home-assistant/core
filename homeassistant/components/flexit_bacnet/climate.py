@@ -77,6 +77,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     def __init__(self, coordinator: FlexitCoordinator) -> None:
         """Initialize the Flexit unit."""
         super().__init__(coordinator)
+        self._attr_unique_id = coordinator.device.serial_number
 
     async def async_update(self) -> None:
         """Refresh unit state."""
