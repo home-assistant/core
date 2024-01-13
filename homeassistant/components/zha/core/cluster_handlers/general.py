@@ -531,6 +531,14 @@ class OtaClientClusterHandler(ClientClusterHandler):
         "current_file_version": True,
     }
 
+    @property
+    def current_file_version(self) -> str:
+        """Return cached value of current_file_version attribute."""
+        current_file_version = self.cluster.get("current_file_version")
+        if current_file_version is not None:
+            return f"0x{int(current_file_version):08x}"
+        return "unknown"
+
     BIND: bool = False
 
     @callback

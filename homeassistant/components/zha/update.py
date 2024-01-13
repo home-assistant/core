@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime
 import functools
 from typing import TYPE_CHECKING, Any
 
 import zigpy.exceptions
 from zigpy.ota.image import BaseOTAImage
+from zigpy.types import uint16_t
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.update import (
+    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityFeature,
@@ -22,6 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import ExtraStoredData
 
 from .core import discovery
 from .core.const import CLUSTER_HANDLER_OTA, SIGNAL_ADD_ENTITIES
@@ -36,6 +40,17 @@ if TYPE_CHECKING:
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.UPDATE
 )
+
+
+@dataclass
+class ZHAFirmwareUpdateExtraStoredData(ExtraStoredData):
+    """Extra stored data for ZHA firmware update entity."""
+
+    image_type: uint16_t | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return {"image_type": self.image_type}
 
 
 async def async_setup_entry(
@@ -82,15 +97,24 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         self._ota_cluster_handler: ClusterHandler = self.cluster_handlers[
             CLUSTER_HANDLER_OTA
         ]
-        self._attr_installed_version: str = self.zha_device.sw_version or "unknown"
-        self._latest_version_firmware: BaseOTAImage = None
+        self._attr_installed_version: str = (
+            self._ota_cluster_handler.current_file_version
+        )
+        self._image_type: uint16_t | None = None
+        self._latest_version_firmware: BaseOTAImage | None = None
         self._result = None
+
+    @property
+    def extra_restore_state_data(self) -> ZHAFirmwareUpdateExtraStoredData:
+        """Return ZHA firmware update specific state data to be restored."""
+        return ZHAFirmwareUpdateExtraStoredData(self._image_type)
 
     @callback
     def device_ota_update_available(self, image: BaseOTAImage) -> None:
         """Handle ota update available signal from Zigpy."""
         self._latest_version_firmware = image
         self._attr_latest_version = f"0x{image.header.file_version:08x}"
+        self._image_type = image.header.image_type
         self.async_write_ha_state()
 
     @callback
@@ -162,6 +186,32 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
+        # If we have a complete previous state, use that to set the latest version
+        if (last_state := await self.async_get_last_state()) and (
+            latest_version := last_state.attributes.get(ATTR_LATEST_VERSION)
+        ) is not None:
+            self._attr_latest_version = latest_version
+        # If we have no state or latest version to restore, or the latest version is
+        # the same as the installed version, we can set the latest
+        # version to installed so that the entity starts as off.
+        elif (
+            not last_state
+            or not latest_version
+            or latest_version == self._attr_installed_version
+        ):
+            self._attr_latest_version = self._attr_installed_version
+
+        if self._attr_latest_version != self._attr_installed_version and (
+            extra_data := await self.async_get_last_extra_data()
+        ):
+            self._image_type = extra_data.as_dict()["image_type"]
+            if self._image_type:
+                self._latest_version_firmware = (
+                    await self.zha_device.device.application.ota.get_ota_image(
+                        self.zha_device.manufacturer_code, self._image_type
+                    )
+                )
+
         self.zha_device.device.add_listener(self)
 
     async def async_will_remove_from_hass(self) -> None:
