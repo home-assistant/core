@@ -1,7 +1,6 @@
 """Support for ZHA AnalogOutput cluster."""
 from __future__ import annotations
 
-import ctypes
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
@@ -32,6 +31,7 @@ from .entity import ZhaEntity
 if TYPE_CHECKING:
     from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -992,10 +992,8 @@ class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        # This is a 16bit signed integer, which has to be converted to a python integer
-        min_present_value = self._cluster_handler.cluster.get(
-            self._min_source, ctypes.c_short(0x954D).value
-        )
+        # The spec says 0x954D, which is a signed integer, therefore the value is in decimals
+        min_present_value = self._cluster_handler.cluster.get(self._min_source, -27315)
         return min_present_value * self._attr_multiplier
 
     @property
