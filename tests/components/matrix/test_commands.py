@@ -1,6 +1,6 @@
 """Test MatrixBot's ability to parse and respond to commands in matrix rooms."""
-from collections.abc import Callable
 from functools import partial
+from itertools import chain
 from typing import Any
 
 from nio import MatrixRoom, RoomMessageText
@@ -18,6 +18,9 @@ from tests.components.matrix.conftest import (
     TEST_ROOM_B_ID,
     TEST_ROOM_C_ID,
 )
+
+ALL_ROOMS = (TEST_ROOM_A_ID, TEST_ROOM_B_ID, TEST_ROOM_C_ID)
+SUBSET_ROOMS = (TEST_ROOM_B_ID, TEST_ROOM_C_ID)
 
 
 @dataclass
@@ -41,7 +44,7 @@ class CommandTestParameters:
         if (
             self.expected_event_data_extra is None
             or "Subset" in self.expected_event_data_extra["command"]
-            and self.room_id == TEST_ROOM_A_ID
+            and self.room_id not in SUBSET_ROOMS
         ):
             return None
         return {
@@ -113,27 +116,22 @@ self_command_global = partial(
 )
 
 
-@pytest.mark.parametrize("room_id", [TEST_ROOM_A_ID, TEST_ROOM_B_ID, TEST_ROOM_C_ID])
 @pytest.mark.parametrize(
-    "command_params_by_room",
-    [
-        word_command_global,
-        expr_command_global,
-        word_command_subset,
-        expr_command_subset,
-        fake_command_global,
-        self_command_global,
-    ],
+    "command_params",
+    chain(
+        (word_command_global(room_id) for room_id in ALL_ROOMS),
+        (expr_command_global(room_id) for room_id in ALL_ROOMS),
+        (word_command_subset(room_id) for room_id in SUBSET_ROOMS),
+        (expr_command_subset(room_id) for room_id in SUBSET_ROOMS),
+    ),
 )
 async def test_commands(
     hass: HomeAssistant,
     matrix_bot: MatrixBot,
     command_events: list[Event],
-    command_params_by_room: Callable[[RoomID], CommandTestParameters],
-    room_id: RoomID,
+    command_params: CommandTestParameters,
 ):
     """Test that the configured commands are used correctly."""
-    command_params: CommandTestParameters = command_params_by_room(room_id)
     room = MatrixRoom(room_id=command_params.room_id, own_user_id=matrix_bot._mx_id)
 
     await hass.async_start()
@@ -141,15 +139,37 @@ async def test_commands(
     await matrix_bot._handle_room_message(room, command_params.room_message)
     await hass.async_block_till_done()
 
-    if command_params.expected_event_data is None:
-        # No Event data specified: MatrixBot should not treat this message as a Command
-        assert len(command_events) == 0
+    # MatrixBot should emit exactly one Event with matching data from this Command
+    assert len(command_events) == 1
+    event = command_events[0]
+    assert event.data == command_params.expected_event_data
 
-    else:
-        # MatrixBot should emit exactly one Event with matching data from this Command
-        assert len(command_events) == 1
-        event = command_events[0]
-        assert event.data == command_params.expected_event_data
+
+@pytest.mark.parametrize(
+    "command_params",
+    chain(
+        (word_command_subset(TEST_ROOM_A_ID),),
+        (expr_command_subset(TEST_ROOM_A_ID),),
+        (fake_command_global(room_id) for room_id in ALL_ROOMS),
+        (self_command_global(room_id) for room_id in ALL_ROOMS),
+    ),
+)
+async def test_non_commands(
+    hass: HomeAssistant,
+    matrix_bot: MatrixBot,
+    command_events: list[Event],
+    command_params: CommandTestParameters,
+):
+    """Test that normal/non-qualifying messages don't wrongly trigger commands."""
+    room = MatrixRoom(room_id=command_params.room_id, own_user_id=matrix_bot._mx_id)
+
+    await hass.async_start()
+    assert len(command_events) == 0
+    await matrix_bot._handle_room_message(room, command_params.room_message)
+    await hass.async_block_till_done()
+
+    # MatrixBot should not treat this message as a Command
+    assert len(command_events) == 0
 
 
 async def test_commands_parsing(hass: HomeAssistant, matrix_bot: MatrixBot):
