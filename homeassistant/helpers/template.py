@@ -1825,18 +1825,13 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
 
 
 def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
-    """Filter and to convert a time string or UNIX timestamp to datetime object.
-
-    Input values will be parsed to string to before parsing them to datetime to allow
-    datetime.datetime and datetime.date to be used as input as well, and avoid errors
-    on other input like lists or mappings
-    """
+    """Filter and to convert a time string or UNIX timestamp to datetime object."""
     try:
         # Check for a valid UNIX timestamp string, int or float
         timestamp = float(value)
         return dt_util.utc_from_timestamp(timestamp)
     except (ValueError, TypeError):
-        # convert value parsed to string to datetime
+        # Try to parse datetime string to datetime object
         try:
             return dt_util.parse_datetime(value, raise_on_error=True)
         except (ValueError, TypeError):
