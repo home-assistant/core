@@ -108,6 +108,8 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
                 await self.coordinator.device.set_air_temp_setpoint_home(temperature)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
+        finally:
+            await self.coordinator.async_refresh()
 
     @property
     def preset_mode(self) -> str:
@@ -125,6 +127,8 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
             await self.coordinator.device.set_ventilation_mode(ventilation_mode)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
+        finally:
+            await self.coordinator.async_refresh()
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -143,3 +147,5 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
                 await self.coordinator.device.set_ventilation_mode(VENTILATION_MODE_HOME)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
+        finally:
+            await self.coordinator.async_refresh()
