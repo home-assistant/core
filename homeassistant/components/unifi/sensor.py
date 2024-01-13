@@ -439,17 +439,21 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-        # Register callback for missed heartbeat
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self.controller.signal_heartbeat_missed}_{self.unique_id}",
-                self._make_disconnected,
+
+        if self.entity_description.is_connected_fn is not None:
+            # Register callback for missed heartbeat
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"{self.controller.signal_heartbeat_missed}_{self.unique_id}",
+                    self._make_disconnected,
+                )
             )
-        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         await super().async_will_remove_from_hass()
-        # Remove heartbeat registration
-        self.controller.async_heartbeat(self._attr_unique_id)
+
+        if self.entity_description.is_connected_fn is not None:
+            # Remove heartbeat registration
+            self.controller.async_heartbeat(self._attr_unique_id)
