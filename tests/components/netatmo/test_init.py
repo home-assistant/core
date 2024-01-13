@@ -528,7 +528,7 @@ async def test_device_remove_devices(
 
     assert await async_setup_component(hass, "config", {})
 
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
