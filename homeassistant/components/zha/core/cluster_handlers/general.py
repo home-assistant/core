@@ -56,6 +56,7 @@ from ..const import (
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
+    UNKNOWN as ZHA_UNKNOWN,
 )
 from . import (
     AttrReportConfig,
@@ -537,7 +538,7 @@ class OtaClientClusterHandler(ClientClusterHandler):
         current_file_version = self.cluster.get("current_file_version")
         if current_file_version is not None:
             return f"0x{int(current_file_version):08x}"
-        return "unknown"
+        return ZHA_UNKNOWN
 
     BIND: bool = False
 

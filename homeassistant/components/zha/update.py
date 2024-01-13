@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData
 
 from .core import discovery
-from .core.const import CLUSTER_HANDLER_OTA, SIGNAL_ADD_ENTITIES
+from .core.const import CLUSTER_HANDLER_OTA, SIGNAL_ADD_ENTITIES, UNKNOWN
 from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
@@ -98,12 +98,19 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         self._ota_cluster_handler: ClusterHandler = self.cluster_handlers[
             CLUSTER_HANDLER_OTA
         ]
-        self._attr_installed_version: str = (
-            self._ota_cluster_handler.current_file_version
-        )
+        self._attr_installed_version: str = self.determine_installed_version()
         self._image_type: uint16_t | None = None
         self._latest_version_firmware: BaseOTAImage | None = None
         self._result = None
+
+    @callback
+    def determine_installed_version(self) -> str:
+        """Determine the currently installed firmware version."""
+        currently_installed_version = self._ota_cluster_handler.current_file_version
+        version_from_dr = self.zha_device.sw_version
+        if currently_installed_version == UNKNOWN and version_from_dr:
+            currently_installed_version = version_from_dr
+        return currently_installed_version
 
     @property
     def extra_restore_state_data(self) -> ZHAFirmwareUpdateExtraStoredData:
@@ -191,7 +198,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         # If we have a complete previous state, use that to set the installed version
         if (
             last_state
-            and self._attr_installed_version == "unknown"
+            and self._attr_installed_version == UNKNOWN
             and (installed_version := last_state.attributes.get(ATTR_INSTALLED_VERSION))
         ):
             self._attr_installed_version = installed_version
@@ -200,6 +207,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
             last_state
             and (latest_version := last_state.attributes.get(ATTR_LATEST_VERSION))
             is not None
+            and latest_version != UNKNOWN
         ):
             self._attr_latest_version = latest_version
         # If we have no state or latest version to restore, or the latest version is
@@ -222,6 +230,11 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
                         self.zha_device.manufacturer_code, self._image_type
                     )
                 )
+                # if we can't locate an image but we have a latest version that differs
+                # we should set the latest version to the installed version to avoid
+                # confusion and errors
+                if not self._latest_version_firmware:
+                    self._attr_latest_version = self._attr_installed_version
 
         self.zha_device.device.add_listener(self)
 
