@@ -14,6 +14,7 @@ from homeassistant.components.shelly.const import (
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
+    CONF_SLEEP_PERIOD,
     DOMAIN,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
     BLEScannerMode,
@@ -316,20 +317,13 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device) -> None
 
 @pytest.mark.parametrize(("model"), MODELS_WITH_WRONG_SLEEP_PERIOD)
 async def test_sleeping_block_device_wrong_sleep_period(
-    hass: HomeAssistant,
-    model,
-    mock_block_device,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mock_block_device, model
 ) -> None:
     """Test sleeping block device with wrong sleep period."""
-
-    await init_integration(hass, 1, model=model, sleep_period=BLOCK_WRONG_SLEEP_PERIOD)
-    assert "will resume when device is online" in caplog.text
-
-    mock_block_device.mock_update()
-    await hass.async_block_till_done()
-
-    assert (
-        f"Updating stored sleep period for Mock Title: from {BLOCK_WRONG_SLEEP_PERIOD} to {BLOCK_EXPECTED_SLEEP_PERIOD}"
-        in caplog.text
+    entry = await init_integration(
+        hass, 1, model=model, sleep_period=21600, skip_setup=True
     )
+    assert entry.data[CONF_SLEEP_PERIOD] == BLOCK_WRONG_SLEEP_PERIOD
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.data[CONF_SLEEP_PERIOD] == BLOCK_EXPECTED_SLEEP_PERIOD
