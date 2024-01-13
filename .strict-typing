@@ -110,10 +110,12 @@ homeassistant.components.bond.*
 homeassistant.components.braviatv.*
 homeassistant.components.brother.*
 homeassistant.components.browser.*
+homeassistant.components.bthome.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
+homeassistant.components.cert_expiry.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
 homeassistant.components.climate.*
@@ -147,6 +149,7 @@ homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
+homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
@@ -230,6 +233,7 @@ homeassistant.components.input_select.*
 homeassistant.components.input_text.*
 homeassistant.components.integration.*
 homeassistant.components.intent.*
+homeassistant.components.ios.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.islamic_prayer_times.*
@@ -282,6 +286,7 @@ homeassistant.components.mopeka.*
 homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
 homeassistant.components.mysensors.*
+homeassistant.components.myuplink.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*
 homeassistant.components.neato.*
@@ -334,6 +339,7 @@ homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.repairs.*
 homeassistant.components.rest.*
+homeassistant.components.rest_command.*
 homeassistant.components.rfxtrx.*
 homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
@@ -383,6 +389,7 @@ homeassistant.components.switchbot_cloud.*
 homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.system_health.*
+homeassistant.components.system_log.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
@@ -432,6 +439,7 @@ homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
+homeassistant.components.webhook.*
 homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
@@ -440,6 +448,7 @@ homeassistant.components.withings.*
 homeassistant.components.wiz.*
 homeassistant.components.wled.*
 homeassistant.components.worldclock.*
+homeassistant.components.xiaomi_ble.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*
 homeassistant.components.youtube.*
