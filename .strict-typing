@@ -354,6 +354,7 @@ homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.scrape.*
+homeassistant.components.search.*
 homeassistant.components.select.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
