@@ -14,6 +14,7 @@ from zigpy.types import uint16_t
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
@@ -186,10 +187,20 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        # If we have a complete previous state, use that to set the installed version
+        if (
+            last_state
+            and self._attr_installed_version == "unknown"
+            and (installed_version := last_state.attributes.get(ATTR_INSTALLED_VERSION))
+        ):
+            self._attr_installed_version = installed_version
         # If we have a complete previous state, use that to set the latest version
-        if (last_state := await self.async_get_last_state()) and (
-            latest_version := last_state.attributes.get(ATTR_LATEST_VERSION)
-        ) is not None:
+        if (
+            last_state
+            and (latest_version := last_state.attributes.get(ATTR_LATEST_VERSION))
+            is not None
+        ):
             self._attr_latest_version = latest_version
         # If we have no state or latest version to restore, or the latest version is
         # the same as the installed version, we can set the latest
