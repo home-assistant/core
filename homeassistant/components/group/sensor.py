@@ -43,6 +43,7 @@ from homeassistant.helpers.entity import (
     get_unit_of_measurement,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import GroupEntity
@@ -352,9 +353,10 @@ class SensorGroup(GroupEntity, SensorEntity):
                         self._state_incorrect.add(entity_id)
                         _LOGGER.warning(
                             "Unable to use state. Only numerical states are supported,"
-                            " entity %s with value %s excluded from calculation",
+                            " entity %s with value %s excluded from calculation in %s",
                             entity_id,
                             state.state,
+                            self.entity_id,
                         )
                     continue
                 except (KeyError, HomeAssistantError):
@@ -365,11 +367,12 @@ class SensorGroup(GroupEntity, SensorEntity):
                             "Unable to use state. Only entities with correct unit of measurement"
                             " is supported when having a device class,"
                             " entity %s, value %s with device class %s"
-                            " and unit of measurement %s excluded from calculation",
+                            " and unit of measurement %s excluded from calculation in %s",
                             entity_id,
                             state.state,
                             self.device_class,
                             state.attributes.get("unit_of_measurement"),
+                            self.entity_id,
                         )
                     continue
                 valid_states.append(True)
@@ -412,7 +415,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         """Calculate state class."""
         if state_class:
             return state_class
-        state_classes: list[SensorStateClass | None] = []
+        state_classes: list[SensorStateClass] = []
         for entity_id in self._entity_ids:
             try:
                 _state_class = get_capability(self.hass, entity_id, "state_class")
@@ -424,6 +427,19 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         if all(x == state_classes[0] for x in state_classes):
             return state_classes[0]
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"{self._attr_name}_state_classes_not_matching",
+            is_fixable=False,
+            is_persistent=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="state_classes_not_matching",
+            translation_placeholders={
+                "source_entities": ", ".join(self._entity_ids),
+                "state_classes:": ", ".join(state_classes),
+            },
+        )
         return None
 
     def _calculate_device_class(
@@ -432,7 +448,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         """Calculate device class."""
         if device_class:
             return device_class
-        device_classes: list[SensorDeviceClass | None] = []
+        device_classes: list[SensorDeviceClass] = []
         for entity_id in self._entity_ids:
             try:
                 _device_class = get_device_class(self.hass, entity_id)
@@ -444,6 +460,19 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         if all(x == device_classes[0] for x in device_classes):
             return device_classes[0]
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"{self._attr_name}_device_classes_not_matching",
+            is_fixable=False,
+            is_persistent=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="device_classes_not_matching",
+            translation_placeholders={
+                "source_entities": ", ".join(self._entity_ids),
+                "device_classes:": ", ".join(device_classes),
+            },
+        )
         return None
 
     def _calculate_unit_of_measurement(
@@ -453,7 +482,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         if unit_of_measurement:
             return unit_of_measurement
 
-        unit_of_measurements: list[str | None] = []
+        unit_of_measurements: list[str] = []
         for entity_id in self._entity_ids:
             try:
                 _unit_of_measurement = get_unit_of_measurement(self.hass, entity_id)
@@ -467,4 +496,33 @@ class SensorGroup(GroupEntity, SensorEntity):
             x in UNIT_CONVERTERS[device_class].VALID_UNITS for x in unit_of_measurements
         ):
             return unit_of_measurements[0]
+        if device_class:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{self._attr_name}_uoms_not_matching_device_class",
+                is_fixable=False,
+                is_persistent=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="uoms_not_matching_device_class",
+                translation_placeholders={
+                    "device_class": device_class,
+                    "source_entities": ", ".join(self._entity_ids),
+                    "uoms:": ", ".join(unit_of_measurements),
+                },
+            )
+        else:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{self._attr_name}_uoms_not_matching_no_device_class",
+                is_fixable=False,
+                is_persistent=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="uoms_not_matching_no_device_class",
+                translation_placeholders={
+                    "source_entities": ", ".join(self._entity_ids),
+                    "uoms:": ", ".join(unit_of_measurements),
+                },
+            )
         return None

@@ -249,5 +249,23 @@
         }
       }
     }
+  },
+  "issues": {
+    "uoms_not_matching_device_class": {
+      "title": "Unit of measurements is not correct",
+      "description": "Source entities: {source_entities} with device class: {device_class} and unit of measurements: {uoms} is not correct for this device class.\n\nPlease correct the unit of measurements on the source entities and reload the group sensor to fix this issue."
+    },
+    "uoms_not_matching_no_device_class": {
+      "title": "Unit of measurements is not correct",
+      "description": "Source entities: {source_entities} with no device class and unit of measurements: {uoms} can not be used.\n\nPlease correct the device class and ensure unit of measurements matches that device class on the source entities and reload the group sensor to fix this issue."
+    },
+    "device_classes_not_matching": {
+      "title": "Device classes is not correct",
+      "description": "Source entities: {source_entities} with device classes: {device_classes} can not be used as they need to be same.\n\nPlease correct the device classes on the source entities and reload the group sensor to fix this issue."
+    },
+    "state_classes_not_matching": {
+      "title": "State classes is not correct",
+      "description": "Source entities: {source_entities} with state classes: {state_classes} can not be used as they need to be same.\n\nPlease correct the state classes on the source entities and reload the group sensor to fix this issue."
+    }
   }
 }
