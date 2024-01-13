@@ -111,29 +111,30 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
     tuple[str, str], SensorEntityDescription
 ] = {
     (ENTITY_DESC_KEY_BATTERY, PERCENTAGE): SensorEntityDescription(
-        ENTITY_DESC_KEY_BATTERY,
+        key=ENTITY_DESC_KEY_BATTERY,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
     (ENTITY_DESC_KEY_CURRENT, UnitOfElectricCurrent.AMPERE): SensorEntityDescription(
-        ENTITY_DESC_KEY_CURRENT,
+        key=ENTITY_DESC_KEY_CURRENT,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     (ENTITY_DESC_KEY_VOLTAGE, UnitOfElectricPotential.VOLT): SensorEntityDescription(
-        ENTITY_DESC_KEY_VOLTAGE,
+        key=ENTITY_DESC_KEY_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=0,
     ),
     (
         ENTITY_DESC_KEY_VOLTAGE,
         UnitOfElectricPotential.MILLIVOLT,
     ): SensorEntityDescription(
-        ENTITY_DESC_KEY_VOLTAGE,
+        key=ENTITY_DESC_KEY_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
@@ -142,67 +143,67 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
         UnitOfEnergy.KILO_WATT_HOUR,
     ): SensorEntityDescription(
-        ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
+        key=ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     (ENTITY_DESC_KEY_POWER, UnitOfPower.WATT): SensorEntityDescription(
-        ENTITY_DESC_KEY_POWER,
+        key=ENTITY_DESC_KEY_POWER,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
     (ENTITY_DESC_KEY_POWER_FACTOR, PERCENTAGE): SensorEntityDescription(
-        ENTITY_DESC_KEY_POWER_FACTOR,
+        key=ENTITY_DESC_KEY_POWER_FACTOR,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
     (ENTITY_DESC_KEY_CO, CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
-        ENTITY_DESC_KEY_CO,
+        key=ENTITY_DESC_KEY_CO,
         device_class=SensorDeviceClass.CO,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
     (ENTITY_DESC_KEY_CO2, CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
-        ENTITY_DESC_KEY_CO2,
+        key=ENTITY_DESC_KEY_CO2,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
     (ENTITY_DESC_KEY_HUMIDITY, PERCENTAGE): SensorEntityDescription(
-        ENTITY_DESC_KEY_HUMIDITY,
+        key=ENTITY_DESC_KEY_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
     (ENTITY_DESC_KEY_ILLUMINANCE, LIGHT_LUX): SensorEntityDescription(
-        ENTITY_DESC_KEY_ILLUMINANCE,
+        key=ENTITY_DESC_KEY_ILLUMINANCE,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
     ),
     (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.KPA): SensorEntityDescription(
-        ENTITY_DESC_KEY_PRESSURE,
+        key=ENTITY_DESC_KEY_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.KPA,
     ),
     (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.PSI): SensorEntityDescription(
-        ENTITY_DESC_KEY_PRESSURE,
+        key=ENTITY_DESC_KEY_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.PSI,
     ),
     (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.INHG): SensorEntityDescription(
-        ENTITY_DESC_KEY_PRESSURE,
+        key=ENTITY_DESC_KEY_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.INHG,
     ),
     (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.MMHG): SensorEntityDescription(
-        ENTITY_DESC_KEY_PRESSURE,
+        key=ENTITY_DESC_KEY_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.MMHG,
@@ -211,7 +212,7 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         ENTITY_DESC_KEY_SIGNAL_STRENGTH,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     ): SensorEntityDescription(
-        ENTITY_DESC_KEY_SIGNAL_STRENGTH,
+        key=ENTITY_DESC_KEY_SIGNAL_STRENGTH,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -219,7 +220,7 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     ),
     (ENTITY_DESC_KEY_TEMPERATURE, UnitOfTemperature.CELSIUS): SensorEntityDescription(
-        ENTITY_DESC_KEY_TEMPERATURE,
+        key=ENTITY_DESC_KEY_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -228,7 +229,7 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         ENTITY_DESC_KEY_TEMPERATURE,
         UnitOfTemperature.FAHRENHEIT,
     ): SensorEntityDescription(
-        ENTITY_DESC_KEY_TEMPERATURE,
+        key=ENTITY_DESC_KEY_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
@@ -237,7 +238,7 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         ENTITY_DESC_KEY_TARGET_TEMPERATURE,
         UnitOfTemperature.CELSIUS,
     ): SensorEntityDescription(
-        ENTITY_DESC_KEY_TARGET_TEMPERATURE,
+        key=ENTITY_DESC_KEY_TARGET_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
@@ -245,7 +246,7 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         ENTITY_DESC_KEY_TARGET_TEMPERATURE,
         UnitOfTemperature.FAHRENHEIT,
     ): SensorEntityDescription(
-        ENTITY_DESC_KEY_TARGET_TEMPERATURE,
+        key=ENTITY_DESC_KEY_TARGET_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
@@ -253,13 +254,13 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
         UnitOfTime.SECONDS,
     ): SensorEntityDescription(
-        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
+        key=ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
         name="Energy production time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
     (ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME, UnitOfTime.HOURS): SensorEntityDescription(
-        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
+        key=ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
     ),
@@ -267,7 +268,7 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
         UnitOfEnergy.WATT_HOUR,
     ): SensorEntityDescription(
-        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
+        key=ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
         name="Energy production today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -277,7 +278,7 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL,
         UnitOfEnergy.WATT_HOUR,
     ): SensorEntityDescription(
-        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL,
+        key=ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL,
         name="Energy production total",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -287,7 +288,7 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         ENTITY_DESC_KEY_ENERGY_PRODUCTION_POWER,
         UnitOfPower.WATT,
     ): SensorEntityDescription(
-        ENTITY_DESC_KEY_POWER,
+        key=ENTITY_DESC_KEY_POWER,
         name="Energy production power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -298,41 +299,41 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
 # These descriptions are without device class.
 ENTITY_DESCRIPTION_KEY_MAP = {
     ENTITY_DESC_KEY_CO: SensorEntityDescription(
-        ENTITY_DESC_KEY_CO,
+        key=ENTITY_DESC_KEY_CO,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_ENERGY_MEASUREMENT: SensorEntityDescription(
-        ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
+        key=ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_HUMIDITY: SensorEntityDescription(
-        ENTITY_DESC_KEY_HUMIDITY,
+        key=ENTITY_DESC_KEY_HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_ILLUMINANCE: SensorEntityDescription(
-        ENTITY_DESC_KEY_ILLUMINANCE,
+        key=ENTITY_DESC_KEY_ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_POWER_FACTOR: SensorEntityDescription(
-        ENTITY_DESC_KEY_POWER_FACTOR,
+        key=ENTITY_DESC_KEY_POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_SIGNAL_STRENGTH: SensorEntityDescription(
-        ENTITY_DESC_KEY_SIGNAL_STRENGTH,
+        key=ENTITY_DESC_KEY_SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_MEASUREMENT: SensorEntityDescription(
-        ENTITY_DESC_KEY_MEASUREMENT,
+        key=ENTITY_DESC_KEY_MEASUREMENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_TOTAL_INCREASING: SensorEntityDescription(
-        ENTITY_DESC_KEY_TOTAL_INCREASING,
+        key=ENTITY_DESC_KEY_TOTAL_INCREASING,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ENTITY_DESC_KEY_UV_INDEX: SensorEntityDescription(
-        ENTITY_DESC_KEY_UV_INDEX,
+        key=ENTITY_DESC_KEY_UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UV_INDEX,
     ),
@@ -342,80 +343,80 @@ ENTITY_DESCRIPTION_KEY_MAP = {
 # Controller statistics descriptions
 ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     SensorEntityDescription(
-        "messagesTX",
+        key="messagesTX",
         name="Successful messages (TX)",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "messagesRX",
+        key="messagesRX",
         name="Successful messages (RX)",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "messagesDroppedTX",
+        key="messagesDroppedTX",
         name="Messages dropped (TX)",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "messagesDroppedRX",
+        key="messagesDroppedRX",
         name="Messages dropped (RX)",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "NAK",
+        key="NAK",
         name="Messages not accepted",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "CAN", name="Collisions", state_class=SensorStateClass.TOTAL
+        key="CAN", name="Collisions", state_class=SensorStateClass.TOTAL
     ),
     SensorEntityDescription(
-        "timeoutACK", name="Missing ACKs", state_class=SensorStateClass.TOTAL
+        key="timeoutACK", name="Missing ACKs", state_class=SensorStateClass.TOTAL
     ),
     SensorEntityDescription(
-        "timeoutResponse",
+        key="timeoutResponse",
         name="Timed out responses",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "timeoutCallback",
+        key="timeoutCallback",
         name="Timed out callbacks",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "backgroundRSSI.channel0.average",
+        key="backgroundRSSI.channel0.average",
         name="Average background RSSI (channel 0)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
     SensorEntityDescription(
-        "backgroundRSSI.channel0.current",
+        key="backgroundRSSI.channel0.current",
         name="Current background RSSI (channel 0)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        "backgroundRSSI.channel1.average",
+        key="backgroundRSSI.channel1.average",
         name="Average background RSSI (channel 1)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
     SensorEntityDescription(
-        "backgroundRSSI.channel1.current",
+        key="backgroundRSSI.channel1.current",
         name="Current background RSSI (channel 1)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        "backgroundRSSI.channel2.average",
+        key="backgroundRSSI.channel2.average",
         name="Average background RSSI (channel 2)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
     SensorEntityDescription(
-        "backgroundRSSI.channel2.current",
+        key="backgroundRSSI.channel2.current",
         name="Current background RSSI (channel 2)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -426,39 +427,39 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
 # Node statistics descriptions
 ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
     SensorEntityDescription(
-        "commandsRX",
+        key="commandsRX",
         name="Successful commands (RX)",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "commandsTX",
+        key="commandsTX",
         name="Successful commands (TX)",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "commandsDroppedRX",
+        key="commandsDroppedRX",
         name="Commands dropped (RX)",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "commandsDroppedTX",
+        key="commandsDroppedTX",
         name="Commands dropped (TX)",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "timeoutResponse",
+        key="timeoutResponse",
         name="Timed out responses",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        "rtt",
+        key="rtt",
         name="Round Trip Time",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        "rssi",
+        key="rssi",
         name="RSSI",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -478,7 +479,7 @@ def get_entity_description(
         ENTITY_DESCRIPTION_KEY_MAP.get(
             data_description_key,
             SensorEntityDescription(
-                "base_sensor", native_unit_of_measurement=data.unit_of_measurement
+                key="base_sensor", native_unit_of_measurement=data.unit_of_measurement
             ),
         ),
     )
@@ -661,7 +662,7 @@ class ZWaveNumericSensor(ZwaveSensor):
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return 0
-        return round(float(self.info.primary_value.value), 2)
+        return float(self.info.primary_value.value)
 
 
 class ZWaveMeterSensor(ZWaveNumericSensor):

@@ -54,11 +54,17 @@ from homeassistant.exceptions import (
     MaxLengthExceeded,
     ServiceNotFound,
 )
+from homeassistant.helpers.json import json_dumps
 import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .common import async_capture_events, async_mock_service
+from .common import (
+    async_capture_events,
+    async_mock_service,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+)
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -407,7 +413,7 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
         await hass.async_stop()
 
-    assert hass.state == CoreState.stopped
+    assert hass.state is CoreState.stopped
 
 
 async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
@@ -619,6 +625,38 @@ def test_event_eq() -> None:
     assert event1.as_dict() == event2.as_dict()
 
 
+def test_event_json_fragment() -> None:
+    """Test event JSON fragments."""
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+    context = ha.Context()
+    event1, event2 = (
+        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+    )
+
+    # We are testing that the JSON fragments are the same when as_dict is called
+    # after json_fragment or before.
+    json_fragment_1 = event1.json_fragment
+    as_dict_1 = event1.as_dict()
+    as_dict_2 = event2.as_dict()
+    json_fragment_2 = event2.json_fragment
+
+    assert json_dumps(json_fragment_1) == json_dumps(json_fragment_2)
+    # We also test that the as_dict is the same
+    assert as_dict_1 == as_dict_2
+
+    # Finally we verify that the as_dict is a ReadOnlyDict
+    # as is the data and context inside regardless of
+    # if the json fragment was called first or not
+    assert isinstance(as_dict_1, ReadOnlyDict)
+    assert isinstance(as_dict_1["data"], ReadOnlyDict)
+    assert isinstance(as_dict_1["context"], ReadOnlyDict)
+
+    assert isinstance(as_dict_2, ReadOnlyDict)
+    assert isinstance(as_dict_2["data"], ReadOnlyDict)
+    assert isinstance(as_dict_2["context"], ReadOnlyDict)
+
+
 def test_event_repr() -> None:
     """Test that Event repr method works."""
     assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
@@ -705,6 +743,44 @@ def test_state_as_dict_json() -> None:
     # 2nd time to verify cache
     assert state.as_dict_json == expected
     assert state.as_dict_json is as_dict_json_1
+
+
+def test_state_json_fragment() -> None:
+    """Test state JSON fragments."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0)
+    state1, state2 = (
+        ha.State(
+            "happy.happy",
+            "on",
+            {"pig": "dog"},
+            last_updated=last_time,
+            last_changed=last_time,
+            context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
+        )
+        for _ in range(2)
+    )
+
+    # We are testing that the JSON fragments are the same when as_dict is called
+    # after json_fragment or before.
+    json_fragment_1 = state1.json_fragment
+    as_dict_1 = state1.as_dict()
+    as_dict_2 = state2.as_dict()
+    json_fragment_2 = state2.json_fragment
+
+    assert json_dumps(json_fragment_1) == json_dumps(json_fragment_2)
+    # We also test that the as_dict is the same
+    assert as_dict_1 == as_dict_2
+
+    # Finally we verify that the as_dict is a ReadOnlyDict
+    # as is the attributes and context inside regardless of
+    # if the json fragment was called first or not
+    assert isinstance(as_dict_1, ReadOnlyDict)
+    assert isinstance(as_dict_1["attributes"], ReadOnlyDict)
+    assert isinstance(as_dict_1["context"], ReadOnlyDict)
+
+    assert isinstance(as_dict_2, ReadOnlyDict)
+    assert isinstance(as_dict_2["attributes"], ReadOnlyDict)
+    assert isinstance(as_dict_2["context"], ReadOnlyDict)
 
 
 def test_state_as_compressed_state() -> None:
@@ -1151,6 +1227,26 @@ async def test_statemachine_force_update(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", None, True)
     await hass.async_block_till_done()
     assert len(events) == 1
+
+
+async def test_statemachine_avoids_updating_attributes(hass: HomeAssistant) -> None:
+    """Test async_set avoids recreating ReadOnly dicts when possible."""
+    attrs = {"some_attr": "attr_value"}
+
+    hass.states.async_set("light.bowl", "off", attrs)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.bowl")
+    assert state.attributes == attrs
+
+    hass.states.async_set("light.bowl", "on", attrs)
+    await hass.async_block_till_done()
+
+    new_state = hass.states.get("light.bowl")
+    assert new_state.attributes == attrs
+
+    assert new_state.attributes is state.attributes
+    assert isinstance(new_state.attributes, ReadOnlyDict)
 
 
 def test_service_call_repr() -> None:
@@ -1702,6 +1798,27 @@ def test_context() -> None:
     assert c.user_id == 23
     assert c.parent_id == 100
     assert c.id is not None
+
+
+def test_context_json_fragment() -> None:
+    """Test context JSON fragments."""
+    context1, context2 = (ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW") for _ in range(2))
+
+    # We are testing that the JSON fragments are the same when as_dict is called
+    # after json_fragment or before.
+    json_fragment_1 = context1.json_fragment
+    as_dict_1 = context1.as_dict()
+    as_dict_2 = context2.as_dict()
+    json_fragment_2 = context2.json_fragment
+
+    assert json_dumps(json_fragment_1) == json_dumps(json_fragment_2)
+    # We also test that the as_dict is the same
+    assert as_dict_1 == as_dict_2
+
+    # Finally we verify that the as_dict is a ReadOnlyDict
+    # regardless of if the json fragment was called first or not
+    assert isinstance(as_dict_1, ReadOnlyDict)
+    assert isinstance(as_dict_2, ReadOnlyDict)
 
 
 async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
@@ -2601,6 +2718,9 @@ async def test_shutdown_job(hass: HomeAssistant) -> None:
     evt = asyncio.Event()
 
     async def shutdown_func() -> None:
+        # Sleep to ensure core is waiting for the task to finish
+        await asyncio.sleep(0.01)
+        # Set the event
         evt.set()
 
     job = HassJob(shutdown_func, "shutdown_job")
@@ -2621,3 +2741,24 @@ async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
     cancel()
     await hass.async_stop()
     assert not evt.is_set()
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(ha)
+
+
+@pytest.mark.parametrize(
+    ("enum"),
+    [
+        ha.ConfigSource.DISCOVERED,
+        ha.ConfigSource.YAML,
+        ha.ConfigSource.STORAGE,
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: ha.ConfigSource,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")

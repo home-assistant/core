@@ -8,15 +8,10 @@ from py_nextbus.client import NextBusFormatError, NextBusHTTPError, RouteStop
 import pytest
 
 from homeassistant.components import sensor
-from homeassistant.components.nextbus.const import (
-    CONF_AGENCY,
-    CONF_ROUTE,
-    CONF_STOP,
-    DOMAIN,
-)
+from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
 from homeassistant.components.nextbus.coordinator import NextBusDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed

@@ -29,7 +29,7 @@ from .entity import (
 )
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkSensorEntityDescription(
     SensorEntityDescription,
     ReolinkChannelEntityDescription,
@@ -39,7 +39,7 @@ class ReolinkSensorEntityDescription(
     value: Callable[[Host, int], int]
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkHostSensorEntityDescription(
     SensorEntityDescription,
     ReolinkHostEntityDescription,

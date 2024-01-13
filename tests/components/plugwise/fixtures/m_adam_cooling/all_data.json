@@ -52,7 +52,7 @@
     "ad4838d7d35c4d6ea796ee12ae5aedf8": {
       "active_preset": "asleep",
       "available": true,
-      "available_schedules": ["Weekschema", "Badkamer", "Test"],
+      "available_schedules": ["Weekschema", "Badkamer", "Test", "off"],
       "control_state": "cooling",
       "dev_class": "thermostat",
       "location": "f2bf9048bef64cc5b6d5110154e33c81",
@@ -102,7 +102,7 @@
     "e2f4322d57924fa090fbbc48b3a140dc": {
       "active_preset": "home",
       "available": true,
-      "available_schedules": ["Weekschema", "Badkamer", "Test"],
+      "available_schedules": ["Weekschema", "Badkamer", "Test", "off"],
       "control_state": "off",
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-10T02:00:00+02:00",

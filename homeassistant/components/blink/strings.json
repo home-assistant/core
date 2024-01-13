@@ -57,7 +57,13 @@
   "services": {
     "blink_update": {
       "name": "Update",
-      "description": "Forces a refresh."
+      "description": "Forces a refresh.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "The Blink device id."
+        }
+      }
     },
     "trigger_camera": {
       "name": "Trigger camera",
@@ -67,10 +73,6 @@
       "name": "Save video",
       "description": "Saves last recorded video clip to local file.",
       "fields": {
-        "name": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "description": "Name of camera to grab video from."
-        },
         "filename": {
           "name": "File name",
           "description": "Filename to writable path (directory may need to be included in allowlist_external_dirs in config)."
@@ -81,10 +83,6 @@
       "name": "Save recent clips",
       "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_{name}.mp4\".",
       "fields": {
-        "name": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "description": "Name of camera to grab recent clips from."
-        },
         "file_path": {
           "name": "Output directory",
           "description": "Directory name of writable path (directory may need to be included in allowlist_external_dirs in config)."
@@ -98,16 +96,17 @@
         "pin": {
           "name": "Pin",
           "description": "PIN received from blink. Leave empty if you only received a verification email."
+        },
+        "config_entry_id": {
+          "name": "Integration ID",
+          "description": "The Blink Integration id."
         }
       }
     }
   },
   "exceptions": {
-    "invalid_device": {
-      "message": "Device '{target}' is not a {domain} device"
-    },
-    "device_not_found": {
-      "message": "Device '{target}' not found in device registry"
+    "integration_not_found": {
+      "message": "Integration '{target}' not found in registry"
     },
     "no_path": {
       "message": "Can't write to directory {target}, no access to path!"
@@ -117,6 +116,19 @@
     },
     "not_loaded": {
       "message": "{target} is not loaded"
+    }
+  },
+  "issues": {
+    "service_deprecation": {
+      "title": "Blink update service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::blink::issues::service_deprecation::title%]",
+            "description": "Blink update service is deprecated and will be removed.\nPlease update your automations and scripts to use `Home Assistant Core Integration: Update entity`."
+          }
+        }
+      }
     }
   }
 }

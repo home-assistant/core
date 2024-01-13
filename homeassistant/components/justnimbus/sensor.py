@@ -28,14 +28,14 @@ from .const import DOMAIN
 from .entity import JustNimbusEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class JustNimbusEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[JustNimbusCoordinator], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class JustNimbusEntityDescription(
     SensorEntityDescription, JustNimbusEntityDescriptionMixin
 ):

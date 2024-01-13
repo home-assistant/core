@@ -37,7 +37,7 @@ LOGGER = logging.getLogger(__name__)
 EXTRA_POLL_DELAY = 3.0
 
 
-@dataclass
+@dataclass(frozen=True)
 class MatterEntityDescription(EntityDescription):
     """Describe the Matter entity."""
 

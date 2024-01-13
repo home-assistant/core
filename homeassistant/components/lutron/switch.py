@@ -1,46 +1,54 @@
 """Support for Lutron switches."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
+from pylutron import Button, Led, Lutron, Output
+
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from . import DOMAIN, LutronData
+from .entity import LutronDevice
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Lutron switches."""
-    devs = []
+    """Set up the Lutron switch platform.
+
+    Adds switches from the Main Repeater associated with the config_entry as
+    switch entities.
+    """
+    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[SwitchEntity] = []
 
     # Add Lutron Switches
-    for area_name, device in hass.data[LUTRON_DEVICES]["switch"]:
-        dev = LutronSwitch(area_name, device, hass.data[LUTRON_CONTROLLER])
-        devs.append(dev)
+    for area_name, device in entry_data.switches:
+        entities.append(LutronSwitch(area_name, device, entry_data.client))
 
     # Add the indicator LEDs for scenes (keypad buttons)
-    for scene_data in hass.data[LUTRON_DEVICES]["scene"]:
-        (area_name, keypad_name, scene, led) = scene_data
+    for area_name, keypad_name, scene, led in entry_data.scenes:
         if led is not None:
-            led = LutronLed(
-                area_name, keypad_name, scene, led, hass.data[LUTRON_CONTROLLER]
+            entities.append(
+                LutronLed(area_name, keypad_name, scene, led, entry_data.client)
             )
-            devs.append(led)
-
-    add_entities(devs, True)
+    async_add_entities(entities, True)
 
 
 class LutronSwitch(LutronDevice, SwitchEntity):
     """Representation of a Lutron Switch."""
 
-    def __init__(self, area_name, lutron_device, controller):
+    _lutron_device: Output
+
+    def __init__(
+        self, area_name: str, lutron_device: Output, controller: Lutron
+    ) -> None:
         """Initialize the switch."""
         self._prev_state = None
         super().__init__(area_name, lutron_device, controller)
@@ -54,12 +62,12 @@ class LutronSwitch(LutronDevice, SwitchEntity):
         self._lutron_device.level = 0
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._lutron_device.last_level() > 0
 
@@ -72,7 +80,16 @@ class LutronSwitch(LutronDevice, SwitchEntity):
 class LutronLed(LutronDevice, SwitchEntity):
     """Representation of a Lutron Keypad LED."""
 
-    def __init__(self, area_name, keypad_name, scene_device, led_device, controller):
+    _lutron_device: Led
+
+    def __init__(
+        self,
+        area_name: str,
+        keypad_name: str,
+        scene_device: Button,
+        led_device: Led,
+        controller: Lutron,
+    ) -> None:
         """Initialize the switch."""
         self._keypad_name = keypad_name
         self._scene_name = scene_device.name
@@ -87,7 +104,7 @@ class LutronLed(LutronDevice, SwitchEntity):
         self._lutron_device.state = 0
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {
             "keypad": self._keypad_name,
@@ -96,7 +113,7 @@ class LutronLed(LutronDevice, SwitchEntity):
         }
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._lutron_device.last_state
 

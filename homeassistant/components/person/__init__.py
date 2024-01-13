@@ -1,12 +1,9 @@
 """Support for tracking people."""
 from __future__ import annotations
 
-from http import HTTPStatus
-from ipaddress import ip_address
 import logging
 from typing import Any
 
-from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth import EVENT_USER_REMOVED
@@ -16,7 +13,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
 )
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,
@@ -51,12 +47,10 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util.network import is_local
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -391,8 +385,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, SERVICE_RELOAD, async_reload_yaml
     )
 
-    hass.http.register_view(ListPersonsView)
-
     return True
 
 
@@ -577,44 +569,3 @@ def _get_latest(prev: State | None, curr: State):
     if prev is None or curr.last_updated > prev.last_updated:
         return curr
     return prev
-
-
-class ListPersonsView(HomeAssistantView):
-    """List all persons if request is made from a local network."""
-
-    requires_auth = False
-    url = "/api/person/list"
-    name = "api:person:list"
-
-    async def get(self, request: web.Request) -> web.Response:
-        """Return a list of persons if request comes from a local IP."""
-        try:
-            remote_address = ip_address(request.remote)  # type: ignore[arg-type]
-        except ValueError:
-            return self.json_message(
-                message="Invalid remote IP",
-                status_code=HTTPStatus.BAD_REQUEST,
-                message_code="invalid_remote_ip",
-            )
-
-        hass: HomeAssistant = request.app["hass"]
-        if is_cloud_connection(hass) or not is_local(remote_address):
-            return self.json_message(
-                message="Not local",
-                status_code=HTTPStatus.BAD_REQUEST,
-                message_code="not_local",
-            )
-
-        yaml, storage, _ = hass.data[DOMAIN]
-        persons = [*yaml.async_items(), *storage.async_items()]
-
-        return self.json(
-            {
-                person[ATTR_USER_ID]: {
-                    ATTR_NAME: person[ATTR_NAME],
-                    CONF_PICTURE: person.get(CONF_PICTURE),
-                }
-                for person in persons
-                if person.get(ATTR_USER_ID)
-            }
-        )
