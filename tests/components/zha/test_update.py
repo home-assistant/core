@@ -52,26 +52,19 @@ async def test_firmware_updates(
 ) -> None:
     """Test ZHA update platform."""
 
+    fw_version = 0x12345678
+    installed_fw_version = fw_version - 10
     cluster = zigpy_device.endpoints.get(1).out_clusters[general.Ota.cluster_id]
-    cluster.PLUGGED_ATTR_READS = {"current_file_version": 0x12345678 - 10}
+    cluster.PLUGGED_ATTR_READS = {"current_file_version": installed_fw_version}
     update_attribute_cache(cluster)
 
-    zha_device = await zha_device_joined_restored(zigpy_device)
-
-    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
-    assert entity_id is not None
-
-    # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, [zha_device])
-
-    assert hass.states.get(entity_id).state == STATE_OFF
-
+    # set up firmware image
     fw_image = firmware.OTAImage()
     fw_image.subelements = [firmware.SubElement(tag_id=0x0000, data=b"fw_image")]
     fw_header = firmware.OTAImageHeader(
-        file_version=0x12345678,
+        file_version=fw_version,
         image_type=0x90,
-        manufacturer_id=zha_device.manufacturer_code,
+        manufacturer_id=zigpy_device.manufacturer_id,
         upgrade_file_id=firmware.OTAImageHeader.MAGIC_VALUE,
         header_version=256,
         header_length=56,
@@ -83,18 +76,28 @@ async def test_firmware_updates(
     fw_image.header = fw_header
     fw_image.should_update = MagicMock(return_value=True)
     cached_image = CachedImage(fw_image)
-    zha_device.async_update_sw_build_id(fw_image.header.file_version - 10)
 
     cluster.endpoint.device.application.ota.get_ota_image = AsyncMock(
         return_value=cached_image
     )
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    zha_device.async_update_sw_build_id(installed_fw_version)
+
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     # simulate an image available notification
     await cluster._handle_query_next_image(
         fw_image.header.field_control,
         zha_device.manufacturer_code,
         fw_image.header.image_type,
-        fw_image.header.file_version - 10,
+        installed_fw_version,
         fw_image.header.header_version,
         tsn=15,
     )
@@ -103,6 +106,6 @@ async def test_firmware_updates(
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     attrs = state.attributes
-    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{fw_image.header.file_version - 10:08x}"
+    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
     assert not attrs[ATTR_IN_PROGRESS]
     assert attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.header.file_version:08x}"
