@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from aioshelly.const import MODEL_DW
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -12,8 +11,11 @@ from aioshelly.exceptions import (
 import pytest
 
 from homeassistant.components.shelly.const import (
+    BLOCK_EXPECTED_SLEEP_PERIOD,
+    BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
     DOMAIN,
+    MODELS_WITH_WRONG_SLEEP_PERIOD,
     BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -312,23 +314,22 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device) -> None
     assert hass.states.get("switch.test_name_channel_1").state is STATE_ON
 
 
-@pytest.mark.parametrize(("entry_sleep", "device_sleep"), [(21600, 42300)])
+@pytest.mark.parametrize(("model"), MODELS_WITH_WRONG_SLEEP_PERIOD)
 async def test_sleeping_block_device_wrong_sleep_period(
     hass: HomeAssistant,
-    entry_sleep,
-    device_sleep,
+    model,
     mock_block_device,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping block device with wrong sleep period."""
 
-    await init_integration(hass, 1, model=MODEL_DW, sleep_period=entry_sleep)
+    await init_integration(hass, 1, model=model, sleep_period=BLOCK_WRONG_SLEEP_PERIOD)
     assert "will resume when device is online" in caplog.text
 
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
     assert (
-        f"Updating stored sleep period for Mock Title: from {entry_sleep} to {device_sleep}"
+        f"Updating stored sleep period for Mock Title: from {BLOCK_WRONG_SLEEP_PERIOD} to {BLOCK_EXPECTED_SLEEP_PERIOD}"
         in caplog.text
     )
