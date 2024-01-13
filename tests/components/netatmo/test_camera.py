@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pyatmo
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_STREAMING
@@ -17,11 +18,35 @@ from homeassistant.components.netatmo.const import (
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .common import fake_post_request, selected_platforms, simulate_webhook
+from .common import (
+    fake_post_request,
+    selected_platforms,
+    simulate_webhook,
+    snapshot_platform_entities,
+)
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
+
+
+async def test_entity(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities."""
+    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
+        await snapshot_platform_entities(
+            hass,
+            config_entry,
+            Platform.CAMERA,
+            entity_registry,
+            snapshot,
+        )
 
 
 async def test_setup_component_with_webhook(
