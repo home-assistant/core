@@ -39,13 +39,14 @@ async def test_entity(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test entities."""
-    await snapshot_platform_entities(
-        hass,
-        config_entry,
-        Platform.CAMERA,
-        entity_registry,
-        snapshot,
-    )
+    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
+        await snapshot_platform_entities(
+            hass,
+            config_entry,
+            Platform.CAMERA,
+            entity_registry,
+            snapshot,
+        )
 
 
 async def test_setup_component_with_webhook(
