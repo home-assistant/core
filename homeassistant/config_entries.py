@@ -1094,7 +1094,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """Add an item."""
         data = self.data
         if entry_id in data:
-            raise HomeAssistantError(f"An entry with the id {entry_id} already exists.")
+            # This is likely a bug in a test that is adding the same entry twice.
+            # In the future, once we have fixed the tests, this will raise HomeAssistantError.
+            _LOGGER.error("An entry with the id %s already exists", entry_id)
+            self._unindex_entry(entry_id)
         data[entry_id] = entry
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:

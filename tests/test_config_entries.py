@@ -4136,9 +4136,11 @@ async def test_preview_not_supported(
     assert result["preview"] is None
 
 
-def test_raise_trying_to_add_same_config_entry_twice(hass: HomeAssistant) -> None:
-    """Test we raise if trying to add same config entry twice."""
+def test_raise_trying_to_add_same_config_entry_twice(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we log an error if trying to add same config entry twice."""
     entry = MockConfigEntry(domain="test")
     entry.add_to_hass(hass)
-    with pytest.raises(HomeAssistantError, match="already exists"):
-        entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
+    assert f"An entry with the id {entry.entry_id} already exists" in caplog.text
