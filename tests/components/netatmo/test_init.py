@@ -6,11 +6,13 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from pyatmo.const import ALL_SCOPES
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import CoreState, HomeAssistant
+import homeassistant.helpers.device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -461,3 +463,36 @@ async def test_setup_component_invalid_token(
 
     for config_entry in hass.config_entries.async_entries("netatmo"):
         await hass.config_entries.async_remove(config_entry.entry_id)
+
+
+async def test_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test devices are registered."""
+    with selected_platforms(
+        [
+            Platform.CAMERA,
+            Platform.CLIMATE,
+            Platform.COVER,
+            Platform.LIGHT,
+            Platform.SELECT,
+            Platform.SENSOR,
+            Platform.SWITCH,
+        ]
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+
+    assert device_entries
+
+    for device_entry in device_entries:
+        assert device_entry == snapshot
