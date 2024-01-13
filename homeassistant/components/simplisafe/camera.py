@@ -175,6 +175,7 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
             filename.hass = self._hass
             clip_file = filename.async_render(variables={ATTR_ENTITY_ID: self})
 
+            self._attr_clip_url = self._attr_clip_url.replace("Download", "xxx") # TO CAUSE A 404 retry loop
             clip = await self._simplisafe.async_media_request(self._attr_clip_url)
             if clip is None:
                 return
@@ -220,9 +221,9 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
             return
 
         self._attr_image_last_updated = event.timestamp
-        self._attr_image_url = event.media_urls["imageUrl"]
-        self._attr_clip_url = event.media_urls["clipUrl"]
-        self._attr_hls_url = event.media_urls["hlsUrl"]
+        self._attr_image_url = event.media_urls["image_url"]
+        self._attr_clip_url = event.media_urls["clip_url"]
+        self._attr_hls_url = event.media_urls["hls_url"]
         self._attr_cached_image = None
 
     def video_url(
