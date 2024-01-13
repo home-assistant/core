@@ -27,7 +27,7 @@ async def test_switch_setup_and_services(
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: fan_entity, "preset_mode": "fast"},
+            {ATTR_ENTITY_ID: fan_entity, ATTR_PRESET_MODE: "fast"},
             blocking=True,
         )
         await hass.async_block_till_done()
