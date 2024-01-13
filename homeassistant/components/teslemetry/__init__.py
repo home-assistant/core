@@ -5,7 +5,6 @@ from typing import Final
 from tesla_fleet_api import Teslemetry
 from tesla_fleet_api.exceptions import InvalidToken, TeslaFleetError
 from tesla_fleet_api.vehiclespecific import VehicleSpecific
-from teslemetry_stream import TeslemetryStream
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -54,14 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api = VehicleSpecific(teslemetry.vehicle, vin)
         coordinator = TeslemetryVehicleDataCoordinator(hass, api)
         await coordinator.async_config_entry_first_refresh()
-        stream = TeslemetryStream(
-            session=async_get_clientsession(hass),
-            vin=vin,
-            access_token=access_token,
-        )
-        data.append(
-            TeslemetryVehicleData(api=api, coordinator=coordinator, stream=stream)
-        )
+        data.append(TeslemetryVehicleData(api=api, coordinator=coordinator))
 
     # Do all coordinator first refreshes simultaneously
     # await asyncio.gather(
@@ -71,16 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Setup Platforms
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Start SSE streams
-    for vehicle in data:
-
-        async def on_message(message):
-            _LOGGER.debug("Received SSE message: %s", message)
-
-        entry.async_create_background_task(
-            hass, vehicle.stream.listen(on_message), vehicle.stream.vin
-        )
 
     return True
 
