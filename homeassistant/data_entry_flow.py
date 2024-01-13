@@ -24,6 +24,7 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .helpers.frame import report
+from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -526,6 +527,7 @@ class FlowHandler:
     MINOR_VERSION = 1
 
     __progress_task: asyncio.Task[Any] | None = None
+    __no_progress_task_reported = False
 
     @property
     def source(self) -> str | None:
@@ -668,6 +670,21 @@ class FlowHandler:
         progress_task: asyncio.Task[Any] | None = None,
     ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
+        if progress_task is None and not self.__no_progress_task_reported:
+            self.__no_progress_task_reported = True
+            cls = self.__class__
+            report_issue = async_suggest_report_issue(self.hass, module=cls.__module__)
+            _LOGGER.warning(
+                (
+                    "%s::%s calls async_show_progress without passing a progress task, "
+                    "this is not valid and will break in Home Assistant Core 2024.8. "
+                    "Please %s"
+                ),
+                cls.__module__,
+                cls.__name__,
+                report_issue,
+            )
+
         result = FlowResult(
             type=FlowResultType.SHOW_PROGRESS,
             flow_id=self.flow_id,
