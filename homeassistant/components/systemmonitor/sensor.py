@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import cache
+from functools import cache, lru_cache
 import logging
 import os
 import socket
@@ -66,6 +66,7 @@ SENSOR_TYPE_MANDATORY_ARG = 4
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 
 
+@lru_cache
 def get_cpu_icon() -> Literal["mdi:cpu-64-bit", "mdi:cpu-32-bit"]:
     """Return cpu icon."""
     if sys.maxsize > 2**32:

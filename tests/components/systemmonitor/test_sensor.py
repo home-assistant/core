@@ -69,8 +69,10 @@ async def test_sensor_not_loading_veth_networks(
 async def test_sensor_icon() -> None:
     """Test the sensor icon for 32bit/64bit system."""
 
+    get_cpu_icon.cache_clear()
     with patch("sys.maxsize", 2**32):
         assert get_cpu_icon() == "mdi:cpu-32-bit"
+    get_cpu_icon.cache_clear()
     with patch("sys.maxsize", 2**64):
         assert get_cpu_icon() == "mdi:cpu-64-bit"
 
