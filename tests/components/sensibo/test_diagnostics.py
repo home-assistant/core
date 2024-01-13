@@ -28,3 +28,11 @@ async def test_diagnostics(
     assert diag["ABC999111"]["smart_low_state"] == snapshot
     assert diag["ABC999111"]["smart_high_state"] == snapshot
     assert diag["ABC999111"]["pure_conf"] == snapshot
+
+    def limit_attrs(prop, path):
+        exclude_attrs = {
+            "full_features",
+        }
+        return prop in exclude_attrs
+
+    assert diag == snapshot(name="full_snapshot", exclude=limit_attrs)
