@@ -2751,7 +2751,7 @@ velbus-aio==2023.12.0
 venstarcolortouch==0.19
 
 # homeassistant.components.vevor_heater
-vevor-heater-ble==0.0.5
+vevor-heater-ble==0.1.1
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.4.1
