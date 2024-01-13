@@ -92,42 +92,6 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
         # unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     FlexitSensorEntityDescription(
-        key="room_1_humidity",
-        device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
-        translation_key="room_1_humidity",
-        # icon="mdi:thermometer",
-        value_fn=lambda data: data.room_1_humidity,
-        # unit_of_measurement=UnitOfTemperature.HUMIDITY
-    ),
-    FlexitSensorEntityDescription(
-        key="room_2_humidity",
-        device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
-        translation_key="room_2_humidity",
-        # icon="mdi:thermometer",
-        value_fn=lambda data: data.room_2_humidity,
-        # unit_of_measurement=UnitOfTemperature.CELSIUS
-    ),
-    FlexitSensorEntityDescription(
-        key="room_3_humidity",
-        device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
-        translation_key="room_3_humidity",
-        # icon="mdi:thermometer",
-        value_fn=lambda data: data.room_3_humidity,
-        # unit_of_measurement=UnitOfTemperature.CELSIUS
-    ),
-    FlexitSensorEntityDescription(
-        key="comfort_button",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        # native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        translation_key="comfort_button",
-        # icon="mdi:thermometer",
-        value_fn=lambda data: data.comfort_button,
-        # unit_of_measurement=UnitOfTemperature.CELSIUS
-    ),
-    FlexitSensorEntityDescription(
         key="fireplace_ventilation_remaining_duration",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -255,7 +219,7 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
 #   ventilation_mode
 
 # Comfort button state: shows true or false if the hvac is in mode HOME or AWAY, and is probably not needed as a sensor
-# room humidity 1,2,3: gives readings id extra wireless hardware is installed (so not needed)
+# room humidity 1,2,3: gives readings if extra wireless hardware is installed (so not needed)
 # If the sensor with bacnet address 59 is non existent use 95 AND 96 for in machine humidity sensors
 
 # These attributes exist in flexit_bacnet but seem too redundant as sensors since they almost never change
