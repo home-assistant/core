@@ -5,7 +5,9 @@ import pytest
 from zigpy.ota import CachedImage
 import zigpy.ota.image as firmware
 import zigpy.profiles.zha as zha
+import zigpy.types as t
 import zigpy.zcl.clusters.general as general
+import zigpy.zcl.foundation as foundation
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -15,6 +17,8 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    DOMAIN as UPDATE_DOMAIN,
+    SERVICE_INSTALL,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -129,7 +133,7 @@ async def test_firmware_update_notification_from_zigpy(
 async def test_firmware_update_notification_from_service_call(
     hass: HomeAssistant, zha_device_joined_restored, zigpy_device
 ) -> None:
-    """Test ZHA update platform - firmware update notification."""
+    """Test ZHA update platform - firmware update manual check."""
     zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
         zha_device_joined_restored, zigpy_device
     )
@@ -173,3 +177,173 @@ async def test_firmware_update_notification_from_service_call(
     assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
     assert not attrs[ATTR_IN_PROGRESS]
     assert attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.header.file_version:08x}"
+
+
+def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
+    """Make a zigpy packet."""
+    req_hdr, req_cmd = cluster._create_request(
+        general=False,
+        command_id=cluster.commands_by_name[cmd_name].id,
+        schema=cluster.commands_by_name[cmd_name].schema,
+        disable_default_response=False,
+        direction=foundation.Direction.Server_to_Client,
+        args=(),
+        kwargs=kwargs,
+    )
+
+    ota_packet = t.ZigbeePacket(
+        src=t.AddrModeAddress(addr_mode=t.AddrMode.NWK, address=zigpy_device.nwk),
+        src_ep=1,
+        dst=t.AddrModeAddress(addr_mode=t.AddrMode.NWK, address=0x0000),
+        dst_ep=1,
+        tsn=req_hdr.tsn,
+        profile_id=260,
+        cluster_id=cluster.cluster_id,
+        data=t.SerializableBytes(req_hdr.serialize() + req_cmd.serialize()),
+        lqi=255,
+        rssi=-30,
+    )
+
+    return ota_packet
+
+
+async def test_firmware_updatesuccess(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
+    """Test ZHA update platform - firmware update success."""
+    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
+        zha_device_joined_restored, zigpy_device
+    )
+
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # simulate an image available notification
+    await cluster._handle_query_next_image(
+        fw_image.header.field_control,
+        zha_device.manufacturer_code,
+        fw_image.header.image_type,
+        installed_fw_version,
+        fw_image.header.header_version,
+        tsn=15,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
+    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.header.file_version:08x}"
+
+    async def endpoint_reply(cluster_id, tsn, data, command_id):
+        if cluster_id == general.Ota.cluster_id:
+            hdr, cmd = cluster.deserialize(data)
+            if isinstance(cmd, general.Ota.ImageNotifyCommand):
+                zigpy_device.packet_received(
+                    make_packet(
+                        zigpy_device,
+                        cluster,
+                        "query_next_image",
+                        field_control=general.Ota.QueryNextImageCommand.FieldControl.HardwareVersion,
+                        manufacturer_code=fw_image.header.manufacturer_id,
+                        image_type=fw_image.header.image_type,
+                        current_file_version=fw_image.header.file_version - 10,
+                        hardware_version=1,
+                    )
+                )
+            elif isinstance(
+                cmd, general.Ota.ClientCommandDefs.query_next_image_response.schema
+            ):
+                assert cmd.status == foundation.Status.SUCCESS
+                assert cmd.manufacturer_code == fw_image.header.manufacturer_id
+                assert cmd.image_type == fw_image.header.image_type
+                assert cmd.file_version == fw_image.header.file_version
+                assert cmd.image_size == fw_image.header.image_size
+                zigpy_device.packet_received(
+                    make_packet(
+                        zigpy_device,
+                        cluster,
+                        "image_block",
+                        field_control=general.Ota.ImageBlockCommand.FieldControl.RequestNodeAddr,
+                        manufacturer_code=fw_image.header.manufacturer_id,
+                        image_type=fw_image.header.image_type,
+                        file_version=fw_image.header.file_version,
+                        file_offset=0,
+                        maximum_data_size=40,
+                        request_node_addr=zigpy_device.ieee,
+                    )
+                )
+            elif isinstance(
+                cmd, general.Ota.ClientCommandDefs.image_block_response.schema
+            ):
+                if cmd.file_offset == 0:
+                    assert cmd.status == foundation.Status.SUCCESS
+                    assert cmd.manufacturer_code == fw_image.header.manufacturer_id
+                    assert cmd.image_type == fw_image.header.image_type
+                    assert cmd.file_version == fw_image.header.file_version
+                    assert cmd.file_offset == 0
+                    assert cmd.image_data == fw_image.serialize()[0:40]
+                    zigpy_device.packet_received(
+                        make_packet(
+                            zigpy_device,
+                            cluster,
+                            "image_block",
+                            field_control=general.Ota.ImageBlockCommand.FieldControl.RequestNodeAddr,
+                            manufacturer_code=fw_image.header.manufacturer_id,
+                            image_type=fw_image.header.image_type,
+                            file_version=fw_image.header.file_version,
+                            file_offset=40,
+                            maximum_data_size=40,
+                            request_node_addr=zigpy_device.ieee,
+                        )
+                    )
+                elif cmd.file_offset == 40:
+                    assert cmd.status == foundation.Status.SUCCESS
+                    assert cmd.manufacturer_code == fw_image.header.manufacturer_id
+                    assert cmd.image_type == fw_image.header.image_type
+                    assert cmd.file_version == fw_image.header.file_version
+                    assert cmd.file_offset == 40
+                    assert cmd.image_data == fw_image.serialize()[40:70]
+                    zigpy_device.packet_received(
+                        make_packet(
+                            zigpy_device,
+                            cluster,
+                            "upgrade_end",
+                            status=foundation.Status.SUCCESS,
+                            manufacturer_code=fw_image.header.manufacturer_id,
+                            image_type=fw_image.header.image_type,
+                            file_version=fw_image.header.file_version,
+                        )
+                    )
+
+            elif isinstance(
+                cmd, general.Ota.ClientCommandDefs.upgrade_end_response.schema
+            ):
+                assert cmd.manufacturer_code == fw_image.header.manufacturer_id
+                assert cmd.image_type == fw_image.header.image_type
+                assert cmd.file_version == fw_image.header.file_version
+                assert cmd.current_time == 0
+                assert cmd.upgrade_time == 0
+
+    cluster.endpoint.reply = AsyncMock(side_effect=endpoint_reply)
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{fw_image.header.file_version:08x}"
+    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_LATEST_VERSION] == attrs[ATTR_INSTALLED_VERSION]

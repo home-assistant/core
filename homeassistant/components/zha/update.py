@@ -2,15 +2,12 @@
 # pylint: skip-file
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 import functools
 from typing import TYPE_CHECKING, Any
 
-import zigpy.exceptions
 from zigpy.ota.image import BaseOTAImage
 from zigpy.types import uint16_t
-from zigpy.zcl.foundation import Status
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -157,25 +154,16 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         self.async_write_ha_state()
 
         try:
-            self._result = await self.zha_device.device.update_firmware(
+            await self.zha_device.device.update_firmware(
                 self._latest_version_firmware,
                 self._update_progress,
             )
-        # TODO: do we want to catch all exceptions here?
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except Exception as ex:
             self._reset_progress()
             raise HomeAssistantError(ex) from ex
 
-        assert self._result is not None
-
-        # If the update was not successful, we should throw an error to let the user know
-        if self._result != Status.SUCCESS:
-            self._reset_progress()
-            raise HomeAssistantError(
-                "Update was not successful - result: {self._result}"
-            )
-
         # If we get here, all files were installed successfully
+        self._reset_progress()
         self._attr_installed_version = (
             self._attr_latest_version
         ) = f"0x{firmware.header.file_version:08x}"
