@@ -9,11 +9,12 @@ from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
     BaseHaRemoteScanner,
     HaBluetoothConnector,
+    HaScanner,
 )
 from homeassistant.core import HomeAssistant
 
 from . import (
-    FakeScanner,
+    FakeScannerMixin,
     MockBleakClient,
     _get_manager,
     generate_advertisement_data,
@@ -26,7 +27,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-class FakeHaScanner(FakeScanner):
+class FakeHaScanner(FakeScannerMixin, HaScanner):
     """Fake HaScanner."""
 
     @property
