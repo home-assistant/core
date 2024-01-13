@@ -245,8 +245,8 @@ class EnumSensor(Sensor):
 
     def formatter(self, value: int) -> str | None:
         """Use name of enum."""
-        if self._enum is None:
-            return None
+        assert self._enum is not None
+
         return self._enum(value).name
 
 
