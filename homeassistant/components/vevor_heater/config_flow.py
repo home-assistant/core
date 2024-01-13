@@ -100,6 +100,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await validate_device(self.hass, discovery_info.address)
         except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except ProtocolError:
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
         return await self.async_step_bluetooth_confirm()

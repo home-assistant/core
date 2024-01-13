@@ -45,7 +45,7 @@ async def test_form_cannot_find(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "not_supported"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
