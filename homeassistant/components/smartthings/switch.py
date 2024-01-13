@@ -28,18 +28,14 @@ async def async_setup_entry(
     entities = []
 
     for device in broker.devices.values():
-        has_switch = broker.any_assigned(device.device_id, Platform.SWITCH)
+        if broker.any_assigned(device.device_id, Platform.SWITCH):
+            device_components = get_device_attributes(device)
 
-        if not has_switch:
-            continue
+            for component_id in list(device_components.keys()):
+                attributes = device_components[component_id]
 
-        device_components = get_device_attributes(device)
-
-        for component_id in list(device_components.keys()):
-            attributes = device_components[component_id]
-
-            if attributes is None or Platform.SWITCH in attributes:
-                entities.append(SmartThingsSwitch(device, component_id))
+                if attributes is None or Platform.SWITCH in attributes:
+                    entities.append(SmartThingsSwitch(device, component_id))
 
     async_add_entities(entities)
 
@@ -92,7 +88,4 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         """Return true if light is on."""
         status = get_device_status(self._device, self._component_id)
 
-        if status is None:
-            return False
-
-        return status.switch
+        return False if status is None else status.switch

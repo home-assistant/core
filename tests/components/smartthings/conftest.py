@@ -263,6 +263,12 @@ def device_factory_fixture():
                     "capabilities": [
                         {"id": capability, "version": 1} for capability in capabilities
                     ],
+                },
+                {
+                    "id": "secondary",
+                    "capabilities": [
+                        {"id": capability, "version": 1} for capability in capabilities
+                    ],
                 }
             ],
             "dth": {

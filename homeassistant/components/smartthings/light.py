@@ -39,18 +39,14 @@ async def async_setup_entry(
     entities = []
 
     for device in broker.devices.values():
-        has_light = broker.any_assigned(device.device_id, Platform.LIGHT)
+        if broker.any_assigned(device.device_id, Platform.LIGHT):
+            device_components = get_device_attributes(device)
 
-        if not has_light:
-            continue
+            for component_id in list(device_components.keys()):
+                attributes = device_components[component_id]
 
-        device_components = get_device_attributes(device)
-
-        for component_id in list(device_components.keys()):
-            attributes = device_components[component_id]
-
-            if attributes is None or Platform.SWITCH in attributes:
-                entities.append(SmartThingsLight(device, component_id))
+                if attributes is None or Platform.SWITCH in attributes:
+                    entities.append(SmartThingsLight(device, component_id))
 
     async_add_entities(entities, True)
 
@@ -209,29 +205,21 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         hue = max(min(hue, 100.0), 0.0)
         saturation = max(min(float(hs_color[1]), 100.0), 0.0)
 
-        if self._component_id is None:
-            await self._device.set_color(hue, saturation, set_status=True)
-
-        else:
-            await self._device.set_color(
-                hue,
-                saturation,
-                set_status=True,
-                component_id=self._external_component_id,
-            )
+        await self._device.set_color(
+            hue,
+            saturation,
+            set_status=True,
+            component_id=self._external_component_id,
+        )
 
     async def async_set_color_temp(self, value: float):
         """Set the color temperature of the device."""
         kelvin = color_util.color_temperature_mired_to_kelvin(value)
         kelvin = max(min(kelvin, 30000), 1)
 
-        if self._component_id is None:
-            await self._device.set_color_temperature(kelvin, set_status=True)
-
-        else:
-            await self._device.set_color_temperature(
-                kelvin, set_status=True, component_id=self._external_component_id
-            )
+        await self._device.set_color_temperature(
+            kelvin, set_status=True, component_id=self._external_component_id
+        )
 
     async def async_set_level(self, brightness: int, transition: int):
         """Set the brightness of the light over transition."""
@@ -242,16 +230,12 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         level = max(min(level, 100), 0)
         duration = int(transition)
 
-        if self._component_id is None:
-            await self._device.set_level(level, duration, set_status=True)
-
-        else:
-            await self._device.set_level(
-                level,
-                duration,
-                set_status=True,
-                component_id=self._external_component_id,
-            )
+        await self._device.set_level(
+            level,
+            duration,
+            set_status=True,
+            component_id=self._external_component_id,
+        )
 
     @property
     def color_mode(self) -> ColorMode:
@@ -270,7 +254,4 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         """Return true if light is on."""
         status = get_device_status(self._device, self._component_id)
 
-        if status is None:
-            return False
-
-        return status.switch
+        return False if status is None else status.switch
