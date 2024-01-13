@@ -1,7 +1,6 @@
 """Lamarzocco session fixtures."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import MagicMock, patch
 
 from lmcloud.const import LaMarzoccoModel
@@ -12,7 +11,11 @@ from homeassistant.core import HomeAssistant
 
 from . import USER_INPUT
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 @pytest.fixture
@@ -89,11 +92,11 @@ def mock_lamarzocco(
         lamarzocco.gateway_version = "v2.2-rc0"
         lamarzocco.latest_gateway_version = "v3.1-rc4"
 
-        lamarzocco.current_status = json.loads(
-            load_fixture("current_status.json", DOMAIN)
+        lamarzocco.current_status = load_json_object_fixture(
+            "current_status.json", DOMAIN
         )
-        lamarzocco.config = json.loads(load_fixture("config.json", DOMAIN))
-        lamarzocco.statistics = json.loads(load_fixture("statistics.json", DOMAIN))
+        lamarzocco.config = load_json_object_fixture("config.json", DOMAIN)
+        lamarzocco.statistics = load_json_array_fixture("statistics.json", DOMAIN)
 
         lamarzocco.get_all_machines.return_value = [
             (serial_number, model_name),
