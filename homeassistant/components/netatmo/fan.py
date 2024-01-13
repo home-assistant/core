@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_FAN
 from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoFan(NetatmoBase, FanEntity):
+class NetatmoFan(NetatmoBaseEntity, FanEntity):
     """Representation of a Netatmo fan."""
 
     _attr_preset_modes = ["slow", "fast"]

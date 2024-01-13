@@ -1,11 +1,37 @@
 """The tests for Netatmo switch."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN, SERVICE_SET_PRESET_MODE
-from homeassistant.const import ATTR_ENTITY_ID
+from syrupy import SnapshotAssertion
+
+from homeassistant.components.fan import (
+    ATTR_PRESET_MODE,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PRESET_MODE,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
 
-from .common import selected_platforms
+from .common import selected_platforms, snapshot_platform_entities
+
+from tests.common import MockConfigEntry
+
+
+async def test_entity(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities."""
+    await snapshot_platform_entities(
+        hass,
+        config_entry,
+        Platform.FAN,
+        entity_registry,
+        snapshot,
+    )
 
 
 async def test_switch_setup_and_services(
