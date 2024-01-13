@@ -505,6 +505,7 @@ class SmartEnergyMeteringEntityDescription(SensorEntityDescription):
 class SmartEnergyMetering(PollableSensor):
     """Metering sensor."""
 
+    entity_description: SmartEnergyMeteringEntityDescription
     _use_custom_polling: bool = False
     _attribute_name = "instantaneous_demand"
     _attr_translation_key: str = "instantaneous_demand"
@@ -605,11 +606,8 @@ class SmartEnergyMetering(PollableSensor):
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         state = super().native_value
-        description = self._ENTITY_DESCRIPTION_MAP.get(
-            self._cluster_handler.unit_of_measurement
-        )
-        if description is not None and state is not None:
-            return float(state) * description.scale
+        if hasattr(self, "entity_description") and state is not None:
+            return float(state) * self.entity_description.scale
 
         return state
 
@@ -630,6 +628,7 @@ class SmartEnergySummationEntityDescription(SmartEnergyMeteringEntityDescription
 class SmartEnergySummation(SmartEnergyMetering):
     """Smart Energy Metering summation sensor."""
 
+    entity_description: SmartEnergySummationEntityDescription
     _attribute_name = "current_summ_delivered"
     _unique_id_suffix = "summation_delivered"
     _attr_translation_key: str = "summation_delivered"
