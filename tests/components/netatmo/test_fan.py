@@ -1,4 +1,4 @@
-"""The tests for Netatmo switch."""
+"""The tests for Netatmo fan."""
 from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion
