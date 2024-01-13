@@ -7,17 +7,23 @@ import psutil
 
 _LOGGER = logging.getLogger(__name__)
 
+SKIP_DISK_TYPES = {"proc", "tmpfs", "devtmpfs"}
+
 
 def get_all_disk_mounts() -> set[str]:
     """Return all disk mount points on system."""
     disks: set[str] = set()
     for part in psutil.disk_partitions(all=True):
-        if os.name == "nt":
+        os_name = os.name
+        if os_name == "nt":
             if "cdrom" in part.opts or part.fstype == "":
                 # skip cd-rom drives with no disk in it; they may raise
                 # ENOENT, pop-up a Windows GUI error for a non-ready
                 # partition or just hang.
                 continue
+        if part.fstype in SKIP_DISK_TYPES:
+            # Ignore disks which are memory
+            continue
         try:
             usage = psutil.disk_usage(part.mountpoint)
         except PermissionError:
