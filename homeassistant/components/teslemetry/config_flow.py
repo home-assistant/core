@@ -33,12 +33,12 @@ class TeslemetryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get configuration from the user."""
         errors: dict[str, str] = {}
         if user_input:
-            api = Teslemetry(
+            teslemetry = Teslemetry(
                 session=async_get_clientsession(self.hass),
                 access_token=user_input[CONF_ACCESS_TOKEN],
             )
             try:
-                await api.test()
+                await teslemetry.test()
             except InvalidToken:
                 errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
             except PaymentRequired:

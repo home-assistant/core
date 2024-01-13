@@ -30,12 +30,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     access_token = entry.data[CONF_ACCESS_TOKEN]
 
     # Create API connection
-    api = Teslemetry(
+    teslemetry = Teslemetry(
         session=async_get_clientsession(hass),
         access_token=access_token,
     )
     try:
-        products = (await api.products())["response"]
+        products = (await teslemetry.products())["response"]
     except InvalidToken as e:
         raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
@@ -51,8 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             continue
         vin = product["vin"]
 
-        api = VehicleSpecific(api, vin)
+        api = VehicleSpecific(teslemetry.vehicle, vin)
         coordinator = TeslemetryVehicleDataCoordinator(hass, api)
+        await coordinator.async_config_entry_first_refresh()
         stream = TeslemetryStream(
             session=async_get_clientsession(hass),
             vin=vin,
@@ -61,6 +62,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data.append(
             TeslemetryVehicleData(api=api, coordinator=coordinator, stream=stream)
         )
+
+    # Do all coordinator first refreshes simultaneously
+    # await asyncio.gather(
+    #    *(vehicle.coordinator.async_config_entry_first_refresh() for vehicle in data)
+    # )
 
     # Setup Platforms
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data

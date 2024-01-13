@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from tesla_fleet_api.const import ClimateKeeperMode
-
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -43,12 +41,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_preset_modes = [
-        ClimateKeeperMode.OFF,
-        ClimateKeeperMode.ON,
-        ClimateKeeperMode.DOG,
-        ClimateKeeperMode.CAMP,
-    ]
+    _attr_preset_modes = ["off", "keep", "dog", "camp"]
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -65,7 +58,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.get(f"climate_state_{self.key}_temp_setting")
+        return self.get(f"climate_state_{self.key}_setting")
 
     @property
     def max_temp(self) -> float:
@@ -98,9 +91,9 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
         temp = kwargs[ATTR_TEMPERATURE]
-        args = {f"{self.key}_temp": temp}
+        args = {self.key: temp}
         await self.api.set_temps(**args)
-        self.set((f"climate_state_{self.key}_temp_setting", temp))
+        self.set((f"climate_state_{self.key}_setting", temp))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
@@ -111,7 +104,9 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the climate preset mode."""
-        await self.api.set_climate_keeper_mode(mode=preset_mode)
+        await self.api.set_climate_keeper_mode(
+            mode=self._attr_preset_modes.index(preset_mode)
+        )
         self.set(
             (
                 "climate_state_climate_keeper_mode",
@@ -119,6 +114,6 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
             ),
             (
                 "climate_state_is_climate_on",
-                preset_mode != ClimateKeeperMode.OFF,
+                preset_mode != self._attr_preset_modes[0],
             ),
         )

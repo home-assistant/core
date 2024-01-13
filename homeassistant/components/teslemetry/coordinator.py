@@ -25,12 +25,12 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name="Teslemetry Vehicle",
             update_interval=timedelta(seconds=SYNC_INTERVAL),
         )
-        self._api = api
+        self.api = api
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
         try:
-            data = await self._api.vehicle_data()
+            data = await self.api.vehicle_data()
         except TeslaFleetError as e:
             raise UpdateFailed from e
 

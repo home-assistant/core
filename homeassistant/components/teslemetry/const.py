@@ -16,5 +16,5 @@ MODELS = {
 class TeslemetryClimateSide(StrEnum):
     """Teslemetry Climate Keeper Modes."""
 
-    DRIVER = "driver"
-    PASSENGER = "passenger"
+    DRIVER = "driver_temp"
+    PASSENGER = "passenger_temp"
