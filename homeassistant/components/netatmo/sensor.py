@@ -672,6 +672,7 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, area.area_name)},
             name=area.area_name,
+            model="Public Weather station",
         )
 
     async def async_added_to_hass(self) -> None:
