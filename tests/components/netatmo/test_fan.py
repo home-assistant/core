@@ -12,7 +12,7 @@ async def test_switch_setup_and_services(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test setup and services."""
-    with selected_platforms(["fan"]):
+    with selected_platforms([Platform.FAN]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
