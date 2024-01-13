@@ -1,12 +1,9 @@
 """The Flexit Nordic (BACnet) integration."""
 from __future__ import annotations
 
-
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import FlexitCoordinator

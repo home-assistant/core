@@ -1,22 +1,18 @@
+"""DataUpdateCoordinator for Flexit Nordic (BACnet) integration.."""
+import asyncio.exceptions
 from datetime import timedelta
 import logging
-
-from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS, Platform
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import ConfigEntryNotReady
-import asyncio.exceptions
 
 from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-)
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    DOMAIN,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +27,7 @@ class FlexitCoordinator(DataUpdateCoordinator):
 
         self.config_entry = entry
         self.device = FlexitBACnet(
-            entry.data[CONF_IP_ADDRESS],
-            entry.data[CONF_DEVICE_ID]
+            entry.data[CONF_IP_ADDRESS], entry.data[CONF_DEVICE_ID]
         )
 
         super().__init__(
@@ -42,7 +37,7 @@ class FlexitCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=60),
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> FlexitBACnet:
         """Fetch data from the device."""
 
         try:

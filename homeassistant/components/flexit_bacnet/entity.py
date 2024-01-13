@@ -38,8 +38,8 @@ class FlexitEntity(CoordinatorEntity[FlexitCoordinator]):
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
 
-    _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step: float = PRECISION_HALVES
+    _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: FlexitCoordinator) -> None:
         """Initialize a Flexit Nordic (BACnet) entity."""
