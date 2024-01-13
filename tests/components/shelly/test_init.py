@@ -321,7 +321,7 @@ async def test_sleeping_block_device_wrong_sleep_period(
 ) -> None:
     """Test sleeping block device with wrong sleep period."""
     entry = await init_integration(
-        hass, 1, model=model, sleep_period=21600, skip_setup=True
+        hass, 1, model=model, sleep_period=BLOCK_WRONG_SLEEP_PERIOD, skip_setup=True
     )
     assert entry.data[CONF_SLEEP_PERIOD] == BLOCK_WRONG_SLEEP_PERIOD
     await hass.config_entries.async_setup(entry.entry_id)
