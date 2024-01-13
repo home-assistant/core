@@ -113,8 +113,9 @@ def mock_psutil(mock_process: list[MockProcess]) -> Mock:
             1,
         )
         mock_psutil.net_io_counters.return_value = {
-            "eth0": snetio(100, 100, 50, 50, 0, 0, 0, 0),
-            "eth1": snetio(200, 200, 150, 150, 0, 0, 0, 0),
+            "eth0": snetio(100 * 1024**2, 100 * 1024**2, 50, 50, 0, 0, 0, 0),
+            "eth1": snetio(200 * 1024**2, 200 * 1024**2, 150, 150, 0, 0, 0, 0),
+            "vethxyzxyz": snetio(300 * 1024**2, 300 * 1024**2, 150, 150, 0, 0, 0, 0),
         }
         mock_psutil.net_if_addrs.return_value = {
             "eth0": [
@@ -130,6 +131,15 @@ def mock_psutil(mock_process: list[MockProcess]) -> Mock:
                 snicaddr(
                     socket.AF_INET,
                     "192.168.10.1",
+                    "255.255.255.0",
+                    "255.255.255.255",
+                    None,
+                )
+            ],
+            "vethxyzxyz": [
+                snicaddr(
+                    socket.AF_INET,
+                    "172.16.10.1",
                     "255.255.255.0",
                     "255.255.255.255",
                     None,

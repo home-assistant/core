@@ -32,6 +32,21 @@ async def test_sensor(
     assert process_sensor.state == STATE_ON
 
 
+async def test_sensor_not_loading_veth_networks(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_added_config_entry: ConfigEntry,
+) -> None:
+    """Test the sensor."""
+    network_sensor_1 = hass.states.get("sensor.system_monitor_network_out_eth1")
+    network_sensor_2 = hass.states.get(
+        "sensor.sensor.system_monitor_network_out_vethxyzxyz"
+    )
+    assert network_sensor_1 is not None
+    assert network_sensor_1.state == "200.0"
+    assert network_sensor_2 is None
+
+
 async def test_sensor_icon_32bit() -> None:
     """Test the sensor icon for 32bit system."""
 
@@ -186,13 +201,13 @@ async def test_sensor_network_sensors(
     assert network_out_sensor is not None
     assert packets_out_sensor is not None
     assert throughput_network_out_sensor is not None
-    assert network_out_sensor.state == "0.0"
+    assert network_out_sensor.state == "200.0"
     assert packets_out_sensor.state == "150"
     assert throughput_network_out_sensor.state == STATE_UNKNOWN
 
     mock_psutil.net_io_counters.return_value = {
-        "eth0": snetio(200, 200, 100, 100, 0, 0, 0, 0),
-        "eth1": snetio(400, 400, 300, 300, 0, 0, 0, 0),
+        "eth0": snetio(200 * 1024**2, 200 * 1024**2, 100, 100, 0, 0, 0, 0),
+        "eth1": snetio(400 * 1024**2, 400 * 1024**2, 300, 300, 0, 0, 0, 0),
     }
 
     freezer.tick(timedelta(minutes=1))
@@ -208,12 +223,12 @@ async def test_sensor_network_sensors(
     assert network_out_sensor is not None
     assert packets_out_sensor is not None
     assert throughput_network_out_sensor is not None
-    assert network_out_sensor.state == "0.0"
+    assert network_out_sensor.state == "400.0"
     assert packets_out_sensor.state == "300"
-    assert throughput_network_out_sensor.state == "0.0"
+    assert float(throughput_network_out_sensor.state) == pytest.approx(3.493, rel=0.001)
 
     mock_psutil.net_io_counters.return_value = {
-        "eth0": snetio(100, 100, 50, 50, 0, 0, 0, 0),
+        "eth0": snetio(100 * 1024**2, 100 * 1024**2, 50, 50, 0, 0, 0, 0),
     }
     mock_psutil.net_if_addrs.return_value = {
         "eth0": [
