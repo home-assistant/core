@@ -521,8 +521,8 @@ async def test_device_remove_devices(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    config_entry,
-    netatmo_auth,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
 ) -> None:
     """Test we can only remove a device that no longer exists."""
 
