@@ -274,26 +274,28 @@ def device_factory_fixture():
         }
 
         if label == "Dimmer 1":
-            device_data["components"].extend([
-                {
-                    "id": "secondary",
-                    "capabilities": [
-                        {"id": capability, "version": 1} for capability in capabilities
-                    ],
-                },
-                {
-                    "id": "with_unsupported_capabilities",
-                    "capabilities": [
-                        {"id": f"{capability}_other", "version": 1} for capability in capabilities
-                    ],
-                },
-                {
-                    "id": "with_unsupported_capabilities",
-                    "capabilities": [
-                        {"id": "temperature", "version": 1}
-                    ],
-                },
-            ])
+            device_data["components"].extend(
+                [
+                    {
+                        "id": "secondary",
+                        "capabilities": [
+                            {"id": capability, "version": 1}
+                            for capability in capabilities
+                        ],
+                    },
+                    {
+                        "id": "with_unsupported_capabilities",
+                        "capabilities": [
+                            {"id": f"{capability}_other", "version": 1}
+                            for capability in capabilities
+                        ],
+                    },
+                    {
+                        "id": "with_unsupported_capabilities",
+                        "capabilities": [{"id": "temperature", "version": 1}],
+                    },
+                ]
+            )
 
         device = DeviceEntity(api, data=device_data)
         if status:
