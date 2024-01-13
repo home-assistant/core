@@ -779,10 +779,8 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         status = get_device_status(self._device, self._component_id)
-        if status is None:
-            return None
 
-        value = status.attributes[Attribute.power_consumption].value
+        value = None if status is None else status.attributes[Attribute.power_consumption].value
         if value is None or value.get(self.report_name) is None:
             return None
         if self.report_name == "power":
