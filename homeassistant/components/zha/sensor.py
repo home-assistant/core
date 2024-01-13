@@ -236,6 +236,20 @@ class PollableSensor(Sensor):
             )
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class EnumSensor(Sensor):
+    """Sensor with value from enum."""
+
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
+    _enum: type[enum.Enum]
+
+    def formatter(self, value: int) -> str | None:
+        """Use name of enum."""
+        assert self._enum is not None
+
+        return self._enum(value).name
+
+
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_ANALOG_INPUT,
     manufacturers="Digi",
@@ -1091,18 +1105,6 @@ class AqaraSmokeDensityDbm(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_icon: str = "mdi:google-circles-communities"
     _attr_suggested_display_precision: int = 3
-
-
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class EnumSensor(Sensor):
-    """Sensor with value from enum."""
-
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
-    _enum: type[enum.Enum]
-
-    def formatter(self, value: int) -> str | None:
-        """Use name of enum."""
-        return self._enum(value).name
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
