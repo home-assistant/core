@@ -557,6 +557,14 @@ class OtaClientClusterHandler(ClientClusterHandler):
             assert args
             self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
 
+    async def async_check_for_update(self):
+        """Check for firmware availability by issuing an image notify command."""
+        if self._endpoint.device.is_mains_powered:
+            await self.cluster.image_notify(
+                payload_type=(self.cluster.ImageNotifyCommand.PayloadType.QueryJitter),
+                query_jitter=100,
+            )
+
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Partition.cluster_id)
 class PartitionClusterHandler(ClusterHandler):

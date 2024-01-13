@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime
 import functools
 from typing import TYPE_CHECKING, Any
 
@@ -141,17 +140,11 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         if write_state:
             self.async_write_ha_state()
 
-    async def _async_check_for_update(
-        self, _: HomeAssistant | datetime | None = None
-    ) -> None:
+    async def async_update(self) -> None:
         """Update the entity."""
-        if self.zha_device.is_mains_powered:
-            await self._ota_cluster_handler.image_notify(
-                payload_type=(
-                    self._ota_cluster_handler.cluster.ImageNotifyCommand.PayloadType.QueryJitter
-                ),
-                query_jitter=100,
-            )
+        await super().async_update()
+        if self._attr_available:
+            await self._ota_cluster_handler.async_check_for_update()
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
