@@ -92,14 +92,20 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
         """Set the climate temperature."""
         temp = kwargs[ATTR_TEMPERATURE]
         if self.key == TeslemetryClimateSide.DRIVER:
-            await self.api.set_temps(
-                driver_temp=temp,
-                passenger_temp=self.get("climate_state_passenger_temp_setting"),
+            print(temp, self.get("climate_state_passenger_temp_setting"))
+            print(
+                await self.api.set_temps(
+                    driver_temp=temp,
+                    passenger_temp=self.get("climate_state_passenger_temp_setting"),
+                )
             )
         else:
-            await self.api.set_temps(
-                driver_temp=self.get("climate_state_driver_temp_setting"),
-                passenger_temp=temp,
+            print(self.get("climate_state_driver_temp_setting"), temp)
+            print(
+                await self.api.set_temps(
+                    driver_temp=self.get("climate_state_driver_temp_setting"),
+                    passenger_temp=temp,
+                )
             )
         self.set((f"climate_state_{self.key}_setting", temp))
 
