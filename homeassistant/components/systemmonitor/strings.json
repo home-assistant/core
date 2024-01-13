@@ -21,5 +21,81 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "disk_free": {
+        "name": "Disk free {argument}"
+      },
+      "disk_use": {
+        "name": "Disk use {argument}"
+      },
+      "disk_use_percent": {
+        "name": "Disk use (percent) {argument}"
+      },
+      "ipv4_address": {
+        "name": "IPv4 address {argument}"
+      },
+      "ipv6_address": {
+        "name": "IPv6 address {argument}"
+      },
+      "last_boot": {
+        "name": "Last boot"
+      },
+      "load_15m": {
+        "name": "Load (15m)"
+      },
+      "load_1m": {
+        "name": "Load (1m)"
+      },
+      "load_5m": {
+        "name": "Load (5m)"
+      },
+      "memory_free": {
+        "name": "Memory free"
+      },
+      "memory_use": {
+        "name": "Memory use"
+      },
+      "memory_use_percent": {
+        "name": "Memory use (percent)"
+      },
+      "network_in": {
+        "name": "Network in {argument}"
+      },
+      "network_out": {
+        "name": "Network out {argument}"
+      },
+      "packets_in": {
+        "name": "Packets in {argument}"
+      },
+      "packets_out": {
+        "name": "Packets out {argument}"
+      },
+      "throughput_network_in": {
+        "name": "Network throughput in {argument}"
+      },
+      "throughput_network_out": {
+        "name": "Network throughput out {argument}"
+      },
+      "process": {
+        "name": "Process {argument}"
+      },
+      "processor_use": {
+        "name": "Processor use"
+      },
+      "processor_temperature": {
+        "name": "Processor temperature"
+      },
+      "swap_free": {
+        "name": "Swap free"
+      },
+      "swap_use": {
+        "name": "Swap use"
+      },
+      "swap_use_percent": {
+        "name": "Swap use (percent)"
+      }
+    }
   }
 }

@@ -84,7 +84,7 @@ class SysMonitorSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "disk_free": SysMonitorSensorEntityDescription(
         key="disk_free",
-        name="Disk free",
+        translation_key="disk_free",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
@@ -92,7 +92,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "disk_use": SysMonitorSensorEntityDescription(
         key="disk_use",
-        name="Disk use",
+        translation_key="disk_use",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
@@ -100,49 +100,49 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "disk_use_percent": SysMonitorSensorEntityDescription(
         key="disk_use_percent",
-        name="Disk use (percent)",
+        translation_key="disk_use_percent",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "ipv4_address": SysMonitorSensorEntityDescription(
         key="ipv4_address",
-        name="IPv4 address",
+        translation_key="ipv4_address",
         icon="mdi:ip-network",
         mandatory_arg=True,
     ),
     "ipv6_address": SysMonitorSensorEntityDescription(
         key="ipv6_address",
-        name="IPv6 address",
+        translation_key="ipv6_address",
         icon="mdi:ip-network",
         mandatory_arg=True,
     ),
     "last_boot": SysMonitorSensorEntityDescription(
         key="last_boot",
-        name="Last boot",
+        translation_key="last_boot",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     "load_15m": SysMonitorSensorEntityDescription(
         key="load_15m",
-        name="Load (15m)",
+        translation_key="load_15m",
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "load_1m": SysMonitorSensorEntityDescription(
         key="load_1m",
-        name="Load (1m)",
+        translation_key="load_1m",
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "load_5m": SysMonitorSensorEntityDescription(
         key="load_5m",
-        name="Load (5m)",
+        translation_key="load_5m",
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "memory_free": SysMonitorSensorEntityDescription(
         key="memory_free",
-        name="Memory free",
+        translation_key="memory_free",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
@@ -150,7 +150,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "memory_use": SysMonitorSensorEntityDescription(
         key="memory_use",
-        name="Memory use",
+        translation_key="memory_use",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
@@ -158,14 +158,14 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "memory_use_percent": SysMonitorSensorEntityDescription(
         key="memory_use_percent",
-        name="Memory use (percent)",
+        translation_key="memory_use_percent",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "network_in": SysMonitorSensorEntityDescription(
         key="network_in",
-        name="Network in",
+        translation_key="network_in",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:server-network",
@@ -174,7 +174,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "network_out": SysMonitorSensorEntityDescription(
         key="network_out",
-        name="Network out",
+        translation_key="network_out",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:server-network",
@@ -183,21 +183,21 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "packets_in": SysMonitorSensorEntityDescription(
         key="packets_in",
-        name="Packets in",
+        translation_key="packets_in",
         icon="mdi:server-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
     ),
     "packets_out": SysMonitorSensorEntityDescription(
         key="packets_out",
-        name="Packets out",
+        translation_key="packets_out",
         icon="mdi:server-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
     ),
     "throughput_network_in": SysMonitorSensorEntityDescription(
         key="throughput_network_in",
-        name="Network throughput in",
+        translation_key="throughput_network_in",
         native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -205,7 +205,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "throughput_network_out": SysMonitorSensorEntityDescription(
         key="throughput_network_out",
-        name="Network throughput out",
+        translation_key="throughput_network_out",
         native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -213,27 +213,27 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "process": SysMonitorSensorEntityDescription(
         key="process",
-        name="Process",
+        translation_key="process",
         icon=get_cpu_icon(),
         mandatory_arg=True,
     ),
     "processor_use": SysMonitorSensorEntityDescription(
         key="processor_use",
-        name="Processor use",
+        translation_key="processor_use",
         native_unit_of_measurement=PERCENTAGE,
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "processor_temperature": SysMonitorSensorEntityDescription(
         key="processor_temperature",
-        name="Processor temperature",
+        translation_key="processor_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "swap_free": SysMonitorSensorEntityDescription(
         key="swap_free",
-        name="Swap free",
+        translation_key="swap_free",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
@@ -241,7 +241,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "swap_use": SysMonitorSensorEntityDescription(
         key="swap_use",
-        name="Swap use",
+        translation_key="swap_use",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
@@ -249,7 +249,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "swap_use_percent": SysMonitorSensorEntityDescription(
         key="swap_use_percent",
-        name="Swap use (percent)",
+        translation_key="swap_use_percent",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
@@ -587,7 +587,7 @@ class SystemMonitorSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = sensor_description
-        self._attr_name: str = f"{sensor_description.name} {argument}".rstrip()
+        self._attr_translation_placeholders = {"argument": argument.rstrip()}
         self._attr_unique_id: str = slugify(f"{sensor_description.key}_{argument}")
         self._sensor_registry = sensor_registry
         self._argument: str = argument
