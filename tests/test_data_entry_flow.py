@@ -498,7 +498,7 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
     assert result["reason"] == "error"
 
 
-async def test_show_progress_legacy(hass: HomeAssistant, manager) -> None:
+async def test_show_progress_legacy(hass: HomeAssistant, manager, caplog) -> None:
     """Test show progress logic.
 
     This tests the deprecated version where the config flow is responsible for
@@ -585,6 +585,13 @@ async def test_show_progress_legacy(hass: HomeAssistant, manager) -> None:
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Hello"
+
+    # Check for deprecation warning
+    assert (
+        "tests.test_data_entry_flow::TestFlow calls async_show_progress without passing"
+        " a progress task, this is not valid and will break in Home Assistant "
+        "Core 2024.8."
+    ) in caplog.text
 
 
 async def test_show_progress_fires_only_when_changed(
