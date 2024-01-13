@@ -3,7 +3,6 @@ from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
-from habluetooth import HaScanner
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -14,6 +13,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.core import HomeAssistant
 
 from . import (
+    FakeScanner,
     MockBleakClient,
     _get_manager,
     generate_advertisement_data,
@@ -26,7 +26,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-class FakeHaScanner(HaScanner):
+class FakeHaScanner(FakeScanner):
     """Fake HaScanner."""
 
     @property
