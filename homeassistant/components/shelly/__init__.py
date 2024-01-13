@@ -6,7 +6,7 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import MODEL_DW_2, MODEL_HT, RPC_GENERATIONS
+from aioshelly.const import MODEL_DW, MODEL_DW_2, MODEL_HT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -173,7 +173,11 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
         # Some old firmware have a wrong sleep period hardcoded value.
         # Following code block will force the right value for affected devices
-        if sleep_period == 21600 and entry.data["model"] in [MODEL_HT, MODEL_DW_2]:
+        if sleep_period == 21600 and entry.data["model"] in [
+            MODEL_DW,
+            MODEL_DW_2,
+            MODEL_HT,
+        ]:
             expected_sleep_period = 42300
             LOGGER.warning(
                 "Updating stored sleep period for %s: from %s to %s",
