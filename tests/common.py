@@ -939,12 +939,10 @@ class MockConfigEntry(config_entries.ConfigEntry):
     def add_to_hass(self, hass: HomeAssistant) -> None:
         """Test helper to add entry to hass."""
         hass.config_entries._entries[self.entry_id] = self
-        hass.config_entries._domain_index.setdefault(self.domain, []).append(self)
 
     def add_to_manager(self, manager: config_entries.ConfigEntries) -> None:
         """Test helper to add entry to entry manager."""
         manager._entries[self.entry_id] = self
-        manager._domain_index.setdefault(self.domain, []).append(self)
 
 
 def patch_yaml_files(files_dict, endswith=True):
