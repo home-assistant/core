@@ -38,8 +38,7 @@ class TeslemetryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 access_token=user_input[CONF_ACCESS_TOKEN],
             )
             try:
-                # This needs a new meta endpoint to check for a subscription
-                await api.vehicles()
+                await api.test()
             except InvalidToken:
                 errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
             except PaymentRequired:
