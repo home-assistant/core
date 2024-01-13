@@ -405,7 +405,7 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.add(f"{_type}_{slugify(argument)}")
+                loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -425,7 +425,7 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.add(f"{_type}_{slugify(argument)}")
+                loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -449,7 +449,7 @@ async def async_setup_entry(
                 sensor_registry[(_type, argument)] = SensorData(
                     argument, None, None, None, None
                 )
-                loaded_resources.add(f"{_type}_{slugify(argument)}")
+                loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,

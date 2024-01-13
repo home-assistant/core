@@ -4,6 +4,7 @@ import logging
 
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.helpers import is_valid_warning_department
+from meteofrance_api.model import CurrentPhenomenons, Forecast, Rain
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -79,17 +80,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
-    async def _async_update_data_forecast_forecast():
+    async def _async_update_data_forecast_forecast() -> Forecast:
         """Fetch data from API endpoint."""
         return await hass.async_add_executor_job(
             client.get_forecast, latitude, longitude
         )
 
-    async def _async_update_data_rain():
+    async def _async_update_data_rain() -> Rain:
         """Fetch data from API endpoint."""
         return await hass.async_add_executor_job(client.get_rain, latitude, longitude)
 
-    async def _async_update_data_alert():
+    async def _async_update_data_alert() -> CurrentPhenomenons:
         """Fetch data from API endpoint."""
         return await hass.async_add_executor_job(
             client.get_warning_current_phenomenoms, department, 0, True
@@ -136,7 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.title,
         department,
     )
-    if is_valid_warning_department(department):
+    if department is not None and is_valid_warning_department(department):
         if not hass.data[DOMAIN].get(department):
             coordinator_alert = DataUpdateCoordinator(
                 hass,
