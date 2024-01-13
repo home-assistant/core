@@ -269,7 +269,7 @@ def device_factory_fixture():
                     "capabilities": [
                         {"id": capability, "version": 1} for capability in capabilities
                     ],
-                }
+                },
             ],
             "dth": {
                 "deviceTypeId": "b678b29d-2726-4e4f-9c3f-7aa05bd08964",
