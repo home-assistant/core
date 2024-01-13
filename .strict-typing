@@ -339,6 +339,7 @@ homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.repairs.*
 homeassistant.components.rest.*
+homeassistant.components.rest_command.*
 homeassistant.components.rfxtrx.*
 homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
