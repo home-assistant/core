@@ -1084,21 +1084,21 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """Return the underlying values to avoid __iter__ overhead."""
         return self.data.values()
 
-    def __setitem__(self, key: str, entry: ConfigEntry) -> None:
+    def __setitem__(self, entry_id: str, entry: ConfigEntry) -> None:
         """Add an item."""
         data = self.data
-        if key in data:
-            self._unindex_entry(key)
-        data[key] = entry
+        if entry_id in data:
+            raise HomeAssistantError(f"An entry with the id {entry_id} already exists.")
+        data[entry_id] = entry
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
             self._domain_unique_id_index.setdefault(entry.domain, {})[
                 entry.unique_id
             ] = entry
 
-    def _unindex_entry(self, key: str) -> None:
+    def _unindex_entry(self, entry_id: str) -> None:
         """Unindex an entry."""
-        entry = self.data[key]
+        entry = self.data[entry_id]
         domain = entry.domain
         self._domain_index[domain].remove(entry)
         if not self._domain_index[domain]:
@@ -1108,10 +1108,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             if not self._domain_unique_id_index[domain]:
                 del self._domain_unique_id_index[domain]
 
-    def __delitem__(self, key: str) -> None:
+    def __delitem__(self, entry_id: str) -> None:
         """Remove an item."""
-        self._unindex_entry(key)
-        super().__delitem__(key)
+        self._unindex_entry(entry_id)
+        super().__delitem__(entry_id)
 
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
         """Get entries for a domain."""
