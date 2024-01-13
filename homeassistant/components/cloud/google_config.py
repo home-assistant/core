@@ -412,7 +412,7 @@ class CloudGoogleConfig(AbstractConfig):
         if (
             not self.enabled
             or not self._cloud.is_logged_in
-            or self.hass.state != CoreState.running
+            or self.hass.state is not CoreState.running
         ):
             return
 
@@ -435,7 +435,7 @@ class CloudGoogleConfig(AbstractConfig):
         if (
             not self.enabled
             or not self._cloud.is_logged_in
-            or self.hass.state != CoreState.running
+            or self.hass.state is not CoreState.running
         ):
             return
 
