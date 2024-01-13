@@ -66,8 +66,37 @@ async def test_sensor_not_loading_veth_networks(
     assert network_sensor_2 is None
 
 
-async def test_sensor_icon() -> None:
+async def test_sensor_icon(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_util: Mock,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test the sensor icon for 32bit/64bit system."""
+
+    with patch("sys.maxsize", 2**32):
+        get_cpu_icon.cache_clear()
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
+    assert process_sensor is not None
+    assert process_sensor.attributes["icon"] == "mdi:cpu-32-bit"
+
+    with patch("sys.maxsize", 2**64):
+        get_cpu_icon.cache_clear()
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
+    assert process_sensor is not None
+    assert process_sensor.attributes["icon"] == "mdi:cpu-64-bit"
 
     get_cpu_icon.cache_clear()
     with patch("sys.maxsize", 2**32):
