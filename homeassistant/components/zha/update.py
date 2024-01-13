@@ -173,12 +173,10 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
             self._reset_progress()
             raise HomeAssistantError(ex) from ex
 
-        # TODO: make this work for Zigpy
         assert self._result is not None
 
         # If the update was not successful, we should throw an error to let the user know
         if self._result != Status.SUCCESS:
-            # TODO: make this work for Zigpy
             self._reset_progress()
             raise HomeAssistantError(
                 "Update was not successful - result: {self._result}"
