@@ -67,8 +67,8 @@ async def test_sensor_not_loading_veth_networks(
     assert network_sensor_2 is None
 
 
-async def test_sensor_icon_32bit() -> None:
-    """Test the sensor icon for 32bit system."""
+async def test_sensor_icon() -> None:
+    """Test the sensor icon for 32bit/64bit system."""
 
     with patch("sys.maxsize", 2**32):
         assert get_cpu_icon() == "mdi:cpu-32-bit"
