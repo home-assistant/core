@@ -406,6 +406,7 @@ class NetatmoWeatherSensor(NetatmoModuleEntity, SensorEntity):
     """Implementation of a Netatmo weather/home coach sensor."""
 
     entity_description: NetatmoSensorEntityDescription
+    _attr_configuration_url = CONF_URL_WEATHER
 
     def __init__(
         self,
@@ -424,7 +425,6 @@ class NetatmoWeatherSensor(NetatmoModuleEntity, SensorEntity):
                 },
             ]
         )
-        self._config_url = CONF_URL_WEATHER
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
         if hasattr(self.device, "place"):
@@ -473,6 +473,7 @@ class NetatmoClimateBatterySensor(NetatmoModuleEntity, SensorEntity):
 
     entity_description: NetatmoSensorEntityDescription
     device: pyatmo.modules.NRV
+    _attr_configuration_url = CONF_URL_ENERGY
 
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize the sensor."""
@@ -488,7 +489,6 @@ class NetatmoClimateBatterySensor(NetatmoModuleEntity, SensorEntity):
                 },
             ]
         )
-        self._config_url = CONF_URL_ENERGY
 
         self._attr_unique_id = f"{netatmo_device.parent_id}-{self.device.entity_id}-{self.entity_description.key}"
 
@@ -508,6 +508,7 @@ class NetatmoSensor(NetatmoModuleEntity, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     entity_description: NetatmoSensorEntityDescription
+    _attr_configuration_url = CONF_URL_ENERGY
 
     def __init__(
         self,
@@ -527,7 +528,6 @@ class NetatmoSensor(NetatmoModuleEntity, SensorEntity):
                 },
             ]
         )
-        self._config_url = CONF_URL_ENERGY
 
         self._attr_unique_id = (
             f"{self.device.entity_id}-{self.device.entity_id}-{description.key}"
@@ -609,8 +609,6 @@ class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
             ]
         )
 
-        self._config_url = CONF_URL_ENERGY
-
         self._attr_unique_id = (
             f"{self.device.entity_id}-{self.device.entity_id}-{description.key}"
         )
@@ -658,9 +656,7 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
 
         self.area = area
         self._mode = area.mode
-        self._area_name = area.area_name
         self._show_on_map = area.show_on_map
-        self._config_url = CONF_URL_PUBLIC_WEATHER
         self._attr_unique_id = f"{area.area_name.replace(' ', '-')}-{description.key}"
 
         self._attr_extra_state_attributes.update(
@@ -673,6 +669,8 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
             identifiers={(DOMAIN, area.area_name)},
             name=area.area_name,
             model="Public Weather station",
+            manufacturer="Netatmo",
+            configuration_url=CONF_URL_PUBLIC_WEATHER,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -682,7 +680,7 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"netatmo-config-{self._area_name}",
+                f"netatmo-config-{self.area.area_name}",
                 self.async_config_update_callback,
             )
         )
@@ -741,7 +739,7 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
                 _LOGGER.error(
                     "No station provides %s data in the area %s",
                     self.entity_description.key,
-                    self._area_name,
+                    self.area.area_name,
                 )
 
             self._attr_available = False
