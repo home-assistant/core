@@ -111,7 +111,7 @@ async def test_public_weather_sensor(
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == entities_before_change
-    assert hass.states.get(f"{prefix}temperature").state == "22.7"
+    assert hass.states.get(f"{prefix}temperature").state == "27.4"
 
 
 @pytest.mark.parametrize(
