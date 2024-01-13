@@ -2095,7 +2095,7 @@ volvooncall==0.10.3
 vsure==2.6.6
 
 # homeassistant.components.vulcan
-vulcan-api==2.3.0
+vulcan-api==2.3.2
 
 # homeassistant.components.vultr
 vultr==0.1.2
