@@ -1,19 +1,37 @@
 """Fixtures for the System Monitor integration."""
 from __future__ import annotations
 
+from collections import namedtuple
 from collections.abc import Generator
 import socket
 from unittest.mock import AsyncMock, Mock, patch
 
 from psutil import NoSuchProcess, Process
 from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr, sswap
-from psutil._pslinux import svmem
 import pytest
 
 from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+# Different depending on platform so making according to Linux
+svmem = namedtuple(
+    "svmem",
+    [
+        "total",
+        "available",
+        "percent",
+        "used",
+        "free",
+        "active",
+        "inactive",
+        "buffers",
+        "cached",
+        "shared",
+        "slab",
+    ],
+)
 
 
 @pytest.fixture(autouse=True)

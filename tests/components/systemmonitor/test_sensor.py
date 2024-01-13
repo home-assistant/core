@@ -1,5 +1,4 @@
 """Test System Monitor sensor."""
-from collections import namedtuple
 from datetime import timedelta
 import socket
 from unittest.mock import Mock, patch
@@ -16,27 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockProcess
+from .conftest import MockProcess, svmem
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-# Different depending on platform so making according to Linux
-svmem = namedtuple(
-    "svmem",
-    [
-        "total",
-        "available",
-        "percent",
-        "used",
-        "free",
-        "active",
-        "inactive",
-        "buffers",
-        "cached",
-        "shared",
-        "slab",
-    ],
-)
 
 
 async def test_sensor(
