@@ -9,7 +9,7 @@ from tesla_fleet_api.vehiclespecific import VehicleSpecific
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-SYNC_INTERVAL = 300
+SYNC_INTERVAL = 60
 
 _LOGGER = logging.getLogger(__name__)
 
