@@ -113,8 +113,8 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
         },
     )
     await hass.async_block_till_done()
-    on_start_callback = cloud.register_on_start.call_args[0][0]
-    await on_start_callback()
+    await cloud.login("test-user", "test-pass")
+    cloud.login.reset_mock()
 
 
 async def test_google_actions_sync(

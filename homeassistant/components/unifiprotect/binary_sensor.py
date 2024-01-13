@@ -43,14 +43,14 @@ _LOGGER = logging.getLogger(__name__)
 _KEY_DOOR = "door"
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ProtectBinaryEntityDescription(
     ProtectRequiredKeysMixin, BinarySensorEntityDescription
 ):
     """Describes UniFi Protect Binary Sensor entity."""
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ProtectBinaryEventEntityDescription(
     ProtectEventMixin, BinarySensorEntityDescription
 ):
