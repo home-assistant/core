@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
-from aiohttp import hdrs
+from aiohttp import hdrs, web
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
@@ -57,9 +58,11 @@ class TriggerInstance:
     job: HassJob
 
 
-async def _handle_webhook(hass, webhook_id, request):
+async def _handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> None:
     """Handle incoming webhook."""
-    base_result = {"platform": "webhook", "webhook_id": webhook_id}
+    base_result: dict[str, Any] = {"platform": "webhook", "webhook_id": webhook_id}
 
     if "json" in request.headers.get(hdrs.CONTENT_TYPE, ""):
         base_result["json"] = await request.json()
@@ -133,7 +136,7 @@ async def async_attach_trigger(
     triggers[webhook_id].append(trigger_instance)
 
     @callback
-    def unregister():
+    def unregister() -> None:
         """Unregister webhook."""
         if issue_id:
             async_delete_issue(hass, DOMAIN, issue_id)
