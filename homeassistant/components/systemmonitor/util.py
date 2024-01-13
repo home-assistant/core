@@ -7,6 +7,8 @@ import psutil
 
 _LOGGER = logging.getLogger(__name__)
 
+SKIP_DISK_TYPES = {"proc", "tmpfs", "devtmpfs"}
+
 
 def get_all_disk_mounts() -> set[str]:
     """Return all disk mount points on system."""
@@ -18,6 +20,9 @@ def get_all_disk_mounts() -> set[str]:
                 # ENOENT, pop-up a Windows GUI error for a non-ready
                 # partition or just hang.
                 continue
+        if part.fstype in SKIP_DISK_TYPES:
+            # Ignore disks which are memory
+            continue
         try:
             usage = psutil.disk_usage(part.mountpoint)
         except PermissionError:
