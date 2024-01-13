@@ -1,6 +1,7 @@
 """Config flow for Google integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -68,6 +69,8 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
+    _exchange_finished_task: asyncio.Task[bool] | None = None
+
     def __init__(self) -> None:
         """Set up instance."""
         super().__init__()
@@ -115,7 +118,7 @@ class OAuth2FlowHandler(
         if self._web_auth:
             return await super().async_step_auth(user_input)
 
-        if user_input is not None:
+        if self._exchange_finished_task and self._exchange_finished_task.done():
             return self.async_show_progress_done(next_step_id="creation")
 
         if not self._device_flow:
@@ -150,15 +153,16 @@ class OAuth2FlowHandler(
                 return self.async_abort(reason="oauth_error")
             self._device_flow = device_flow
 
+            exchange_finished_evt = asyncio.Event()
+            self._exchange_finished_task = self.hass.async_create_task(
+                exchange_finished_evt.wait()
+            )
+
             def _exchange_finished() -> None:
                 self.external_data = {
                     DEVICE_AUTH_CREDS: device_flow.creds
                 }  # is None on timeout/expiration
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_configure(
-                        flow_id=self.flow_id, user_input={}
-                    )
-                )
+                exchange_finished_evt.set()
 
             device_flow.async_set_listener(_exchange_finished)
             device_flow.async_start_exchange()
@@ -170,6 +174,7 @@ class OAuth2FlowHandler(
                 "user_code": self._device_flow.user_code,
             },
             progress_action="exchange",
+            progress_task=self._exchange_finished_task,
         )
 
     async def async_step_creation(

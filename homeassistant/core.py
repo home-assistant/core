@@ -425,7 +425,7 @@ class HomeAssistant:
 
         This method is a coroutine.
         """
-        if self.state != CoreState.not_running:
+        if self.state is not CoreState.not_running:
             raise RuntimeError("Home Assistant is already running")
 
         # _async_stop will set this instead of stopping the loop
@@ -474,7 +474,7 @@ class HomeAssistant:
         # Allow automations to set up the start triggers before changing state
         await asyncio.sleep(0)
 
-        if self.state != CoreState.starting:
+        if self.state is not CoreState.starting:
             _LOGGER.warning(
                 "Home Assistant startup has been interrupted. "
                 "Its state may be inconsistent"
@@ -824,7 +824,7 @@ class HomeAssistant:
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
-        if self.state == CoreState.not_running:  # just ignore
+        if self.state is CoreState.not_running:  # just ignore
             return
         # The future is never retrieved, and we only hold a reference
         # to it to prevent it from being garbage collected.
@@ -844,12 +844,12 @@ class HomeAssistant:
         if not force:
             # Some tests require async_stop to run,
             # regardless of the state of the loop.
-            if self.state == CoreState.not_running:  # just ignore
+            if self.state is CoreState.not_running:  # just ignore
                 return
             if self.state in [CoreState.stopping, CoreState.final_write]:
                 _LOGGER.info("Additional call to async_stop was ignored")
                 return
-            if self.state == CoreState.starting:
+            if self.state is CoreState.starting:
                 # This may not work
                 _LOGGER.warning(
                     "Stopping Home Assistant before startup has completed may fail"

@@ -818,7 +818,7 @@ async def test_this_variable_early_hass_running(
     """
 
     # Start hass
-    assert hass.state == CoreState.running
+    assert hass.state is CoreState.running
     await hass.async_start()
     await hass.async_block_till_done()
 
