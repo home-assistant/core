@@ -447,6 +447,7 @@ homeassistant.components.withings.*
 homeassistant.components.wiz.*
 homeassistant.components.wled.*
 homeassistant.components.worldclock.*
+homeassistant.components.xiaomi_ble.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*
 homeassistant.components.youtube.*
