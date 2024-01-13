@@ -20,7 +20,7 @@ async def test_switch_setup_and_services(
     fan_entity = "fan.centralized_ventilation_controler"
 
     assert hass.states.get(fan_entity).state == "on"
-    assert hass.states.get(fan_entity).attributes["preset_mode"] == "slow"
+    assert hass.states.get(fan_entity).attributes[ATTR_PRESET_MODE] == "slow"
 
     # Test turning switch on
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
