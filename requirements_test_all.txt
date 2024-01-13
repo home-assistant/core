@@ -146,7 +146,7 @@ afsapi==0.2.7
 agent-py==0.0.23
 
 # homeassistant.components.geo_json_events
-aio-geojson-generic-client==0.3
+aio-geojson-generic-client==0.4
 
 # homeassistant.components.geonetnz_quakes
 aio-geojson-geonetnz-quakes==0.15
@@ -837,7 +837,7 @@ hole==0.8.0
 holidays==0.39
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240104.0
+home-assistant-frontend==20240112.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.1.2
@@ -1034,6 +1034,9 @@ mutesync==0.0.1
 
 # homeassistant.components.permobil
 mypermobil==0.1.6
+
+# homeassistant.components.myuplink
+myuplink==0.0.9
 
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
@@ -2132,7 +2135,7 @@ wyoming==1.4.0
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.21.1
+xiaomi-ble==0.21.2
 
 # homeassistant.components.knx
 xknx==2.11.2

@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from meteofrance_api.client import MeteoFranceClient
+from meteofrance_api.model import Place
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_CITY, DOMAIN
 
@@ -21,12 +24,16 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init MeteoFranceFlowHandler."""
-        self.places = []
+        self.places: list[Place] = []
 
     @callback
-    def _show_setup_form(self, user_input=None, errors=None):
+    def _show_setup_form(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> FlowResult:
         """Show the setup form to the user."""
 
         if user_input is None:
@@ -40,9 +47,11 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is None:
             return self._show_setup_form(user_input, errors)
@@ -72,15 +81,17 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude},
         )
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_cities(self, user_input=None):
+    async def async_step_cities(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Step where the user choose the city from the API search results."""
         if not user_input:
             if len(self.places) > 1 and self.source != SOURCE_IMPORT:
-                places_for_form = {}
+                places_for_form: dict[str, str] = {}
                 for place in self.places:
                     places_for_form[_build_place_key(place)] = f"{place}"
 
@@ -106,5 +117,5 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-def _build_place_key(place) -> str:
+def _build_place_key(place: Place) -> str:
     return f"{place};{place.latitude};{place.longitude}"
