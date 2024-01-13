@@ -85,6 +85,7 @@ def async_handle_failed_command(
     {
         vol.Required(TYPE): "matter/commission",
         vol.Required("code"): str,
+        vol.Optional("network_only"): bool,
     }
 )
 @websocket_api.async_response
@@ -97,7 +98,9 @@ async def websocket_commission(
     matter: MatterAdapter,
 ) -> None:
     """Add a device to the network and commission the device."""
-    await matter.matter_client.commission_with_code(msg["code"])
+    await matter.matter_client.commission_with_code(
+        msg["code"], network_only=msg.get("network_only", True)
+    )
     connection.send_result(msg[ID])
 
 
@@ -106,6 +109,7 @@ async def websocket_commission(
     {
         vol.Required(TYPE): "matter/commission_on_network",
         vol.Required("pin"): int,
+        vol.Optional("ip_addr"): str,
     }
 )
 @websocket_api.async_response
@@ -118,7 +122,9 @@ async def websocket_commission_on_network(
     matter: MatterAdapter,
 ) -> None:
     """Commission a device already on the network."""
-    await matter.matter_client.commission_on_network(msg["pin"])
+    await matter.matter_client.commission_on_network(
+        msg["pin"], ip_addr=msg.get("ip_addr", None)
+    )
     connection.send_result(msg[ID])
 
 

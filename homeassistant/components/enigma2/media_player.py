@@ -1,8 +1,9 @@
 """Support for Enigma2 media players."""
 from __future__ import annotations
 
+from aiohttp.client_exceptions import ClientConnectorError
 from openwebif.api import OpenWebIfDevice
-from openwebif.enums import RemoteControlCodes
+from openwebif.enums import RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -20,6 +21,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -96,9 +98,13 @@ async def async_setup_platform(
         source_bouquet=config.get(CONF_SOURCE_BOUQUET),
     )
 
-    async_add_entities(
-        [Enigma2Device(config[CONF_NAME], device, await device.get_about())]
-    )
+    try:
+        about = await device.get_about()
+    except ClientConnectorError as err:
+        await device.close()
+        raise PlatformNotReady from err
+
+    async_add_entities([Enigma2Device(config[CONF_NAME], device, about)])
 
 
 class Enigma2Device(MediaPlayerEntity):
@@ -119,7 +125,6 @@ class Enigma2Device(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
-    _attr_volume_step = 5 / 100
 
     def __init__(self, name: str, device: OpenWebIfDevice, about: dict) -> None:
         """Initialize the Enigma2 device."""
@@ -141,6 +146,14 @@ class Enigma2Device(MediaPlayerEntity):
         """Set volume level, range 0..1."""
         await self._device.set_volume(int(volume * 100))
 
+    async def async_volume_up(self) -> None:
+        """Volume up the media player."""
+        await self._device.set_volume(SetVolumeOption.UP)
+
+    async def async_volume_down(self) -> None:
+        """Volume down media player."""
+        await self._device.set_volume(SetVolumeOption.DOWN)
+
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._device.send_remote_control_action(RemoteControlCodes.STOP)
@@ -158,8 +171,8 @@ class Enigma2Device(MediaPlayerEntity):
         await self._device.send_remote_control_action(RemoteControlCodes.CHANNEL_UP)
 
     async def async_media_previous_track(self) -> None:
-        """Send next track command."""
-        self._device.send_remote_control_action(RemoteControlCodes.CHANNEL_DOWN)
+        """Send previous track command."""
+        await self._device.send_remote_control_action(RemoteControlCodes.CHANNEL_DOWN)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""

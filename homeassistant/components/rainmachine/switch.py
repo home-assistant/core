@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity, async_update_programs_and_zones
 from .const import (
+    CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_DURATION,
     CONF_USE_APP_RUN_TIMES,
@@ -300,7 +301,10 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
         The only way this could occur is if someone rapidly turns a disabled activity
         off right after turning it on.
         """
-        if not self.coordinator.data[self.entity_description.uid]["active"]:
+        if (
+            not self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN]
+            and not self.coordinator.data[self.entity_description.uid]["active"]
+        ):
             raise HomeAssistantError(
                 f"Cannot turn off an inactive program/zone: {self.name}"
             )
@@ -314,7 +318,10 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if not self.coordinator.data[self.entity_description.uid]["active"]:
+        if (
+            not self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN]
+            and not self.coordinator.data[self.entity_description.uid]["active"]
+        ):
             self._attr_is_on = False
             self.async_write_ha_state()
             raise HomeAssistantError(

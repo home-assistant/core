@@ -497,7 +497,6 @@ class EvoBroker:
 
         session_id = get_session_id(self.client_v1)
 
-        self.temps = {}  # these are now stale, will fall back to v2 temps
         try:
             temps = await self.client_v1.get_temperatures()
 
@@ -523,6 +522,11 @@ class EvoBroker:
                 ),
                 err,
             )
+            self.temps = {}  # high-precision temps now considered stale
+
+        except Exception:
+            self.temps = {}  # high-precision temps now considered stale
+            raise
 
         else:
             if str(self.client_v1.location_id) != self._location.locationId:
@@ -654,6 +658,7 @@ class EvoChild(EvoDevice):
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
         if self._evo_broker.temps.get(self._evo_id) is not None:
+            # use high-precision temps if available
             return self._evo_broker.temps[self._evo_id]
         return self._evo_device.temperature
 
