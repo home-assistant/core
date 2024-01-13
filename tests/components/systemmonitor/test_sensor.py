@@ -26,6 +26,13 @@ async def test_sensor(
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
     assert memory_sensor is not None
     assert memory_sensor.state == "40.0"
+    assert memory_sensor.attributes == {
+        "state_class": "measurement",
+        "unit_of_measurement": "MiB",
+        "device_class": "data_size",
+        "icon": "mdi:memory",
+        "friendly_name": "System Monitor Memory free",
+    }
 
     process_sensor = hass.states.get("sensor.system_monitor_process_python3")
     assert process_sensor is not None
