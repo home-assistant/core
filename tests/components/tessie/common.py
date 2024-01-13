@@ -6,7 +6,7 @@ from unittest.mock import patch
 from aiohttp import ClientConnectionError, ClientResponseError
 from aiohttp.client import RequestInfo
 
-from homeassistant.components.tessie.const import DOMAIN
+from homeassistant.components.tessie.const import DOMAIN, TessieStatus
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
@@ -14,7 +14,9 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_STATE_OF_ALL_VEHICLES = load_json_object_fixture("vehicles.json", DOMAIN)
 TEST_VEHICLE_STATE_ONLINE = load_json_object_fixture("online.json", DOMAIN)
-TEST_VEHICLE_STATE_ASLEEP = load_json_object_fixture("asleep.json", DOMAIN)
+TEST_VEHICLE_STATUS_AWAKE = {"status": TessieStatus.AWAKE}
+TEST_VEHICLE_STATUS_ASLEEP = {"status": TessieStatus.ASLEEP}
+
 TEST_RESPONSE = {"result": True}
 TEST_RESPONSE_ERROR = {"result": False, "reason": "reason why"}
 

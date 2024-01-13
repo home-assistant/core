@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from tessie_api import get_state, status as get_status
+from tessie_api import get_state, get_status
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
