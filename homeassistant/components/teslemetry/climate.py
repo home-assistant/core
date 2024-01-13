@@ -91,8 +91,16 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
         temp = kwargs[ATTR_TEMPERATURE]
-        args = {self.key: temp}
-        await self.api.set_temps(**args)
+        if self.key == TeslemetryClimateSide.DRIVER:
+            await self.api.set_temps(
+                driver_temp=temp,
+                passenger_temp=self.get("climate_state_passenger_temp_setting"),
+            )
+        else:
+            await self.api.set_temps(
+                driver_temp=self.get("climate_state_driver_temp_setting"),
+                passenger_temp=temp,
+            )
         self.set((f"climate_state_{self.key}_setting", temp))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
