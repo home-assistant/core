@@ -1,11 +1,11 @@
 """Test System Monitor sensor."""
+from collections import namedtuple
 from datetime import timedelta
 import socket
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from psutil._common import shwtemp, snetio, snicaddr
-from psutil._pslinux import svmem
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,6 +19,24 @@ from homeassistant.setup import async_setup_component
 from .conftest import MockProcess
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+# Different depending on platform so making according to Linux
+svmem = namedtuple(
+    "svmem",
+    [
+        "total",
+        "available",
+        "percent",
+        "used",
+        "free",
+        "active",
+        "inactive",
+        "buffers",
+        "cached",
+        "shared",
+        "slab",
+    ],
+)
 
 
 async def test_sensor(

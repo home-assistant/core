@@ -16,6 +16,13 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def mock_sys_platform() -> Generator[None, None, None]:
+    """Mock sys platform to Linux."""
+    with patch("sys.platform", "linux"):
+        yield
+
+
 class MockProcess(Process):
     """Mock a Process class."""
 
