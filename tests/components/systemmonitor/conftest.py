@@ -171,6 +171,15 @@ def mock_util(mock_process) -> Mock:
                     None,
                 )
             ],
+            "vethxyzxyz": [
+                snicaddr(
+                    socket.AF_INET,
+                    "172.16.10.1",
+                    "255.255.255.0",
+                    "255.255.255.255",
+                    None,
+                )
+            ],
         }
         mock_process = [MockProcess("python3")]
         mock_util.process_iter.return_value = mock_process
@@ -181,6 +190,7 @@ def mock_util(mock_process) -> Mock:
             sdiskpart("test", "/", "ext4", "", 1, 1),
             sdiskpart("test2", "/media/share", "ext4", "", 1, 1),
             sdiskpart("test3", "/incorrect", "", "", 1, 1),
+            sdiskpart("proc", "/proc/run", "proc", "", 1, 1),
         ]
         mock_util.disk_usage.return_value = sdiskusage(10, 10, 0, 0)
         yield mock_util
