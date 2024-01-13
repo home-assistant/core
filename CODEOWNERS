@@ -45,8 +45,8 @@ build.json @home-assistant/supervisor
 /tests/components/airnow/ @asymworks
 /homeassistant/components/airq/ @Sibgatulin @dl2080
 /tests/components/airq/ @Sibgatulin @dl2080
-/homeassistant/components/airthings/ @danielhiversen
-/tests/components/airthings/ @danielhiversen
+/homeassistant/components/airthings/ @danielhiversen @LaStrada
+/tests/components/airthings/ @danielhiversen @LaStrada
 /homeassistant/components/airthings_ble/ @vincegio @LaStrada
 /tests/components/airthings_ble/ @vincegio @LaStrada
 /homeassistant/components/airtouch4/ @samsinnamon
@@ -317,8 +317,6 @@ build.json @home-assistant/supervisor
 /tests/components/eafm/ @Jc2k
 /homeassistant/components/easyenergy/ @klaasnicolaas
 /tests/components/easyenergy/ @klaasnicolaas
-/homeassistant/components/ecobee/ @marcolivierarsenault
-/tests/components/ecobee/ @marcolivierarsenault
 /homeassistant/components/ecoforest/ @pjanuario
 /tests/components/ecoforest/ @pjanuario
 /homeassistant/components/econet/ @w1ll1am23
@@ -708,8 +706,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lg_netcast/ @Drafteed
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
-/homeassistant/components/life360/ @pnbruckner
-/tests/components/life360/ @pnbruckner
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linear_garage_door/ @IceBotYT
@@ -833,6 +829,8 @@ build.json @home-assistant/supervisor
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
 /tests/components/mystrom/ @fabaff
+/homeassistant/components/myuplink/ @pajzo
+/tests/components/myuplink/ @pajzo
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
 /homeassistant/components/nanoleaf/ @milanmeu
@@ -1306,8 +1304,8 @@ build.json @home-assistant/supervisor
 /tests/components/system_bridge/ @timmo001
 /homeassistant/components/systemmonitor/ @gjohansson-ST
 /tests/components/systemmonitor/ @gjohansson-ST
-/homeassistant/components/tado/ @michaelarnauts @chiefdragon @erwindouna
-/tests/components/tado/ @michaelarnauts @chiefdragon @erwindouna
+/homeassistant/components/tado/ @chiefdragon @erwindouna
+/tests/components/tado/ @chiefdragon @erwindouna
 /homeassistant/components/tag/ @balloob @dmulcahey
 /tests/components/tag/ @balloob @dmulcahey
 /homeassistant/components/tailscale/ @frenck
