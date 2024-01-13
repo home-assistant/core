@@ -45,6 +45,9 @@ def get_all_network_interfaces() -> set[str]:
     """Return all network interfaces on system."""
     interfaces: set[str] = set()
     for interface, _ in psutil.net_if_addrs().items():
+        if interface.startswith("veth"):
+            # Don't load docker virtual network interfaces
+            continue
         interfaces.add(interface)
     _LOGGER.debug("Adding interfaces: %s", ", ".join(interfaces))
     return interfaces
