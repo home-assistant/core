@@ -43,7 +43,11 @@ from homeassistant.helpers.entity import (
     get_unit_of_measurement,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import GroupEntity
@@ -426,11 +430,14 @@ class SensorGroup(GroupEntity, SensorEntity):
             state_classes.append(_state_class)
 
         if all(x == state_classes[0] for x in state_classes):
+            async_delete_issue(
+                self.hass, DOMAIN, f"{self.entity_id}_state_classes_not_matching"
+            )
             return state_classes[0]
         async_create_issue(
             self.hass,
             DOMAIN,
-            f"{self._attr_name}_state_classes_not_matching",
+            f"{self.entity_id}_state_classes_not_matching",
             is_fixable=False,
             is_persistent=False,
             severity=IssueSeverity.WARNING,
@@ -459,11 +466,14 @@ class SensorGroup(GroupEntity, SensorEntity):
             device_classes.append(SensorDeviceClass(_device_class))
 
         if all(x == device_classes[0] for x in device_classes):
+            async_delete_issue(
+                self.hass, DOMAIN, f"{self.entity_id}_device_classes_not_matching"
+            )
             return device_classes[0]
         async_create_issue(
             self.hass,
             DOMAIN,
-            f"{self._attr_name}_device_classes_not_matching",
+            f"{self.entity_id}_device_classes_not_matching",
             is_fixable=False,
             is_persistent=False,
             severity=IssueSeverity.WARNING,
@@ -495,12 +505,18 @@ class SensorGroup(GroupEntity, SensorEntity):
         if (device_class := self.device_class) in UNIT_CONVERTERS and all(
             x in UNIT_CONVERTERS[device_class].VALID_UNITS for x in unit_of_measurements
         ):
+            async_delete_issue(
+                self.hass, DOMAIN, f"{self.entity_id}_uoms_not_matching_device_class"
+            )
+            async_delete_issue(
+                self.hass, DOMAIN, f"{self.entity_id}_uoms_not_matching_no_device_class"
+            )
             return unit_of_measurements[0]
         if device_class:
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                f"{self._attr_name}_uoms_not_matching_device_class",
+                f"{self.entity_id}_uoms_not_matching_device_class",
                 is_fixable=False,
                 is_persistent=False,
                 severity=IssueSeverity.WARNING,
@@ -515,7 +531,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                f"{self._attr_name}_uoms_not_matching_no_device_class",
+                f"{self.entity_id}_uoms_not_matching_no_device_class",
                 is_fixable=False,
                 is_persistent=False,
                 severity=IssueSeverity.WARNING,
