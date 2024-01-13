@@ -66,6 +66,7 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
 
     device: NaModules.NOC
     _attr_color_mode = ColorMode.ONOFF
+    _attr_configuration_url = CONF_URL_SECURITY
     _attr_has_entity_name = True
     _attr_is_on = False
     _attr_name = None
@@ -74,7 +75,6 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo Presence camera light."""
         super().__init__(netatmo_device)
-        self._config_url = CONF_URL_SECURITY
         self._attr_unique_id = f"{self.device.entity_id}-light"
 
         self._signal_name = f"{HOME}-{self.home.entity_id}"
@@ -143,13 +143,13 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
     """Representation of a dimmable light by Legrand/BTicino."""
 
     _attr_name = None
+    _attr_configuration_url = CONF_URL_CONTROL
     _attr_brightness: int | None = 0
     device: NaModules.NLFN
 
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo light."""
         super().__init__(netatmo_device)
-        self._config_url = CONF_URL_CONTROL
         self._attr_unique_id = f"{self.device.entity_id}-light"
 
         if self.device.brightness is not None:

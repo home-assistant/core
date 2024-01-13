@@ -41,6 +41,7 @@ class NetatmoSwitch(NetatmoModuleEntity, SwitchEntity):
     """Representation of a Netatmo switch device."""
 
     _attr_name = None
+    _attr_configuration_url = CONF_URL_CONTROL
     device: NaModules.Switch
 
     def __init__(
@@ -49,8 +50,6 @@ class NetatmoSwitch(NetatmoModuleEntity, SwitchEntity):
     ) -> None:
         """Initialize the Netatmo device."""
         super().__init__(netatmo_device)
-        self._config_url = CONF_URL_CONTROL
-
         self._signal_name = f"{HOME}-{self.home.entity_id}"
         self._publishers.extend(
             [

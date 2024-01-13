@@ -84,6 +84,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
     _attr_brand = MANUFACTURER
     _attr_supported_features = CameraEntityFeature.STREAM
+    _attr_configuration_url = CONF_URL_SECURITY
     device: NaModules.Camera
     _quality = DEFAULT_QUALITY
     _monitoring: bool | None = None
@@ -97,7 +98,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         Camera.__init__(self)
         super().__init__(netatmo_device)
 
-        self._config_url = CONF_URL_SECURITY
         self._attr_unique_id = f"{netatmo_device.device.entity_id}-{self.device_type}"
         self._light_state = None
 

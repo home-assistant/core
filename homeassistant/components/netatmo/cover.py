@@ -51,6 +51,7 @@ class NetatmoCover(NetatmoModuleEntity, CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
+    _attr_configuration_url = CONF_URL_CONTROL
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_name = None
     device: NaModules.Shutter
@@ -58,8 +59,6 @@ class NetatmoCover(NetatmoModuleEntity, CoverEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize the Netatmo device."""
         super().__init__(netatmo_device)
-
-        self._config_url = CONF_URL_CONTROL
 
         self._attr_is_closed = self.device.current_position == 0
 
