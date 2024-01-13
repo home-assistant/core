@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+from zigpy.exceptions import DeliveryError
 from zigpy.ota import CachedImage
 import zigpy.ota.image as firmware
 import zigpy.profiles.zha as zha
@@ -20,12 +21,16 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
+from homeassistant.components.update.const import ATTR_SKIPPED_VERSION
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .common import async_enable_traffic, find_entity_id, update_attribute_cache
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
+
+from tests.common import mock_restore_cache_with_extra_data
 
 
 @pytest.fixture(autouse=True)
@@ -58,13 +63,19 @@ def zigpy_device(zigpy_device_mock):
     )
 
 
-async def setup_test_data(zha_device_joined_restored, zigpy_device):
+async def setup_test_data(
+    zha_device_joined_restored,
+    zigpy_device,
+    skip_attribute_plugs=False,
+    file_not_found=False,
+):
     """Set up test data for the tests."""
     fw_version = 0x12345678
     installed_fw_version = fw_version - 10
     cluster = zigpy_device.endpoints.get(1).out_clusters[general.Ota.cluster_id]
-    cluster.PLUGGED_ATTR_READS = {"current_file_version": installed_fw_version}
-    update_attribute_cache(cluster)
+    if not skip_attribute_plugs:
+        cluster.PLUGGED_ATTR_READS = {"current_file_version": installed_fw_version}
+        update_attribute_cache(cluster)
 
     # set up firmware image
     fw_image = firmware.OTAImage()
@@ -86,7 +97,7 @@ async def setup_test_data(zha_device_joined_restored, zigpy_device):
     cached_image = CachedImage(fw_image)
 
     cluster.endpoint.device.application.ota.get_ota_image = AsyncMock(
-        return_value=cached_image
+        return_value=None if file_not_found else cached_image
     )
 
     zha_device = await zha_device_joined_restored(zigpy_device)
@@ -207,7 +218,7 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
     return ota_packet
 
 
-async def test_firmware_updatesuccess(
+async def test_firmware_update_success(
     hass: HomeAssistant, zha_device_joined_restored, zigpy_device
 ) -> None:
     """Test ZHA update platform - firmware update success."""
@@ -310,6 +321,20 @@ async def test_firmware_updatesuccess(
                     assert cmd.file_version == fw_image.header.file_version
                     assert cmd.file_offset == 40
                     assert cmd.image_data == fw_image.serialize()[40:70]
+
+                    # make sure the state machine gets progress reports
+                    state = hass.states.get(entity_id)
+                    assert state.state == STATE_ON
+                    attrs = state.attributes
+                    assert (
+                        attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
+                    )
+                    assert attrs[ATTR_IN_PROGRESS] == 57
+                    assert (
+                        attrs[ATTR_LATEST_VERSION]
+                        == f"0x{fw_image.header.file_version:08x}"
+                    )
+
                     zigpy_device.packet_received(
                         make_packet(
                             zigpy_device,
@@ -347,3 +372,214 @@ async def test_firmware_updatesuccess(
     assert attrs[ATTR_INSTALLED_VERSION] == f"0x{fw_image.header.file_version:08x}"
     assert not attrs[ATTR_IN_PROGRESS]
     assert attrs[ATTR_LATEST_VERSION] == attrs[ATTR_INSTALLED_VERSION]
+
+
+async def test_firmware_update_raises(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
+    """Test ZHA update platform - firmware update raises."""
+    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
+        zha_device_joined_restored, zigpy_device
+    )
+
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # simulate an image available notification
+    await cluster._handle_query_next_image(
+        fw_image.header.field_control,
+        zha_device.manufacturer_code,
+        fw_image.header.image_type,
+        installed_fw_version,
+        fw_image.header.header_version,
+        tsn=15,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
+    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.header.file_version:08x}"
+
+    async def endpoint_reply(cluster_id, tsn, data, command_id):
+        if cluster_id == general.Ota.cluster_id:
+            hdr, cmd = cluster.deserialize(data)
+            if isinstance(cmd, general.Ota.ImageNotifyCommand):
+                zigpy_device.packet_received(
+                    make_packet(
+                        zigpy_device,
+                        cluster,
+                        "query_next_image",
+                        field_control=general.Ota.QueryNextImageCommand.FieldControl.HardwareVersion,
+                        manufacturer_code=fw_image.header.manufacturer_id,
+                        image_type=fw_image.header.image_type,
+                        current_file_version=fw_image.header.file_version - 10,
+                        hardware_version=1,
+                    )
+                )
+            elif isinstance(
+                cmd, general.Ota.ClientCommandDefs.query_next_image_response.schema
+            ):
+                assert cmd.status == foundation.Status.SUCCESS
+                assert cmd.manufacturer_code == fw_image.header.manufacturer_id
+                assert cmd.image_type == fw_image.header.image_type
+                assert cmd.file_version == fw_image.header.file_version
+                assert cmd.image_size == fw_image.header.image_size
+                raise DeliveryError("failed to deliver")
+
+    cluster.endpoint.reply = AsyncMock(side_effect=endpoint_reply)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {
+                ATTR_ENTITY_ID: entity_id,
+            },
+            blocking=True,
+        )
+
+    with patch(
+        "zigpy.device.Device.update_firmware",
+        AsyncMock(side_effect=DeliveryError("failed to deliver")),
+    ), pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {
+                ATTR_ENTITY_ID: entity_id,
+            },
+            blocking=True,
+        )
+
+
+async def test_firmware_update_restore_data(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
+    """Test ZHA update platform - restore data."""
+    fw_version = 0x12345678
+    installed_fw_version = fw_version - 10
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "update.fakemanufacturer_fakemodel_firmware",
+                    STATE_ON,
+                    {
+                        ATTR_INSTALLED_VERSION: f"0x{installed_fw_version:08x}",
+                        ATTR_LATEST_VERSION: f"0x{fw_version:08x}",
+                        ATTR_SKIPPED_VERSION: None,
+                    },
+                ),
+                {"image_type": 0x90},
+            )
+        ],
+    )
+    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
+        zha_device_joined_restored, zigpy_device
+    )
+
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
+    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.header.file_version:08x}"
+
+
+async def test_firmware_update_restore_file_not_found(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
+    """Test ZHA update platform - restore data - file not found."""
+    fw_version = 0x12345678
+    installed_fw_version = fw_version - 10
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "update.fakemanufacturer_fakemodel_firmware",
+                    STATE_ON,
+                    {
+                        ATTR_INSTALLED_VERSION: f"0x{installed_fw_version:08x}",
+                        ATTR_LATEST_VERSION: f"0x{fw_version:08x}",
+                        ATTR_SKIPPED_VERSION: None,
+                    },
+                ),
+                {"image_type": 0x90},
+            )
+        ],
+    )
+    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
+        zha_device_joined_restored, zigpy_device, file_not_found=True
+    )
+
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
+    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_LATEST_VERSION] == f"0x{installed_fw_version:08x}"
+
+
+async def test_firmware_update_restore_version_from_state_machine(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
+    """Test ZHA update platform - restore data - file not found."""
+    fw_version = 0x12345678
+    installed_fw_version = fw_version - 10
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "update.fakemanufacturer_fakemodel_firmware",
+                    STATE_ON,
+                    {
+                        ATTR_INSTALLED_VERSION: f"0x{installed_fw_version:08x}",
+                        ATTR_LATEST_VERSION: f"0x{fw_version:08x}",
+                        ATTR_SKIPPED_VERSION: None,
+                    },
+                ),
+                {"image_type": 0x90},
+            )
+        ],
+    )
+    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
+        zha_device_joined_restored,
+        zigpy_device,
+        skip_attribute_plugs=True,
+        file_not_found=True,
+    )
+
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
+    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_LATEST_VERSION] == f"0x{installed_fw_version:08x}"

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from zigpy.ota.image import BaseOTAImage
 from zigpy.types import uint16_t
+from zigpy.zcl.foundation import Status
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -124,8 +125,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     @callback
     def _update_progress(self, current: int, total: int, progress: float) -> None:
         """Update install progress on event."""
-        if not self._latest_version_firmware:
-            return
+        assert self._latest_version_firmware
         self._attr_in_progress = int(progress)
         self.async_write_ha_state()
 
@@ -154,7 +154,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         self.async_write_ha_state()
 
         try:
-            await self.zha_device.device.update_firmware(
+            self._result = await self.zha_device.device.update_firmware(
                 self._latest_version_firmware,
                 self._update_progress,
             )
@@ -162,8 +162,16 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
             self._reset_progress()
             raise HomeAssistantError(ex) from ex
 
+        assert self._result is not None
+
+        # If the update was not successful, we should throw an error to let the user know
+        if self._result != Status.SUCCESS:
+            self._reset_progress()
+            raise HomeAssistantError(
+                "Update was not successful - result: {self._result}"
+            )
+
         # If we get here, all files were installed successfully
-        self._reset_progress()
         self._attr_installed_version = (
             self._attr_latest_version
         ) = f"0x{firmware.header.file_version:08x}"
