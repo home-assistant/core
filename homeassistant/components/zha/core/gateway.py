@@ -239,7 +239,7 @@ class ZHAGateway:
             return
 
         # Ensure we do not queue up multiple resets
-        if self._reload_task is not None and not self._reload_task.done():
+        if self._reload_task is not None:
             _LOGGER.debug("Ignoring reset, one is already running")
             return
 
