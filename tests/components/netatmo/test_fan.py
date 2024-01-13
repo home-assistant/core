@@ -9,7 +9,7 @@ from .common import selected_platforms
 
 
 async def test_switch_setup_and_services(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test setup and services."""
     with selected_platforms(["fan"]):
