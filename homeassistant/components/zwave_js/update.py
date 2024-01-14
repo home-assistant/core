@@ -191,7 +191,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
         # If hass hasn't started yet, push the next update to the next day so that we
         # can preserve the offsets we've created between each node
-        if self.hass.state != CoreState.running:
+        if self.hass.state is not CoreState.running:
             self._poll_unsub = async_call_later(
                 self.hass, timedelta(days=1), self._async_update
             )
@@ -344,7 +344,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             is not None
             and (extra_data := await self.async_get_last_extra_data())
             and (
-                latest_version_firmware := ZWaveNodeFirmwareUpdateExtraStoredData.from_dict(
+                latest_version_firmware
+                := ZWaveNodeFirmwareUpdateExtraStoredData.from_dict(
                     extra_data.as_dict()
                 ).latest_version_firmware
             )

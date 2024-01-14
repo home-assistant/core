@@ -50,6 +50,9 @@ async def test_create_new_credential(manager, provider) -> None:
 
     user = await manager.async_get_or_create_user(credentials)
     assert user.is_active
+    assert len(user.groups) == 1
+    assert user.groups[0].id == "system-admin"
+    assert not user.local_only
 
 
 async def test_match_existing_credentials(store, provider) -> None:
@@ -100,6 +103,9 @@ async def test_good_auth_with_meta(manager, provider) -> None:
     user = await manager.async_get_or_create_user(credentials)
     assert user.name == "Bob"
     assert user.is_active
+    assert len(user.groups) == 1
+    assert user.groups[0].id == "system-users"
+    assert user.local_only
 
 
 async def test_utf_8_username_password(provider) -> None:

@@ -231,7 +231,7 @@ async def async_setup_entry(
 
 
 def cmd(
-    func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]]
+    func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_KodiEntityT, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
 
@@ -404,7 +404,7 @@ class KodiEntity(MediaPlayerEntity):
 
         # If Home Assistant is already in a running state, start the watchdog
         # immediately, else trigger it after Home Assistant has finished starting.
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             await start_watchdog()
         else:
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_watchdog)

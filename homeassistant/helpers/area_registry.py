@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Container, Iterable, MutableMapping
-from typing import Any, cast
+from typing import Any, Literal, TypedDict, cast
 
 import attr
 
@@ -20,6 +20,13 @@ STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
+
+
+class EventAreaRegistryUpdatedData(TypedDict):
+    """EventAreaRegistryUpdated data."""
+
+    action: Literal["create", "remove", "update"]
+    area_id: str
 
 
 @attr.s(slots=True, frozen=True)

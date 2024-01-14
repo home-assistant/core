@@ -119,14 +119,14 @@ async def test_turn_on_intent(hass: HomeAssistant) -> None:
     assert call.data == {"entity_id": ["light.test_light"]}
 
 
-async def test_translated_turn_on_intent(hass: HomeAssistant) -> None:
+async def test_translated_turn_on_intent(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test HassTurnOn intent on domains which don't have the intent."""
     result = await async_setup_component(hass, "homeassistant", {})
     result = await async_setup_component(hass, "intent", {})
     await hass.async_block_till_done()
     assert result
-
-    entity_registry = er.async_get(hass)
 
     cover = entity_registry.async_get_or_create("cover", "test", "cover_uid")
     lock = entity_registry.async_get_or_create("lock", "test", "lock_uid")

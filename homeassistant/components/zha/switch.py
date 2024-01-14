@@ -5,6 +5,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
@@ -107,11 +108,10 @@ class Switch(ZhaEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Attempt to retrieve on off state from the switch."""
-        await super().async_update()
-        if self._on_off_cluster_handler:
-            await self._on_off_cluster_handler.get_attribute_value(
-                "on_off", from_cache=False
-            )
+        self.debug("Polling current state")
+        await self._on_off_cluster_handler.get_attribute_value(
+            "on_off", from_cache=False
+        )
 
 
 @GROUP_MATCH()
@@ -254,16 +254,14 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
-        await super().async_update()
-        self.error("Polling current state")
-        if self._cluster_handler:
-            value = await self._cluster_handler.get_attribute_value(
-                self._attribute_name, from_cache=False
-            )
-            await self._cluster_handler.get_attribute_value(
-                self._inverter_attribute_name, from_cache=False
-            )
-            self.debug("read value=%s, inverted=%s", value, self.inverted)
+        self.debug("Polling current state")
+        value = await self._cluster_handler.get_attribute_value(
+            self._attribute_name, from_cache=False
+        )
+        await self._cluster_handler.get_attribute_value(
+            self._inverter_attribute_name, from_cache=False
+        )
+        self.debug("read value=%s, inverted=%s", value, self.inverted)
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -361,6 +359,17 @@ class InovelliSmartBulbMode(ZHASwitchConfigurationEntity):
     _unique_id_suffix = "smart_bulb_mode"
     _attribute_name = "smart_bulb_mode"
     _attr_translation_key = "smart_bulb_mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
+)
+class InovelliSmartFanMode(ZHASwitchConfigurationEntity):
+    """Inovelli smart fan mode control."""
+
+    _unique_id_suffix = "smart_fan_mode"
+    _attribute_name = "smart_fan_mode"
+    _attr_translation_key = "smart_fan_mode"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -488,8 +497,7 @@ class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
-    models={"TS011F"},
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF, quirk_ids=TUYA_PLUG_ONOFF
 )
 class TuyaChildLockSwitch(ZHASwitchConfigurationEntity):
     """Representation of a child lock configuration entity."""

@@ -84,7 +84,7 @@ async def ban_middleware(
 
 
 def log_invalid_auth(
-    func: Callable[Concatenate[_HassViewT, Request, _P], Awaitable[Response]]
+    func: Callable[Concatenate[_HassViewT, Request, _P], Awaitable[Response]],
 ) -> Callable[Concatenate[_HassViewT, Request, _P], Coroutine[Any, Any, Response]]:
     """Decorate function to handle invalid auth or failed login attempts."""
 
@@ -243,5 +243,6 @@ class IpBanManager:
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
-        new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
-        await self.hass.async_add_executor_job(self._add_ban, new_ban)
+        if remote_addr not in self.ip_bans_lookup:
+            new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
+            await self.hass.async_add_executor_job(self._add_ban, new_ban)

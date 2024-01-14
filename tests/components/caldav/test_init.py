@@ -1,6 +1,5 @@
 """Unit tests for the CalDav integration."""
 
-from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
 from caldav.lib.error import AuthorizationError, DAVError
@@ -13,17 +12,21 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+async def mock_add_to_hass(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Fixture to add the ConfigEntry."""
+    config_entry.add_to_hass(hass)
+
+
 async def test_load_unload(
     hass: HomeAssistant,
-    setup_integration: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
 ) -> None:
     """Test loading and unloading of the config entry."""
-
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
     with patch("homeassistant.components.caldav.config_flow.caldav.DAVClient"):
-        assert await setup_integration()
+        await config_entry.async_setup(hass)
 
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -47,8 +50,7 @@ async def test_load_unload(
 )
 async def test_client_failure(
     hass: HomeAssistant,
-    setup_integration: Callable[[], Awaitable[bool]],
-    config_entry: MockConfigEntry | None,
+    config_entry: MockConfigEntry,
     side_effect: Exception,
     expected_state: ConfigEntryState,
     expected_flows: list[str],
@@ -61,7 +63,8 @@ async def test_client_failure(
         "homeassistant.components.caldav.config_flow.caldav.DAVClient"
     ) as mock_client:
         mock_client.return_value.principal.side_effect = side_effect
-        assert not await setup_integration()
+        await config_entry.async_setup(hass)
+        await hass.async_block_till_done()
 
     assert config_entry.state == expected_state
 

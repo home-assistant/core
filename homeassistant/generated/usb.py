@@ -20,6 +20,20 @@ USB = [
         "vid": "0572",
     },
     {
+        "description": "*raven*",
+        "domain": "rainforest_raven",
+        "manufacturer": "*rainforest*",
+        "pid": "8A28",
+        "vid": "0403",
+    },
+    {
+        "description": "*emu-2*",
+        "domain": "rainforest_raven",
+        "manufacturer": "*rainforest*",
+        "pid": "0003",
+        "vid": "04B4",
+    },
+    {
         "domain": "velbus",
         "pid": "0B1B",
         "vid": "10CF",
@@ -80,6 +94,12 @@ USB = [
         "domain": "zha",
         "pid": "0030",
         "vid": "1CF1",
+    },
+    {
+        "description": "*conbee*",
+        "domain": "zha",
+        "pid": "6015",
+        "vid": "0403",
     },
     {
         "description": "*zigbee*",

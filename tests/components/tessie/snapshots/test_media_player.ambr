@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_media_player_idle
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test Media player',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+      'volume_level': 0.22580323309042688,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_media_player',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_media_player_idle.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test Media player',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+      'volume_level': 0.22580323309042688,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_media_player',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_media_player_playing
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+      'volume_level': 0.22580323309042688,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_sensors
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+      'volume_level': 0.22580323309042688,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

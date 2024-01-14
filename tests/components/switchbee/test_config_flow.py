@@ -39,9 +39,7 @@ async def test_form(hass: HomeAssistant, test_cucode_in_coordinator_data) -> Non
         return_value=True,
     ), patch(
         "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
-    ), patch(
-        "switchbee.api.polling.CentralUnitPolling._login", return_value=None
-    ):
+    ), patch("switchbee.api.polling.CentralUnitPolling._login", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

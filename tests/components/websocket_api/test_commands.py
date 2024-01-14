@@ -804,6 +804,7 @@ async def test_states_filters_visible(
     hass: HomeAssistant, hass_admin_user: MockUser, websocket_client
 ) -> None:
     """Test we only get entities that we're allowed to see."""
+    hass_admin_user.groups = []
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"test.entity": True}}})
     hass.states.async_set("test.entity", "hello")
     hass.states.async_set("test.not_visible_entity", "invisible")
@@ -1048,6 +1049,7 @@ async def test_subscribe_unsubscribe_entities(
     }
     hass_admin_user.groups = []
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
+    assert not hass_admin_user.is_admin
 
     await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
 
@@ -2315,6 +2317,65 @@ async def test_execute_script(
     assert call.service == "test_service"
     assert call.data == {"hello": "From variable"}
     assert call.context.as_dict() == msg_var["result"]["context"]
+
+
+@pytest.mark.parametrize(
+    ("raise_exception", "err_code"),
+    [
+        (
+            HomeAssistantError(
+                "Some error",
+                translation_domain="test",
+                translation_key="test_error",
+                translation_placeholders={"option": "bla"},
+            ),
+            "home_assistant_error",
+        ),
+        (
+            ServiceValidationError(
+                "Some error",
+                translation_domain="test",
+                translation_key="test_error",
+                translation_placeholders={"option": "bla"},
+            ),
+            "service_validation_error",
+        ),
+    ],
+)
+async def test_execute_script_err_localization(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    raise_exception: HomeAssistantError,
+    err_code: str,
+) -> None:
+    """Test testing a condition."""
+    async_mock_service(
+        hass, "domain_test", "test_service", raise_exception=raise_exception
+    )
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "execute_script",
+            "sequence": [
+                {
+                    "service": "domain_test.test_service",
+                    "data": {"hello": "world"},
+                },
+                {"stop": "done", "response_variable": "service_result"},
+            ],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"] is False
+    assert msg["error"]["code"] == err_code
+    assert msg["error"]["message"] == "Some error"
+    assert msg["error"]["translation_key"] == "test_error"
+    assert msg["error"]["translation_domain"] == "test"
+    assert msg["error"]["translation_placeholders"] == {"option": "bla"}
 
 
 async def test_execute_script_complex_response(

@@ -113,9 +113,11 @@ def _forward_events_check_permissions(
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
     permissions = user.permissions
-    if not permissions.access_all_entities(
-        POLICY_READ
-    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+    if (
+        not user.is_admin
+        and not permissions.access_all_entities(POLICY_READ)
+        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+    ):
         return
     send_message(messages.cached_event_message(msg_id, event))
 
@@ -306,7 +308,8 @@ async def handle_call_service(
 def _async_get_allowed_states(
     hass: HomeAssistant, connection: ActiveConnection
 ) -> list[State]:
-    if connection.user.permissions.access_all_entities(POLICY_READ):
+    user = connection.user
+    if user.is_admin or user.permissions.access_all_entities(POLICY_READ):
         return hass.states.async_all()
     entity_perm = connection.user.permissions.check_entity
     return [
@@ -372,9 +375,11 @@ def _forward_entity_changes(
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
     permissions = user.permissions
-    if not permissions.access_all_entities(
-        POLICY_READ
-    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+    if (
+        not user.is_admin
+        and not permissions.access_all_entities(POLICY_READ)
+        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+    ):
         return
     send_message(messages.cached_state_diff_message(msg_id, event))
 
@@ -650,7 +655,7 @@ async def handle_render_template(
 
 
 def _serialize_entity_sources(
-    entity_infos: dict[str, entity.EntityInfo]
+    entity_infos: dict[str, entity.EntityInfo],
 ) -> dict[str, Any]:
     """Prepare a websocket response from a dict of entity sources."""
     return {
@@ -778,7 +783,22 @@ async def handle_execute_script(
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
-    script_result = await script_obj.async_run(msg.get("variables"), context=context)
+    try:
+        script_result = await script_obj.async_run(
+            msg.get("variables"), context=context
+        )
+    except ServiceValidationError as err:
+        connection.logger.error(err)
+        connection.logger.debug("", exc_info=err)
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
     connection.send_result(
         msg["id"],
         {
