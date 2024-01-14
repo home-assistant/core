@@ -84,6 +84,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.logger = logger
         self.name = name
         self.update_method = update_method
+        self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
         self.config_entry = config_entries.current_entry.get()
@@ -212,10 +213,21 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._unsub_shutdown()
             self._unsub_shutdown = None
 
+    @property
+    def update_interval(self) -> timedelta | None:
+        """Interval between updates."""
+        return self._update_interval
+
+    @update_interval.setter
+    def update_interval(self, value: timedelta | None) -> None:
+        """Set interval between updates."""
+        self._update_interval = value
+        self._update_interval_seconds = value.total_seconds() if value else None
+
     @callback
     def _schedule_refresh(self) -> None:
         """Schedule a refresh."""
-        if self.update_interval is None:
+        if self._update_interval_seconds is None:
             return
 
         if self.config_entry and self.config_entry.pref_disable_polling:
@@ -229,15 +241,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # not need an exact update interval.
         now = self.hass.loop.time()
 
-        next_refresh = int(now) + self._microsecond
-        next_refresh += self.update_interval.total_seconds()
-        self._unsub_refresh = event.async_call_at(
-            self.hass,
-            self._job,
-            next_refresh,
-        )
+        next_refresh = int(now) + self._microsecond + self._update_interval_seconds
+        self._unsub_refresh = self.hass.loop.call_at(
+            next_refresh, self.hass.async_run_hass_job, self._job
+        ).cancel
 
-    async def _handle_refresh_interval(self, _now: datetime) -> None:
+    async def _handle_refresh_interval(self) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
         await self._async_refresh(log_failures=True, scheduled=True)
