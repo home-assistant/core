@@ -53,14 +53,14 @@ class WallConnectorSensorDescription(
 WALL_CONNECTOR_SENSORS = [
     WallConnectorSensorDescription(
         key="evse_state",
-        translation_key="evse_state",
+        translation_key="status_code",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].evse_state,
         entity_registry_enabled_default=False,
     ),
     WallConnectorSensorDescription(
-        key="state",
-        translation_key="state",
+        key="status",
+        translation_key="status",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda data: EVSE_STATE.get(
             data[WALLCONNECTOR_DATA_VITALS].evse_state

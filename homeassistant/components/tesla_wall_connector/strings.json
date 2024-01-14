@@ -30,7 +30,7 @@
       }
     },
     "sensor": {
-      "state": {
+      "status": {
         "name": "Status",
         "state": {
           "booting": "Booting",
@@ -45,8 +45,8 @@
           "charging": "Charging"
         }
       },
-      "evse_state": {
-        "name": "Raw state"
+      "status_code": {
+        "name": "Status code"
       },
       "handle_temp_c": {
         "name": "Handle temperature"
