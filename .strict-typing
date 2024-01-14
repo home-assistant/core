@@ -412,6 +412,7 @@ homeassistant.components.todo.*
 homeassistant.components.tolo.*
 homeassistant.components.tplink.*
 homeassistant.components.tplink_omada.*
+homeassistant.components.trace.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
 homeassistant.components.trafikverket_camera.*
