@@ -806,7 +806,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.1.0
+habluetooth==2.2.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.75.1
@@ -964,7 +964,7 @@ loqedAPI==2.1.8
 luftdaten==0.7.4
 
 # homeassistant.components.scrape
-lxml==4.9.4
+lxml==5.1.0
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.12
