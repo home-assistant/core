@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tesla_fleet_api import Teslemetry
+from tesla_fleet_api import VehicleSpecific
 
 from .coordinator import TeslemetryVehicleDataCoordinator
 
@@ -12,5 +12,5 @@ from .coordinator import TeslemetryVehicleDataCoordinator
 class TeslemetryVehicleData:
     """Data for a vehicle in the Teslemetry integration."""
 
-    api: Teslemetry.Vehicle.Specific
+    api: VehicleSpecific
     coordinator: TeslemetryVehicleDataCoordinator

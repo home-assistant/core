@@ -24,8 +24,7 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TeslemetryClimateEntity(vehicle, side)
-        for side in (TeslemetryClimateSide.DRIVER, TeslemetryClimateSide.PASSENGER)
+        TeslemetryClimateEntity(vehicle, TeslemetryClimateSide.DRIVER)
         for vehicle in data
     )
 
@@ -91,22 +90,11 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
         temp = kwargs[ATTR_TEMPERATURE]
-        if self.key == TeslemetryClimateSide.DRIVER:
-            print(temp, self.get("climate_state_passenger_temp_setting"))
-            print(
-                await self.api.set_temps(
-                    driver_temp=temp,
-                    passenger_temp=self.get("climate_state_passenger_temp_setting"),
-                )
-            )
-        else:
-            print(self.get("climate_state_driver_temp_setting"), temp)
-            print(
-                await self.api.set_temps(
-                    driver_temp=self.get("climate_state_driver_temp_setting"),
-                    passenger_temp=temp,
-                )
-            )
+        await self.api.set_temps(
+            driver_temp=temp,
+            passenger_temp=temp,
+        )
+
         self.set((f"climate_state_{self.key}_setting", temp))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
