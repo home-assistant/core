@@ -24,7 +24,7 @@ dbus-fast==2.21.0
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.1.0
-habluetooth==2.1.0
+habluetooth==2.2.0
 hass-nabucasa==0.75.1
 hassil==1.5.2
 home-assistant-bluetooth==1.12.0
@@ -181,10 +181,6 @@ get-mac==1000000000.0.0
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
 charset-normalizer==3.2.0
-
-# lxml 5.0.0 currently does not build on alpine 3.18
-# https://bugs.launchpad.net/lxml/+bug/2047718
-lxml==4.9.4
 
 # dacite: Ensure we have a version that is able to handle type unions for
 # Roborock, NAM, Brother, and GIOS.

@@ -21,6 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -151,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady from err
 
     gateway_din = base_info.gateway_din
-    if gateway_din and entry.unique_id is not None and is_ip_address(entry.unique_id):
+    if entry.unique_id is not None and is_ip_address(entry.unique_id):
         hass.config_entries.async_update_entry(entry, unique_id=gateway_din)
 
     runtime_data = PowerwallRuntimeData(
@@ -178,9 +179,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime_data
 
+    await async_migrate_entity_unique_ids(hass, entry, base_info)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_migrate_entity_unique_ids(
+    hass: HomeAssistant, entry: ConfigEntry, base_info: PowerwallBaseInfo
+) -> None:
+    """Migrate old entity unique ids to use gateway_din."""
+    old_base_unique_id = "_".join(base_info.serial_numbers)
+    new_base_unique_id = base_info.gateway_din
+
+    dev_reg = dr.async_get(hass)
+    if device := dev_reg.async_get_device(identifiers={(DOMAIN, old_base_unique_id)}):
+        dev_reg.async_update_device(
+            device.id, new_identifiers={(DOMAIN, new_base_unique_id)}
+        )
+
+    ent_reg = er.async_get(hass)
+    for ent_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        current_unique_id = ent_entry.unique_id
+        if current_unique_id.startswith(old_base_unique_id):
+            unique_id_postfix = current_unique_id.removeprefix(old_base_unique_id)
+            new_unique_id = f"{new_base_unique_id}{unique_id_postfix}"
+            ent_reg.async_update_entity(
+                ent_entry.entity_id, new_unique_id=new_unique_id
+            )
 
 
 async def _login_and_fetch_base_info(
