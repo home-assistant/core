@@ -165,12 +165,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             )
             mode_config = config[CONF_FAN_MODE_REGISTER]
             self._fan_mode_register = mode_config[CONF_ADDRESS]
+            self._fan_mode_write_registers = mode_config[CONF_WRITE_REGISTERS]
             self._attr_fan_modes = cast(list[str], [])
             self._attr_fan_mode = None
             self._fan_mode_mapping_to_modbus: dict[str, int] = {}
             self._fan_mode_mapping_from_modbus: dict[int, str] = {}
             mode_value_config = mode_config[CONF_FAN_MODE_VALUES]
-
             for fan_mode_kw, fan_mode in (
                 (CONF_FAN_MODE_ON, FAN_ON),
                 (CONF_FAN_MODE_OFF, FAN_OFF),
@@ -253,16 +253,24 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-
         if self._fan_mode_register is not None:
             # Write a value to the mode register for the desired mode.
-            value = self._fan_mode_mapping_to_modbus[fan_mode]
-            await self._hub.async_pb_call(
-                self._slave,
-                self._fan_mode_register,
-                value,
-                CALL_TYPE_WRITE_REGISTER,
-            )
+            if self._fan_mode_write_registers:
+                value = self._fan_mode_mapping_to_modbus[fan_mode]
+                await self._hub.async_pb_call(
+                    self._slave,
+                    self._fan_mode_register,
+                    [value],
+                    CALL_TYPE_WRITE_REGISTERS,
+                )
+            else:
+                value = self._fan_mode_mapping_to_modbus[fan_mode]
+                await self._hub.async_pb_call(
+                    self._slave,
+                    self._fan_mode_register,
+                    value,
+                    CALL_TYPE_WRITE_REGISTER,
+                )
 
         await self.async_update()
 

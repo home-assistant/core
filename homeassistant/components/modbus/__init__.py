@@ -282,6 +282,7 @@ CLIMATE_SCHEMA = vol.All(
                 vol.All(
                     {
                         CONF_ADDRESS: cv.positive_int,
+                        vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                         CONF_FAN_MODE_VALUES: {
                             vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
                             vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
