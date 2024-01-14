@@ -50,9 +50,6 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_init_client(self) -> None:
         """Initialize the La Marzocco Client."""
 
-        # optional setting
-        host: str = self.config_entry.data.get(CONF_HOST, "")
-
         # Initialize cloud API
         _LOGGER.debug("Initializing Cloud API")
         await self._async_handle_request(
