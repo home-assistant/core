@@ -964,7 +964,7 @@ loqedAPI==2.1.8
 luftdaten==0.7.4
 
 # homeassistant.components.scrape
-lxml==4.9.4
+lxml==5.1.0
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.12
