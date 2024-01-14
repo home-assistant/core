@@ -237,8 +237,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # than the debouncer cooldown, this would cause the debounce to never be called
         self._async_unsub_refresh()
 
-        # We use event.async_call_at because DataUpdateCoordinator does
-        # not need an exact update interval.
+        # We use loop.call_at because DataUpdateCoordinator does
+        # not need an exact update interval which also avoids
+        # calling dt_util.utcnow() on every update.
         hass = self.hass
         loop = hass.loop
 
