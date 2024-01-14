@@ -7,6 +7,7 @@ from typing import Any
 
 from simplipy.device import DeviceTypes
 from simplipy.device.camera import Camera, CameraTypes
+from simplipy.errors import SimplipyError
 from simplipy.system.v3 import SystemV3
 from simplipy.websocket import EVENT_CAMERA_MOTION_DETECTED, WebsocketEvent
 
@@ -16,6 +17,7 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
@@ -153,11 +155,14 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
             filename.hass = self._hass
             snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: self})
 
-            snapshot = await self._simplisafe.async_media_request(
-                self._attr_image_url.replace("{&width}", "&width=" + str(width))
-            )
-            if snapshot is None:
-                return
+            try:
+                snapshot = await self._simplisafe.async_media_request(
+                    self._attr_image_url.replace("{&width}", "&width=" + str(width))
+                )
+            except SimplipyError as err:
+                raise HomeAssistantError(
+                f'Error fetching motion media "{self._system.system_id}": {err}'
+            ) from err
 
             try:
                 await self._hass.async_add_executor_job(
@@ -175,10 +180,12 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
             filename.hass = self._hass
             clip_file = filename.async_render(variables={ATTR_ENTITY_ID: self})
 
-            self._attr_clip_url = self._attr_clip_url.replace("Download", "xxx") # TO CAUSE A 404 retry loop
-            clip = await self._simplisafe.async_media_request(self._attr_clip_url)
-            if clip is None:
-                return
+            try:
+                clip = await self._simplisafe.async_media_request(self._attr_clip_url)
+            except SimplipyError as err:
+                raise HomeAssistantError(
+                f'Error fetching motion media "{self._system.system_id}": {err}'
+            ) from err
 
             try:
                 await self._hass.async_add_executor_job(
