@@ -193,12 +193,14 @@
       },
       "dev_class": "gateway",
       "firmware": "3.2.8",
+      "gateway_modes": ["away", "full", "vacation"],
       "hardware": "AME Smile 2.0 board",
       "location": "9e4433a9d69f40b3aefd15e74395eaec",
       "mac_address": "012345670001",
       "model": "Gateway",
       "name": "Adam",
       "regulation_modes": ["heating", "off", "bleeding_cold", "bleeding_hot"],
+      "select_gateway_mode": "full",
       "select_regulation_mode": "heating",
       "sensors": {
         "outdoor_temperature": 24.9
@@ -304,7 +306,7 @@
     "cooling_present": false,
     "gateway_id": "b5c2386c6f6342669e50fe49dd05b188",
     "heater_id": "e4684553153b44afbef2200885f379dc",
-    "item_count": 219,
+    "item_count": 221,
     "notifications": {},
     "smile_name": "Adam"
   }
