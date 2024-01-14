@@ -7,7 +7,7 @@ from typing import Any
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
-from requests.exceptions import HTTPError, Timeout
+from requests.exceptions import HTTPError, SSLError, Timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
@@ -109,13 +109,19 @@ async def async_validate_input(
         for field in (CONF_MJPEG_URL, CONF_STILL_IMAGE_URL):
             if not (url := user_input.get(field)):
                 continue
-            authentication = await hass.async_add_executor_job(
-                validate_url,
-                url,
-                user_input.get(CONF_USERNAME),
-                user_input[CONF_PASSWORD],
-                user_input[CONF_VERIFY_SSL],
-            )
+            try:
+                authentication = await hass.async_add_executor_job(
+                    validate_url,
+                    url,
+                    user_input.get(CONF_USERNAME),
+                    user_input[CONF_PASSWORD],
+                    user_input[CONF_VERIFY_SSL],
+                )
+            except SSLError:
+                LOGGER.exception(
+                    "Invalid SSL certificate on server %s", user_input[CONF_MJPEG_URL]
+                )
+                errors[field] = "cannot_connect_ssl"
     except InvalidAuth:
         errors["username"] = "invalid_auth"
     except (OSError, HTTPError, Timeout):
