@@ -9,6 +9,8 @@ from homeassistant.core import HomeAssistant
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
+EXCLUDE_ATTRIBUTES = {"full_features"}
+
 
 async def test_diagnostics(
     hass: HomeAssistant,
@@ -30,9 +32,7 @@ async def test_diagnostics(
     assert diag["ABC999111"]["pure_conf"] == snapshot
 
     def limit_attrs(prop, path):
-        exclude_attrs = {
-            "full_features",
-        }
+        exclude_attrs = EXCLUDE_ATTRIBUTES
         return prop in exclude_attrs
 
     assert diag == snapshot(name="full_snapshot", exclude=limit_attrs)
