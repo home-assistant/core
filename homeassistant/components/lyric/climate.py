@@ -432,11 +432,23 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             )
 
     async def _async_set_hvac_mode_lcc(self, hvac_mode: HVACMode) -> None:
+        """Set hvac mode for LCC devices (e.g., T5,6)."""
         _LOGGER.debug("HVAC mode passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode])
+        # Set autoChangeoverActive to True if the mode being passed is Auto
+        # otherwise leave unchanged.
+        if (
+            LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL
+            and not self.device.changeableValues.autoChangeoverActive
+        ):
+            auto_changeover = True
+        else:
+            auto_changeover = None
+
         await self._update_thermostat(
             self.location,
             self.device,
             mode=LYRIC_HVAC_MODES[hvac_mode],
+            autoChangeoverActive=auto_changeover,
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
