@@ -1397,6 +1397,10 @@ class _TrackPointUTCTime:
     expected_fire_timestamp: float
     _cancel_callback: asyncio.TimerHandle | None = None
 
+    def __post_init__(self) -> None:
+        """Initialize track job."""
+        self._reschedule(self.expected_fire_timestamp - time.time())
+
     @callback
     def _run_action(self) -> None:
         """Call the action."""
@@ -1407,13 +1411,13 @@ class _TrackPointUTCTime:
         # time.
         if (delta := (self.expected_fire_timestamp - time_tracker_timestamp())) > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
-            self.reschedule(delta)
+            self._reschedule(delta)
             return
 
         self.hass.async_run_hass_job(self.job, self.utc_point_in_time)
 
     @callback
-    def reschedule(self, delay: float) -> None:
+    def _reschedule(self, delay: float) -> None:
         """Reschedule the call_at."""
         loop = self.hass.loop
         self._cancel_callback = loop.call_at(loop.time() + delay, self._run_action)
@@ -1449,9 +1453,9 @@ def async_track_point_in_utc_time(
         if TYPE_CHECKING:
             assert not isinstance(action, HassJob)
         job = HassJob(action, f"track point in utc time {utc_point_in_time}")
-    track = _TrackPointUTCTime(hass, job, utc_point_in_time, expected_fire_timestamp)
-    track.reschedule(expected_fire_timestamp - time.time())
-    return track.cancel
+    return _TrackPointUTCTime(
+        hass, job, utc_point_in_time, expected_fire_timestamp
+    ).cancel
 
 
 track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_time)
@@ -1510,6 +1514,59 @@ def async_call_later(
 call_later = threaded_listener_factory(async_call_later)
 
 
+@dataclass(slots=True)
+class _TrackTimeInterval:
+    """Helper class to help listen to time interval events."""
+
+    hass: HomeAssistant
+    seconds: float
+    job_name: str
+    action: Callable[[datetime], Coroutine[Any, Any, None] | None]
+    cancel_on_shutdown: bool | None
+    _track_job: HassJob[[datetime], Coroutine[Any, Any, None] | None] | None = None
+    _run_job: HassJob[[datetime], Coroutine[Any, Any, None] | None] | None = None
+    _cancel_callback: CALLBACK_TYPE | None = None
+
+    def __post_init__(self) -> None:
+        """Initialize track job."""
+        self._track_job = HassJob(
+            self._interval_listener,
+            self.job_name,
+            job_type=HassJobType.Callback,
+            cancel_on_shutdown=self.cancel_on_shutdown,
+        )
+        self._run_job = HassJob(
+            self.action,
+            f"track time interval {self.seconds}",
+            cancel_on_shutdown=self.cancel_on_shutdown,
+        )
+        self._schedule()
+
+    @callback
+    def _interval_listener(self, now: datetime) -> None:
+        """Handle elapsed intervals."""
+        self._schedule()
+        if TYPE_CHECKING:
+            assert self._run_job is not None
+        self.hass.async_run_hass_job(self._run_job, now)
+
+    @callback
+    def _schedule(self) -> None:
+        """Schedule the call_at."""
+        if TYPE_CHECKING:
+            assert self._track_job is not None
+        self._cancel_callback = async_call_later(
+            self.hass, self.seconds, self._track_job
+        )
+
+    @callback
+    def cancel(self) -> None:
+        """Cancel the call_at."""
+        if TYPE_CHECKING:
+            assert self._cancel_callback is not None
+        self._cancel_callback()
+
+
 @callback
 @bind_hass
 def async_track_time_interval(
@@ -1524,41 +1581,13 @@ def async_track_time_interval(
 
     The listener is passed the time it fires in UTC time.
     """
-    remove: CALLBACK_TYPE
-    interval_listener_job: HassJob[[datetime], None]
-    interval_seconds = interval.total_seconds()
-
-    job = HassJob(
-        action, f"track time interval {interval}", cancel_on_shutdown=cancel_on_shutdown
-    )
-
-    @callback
-    def interval_listener(now: datetime) -> None:
-        """Handle elapsed intervals."""
-        nonlocal remove
-        nonlocal interval_listener_job
-
-        remove = async_call_later(hass, interval_seconds, interval_listener_job)
-        hass.async_run_hass_job(job, now)
-
+    seconds = interval.total_seconds()
+    job_name = f"track time interval {seconds} {action}"
     if name:
-        job_name = f"{name}: track time interval {interval} {action}"
-    else:
-        job_name = f"track time interval {interval} {action}"
-
-    interval_listener_job = HassJob(
-        interval_listener,
-        job_name,
-        cancel_on_shutdown=cancel_on_shutdown,
-        job_type=HassJobType.Callback,
-    )
-    remove = async_call_later(hass, interval_seconds, interval_listener_job)
-
-    def remove_listener() -> None:
-        """Remove interval listener."""
-        remove()
-
-    return remove_listener
+        job_name = f"{name}: {job_name}"
+    return _TrackTimeInterval(
+        hass, seconds, job_name, action, cancel_on_shutdown
+    ).cancel
 
 
 track_time_interval = threaded_listener_factory(async_track_time_interval)
