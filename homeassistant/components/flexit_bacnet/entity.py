@@ -1,14 +1,6 @@
 """Base entity for the Flexit Nordic (BACnet) integration."""
 from __future__ import annotations
 
-from homeassistant.components.climate import (
-    PRESET_AWAY,
-    PRESET_BOOST,
-    PRESET_HOME,
-    ClimateEntityFeature,
-    HVACMode,
-)
-from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -18,28 +10,6 @@ from .coordinator import FlexitCoordinator
 
 class FlexitEntity(CoordinatorEntity[FlexitCoordinator]):
     """Defines a Flexit entity."""
-
-    _attr_has_entity_name = True
-
-    _attr_name = None
-
-    _attr_hvac_modes = [
-        HVACMode.OFF,
-        HVACMode.FAN_ONLY,
-    ]
-
-    _attr_preset_modes = [
-        PRESET_AWAY,
-        PRESET_HOME,
-        PRESET_BOOST,
-    ]
-
-    _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
-    )
-
-    _attr_target_temperature_step: float = PRECISION_HALVES
-    _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: FlexitCoordinator) -> None:
         """Initialize a Flexit Nordic (BACnet) entity."""
