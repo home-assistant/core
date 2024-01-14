@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy.engine.row import Row
 
@@ -20,6 +20,11 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
 
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 @dataclass(slots=True)
 class LogbookConfig:
@@ -35,16 +40,6 @@ class LogbookConfig:
 class LazyEventPartialState:
     """A lazy version of core Event with limited State joined in."""
 
-    __slots__ = [
-        "row",
-        "_event_data",
-        "_event_data_cache",
-        "event_type",
-        "entity_id",
-        "state",
-        "data",
-    ]
-
     def __init__(
         self,
         row: Row | EventAsRow,
@@ -54,9 +49,6 @@ class LazyEventPartialState:
         self.row = row
         self._event_data: dict[str, Any] | None = None
         self._event_data_cache = event_data_cache
-        self.event_type: str | None = self.row.event_type
-        self.entity_id: str | None = self.row.entity_id
-        self.state = self.row.state
         # We need to explicitly check for the row is EventAsRow as the unhappy path
         # to fetch row.data for Row is very expensive
         if type(row) is EventAsRow:  # noqa: E721
@@ -64,7 +56,10 @@ class LazyEventPartialState:
             # json decode process as we already have the data
             self.data = row.data
             return
-        source = cast(str, self.row.event_data)
+        if TYPE_CHECKING:
+            source = cast(str, row.event_data)
+        else:
+            source = row.event_data
         if not source:
             self.data = {}
         elif event_data := self._event_data_cache.get(source):
@@ -74,17 +69,32 @@ class LazyEventPartialState:
                 dict[str, Any], json_loads(source)
             )
 
-    @property
+    @cached_property
+    def event_type(self) -> str | None:
+        """Return the event type."""
+        return self.row.event_type
+
+    @cached_property
+    def entity_id(self) -> str | None:
+        """Return the entity id."""
+        return self.row.entity_id
+
+    @cached_property
+    def state(self) -> str | None:
+        """Return the state."""
+        return self.row.state
+
+    @cached_property
     def context_id(self) -> str | None:
         """Return the context id."""
         return bytes_to_ulid_or_none(self.row.context_id_bin)
 
-    @property
+    @cached_property
     def context_user_id(self) -> str | None:
         """Return the context user id."""
         return bytes_to_uuid_hex_or_none(self.row.context_user_id_bin)
 
-    @property
+    @cached_property
     def context_parent_id(self) -> str | None:
         """Return the context parent id."""
         return bytes_to_ulid_or_none(self.row.context_parent_id_bin)

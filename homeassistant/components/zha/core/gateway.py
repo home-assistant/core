@@ -46,6 +46,7 @@ from .const import (
     ATTR_SIGNATURE,
     ATTR_TYPE,
     CONF_RADIO_TYPE,
+    CONF_USE_THREAD,
     CONF_ZIGPY,
     DATA_ZHA,
     DEBUG_COMP_BELLOWS,
@@ -141,7 +142,9 @@ class ZHAGateway:
         self._log_relay_handler = LogRelayHandler(hass, self)
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
+
         self.shutting_down = False
+        self._reload_task: asyncio.Task | None = None
 
     def get_application_controller_data(self) -> tuple[ControllerApplication, dict]:
         """Get an uninitialized instance of a zigpy `ControllerApplication`."""
@@ -157,6 +160,15 @@ class ZHAGateway:
 
         if CONF_NWK_VALIDATE_SETTINGS not in app_config:
             app_config[CONF_NWK_VALIDATE_SETTINGS] = True
+
+        # The bellows UART thread sometimes propagates a cancellation into the main Core
+        # event loop, when a connection to a TCP coordinator fails in a specific way
+        if (
+            CONF_USE_THREAD not in app_config
+            and radio_type is RadioType.ezsp
+            and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
+        ):
+            app_config[CONF_USE_THREAD] = False
 
         # Local import to avoid circular dependencies
         # pylint: disable-next=import-outside-toplevel
@@ -221,12 +233,17 @@ class ZHAGateway:
 
     def connection_lost(self, exc: Exception) -> None:
         """Handle connection lost event."""
+        _LOGGER.debug("Connection to the radio was lost: %r", exc)
+
         if self.shutting_down:
             return
 
-        _LOGGER.debug("Connection to the radio was lost: %r", exc)
+        # Ensure we do not queue up multiple resets
+        if self._reload_task is not None:
+            _LOGGER.debug("Ignoring reset, one is already running")
+            return
 
-        self.hass.async_create_task(
+        self._reload_task = self.hass.async_create_task(
             self.hass.config_entries.async_reload(self.config_entry.entry_id)
         )
 
@@ -750,6 +767,10 @@ class ZHAGateway:
 
     async def shutdown(self) -> None:
         """Stop ZHA Controller Application."""
+        if self.shutting_down:
+            _LOGGER.debug("Ignoring duplicate shutdown event")
+            return
+
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
         self.shutting_down = True
 

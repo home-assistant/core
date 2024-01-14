@@ -56,6 +56,9 @@
     "lock": {
       "vehicle_state_locked": {
         "name": "[%key:component::lock::title%]"
+      },
+      "charge_state_charge_port_latch": {
+        "name": "Charge cable lock"
       }
     },
     "media_player": {
@@ -334,6 +337,9 @@
     },
     "incorrect_pin": {
       "message": "Incorrect pin for {name}."
+    },
+    "no_cable": {
+      "message": "Insert cable to lock"
     }
   }
 }
