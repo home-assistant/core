@@ -17,13 +17,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class Data(BringList):
+class BringData(BringList):
     """Coordinator data class."""
 
     items: list[BringItemsResponse]
 
 
-class BringDataUpdateCoordinator(DataUpdateCoordinator[list[Data]]):
+class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
     """A Bring Data Update Coordinator."""
 
     config_entry: ConfigEntry
@@ -39,11 +39,11 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[Data]]):
         self._bring = bring
 
     @property
-    def bring(self):
+    def bring(self) -> Bring:
         """Return the bring api."""
         return self._bring
 
-    async def _async_update_data(self) -> list[Data]:
+    async def _async_update_data(self) -> list[BringData]:
         try:
             lists_response = await self.hass.async_add_executor_job(
                 self._bring.loadLists
