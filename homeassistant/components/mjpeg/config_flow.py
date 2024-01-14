@@ -66,7 +66,7 @@ def validate_url(
     username: str | None,
     password: str,
     verify_ssl: bool,
-    authentication: str = HTTP_BASIC_AUTHENTICATION,
+    authentication: str = HTTP_DIGEST_AUTHENTICATION,
 ) -> str:
     """Test if the given setting works as expected."""
     auth: HTTPDigestAuth | HTTPBasicAuth | None = None
@@ -85,10 +85,10 @@ def validate_url(
     )
 
     if response.status_code == HTTPStatus.UNAUTHORIZED:
-        # If unauthorized, try again using digest auth
-        if authentication == HTTP_BASIC_AUTHENTICATION:
+        # If unauthorized with digest, try again using basic auth
+        if authentication == HTTP_DIGEST_AUTHENTICATION:
             return validate_url(
-                url, username, password, verify_ssl, HTTP_DIGEST_AUTHENTICATION
+                url, username, password, verify_ssl, HTTP_BASIC_AUTHENTICATION
             )
         raise InvalidAuth
 
@@ -104,7 +104,7 @@ async def async_validate_input(
     """Manage MJPEG IP Camera options."""
     errors = {}
     field = "base"
-    authentication = HTTP_BASIC_AUTHENTICATION
+    authentication = HTTP_DIGEST_AUTHENTICATION
     try:
         for field in (CONF_MJPEG_URL, CONF_STILL_IMAGE_URL):
             if not (url := user_input.get(field)):
