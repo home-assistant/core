@@ -24,12 +24,13 @@
         }
       },
       "machine_selection": {
+        "description": "Select the machine you want to integrate. Set the \"IP\" to get access to shot time related sensors.",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
           "machine": "Machine"
         },
         "data_description": {
-          "host": "Local IP address of the machine. Used to connect locally to the machine"
+          "host": "Local IP address of the machine"
         }
       }
     }
