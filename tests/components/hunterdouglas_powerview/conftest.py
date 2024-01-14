@@ -1,0 +1,103 @@
+"""Common fixtures for Hunter Douglas Powerview tests."""
+
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
+
+from tests.common import load_json_object_fixture
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+async def mock_hunterdouglas_base() -> MagicMock:
+    """Return a mocked Powerview Hub with no data."""
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.Hub",
+        return_value=MagicMock(),
+    ) as hub_mock:
+        yield hub_mock
+
+
+@pytest.fixture
+@pytest.mark.usefixtures("mock_hunterdouglas_base")
+async def mock_hunterdouglas_user(
+    device_json: str,
+) -> Generator[MagicMock, None, None]:
+    """Return a mocked Powerview Hub with only base raw data."""
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+        return_value=load_json_object_fixture(device_json, DOMAIN),
+    ):
+        yield
+
+
+@pytest.fixture
+@pytest.mark.usefixtures("mock_hunterdouglas_base")
+async def mock_hunterdouglas_full(
+    device_json: str,
+    home_json: str,
+    firmware_json: str,
+) -> Generator[MagicMock, None, None]:
+    """Return a mocked Powerview Hub with all data populated."""
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+        return_value=load_json_object_fixture(device_json, DOMAIN),
+    ), patch(
+        "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
+        return_value=load_json_object_fixture(home_json, DOMAIN),
+    ), patch(
+        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_firmware",
+        return_value=load_json_object_fixture(firmware_json, DOMAIN),
+    ):
+        yield
+
+
+@pytest.fixture
+def device_json(api_version: int) -> str:
+    """Return the request_raw_data fixture for a specific device."""
+    if api_version == 1:
+        return "gen1/userdata.json"
+    if api_version == 2:
+        return "gen2/userdata.json"
+    if api_version == 3:
+        return "gen3/gateway/primary.json"
+    # Add more conditions for different api_versions if needed
+    raise ValueError(f"Unsupported api_version: {api_version}")
+
+
+@pytest.fixture
+def home_json(api_version: int) -> str:
+    """Return the request_home_data fixture for a specific device."""
+    if api_version == 1:
+        return "gen1/userdata.json"
+    if api_version == 2:
+        return "gen2/userdata.json"
+    if api_version == 3:
+        return "gen3/home/home.json"
+    # Add more conditions for different api_versions if needed
+    raise ValueError(f"Unsupported api_version: {api_version}")
+
+
+@pytest.fixture
+def firmware_json(api_version: int) -> str:
+    """Return the request_raw_firmware fixture for a specific device."""
+    if api_version == 1:
+        return "gen1/fwversion.json"
+    if api_version == 2:
+        return "gen2/fwversion.json"
+    if api_version == 3:
+        return "gen3/gateway/info.json"
+    # Add more conditions for different api_versions if needed
+    raise ValueError(f"Unsupported api_version: {api_version}")

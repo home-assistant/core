@@ -758,4 +758,9 @@ ZEROCONF = {
             "domain": "zwave_js",
         },
     ],
+    "powerview-g3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
+        },
+    ],
 }
