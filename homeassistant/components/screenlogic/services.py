@@ -12,10 +12,16 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 
 from .const import (
     ATTR_COLOR_MODE,
+    ATTR_RUNTIME,
     DOMAIN,
+    MAX_RUNTIME,
+    MIN_RUNTIME,
     SERVICE_SET_COLOR_MODE,
+    SERVICE_START_SUPER_CHLORINATION,
+    SERVICE_STOP_SUPER_CHLORINATION,
     SUPPORTED_COLOR_MODES,
 )
+from .coordinator import ScreenlogicDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +29,12 @@ SET_COLOR_MODE_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Required(ATTR_COLOR_MODE): vol.In(SUPPORTED_COLOR_MODES),
     },
+)
+
+TURN_ON_SUPER_CHLOR_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Optional(ATTR_RUNTIME): vol.Clamp(min=MIN_RUNTIME, max=MAX_RUNTIME),
+    }
 )
 
 
@@ -53,7 +65,7 @@ def async_load_screenlogic_services(hass: HomeAssistant):
             )
         color_num = SUPPORTED_COLOR_MODES[service_call.data[ATTR_COLOR_MODE]]
         for entry_id in screenlogic_entry_ids:
-            coordinator = hass.data[DOMAIN][entry_id]
+            coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
             _LOGGER.debug(
                 "Service %s called on %s with mode %s",
                 SERVICE_SET_COLOR_MODE,
@@ -68,8 +80,58 @@ def async_load_screenlogic_services(hass: HomeAssistant):
             except ScreenLogicError as error:
                 raise HomeAssistantError(error) from error
 
+    async def async_set_super_chlor(
+        service_call: ServiceCall,
+        is_on: bool,
+        runtime: int | None = None,
+    ) -> None:
+        if not (
+            screenlogic_entry_ids := await extract_screenlogic_config_entry_ids(
+                service_call
+            )
+        ):
+            raise HomeAssistantError(
+                f"Failed to call service '{service_call.service}'. Config entry for"
+                " target not found"
+            )
+        for entry_id in screenlogic_entry_ids:
+            coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+            _LOGGER.debug(
+                "Service %s called on %s with runtime %s",
+                SERVICE_START_SUPER_CHLORINATION,
+                coordinator.gateway.name,
+                runtime,
+            )
+            try:
+                await coordinator.gateway.async_set_scg_config(
+                    super_chlor_timer=runtime, super_chlorinate=is_on
+                )
+                # Debounced refresh to catch any secondary
+                # changes in the device
+                await coordinator.async_request_refresh()
+            except ScreenLogicError as error:
+                raise HomeAssistantError(error) from error
+
+    async def async_start_super_chlor(service_call: ServiceCall) -> None:
+        runtime = service_call.data.get(ATTR_RUNTIME, 24)
+        await async_set_super_chlor(service_call, True, runtime)
+
+    async def async_stop_super_chlor(service_call: ServiceCall) -> None:
+        await async_set_super_chlor(service_call, False)
+
     hass.services.async_register(
         DOMAIN, SERVICE_SET_COLOR_MODE, async_set_color_mode, SET_COLOR_MODE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_START_SUPER_CHLORINATION,
+        async_start_super_chlor,
+        TURN_ON_SUPER_CHLOR_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_STOP_SUPER_CHLORINATION,
+        async_stop_super_chlor,
     )
 
 
@@ -80,8 +142,10 @@ def async_unload_screenlogic_services(hass: HomeAssistant):
         # There is still another config entry for this domain, don't remove services.
         return
 
-    if not hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE):
+    if not hass.services.async_services().get(DOMAIN):
         return
 
     _LOGGER.info("Unloading ScreenLogic Services")
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_SET_COLOR_MODE)
+    hass.services.async_remove(domain=DOMAIN, service=SERVICE_START_SUPER_CHLORINATION)
+    hass.services.async_remove(domain=DOMAIN, service=SERVICE_STOP_SUPER_CHLORINATION)
