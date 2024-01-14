@@ -1399,7 +1399,10 @@ class _TrackPointUTCTime:
 
     def __post_init__(self) -> None:
         """Initialize track job."""
-        self._reschedule(self.expected_fire_timestamp - time.time())
+        loop = self.hass.loop
+        self._cancel_callback = loop.call_at(
+            loop.time() + self.expected_fire_timestamp - time.time(), self._run_action
+        )
 
     @callback
     def _run_action(self) -> None:
@@ -1411,16 +1414,11 @@ class _TrackPointUTCTime:
         # time.
         if (delta := (self.expected_fire_timestamp - time_tracker_timestamp())) > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
-            self._reschedule(delta)
+            loop = self.hass.loop
+            self._cancel_callback = loop.call_at(loop.time() + delta, self._run_action)
             return
 
         self.hass.async_run_hass_job(self.job, self.utc_point_in_time)
-
-    @callback
-    def _reschedule(self, delay: float) -> None:
-        """Reschedule the call_at."""
-        loop = self.hass.loop
-        self._cancel_callback = loop.call_at(loop.time() + delay, self._run_action)
 
     @callback
     def cancel(self) -> None:
@@ -1529,6 +1527,7 @@ class _TrackTimeInterval:
 
     def __post_init__(self) -> None:
         """Initialize track job."""
+        hass = self.hass
         self._track_job = HassJob(
             self._interval_listener,
             self.job_name,
@@ -1540,20 +1539,17 @@ class _TrackTimeInterval:
             f"track time interval {self.seconds}",
             cancel_on_shutdown=self.cancel_on_shutdown,
         )
-        self._schedule()
+        self._cancel_callback = async_call_at(
+            hass,
+            self._track_job,
+            hass.loop.time() + self.seconds,
+        )
 
     @callback
     def _interval_listener(self, now: datetime) -> None:
         """Handle elapsed intervals."""
-        self._schedule()
         if TYPE_CHECKING:
             assert self._run_job is not None
-        self.hass.async_run_hass_job(self._run_job, now)
-
-    @callback
-    def _schedule(self) -> None:
-        """Schedule the call_at."""
-        if TYPE_CHECKING:
             assert self._track_job is not None
         hass = self.hass
         self._cancel_callback = async_call_at(
@@ -1561,6 +1557,7 @@ class _TrackTimeInterval:
             self._track_job,
             hass.loop.time() + self.seconds,
         )
+        hass.async_run_hass_job(self._run_job, now)
 
     @callback
     def cancel(self) -> None:
