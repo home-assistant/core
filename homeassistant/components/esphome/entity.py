@@ -145,7 +145,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         state_type: type[_StateT],
     ) -> None:
         """Initialize."""
-
         self._entry_data = entry_data
         self._on_entry_data_changed()
         self._key = entity_info.key
@@ -157,7 +156,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
-        self._entry_id = entry_data.entry_id
         #
         # If `friendly_name` is set, we use the Friendly naming rules, if
         # `friendly_name` is not set we make an exception to the naming rules for
@@ -183,10 +181,11 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         entry_data = self._entry_data
         hass = self.hass
         key = self._key
+        static_info = self._static_info
 
         self.async_on_remove(
             entry_data.async_register_key_static_info_remove_callback(
-                self._static_info,
+                static_info,
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
@@ -204,7 +203,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         )
         self.async_on_remove(
             entry_data.async_register_key_static_info_updated_callback(
-                self._static_info, self._on_static_info_update
+                static_info, self._on_static_info_update
             )
         )
         self._update_state_from_entry_data()
@@ -236,12 +235,10 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @callback
     def _update_state_from_entry_data(self) -> None:
         """Update state from entry data."""
-
         state = self._entry_data.state
         key = self._key
         state_type = self._state_type
-        has_state = key in state[state_type]
-        if has_state:
+        if has_state := key in state[state_type]:
             self._state = cast(_StateT, state[state_type][key])
         self._has_state = has_state
 
@@ -301,13 +298,11 @@ class EsphomeAssistEntity(Entity):
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
 
-    @callback
-    def _update(self) -> None:
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self._entry_data.async_subscribe_assist_pipeline_update(self._update)
+            self._entry_data.async_subscribe_assist_pipeline_update(
+                self.async_write_ha_state
+            )
         )

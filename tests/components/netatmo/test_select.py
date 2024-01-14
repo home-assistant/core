@@ -2,18 +2,42 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID, SERVICE_SELECT_OPTION
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_WEBHOOK_ID,
+    SERVICE_SELECT_OPTION,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
 
-from .common import selected_platforms, simulate_webhook
+from .common import selected_platforms, simulate_webhook, snapshot_platform_entities
 
 from tests.common import MockConfigEntry
+
+
+async def test_entity(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities."""
+    await snapshot_platform_entities(
+        hass,
+        config_entry,
+        Platform.SELECT,
+        entity_registry,
+        snapshot,
+    )
 
 
 async def test_select_schedule_thermostats(

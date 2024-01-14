@@ -46,7 +46,6 @@ import voluptuous as vol
 import yarl
 
 from . import block_async_io, util
-from .backports.functools import cached_property
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -108,11 +107,14 @@ from .util.unit_system import (
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    from functools import cached_property
+
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
-
+else:
+    from .backports.functools import cached_property
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
@@ -1436,7 +1438,7 @@ class State:
         self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
 
-    @property
+    @cached_property
     def name(self) -> str:
         """Name of this state."""
         return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(

@@ -4,12 +4,15 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
 from homeassistant.util.aiohttp import MockRequest
 
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 COMMON_RESPONSE = {
@@ -22,6 +25,30 @@ COMMON_RESPONSE = {
 FAKE_WEBHOOK_ACTIVATION = {
     "push_type": "webhook_activation",
 }
+
+
+async def snapshot_platform_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    platform: Platform,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot entities and their states."""
+    with selected_platforms([platform]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-state"
+        )
 
 
 async def fake_post_request(*args: Any, **kwargs: Any):
