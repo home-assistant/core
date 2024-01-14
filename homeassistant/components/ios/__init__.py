@@ -1,7 +1,9 @@
 """Native Home Assistant iOS app component."""
 import datetime
 from http import HTTPStatus
+from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -218,7 +220,7 @@ CONFIGURATION_FILE = ".ios.conf"
 PLATFORMS = [Platform.SENSOR]
 
 
-def devices_with_push(hass):
+def devices_with_push(hass: HomeAssistant) -> dict[str, str]:
     """Return a dictionary of push enabled targets."""
     return {
         device_name: device.get(ATTR_PUSH_ID)
@@ -227,7 +229,7 @@ def devices_with_push(hass):
     }
 
 
-def enabled_push_ids(hass):
+def enabled_push_ids(hass: HomeAssistant) -> list[str]:
     """Return a list of push enabled target push IDs."""
     return [
         device.get(ATTR_PUSH_ID)
@@ -236,16 +238,16 @@ def enabled_push_ids(hass):
     ]
 
 
-def devices(hass):
+def devices(hass: HomeAssistant) -> dict[str, dict[str, Any]]:
     """Return a dictionary of all identified devices."""
-    return hass.data[DOMAIN][ATTR_DEVICES]
+    return hass.data[DOMAIN][ATTR_DEVICES]  # type: ignore[no-any-return]
 
 
-def device_name_for_push_id(hass, push_id):
+def device_name_for_push_id(hass: HomeAssistant, push_id: str) -> str | None:
     """Return the device name for the push ID."""
     for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items():
         if device.get(ATTR_PUSH_ID) is push_id:
-            return device_name
+            return device_name  # type: ignore[no-any-return]
     return None
 
 
@@ -299,12 +301,12 @@ class iOSPushConfigView(HomeAssistantView):
     url = "/api/ios/push"
     name = "api:ios:push"
 
-    def __init__(self, push_config):
+    def __init__(self, push_config: dict[str, Any]) -> None:
         """Init the view."""
         self.push_config = push_config
 
     @callback
-    def get(self, request):
+    def get(self, request: web.Request) -> web.Response:
         """Handle the GET request for the push configuration."""
         return self.json(self.push_config)
 
@@ -315,12 +317,12 @@ class iOSConfigView(HomeAssistantView):
     url = "/api/ios/config"
     name = "api:ios:config"
 
-    def __init__(self, config):
+    def __init__(self, config: dict[str, Any]) -> None:
         """Init the view."""
         self.config = config
 
     @callback
-    def get(self, request):
+    def get(self, request: web.Request) -> web.Response:
         """Handle the GET request for the user-defined configuration."""
         return self.json(self.config)
 
@@ -331,18 +333,18 @@ class iOSIdentifyDeviceView(HomeAssistantView):
     url = "/api/ios/identify"
     name = "api:ios:identify"
 
-    def __init__(self, config_path):
+    def __init__(self, config_path: str) -> None:
         """Initialize the view."""
         self._config_path = config_path
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Handle the POST request for device identification."""
         try:
             data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
 
         data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 

@@ -684,6 +684,8 @@ async def test_get_entity_state_read_perm(
 ) -> None:
     """Test getting a state requires read permission."""
     hass_admin_user.mock_policy({})
+    hass_admin_user.groups = []
+    assert hass_admin_user.is_admin is False
     resp = await mock_api_client.get("/api/states/light.test")
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
