@@ -174,6 +174,9 @@ def mock_psutil(mock_process: list[MockProcess]) -> Mock:
         mock_psutil.cpu_percent.return_value = 10.0
         mock_psutil.boot_time.return_value = 1703973338.0
         mock_psutil.process_iter.return_value = mock_process
+        # sensors_temperatures not available on MacOS so we
+        # need to override the spec
+        mock_psutil.sensors_temperatures = Mock()
         mock_psutil.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
@@ -218,6 +221,9 @@ def mock_util(mock_process) -> Mock:
         }
         mock_process = [MockProcess("python3")]
         mock_util.process_iter.return_value = mock_process
+        # sensors_temperatures not available on MacOS so we
+        # need to override the spec
+        mock_util.sensors_temperatures = Mock()
         mock_util.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
