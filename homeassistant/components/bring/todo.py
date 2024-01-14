@@ -47,7 +47,7 @@ async def async_setup_entry(
                 BringTodoListEntity(
                     coordinator,
                     name=f"Bring! {_list['name']}",
-                    unique_id=_list["listUuid"],
+                    unique_id=f"{unique_id} {_list['listUuid']}",
                 )
             ],
         )
