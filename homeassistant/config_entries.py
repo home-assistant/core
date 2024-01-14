@@ -1937,7 +1937,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
         return result
 
-    async def async_update_and_reload_entry(
+    @callback
+    def async_update_and_reload_entry(
         self,
         entry: ConfigEntry,
         title: str | UndefinedType = UNDEFINED,
@@ -1952,7 +1953,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             data=data,
             options=options,
         )
-        await self.hass.config_entries.async_reload(entry.entry_id)
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(entry.entry_id)
+        )
         return self.async_abort(reason=reason)
 
 
