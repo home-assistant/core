@@ -37,15 +37,14 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
-        if not self._lm.initialized:
+        if not self.lm.initialized:
             await self._async_init_client()
 
-        _LOGGER.debug("Update coordinator: Updating data")
         await self._async_handle_request(
-            self._lm.update_local_machine_status, force_update=True
+            self.lm.update_local_machine_status, force_update=True
         )
 
-        _LOGGER.debug("Current status: %s", str(self._lm.current_status))
+        _LOGGER.debug("Current status: %s", str(self.lm.current_status))
 
     async def _async_init_client(self) -> None:
         """Initialize the La Marzocco Client."""
@@ -53,16 +52,16 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         # Initialize cloud API
         _LOGGER.debug("Initializing Cloud API")
         await self._async_handle_request(
-            self._lm.init_cloud_api,
+            self.lm.init_cloud_api,
             credentials=self.config_entry.data,
             machine_serial=self.config_entry.data[CONF_MACHINE],
         )
-        _LOGGER.debug("Model name: %s", self._lm.model_name)
+        _LOGGER.debug("Model name: %s", self.lm.model_name)
 
         # initialize local API
         if (host := self.config_entry.data.get(CONF_HOST)) is not None:
             _LOGGER.debug("Initializing local API")
-            await self._lm.init_local_api(
+            await self.lm.init_local_api(
                 host=host,
                 client=get_async_client(self.hass),
             )
@@ -71,14 +70,14 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
             self.config_entry.async_create_background_task(
                 hass=self.hass,
-                target=self._lm.lm_local_api.websocket_connect(
-                    callback=self._lm.on_websocket_message_received,
+                target=self.lm.lm_local_api.websocket_connect(
+                    callback=self.lm.on_websocket_message_received,
                     use_sigterm_handler=False,
                 ),
                 name="lm_websocket_task",
             )
 
-        self._lm.initialized = True
+        self.lm.initialized = True
 
     async def _async_handle_request(
         self,

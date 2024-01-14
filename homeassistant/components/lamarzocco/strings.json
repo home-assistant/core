@@ -29,7 +29,7 @@
           "machine": "Machine"
         },
         "data_description": {
-          "host": "Local IP address of the machine"
+          "host": "Local IP address of the machine. Used to connect locally to the machine"
         }
       }
     }

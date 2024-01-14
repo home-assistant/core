@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_auto_on_off
+# name: test_switches[auto_on_off-set_auto_on_off_global]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Auto on/off',
@@ -12,7 +12,7 @@
     'state': 'on',
   })
 # ---
-# name: test_auto_on_off.1
+# name: test_switches[auto_on_off-set_auto_on_off_global].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -43,7 +43,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_auto_on_off.2
+# name: test_switches[auto_on_off-set_auto_on_off_global].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -71,7 +71,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_main
+# name: test_switches[main-set_power]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Main',
@@ -84,7 +84,7 @@
     'state': 'on',
   })
 # ---
-# name: test_main.1
+# name: test_switches[main-set_power].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -115,7 +115,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_main.2
+# name: test_switches[main-set_power].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -143,7 +143,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_steam_boiler_enable
+# name: test_switches[steam_boiler-set_steam]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Steam boiler',
@@ -156,7 +156,7 @@
     'state': 'on',
   })
 # ---
-# name: test_steam_boiler_enable.1
+# name: test_switches[steam_boiler-set_steam].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -187,7 +187,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_steam_boiler_enable.2
+# name: test_switches[steam_boiler-set_steam].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,

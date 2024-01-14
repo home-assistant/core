@@ -16,17 +16,29 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 pytestmark = pytest.mark.usefixtures("init_integration")
 
 
-async def test_main(
+@pytest.mark.parametrize(
+    ("entity_name", "method_name"),
+    [
+        ("main", "set_power"),
+        ("auto_on_off", "set_auto_on_off_global"),
+        ("steam_boiler", "set_steam"),
+    ],
+)
+async def test_switches(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    entity_name: str,
+    method_name: str,
 ) -> None:
-    """Test the La Marzocco Main switch."""
+    """Test the La Marzocco switches."""
     serial_number = mock_lamarzocco.serial_number
 
-    state = hass.states.get(f"switch.{serial_number}_main")
+    control_fn = getattr(mock_lamarzocco, method_name)
+
+    state = hass.states.get(f"switch.{serial_number}_{entity_name}")
     assert state
     assert state == snapshot
 
@@ -43,118 +55,22 @@ async def test_main(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {
-            ATTR_ENTITY_ID: f"switch.{serial_number}_main",
+            ATTR_ENTITY_ID: f"switch.{serial_number}_{entity_name}",
         },
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_power.mock_calls) == 1
-    mock_lamarzocco.set_power.assert_called_once_with(False)
+    assert len(control_fn.mock_calls) == 1
+    control_fn.assert_called_once_with(False)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: f"switch.{serial_number}_main",
+            ATTR_ENTITY_ID: f"switch.{serial_number}_{entity_name}",
         },
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_power.mock_calls) == 2
-    mock_lamarzocco.set_power.assert_called_with(True)
-
-
-async def test_auto_on_off(
-    hass: HomeAssistant,
-    mock_lamarzocco: MagicMock,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the La Marzocco Auto On/Off switch."""
-    serial_number = mock_lamarzocco.serial_number
-
-    state = hass.states.get(f"switch.{serial_number}_auto_on_off")
-    assert state
-    assert state == snapshot
-
-    entry = entity_registry.async_get(state.entity_id)
-    assert entry
-    assert entry.device_id
-    assert entry == snapshot
-
-    device = device_registry.async_get(entry.device_id)
-    assert device
-    assert device == snapshot
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {
-            ATTR_ENTITY_ID: f"switch.{serial_number}_auto_on_off",
-        },
-        blocking=True,
-    )
-
-    assert len(mock_lamarzocco.set_auto_on_off_global.mock_calls) == 1
-    mock_lamarzocco.set_auto_on_off_global.assert_called_once_with(enable=False)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: f"switch.{serial_number}_auto_on_off",
-        },
-        blocking=True,
-    )
-
-    assert len(mock_lamarzocco.set_auto_on_off_global.mock_calls) == 2
-    mock_lamarzocco.set_auto_on_off_global.assert_called_with(enable=True)
-
-
-async def test_steam_boiler_enable(
-    hass: HomeAssistant,
-    mock_lamarzocco: MagicMock,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the La Marzocco Steam Boiler switch."""
-    serial_number = mock_lamarzocco.serial_number
-
-    state = hass.states.get(f"switch.{serial_number}_steam_boiler")
-    assert state
-    assert state == snapshot
-
-    entry = entity_registry.async_get(state.entity_id)
-    assert entry
-    assert entry.device_id
-    assert entry == snapshot
-
-    device = device_registry.async_get(entry.device_id)
-    assert device
-    assert device == snapshot
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {
-            ATTR_ENTITY_ID: f"switch.{serial_number}_steam_boiler",
-        },
-        blocking=True,
-    )
-
-    assert len(mock_lamarzocco.set_steam.mock_calls) == 1
-    mock_lamarzocco.set_steam.assert_called_once_with(False)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: f"switch.{serial_number}_steam_boiler",
-        },
-        blocking=True,
-    )
-
-    assert len(mock_lamarzocco.set_steam.mock_calls) == 2
-    mock_lamarzocco.set_steam.assert_called_with(True)
+    assert len(control_fn.mock_calls) == 2
+    control_fn.assert_called_with(True)

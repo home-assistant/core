@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["lmcloud"],
-  "requirements": ["lmcloud==0.4.30"]
+  "requirements": ["lmcloud==0.4.31"]
 }
