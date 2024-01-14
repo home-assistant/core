@@ -40,11 +40,6 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
             serial_number=self.api.vin,
         )
 
-    @property
-    def _value(self) -> Any:
-        """Return value from coordinator data."""
-        return self.coordinator.data[self.key]
-
     def get(self, key: str | None = None, default: Any | None = None) -> Any:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(key or self.key, default)
