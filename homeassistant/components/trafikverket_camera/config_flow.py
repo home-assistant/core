@@ -37,12 +37,12 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], list[CameraInfo] | None]:
         """Validate input from user input."""
         errors: dict[str, str] = {}
-        camera_info: list[CameraInfo] | None = None
+        cameras: list[CameraInfo] | None = None
 
         web_session = async_get_clientsession(self.hass)
         camera_api = TrafikverketCamera(web_session, sensor_api)
         try:
-            camera_info = await camera_api.async_get_cameras(location)
+            cameras = await camera_api.async_get_cameras(location)
         except NoCameraFound:
             errors["location"] = "invalid_location"
         except InvalidAuthentication:
@@ -50,7 +50,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except UnknownError:
             errors["base"] = "cannot_connect"
 
-        return (errors, camera_info)
+        return (errors, cameras)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Trafikverket."""
