@@ -619,7 +619,10 @@ async def test_show_progress_legacy(hass: HomeAssistant, manager, caplog) -> Non
     result = await manager.async_configure(
         result["flow_id"], {"task_finished": 2, "title": "Hello"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE
+    # Note: The SHOW_PROGRESS_DONE is hidden from frontend; FlowManager automatically
+    # calls the flow again
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Hello"
 
     await hass.async_block_till_done()
     assert len(events) == 2  # 1 for task one and 1 for task two
@@ -628,11 +631,6 @@ async def test_show_progress_legacy(hass: HomeAssistant, manager, caplog) -> Non
         "flow_id": result["flow_id"],
         "refresh": True,
     }
-
-    # Frontend refreshes the flow
-    result = await manager.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Hello"
 
     # Check for deprecation warning
     assert (
