@@ -1,5 +1,0 @@
-{
-  "domain": "airvisual",
-  "name": "AirVisual",
-  "integrations": ["airvisual", "airvisual_pro"]
-}

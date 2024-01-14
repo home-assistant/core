@@ -1,5 +1,0 @@
-{
-  "domain": "flexit",
-  "name": "Flexit",
-  "integrations": ["flexit", "flexit_bacnet"]
-}

@@ -1,6 +1,0 @@
-order:
-  fields:
-    order_entity_id:
-      example: dominos.medium_pan
-      selector:
-        text:

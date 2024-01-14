@@ -1,9 +1,0 @@
-{
-  "domain": "pilight",
-  "name": "Pilight",
-  "codeowners": ["@trekky12"],
-  "documentation": "https://www.home-assistant.io/integrations/pilight",
-  "iot_class": "local_push",
-  "loggers": ["pilight"],
-  "requirements": ["pilight==0.1.1"]
-}

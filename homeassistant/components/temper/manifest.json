@@ -1,9 +1,0 @@
-{
-  "domain": "temper",
-  "name": "TEMPer",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/temper",
-  "iot_class": "local_polling",
-  "loggers": ["pyusb", "temperusb"],
-  "requirements": ["temperusb==1.6.1"]
-}

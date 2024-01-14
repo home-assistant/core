@@ -1,6 +1,0 @@
-{
-  "domain": "sensorblue",
-  "name": "SensorBlue",
-  "integration_type": "virtual",
-  "supported_by": "thermobeacon"
-}

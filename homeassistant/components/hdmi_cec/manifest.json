@@ -1,9 +1,0 @@
-{
-  "domain": "hdmi_cec",
-  "name": "HDMI-CEC",
-  "codeowners": ["@inytar"],
-  "documentation": "https://www.home-assistant.io/integrations/hdmi_cec",
-  "iot_class": "local_push",
-  "loggers": ["pycec"],
-  "requirements": ["pyCEC==0.5.2"]
-}

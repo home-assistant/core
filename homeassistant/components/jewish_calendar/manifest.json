@@ -1,9 +1,0 @@
-{
-  "domain": "jewish_calendar",
-  "name": "Jewish Calendar",
-  "codeowners": ["@tsvi"],
-  "documentation": "https://www.home-assistant.io/integrations/jewish_calendar",
-  "iot_class": "calculated",
-  "loggers": ["hdate"],
-  "requirements": ["hdate==0.10.4"]
-}

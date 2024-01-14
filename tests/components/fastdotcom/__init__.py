@@ -1,1 +1,0 @@
-"""Fast.com integration tests."""

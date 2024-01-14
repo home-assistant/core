@@ -1,9 +1,0 @@
-{
-  "domain": "foobot",
-  "name": "Foobot",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/foobot",
-  "iot_class": "cloud_polling",
-  "loggers": ["foobot_async"],
-  "requirements": ["foobot_async==1.0.0"]
-}

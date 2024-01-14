@@ -1,9 +1,0 @@
-{
-  "domain": "emby",
-  "name": "Emby",
-  "codeowners": ["@mezz64"],
-  "documentation": "https://www.home-assistant.io/integrations/emby",
-  "iot_class": "local_push",
-  "loggers": ["pyemby"],
-  "requirements": ["pyEmby==1.9"]
-}

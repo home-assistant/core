@@ -1,8 +1,0 @@
-{
-  "services": {
-    "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads generic thermostats from the YAML-configuration."
-    }
-  }
-}

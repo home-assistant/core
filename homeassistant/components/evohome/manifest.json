@@ -1,9 +1,0 @@
-{
-  "domain": "evohome",
-  "name": "Honeywell Total Connect Comfort (Europe)",
-  "codeowners": ["@zxdavb"],
-  "documentation": "https://www.home-assistant.io/integrations/evohome",
-  "iot_class": "cloud_polling",
-  "loggers": ["evohomeasync", "evohomeasync2"],
-  "requirements": ["evohome-async==0.4.15"]
-}

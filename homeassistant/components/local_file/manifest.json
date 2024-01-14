@@ -1,7 +1,0 @@
-{
-  "domain": "local_file",
-  "name": "Local File",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/local_file",
-  "iot_class": "local_polling"
-}

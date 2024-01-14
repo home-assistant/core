@@ -1,9 +1,0 @@
-{
-  "domain": "message_bird",
-  "name": "MessageBird",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/message_bird",
-  "iot_class": "cloud_push",
-  "loggers": ["messagebird"],
-  "requirements": ["messagebird==1.2.0"]
-}

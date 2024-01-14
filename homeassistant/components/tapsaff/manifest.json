@@ -1,9 +1,0 @@
-{
-  "domain": "tapsaff",
-  "name": "Taps Aff",
-  "codeowners": ["@bazwilliams"],
-  "documentation": "https://www.home-assistant.io/integrations/tapsaff",
-  "iot_class": "local_polling",
-  "loggers": ["tapsaff"],
-  "requirements": ["tapsaff==0.2.1"]
-}

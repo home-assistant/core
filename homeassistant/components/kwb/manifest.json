@@ -1,9 +1,0 @@
-{
-  "domain": "kwb",
-  "name": "KWB Easyfire",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/kwb",
-  "iot_class": "local_polling",
-  "loggers": ["pykwb"],
-  "requirements": ["pykwb==0.0.8"]
-}

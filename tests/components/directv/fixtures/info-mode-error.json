@@ -1,8 +1,0 @@
-{
-  "status": {
-    "code": 500,
-    "commandResult": 1,
-    "msg": "Internal Server Error.",
-    "query": "/info/mode"
-  }
-}

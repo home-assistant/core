@@ -1,6 +1,0 @@
-{
-  "enableAutoReply": true,
-  "responseSubject": "Vacation",
-  "responseBodyPlainText": "I am on vacation.",
-  "restrictToContacts": false
-}

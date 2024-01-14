@@ -1,7 +1,0 @@
-{
-  "domain": "tag",
-  "name": "Tags",
-  "codeowners": ["@balloob", "@dmulcahey"],
-  "documentation": "https://www.home-assistant.io/integrations/tag",
-  "quality_scale": "internal"
-}

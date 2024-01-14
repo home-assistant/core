@@ -1,7 +1,0 @@
-{
-  "domain": "telnet",
-  "name": "Telnet",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/telnet",
-  "iot_class": "local_polling"
-}

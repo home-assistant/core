@@ -1,9 +1,0 @@
-{
-  "domain": "logbook",
-  "name": "Logbook",
-  "codeowners": ["@home-assistant/core"],
-  "dependencies": ["frontend", "http", "recorder"],
-  "documentation": "https://www.home-assistant.io/integrations/logbook",
-  "integration_type": "system",
-  "quality_scale": "internal"
-}

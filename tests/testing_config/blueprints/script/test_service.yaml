@@ -1,8 +1,0 @@
-blueprint:
-  name: "Call service"
-  domain: script
-  input:
-    service_to_call:
-sequence:
-  service: !input service_to_call
-  entity_id: light.kitchen

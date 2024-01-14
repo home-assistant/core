@@ -1,8 +1,0 @@
-{
-  "domain": "pulseaudio_loopback",
-  "name": "PulseAudio Loopback",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/pulseaudio_loopback",
-  "iot_class": "local_polling",
-  "requirements": ["pulsectl==23.5.2"]
-}

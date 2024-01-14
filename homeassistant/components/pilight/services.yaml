@@ -1,7 +1,0 @@
-send:
-  fields:
-    protocol:
-      required: true
-      example: "lirc"
-      selector:
-        object:

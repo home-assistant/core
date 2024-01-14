@@ -1,3 +1,0 @@
-"""Lutron constants."""
-
-DOMAIN = "lutron"

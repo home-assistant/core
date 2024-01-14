@@ -1,3 +1,0 @@
-homeassistant:
-  # Load packages
-  packages: !include_dir_named integrations

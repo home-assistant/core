@@ -1,7 +1,0 @@
-{
-  "domain": "clickatell",
-  "name": "Clickatell",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/clickatell",
-  "iot_class": "cloud_push"
-}

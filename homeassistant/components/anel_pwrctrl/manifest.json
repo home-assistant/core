@@ -1,9 +1,0 @@
-{
-  "domain": "anel_pwrctrl",
-  "name": "Anel NET-PwrCtrl",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/anel_pwrctrl",
-  "iot_class": "local_polling",
-  "loggers": ["anel_pwrctrl"],
-  "requirements": ["anel-pwrctrl-homeassistant==0.0.1.dev2"]
-}

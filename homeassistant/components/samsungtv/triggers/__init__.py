@@ -1,1 +1,0 @@
-"""Samsung TV triggers."""

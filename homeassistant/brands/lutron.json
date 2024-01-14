@@ -1,5 +1,0 @@
-{
-  "domain": "lutron",
-  "name": "Lutron",
-  "integrations": ["lutron", "lutron_caseta", "homeworks"]
-}

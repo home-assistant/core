@@ -1,9 +1,0 @@
-{
-  "domain": "tikteck",
-  "name": "Tikteck",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/tikteck",
-  "iot_class": "local_polling",
-  "loggers": ["tikteck"],
-  "requirements": ["tikteck==0.4"]
-}

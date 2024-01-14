@@ -1,9 +1,0 @@
-{
-  "domain": "digital_ocean",
-  "name": "Digital Ocean",
-  "codeowners": ["@fabaff"],
-  "documentation": "https://www.home-assistant.io/integrations/digital_ocean",
-  "iot_class": "local_polling",
-  "loggers": ["digitalocean"],
-  "requirements": ["python-digitalocean==1.13.2"]
-}

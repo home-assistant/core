@@ -1,9 +1,0 @@
-{
-  "domain": "tmb",
-  "name": "Transports Metropolitans de Barcelona",
-  "codeowners": ["@alemuro"],
-  "documentation": "https://www.home-assistant.io/integrations/tmb",
-  "iot_class": "local_polling",
-  "loggers": ["tmb"],
-  "requirements": ["tmb==0.0.4"]
-}

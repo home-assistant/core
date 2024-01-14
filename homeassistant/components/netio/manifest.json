@@ -1,9 +1,0 @@
-{
-  "domain": "netio",
-  "name": "Netio",
-  "codeowners": [],
-  "dependencies": ["http"],
-  "documentation": "https://www.home-assistant.io/integrations/netio",
-  "iot_class": "local_polling",
-  "requirements": ["pynetio==0.1.9.1"]
-}

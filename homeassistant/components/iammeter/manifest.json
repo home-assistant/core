@@ -1,9 +1,0 @@
-{
-  "domain": "iammeter",
-  "name": "IamMeter",
-  "codeowners": ["@lewei50"],
-  "documentation": "https://www.home-assistant.io/integrations/iammeter",
-  "iot_class": "local_polling",
-  "loggers": ["iammeter"],
-  "requirements": ["iammeter==0.2.1"]
-}

@@ -1,9 +1,0 @@
-{
-  "domain": "gitter",
-  "name": "Gitter",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/gitter",
-  "iot_class": "cloud_polling",
-  "loggers": ["gitterpy"],
-  "requirements": ["gitterpy==0.1.7"]
-}

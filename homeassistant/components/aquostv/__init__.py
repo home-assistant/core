@@ -1,1 +1,0 @@
-"""The aquostv component."""

@@ -1,5 +1,0 @@
-{
-  "domain": "raspberry_pi",
-  "name": "Raspberry Pi",
-  "integrations": ["raspberry_pi", "rpi_camera", "rpi_power", "remote_rpi_gpio"]
-}

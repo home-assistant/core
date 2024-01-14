@@ -1,1 +1,0 @@
-"""The bitcoin component."""

@@ -1,9 +1,0 @@
-{
-  "domain": "opensensemap",
-  "name": "openSenseMap",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/opensensemap",
-  "iot_class": "cloud_polling",
-  "loggers": ["opensensemap_api"],
-  "requirements": ["opensensemap-api==0.2.0"]
-}

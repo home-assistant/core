@@ -1,9 +1,0 @@
-{
-  "domain": "mochad",
-  "name": "Mochad",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/mochad",
-  "iot_class": "local_polling",
-  "loggers": ["pbr", "pymochad"],
-  "requirements": ["pymochad==0.2.0"]
-}

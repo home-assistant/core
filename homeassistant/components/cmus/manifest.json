@@ -1,9 +1,0 @@
-{
-  "domain": "cmus",
-  "name": "cmus",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/cmus",
-  "iot_class": "local_polling",
-  "loggers": ["pbr", "pycmus"],
-  "requirements": ["pycmus==0.1.1"]
-}

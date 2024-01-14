@@ -1,7 +1,0 @@
-{
-  "domain": "proxy",
-  "name": "Camera Proxy",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/proxy",
-  "requirements": ["Pillow==10.1.0"]
-}

@@ -1,9 +1,0 @@
-{
-  "domain": "hikvision",
-  "name": "Hikvision",
-  "codeowners": ["@mezz64"],
-  "documentation": "https://www.home-assistant.io/integrations/hikvision",
-  "iot_class": "local_push",
-  "loggers": ["pyhik"],
-  "requirements": ["pyHik==0.3.2"]
-}

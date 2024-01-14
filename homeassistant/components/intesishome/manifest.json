@@ -1,9 +1,0 @@
-{
-  "domain": "intesishome",
-  "name": "IntesisHome",
-  "codeowners": ["@jnimmo"],
-  "documentation": "https://www.home-assistant.io/integrations/intesishome",
-  "iot_class": "cloud_push",
-  "loggers": ["pyintesishome"],
-  "requirements": ["pyintesishome==1.8.0"]
-}

@@ -1,5 +1,0 @@
-{
-  "domain": "lg",
-  "name": "LG",
-  "integrations": ["lg_netcast", "lg_soundbar", "webostv"]
-}

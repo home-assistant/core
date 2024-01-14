@@ -1,1 +1,0 @@
-"""webOS Smart TV triggers."""

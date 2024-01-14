@@ -1,9 +1,0 @@
-{
-  "domain": "microsoft",
-  "name": "Microsoft Text-to-Speech (TTS)",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/microsoft",
-  "iot_class": "cloud_push",
-  "loggers": ["pycsspeechtts"],
-  "requirements": ["pycsspeechtts==1.0.8"]
-}

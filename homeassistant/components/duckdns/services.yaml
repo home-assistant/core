@@ -1,7 +1,0 @@
-set_txt:
-  fields:
-    txt:
-      required: true
-      example: "This domain name is reserved for use in documentation"
-      selector:
-        text:
