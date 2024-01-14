@@ -1397,7 +1397,7 @@ class _TrackPointUTCTime:
     expected_fire_timestamp: float
     _cancel_callback: asyncio.TimerHandle | None = None
 
-    def __post_init__(self) -> None:
+    def start(self) -> None:
         """Initialize track job."""
         loop = self.hass.loop
         self._cancel_callback = loop.call_at(
@@ -1448,9 +1448,9 @@ def async_track_point_in_utc_time(
         if isinstance(action, HassJob)
         else HassJob(action, f"track point in utc time {utc_point_in_time}")
     )
-    return _TrackPointUTCTime(
-        hass, job, utc_point_in_time, expected_fire_timestamp
-    ).cancel
+    track = _TrackPointUTCTime(hass, job, utc_point_in_time, expected_fire_timestamp)
+    track.start()
+    return track.cancel
 
 
 track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_time)
@@ -1522,7 +1522,7 @@ class _TrackTimeInterval:
     _run_job: HassJob[[datetime], Coroutine[Any, Any, None] | None] | None = None
     _cancel_callback: CALLBACK_TYPE | None = None
 
-    def __post_init__(self) -> None:
+    def start(self) -> None:
         """Initialize track job."""
         hass = self.hass
         self._track_job = HassJob(
@@ -1582,9 +1582,9 @@ def async_track_time_interval(
     job_name = f"track time interval {seconds} {action}"
     if name:
         job_name = f"{name}: {job_name}"
-    return _TrackTimeInterval(
-        hass, seconds, job_name, action, cancel_on_shutdown
-    ).cancel
+    track = _TrackTimeInterval(hass, seconds, job_name, action, cancel_on_shutdown)
+    track.start()
+    return track.cancel
 
 
 track_time_interval = threaded_listener_factory(async_track_time_interval)
