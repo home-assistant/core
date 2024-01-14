@@ -1443,10 +1443,11 @@ def async_track_point_in_utc_time(
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
     expected_fire_timestamp = dt_util.utc_to_timestamp(utc_point_in_time)
-    if isinstance(action, HassJob):
-        job = action
-    else:
-        job = HassJob(action, f"track point in utc time {utc_point_in_time}")
+    job = (
+        action
+        if isinstance(action, HassJob)
+        else HassJob(action, f"track point in utc time {utc_point_in_time}")
+    )
     return _TrackPointUTCTime(
         hass, job, utc_point_in_time, expected_fire_timestamp
     ).cancel
