@@ -31,7 +31,7 @@
         "name": "Disk use {argument}"
       },
       "disk_use_percent": {
-        "name": "Disk use (percent) {argument}"
+        "name": "Disk usage {argument}"
       },
       "ipv4_address": {
         "name": "IPv4 address {argument}"
@@ -58,7 +58,7 @@
         "name": "Memory use"
       },
       "memory_use_percent": {
-        "name": "Memory use (percent)"
+        "name": "Memory usage"
       },
       "network_in": {
         "name": "Network in {argument}"
@@ -94,7 +94,7 @@
         "name": "Swap use"
       },
       "swap_use_percent": {
-        "name": "Swap use (percent)"
+        "name": "Swap usage"
       }
     }
   }
