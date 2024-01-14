@@ -43,7 +43,7 @@ from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonObjectType, load_json_object
 
-from .const import DOMAIN, FORMAT_HTML, FORMAT_TEXT, SERVICE_SEND_MESSAGE
+from .const import DOMAIN, FORMAT_HTML, FORMAT_TEXT, FORMAT_NOTICE, SERVICE_SEND_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ EVENT_MATRIX_COMMAND = "matrix_command"
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
-MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT]
+MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT, FORMAT_NOTICE]
 DEFAULT_MESSAGE_FORMAT = FORMAT_TEXT
 
 ATTR_FORMAT = "format"  # optional message format
@@ -501,7 +501,11 @@ class MatrixBot:
         self, message: str, target_rooms: list[RoomAnyID], data: dict | None
     ) -> None:
         """Send a message to the Matrix server."""
-        content = {"msgtype": "m.text", "body": message}
+        msgtype = "m.text"
+        if data is not None and data.get(ATTR_FORMAT) == FORMAT_NOTICE:
+            msgtype = "m.notice"
+
+        content = {"msgtype": msgtype, "body": message}
         if data is not None and data.get(ATTR_FORMAT) == FORMAT_HTML:
             content |= {"format": "org.matrix.custom.html", "formatted_body": message}
 
