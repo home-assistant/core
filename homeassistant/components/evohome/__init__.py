@@ -658,9 +658,9 @@ class EvoChild(EvoDevice):
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
-        if self._evo_broker.temps.get(self._evo_id) is not None:
+        if (temp := self._evo_broker.temps.get(self._evo_id)) is not None:
             # use high-precision temps if available
-            return self._evo_broker.temps[self._evo_id]
+            return temp
         return self._evo_device.temperature
 
     @property
