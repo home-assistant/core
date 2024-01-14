@@ -39,7 +39,7 @@ class LaMarzoccoEntity(CoordinatorEntity[LaMarzoccoUpdateCoordinator]):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = (
-            f"{self.coordinator.lm.serial_number}_{entity_description.key}"
+            f"{coordinator.lm.serial_number}_{entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.lm.serial_number)},
