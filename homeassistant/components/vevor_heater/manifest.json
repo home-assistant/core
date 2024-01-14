@@ -13,5 +13,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/vevor_heater",
   "iot_class": "local_polling",
-  "requirements": ["vevor-heater-ble==0.1.1"]
+  "requirements": ["vevor-heater-ble==0.1.3"]
 }
