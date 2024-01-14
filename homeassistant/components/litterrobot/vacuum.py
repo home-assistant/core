@@ -75,11 +75,7 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     """Litter-Robot "Vacuum" Cleaner."""
 
     _attr_supported_features = (
-        VacuumEntityFeature.START
-        | VacuumEntityFeature.STATE
-        | VacuumEntityFeature.STOP
-        | VacuumEntityFeature.TURN_OFF
-        | VacuumEntityFeature.TURN_ON
+        VacuumEntityFeature.START | VacuumEntityFeature.STATE | VacuumEntityFeature.STOP
     )
 
     @property
