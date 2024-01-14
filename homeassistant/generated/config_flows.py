@@ -587,6 +587,7 @@ FLOWS = {
         "steamist",
         "stookwijzer",
         "streamlabswater",
+        "strip_controller",
         "subaru",
         "suez_water",
         "sun",

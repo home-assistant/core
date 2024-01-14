@@ -1448,6 +1448,8 @@ build.json @home-assistant/supervisor
 /tests/components/stookwijzer/ @fwestenberg
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
 /tests/components/stream/ @hunterjm @uvjustin @allenporter
+/homeassistant/components/strip_controller/ @brunopk
+/tests/components/strip_controller/ @brunopk
 /homeassistant/components/stt/ @home-assistant/core
 /tests/components/stt/ @home-assistant/core
 /homeassistant/components/subaru/ @G-Two
