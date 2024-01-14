@@ -3,9 +3,8 @@ from datetime import timedelta
 import logging
 
 from aio_georss_gdacs import GdacsFeedManager
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -14,70 +13,21 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import (
+from .const import (  # noqa: F401
     CONF_CATEGORIES,
-    DEFAULT_RADIUS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     FEED,
     PLATFORMS,
-    VALID_CATEGORIES,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-                vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-                vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
-                    cv.ensure_list, [vol.In(VALID_CATEGORIES)]
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the GDACS component."""
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-    latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    scan_interval = conf[CONF_SCAN_INTERVAL]
-    categories = conf[CONF_CATEGORIES]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_LATITUDE: latitude,
-                CONF_LONGITUDE: longitude,
-                CONF_RADIUS: conf[CONF_RADIUS],
-                CONF_SCAN_INTERVAL: scan_interval,
-                CONF_CATEGORIES: categories,
-            },
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
