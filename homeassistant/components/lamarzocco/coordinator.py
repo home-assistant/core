@@ -26,15 +26,10 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: ConfigEntry
 
-    @property
-    def lm(self) -> LaMarzoccoClient:
-        """Return the LaMarzoccoClient instance."""
-        return self._lm
-
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-        self._lm = LaMarzoccoClient(
+        self.lm = LaMarzoccoClient(
             callback_websocket_notify=self.async_update_listeners,
         )
         self._use_bluetooth = False
