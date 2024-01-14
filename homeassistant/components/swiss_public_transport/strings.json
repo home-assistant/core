@@ -24,7 +24,7 @@
   },
   "entity": {
     "sensor": {
-      "departure": {
+      "departure0": {
         "name": "Departure"
       },
       "departure1": {
