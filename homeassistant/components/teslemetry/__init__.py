@@ -1,10 +1,10 @@
 """Teslemetry integration."""
+import asyncio
 import logging
 from typing import Final
 
 from tesla_fleet_api import Teslemetry
 from tesla_fleet_api.exceptions import InvalidToken, TeslaFleetError
-from tesla_fleet_api.vehiclespecific import VehicleSpecific
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -50,15 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             continue
         vin = product["vin"]
 
-        api = VehicleSpecific(teslemetry.vehicle, vin)
+        api = teslemetry.vehicle.specific(vin)
         coordinator = TeslemetryVehicleDataCoordinator(hass, api)
-        await coordinator.async_config_entry_first_refresh()
         data.append(TeslemetryVehicleData(api=api, coordinator=coordinator))
 
-    # Do all coordinator first refreshes simultaneously
-    # await asyncio.gather(
-    #    *(vehicle.coordinator.async_config_entry_first_refresh() for vehicle in data)
-    # )
+    # Do all coordinator first refresh simultaneously
+    await asyncio.gather(
+        *(vehicle.coordinator.async_config_entry_first_refresh() for vehicle in data)
+    )
 
     # Setup Platforms
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data

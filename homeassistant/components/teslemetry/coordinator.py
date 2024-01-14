@@ -3,11 +3,14 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.exceptions import TeslaFleetError, VehicleOffline
 from tesla_fleet_api.vehiclespecific import VehicleSpecific
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import TeslemetryState
 
 SYNC_INTERVAL = 60
 
@@ -27,18 +30,26 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
 
+    async def async_config_entry_first_refresh(self) -> None:
+        """Perform first refresh."""
+        try:
+            response = await self.api.wake_up()
+            if response["response"]["state"] != TeslemetryState.ONLINE:
+                raise ConfigEntryNotReady("Vehicle is not online")
+        except TeslaFleetError as e:
+            raise ConfigEntryNotReady from e
+        await super().async_config_entry_first_refresh()
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
         # The first update cannot fail, so ensure the vehicle is awake
-        if not self.data:
-            try:
-                await self.api.wake_up()
-            except TeslaFleetError as e:
-                raise UpdateFailed from e
         try:
             data = await self.api.vehicle_data()
+        except VehicleOffline:
+            self.data["state"] = TeslemetryState.OFFLINE
+            return self.data
         except TeslaFleetError as e:
-            raise UpdateFailed from e
+            raise UpdateFailed(e.message) from e
 
         return self._flatten(data["response"])
 

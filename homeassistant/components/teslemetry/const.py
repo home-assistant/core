@@ -13,6 +13,14 @@ MODELS = {
 }
 
 
+class TeslemetryState(StrEnum):
+    """Teslemetry Vehicle States."""
+
+    ONLINE = "online"
+    ASLEEP = "asleep"
+    OFFLINE = "offline"
+
+
 class TeslemetryClimateSide(StrEnum):
     """Teslemetry Climate Keeper Modes."""
 

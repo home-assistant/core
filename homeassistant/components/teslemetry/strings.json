@@ -18,7 +18,7 @@
   "entity": {
     "climate": {
       "driver_temp": {
-        "name": "Driver Climate",
+        "name": "[%key:component::climate::title%]",
         "state_attributes": {
           "preset_mode": {
             "state": {
@@ -26,19 +26,6 @@
               "keep": "Keep mode",
               "dog": "Dog mode",
               "camp": "Camp mode"
-            }
-          }
-        }
-      },
-      "passenger_temp": {
-        "name": "Passenger Climate",
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "off": "[%key:component::teslemetry::entity::climate::driver_temp::state_attributes::preset_mode::state::off%]",
-              "keep": "[%key:component::teslemetry::entity::climate::driver_temp::state_attributes::preset_mode::state::keep%]",
-              "dog": "[%key:component::teslemetry::entity::climate::driver_temp::state_attributes::preset_mode::state::dog%]",
-              "camp": "[%key:component::teslemetry::entity::climate::driver_temp::state_attributes::preset_mode::state::camp%]"
             }
           }
         }
