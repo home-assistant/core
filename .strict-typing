@@ -362,6 +362,7 @@ homeassistant.components.sensor.*
 homeassistant.components.senz.*
 homeassistant.components.sfr_box.*
 homeassistant.components.shelly.*
+homeassistant.components.shopping_list.*
 homeassistant.components.simplepush.*
 homeassistant.components.simplisafe.*
 homeassistant.components.siren.*
@@ -406,11 +407,13 @@ homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*
 homeassistant.components.time.*
 homeassistant.components.time_date.*
+homeassistant.components.timer.*
 homeassistant.components.tod.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*
 homeassistant.components.tplink.*
 homeassistant.components.tplink_omada.*
+homeassistant.components.trace.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
 homeassistant.components.trafikverket_camera.*
