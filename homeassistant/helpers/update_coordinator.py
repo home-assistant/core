@@ -249,7 +249,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             next_refresh, hass.async_run_hass_job, self._job
         ).cancel
 
-    async def _handle_refresh_interval(self) -> None:
+    async def _handle_refresh_interval(self, _now: datetime | None = None) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
         await self._async_refresh(log_failures=True, scheduled=True)
