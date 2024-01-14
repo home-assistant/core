@@ -10,7 +10,7 @@ import functools as ft
 import logging
 from random import randint
 import time
-from typing import Any, Concatenate, ParamSpec, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypedDict, TypeVar
 
 import attr
 
@@ -1389,6 +1389,43 @@ def async_track_point_in_time(
 track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 
 
+@dataclass(slots=True)
+class _TrackPointUTCTime:
+    hass: HomeAssistant
+    job: HassJob[[datetime], Coroutine[Any, Any, None] | None]
+    utc_point_in_time: datetime
+    expected_fire_timestamp: float
+    _cancel_callback: asyncio.TimerHandle | None = None
+
+    @callback
+    def _run_action(self) -> None:
+        """Call the action."""
+        # Depending on the available clock support (including timer hardware
+        # and the OS kernel) it can happen that we fire a little bit too early
+        # as measured by utcnow(). That is bad when callbacks have assumptions
+        # about the current time. Thus, we rearm the timer for the remaining
+        # time.
+        if (delta := (self.expected_fire_timestamp - time_tracker_timestamp())) > 0:
+            _LOGGER.debug("Called %f seconds too early, rearming", delta)
+            self.reschedule(delta)
+            return
+
+        self.hass.async_run_hass_job(self.job, self.utc_point_in_time)
+
+    @callback
+    def reschedule(self, delay: float) -> None:
+        """Reschedule the call_at."""
+        loop = self.hass.loop
+        self._cancel_callback = loop.call_at(loop.time() + delay, self._run_action)
+
+    @callback
+    def cancel(self) -> None:
+        """Cancel the call_at."""
+        if TYPE_CHECKING:
+            assert self._cancel_callback is not None
+        self._cancel_callback.cancel()
+
+
 @callback
 @bind_hass
 def async_track_point_in_utc_time(
@@ -1404,44 +1441,17 @@ def async_track_point_in_utc_time(
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
     expected_fire_timestamp = dt_util.utc_to_timestamp(utc_point_in_time)
-
-    # Since this is called once, we accept a HassJob so we can avoid
-    # having to figure out how to call the action every time its called.
-    cancel_callback: asyncio.TimerHandle | None = None
-    loop = hass.loop
-
-    @callback
-    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
-        """Call the action."""
-        nonlocal cancel_callback
-        # Depending on the available clock support (including timer hardware
-        # and the OS kernel) it can happen that we fire a little bit too early
-        # as measured by utcnow(). That is bad when callbacks have assumptions
-        # about the current time. Thus, we rearm the timer for the remaining
-        # time.
-        if (delta := (expected_fire_timestamp - time_tracker_timestamp())) > 0:
-            _LOGGER.debug("Called %f seconds too early, rearming", delta)
-
-            cancel_callback = loop.call_at(loop.time() + delta, run_action, job)
-            return
-
-        hass.async_run_hass_job(job, utc_point_in_time)
-
-    job = (
-        action
-        if isinstance(action, HassJob)
-        else HassJob(action, f"track point in utc time {utc_point_in_time}")
-    )
-    delta = expected_fire_timestamp - time.time()
-    cancel_callback = loop.call_at(loop.time() + delta, run_action, job)
-
-    @callback
-    def unsub_point_in_time_listener() -> None:
-        """Cancel the call_at."""
-        assert cancel_callback is not None
-        cancel_callback.cancel()
-
-    return unsub_point_in_time_listener
+    if type(action) is HassJob:
+        if TYPE_CHECKING:
+            assert isinstance(action, HassJob)
+        job = action
+    else:
+        if TYPE_CHECKING:
+            assert not isinstance(action, HassJob)
+        job = HassJob(action, f"track point in utc time {utc_point_in_time}")
+    track = _TrackPointUTCTime(hass, job, utc_point_in_time, expected_fire_timestamp)
+    track.reschedule(expected_fire_timestamp - time.time())
+    return track.cancel
 
 
 track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_time)
