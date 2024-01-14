@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.lamarzocco.const import CONF_MACHINE, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import USER_INPUT
+from . import USER_INPUT, async_init_integration
 
 from tests.common import (
     MockConfigEntry,
@@ -34,10 +34,7 @@ async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lamarzocco: MagicMock
 ) -> MockConfigEntry:
     """Set up the LaMetric integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     return mock_config_entry
 
