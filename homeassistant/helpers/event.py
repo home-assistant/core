@@ -1555,8 +1555,11 @@ class _TrackTimeInterval:
         """Schedule the call_at."""
         if TYPE_CHECKING:
             assert self._track_job is not None
-        self._cancel_callback = async_call_later(
-            self.hass, self.seconds, self._track_job
+        hass = self.hass
+        self._cancel_callback = async_call_at(
+            hass,
+            self._track_job,
+            hass.loop.time() + self.seconds,
         )
 
     @callback
