@@ -27,11 +27,11 @@
       "departure": {
         "name": "Departure"
       },
-      "next_departure": {
-        "name": "Next Departure"
+      "departure1": {
+        "name": "Departure +1"
       },
-      "next_on_departure": {
-        "name": "Next On Departure"
+      "departure2": {
+        "name": "Departure +2"
       }
     }
   },

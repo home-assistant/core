@@ -22,13 +22,6 @@ class DataConnection(TypedDict):
     """A connection data class."""
 
     departure: datetime | None
-    next_departure: datetime | None
-    next_on_departure: datetime | None
-
-
-class DataConnectionAttributes(TypedDict):
-    """A connection data class for attributes."""
-
     next_departure: str | None
     next_on_departure: str | None
     duration: str
@@ -41,15 +34,8 @@ class DataConnectionAttributes(TypedDict):
     delay: int
 
 
-class DataConnectionTuple(TypedDict):
-    """A connection data class tuple."""
-
-    native: DataConnection
-    attributes: DataConnectionAttributes
-
-
 class SwissPublicTransportDataUpdateCoordinator(
-    DataUpdateCoordinator[DataConnectionTuple]
+    DataUpdateCoordinator[list[DataConnection]]
 ):
     """A SwissPublicTransport Data Update Coordinator."""
 
@@ -65,7 +51,7 @@ class SwissPublicTransportDataUpdateCoordinator(
         )
         self._opendata = opendata
 
-    async def _async_update_data(self) -> DataConnectionTuple:
+    async def _async_update_data(self) -> list[DataConnection]:
         try:
             await self._opendata.async_get_data()
         except OpendataTransportError as e:
@@ -74,47 +60,51 @@ class SwissPublicTransportDataUpdateCoordinator(
             )
             raise UpdateFailed from e
 
-        departure_time = (
-            dt_util.parse_datetime(self._opendata.connections[0]["departure"])
-            if self._opendata.connections[0] is not None
-            else None
-        )
-        next_departure_time = (
-            dt_util.parse_datetime(self._opendata.connections[1]["departure"])
-            if self._opendata.connections[1] is not None
-            else None
-        )
-        next_on_departure_time = (
-            dt_util.parse_datetime(self._opendata.connections[2]["departure"])
-            if self._opendata.connections[2] is not None
-            else None
-        )
+        data_connections = []
 
-        if departure_time:
-            remaining_time = departure_time - dt_util.as_local(dt_util.utcnow())
-        else:
-            remaining_time = None
+        for i in range(3):
+            departure_time = (
+                dt_util.parse_datetime(self._opendata.connections[i]["departure"])
+                if len(self._opendata.connections) > i
+                and self._opendata.connections[i] is not None
+                else None
+            )
+            next_departure_time = (
+                dt_util.parse_datetime(self._opendata.connections[i + 1]["departure"])
+                if len(self._opendata.connections) > i + 1
+                and self._opendata.connections[i + 1] is not None
+                else None
+            )
+            next_on_departure_time = (
+                dt_util.parse_datetime(self._opendata.connections[i + 2]["departure"])
+                if len(self._opendata.connections) > i + 2
+                and self._opendata.connections[i + 2] is not None
+                else None
+            )
 
-        return {
-            "native": DataConnection(
-                departure=departure_time,
-                next_departure=next_departure_time,
-                next_on_departure=next_on_departure_time,
-            ),
-            "attributes": DataConnectionAttributes(
-                next_departure=next_departure_time.isoformat()
-                if next_departure_time is not None
-                else None,
-                next_on_departure=next_on_departure_time.isoformat()
-                if next_on_departure_time is not None
-                else None,
-                train_number=self._opendata.connections[0]["number"],
-                platform=self._opendata.connections[0]["platform"],
-                transfers=self._opendata.connections[0]["transfers"],
-                duration=self._opendata.connections[0]["duration"],
-                start=self._opendata.from_name,
-                destination=self._opendata.to_name,
-                remaining_time=f"{remaining_time}",
-                delay=self._opendata.connections[0]["delay"],
-            ),
-        }
+            if departure_time:
+                remaining_time = departure_time - dt_util.as_local(dt_util.utcnow())
+            else:
+                remaining_time = None
+
+            data_connections.append(
+                DataConnection(
+                    departure=departure_time,
+                    next_departure=next_departure_time.isoformat()
+                    if next_departure_time is not None
+                    else None,
+                    next_on_departure=next_on_departure_time.isoformat()
+                    if next_on_departure_time is not None
+                    else None,
+                    train_number=self._opendata.connections[i]["number"],
+                    platform=self._opendata.connections[i]["platform"],
+                    transfers=self._opendata.connections[i]["transfers"],
+                    duration=self._opendata.connections[i]["duration"],
+                    start=self._opendata.from_name,
+                    destination=self._opendata.to_name,
+                    remaining_time=f"{remaining_time}",
+                    delay=self._opendata.connections[i]["delay"],
+                ),
+            )
+
+        return data_connections
