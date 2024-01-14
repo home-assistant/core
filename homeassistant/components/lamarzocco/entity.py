@@ -41,11 +41,12 @@ class LaMarzoccoEntity(CoordinatorEntity[LaMarzoccoUpdateCoordinator]):
         self._attr_unique_id = (
             f"{coordinator.lm.serial_number}_{entity_description.key}"
         )
+        lm = coordinator.lm
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.lm.serial_number)},
-            name=self.coordinator.lm.machine_name,
+            identifiers={(DOMAIN, lm.serial_number)},
+            name=lm.machine_name,
             manufacturer="La Marzocco",
-            model=self.coordinator.lm.true_model_name,
-            serial_number=self.coordinator.lm.serial_number,
-            sw_version=self.coordinator.lm.firmware_version,
+            model=lm.true_model_name,
+            serial_number=lm.serial_number,
+            sw_version=lm.firmware_version,
         )
