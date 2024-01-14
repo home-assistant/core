@@ -1686,6 +1686,62 @@ time_tracker_utcnow = dt_util.utcnow
 time_tracker_timestamp = time.time
 
 
+@dataclass(slots=True)
+class _TrackUTCTimeChange:
+    hass: HomeAssistant
+    time_match_expression: tuple[list[int], list[int], list[int]]
+    microsecond: int
+    local: bool
+    job: HassJob[[datetime], Coroutine[Any, Any, None] | None]
+    listener_job_name: str
+    _pattern_time_change_listener_job: HassJob[[datetime], None] | None = None
+    _cancel_callback: CALLBACK_TYPE | None = None
+
+    def async_attach(self) -> None:
+        """Initialize track job."""
+        self._pattern_time_change_listener_job = HassJob(
+            self._pattern_time_change_listener,
+            self.listener_job_name,
+            job_type=HassJobType.Callback,
+        )
+        self._cancel_callback = async_track_point_in_utc_time(
+            self.hass,
+            self._pattern_time_change_listener_job,
+            self._calculate_next(dt_util.utcnow()),
+        )
+
+    def _calculate_next(self, utc_now: datetime) -> datetime:
+        """Calculate and set the next time the trigger should fire."""
+        localized_now = dt_util.as_local(utc_now) if self.local else utc_now
+        return dt_util.find_next_time_expression_time(
+            localized_now, *self.time_match_expression
+        ).replace(microsecond=self.microsecond)
+
+    @callback
+    def _pattern_time_change_listener(self, _: datetime) -> None:
+        """Listen for matching time_changed events."""
+        hass = self.hass
+        # Fetch time again because we want the actual time, not the
+        # time when the timer was scheduled
+        utc_now = time_tracker_utcnow()
+        localized_now = dt_util.as_local(utc_now) if self.local else utc_now
+        hass.async_run_hass_job(self.job, localized_now)
+        if TYPE_CHECKING:
+            assert self._pattern_time_change_listener_job is not None
+        self._cancel_callback = async_track_point_in_utc_time(
+            hass,
+            self._pattern_time_change_listener_job,
+            self._calculate_next(utc_now + timedelta(seconds=1)),
+        )
+
+    @callback
+    def async_cancel(self) -> None:
+        """Cancel the call_at."""
+        if TYPE_CHECKING:
+            assert self._cancel_callback is not None
+        self._cancel_callback()
+
+
 @callback
 @bind_hass
 def async_track_utc_time_change(
@@ -1718,49 +1774,17 @@ def async_track_utc_time_change(
     # since it can create a thundering herd problem
     # https://github.com/home-assistant/core/issues/82231
     microsecond = randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX)
-
-    def calculate_next(now: datetime) -> datetime:
-        """Calculate and set the next time the trigger should fire."""
-        localized_now = dt_util.as_local(now) if local else now
-        return dt_util.find_next_time_expression_time(
-            localized_now, matching_seconds, matching_minutes, matching_hours
-        ).replace(microsecond=microsecond)
-
-    time_listener: CALLBACK_TYPE | None = None
-    pattern_time_change_listener_job: HassJob[[datetime], Any] | None = None
-
-    @callback
-    def pattern_time_change_listener(_: datetime) -> None:
-        """Listen for matching time_changed events."""
-        nonlocal time_listener
-        nonlocal pattern_time_change_listener_job
-
-        now = time_tracker_utcnow()
-        hass.async_run_hass_job(job, dt_util.as_local(now) if local else now)
-        assert pattern_time_change_listener_job is not None
-
-        time_listener = async_track_point_in_utc_time(
-            hass,
-            pattern_time_change_listener_job,
-            calculate_next(now + timedelta(seconds=1)),
-        )
-
-    pattern_time_change_listener_job = HassJob(
-        pattern_time_change_listener,
-        f"time change listener {hour}:{minute}:{second} {action}",
-        job_type=HassJobType.Callback,
+    listener_job_name = f"time change listener {hour}:{minute}:{second} {action}"
+    track = _TrackUTCTimeChange(
+        hass,
+        (matching_seconds, matching_minutes, matching_hours),
+        microsecond,
+        local,
+        job,
+        listener_job_name,
     )
-    time_listener = async_track_point_in_utc_time(
-        hass, pattern_time_change_listener_job, calculate_next(dt_util.utcnow())
-    )
-
-    @callback
-    def unsub_pattern_time_change_listener() -> None:
-        """Cancel the time listener."""
-        assert time_listener is not None
-        time_listener()
-
-    return unsub_pattern_time_change_listener
+    track.async_attach()
+    return track.async_cancel
 
 
 track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
