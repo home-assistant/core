@@ -358,30 +358,39 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
         VERSION = 5
         data = None
         start_task_two = False
-        progress_task: asyncio.Task[None] | None = None
+        task_one: asyncio.Task[None] | None = None
+        task_two: asyncio.Task[None] | None = None
 
         async def async_step_init(self, user_input=None):
-            async def long_running_task_one() -> None:
+            async def long_running_job_one() -> None:
                 await task_one_evt.wait()
-                self.start_task_two = True
 
-            async def long_running_task_two() -> None:
+            async def long_running_job_two() -> None:
                 await task_two_evt.wait()
                 self.data = {"title": "Hello"}
 
-            if not task_one_evt.is_set():
+            uncompleted_task: asyncio.Task[None] | None = None
+            if not self.task_one:
+                self.task_one = hass.async_create_task(long_running_job_one())
+
+            progress_action = None
+            if not self.task_one.done():
                 progress_action = "task_one"
-                if not self.progress_task:
-                    self.progress_task = hass.async_create_task(long_running_task_one())
-            elif not task_two_evt.is_set():
-                progress_action = "task_two"
-                if self.start_task_two:
-                    self.progress_task = hass.async_create_task(long_running_task_two())
-                    self.start_task_two = False
-            if not task_one_evt.is_set() or not task_two_evt.is_set():
+                uncompleted_task = self.task_one
+
+            if not uncompleted_task:
+                if not self.task_two:
+                    self.task_two = hass.async_create_task(long_running_job_two())
+
+                if not self.task_two.done():
+                    progress_action = "task_two"
+                    uncompleted_task = self.task_two
+
+            if uncompleted_task:
+                assert progress_action
                 return self.async_show_progress(
                     progress_action=progress_action,
-                    progress_task=self.progress_task,
+                    progress_task=uncompleted_task,
                 )
 
             return self.async_show_progress_done(next_step_id="finish")
