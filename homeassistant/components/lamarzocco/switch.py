@@ -3,8 +3,6 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import LaMarzoccoModel
-
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -45,34 +43,6 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         is_on_fn=lambda coordinator: coordinator.lm.current_status["global_auto"]
         == "Enabled",
         entity_category=EntityCategory.CONFIG,
-    ),
-    LaMarzoccoSwitchEntityDescription(
-        key="prebrew",
-        translation_key="prebrew",
-        icon="mdi:water",
-        control_fn=lambda coordinator, state: coordinator.lm.set_prebrew(state),
-        is_on_fn=lambda coordinator: coordinator.lm.current_status["enable_prebrewing"],
-        entity_category=EntityCategory.CONFIG,
-        supported_models=(
-            LaMarzoccoModel.GS3_AV,
-            LaMarzoccoModel.LINEA_MINI,
-            LaMarzoccoModel.LINEA_MICRA,
-        ),
-    ),
-    LaMarzoccoSwitchEntityDescription(
-        key="preinfusion",
-        translation_key="preinfusion",
-        icon="mdi:water",
-        control_fn=lambda coordinator, state: coordinator.lm.set_preinfusion(state),
-        is_on_fn=lambda coordinator: coordinator.lm.current_status[
-            "enable_preinfusion"
-        ],
-        entity_category=EntityCategory.CONFIG,
-        supported_models=(
-            LaMarzoccoModel.GS3_AV,
-            LaMarzoccoModel.LINEA_MINI,
-            LaMarzoccoModel.LINEA_MICRA,
-        ),
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",

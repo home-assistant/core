@@ -42,12 +42,6 @@
       "auto_on_off": {
         "name": "Auto on/off"
       },
-      "prebrew": {
-        "name": "Prebrew"
-      },
-      "preinfusion": {
-        "name": "Preinfusion"
-      },
       "steam_boiler": {
         "name": "Steam boiler"
       }
