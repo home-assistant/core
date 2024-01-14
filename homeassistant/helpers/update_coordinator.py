@@ -239,11 +239,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         # We use event.async_call_at because DataUpdateCoordinator does
         # not need an exact update interval.
-        now = self.hass.loop.time()
+        hass = self.hass
+        loop = hass.loop
 
-        next_refresh = int(now) + self._microsecond + self._update_interval_seconds
-        self._unsub_refresh = self.hass.loop.call_at(
-            next_refresh, self.hass.async_run_hass_job, self._job
+        next_refresh = (
+            int(loop.time()) + self._microsecond + self._update_interval_seconds
+        )
+        self._unsub_refresh = loop.call_at(
+            next_refresh, hass.async_run_hass_job, self._job
         ).cancel
 
     async def _handle_refresh_interval(self) -> None:
