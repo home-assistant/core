@@ -1436,7 +1436,7 @@ class State:
         self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
 
-    @property
+    @cached_property
     def name(self) -> str:
         """Name of this state."""
         return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
