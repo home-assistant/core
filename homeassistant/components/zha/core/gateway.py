@@ -327,7 +327,7 @@ class ZHAGateway:
             )
 
             # Make sure that we always leave slots for non-startup requests
-            max_poll_concurrency = min(1, self.radio_concurrency - 4)
+            max_poll_concurrency = max(1, self.radio_concurrency - 4)
 
             await gather_with_limited_concurrency(
                 max_poll_concurrency,
