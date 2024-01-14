@@ -76,6 +76,9 @@ FLOW_NOT_COMPLETE_STEPS = {
 }
 
 STEP_ID_OPTIONAL_STEPS = {
+    FlowResultType.EXTERNAL_STEP,
+    FlowResultType.FORM,
+    FlowResultType.MENU,
     FlowResultType.SHOW_PROGRESS,
 }
 
