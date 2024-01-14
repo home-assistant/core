@@ -1689,13 +1689,11 @@ time_tracker_timestamp = time.time
 @dataclass(slots=True)
 class _TrackUTCTimeChange:
     hass: HomeAssistant
-    matching_hours: list[int]
-    matching_minutes: list[int]
-    matching_seconds: list[int]
+    time_match_expression: tuple[list[int], list[int], list[int]]
     microsecond: int
     local: bool
     job: HassJob[[datetime], Coroutine[Any, Any, None] | None]
-    job_name: str
+    listener_job_name: str
     _pattern_time_change_listener_job: HassJob[[datetime], None] | None = None
     _cancel_callback: CALLBACK_TYPE | None = None
 
@@ -1703,7 +1701,7 @@ class _TrackUTCTimeChange:
         """Initialize track job."""
         self._pattern_time_change_listener_job = HassJob(
             self._pattern_time_change_listener,
-            self.job_name,
+            self.listener_job_name,
             job_type=HassJobType.Callback,
         )
         self._cancel_callback = async_track_point_in_utc_time(
@@ -1716,10 +1714,7 @@ class _TrackUTCTimeChange:
         """Calculate and set the next time the trigger should fire."""
         localized_now = dt_util.as_local(utc_now) if self.local else utc_now
         return dt_util.find_next_time_expression_time(
-            localized_now,
-            self.matching_seconds,
-            self.matching_minutes,
-            self.matching_hours,
+            localized_now, *self.time_match_expression
         ).replace(microsecond=self.microsecond)
 
     @callback
@@ -1776,16 +1771,14 @@ def async_track_utc_time_change(
     # since it can create a thundering herd problem
     # https://github.com/home-assistant/core/issues/82231
     microsecond = randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX)
-    job_name = f"time change listener {hour}:{minute}:{second} {action}"
+    listener_job_name = f"time change listener {hour}:{minute}:{second} {action}"
     track = _TrackUTCTimeChange(
         hass,
-        matching_hours,
-        matching_minutes,
-        matching_seconds,
+        (matching_seconds, matching_minutes, matching_hours),
         microsecond,
         local,
         job,
-        job_name,
+        listener_job_name,
     )
     track.async_attach()
     return track.async_cancel
