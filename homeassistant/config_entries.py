@@ -1041,7 +1041,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> None:
         """After a flow is initialised trigger new flow notifications."""
-        source = flow.context["source"]
+        source = flow.init_step
 
         # Create notification.
         if source in DISCOVERY_SOURCES:

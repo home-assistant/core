@@ -1718,9 +1718,12 @@ class _TrackUTCTimeChange:
         ).replace(microsecond=self.microsecond)
 
     @callback
-    def _pattern_time_change_listener(self, utc_now: datetime) -> None:
+    def _pattern_time_change_listener(self, _: datetime) -> None:
         """Listen for matching time_changed events."""
         hass = self.hass
+        # Fetch time again because we want the actual time, not the
+        # time when the timer was scheduled
+        utc_now = time_tracker_utcnow()
         localized_now = dt_util.as_local(utc_now) if self.local else utc_now
         hass.async_run_hass_job(self.job, localized_now)
         if TYPE_CHECKING:
