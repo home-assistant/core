@@ -38,7 +38,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixin
 from .const import (
     DOMAIN,
     VICARE_API,
@@ -48,6 +47,7 @@ from .const import (
     VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
 )
 from .entity import ViCareEntity
+from .types import ViCareRequiredKeysMixin
 from .utils import get_burners, get_circuits, get_compressors, is_supported
 
 _LOGGER = logging.getLogger(__name__)

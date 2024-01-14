@@ -7,7 +7,7 @@ from PyViCare.PyViCareHeatingDevice import (
 )
 from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
-from . import ViCareRequiredKeysMixin
+from .types import ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
