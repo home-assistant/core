@@ -75,6 +75,16 @@ def validate_url(
             auth = HTTPDigestAuth(username, password)
         else:
             auth = HTTPBasicAuth(username, password)
+    elif username:
+        if authentication == HTTP_DIGEST_AUTHENTICATION:
+            auth = HTTPDigestAuth(username, None)
+        else:
+            auth = HTTPBasicAuth(username, None)
+    elif password:
+        if authentication == HTTP_DIGEST_AUTHENTICATION:
+            auth = HTTPDigestAuth(None, password)
+        else:
+            auth = HTTPBasicAuth(None, password)
 
     response = requests.get(
         url,
