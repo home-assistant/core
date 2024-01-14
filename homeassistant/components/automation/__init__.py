@@ -721,7 +721,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._is_enabled = True
 
         # HomeAssistant is starting up
-        if self.hass.state != CoreState.not_running:
+        if self.hass.state is not CoreState.not_running:
             self._async_detach_triggers = await self._async_attach_triggers(False)
             self.async_write_ha_state()
             return
