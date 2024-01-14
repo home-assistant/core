@@ -755,7 +755,11 @@ def _getloadavg() -> tuple[float, float, float]:
 
 def _read_cpu_temperature() -> float | None:
     """Attempt to read CPU / processor temperature."""
-    temps = psutil.sensors_temperatures()
+    try:
+        temps = psutil.sensors_temperatures()
+    except AttributeError:
+        # Linux, macOS
+        return None
 
     for name, entries in temps.items():
         for i, entry in enumerate(entries, start=1):

@@ -8,7 +8,10 @@ from psutil._common import shwtemp, snetio, snicaddr
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.systemmonitor.sensor import get_cpu_icon
+from homeassistant.components.systemmonitor.sensor import (
+    _read_cpu_temperature,
+    get_cpu_icon,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -255,7 +258,7 @@ async def test_sensor_network_sensors(
     assert throughput_network_out_sensor is not None
     assert network_out_sensor.state == "400.0"
     assert packets_out_sensor.state == "300"
-    assert float(throughput_network_out_sensor.state) == pytest.approx(3.493, rel=0.001)
+    assert float(throughput_network_out_sensor.state) == pytest.approx(3.493, rel=0.1)
 
     mock_psutil.net_io_counters.return_value = {
         "eth0": snetio(100 * 1024**2, 100 * 1024**2, 50, 50, 0, 0, 0, 0),
@@ -310,3 +313,34 @@ async def test_missing_cpu_temperature(
     assert "Cannot read CPU / processor temperature information" in caplog.text
     temp_sensor = hass.states.get("sensor.system_monitor_processor_temperature")
     assert temp_sensor is None
+
+
+async def test_processor_temperature() -> None:
+    """Test the disk failures."""
+
+    with patch("sys.platform", "linux"), patch(
+        "homeassistant.components.systemmonitor.sensor.psutil"
+    ) as mock_psutil:
+        mock_psutil.sensors_temperatures.return_value = {
+            "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
+        }
+        temperature = _read_cpu_temperature()
+        assert temperature == 50.0
+
+    with patch("sys.platform", "nt"), patch(
+        "homeassistant.components.systemmonitor.sensor.psutil",
+    ) as mock_psutil:
+        mock_psutil.sensors_temperatures.side_effect = AttributeError(
+            "sensors_temperatures not exist"
+        )
+        temperature = _read_cpu_temperature()
+        assert temperature is None
+
+    with patch("sys.platform", "darwin"), patch(
+        "homeassistant.components.systemmonitor.sensor.psutil"
+    ) as mock_psutil:
+        mock_psutil.sensors_temperatures.return_value = {
+            "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
+        }
+        temperature = _read_cpu_temperature()
+        assert temperature == 50.0

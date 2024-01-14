@@ -51,7 +51,6 @@ async def test_disk_util(
     mock_os: Mock,
     mock_util: Mock,
     mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the disk failures."""
 
