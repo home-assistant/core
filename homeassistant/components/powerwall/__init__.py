@@ -203,7 +203,8 @@ async def async_migrate_entity_unique_ids(
     for ent_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
         current_unique_id = ent_entry.unique_id
         if current_unique_id.startswith(old_base_unique_id):
-            new_unique_id = f"{new_base_unique_id}{current_unique_id.removeprefix(old_base_unique_id)}"
+            unique_id_postfix = current_unique_id.removeprefix(old_base_unique_id)
+            new_unique_id = f"{new_base_unique_id}{unique_id_postfix}"
             ent_reg.async_update_entity(
                 ent_entry.entity_id, new_unique_id=new_unique_id
             )
