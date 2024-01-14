@@ -946,7 +946,7 @@ life360==6.0.1
 linear-garage-door==0.2.7
 
 # homeassistant.components.lamarzocco
-lmcloud==0.4.28
+lmcloud==0.4.30
 
 # homeassistant.components.logi_circle
 logi-circle==0.2.3
