@@ -162,8 +162,8 @@ async def test_block_restored_sleeping_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "20.4"
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
