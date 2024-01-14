@@ -46,6 +46,7 @@ class NetatmoFan(NetatmoBaseEntity, FanEntity):
     """Representation of a Netatmo fan."""
 
     _attr_preset_modes = ["slow", "fast"]
+    _attr_supported_features = FanEntityFeature.PRESET_MODE
 
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize of Netatmo fan."""
@@ -72,13 +73,6 @@ class NetatmoFan(NetatmoBaseEntity, FanEntity):
         )
 
         self._attr_unique_id = f"{self._id}-{self._model}"
-
-    @property
-    def supported_features(self) -> FanEntityFeature:
-        """Flag supported features."""
-        flags = FanEntityFeature.PRESET_MODE
-
-        return flags
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
