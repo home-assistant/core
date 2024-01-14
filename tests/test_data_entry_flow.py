@@ -373,6 +373,7 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
             if not self.task_one:
                 self.task_one = hass.async_create_task(long_running_job_one())
 
+            progress_action = None
             if not self.task_one.done():
                 progress_action = "task_one"
                 uncompleted_task = self.task_one
@@ -386,6 +387,7 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
                     uncompleted_task = self.task_two
 
             if uncompleted_task:
+                assert progress_action
                 return self.async_show_progress(
                     step_id="init",
                     progress_action=progress_action,
