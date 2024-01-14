@@ -6,7 +6,7 @@ from typing import Any
 
 from aiohttp import ClientConnectionError
 from tesla_fleet_api import Teslemetry
-from tesla_fleet_api.exceptions import InvalidToken, PaymentRequired
+from tesla_fleet_api.exceptions import InvalidToken, PaymentRequired, TeslaFleetError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -45,6 +45,8 @@ class TeslemetryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "subscription_required"
             except ClientConnectionError:
                 errors["base"] = "cannot_connect"
+            except TeslaFleetError:
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title="Teslemetry",
