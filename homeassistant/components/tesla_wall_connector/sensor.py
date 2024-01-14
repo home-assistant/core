@@ -63,9 +63,9 @@ WALL_CONNECTOR_SENSORS = [
         translation_key="state",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda data: EVSE_STATE.get(
-            data[WALLCONNECTOR_DATA_VITALS].evse_state, "unknown"
+            data[WALLCONNECTOR_DATA_VITALS].evse_state
         ),
-        options=list(EVSE_STATE.values()) + ["unknown"],
+        options=list(EVSE_STATE.values()),
         icon="mdi:ev-station",
     ),
     WallConnectorSensorDescription(
