@@ -4,7 +4,7 @@
       "available": true,
       "binary_sensors": {
         "dhw_state": false,
-        "flame_state": true,
+        "flame_state": false,
         "heating_state": true
       },
       "dev_class": "heater_central",
