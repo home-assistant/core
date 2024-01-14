@@ -27,9 +27,8 @@ async def test_locks(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
 
     assert hass.states.async_all("lock") == snapshot
 
-    entity_id = "lock.test_lock"
-
     # Test lock set value functions
+    entity_id = "lock.test_lock"
     with patch("homeassistant.components.tessie.lock.lock") as mock_run:
         await hass.services.async_call(
             LOCK_DOMAIN,
