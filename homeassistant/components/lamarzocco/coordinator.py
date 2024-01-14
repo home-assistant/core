@@ -60,7 +60,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         _LOGGER.debug("Model name: %s", self._lm.model_name)
 
         # initialize local API
-        if host:
+        if (host := self.config_entry.data.get(CONF_HOST)) is not None:
             _LOGGER.debug("Initializing local API")
             await self._lm.init_local_api(
                 host=host,
