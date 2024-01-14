@@ -11,8 +11,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from . import ViCareRequiredKeysMixin
 from .const import DOMAIN
+from .types import ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 

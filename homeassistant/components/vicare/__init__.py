@@ -1,15 +1,13 @@
 """The ViCare integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from contextlib import suppress
-from dataclasses import dataclass
 import logging
 import os
 from typing import Any
 
 from PyViCare.PyViCare import PyViCare
-from PyViCare.PyViCareDevice import Device
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
@@ -36,20 +34,6 @@ from .const import (
 from .utils import get_token_path
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class ViCareRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_getter: Callable[[Device], Any]
-
-
-@dataclass(frozen=True)
-class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
-    """Mixin for required keys with setter."""
-
-    value_setter: Callable[[Device], bool]
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
