@@ -1397,7 +1397,7 @@ class _TrackPointUTCTime:
     expected_fire_timestamp: float
     _cancel_callback: asyncio.TimerHandle | None = None
 
-    def start(self) -> None:
+    def async_attach(self) -> None:
         """Initialize track job."""
         loop = self.hass.loop
         self._cancel_callback = loop.call_at(
@@ -1421,7 +1421,7 @@ class _TrackPointUTCTime:
         self.hass.async_run_hass_job(self.job, self.utc_point_in_time)
 
     @callback
-    def cancel(self) -> None:
+    def async_cancel(self) -> None:
         """Cancel the call_at."""
         if TYPE_CHECKING:
             assert self._cancel_callback is not None
@@ -1449,8 +1449,8 @@ def async_track_point_in_utc_time(
         else HassJob(action, f"track point in utc time {utc_point_in_time}")
     )
     track = _TrackPointUTCTime(hass, job, utc_point_in_time, expected_fire_timestamp)
-    track.start()
-    return track.cancel
+    track.async_attach()
+    return track.async_cancel
 
 
 track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_time)
@@ -1522,7 +1522,7 @@ class _TrackTimeInterval:
     _run_job: HassJob[[datetime], Coroutine[Any, Any, None] | None] | None = None
     _cancel_callback: CALLBACK_TYPE | None = None
 
-    def start(self) -> None:
+    def async_attach(self) -> None:
         """Initialize track job."""
         hass = self.hass
         self._track_job = HassJob(
@@ -1557,7 +1557,7 @@ class _TrackTimeInterval:
         hass.async_run_hass_job(self._run_job, now)
 
     @callback
-    def cancel(self) -> None:
+    def async_cancel(self) -> None:
         """Cancel the call_at."""
         if TYPE_CHECKING:
             assert self._cancel_callback is not None
@@ -1583,8 +1583,8 @@ def async_track_time_interval(
     if name:
         job_name = f"{name}: {job_name}"
     track = _TrackTimeInterval(hass, seconds, job_name, action, cancel_on_shutdown)
-    track.start()
-    return track.cancel
+    track.async_attach()
+    return track.async_cancel
 
 
 track_time_interval = threaded_listener_factory(async_track_time_interval)
