@@ -4,7 +4,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from hass_nabucasa.voice import MAP_VOICE, VoiceError
+from hass_nabucasa.voice import MAP_VOICE, VoiceError, VoiceTokenError
 import pytest
 import voluptuous as vol
 
@@ -161,6 +161,58 @@ async def test_get_tts_audio(
     await hass.async_block_till_done()
     on_start_callback = cloud.register_on_start.call_args[0][0]
     await on_start_callback()
+    client = await hass_client()
+
+    url = "/api/tts_get_url"
+    data |= {"message": "There is someone at the door."}
+
+    req = await client.post(url, json=data)
+    assert req.status == HTTPStatus.OK
+    response = await req.json()
+
+    assert response == {
+        "url": (
+            "http://example.local:8123/api/tts_proxy/"
+            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+            f"_en-us_e09b5a0968_{expected_url_suffix}.mp3"
+        ),
+        "path": (
+            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
+            f"_en-us_e09b5a0968_{expected_url_suffix}.mp3"
+        ),
+    }
+    await hass.async_block_till_done()
+
+    assert mock_process_tts.call_count == 1
+    assert mock_process_tts.call_args is not None
+    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+    assert mock_process_tts.call_args.kwargs["language"] == "en-US"
+    assert mock_process_tts.call_args.kwargs["gender"] == "female"
+    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_url_suffix"),
+    [
+        ({"platform": DOMAIN}, DOMAIN),
+        ({"engine_id": DOMAIN}, DOMAIN),
+    ],
+)
+async def test_get_tts_audio_logged_out(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
+    data: dict[str, Any],
+    expected_url_suffix: str,
+) -> None:
+    """Test cloud get tts audio when user is logged out."""
+    mock_process_tts = AsyncMock(
+        side_effect=VoiceTokenError("No token!"),
+    )
+    cloud.voice.process_tts = mock_process_tts
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
     client = await hass_client()
 
     url = "/api/tts_get_url"

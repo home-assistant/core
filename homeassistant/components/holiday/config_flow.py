@@ -47,7 +47,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_COUNTRY: user_input[CONF_COUNTRY]})
 
             try:
-                locale = Locale(self.hass.config.language.replace("-", "_"))
+                locale = Locale.parse(self.hass.config.language, sep="-")
             except UnknownLocaleError:
                 # Default to (US) English if language not recognized by babel
                 # Mainly an issue with English flavors such as "en-GB"
@@ -87,7 +87,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                locale = Locale(self.hass.config.language.replace("-", "_"))
+                locale = Locale.parse(self.hass.config.language, sep="-")
             except UnknownLocaleError:
                 # Default to (US) English if language not recognized by babel
                 # Mainly an issue with English flavors such as "en-GB"
