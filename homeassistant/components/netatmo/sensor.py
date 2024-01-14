@@ -491,6 +491,13 @@ class NetatmoClimateBatterySensor(NetatmoModuleEntity, SensorEntity):
         )
 
         self._attr_unique_id = f"{netatmo_device.parent_id}-{self.device.entity_id}-{self.entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.parent_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
+        )
 
     @callback
     def async_update_callback(self) -> None:
