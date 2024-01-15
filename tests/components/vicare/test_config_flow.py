@@ -9,7 +9,7 @@ from PyViCare.PyViCareUtils import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import dhcp
-from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.const import CONF_ACTIVE_DEVICE, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -26,6 +26,10 @@ VALID_CONFIG = {
     CONF_USERNAME: "foo@bar.com",
     CONF_PASSWORD: "1234",
     CONF_CLIENT_ID: "5678",
+}
+
+VALID_SELECT = {
+    CONF_ACTIVE_DEVICE: "qwertz",
 }
 
 DHCP_INFO = dhcp.DhcpServiceInfo(
@@ -87,6 +91,48 @@ async def test_user_create_entry(
             VALID_CONFIG,
         )
         await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ViCare"
+    assert result["data"] == snapshot
+    mock_setup_entry.assert_called_once()
+
+
+async def test_user_create_entry_with_select(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, snapshot: SnapshotAssertion
+) -> None:
+    """Test that the user step works."""
+    # start user flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    # test user
+    with patch(
+        f"{MODULE}.utils.vicare_login",
+        return_value=MockPyViCare(
+            ["vicare/Vitodens300W.json", "vicare/VitoconnectOpto1.json"]
+        ),
+    ) as mock_setup_entry, patch(f"{MODULE}.utils.get_serial", return_value="qwertz"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "select"
+    assert result["errors"] == {}
+
+    # test select
+    # with patch(f"{MODULE}.utils.get_serial", return_value="qwertz"):
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        VALID_SELECT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "ViCare"
