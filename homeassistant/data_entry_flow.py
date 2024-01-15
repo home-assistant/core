@@ -314,9 +314,6 @@ class FlowManager(abc.ABC):
             try:
                 user_input = data_schema(user_input)
             except vol.Invalid as ex:
-                if not isinstance(user_input, dict):
-                    raise ex
-
                 raised_errors = [ex]
                 if isinstance(ex, vol.MultipleInvalid):
                     raised_errors = ex.errors
@@ -327,7 +324,7 @@ class FlowManager(abc.ABC):
                     if (
                         error.path
                         and len(error.path) == 1
-                        and error.path[0] in user_input
+                        and error.path[0] in data_schema.schema
                     ):
                         path = error.path[0]
 
