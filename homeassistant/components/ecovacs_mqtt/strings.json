@@ -1,12 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_supported_devices_found": "No supported devices found",
-      "reauth_successful": "Re-authentication was successful"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "cannot_connect": "Can't connect to the ecovacs API. Please check the logs",
+      "cannot_connect": "Can't connect to the Ecovacs API. Please check the logs",
       "invalid_auth": "Invalid username or password",
       "select_robots": "Please select at least 1 robot",
       "unknown": "Unknown error. Please check the logs"
@@ -23,13 +23,13 @@
       "auth": {
         "data": {
           "country": "Country",
-          "password": "Password",
+          "password": "[%key:common::config_flow::data::password%]",
           "username": "E-mail or ShortID"
         }
       },
       "user": {
         "data": {
-          "mode": "Mode"
+          "mode": "[%key:common::config_flow::data::mode%]"
         },
         "data_description": {
           "mode": "Please select \"Self hosted\" ONLY if you already have a working instance running. Otherwise, select \"Cloud\" please."
@@ -58,22 +58,22 @@
   },
   "options": {
     "abort": {
-      "cannot_connect": "Can't connect to the ecovacs API. Please check the logs",
-      "invalid_auth": "Authentication failed. Please reauthenticate first",
-      "no_supported_devices_found": "No supported devices found",
+      "cannot_connect": "[%key:component::ecovacs_mqtt::config::error::cannot_connect%]",
+      "invalid_auth": "[%key:component::ecovacs_mqtt::config::error::invalid_auth%]",
+      "no_supported_devices_found": "[%key:component::ecovacs_mqtt::config::abort::no_supported_devices_found%]",
       "unknown_get_devices": "Unknown error on getting all devices. Please check the logs"
     },
     "error": {
-      "select_robots": "Please select at least 1 robot",
-      "unknown": "Unknown error. Please check the logs"
+      "select_robots": "[%key:component::ecovacs_mqtt::config::error::select_robots%]",
+      "unknown": "[%key:component::ecovacs_mqtt::config::error::unknown%]"
     },
     "step": {
       "init": {
         "data": {
-          "devices": "Devices"
+          "devices": "[%key:component::ecovacs_mqtt::config::step::options::data::devices%]"
         },
         "data_description": {
-          "devices": "Please select all devices, which you want to use in HA."
+          "devices": "[%key:component::ecovacs_mqtt::config::step::options::data_description::devices%]"
         }
       }
     }
