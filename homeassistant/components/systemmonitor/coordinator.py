@@ -23,20 +23,16 @@ _LOGGER = logging.getLogger(__name__)
 
 dataT = TypeVar(
     "dataT",
-    bound=bool
-    | datetime
+    bound=datetime
     | dict[str, list[shwtemp]]
     | dict[str, list[snicaddr]]
     | dict[str, snetio]
     | float
-    | int
     | list[psutil.Process]
     | sswap
-    | str
     | svmem
     | tuple[float, float, float]
-    | sdiskusage
-    | None,
+    | sdiskusage,
 )
 
 
