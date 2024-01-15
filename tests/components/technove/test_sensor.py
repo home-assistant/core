@@ -1,14 +1,17 @@
 """Tests for the TechnoVE sensor platform."""
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
+from technove import Status, TechnoVEError
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")
@@ -73,3 +76,22 @@ async def test_no_wifi_support(
 
     assert (state := hass.states.get("sensor.technove_station_wi_fi_network_name"))
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_sensor_update_failure(
+    hass: HomeAssistant,
+    mock_technove: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator update failure."""
+    entity_id = "sensor.technove_station_status"
+
+    assert hass.states.get(entity_id).state == Status.PLUGGED_CHARGING.value
+
+    freezer.tick(timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    mock_technove.update.side_effect = TechnoVEError("Test error")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
