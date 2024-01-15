@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from http import HTTPStatus
-from typing import cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -21,6 +21,9 @@ from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 
+if TYPE_CHECKING:
+    from . import OnboadingStorage
+
 from .const import (
     DEFAULT_AREAS,
     DOMAIN,
@@ -32,7 +35,9 @@ from .const import (
 )
 
 
-async def async_setup(hass, data, store):
+async def async_setup(
+    hass: HomeAssistant, data: dict[str, list[str]], store: OnboadingStorage
+) -> None:
     """Set up the onboarding view."""
     hass.http.register_view(OnboardingView(data, store))
     hass.http.register_view(InstallationTypeOnboardingView(data))
@@ -49,12 +54,12 @@ class OnboardingView(HomeAssistantView):
     url = "/api/onboarding"
     name = "api:onboarding"
 
-    def __init__(self, data, store):
+    def __init__(self, data: dict[str, list[str]], store: OnboadingStorage) -> None:
         """Initialize the onboarding view."""
         self._store = store
         self._data = data
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Return the onboarding status."""
         return self.json(
             [{"step": key, "done": key in self._data["done"]} for key in STEPS]
@@ -68,16 +73,16 @@ class InstallationTypeOnboardingView(HomeAssistantView):
     url = "/api/onboarding/installation_type"
     name = "api:onboarding:installation_type"
 
-    def __init__(self, data):
+    def __init__(self, data: dict[str, list[str]]) -> None:
         """Initialize the onboarding installation type view."""
         self._data = data
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Return the onboarding status."""
         if self._data["done"]:
             raise HTTPUnauthorized()
 
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
         info = await async_get_system_info(hass)
         return self.json({"installation_type": info["installation_type"]})
 
@@ -85,20 +90,20 @@ class InstallationTypeOnboardingView(HomeAssistantView):
 class _BaseOnboardingView(HomeAssistantView):
     """Base class for onboarding."""
 
-    step: str | None = None
+    step: str
 
-    def __init__(self, data, store):
+    def __init__(self, data: dict[str, list[str]], store: OnboadingStorage) -> None:
         """Initialize the onboarding view."""
         self._store = store
         self._data = data
         self._lock = asyncio.Lock()
 
     @callback
-    def _async_is_done(self):
+    def _async_is_done(self) -> bool:
         """Return if this step is done."""
         return self.step in self._data["done"]
 
-    async def _async_mark_done(self, hass):
+    async def _async_mark_done(self, hass: HomeAssistant) -> None:
         """Mark step as done."""
         self._data["done"].append(self.step)
         await self._store.async_save(self._data)
@@ -180,9 +185,9 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
     name = "api:onboarding:core_config"
     step = STEP_CORE_CONFIG
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Handle finishing core config step."""
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
 
         async with self._lock:
             if self._async_is_done():
@@ -205,7 +210,8 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
 
             if (
                 hassio.is_hassio(hass)
-                and "raspberrypi" in hassio.get_core_info(hass)["machine"]
+                and (core_info := hassio.get_core_info(hass))
+                and "raspberrypi" in core_info["machine"]
             ):
                 onboard_integrations.append("rpi_power")
 
@@ -232,9 +238,9 @@ class IntegrationOnboardingView(_BaseOnboardingView):
     @RequestDataValidator(
         vol.Schema({vol.Required("client_id"): str, vol.Required("redirect_uri"): str})
     )
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle token creation."""
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
         refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
 
         async with self._lock:
@@ -276,9 +282,9 @@ class AnalyticsOnboardingView(_BaseOnboardingView):
     name = "api:onboarding:analytics"
     step = STEP_ANALYTICS
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Handle finishing analytics step."""
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
 
         async with self._lock:
             if self._async_is_done():
