@@ -6,7 +6,11 @@ from homeassistant.components.matrix import (
     DOMAIN as MATRIX_DOMAIN,
     MatrixBot,
 )
-from homeassistant.components.matrix.const import FORMAT_HTML, FORMAT_NOTICE, SERVICE_SEND_MESSAGE
+from homeassistant.components.matrix.const import (
+    FORMAT_HTML,
+    FORMAT_NOTICE,
+    SERVICE_SEND_MESSAGE,
+)
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.core import HomeAssistant
 
