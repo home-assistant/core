@@ -7,6 +7,7 @@ from lmcloud.const import LaMarzoccoModel
 import pytest
 
 from homeassistant.components.lamarzocco.const import CONF_MACHINE, DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import USER_INPUT, async_init_integration
@@ -24,7 +25,8 @@ def mock_config_entry(mock_lamarzocco: MagicMock) -> MockConfigEntry:
     return MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
-        data=USER_INPUT | {CONF_MACHINE: mock_lamarzocco.serial_number},
+        data=USER_INPUT
+        | {CONF_MACHINE: mock_lamarzocco.serial_number, CONF_HOST: "host"},
         unique_id=mock_lamarzocco.serial_number,
     )
 
@@ -100,5 +102,14 @@ def mock_lamarzocco(
         ]
         lamarzocco.check_local_connection.return_value = True
         lamarzocco.initialized = False
+        lamarzocco.websocket_connected = True
+
+        async def websocket_connect_mock(
+            callback: MagicMock, use_sigterm_handler: MagicMock
+        ) -> None:
+            """Mock the websocket connect method."""
+            return None
+
+        lamarzocco.lm_local_api.websocket_connect = websocket_connect_mock
 
         yield lamarzocco

@@ -8,6 +8,7 @@ from .const import DOMAIN
 from .coordinator import LaMarzoccoUpdateCoordinator
 
 PLATFORMS = [
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 
