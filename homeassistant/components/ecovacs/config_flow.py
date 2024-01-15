@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -53,12 +53,11 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+
             errors = await self.hass.async_add_executor_job(validate_input, user_input)
 
             if not errors:
-                self._async_abort_entries_match(
-                    {CONF_USERNAME: user_input[CONF_USERNAME]}
-                )
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
@@ -89,20 +88,48 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import configuration from yaml."""
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.8.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Ecovacs",
-            },
-        )
 
-        self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
-        return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)
+        def create_repair(error: str | None = None) -> None:
+            if error:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"deprecated_yaml_import_issue_{error}",
+                    breaks_in_ha_version="2024.8.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.WARNING,
+                    translation_key=f"deprecated_yaml_import_issue_{error}",
+                    translation_placeholders={
+                        "url": "/config/integrations/dashboard/add?domain=ecovacs"
+                    },
+                )
+            else:
+                async_create_issue(
+                    self.hass,
+                    HOMEASSISTANT_DOMAIN,
+                    f"deprecated_yaml_{DOMAIN}",
+                    breaks_in_ha_version="2024.8.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_yaml",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                        "integration_title": "Ecovacs",
+                    },
+                )
+
+        try:
+            result = await self.async_step_user(user_input)
+        except AbortFlow as ex:
+            if ex.reason == "already_configured":
+                create_repair()
+            raise ex
+
+        if errors := result.get("errors"):
+            create_repair(errors["base"])
+        else:
+            create_repair()
+
+        return result

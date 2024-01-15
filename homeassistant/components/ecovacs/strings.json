@@ -11,10 +11,21 @@
       "user": {
         "data": {
           "continent": "Continent",
+          "country": "Country",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "E-mail or ShortID"
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there was an authentication error importing your YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the imported configuration is correct and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
   }
 }
