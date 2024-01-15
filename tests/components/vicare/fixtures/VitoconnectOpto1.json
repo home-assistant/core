@@ -1,0 +1,58 @@
+{
+  "data": [
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "feature": "gateway.devices",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "devices": {
+          "type": "DeviceList",
+          "value": [
+            {
+              "fingerprint": "################",
+              "id": "gateway",
+              "modelId": "Heatbox1",
+              "modelVersion": "################",
+              "name": "Heatbox 1, Vitoconnect",
+              "roles": ["type:gateway;VitoconnectOpto1", "type:legacy"],
+              "status": "online",
+              "type": "vitoconnect"
+            },
+            {
+              "fingerprint": "################",
+              "id": "0",
+              "modelId": "VScotHO1_40",
+              "modelVersion": "################",
+              "name": "VT 200 (HO1A / HO1B)",
+              "roles": ["type:boiler", "type:legacy", "type:product;VScotHO1"],
+              "status": "online",
+              "type": "heating"
+            }
+          ]
+        }
+      },
+      "timestamp": "2024-01-15T21:31:55.441Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/features/gateway.devices"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "feature": "gateway.wifi",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "strength": {
+          "type": "number",
+          "unit": "",
+          "value": -67
+        }
+      },
+      "timestamp": "2024-01-15T22:22:23.479Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/features/gateway.wifi"
+    }
+  ]
+}
