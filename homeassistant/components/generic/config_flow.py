@@ -77,8 +77,8 @@ IMAGE_PREVIEWS_ACTIVE = "previews"
 def build_schema(
     user_input: Mapping[str, Any],
     is_options_flow: bool = False,
-    show_advanced_options=False,
-):
+    show_advanced_options: bool = False,
+) -> vol.Schema:
     """Create schema for camera config setup."""
     spec = {
         vol.Optional(
@@ -276,7 +276,7 @@ async def async_test_stream(
     return {}
 
 
-def register_preview(hass: HomeAssistant):
+def register_preview(hass: HomeAssistant) -> None:
     """Set up previews for camera feeds during config flow."""
     hass.data.setdefault(DOMAIN, {})
 
