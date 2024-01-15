@@ -101,4 +101,12 @@ def mock_lamarzocco(
         lamarzocco.check_local_connection.return_value = True
         lamarzocco.initialized = False
 
+        lamarzocco.lm_bluetooth = MagicMock()
+        lamarzocco.lm_bluetooth.address = "AA:BB:CC:DD:EE:FF"
+
         yield lamarzocco
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""

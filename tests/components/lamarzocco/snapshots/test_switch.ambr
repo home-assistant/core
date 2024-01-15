@@ -27,7 +27,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switches[-set_power]
+# name: test_switches[-set_power-args10-args20]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234',
@@ -40,7 +40,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[-set_power].1
+# name: test_switches[-set_power-args10-args20].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -71,7 +71,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[_auto_on_off-set_auto_on_off_global]
+# name: test_switches[_auto_on_off-set_auto_on_off_global-args11-args21]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Auto on/off',
@@ -84,7 +84,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[_auto_on_off-set_auto_on_off_global].1
+# name: test_switches[_auto_on_off-set_auto_on_off_global-args11-args21].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -115,7 +115,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[_steam_boiler-set_steam]
+# name: test_switches[_steam_boiler-set_steam-args12-args22]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Steam boiler',
@@ -128,7 +128,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[_steam_boiler-set_steam].1
+# name: test_switches[_steam_boiler-set_steam-args12-args22].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),

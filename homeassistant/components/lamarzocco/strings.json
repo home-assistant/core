@@ -35,6 +35,16 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "title": "Update Configuration",
+          "use_bluetooth": "Use Bluetooth"
+        }
+      }
+    }
+  },
   "entity": {
     "switch": {
       "auto_on_off": {
