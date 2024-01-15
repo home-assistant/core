@@ -62,7 +62,7 @@ set_climate_temperature_offset:
           step: 0.01
           unit_of_measurement: "°"
 
-set_climate_meter_reading:
+add_meter_reading:
   fields:
     reading:
       default: 0

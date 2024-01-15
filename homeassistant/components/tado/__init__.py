@@ -5,11 +5,12 @@ import logging
 from PyTado.interface import Tado
 from requests import RequestException
 import requests.exceptions
+import voluptuous as vol
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -17,6 +18,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 
 from .const import (
+    ATTR_READING,
     CONF_FALLBACK,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_DEFAULT,
@@ -26,6 +28,7 @@ from .const import (
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
+    SERVICE_ADD_METER_READING,
     SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TEMP_OFFSET,
@@ -50,6 +53,10 @@ SCAN_INTERVAL = timedelta(minutes=5)
 SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+SCHEMA_ADD_METER_READING = vol.Schema(
+    {vol.Required(ATTR_READING, default=0): vol.Coerce(int)}
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -106,6 +113,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async def add_meter_reading(call: ServiceCall) -> None:
+        """Send meter reading to Tado."""
+        _LOGGER.info("Service call to add_meter_reading")
+        await hass.async_add_executor_job(
+            tadoconnector.set_meter_reading, call.data[ATTR_READING]
+        )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_METER_READING, add_meter_reading, SCHEMA_ADD_METER_READING
+    )
 
     return True
 

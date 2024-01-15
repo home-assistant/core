@@ -123,9 +123,9 @@
         }
       }
     },
-    "set_climate_meter_reading": {
-      "name": "Send Meter Readings to Tado",
-      "description": "Send Meter Readings to Tado.",
+    "add_meter_reading": {
+      "name": "Add meter readings",
+      "description": "Add meter readings to Tado Energy IQ.",
       "fields": {
         "reading": {
           "name": "Reading",
