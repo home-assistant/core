@@ -32,7 +32,7 @@ async def __do_successful_user_step(
 
 async def __do_sucessful_machine_selection_step(
     hass: HomeAssistant, result2: FlowResult, mock_lamarzocco: MagicMock
-) -> FlowResult:
+) -> None:
     """Successfully configure the machine selection step."""
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -51,7 +51,6 @@ async def __do_sucessful_machine_selection_step(
         CONF_HOST: "192.168.1.1",
         CONF_MACHINE: mock_lamarzocco.serial_number,
     }
-    return result3
 
 
 async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:

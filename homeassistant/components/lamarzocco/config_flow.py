@@ -55,8 +55,8 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthFail:
                 _LOGGER.debug("Server rejected login credentials")
                 errors["base"] = "invalid_auth"
-            except RequestNotSuccessful:
-                _LOGGER.debug("Failed to connect to server")
+            except RequestNotSuccessful as exc:
+                _LOGGER.exception("Error connecting to server: %s", str(exc))
                 errors["base"] = "cannot_connect"
             else:
                 if not self._machines:

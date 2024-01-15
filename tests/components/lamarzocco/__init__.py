@@ -5,11 +5,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-USER_INPUT = {
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-}
-
 HOST_SELECTION = {
     CONF_HOST: "192.168.1.1",
 }
@@ -17,6 +12,8 @@ HOST_SELECTION = {
 PASSWORD_SELECTION = {
     CONF_PASSWORD: "password",
 }
+
+USER_INPUT = PASSWORD_SELECTION | {CONF_USERNAME: "username"}
 
 
 async def async_init_integration(
