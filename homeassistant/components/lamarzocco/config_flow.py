@@ -40,7 +40,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        if user_input is not None:
+        if user_input:
             data: dict[str, Any] = {}
             if self.reauth_entry:
                 data = dict(self.reauth_entry.data)
