@@ -89,6 +89,9 @@ async def test_found_bluetooth_is_set_on_reset(
 
     await async_init_integration(hass, mock_config_entry)
 
+    mock_lamarzocco.init_bluetooth.assert_called_once()
+
+    mock_lamarzocco.initialized = False
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 

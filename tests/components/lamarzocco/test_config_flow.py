@@ -288,12 +288,13 @@ async def test_bluetooth_discovery_errors(
     hass: HomeAssistant, mock_lamarzocco: MagicMock
 ) -> None:
     """Test bluetooth discovery errors."""
+    service_info = get_bluetooth_service_info(
+        mock_lamarzocco.model_name, mock_lamarzocco.serial_number
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=get_bluetooth_service_info(
-            mock_lamarzocco.model_name, mock_lamarzocco.serial_number
-        ),
+        data=service_info,
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -319,6 +320,25 @@ async def test_bluetooth_discovery_errors(
     assert result2["step_id"] == "machine_selection"
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 2
 
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_HOST: "192.168.1.1",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+
+    assert result3["title"] == mock_lamarzocco.serial_number
+    assert result3["data"] == {
+        **USER_INPUT,
+        CONF_HOST: "192.168.1.1",
+        CONF_MACHINE: mock_lamarzocco.serial_number,
+        CONF_NAME: service_info.name,
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
+    }
+
 
 async def test_options_flow(
     hass: HomeAssistant,
@@ -339,6 +359,7 @@ async def test_options_flow(
             CONF_USE_BLUETOOTH: False,
         },
     )
+    await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == {

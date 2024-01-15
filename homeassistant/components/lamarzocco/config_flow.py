@@ -225,16 +225,13 @@ class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options for the custom component."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data=self.config_entry.data | user_input,
-                    options=self.config_entry.options,
-                )
-                return self.async_create_entry(title="", data=user_input)
+        if user_input:
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data=self.config_entry.data | user_input,
+                options=self.config_entry.options,
+            )
+            return self.async_create_entry(title="", data=user_input)
 
         options_schema = vol.Schema(
             {
@@ -246,5 +243,6 @@ class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
         )
 
         return self.async_show_form(
-            step_id="init", data_schema=options_schema, errors=errors
+            step_id="init",
+            data_schema=options_schema,
         )

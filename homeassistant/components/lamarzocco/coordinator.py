@@ -90,12 +90,12 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             if (mac_address := self.config_entry.data.get(CONF_MAC, "")) and (
                 name := self.config_entry.data.get(CONF_NAME, "")
             ):
-                # coming from discovery
+                # coming from discovery or last time we used bluetooth
                 _LOGGER.debug("Initializing with known Bluetooth device")
-                self._use_bluetooth = True
                 await self.lm.init_bluetooth_with_known_device(
                     username, mac_address, name
                 )
+                self._use_bluetooth = True
             else:
                 # check if there are any bluetooth adapters to use
                 count = bluetooth.async_scanner_count(self.hass, connectable=True)
@@ -118,7 +118,9 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                         # found a device, add MAC address to config entry
                         new_data = self.config_entry.data.copy()
                         new_data[CONF_MAC] = self.lm.lm_bluetooth.address
-                        new_data[CONF_NAME] = self.lm.serial_number.upper()
+                        new_data[
+                            CONF_NAME
+                        ] = f"{self.lm.model_name}_{self.lm.serial_number.upper()}"
                         self.hass.config_entries.async_update_entry(
                             self.config_entry,
                             data=new_data,
