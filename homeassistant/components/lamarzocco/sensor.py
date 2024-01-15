@@ -92,10 +92,7 @@ async def async_setup_entry(
     entities: list[LaMarzoccoSensorEntity] = []
     for description in ENTITIES:
         if coordinator.lm.model_name in description.supported_models:
-            if (
-                description.key == "shot_timer"
-                and not coordinator.local_connection_set()
-            ):
+            if description.key == "shot_timer" and not coordinator.local_connection_set:
                 continue
             entities.append(LaMarzoccoSensorEntity(coordinator, description))
 
