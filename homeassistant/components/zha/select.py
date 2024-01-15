@@ -942,7 +942,8 @@ class MultitermSleepModeStates(types.enum8):
 class MultitermBOSelectEntity(ZCLEnumSelectEntity):
     """Multiterm Binary Output as Select Entity."""
 
-    _select_attr = "present_value"
+    _attribute_name = "present_value"
+    _attr_translation_key = "present_value"
 
     def __init__(
         self,
@@ -957,9 +958,12 @@ class MultitermBOSelectEntity(ZCLEnumSelectEntity):
 
         if self._attr_name == "Electric Valve":
             self._enum = MultitermElectricValveStates
+            self._attr_icon = "mdi:pipe-valve"
         elif self._attr_name == "Heating/Cooling":
             self._enum = MultitermHeatingCoolingStates
+            self._attr_icon = "mdi:sun-snowflake-variant"
         elif self._attr_name == "Sleep Mode":
             self._enum = MultitermSleepModeStates
+            self._attr_icon = "mdi:sleep"
 
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
