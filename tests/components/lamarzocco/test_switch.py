@@ -19,15 +19,14 @@ pytestmark = pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("entity_name", "method_name"),
     [
-        ("main", "set_power"),
-        ("auto_on_off", "set_auto_on_off_global"),
-        ("steam_boiler", "set_steam"),
+        ("", "set_power"),
+        ("_auto_on_off", "set_auto_on_off_global"),
+        ("_steam_boiler", "set_steam"),
     ],
 )
 async def test_switches(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     entity_name: str,
@@ -38,7 +37,7 @@ async def test_switches(
 
     control_fn = getattr(mock_lamarzocco, method_name)
 
-    state = hass.states.get(f"switch.{serial_number}_{entity_name}")
+    state = hass.states.get(f"switch.{serial_number}{entity_name}")
     assert state
     assert state == snapshot
 
@@ -50,7 +49,7 @@ async def test_switches(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {
-            ATTR_ENTITY_ID: f"switch.{serial_number}_{entity_name}",
+            ATTR_ENTITY_ID: f"switch.{serial_number}{entity_name}",
         },
         blocking=True,
     )
@@ -62,7 +61,7 @@ async def test_switches(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: f"switch.{serial_number}_{entity_name}",
+            ATTR_ENTITY_ID: f"switch.{serial_number}{entity_name}",
         },
         blocking=True,
     )
@@ -80,7 +79,7 @@ async def test_device(
 ) -> None:
     """Test the device for one switch."""
 
-    state = hass.states.get(f"switch.{mock_lamarzocco.serial_number}_main")
+    state = hass.states.get(f"switch.{mock_lamarzocco.serial_number}")
     assert state
 
     entry = entity_registry.async_get(state.entity_id)
