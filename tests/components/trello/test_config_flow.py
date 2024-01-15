@@ -25,28 +25,19 @@ BOARD_ID_LISTS = {
 USER_INPUT_CREDS = {"api_key": API_KEY, "api_token": API_TOKEN}
 
 
-class MockAdapter:
-    """Mock TrelloAdapter."""
+class MockClient:
+    """Mock Trello client."""
 
-    def __init__(self, trello_client) -> None:
-        """Init mock TrelloAdapter."""
+    def __init__(self, api_key, api_secret) -> None:
+        """Init mock Trello client."""
 
-    @classmethod
-    def from_creds(cls, api_key: str, api_token: str):
-        """Init mock TrelloAdapter."""
-        return cls(None)
-
-    def get_member(self):
+    def get_member(self, member_id):
         """Mock member object."""
         return SimpleNamespace(id=USER_ID, email=EMAIL_ADDR)
 
-    def get_boards(self):
+    def list_boards(self, board_filter):
         """Mock board dict."""
-        return {BOARD_ID: {"id": BOARD_ID, "name": "a_board_name"}}
-
-    def get_board_lists(self, id_boards, selected_board_ids):
-        """Mock board dict."""
-        return BOARD_ID_LISTS
+        return [SimpleNamespace(id=BOARD_ID, name="a_board_name")]
 
 
 async def test_flow_user(hass: HomeAssistant) -> None:
@@ -56,8 +47,8 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.trello.config_flow.TrelloAdapter",
-        new=MockAdapter,
+        "homeassistant.components.trello.config_flow.TrelloClient",
+        new=MockClient,
     ), patch(
         "homeassistant.components.trello.async_setup_entry",
         return_value=True,
@@ -99,7 +90,7 @@ async def test_flow_user_unauthorized(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.trello.config_flow.TrelloAdapter.get_member",
+        "homeassistant.components.trello.config_flow.TrelloClient.get_member",
         side_effect=Unauthorized("", Mock(status=123)),
     ), patch(
         "homeassistant.components.trello.async_setup_entry",

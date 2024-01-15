@@ -1,7 +1,7 @@
 """The Trello integration."""
 from __future__ import annotations
 
-from trello import Member, TrelloClient
+from trello import TrelloClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
@@ -45,27 +45,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle removal of an entry."""
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class TrelloAdapter:
-    """Adapter for Trello lib's client."""
-
-    def __init__(self, client: TrelloClient) -> None:
-        """Initialize with Trello lib client."""
-        self.client = client
-
-    @classmethod
-    def from_creds(cls, api_key: str, api_token: str) -> TrelloAdapter:
-        """Initialize with API Key and API Token."""
-        return cls(TrelloClient(api_key=api_key, api_secret=api_token))
-
-    def get_member(self) -> Member:
-        """Get member information."""
-        return self.client.get_member("me")
-
-    def get_boards(self) -> dict[str, dict[str, str]]:
-        """Get all user's boards."""
-        return {
-            board.id: {"id": board.id, "name": board.name}
-            for board in self.client.list_boards(board_filter="open")
-        }

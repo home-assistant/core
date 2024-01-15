@@ -6,7 +6,6 @@ from datetime import timedelta
 from trello import BatchResponse, Board as TrelloBoard, List as TrelloList, TrelloClient
 from trello.batch.board import Board as BatchBoard
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -15,7 +14,6 @@ from .const import LOGGER, Board, List
 
 class TrelloDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Board]]):
     """Data update coordinator for the Trello integration."""
-
 
     def __init__(
         self, hass: HomeAssistant, trello_client: TrelloClient, board_ids: list[str]
