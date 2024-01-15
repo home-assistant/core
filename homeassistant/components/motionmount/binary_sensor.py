@@ -1,4 +1,4 @@
-"""Support for MotionMount sensors."""
+"""Support for MotionMount binary sensors."""
 import motionmount
 
 from homeassistant.components.binary_sensor import (
@@ -29,7 +29,7 @@ class MotionMountMovingSensor(MotionMountEntity, BinarySensorEntity):
     _attr_translation_key = "motionmount_is_moving"
 
     def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
-        """Initialize moving sensor entity."""
+        """Initialize moving binary sensor entity."""
         super().__init__(mm, config_entry)
         self._attr_unique_id = f"{self._base_unique_id}-moving"
 
