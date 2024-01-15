@@ -29,7 +29,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         self._async_abort_entries_match()
-        if user_input is not None:
+        if user_input:
             return self.async_create_entry(
                 title="Home Assistant analytics", data={}, options=user_input
             )
