@@ -23,12 +23,15 @@ class HassEnforceSortedPlatformsChecker(BaseChecker):
     def visit_assign(self, node: nodes.Assign) -> None:
         """Check for sorted PLATFORMS const."""
         for target in node.targets:
-            if isinstance(target, nodes.AssignName) and target.name == "PLATFORMS":
-                if isinstance(node.value, nodes.List):
-                    platforms = [v.as_string() for v in node.value.elts]
-                    sorted_platforms = sorted(platforms)
-                    if platforms != sorted_platforms:
-                        self.add_message("hass-enforce-sorted-platforms", node=node)
+            if (
+                isinstance(target, nodes.AssignName)
+                and target.name == "PLATFORMS"
+                and isinstance(node.value, nodes.List)
+            ):
+                platforms = [v.as_string() for v in node.value.elts]
+                sorted_platforms = sorted(platforms)
+                if platforms != sorted_platforms:
+                    self.add_message("hass-enforce-sorted-platforms", node=node)
 
 
 def register(linter: PyLinter) -> None:
