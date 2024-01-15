@@ -52,7 +52,9 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
         Capability.fan_speed,
     ]
 
-    # If none of the optional capabilities are supported then error
+    # At least one of the optional capabilities must be supported
+    # to classify this entity as a fan.
+    # If they are not then return None and don't setup the platform.
     if not any(capability in capabilities for capability in optional):
         return None
 
