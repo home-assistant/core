@@ -122,6 +122,16 @@
           "description": "Offset you would like (depending on your device)."
         }
       }
+    },
+    "set_climate_meter_reading": {
+      "name": "Send Meter Readings to Tado",
+      "description": "Send Meter Readings to Tado.",
+      "fields": {
+        "reading": {
+          "name": "Reading",
+          "description": "Reading in m³ or kWh without decimals."
+        }
+      }
     }
   },
   "issues": {

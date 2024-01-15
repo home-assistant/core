@@ -425,3 +425,10 @@ class TadoConnector:
             self.tado.set_temp_offset(device_id, offset)
         except RequestException as exc:
             _LOGGER.error("Could not set temperature offset: %s", exc)
+
+    def set_meter_reading(self, reading: int):
+        """Send meter reading to Tado."""
+        try:
+            self.tado.set_eiq_meter_readings(reading=reading)
+        except RequestException as exc:
+            _LOGGER.error("Could not set meater reading: %s", exc)

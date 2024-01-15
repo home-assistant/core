@@ -85,6 +85,13 @@ CLIMATE_TEMP_OFFSET_SCHEMA = {
     vol.Required(ATTR_OFFSET, default=0): vol.Coerce(float),
 }
 
+SERVICE_SET_METER_READING = "set_climate_meter_reading"
+ATTR_METER_READING = "reading"
+
+CLIMATE_SET_METER_READING_SCHEMA = {
+    vol.Required(ATTR_METER_READING, default=0): vol.Coerce(int),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -106,6 +113,12 @@ async def async_setup_entry(
         SERVICE_TEMP_OFFSET,
         CLIMATE_TEMP_OFFSET_SCHEMA,
         "set_temp_offset",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_METER_READING,
+        CLIMATE_SET_METER_READING_SCHEMA,
+        "set_meter_reading",
     )
 
     async_add_entities(entities, True)
@@ -409,6 +422,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         )
 
         self._tado.set_temperature_offset(self._device_id, offset)
+
+    def set_meter_reading(self, reading: int):
+        """Send meter reading to Tado."""
+
+        self._tado.set_meter_reading(reading=reading)
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
