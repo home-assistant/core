@@ -1,4 +1,4 @@
-"""The Govee Lights - Local API integration."""
+"""The Govee Light local integration."""
 from __future__ import annotations
 
 import asyncio
@@ -15,7 +15,7 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Govee Local API from a config entry."""
+    """Set up Govee light local from a config entry."""
 
     coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(hass=hass)
     entry.async_on_unload(coordinator.cleanup)

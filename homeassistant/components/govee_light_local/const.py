@@ -1,8 +1,8 @@
-"""Constants for the Govee Lights - Local API integration."""
+"""Constants for the Govee light local integration."""
 
 from datetime import timedelta
 
-DOMAIN = "govee_light_api"
+DOMAIN = "govee_light_local"
 MANUFACTURER = "Govee"
 
 CONF_MULTICAST_ADDRESS_DEFAULT = "239.255.255.250"

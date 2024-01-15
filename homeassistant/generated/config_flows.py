@@ -195,7 +195,7 @@ FLOWS = {
         "google_translate",
         "google_travel_time",
         "govee_ble",
-        "govee_light_api",
+        "govee_light_local",
         "gpslogger",
         "gree",
         "growatt_server",

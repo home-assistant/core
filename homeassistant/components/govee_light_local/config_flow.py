@@ -1,4 +1,4 @@
-"""Config flow for Govee Local API."""
+"""Config flow for Govee light local."""
 
 from __future__ import annotations
 
@@ -54,5 +54,5 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN, "Govee Lights - Local API", _async_has_devices
+    DOMAIN, "Govee light local", _async_has_devices
 )

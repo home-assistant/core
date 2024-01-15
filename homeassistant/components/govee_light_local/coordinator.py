@@ -1,4 +1,4 @@
-"""Coordinator for Govee Local API."""
+"""Coordinator for Govee light local."""
 
 from collections.abc import Callable
 import logging
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
-    """Govee Local API coordinator."""
+    """Govee light local coordinator."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize my coordinator."""

@@ -1,5 +1,5 @@
 {
   "domain": "govee",
   "name": "Govee",
-  "integrations": ["govee_ble", "govee_light_api"]
+  "integrations": ["govee_ble", "govee_light_local"]
 }

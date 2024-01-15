@@ -1,4 +1,4 @@
-"""Govee Light."""
+"""Govee light local."""
 
 from __future__ import annotations
 
