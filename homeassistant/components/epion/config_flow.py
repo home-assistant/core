@@ -29,13 +29,15 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             api = Epion(user_input[CONF_API_KEY])
             try:
-                await self.hass.async_add_executor_job(api.get_current)
+                api_data = await self.hass.async_add_executor_job(api.get_current)
             except EpionAuthenticationError:
                 errors["base"] = "invalid_auth"
             except EpionConnectionError:
                 _LOGGER.error("Unexpected problem when configuring Epion API")
                 errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(api_data["accountId"])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Epion integration",
                     data=user_input,
