@@ -30,7 +30,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         key="co2",
-        name="CO2",
         suggested_display_precision=0,
     ),
     SensorEntityDescription(
@@ -38,7 +37,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         key="temperature",
-        name="Temperature",
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -46,7 +44,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         key="humidity",
-        name="Humidity",
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -54,7 +51,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.HPA,
         key="pressure",
-        name="Pressure",
         suggested_display_precision=0,
     ),
 )
