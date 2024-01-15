@@ -311,7 +311,37 @@ class FlowManager(abc.ABC):
         if (
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
-            user_input = data_schema(user_input)
+            try:
+                user_input = data_schema(user_input)
+            except vol.Invalid as ex:
+                if not isinstance(user_input, dict):
+                    raise ex
+
+                raised_errors = [ex]
+                if isinstance(ex, vol.MultipleInvalid):
+                    raised_errors = ex.errors
+
+                errors = {}
+                for error in raised_errors:
+                    path = "base"
+                    if (
+                        error.path
+                        and len(error.path) == 1
+                        and error.path[0] in user_input
+                    ):
+                        path = error.path[0]
+
+                    errors[path] = error.error_message
+
+                return FlowResult(
+                    {
+                        **cur_step,
+                        "errors": errors,
+                        "data_schema": flow.add_suggested_values_to_schema(
+                            data_schema, user_input
+                        ),
+                    }
+                )
 
         # Handle a menu navigation choice
         if cur_step["type"] == FlowResultType.MENU and user_input:
