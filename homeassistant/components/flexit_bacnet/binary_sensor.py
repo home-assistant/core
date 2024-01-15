@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from ...helpers.update_coordinator import CoordinatorEntity
 from . import FlexitCoordinator
 from .const import DOMAIN
+from .entity import FlexitEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ async def async_setup_entry(
     # TODO: unsubscribe on remove
 
 
-class FlexitBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class FlexitBinarySensor(FlexitEntity, CoordinatorEntity, BinarySensorEntity):
     """Representation of a Flexit binary Sensor."""
 
     # Should it have a name?
@@ -91,7 +92,9 @@ class FlexitBinarySensor(CoordinatorEntity, BinarySensorEntity):
         """Initialize Flexit (bacnet) sensor."""
         super().__init__(coordinator)
 
-        _LOGGER.info(f"Initialize Flexit (bacnet) sensor {entity_description.key}")
+        _LOGGER.info(
+            f"Initialize Flexit (bacnet) binary sensor {entity_description.key}"
+        )
 
         self.entity_description = entity_description
         self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(

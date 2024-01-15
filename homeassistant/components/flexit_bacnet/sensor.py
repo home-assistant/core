@@ -28,6 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from ...helpers.update_coordinator import CoordinatorEntity
 from . import FlexitCoordinator
 from .const import DOMAIN
+from .entity import FlexitEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +119,6 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         translation_key="exhaust_air_fan_rpm",
-        icon="mdi:thermometer",
         value_fn=lambda data: data.exhaust_air_fan_rpm,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -207,7 +207,7 @@ async def async_setup_entry(
     # TODO: unsubscribe on remove
 
 
-class FlexitSensor(CoordinatorEntity, SensorEntity):
+class FlexitSensor(FlexitEntity, CoordinatorEntity, SensorEntity):
     """Representation of a Flexit Sensor."""
 
     # Should it have a name?
