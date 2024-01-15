@@ -135,7 +135,7 @@ def _wrap_mock_instance(obj: Any) -> MagicMock:
         real_attr = getattr(obj, attr_name)
         mock_attr = getattr(mock, attr_name)
 
-        if callable(real_attr):
+        if callable(real_attr) and not hasattr(real_attr, "__aenter__"):
             mock_attr.side_effect = real_attr
         else:
             setattr(mock, attr_name, real_attr)
