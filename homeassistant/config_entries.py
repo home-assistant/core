@@ -1947,15 +1947,17 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         reason: str = "reauth_successful",
     ) -> data_entry_flow.FlowResult:
         """Update config entry, reload config entry and finish config flow."""
-        self.hass.config_entries.async_update_entry(
+        result = self.hass.config_entries.async_update_entry(
             entry=entry,
             title=title,
             data=data,
             options=options,
         )
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(entry.entry_id)
-        )
+        if result:
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(entry.entry_id),
+                f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+            )
         return self.async_abort(reason=reason)
 
 
