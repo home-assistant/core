@@ -13,7 +13,7 @@ from homeassistant.components.systemmonitor.sensor import (
     get_cpu_icon,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -212,7 +212,7 @@ async def test_sensor_process_fails(
 
     process_sensor = hass.states.get("sensor.system_monitor_process_python3")
     assert process_sensor is not None
-    # assert process_sensor.state == STATE_ON
+    assert process_sensor.state == STATE_OFF
 
     assert "Failed to load process with ID: 1, old name: python3" in caplog.text
 
