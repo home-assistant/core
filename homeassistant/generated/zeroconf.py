@@ -610,6 +610,11 @@ ZEROCONF = {
             "domain": "plugwise",
         },
     ],
+    "_powerview-g3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
+        },
+    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
@@ -756,11 +761,6 @@ ZEROCONF = {
     "_zwave-js-server._tcp.local.": [
         {
             "domain": "zwave_js",
-        },
-    ],
-    "powerview-g3._tcp.local.": [
-        {
-            "domain": "hunterdouglas_powerview",
         },
     ],
 }
