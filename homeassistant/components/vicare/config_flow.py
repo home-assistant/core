@@ -230,7 +230,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.available_devices = await self.hass.async_add_executor_job(
                 _get_device_list,
                 self.hass,
-                self.entry.data,
+                dict(self.entry.data),
             )
         except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
             errors["base"] = "invalid_auth"
