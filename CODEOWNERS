@@ -359,6 +359,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50
+/homeassistant/components/eps/ @parvarm
+/tests/components/eps/ @parvarm
 /homeassistant/components/epson/ @pszafer
 /tests/components/epson/ @pszafer
 /homeassistant/components/epsonworkforce/ @ThaStealth
