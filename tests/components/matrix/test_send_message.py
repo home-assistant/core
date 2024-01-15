@@ -6,7 +6,7 @@ from homeassistant.components.matrix import (
     DOMAIN as MATRIX_DOMAIN,
     MatrixBot,
 )
-from homeassistant.components.matrix.const import FORMAT_HTML, SERVICE_SEND_MESSAGE
+from homeassistant.components.matrix.const import FORMAT_HTML, FORMAT_NOTICE, SERVICE_SEND_MESSAGE
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.core import HomeAssistant
 
@@ -46,6 +46,19 @@ async def test_send_message(
 
     # Send a message with an attached image.
     data[ATTR_DATA] = {ATTR_IMAGES: [image_path.name]}
+    await hass.services.async_call(
+        MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True
+    )
+
+    for room_alias_or_id in TEST_JOINABLE_ROOMS:
+        assert f"Message delivered to room '{room_alias_or_id}'" in caplog.messages
+
+    # Send bot notice (m.notice) message.
+    data = {
+        ATTR_MESSAGE: "Test bot (notice) message",
+        ATTR_TARGET: list(TEST_JOINABLE_ROOMS),
+        ATTR_DATA: {ATTR_FORMAT: FORMAT_NOTICE},
+    }
     await hass.services.async_call(
         MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True
     )
