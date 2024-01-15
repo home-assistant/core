@@ -337,6 +337,16 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Volume Storage (L)
+    (
+        BTHomeExtendedSensorDeviceClass.VOLUME_STORAGE,
+        Units.VOLUME_LITERS,
+    ): SensorEntityDescription(
+        key=f"{BTHomeExtendedSensorDeviceClass.VOLUME_STORAGE}_{Units.VOLUME_LITERS}",
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # Water (L)
     (
         BTHomeSensorDeviceClass.WATER,

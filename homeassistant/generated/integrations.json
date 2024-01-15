@@ -1680,12 +1680,6 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "facebox": {
-      "name": "Facebox",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "fail2ban": {
       "name": "Fail2Ban",
       "integration_type": "hub",
@@ -3104,12 +3098,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "life360": {
-      "name": "Life360",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "lifx": {
       "name": "LIFX",
       "integration_type": "hub",
@@ -3741,6 +3729,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "myuplink": {
+      "name": "myUplink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "nad": {
       "name": "NAD",
