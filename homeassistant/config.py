@@ -1027,7 +1027,11 @@ async def merge_packages_config(
     ] = _log_pkg_error,
 ) -> dict:
     """Merge packages into the top-level configuration. Mutate config."""
-    PACKAGES_CONFIG_SCHEMA(packages)
+    try:
+        PACKAGES_CONFIG_SCHEMA(packages)
+    except vol.Error as err:
+        raise HomeAssistantError(f"Error validating package config: {err}") from err
+
     for pack_name, pack_conf in packages.items():
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
