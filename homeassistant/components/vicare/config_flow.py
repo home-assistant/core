@@ -121,7 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             _LOGGER.debug("Using %s as active device", user_input[CONF_ACTIVE_DEVICE])
             return self.async_create_entry(
-                title="",
+                title=VICARE_NAME,
                 data={
                     **self.user_data,
                     **user_input,
