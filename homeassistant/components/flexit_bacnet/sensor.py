@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    EntityCategory,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
@@ -82,22 +81,29 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
     ),
     FlexitSensorEntityDescription(
         key="fireplace_ventilation_remaining_duration",
-        device_class=SensorDeviceClass.DURATION,
+        # device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        # suggested_unit_of_measurement= UnitOfTime.MINUTES,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         translation_key="fireplace_ventilation_remaining_duration",
         value_fn=lambda data: data.fireplace_ventilation_remaining_duration,
+        suggested_display_precision=0,
     ),
     FlexitSensorEntityDescription(
         key="rapid_ventilation_remaining_duration",
-        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        # suggested_unit_of_measurement= UnitOfTime.MINUTES,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         translation_key="rapid_ventilation_remaining_duration",
         value_fn=lambda data: data.rapid_ventilation_remaining_duration,
+        suggested_display_precision=0,
     ),
     FlexitSensorEntityDescription(
         key="supply_air_fan_control_signal",
-        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
         translation_key="supply_air_fan_control_signal",
+        native_unit_of_measurement=PERCENTAGE,
+        # unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.supply_air_fan_control_signal,
     ),
     # What sensor type should be used for this sensor?
@@ -110,9 +116,10 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
     ),
     FlexitSensorEntityDescription(
         key="exhaust_air_fan_control_signal",
-        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
         translation_key="exhaust_air_fan_control_signal",
         value_fn=lambda data: data.exhaust_air_fan_control_signal,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     FlexitSensorEntityDescription(
         key="exhaust_air_fan_rpm",
@@ -120,46 +127,48 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         translation_key="exhaust_air_fan_rpm",
         value_fn=lambda data: data.exhaust_air_fan_rpm,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    FlexitSensorEntityDescription(
-        key="electric_heater_nominal_power",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        translation_key="electric_heater_nominal_power",
-        value_fn=lambda data: data.electric_heater_nominal_power,
-    ),
+    # This does not make sense to be a sensor, since it's value is always the same, i.e. 0.8 kW
+    # Could this be added as some form of extra attribute somewhere?
+    # FlexitSensorEntityDescription(
+    #     key="electric_heater_nominal_power",
+    #     device_class=SensorDeviceClass.POWER,
+    #     native_unit_of_measurement=UnitOfPower.KILO_WATT,
+    #     translation_key="electric_heater_nominal_power",
+    #     value_fn=lambda data: data.electric_heater_nominal_power,
+    #     suggested_display_precision=3,
+    # ),
     FlexitSensorEntityDescription(
         key="electric_heater_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         translation_key="electric_heater_power",
         value_fn=lambda data: data.electric_heater_power,
+        suggested_display_precision=3,
     ),
     FlexitSensorEntityDescription(
         key="air_filter_operating_time",
-        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         native_unit_of_measurement=UnitOfTime.HOURS,
         translation_key="air_filter_operating_time",
         value_fn=lambda data: data.air_filter_operating_time,
+        # should we have a last_reset?
     ),
     FlexitSensorEntityDescription(
         key="heat_exchanger_efficiency",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         translation_key="heat_exchanger_efficiency",
-        icon="mdi:gauge",
         value_fn=lambda data: data.heat_exchanger_efficiency,
-        entity_category=EntityCategory.DIAGNOSTIC,  # Is this correct?
     ),
     FlexitSensorEntityDescription(
         key="heat_exchanger_speed",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         translation_key="heat_exchanger_speed",
-        icon="mdi:gauge",
         value_fn=lambda data: data.heat_exchanger_speed,
-        entity_category=EntityCategory.DIAGNOSTIC,  # Is this correct?
     ),
 )
 
