@@ -183,6 +183,7 @@ homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fully_kiosk.*
 homeassistant.components.generic_hygrostat.*
+homeassistant.components.generic_thermostat.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
