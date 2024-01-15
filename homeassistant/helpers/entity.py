@@ -6,13 +6,13 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping, MutableMapping
 import dataclasses
-from datetime import timedelta
 from enum import Enum, IntFlag, auto
 import functools as ft
 import logging
 import math
 import sys
 from timeit import default_timer as timer
+from types import FunctionType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -87,7 +87,7 @@ FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) 
 # How many times per hour we allow capabilities to be updated before logging a warning
 CAPABILITIES_UPDATE_LIMIT = 100
 
-CONTEXT_RECENT_TIME = timedelta(seconds=5)  # Time that a context is considered recent
+CONTEXT_RECENT_TIME_SECONDS = 5  # Time that a context is considered recent
 
 
 @callback
@@ -381,6 +381,9 @@ class CachedProperties(type):
             # Check if an _attr_ class attribute exits and move it to __attr_. We check
             # __dict__ here because we don't care about _attr_ class attributes in parents.
             if attr_name in cls.__dict__:
+                attr = getattr(cls, attr_name)
+                if isinstance(attr, (FunctionType, property)):
+                    raise TypeError(f"Can't override {attr_name} in subclass")
                 setattr(cls, private_attr_name, getattr(cls, attr_name))
                 annotations = cls.__annotations__
                 if attr_name in annotations:
@@ -1160,8 +1163,7 @@ class Entity(
 
         if (
             self._context_set is not None
-            and hass.loop.time() - self._context_set
-            > CONTEXT_RECENT_TIME.total_seconds()
+            and hass.loop.time() - self._context_set > CONTEXT_RECENT_TIME_SECONDS
         ):
             self._context = None
             self._context_set = None

@@ -78,11 +78,11 @@ async def test_binary_sensor_sensor_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 5, 5)
     await remove_entities(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 5, 5)
 
 
 async def test_binary_sensor_setup_light(
@@ -201,11 +201,18 @@ async def test_binary_sensor_setup_sensor(
     """Test binary_sensor entity setup for sensor devices."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
     entity_registry = er.async_get(hass)
 
-    for description in SENSE_SENSORS_WRITE:
+    expected = [
+        STATE_OFF,
+        STATE_UNAVAILABLE,
+        STATE_OFF,
+        STATE_OFF,
+        STATE_OFF,
+    ]
+    for index, description in enumerate(SENSE_SENSORS_WRITE):
         unique_id, entity_id = ids_from_device_description(
             Platform.BINARY_SENSOR, sensor_all, description
         )
@@ -216,23 +223,24 @@ async def test_binary_sensor_setup_sensor(
 
         state = hass.states.get(entity_id)
         assert state
-        assert state.state == STATE_OFF
+        assert state.state == expected[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_binary_sensor_setup_sensor_none(
+async def test_binary_sensor_setup_sensor_leak(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor: Sensor
 ) -> None:
-    """Test binary_sensor entity setup for sensor with most sensors disabled."""
+    """Test binary_sensor entity setup for sensor with most leak mounting type."""
 
     sensor.mount_type = MountType.LEAK
     await init_entry(hass, ufp, [sensor])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
     entity_registry = er.async_get(hass)
 
     expected = [
         STATE_UNAVAILABLE,
+        STATE_OFF,
         STATE_OFF,
         STATE_UNAVAILABLE,
         STATE_OFF,
@@ -348,7 +356,7 @@ async def test_binary_sensor_update_mount_type_window(
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
     _, entity_id = ids_from_device_description(
         Platform.BINARY_SENSOR, sensor_all, SENSE_SENSORS_WRITE[0]
@@ -379,8 +387,8 @@ async def test_binary_sensor_update_mount_type_garage(
 ) -> None:
     """Test binary_sensor motion entity."""
 
-    await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
+    await init_entry(hass, ufp, [sensor_all], debug=True)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
     _, entity_id = ids_from_device_description(
         Platform.BINARY_SENSOR, sensor_all, SENSE_SENSORS_WRITE[0]
