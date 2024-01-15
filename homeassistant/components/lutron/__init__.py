@@ -163,8 +163,6 @@ class LutronButton:
 class LutronData:
     """Storage class for platform global data."""
 
-    binary_sensors: list[tuple[str, OccupancyGroup]]
-    buttons: list[LutronButton]
     client: Lutron
     binary_sensors: list[tuple[str, OccupancyGroup]]
     buttons: list[LutronButton]
@@ -188,8 +186,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     _LOGGER.info("Connected to main repeater at %s", host)
 
     entry_data = LutronData(
-        binary_sensors=[],
-        buttons=[],
         client=lutron_client,
         binary_sensors=[],
         buttons=[],
