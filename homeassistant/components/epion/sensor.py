@@ -1,6 +1,8 @@
 """Support for Epion API."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -25,6 +27,7 @@ from .coordinator import EpionCoordinator
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         key="co2",
         name="CO2",
@@ -32,6 +35,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         key="temperature",
         name="Temperature",
@@ -39,6 +43,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         key="humidity",
         name="Humidity",
@@ -46,6 +51,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.HPA,
         key="pressure",
         name="Pressure",
@@ -63,75 +69,51 @@ async def async_setup_entry(
     coordinator: EpionCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
-        EpionSensor(coordinator, epion_device, description)
-        for epion_device in coordinator.data.values()
+        EpionSensor(coordinator, epion_device_id, description)
+        for epion_device_id in coordinator.data
         for description in SENSOR_TYPES
     ]
 
     async_add_entities(entities)
 
 
-class EpionSensor(CoordinatorEntity, SensorEntity):
+class EpionSensor(CoordinatorEntity[EpionCoordinator], SensorEntity):
     """Representation of an Epion Air sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: EpionCoordinator,
-        epion_device: dict,
+        epion_device_id: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize an EpionSensor."""
         super().__init__(coordinator)
-        self._epion_coordinator = coordinator
-        self._epion_device = epion_device
+        self._epion_device_id = epion_device_id
         self._measurement_key = description.key
-        self._display_name = description.name
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        self._attr_device_class = description.device_class
-        self._attr_suggested_display_precision = description.suggested_display_precision
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self.unique_id = f"{self._epion_device['deviceId']}_{self._measurement_key}"
-        self.has_entity_name = True
-        self.name = description.name
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the value reported by the sensor."""
-        return self.extract_value()
-
-    @property
-    def available(self) -> bool:
-        """Return the availability of this sensor."""
-        return self.extract_value() is not None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        my_device_id = self._epion_device["deviceId"]
-        sw_version: str | None = None
-        if my_device_id in self._epion_coordinator.data:
-            current_device = self._epion_coordinator.data[my_device_id]
-            sw_version = current_device.get("fwVersion")
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._epion_device["deviceId"])},
+        self.entity_description = description
+        self.unique_id = f"{epion_device_id}_{self._measurement_key}"
+        current_device = coordinator.data[epion_device_id]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._epion_device_id)},
             manufacturer="Epion",
-            name=self._epion_device["deviceName"],
-            sw_version=sw_version,
+            name=current_device.get("deviceName"),
+            sw_version=current_device.get("fwVersion"),
             model="Epion Air",
         )
 
-    def extract_value(self) -> float | None:
-        """Extract the sensor measurement value from the cached data, or None if it can't be found."""
-        my_device_id = self._epion_device["deviceId"]
-        if my_device_id not in self._epion_coordinator.data:
-            return None  # No data available, this can happen during startup or if the device (temporarily) stopped sending data
+    @property
+    def native_value(self) -> float | None:
+        """Return the value reported by the sensor, or None if the relevant sensor can't produce a current measurement."""
+        return self.device.get(self._measurement_key)
 
-        my_device = self._epion_coordinator.data[my_device_id]
+    @property
+    def available(self) -> bool:
+        """Return the availability of the device that provides this sensor data."""
+        return super().available and self.device
 
-        if self._measurement_key not in my_device:
-            return None  # No relevant measurement available
-
-        measurement = my_device[self._measurement_key]
-
-        return measurement
+    @property
+    def device(self) -> dict[str, Any] | None:
+        """Get the device record from the current coordinator data, or None if there is no data being returned for this device ID anymore."""
+        return self.coordinator.data.get(self._epion_device_id)

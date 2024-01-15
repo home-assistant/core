@@ -26,7 +26,7 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
-        if user_input is not None:
+        if user_input:
             try:
                 key_valid = await self.hass.async_add_executor_job(
                     self._check_api_key, user_input[CONF_API_KEY]
@@ -56,6 +56,7 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Try to connect and see if the API key is valid."""
         api = Epion(api_key)
         try:
-            return len(api.get_current()["devices"]) > 0
+            api.get_current()
+            return True
         except EpionAuthenticationError:
             return False

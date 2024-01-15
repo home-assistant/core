@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Define the API key (token) for this installation",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
@@ -11,22 +10,6 @@
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    }
-  },
-  "entity": {
-    "sensor": {
-      "co2": {
-        "name": "CO2"
-      },
-      "temperature": {
-        "name": "Temperature"
-      },
-      "pressure": {
-        "name": "Pressure"
-      },
-      "humidity": {
-        "name": "Humidity"
-      }
     }
   }
 }

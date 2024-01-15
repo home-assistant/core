@@ -1,6 +1,7 @@
 """The Epion data coordinator."""
 
 import logging
+from typing import Any
 
 from epion import Epion, EpionAuthenticationError, EpionConnectionError
 
@@ -13,7 +14,7 @@ from .const import REFRESH_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class EpionCoordinator(DataUpdateCoordinator[dict]):
+class EpionCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Epion data update coordinator."""
 
     def __init__(self, hass: HomeAssistant, epion_api: Epion) -> None:
@@ -26,7 +27,7 @@ class EpionCoordinator(DataUpdateCoordinator[dict]):
         )
         self.epion_api = epion_api
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Epion API and construct a dictionary with device IDs as keys."""
         try:
             response = await self.hass.async_add_executor_job(
