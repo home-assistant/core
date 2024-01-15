@@ -26,8 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bring! from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
 
