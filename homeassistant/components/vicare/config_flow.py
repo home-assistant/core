@@ -26,14 +26,14 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_ACTIVE_DEVICES,
+    CONF_ACTIVE_DEVICE,
     CONF_HEATING_TYPE,
     DEFAULT_HEATING_TYPE,
     DOMAIN,
     VICARE_NAME,
     HeatingType,
 )
-from .utils import get_device_config_list, login
+from .utils import get_device_config_list, get_device_serial_model_list, vicare_login
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,24 +54,14 @@ USER_SCHEMA = REAUTH_SCHEMA.extend(
 )
 
 
-def _get_option_list(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> list[SelectOptionDict]:
-    device_list = get_device_config_list(hass, entry.data)
-    return [
-        # we cannot always use device_config.getConfig().serial as it returns the gateway serial for all connected devices
-        SelectOptionDict(
-            value=device_config.getConfig().serial,
-            label=f"{device_config.getConfig().serial} ({device_config.getModel()})",
-        )
-        if device_config.getModel() == "Heatbox1"
-        # we cannot always use device.getSerial() either as there is a different API endpoint used for gateways that does not provide the serial (yet)
-        else SelectOptionDict(
-            value=device_config.asAutoDetectDevice().getSerial(),
-            label=f"{device_config.asAutoDetectDevice().getSerial()} ({device_config.getModel()})",
-        )
-        for device_config in device_list
-    ]
+def _get_device_list(
+    hass: HomeAssistant, entry_data: dict[str, Any]
+) -> list[tuple[str, str]]:
+    #     device_list = hass.data[DOMAIN][entry.entry_id].get(
+    #         VICARE_DEVICE_CONFIG_LIST, get_device_config_list(hass, entry.data)
+    #     )
+    device_list = get_device_config_list(hass, entry_data)
+    return get_device_serial_model_list(hass, device_list)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -79,7 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
     entry: config_entries.ConfigEntry | None
-    available_devices: list[SelectOptionDict] = []
+    available_devices: list[tuple[str, str]] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -92,23 +82,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 self.available_devices = await self.hass.async_add_executor_job(
-                    _get_option_list,
+                    _get_device_list,
                     self.hass,
                     user_input,
                 )
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
+                if len(self.available_devices) > 1:
+                    return await self.async_step_select()
                 if len(self.available_devices) == 1:
                     return self.async_create_entry(
                         title=VICARE_NAME,
                         data={
                             **user_input,
-                            CONF_ACTIVE_DEVICES: self.available_devices[0]["value"],
+                            CONF_ACTIVE_DEVICE: self.available_devices[0][0],
                         },
                     )
-                return await self.async_step_select()
-
+                errors["base"] = "no_devices"
         return self.async_show_form(
             step_id="user",
             data_schema=USER_SCHEMA,
@@ -123,18 +114,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        suggested_values: Mapping[str, Any] = {}
-        if self.entry is not None:
-            suggested_values = {
-                CONF_ACTIVE_DEVICES: self.entry.data[CONF_ACTIVE_DEVICES]
-            }
-
         schema = (
             vol.Schema(
                 {
-                    vol.Required(CONF_ACTIVE_DEVICES): SelectSelector(
+                    vol.Required(CONF_ACTIVE_DEVICE): SelectSelector(
                         SelectSelectorConfig(
-                            options=self.available_devices,
+                            options=[
+                                SelectOptionDict(
+                                    value=serial, label=f"{serial} ({model})"
+                                )
+                                for serial, model in self.available_devices
+                            ],
                             multiple=False,
                             mode=SelectSelectorMode.LIST,
                         ),
@@ -145,10 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select",
-            data_schema=self.add_suggested_values_to_schema(
-                schema,
-                suggested_values,
-            ),
+            data_schema=schema,
             errors=errors,
         )
 
@@ -171,7 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
 
             try:
-                await self.hass.async_add_executor_job(login, self.hass, data)
+                await self.hass.async_add_executor_job(vicare_login, self.hass, data)
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
@@ -215,6 +202,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Options flow handler."""
 
+    available_devices: list[tuple[str, str]] = []
+
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.entry = config_entry
@@ -228,33 +217,34 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(data=user_input)
 
         try:
-            options_list: list[
-                SelectOptionDict
-            ] = await self.hass.async_add_executor_job(
-                _get_option_list, self.hass, self.entry
+            self.available_devices = await self.hass.async_add_executor_job(
+                _get_device_list,
+                self.hass,
+                user_input,
             )
         except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
             errors["base"] = "invalid_auth"
-
-        suggested_values: Mapping[str, Any] = {
-            CONF_ACTIVE_DEVICES: self.entry.data[CONF_ACTIVE_DEVICES]
-        }
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Required(CONF_ACTIVE_DEVICES): SelectSelector(
+                        vol.Required(CONF_ACTIVE_DEVICE): SelectSelector(
                             SelectSelectorConfig(
-                                options=options_list,
+                                options=[
+                                    SelectOptionDict(
+                                        value=serial, label=f"{serial} ({model})"
+                                    )
+                                    for serial, model in self.available_devices
+                                ],
                                 multiple=False,
                                 mode=SelectSelectorMode.LIST,
                             ),
                         ),
                     }
                 ),
-                suggested_values,
+                user_input or dict(self.entry.data),
             ),
             errors=errors,
         )

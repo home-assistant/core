@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_MAC, MODULE
+from .conftest import MockPyViCare
 
 from tests.common import MockConfigEntry
 
@@ -48,7 +49,7 @@ async def test_user_create_entry(
 
     # test PyViCareInvalidConfigurationError
     with patch(
-        f"{MODULE}.config_flow.vicare_login",
+        f"{MODULE}.utils.vicare_login",
         side_effect=PyViCareInvalidConfigurationError(
             {"error": "foo", "error_description": "bar"}
         ),
@@ -64,7 +65,7 @@ async def test_user_create_entry(
 
     # test PyViCareInvalidCredentialsError
     with patch(
-        f"{MODULE}.config_flow.vicare_login",
+        f"{MODULE}.utils.vicare_login",
         side_effect=PyViCareInvalidCredentialsError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -78,9 +79,9 @@ async def test_user_create_entry(
 
     # test success
     with patch(
-        f"{MODULE}.config_flow.vicare_login",
-        return_value=None,
-    ) as mock_setup_entry:
+        f"{MODULE}.utils.vicare_login",
+        return_value=MockPyViCare(["vicare/Vitodens300W.json"]),
+    ) as mock_setup_entry, patch(f"{MODULE}.utils.get_serial", return_value="qwertz"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,
@@ -163,9 +164,9 @@ async def test_form_dhcp(
     assert result["errors"] == {}
 
     with patch(
-        f"{MODULE}.config_flow.vicare_login",
-        return_value=None,
-    ):
+        f"{MODULE}.utils.vicare_login",
+        return_value=MockPyViCare(["vicare/Vitodens300W.json"]),
+    ) as mock_setup_entry, patch(f"{MODULE}.utils.get_serial", return_value="qwertz"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,

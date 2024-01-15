@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_form_dhcp
   dict({
+    'active_devices': 'qwertz',
     'client_id': '5678',
     'heating_type': 'auto',
     'password': '1234',
@@ -9,6 +10,7 @@
 # ---
 # name: test_user_create_entry
   dict({
+    'active_devices': 'qwertz',
     'client_id': '5678',
     'heating_type': 'auto',
     'password': '1234',

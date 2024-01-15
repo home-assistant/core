@@ -17,6 +17,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
+
     diag = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_vicare_gas_boiler
     )

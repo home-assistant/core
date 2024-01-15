@@ -17,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
-    CONF_ACTIVE_DEVICES,
+    CONF_ACTIVE_DEVICE,
     CONF_HEATING_TYPE,
     DOMAIN,
     HEATING_TYPE_TO_CREATOR_METHOD,
@@ -33,11 +33,11 @@ from .utils import get_device_config_list, get_serial
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_active_device_list(hass: HomeAssistant, entry: ConfigEntry) -> list[str]:
+def _get_active_device_for_migration(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """Return the serial of the first element of the device config list (migration helper)."""
     device_list = get_device_config_list(hass, entry.data)
     # Currently we only support a single device
-    return [get_serial(device_list[0])]
+    return get_serial(device_list[0])
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -45,15 +45,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.version == 1:
         _LOGGER.debug("Migrating from version %s", entry.version)
-        serials = await hass.async_add_executor_job(
-            _get_active_device_list, hass, entry
+        serial = await hass.async_add_executor_job(
+            _get_active_device_for_migration, hass, entry
         )
         entry.version = 2
         hass.config_entries.async_update_entry(
             entry,
             data={
                 **entry.data,
-                CONF_ACTIVE_DEVICES: serials,
+                CONF_ACTIVE_DEVICE: serial,
             },
         )
         _LOGGER.debug("Migration to version %s successful", entry.version)
@@ -78,14 +78,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update a given config entry."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
-    device_list = get_configured_devices(
-        get_device_config_list(hass, entry.data), entry
-    )
-
+    device_list = get_device_config_list(hass, entry.data)
     # Currently we only support a single device
-    device = device_list[0]
+    device = get_configured_device(device_list, entry)
     hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG_LIST] = device_list
     hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG] = device
     hass.data[DOMAIN][entry.entry_id][VICARE_API] = getattr(
@@ -108,13 +110,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def get_configured_devices(
+def get_configured_device(
     devices: list[PyViCareDeviceConfig],
     entry: ConfigEntry,
-) -> list[PyViCareDeviceConfig]:
-    """Return list of configured devices."""
-    return [
-        device_config
-        for device_config in devices
-        if get_serial(device_config) in entry.data[CONF_ACTIVE_DEVICES]
-    ]
+) -> PyViCareDeviceConfig:
+    """Return the configured device."""
+    active_device: str = entry.options.get(
+        CONF_ACTIVE_DEVICE, entry.data.get(CONF_ACTIVE_DEVICE)
+    )
+
+    for device_config in devices:
+        if get_serial(device_config) == active_device:
+            return device_config
+    return None

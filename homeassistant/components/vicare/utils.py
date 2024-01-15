@@ -21,7 +21,7 @@ from .types import ViCareRequiredKeysMixin
 _LOGGER = logging.getLogger(__name__)
 
 
-def login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare:
+def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare:
     """Login via PyVicare API."""
     api = PyViCare()
     api.setCacheDuration(DEFAULT_SCAN_INTERVAL)
@@ -55,7 +55,7 @@ def get_device_config_list(
     hass: HomeAssistant, entry_data: Mapping[str, Any]
 ) -> list[PyViCareDeviceConfig]:
     """Return the list of device configs."""
-    api = login(hass, entry_data)
+    api = vicare_login(hass, entry_data)
     for device in api.devices:
         _LOGGER.info(
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
@@ -101,6 +101,15 @@ def get_serial(device_config: PyViCareDeviceConfig) -> str:
     # we cannot always use device_config.getConfig().serial as it returns the gateway serial for all connected devices
     if device_config.getModel() == "Heatbox1":
         return device_config.getConfig().serial
-
     # we cannot always use device.getSerial() either as there is a different API endpoint used for gateways that does not provide the serial (yet)
     return device_config.asAutoDetectDevice().getSerial()
+
+
+def get_device_serial_model_list(
+    hass: HomeAssistant, device_list: list[PyViCareDeviceConfig]
+) -> list[tuple[str, str]]:
+    """Return a list of serial / model per device config."""
+    return [
+        (get_serial(device_config), device_config.getModel())
+        for device_config in device_list
+    ]

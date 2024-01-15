@@ -4697,6 +4697,7 @@
     ]),
     'entry': dict({
       'data': dict({
+        'active_devices': '1234567890',
         'client_id': '**REDACTED**',
         'heating_type': 'auto',
         'password': '**REDACTED**',
@@ -4713,7 +4714,7 @@
       'source': 'user',
       'title': 'Mock Title',
       'unique_id': 'ViCare',
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---

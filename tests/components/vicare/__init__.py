@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.components.vicare.const import CONF_HEATING_TYPE
+from homeassistant.components.vicare.const import CONF_ACTIVE_DEVICE, CONF_HEATING_TYPE
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 
 MODULE = "homeassistant.components.vicare"
@@ -13,6 +13,11 @@ ENTRY_CONFIG: Final[dict[str, str]] = {
     CONF_PASSWORD: "1234",
     CONF_CLIENT_ID: "5678",
     CONF_HEATING_TYPE: "auto",
+    CONF_ACTIVE_DEVICE: "1234567890",
+}
+
+ENTRY_OPTIONS: Final[dict[str, str]] = {
+    CONF_ACTIVE_DEVICE: "1234567890",
 }
 
 MOCK_MAC = "B874241B7B9"
