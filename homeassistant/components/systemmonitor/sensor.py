@@ -12,7 +12,6 @@ from typing import Any, Generic, Literal
 
 import psutil
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
-from psutil._pslinux import svmem
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -57,6 +56,7 @@ from .coordinator import (
     SystemMonitorProcessorCoordinator,
     SystemMonitorSwapCoordinator,
     dataT,
+    svmem,
 )
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
 

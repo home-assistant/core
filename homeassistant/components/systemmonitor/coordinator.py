@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections import namedtuple
 from datetime import datetime
 import logging
 import os
@@ -9,7 +10,6 @@ from typing import TypeVar
 
 import psutil
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
-from psutil._pslinux import svmem
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
@@ -19,6 +19,11 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+# psutil constructs svmem by platform. Create our own to overcome the platform dependency.
+svmem = namedtuple(
+    "svmem",
+    ["total", "available", "percent", "used", "free"],
+)
 
 
 dataT = TypeVar(
@@ -84,7 +89,10 @@ class SystemMonitorMemoryCoordinator(MonitorCoordinator[svmem]):
 
     def update_data(self) -> svmem:
         """Fetch data."""
-        return psutil.virtual_memory()
+        memory = psutil.virtual_memory()
+        return svmem(
+            memory.total, memory.available, memory.percent, memory.used, memory.free
+        )
 
 
 class SystemMonitorNetIOCoordinator(MonitorCoordinator[dict[str, snetio]]):
