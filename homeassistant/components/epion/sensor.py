@@ -105,9 +105,9 @@ class EpionSensor(CoordinatorEntity[EpionCoordinator], SensorEntity):
     @property
     def available(self) -> bool:
         """Return the availability of the device that provides this sensor data."""
-        return super().available and self.device
+        return super().available and self._epion_device_id in self.coordinator.data
 
     @property
-    def device(self) -> dict[str, Any] | None:
+    def device(self) -> dict[str, Any]:
         """Get the device record from the current coordinator data, or None if there is no data being returned for this device ID anymore."""
-        return self.coordinator.data.get(self._epion_device_id)
+        return self.coordinator.data[self._epion_device_id]
