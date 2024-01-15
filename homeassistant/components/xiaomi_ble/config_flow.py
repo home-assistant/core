@@ -280,8 +280,8 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         # Otherwise there wasn't actually encryption so abort
         return self.async_abort(reason="reauth_successful")
 
-    def _async_get_or_create_entry(self, bindkey=None):
-        data = {}
+    def _async_get_or_create_entry(self, bindkey: str | None = None) -> FlowResult:
+        data: dict[str, Any] = {}
 
         if bindkey:
             data["bindkey"] = bindkey
