@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["deebot_client"],
-  "requirements": ["deebot-client==4.1.0", "numpy==1.26.0"]
+  "requirements": ["deebot-client==4.1.0"]
 }

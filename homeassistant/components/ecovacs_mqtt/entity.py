@@ -39,7 +39,6 @@ class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
     _attr_should_poll = False
     _attr_has_entity_name = True
     _always_available: bool = False
-    _subscribed_events: set[type[Event]] = set()
 
     def __init__(
         self,
@@ -60,6 +59,7 @@ class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
         self._device = device
         self._capability = capability
         self._attr_unique_id = f"{device.device_info.did}_{self.entity_description.key}"
+        self._subscribed_events: set[type[Event]] = set()
 
     @property
     def device_info(self) -> DeviceInfo | None:

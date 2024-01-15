@@ -1375,7 +1375,6 @@ nuheat==1.0.1
 numato-gpio==0.10.0
 
 # homeassistant.components.compensation
-# homeassistant.components.ecovacs_mqtt
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.stream
