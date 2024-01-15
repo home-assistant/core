@@ -17,8 +17,8 @@ class TechnoVEEntity(CoordinatorEntity[TechnoVEDataUpdateCoordinator]):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_{key}"
         info = self.coordinator.data.info
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC,info.mac_address)},
-            identifiers={(DOMAIN,info.mac_address)},
+            connections={(CONNECTION_NETWORK_MAC, info.mac_address)},
+            identifiers={(DOMAIN, info.mac_address)},
             name=info.name,
             manufacturer="TechnoVE",
             model=f"TechnoVE i{info.max_station_current}",
