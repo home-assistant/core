@@ -25,7 +25,7 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkLightEntityDescription(
     LightEntityDescription,
     ReolinkChannelEntityDescription,
@@ -49,16 +49,6 @@ LIGHT_ENTITIES = (
         turn_on_off_fn=lambda api, ch, value: api.set_whiteled(ch, state=value),
         get_brightness_fn=lambda api, ch: api.whiteled_brightness(ch),
         set_brightness_fn=lambda api, ch, value: api.set_whiteled(ch, brightness=value),
-    ),
-    ReolinkLightEntityDescription(
-        key="ir_lights",
-        cmd_key="GetIrLights",
-        translation_key="ir_lights",
-        icon="mdi:led-off",
-        entity_category=EntityCategory.CONFIG,
-        supported=lambda api, ch: api.supported(ch, "ir_lights"),
-        is_on_fn=lambda api, ch: api.ir_enabled(ch),
-        turn_on_off_fn=lambda api, ch, value: api.set_ir_lights(ch, value),
     ),
     ReolinkLightEntityDescription(
         key="status_led",

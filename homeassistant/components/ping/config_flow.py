@@ -8,6 +8,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -45,7 +49,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=user_input[CONF_HOST],
             data={},
-            options={**user_input, CONF_PING_COUNT: DEFAULT_PING_COUNT},
+            options={
+                **user_input,
+                CONF_PING_COUNT: DEFAULT_PING_COUNT,
+                CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.seconds,
+            },
         )
 
     async def async_step_import(self, import_info: Mapping[str, Any]) -> FlowResult:
@@ -54,6 +62,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         to_import = {
             CONF_HOST: import_info[CONF_HOST],
             CONF_PING_COUNT: import_info[CONF_PING_COUNT],
+            CONF_CONSIDER_HOME: import_info.get(
+                CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME
+            ).seconds,
         }
         title = import_info.get(CONF_NAME, import_info[CONF_HOST])
 
@@ -102,6 +113,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             min=1, max=100, mode=selector.NumberSelectorMode.BOX
                         )
                     ),
+                    vol.Optional(
+                        CONF_CONSIDER_HOME,
+                        default=self.config_entry.options.get(
+                            CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.seconds
+                        ),
+                    ): int,
                 }
             ),
         )

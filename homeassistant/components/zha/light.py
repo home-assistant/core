@@ -47,6 +47,7 @@ from .core.const import (
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
     CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
     CONF_GROUP_MEMBERS_ASSUME_STATE,
+    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
@@ -75,7 +76,6 @@ FLASH_EFFECTS = {
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.LIGHT)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.LIGHT)
-PARALLEL_UPDATES = 0
 SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 SIGNAL_LIGHT_GROUP_TRANSITION_START = "zha_light_group_transition_start"
 SIGNAL_LIGHT_GROUP_TRANSITION_FINISHED = "zha_light_group_transition_finished"
@@ -788,6 +788,7 @@ class Light(BaseLight, ZhaEntity):
         self._cancel_refresh_handle = async_track_time_interval(
             self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
+        self.debug("started polling with refresh interval of %s", refresh_interval)
         self.async_accept_signal(
             None,
             SIGNAL_LIGHT_GROUP_STATE_CHANGED,
@@ -838,6 +839,8 @@ class Light(BaseLight, ZhaEntity):
         """Disconnect entity object when removed."""
         assert self._cancel_refresh_handle
         self._cancel_refresh_handle()
+        self._cancel_refresh_handle = None
+        self.debug("stopped polling during device removal")
         await super().async_will_remove_from_hass()
 
     @callback
@@ -980,8 +983,16 @@ class Light(BaseLight, ZhaEntity):
         if self.is_transitioning:
             self.debug("skipping _refresh while transitioning")
             return
-        await self.async_get_state()
-        self.async_write_ha_state()
+        if self._zha_device.available and self.hass.data[DATA_ZHA].allow_polling:
+            self.debug("polling for updated state")
+            await self.async_get_state()
+            self.async_write_ha_state()
+        else:
+            self.debug(
+                "skipping polling for updated state, available: %s, allow polled requests: %s",
+                self._zha_device.available,
+                self.hass.data[DATA_ZHA].allow_polling,
+            )
 
     async def _maybe_force_refresh(self, signal):
         """Force update the state if the signal contains the entity id for this entity."""
@@ -989,8 +1000,16 @@ class Light(BaseLight, ZhaEntity):
             if self.is_transitioning:
                 self.debug("skipping _maybe_force_refresh while transitioning")
                 return
-            await self.async_get_state()
-            self.async_write_ha_state()
+            if self._zha_device.available and self.hass.data[DATA_ZHA].allow_polling:
+                self.debug("forcing polling for updated state")
+                await self.async_get_state()
+                self.async_write_ha_state()
+            else:
+                self.debug(
+                    "skipping _maybe_force_refresh, available: %s, allow polled requests: %s",
+                    self._zha_device.available,
+                    self.hass.data[DATA_ZHA].allow_polling,
+                )
 
     @callback
     def _assume_group_state(self, signal, update_params) -> None:

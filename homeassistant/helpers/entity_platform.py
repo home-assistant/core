@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
+from functools import partial
 from logging import Logger, getLogger
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -20,7 +21,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
-    EntityServiceResponse,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     SupportsResponse,
@@ -31,7 +32,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.generated import languages
 from homeassistant.setup import async_start_setup
-from homeassistant.util.async_ import run_callback_threadsafe
 
 from . import (
     config_validation as cv,
@@ -56,6 +56,7 @@ SLOW_ADD_MIN_TIMEOUT = 500
 
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
+DATA_DOMAIN_ENTITIES = "domain_entities"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = getLogger(__name__)
@@ -147,6 +148,10 @@ class EntityPlatform:
         hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
             self.platform_name, []
         ).append(self)
+
+        self.domain_entities: dict[str, Entity] = hass.data.setdefault(
+            DATA_DOMAIN_ENTITIES, {}
+        ).setdefault(domain, {})
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
@@ -396,7 +401,7 @@ class EntityPlatform:
                     self._async_cancel_retry_setup = None
                     await self._async_setup_platform(async_create_setup_task, tries)
 
-                if hass.state == CoreState.running:
+                if hass.state is CoreState.running:
                     self._async_cancel_retry_setup = async_call_later(
                         hass, wait_time, setup_again
                     )
@@ -429,12 +434,11 @@ class EntityPlatform:
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform, synchronously."""
-        run_callback_threadsafe(
-            self.hass.loop,
+        self.hass.loop.call_soon_threadsafe(
             self._async_schedule_add_entities,
             list(new_entities),
             update_before_add,
-        ).result()
+        )
 
     @callback
     def _async_schedule_add_entities(
@@ -736,6 +740,7 @@ class EntityPlatform:
 
         entity_id = entity.entity_id
         self.entities[entity_id] = entity
+        self.domain_entities[entity_id] = entity
 
         if not restored:
             # Reserve the state in the state machine
@@ -748,6 +753,7 @@ class EntityPlatform:
         def remove_entity_cb() -> None:
             """Remove entity from entities dict."""
             self.entities.pop(entity_id)
+            self.domain_entities.pop(entity_id)
 
         entity.async_on_remove(remove_entity_cb)
 
@@ -828,22 +834,21 @@ class EntityPlatform:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> EntityServiceResponse | None:
-            """Handle the service."""
-            return await service.entity_service_call(
-                self.hass,
-                [
-                    plf
-                    for plf in self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name]
-                    if plf.domain == self.domain
-                ],
-                func,
-                call,
-                required_features,
-            )
+        service_func: str | HassJob[..., Any]
+        service_func = func if isinstance(func, str) else HassJob(func)
 
         self.hass.services.async_register(
-            self.platform_name, name, handle_service, schema, supports_response
+            self.platform_name,
+            name,
+            partial(
+                service.entity_service_call,
+                self.hass,
+                self.domain_entities,
+                service_func,
+                required_features=required_features,
+            ),
+            schema,
+            supports_response,
         )
 
     async def _update_entity_states(self, now: datetime) -> None:

@@ -10,7 +10,7 @@ OFFON = [STATE_OFF, STATE_ON]
 
 
 async def test_binary_sensors(hass: HomeAssistant) -> None:
-    """Tests that the sensors are correct."""
+    """Tests that the binary sensor entities are correct."""
 
     assert len(hass.states.async_all("binary_sensor")) == 0
 

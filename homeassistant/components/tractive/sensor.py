@@ -43,14 +43,14 @@ from .const import (
 from .entity import TractiveEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class TractiveRequiredKeysMixin:
     """Mixin for required keys."""
 
     signal_prefix: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class TractiveSensorEntityDescription(
     SensorEntityDescription, TractiveRequiredKeysMixin
 ):
