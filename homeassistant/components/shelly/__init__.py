@@ -50,6 +50,7 @@ from .coordinator import (
     get_entry_data,
 )
 from .utils import (
+    check_if_device_has_latest_firmware,
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
@@ -205,6 +206,9 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
+        hass.async_create_task(
+            check_if_device_has_latest_firmware(hass, device, entry.unique_id)
+        )
         hass.async_create_task(_async_block_device_setup())
 
     if sleep_period == 0:
@@ -212,6 +216,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         LOGGER.debug("Setting up online block device %s", entry.title)
         try:
             await device.initialize()
+            await check_if_device_has_latest_firmware(hass, device, entry.unique_id)
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
@@ -289,6 +294,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             data[CONF_SLEEP_PERIOD] = get_rpc_device_wakeup_period(device.status)
             hass.config_entries.async_update_entry(entry, data=data)
 
+        hass.async_create_task(
+            check_if_device_has_latest_firmware(hass, device, entry.unique_id)
+        )
         hass.async_create_task(_async_rpc_device_setup())
 
     if sleep_period == 0:
@@ -296,6 +304,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         LOGGER.debug("Setting up online RPC device %s", entry.title)
         try:
             await device.initialize()
+            await check_if_device_has_latest_firmware(hass, device, entry.unique_id)
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
