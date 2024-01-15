@@ -30,12 +30,15 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    BLOCK_EXPECTED_SLEEP_PERIOD,
+    BLOCK_WRONG_SLEEP_PERIOD,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
     DEFAULT_COAP_PORT,
     DOMAIN,
     LOGGER,
+    MODELS_WITH_WRONG_SLEEP_PERIOD,
     PUSH_UPDATE_ISSUE_ID,
 )
 from .coordinator import (
@@ -161,6 +164,22 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     shelly_entry_data = get_entry_data(hass)[entry.entry_id]
+
+    # Some old firmware have a wrong sleep period hardcoded value.
+    # Following code block will force the right value for affected devices
+    if (
+        sleep_period == BLOCK_WRONG_SLEEP_PERIOD
+        and entry.data["model"] in MODELS_WITH_WRONG_SLEEP_PERIOD
+    ):
+        LOGGER.warning(
+            "Updating stored sleep period for %s: from %s to %s",
+            entry.title,
+            sleep_period,
+            BLOCK_EXPECTED_SLEEP_PERIOD,
+        )
+        data = {**entry.data}
+        data[CONF_SLEEP_PERIOD] = sleep_period = BLOCK_EXPECTED_SLEEP_PERIOD
+        hass.config_entries.async_update_entry(entry, data=data)
 
     async def _async_block_device_setup() -> None:
         """Set up a block based device that is online."""
