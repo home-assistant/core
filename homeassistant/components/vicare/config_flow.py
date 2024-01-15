@@ -70,6 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 2
     entry: config_entries.ConfigEntry | None
     available_devices: list[tuple[str, str]] = []
+    user_data: dict[str, Any]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -90,6 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 if len(self.available_devices) > 1:
+                    self.user_data = user_input
                     return await self.async_step_select()
                 if len(self.available_devices) == 1:
                     return self.async_create_entry(
@@ -112,7 +114,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Select which device to show."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(
+                title="",
+                data={
+                    **self.user_data,
+                    **user_input,
+                },
+            )
 
         schema = (
             vol.Schema(
