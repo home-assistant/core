@@ -61,6 +61,7 @@ def _get_device_list(
     #         VICARE_DEVICE_CONFIG_LIST, get_device_config_list(hass, entry.data)
     #     )
     device_list = get_device_config_list(hass, entry_data)
+    _LOGGER.debug("Found %s devices", len(device_list))
     return get_device_serial_model_list(hass, device_list)
 
 
@@ -90,10 +91,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
-                if len(self.available_devices) > 1:
-                    self.user_data = user_input
-                    return await self.async_step_select()
-                if len(self.available_devices) == 1:
+                if len(self.available_devices) == 0:
+                    _LOGGER.debug("No devices found")
+                    errors["base"] = "no_devices"
+                elif len(self.available_devices) == 1:
+                    _LOGGER.debug("One device found: %s", self.available_devices[0][0])
                     return self.async_create_entry(
                         title=VICARE_NAME,
                         data={
@@ -101,7 +103,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             CONF_ACTIVE_DEVICE: self.available_devices[0][0],
                         },
                     )
-                errors["base"] = "no_devices"
+                else:
+                    _LOGGER.debug("Multiple devices found")
+                    self.user_data = user_input
+                    return await self.async_step_select()
         return self.async_show_form(
             step_id="user",
             data_schema=USER_SCHEMA,
@@ -114,6 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Select which device to show."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            _LOGGER.debug("Using %s as active device", user_input[CONF_ACTIVE_DEVICE])
             return self.async_create_entry(
                 title="",
                 data={
@@ -122,8 +128,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        schema = (
-            vol.Schema(
+        return self.async_show_form(
+            step_id="select",
+            data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ACTIVE_DEVICE): SelectSelector(
                         SelectSelectorConfig(
@@ -139,11 +146,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-        )
-
-        return self.async_show_form(
-            step_id="select",
-            data_schema=schema,
             errors=errors,
         )
 
