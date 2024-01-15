@@ -20,6 +20,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
 from . import DOMAIN as GPL_DOMAIN, TRACKER_UPDATE
 from .const import (
@@ -80,13 +81,13 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
 
     def __init__(self, device, location, battery, accuracy, attributes):
         """Set up GPSLogger entity."""
-        self._accuracy = accuracy
+        self._accuracy = accuracy or 0
         self._attributes = attributes
         self._name = device
         self._battery = battery
         self._location = location
         self._unique_id = device
-        self._prv_seen = attributes.get(ATTR_LAST_SEEN)
+        self._prv_seen = attributes and attributes.get(ATTR_LAST_SEEN)
 
     @property
     def battery_level(self):
@@ -146,7 +147,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
 
         if (state := await self.async_get_last_state()) is None:
             self._location = (None, None)
-            self._accuracy = None
+            self._accuracy = 0
             self._attributes = {
                 ATTR_ACTIVITY: None,
                 ATTR_ALTITUDE: None,
@@ -162,8 +163,14 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
 
         attr = state.attributes
         self._location = (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
-        self._accuracy = attr.get(ATTR_GPS_ACCURACY)
-        last_seen = cast(datetime | None, attr.get(ATTR_LAST_SEEN))
+        self._accuracy = attr.get(ATTR_GPS_ACCURACY, 0)
+        # Python datetime objects are saved/restored as strings.
+        # Convert back to datetime object.
+        restored_last_seen = cast(str | None, attr.get(ATTR_LAST_SEEN))
+        if isinstance(restored_last_seen, str):
+            last_seen = dt_util.parse_datetime(restored_last_seen)
+        else:
+            last_seen = None
         self._prv_seen = last_seen
         self._attributes = {
             ATTR_ACTIVITY: attr.get(ATTR_ACTIVITY),
@@ -194,7 +201,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
 
         self._location = location
         self._battery = battery
-        self._accuracy = accuracy
+        self._accuracy = accuracy or 0
         self._attributes.update(attributes)
         self._prv_seen = last_seen
         self.async_write_ha_state()
