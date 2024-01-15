@@ -38,10 +38,10 @@ class LaMarzoccoEntity(CoordinatorEntity[LaMarzoccoUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{coordinator.lm.serial_number}_{entity_description.key}"
-        )
         lm = coordinator.lm
+        self._attr_unique_id = (
+            f"{lm.serial_number}_{entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, lm.serial_number)},
             name=lm.machine_name,
