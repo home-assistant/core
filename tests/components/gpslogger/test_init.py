@@ -1,4 +1,5 @@
 """The tests the for GPSLogger device tracker platform."""
+from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -14,6 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -28,7 +32,7 @@ def mock_dev_track(mock_device_tracker_conf):
 async def gpslogger_client(event_loop, hass, hass_client_no_auth):
     """Mock client for GPSLogger (unauthenticated)."""
 
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
 
@@ -145,6 +149,8 @@ async def test_enter_with_attrs(
     """Test when additional attributes are present."""
     url = f"/api/webhook/{webhook_id}"
 
+    now = dt_util.now()
+
     data = {
         "latitude": 1.0,
         "longitude": 1.1,
@@ -156,6 +162,8 @@ async def test_enter_with_attrs(
         "altitude": 102,
         "provider": "gps",
         "activity": "running",
+        "battery_charging": True,
+        "last_seen": now,
     }
 
     req = await gpslogger_client.post(url, data=data)
@@ -170,6 +178,12 @@ async def test_enter_with_attrs(
     assert state.attributes["altitude"] == 102.0
     assert state.attributes["provider"] == "gps"
     assert state.attributes["activity"] == "running"
+    assert state.attributes["battery_charging"]
+    assert state.attributes["last_seen"] == now
+
+    now += timedelta(seconds=10)
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
 
     data = {
         "latitude": HOME_LATITUDE,
@@ -182,6 +196,8 @@ async def test_enter_with_attrs(
         "altitude": 123,
         "provider": "gps",
         "activity": "idle",
+        "battery_charging": False,
+        "last_seen": now,
     }
 
     req = await gpslogger_client.post(url, data=data)
@@ -196,6 +212,62 @@ async def test_enter_with_attrs(
     assert state.attributes["altitude"] == 123
     assert state.attributes["provider"] == "gps"
     assert state.attributes["activity"] == "idle"
+    assert not state.attributes["battery_charging"]
+    assert state.attributes["last_seen"] == now
+
+
+async def test_no_last_seen_warning(
+    hass: HomeAssistant, gpslogger_client, webhook_id, caplog
+) -> None:
+    """Test when additional attributes do not contain last_seen."""
+    url = f"/api/webhook/{webhook_id}"
+
+    data = {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE, "device": "123"}
+
+    # Enter the Home
+    req = await gpslogger_client.post(url, data=data)
+    await hass.async_block_till_done()
+    assert req.status == HTTPStatus.OK
+    assert "HTTP Body does not contain last_seen" in caplog.text
+
+
+async def test_last_seen_goes_backward(
+    hass: HomeAssistant, gpslogger_client, webhook_id, caplog
+) -> None:
+    """Test when last_seen goes backward."""
+    url = f"/api/webhook/{webhook_id}"
+
+    now = dt_util.now()
+
+    data = {
+        "latitude": HOME_LATITUDE,
+        "longitude": HOME_LONGITUDE,
+        "device": "123",
+        "last_seen": now,
+    }
+
+    # Enter the Home
+    req = await gpslogger_client.post(url, data=data)
+    await hass.async_block_till_done()
+    assert req.status == HTTPStatus.OK
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
+    assert state.state == STATE_HOME
+    assert state.attributes["last_seen"] == now
+
+    async_fire_time_changed(hass, now + timedelta(seconds=10))
+    await hass.async_block_till_done()
+
+    data["longitude"] = 0
+    data["latitude"] = 0
+    data["last_seen"] = now - timedelta(seconds=10)
+
+    # Enter Somewhere else, but with an older last_seen
+    req = await gpslogger_client.post(url, data=data)
+    await hass.async_block_till_done()
+    assert req.status == HTTPStatus.OK
+    new_state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
+    assert new_state == state
+    assert "Skipping update because last_seen went backwards" in caplog.text
 
 
 async def test_load_unload_entry(
