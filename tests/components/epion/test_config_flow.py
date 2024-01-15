@@ -10,29 +10,19 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 API_KEY = "test-key-123"
 
 
-async def test_user_flow(hass: HomeAssistant) -> None:
+async def test_user_flow(hass: HomeAssistant, mock_epion_api_one_device) -> None:
     """Test we can handle a regular successflow setup flow."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_epion_api = _get_mock_epion_api(
-        get_current={
-            "devices": [{"deviceId": "abc", "deviceName": "Test Device"}],
-            "accountId": "abc-123",
-        }
-    )
-
     with patch(
-        "homeassistant.components.epion.config_flow.Epion",
-        return_value=mock_epion_api,
-    ), patch(
         "homeassistant.components.epion.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -81,10 +71,7 @@ async def test_form_exceptions(
 
     # Test a retry to recover, upon failure
     mock_epion_api = _get_mock_epion_api(
-        get_current={
-            "devices": [{"deviceId": "abc", "deviceName": "Test Device"}],
-            "accountId": "abc-123",
-        }
+        get_current=load_epion_api_get_current_fixture()
     )
 
     with patch(
@@ -108,7 +95,7 @@ async def test_form_exceptions(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_duplicate_entry(hass: HomeAssistant) -> None:
+async def test_duplicate_entry(hass: HomeAssistant, mock_epion_api_one_device) -> None:
     """Test duplicate setup handling."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -123,17 +110,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_epion_api = _get_mock_epion_api(
-        get_current={
-            "devices": [{"deviceId": "abc", "deviceName": "Test Device"}],
-            "accountId": "account-dupe-123",
-        }
-    )
-
     with patch(
-        "homeassistant.components.epion.config_flow.Epion",
-        return_value=mock_epion_api,
-    ), patch(
         "homeassistant.components.epion.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -146,6 +123,25 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_setup_entry.call_count == 0
+
+
+@pytest.fixture
+def mock_epion_api_one_device():
+    """Build a fixture for the Epion API that connects successfully and returns one device."""
+    current_one_device_data = load_epion_api_get_current_fixture()
+    mock_epion_api = _get_mock_epion_api(get_current=current_one_device_data)
+    with patch(
+        "homeassistant.components.epion.config_flow.Epion",
+        return_value=mock_epion_api,
+    ) as mock_epion_api:
+        yield mock_epion_api
+
+
+def load_epion_api_get_current_fixture(
+    fixture: str = "epion/get_current_one_device.json",
+):
+    """Load an Epion API get_current response structure."""
+    return load_json_object_fixture(fixture)
 
 
 def _get_mock_epion_api(get_current=None) -> MagicMock:
