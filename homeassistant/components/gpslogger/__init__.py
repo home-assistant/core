@@ -7,7 +7,13 @@ import voluptuous as vol
 from homeassistant.components import webhook
 from homeassistant.components.device_tracker import ATTR_BATTERY
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID, Platform
+from homeassistant.const import (
+    ATTR_BATTERY_CHARGING,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_WEBHOOK_ID,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
@@ -19,6 +25,7 @@ from .const import (
     ATTR_ALTITUDE,
     ATTR_DEVICE,
     ATTR_DIRECTION,
+    ATTR_LAST_SEEN,
     ATTR_PROVIDER,
     ATTR_SPEED,
     DOMAIN,
@@ -47,7 +54,9 @@ WEBHOOK_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ACTIVITY): cv.string,
         vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
         vol.Optional(ATTR_BATTERY, default=DEFAULT_BATTERY): vol.Coerce(float),
+        vol.Optional(ATTR_BATTERY_CHARGING): cv.boolean,
         vol.Optional(ATTR_DIRECTION): vol.Coerce(float),
+        vol.Optional(ATTR_LAST_SEEN): cv.datetime,
         vol.Optional(ATTR_PROVIDER): cv.string,
         vol.Optional(ATTR_SPEED): vol.Coerce(float),
     }
@@ -64,11 +73,13 @@ async def handle_webhook(hass, webhook_id, request):
         )
 
     attrs = {
-        ATTR_SPEED: data.get(ATTR_SPEED),
-        ATTR_DIRECTION: data.get(ATTR_DIRECTION),
-        ATTR_ALTITUDE: data.get(ATTR_ALTITUDE),
-        ATTR_PROVIDER: data.get(ATTR_PROVIDER),
         ATTR_ACTIVITY: data.get(ATTR_ACTIVITY),
+        ATTR_ALTITUDE: data.get(ATTR_ALTITUDE),
+        ATTR_BATTERY_CHARGING: data.get(ATTR_BATTERY_CHARGING),
+        ATTR_DIRECTION: data.get(ATTR_DIRECTION),
+        ATTR_LAST_SEEN: data.get(ATTR_LAST_SEEN),
+        ATTR_PROVIDER: data.get(ATTR_PROVIDER),
+        ATTR_SPEED: data.get(ATTR_SPEED),
     }
 
     device = data[ATTR_DEVICE]

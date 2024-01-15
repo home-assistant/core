@@ -1,7 +1,14 @@
 """Support for the GPSLogger device tracking."""
+from __future__ import annotations
+
+from datetime import datetime
+import logging
+from typing import cast
+
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -19,9 +26,12 @@ from .const import (
     ATTR_ACTIVITY,
     ATTR_ALTITUDE,
     ATTR_DIRECTION,
+    ATTR_LAST_SEEN,
     ATTR_PROVIDER,
     ATTR_SPEED,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -68,6 +78,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _prv_seen: datetime | None = None
 
     def __init__(self, device, location, battery, accuracy, attributes):
         """Set up GPSLogger entity."""
@@ -78,6 +89,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         self._location = location
         self._unsub_dispatcher = None
         self._unique_id = device
+        self._prv_seen = attributes.get(ATTR_LAST_SEEN)
 
     @property
     def battery_level(self):
@@ -137,22 +149,29 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
             self._location = (None, None)
             self._accuracy = None
             self._attributes = {
-                ATTR_ALTITUDE: None,
                 ATTR_ACTIVITY: None,
+                ATTR_ALTITUDE: None,
+                ATTR_BATTERY_CHARGING: None,
                 ATTR_DIRECTION: None,
+                ATTR_LAST_SEEN: None,
                 ATTR_PROVIDER: None,
                 ATTR_SPEED: None,
             }
             self._battery = None
+            self._prv_seen = None
             return
 
         attr = state.attributes
         self._location = (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
         self._accuracy = attr.get(ATTR_GPS_ACCURACY)
+        last_seen = cast(datetime | None, attr.get(ATTR_LAST_SEEN))
+        self._prv_seen = last_seen
         self._attributes = {
-            ATTR_ALTITUDE: attr.get(ATTR_ALTITUDE),
             ATTR_ACTIVITY: attr.get(ATTR_ACTIVITY),
+            ATTR_ALTITUDE: attr.get(ATTR_ALTITUDE),
+            ATTR_BATTERY_CHARGING: attr.get(ATTR_BATTERY_CHARGING),
             ATTR_DIRECTION: attr.get(ATTR_DIRECTION),
+            ATTR_LAST_SEEN: last_seen,
             ATTR_PROVIDER: attr.get(ATTR_PROVIDER),
             ATTR_SPEED: attr.get(ATTR_SPEED),
         }
@@ -169,8 +188,19 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         if device != self._name:
             return
 
+        last_seen = cast(datetime | None, attributes.get(ATTR_LAST_SEEN))
+        if self._prv_seen and last_seen and last_seen < self._prv_seen:
+            _LOGGER.debug(
+                "%s: Skipping update because last_seen went backwards: %s < %s",
+                self.entity_id,
+                last_seen,
+                self._prv_seen,
+            )
+            return
+
         self._location = location
         self._battery = battery
         self._accuracy = accuracy
         self._attributes.update(attributes)
+        self._prv_seen = last_seen
         self.async_write_ha_state()
