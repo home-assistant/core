@@ -19,8 +19,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "Your password from the La Marzocco app",
-          "username": "Your username from the La Marzocco app"
+          "username": "Your username from the La Marzocco app",
+          "password": "Your password from the La Marzocco app"
         }
       },
       "machine_selection": {
