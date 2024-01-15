@@ -36,6 +36,38 @@
     }
   },
   "entity": {
+    "number": {
+      "coffee_temp": {
+        "name": "Coffee temperature"
+      },
+      "steam_temp": {
+        "name": "Steam temperature"
+      },
+      "prebrew_on": {
+        "name": "Prebrew on time"
+      },
+      "prebrew_on_key": {
+        "name": "Prebrew on time Key {key}"
+      },
+      "prebrew_off": {
+        "name": "Prebrew off time"
+      },
+      "prebrew_off_key": {
+        "name": "Prebrew off time Key {key}"
+      },
+      "preinfusion_off": {
+        "name": "Preinfusion off time"
+      },
+      "preinfusion_off_key": {
+        "name": "Preinfusion off time Key {key}"
+      },
+      "dose_key": {
+        "name": "Dose Key {key}"
+      },
+      "dose_hot_water": {
+        "name": "Dose hot water"
+      }
+    },
     "switch": {
       "auto_on_off": {
         "name": "Auto on/off"
