@@ -146,6 +146,7 @@ homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
 homeassistant.components.downloader.*
 homeassistant.components.dsmr.*
+homeassistant.components.duckdns.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
