@@ -238,7 +238,7 @@ class FlexitSensor(FlexitEntity, CoordinatorEntity, SensorEntity):
         """Initialize Flexit (bacnet) sensor."""
         super().__init__(coordinator)
 
-        _LOGGER.info(f"Initialize Flexit (bacnet) sensor {entity_description.key}")
+        _LOGGER.info("Initialize Flexit (bacnet) sensor %s", entity_description.key)
 
         self.entity_description = entity_description
         self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(

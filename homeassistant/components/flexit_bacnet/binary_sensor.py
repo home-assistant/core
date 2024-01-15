@@ -93,7 +93,7 @@ class FlexitBinarySensor(FlexitEntity, CoordinatorEntity, BinarySensorEntity):
         super().__init__(coordinator)
 
         _LOGGER.info(
-            f"Initialize Flexit (bacnet) binary sensor {entity_description.key}"
+            "Initialize Flexit (bacnet) binary sensor %s", entity_description.key
         )
 
         self.entity_description = entity_description

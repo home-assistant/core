@@ -30,7 +30,6 @@ from .const import (
     PRESET_TO_VENTILATION_MODE_MAP,
     VENTILATION_TO_PRESET_MODE_MAP,
 )
-
 from .coordinator import FlexitCoordinator
 from .entity import FlexitEntity
 
@@ -72,7 +71,6 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
-
 
     def __init__(self, coordinator: FlexitCoordinator) -> None:
         """Initialize the Flexit unit."""
@@ -142,9 +140,13 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
         """Set new target hvac mode."""
         try:
             if hvac_mode == HVACMode.OFF:
-                await self.coordinator.device.set_ventilation_mode(VENTILATION_MODE_STOP)
+                await self.coordinator.device.set_ventilation_mode(
+                    VENTILATION_MODE_STOP
+                )
             else:
-                await self.coordinator.device.set_ventilation_mode(VENTILATION_MODE_HOME)
+                await self.coordinator.device.set_ventilation_mode(
+                    VENTILATION_MODE_HOME
+                )
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
         finally:
