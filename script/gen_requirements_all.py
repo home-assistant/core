@@ -106,9 +106,6 @@ httpcore==1.0.2
 # 5.2.0 fixed a collections abc deprecation
 hyperframe>=5.2.0
 
-# Ensure we run compatible with musllinux build env
-numpy==1.26.0
-
 # Prevent dependency conflicts between sisyphus-control and aioambient
 # until upper bounds for sisyphus-control have been updated
 # https://github.com/jkeljo/sisyphus-control/issues/6
