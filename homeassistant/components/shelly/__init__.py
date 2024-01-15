@@ -38,7 +38,6 @@ from .const import (
     DATA_CONFIG_ENTRY,
     DEFAULT_COAP_PORT,
     DOMAIN,
-    FIRMWARE_UNSUPPORTED_ISSUE_ID,
     LOGGER,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
     PUSH_UPDATE_ISSUE_ID,
@@ -57,6 +56,7 @@ from .utils import (
     get_device_entry_gen,
     get_rpc_device_wakeup_period,
     get_ws_context,
+    issue_for_unsupported_firmware,
 )
 
 BLOCK_PLATFORMS: Final = [
@@ -220,19 +220,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             raise ConfigEntryAuthFailed(repr(err)) from err
         except FirmwareUnsupported as err:
             error = repr(err)
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
-                is_fixable=False,
-                is_persistent=False,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="unsupported_firmware",
-                translation_placeholders={
-                    "device_name": entry.title,
-                    "ip_address": entry.data["host"],
-                },
-            )
+            issue_for_unsupported_firmware(hass, entry)
             raise ConfigEntryNotReady(error) from err
 
         await _async_block_device_setup()
@@ -316,19 +304,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             await device.initialize()
         except FirmwareUnsupported as err:
             error = repr(err)
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
-                is_fixable=False,
-                is_persistent=False,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="unsupported_firmware",
-                translation_placeholders={
-                    "device_name": entry.title,
-                    "ip_address": entry.data["host"],
-                },
-            )
+            issue_for_unsupported_firmware(hass, entry)
             raise ConfigEntryNotReady(error) from err
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
