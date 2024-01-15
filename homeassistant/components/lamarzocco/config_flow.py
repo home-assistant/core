@@ -65,7 +65,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 if self.reauth_entry:
                     self.hass.config_entries.async_update_entry(
-                        self.reauth_entry, data=user_input
+                        self.reauth_entry, data=data
                     )
                     await self.hass.config_entries.async_reload(
                         self.reauth_entry.entry_id
