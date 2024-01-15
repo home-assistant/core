@@ -49,9 +49,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     bring = Bring(email, password)
 
+    def login_and_load_lists() -> None:
+        bring.login()
+        bring.loadLists()
+
     try:
-        await hass.async_add_executor_job(bring.login)
-        await hass.async_add_executor_job(bring.loadLists)
+        await hass.async_add_executor_job(login_and_load_lists)
     except BringRequestException as e:
         raise CannotConnect from e
     except BringAuthException as e:

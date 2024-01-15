@@ -14,6 +14,7 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,13 +40,13 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert unique_id
 
-    for list_ in coordinator.data:
+    for bringList in coordinator.data:
         async_add_entities(
             [
                 BringTodoListEntity(
                     coordinator,
-                    list_=list_,
-                    unique_id=f"{unique_id} {list_['listUuid']}",
+                    bringList=bringList,
+                    unique_id=f"{unique_id} {bringList['listUuid']}",
                 )
             ],
         )
@@ -68,13 +69,13 @@ class BringTodoListEntity(
     def __init__(
         self,
         coordinator: BringDataUpdateCoordinator,
-        list_: BringData,
+        bringList: BringData,
         unique_id: str,
     ) -> None:
         """Initialize BringTodoListEntity."""
         super().__init__(coordinator)
-        self.list = list_
-        self._attr_name = self.list["name"]
+        self.bringList = bringList
+        self._attr_name = self.bringList["name"]
         self._attr_unique_id = unique_id
 
     @property
@@ -87,19 +88,30 @@ class BringTodoListEntity(
                 description=item["specification"] or "",
                 status=TodoItemStatus.NEEDS_ACTION,
             )
-            for item in self.list["items"]
+            for item in self.bringList["items"]
         ]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator and update the bring list object."""
+        super()._handle_coordinator_update()
+        self.bringList = next(
+            (
+                lst
+                for lst in self.coordinator.data
+                if lst["listUuid"] == self.bringList["listUuid"]
+            ),
+        )
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         try:
-
-            def _sync():
-                return self.coordinator.bring.saveItem(
-                    self.unique_id, item.summary, item.description or ""
-                )
-
-            await self.hass.async_add_executor_job(_sync)
+            await self.hass.async_add_executor_job(
+                self.coordinator.bring.saveItem,
+                self.bringList["listUuid"],
+                item.summary,
+                item.description or "",
+            )
         except BringRequestException as e:
             _LOGGER.warning("Unable to save todo item for bring")
             raise HomeAssistantError from e
@@ -121,35 +133,49 @@ class BringTodoListEntity(
             assert item.uid
 
         if item.status == TodoItemStatus.COMPLETED:
-            await self.async_delete_todo_items([item.uid])
+            await self.hass.async_add_executor_job(
+                self.coordinator.bring.removeItem,
+                self.bringList["listUuid"],
+                item.uid,
+            )
 
         elif item.summary == item.uid:
             try:
-
-                def _sync():
-                    return self.coordinator.bring.updateItem(
-                        self.unique_id, item.uid, item.description or ""
-                    )
-
-                await self.hass.async_add_executor_job(_sync)
+                await self.hass.async_add_executor_job(
+                    self.coordinator.bring.updateItem,
+                    self.bringList["listUuid"],
+                    item.uid,
+                    item.description or "",
+                )
             except BringRequestException as e:
                 _LOGGER.warning("Unable to update todo item for bring")
                 raise HomeAssistantError from e
         else:
-            await self.async_delete_todo_items([item.uid])
-            await self.async_create_todo_item(item)
+            try:
+                await self.hass.async_add_executor_job(
+                    self.coordinator.bring.removeItem,
+                    self.bringList["listUuid"],
+                    item.uid,
+                )
+                await self.hass.async_add_executor_job(
+                    self.coordinator.bring.saveItem,
+                    self.bringList["listUuid"],
+                    item.summary,
+                    item.description or "",
+                )
+            except BringRequestException as e:
+                _LOGGER.warning("Unable to replace todo item for bring")
+                raise HomeAssistantError from e
 
-        await self.coordinator.async_refresh()
+        await self.async_update_ha_state(force_refresh=True)
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
         for uid in uids:
             try:
-
-                def _sync():
-                    return self.coordinator.bring.removeItem(self.unique_id, uid)  # noqa: B023
-
-                await self.hass.async_add_executor_job(_sync)
+                await self.hass.async_add_executor_job(
+                    self.coordinator.bring.removeItem, self.bringList["listUuid"], uid
+                )
             except BringRequestException as e:
                 _LOGGER.warning("Unable to delete todo item for bring")
                 raise HomeAssistantError from e

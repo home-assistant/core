@@ -51,20 +51,17 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
             _LOGGER.warning("Unable to parse response from bring")
             raise UpdateFailed from e
 
-        for _list in lists:
+        for lst in lists:
             try:
-
-                def _sync():
-                    nonlocal _list
-                    return self._bring.getItems(_list["listUuid"])  # noqa: B023
-
-                items = await self.hass.async_add_executor_job(_sync)
-                _list["items"] = items["purchase"]
+                items = await self.hass.async_add_executor_job(
+                    self.bring.getItems, lst["listUuid"]
+                )
             except BringRequestException as e:
                 _LOGGER.warning("Unable to connect and retrieve data from bring")
                 raise UpdateFailed from e
             except BringParseException as e:
                 _LOGGER.warning("Unable to parse response from bring")
                 raise UpdateFailed from e
+            lst["items"] = items["purchase"]
 
         return lists
