@@ -44,12 +44,7 @@ async def test_switches(
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
-    assert entry.device_id
     assert entry == snapshot
-
-    device = device_registry.async_get(entry.device_id)
-    assert device
-    assert device == snapshot
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -74,3 +69,24 @@ async def test_switches(
 
     assert len(control_fn.mock_calls) == 2
     control_fn.assert_called_with(True)
+
+
+async def test_device(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device for one switch."""
+
+    state = hass.states.get(f"switch.{mock_lamarzocco.serial_number}_main")
+    assert state
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry.device_id
+
+    device = device_registry.async_get(entry.device_id)
+    assert device
+    assert device == snapshot
