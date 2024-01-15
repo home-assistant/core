@@ -36,12 +36,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
             name=DOMAIN,
             update_interval=timedelta(seconds=90),
         )
-        self._bring = bring
-
-    @property
-    def bring(self) -> Bring:
-        """Return the bring api."""
-        return self._bring
+        self.bring = bring
 
     async def _async_update_data(self) -> list[BringData]:
         try:
