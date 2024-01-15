@@ -33,7 +33,9 @@ SET_COLOR_MODE_SCHEMA = cv.make_entity_service_schema(
 
 TURN_ON_SUPER_CHLOR_SCHEMA = cv.make_entity_service_schema(
     {
-        vol.Optional(ATTR_RUNTIME): vol.Clamp(min=MIN_RUNTIME, max=MAX_RUNTIME),
+        vol.Optional(ATTR_RUNTIME, default=24): vol.Clamp(
+            min=MIN_RUNTIME, max=MAX_RUNTIME
+        ),
     }
 )
 
@@ -113,7 +115,7 @@ def async_load_screenlogic_services(hass: HomeAssistant):
                 raise HomeAssistantError(error) from error
 
     async def async_start_super_chlor(service_call: ServiceCall) -> None:
-        runtime = service_call.data.get(ATTR_RUNTIME, 24)
+        runtime = service_call.data[ATTR_RUNTIME]
         await async_set_super_chlor(service_call, True, runtime)
 
     async def async_stop_super_chlor(service_call: ServiceCall) -> None:
