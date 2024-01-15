@@ -201,6 +201,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 entry_data.covers.append((area.name, output))
             elif output.type == "CEILING_FAN_TYPE":
                 entry_data.fans.append((area.name, output))
+                # Deprecated, should be removed in 2024.8
+                entry_data.lights.append((area.name, output))
             elif output.is_dimmable:
                 entry_data.lights.append((area.name, output))
             else:
