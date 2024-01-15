@@ -41,7 +41,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
     async def _async_update_data(self) -> list[BringData]:
         try:
             lists_response = await self.hass.async_add_executor_job(
-                self._bring.loadLists
+                self.bring.loadLists
             )
             lists = lists_response["lists"]
         except BringRequestException as e:

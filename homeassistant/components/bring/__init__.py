@@ -34,8 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     bring = Bring(email, password)
 
     try:
-        await hass.async_add_executor_job(bring.login)
-        await hass.async_add_executor_job(bring.loadLists)
+
+        def login_and_load_lists() -> None:
+            bring.login()
+            bring.loadLists()
+
+        await hass.async_add_executor_job(login_and_load_lists)
     except BringRequestException as e:
         raise ConfigEntryNotReady(
             f"Timeout while connecting for email '{email}'"
@@ -53,8 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Failed to parse request '%s', check your email and password",
             email,
         )
-        raise ConfigEntryError(
-            f"Failed to parse request '{email}', check your email and password"
+        raise ConfigEntryNotReady(
+            "Failed to parse response request from server, try again later"
         ) from e
 
     coordinator = BringDataUpdateCoordinator(hass, bring)
