@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import cast
 
 from homeassistant.components.binary_sensor import (
@@ -115,7 +115,7 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self._update_entity_state(None)
+        await self._update_entity_state()
         self.async_on_remove(
             async_track_time_interval(
                 self.hass,
@@ -126,7 +126,7 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
             ),
         )
 
-    async def _update_entity_state(self, now) -> None:
+    async def _update_entity_state(self, now: datetime | None = None) -> None:
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()

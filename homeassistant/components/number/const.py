@@ -38,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -69,10 +70,6 @@ class NumberMode(StrEnum):
 _DEPRECATED_MODE_AUTO: Final = DeprecatedConstantEnum(NumberMode.AUTO, "2025.1")
 _DEPRECATED_MODE_BOX: Final = DeprecatedConstantEnum(NumberMode.BOX, "2025.1")
 _DEPRECATED_MODE_SLIDER: Final = DeprecatedConstantEnum(NumberMode.SLIDER, "2025.1")
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 class NumberDeviceClass(StrEnum):
@@ -478,6 +475,13 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 
-UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
 }
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

@@ -16,7 +16,7 @@ pre-commit==3.6.0
 pydantic==1.10.12
 pylint==3.0.3
 pylint-per-file-ignores==1.2.1
-pipdeptree==2.11.0
+pipdeptree==2.13.2
 pytest-asyncio==0.21.0
 pytest-aiohttp==1.0.5
 pytest-cov==4.1.0
@@ -28,7 +28,7 @@ pytest-timeout==2.1.0
 pytest-unordered==0.5.2
 pytest-picked==0.5.0
 pytest-xdist==3.3.1
-pytest==7.4.3
+pytest==7.4.4
 requests-mock==1.11.0
 respx==0.20.2
 syrupy==4.6.0
