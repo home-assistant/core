@@ -320,6 +320,7 @@ homeassistant.components.plugwise.*
 homeassistant.components.poolsense.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
+homeassistant.components.prometheus.*
 homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
