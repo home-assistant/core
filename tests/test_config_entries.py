@@ -4170,7 +4170,7 @@ async def test_update_entry_and_reload(
 
         async def async_step_reauth(self, data):
             """Mock Reauth."""
-            return await self.async_update_and_reload_entry(
+            return self.async_update_and_reload_entry(
                 entry=entry,
                 title="Updated Title",
                 data={"vendor": "data2"},
