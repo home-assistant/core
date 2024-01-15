@@ -244,7 +244,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         ),
                     }
                 ),
-                user_input or dict(self.entry.data),
+                user_input or dict(self.entry.options) or dict(self.entry.data),
             ),
             errors=errors,
         )
