@@ -9,17 +9,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
 from .const import NEATO_DOMAIN, NEATO_LOGIN
 from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
-
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(NEATO_DOMAIN)
 
 PLATFORMS = [
     Platform.CAMERA,
@@ -30,14 +26,9 @@ PLATFORMS = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Neato component."""
-    hass.data[NEATO_DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
+    hass.data.setdefault(NEATO_DOMAIN, {})
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed
 
