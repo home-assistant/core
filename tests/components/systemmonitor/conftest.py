@@ -57,14 +57,6 @@ class MockProcess(Process):
         return self._name
 
 
-class Process:
-    """Mock a Process class."""
-
-    def name():
-        """Return a name."""
-        return "python3"
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setup entry."""
@@ -193,23 +185,11 @@ def mock_psutil(mock_process: list[MockProcess]) -> Mock:
 
 
 @pytest.fixture
-<<<<<<< HEAD
 def mock_util(mock_process) -> Mock:
     """Mock psutil."""
     with patch(
         "homeassistant.components.systemmonitor.util.psutil", autospec=True
     ) as mock_util:
-=======
-def mock_util() -> Mock:
-    """Mock psutil."""
-    with patch(
-        "homeassistant.components.systemmonitor.util.psutil", autospec=True
-    ) as mock_util:
-<<<<<<< HEAD
-        mock_util
->>>>>>> 4d1de7ae9a (Add fixtures and first test)
-=======
->>>>>>> 75938d9570 (Remove unneeded)
         mock_util.net_if_addrs.return_value = {
             "eth0": [
                 snicaddr(
@@ -219,7 +199,6 @@ def mock_util() -> Mock:
                     "255.255.255.255",
                     None,
                 )
-<<<<<<< HEAD
             ],
             "eth1": [
                 snicaddr(
@@ -245,28 +224,14 @@ def mock_util() -> Mock:
         # sensors_temperatures not available on MacOS so we
         # need to override the spec
         mock_util.sensors_temperatures = Mock()
-=======
-            ]
-        }
-<<<<<<< HEAD
-        mock_util.process_iter.return_value = [mock_process.return_value]
->>>>>>> 4d1de7ae9a (Add fixtures and first test)
-=======
-        _process = Process()
-        mock_util.process_iter.return_value = [_process]
->>>>>>> a4f32af124 (Fix process)
         mock_util.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
         mock_util.disk_partitions.return_value = [
-<<<<<<< HEAD
             sdiskpart("test", "/", "ext4", "", 1, 1),
             sdiskpart("test2", "/media/share", "ext4", "", 1, 1),
             sdiskpart("test3", "/incorrect", "", "", 1, 1),
             sdiskpart("proc", "/proc/run", "proc", "", 1, 1),
-=======
-            sdiskpart("test", "/", "ext4", "", 1, 1)
->>>>>>> 4d1de7ae9a (Add fixtures and first test)
         ]
         mock_util.disk_usage.return_value = sdiskusage(10, 10, 0, 0)
         yield mock_util
@@ -275,24 +240,9 @@ def mock_util() -> Mock:
 @pytest.fixture
 def mock_os() -> Mock:
     """Mock os."""
-<<<<<<< HEAD
     with patch("homeassistant.components.systemmonitor.sensor.os") as mock_os, patch(
         "homeassistant.components.systemmonitor.util.os"
     ) as mock_os_util:
         mock_os_util.name = "nt"
         mock_os.getloadavg.return_value = (1, 2, 3)
         yield mock_os
-=======
-    with patch(
-        "homeassistant.components.systemmonitor.coordinator.os",
-        autospec=True,
-    ) as mock_os:
-<<<<<<< HEAD
-        _os = mock_os
-        _os.getloadavg.return_value = (1, 2, 3)
-        yield _os
->>>>>>> 4d1de7ae9a (Add fixtures and first test)
-=======
-        mock_os.getloadavg.return_value = (1, 2, 3)
-        yield mock_os
->>>>>>> a4f32af124 (Fix process)
