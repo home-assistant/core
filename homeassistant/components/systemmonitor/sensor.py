@@ -93,8 +93,8 @@ def get_process(entity: SystemMonitorSensor[list[psutil.Process]]) -> str:
     """Return process."""
     state = STATE_OFF
     for proc in entity.coordinator.data:
-        _LOGGER.debug("process %s for argument %s", proc.name(), entity.argument)
         try:
+            _LOGGER.debug("process %s for argument %s", proc.name(), entity.argument)
             if entity.argument == proc.name():
                 state = STATE_ON
                 break
