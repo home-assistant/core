@@ -116,7 +116,7 @@ class BringTodoListEntity(
             _LOGGER.warning("Unable to save todo item for bring")
             raise HomeAssistantError from e
 
-        await self.async_update_ha_state(force_refresh=True)
+        await self.coordinator.async_refresh()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list.
@@ -167,7 +167,7 @@ class BringTodoListEntity(
                 _LOGGER.warning("Unable to replace todo item for bring")
                 raise HomeAssistantError from e
 
-        await self.async_update_ha_state(force_refresh=True)
+        await self.coordinator.async_refresh()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
@@ -180,4 +180,4 @@ class BringTodoListEntity(
                 _LOGGER.warning("Unable to delete todo item for bring")
                 raise HomeAssistantError from e
 
-        await self.async_update_ha_state(force_refresh=True)
+        await self.coordinator.async_refresh()
