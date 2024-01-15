@@ -59,9 +59,7 @@ class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
 
         self._device = device
         self._capability = capability
-        self._attr_unique_id = (
-            f"{self._device.device_info.did}_{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{device.device_info.did}_{self.entity_description.key}"
 
     @property
     def device_info(self) -> DeviceInfo | None:
