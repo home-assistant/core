@@ -91,22 +91,20 @@ class EpionSensor(CoordinatorEntity[EpionCoordinator], SensorEntity):
         """Initialize an EpionSensor."""
         super().__init__(coordinator)
         self._epion_device_id = epion_device_id
-        self._measurement_key = description.key
         self.entity_description = description
-        self.unique_id = f"{epion_device_id}_{self._measurement_key}"
-        current_device = coordinator.data[epion_device_id]
+        self.unique_id = f"{epion_device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._epion_device_id)},
             manufacturer="Epion",
-            name=current_device.get("deviceName"),
-            sw_version=current_device.get("fwVersion"),
+            name=self.device.get("deviceName"),
+            sw_version=self.device.get("fwVersion"),
             model="Epion Air",
         )
 
     @property
     def native_value(self) -> float | None:
         """Return the value reported by the sensor, or None if the relevant sensor can't produce a current measurement."""
-        return self.device.get(self._measurement_key)
+        return self.device.get(self.entity_description.key)
 
     @property
     def available(self) -> bool:
