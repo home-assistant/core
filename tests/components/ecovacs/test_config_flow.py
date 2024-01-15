@@ -40,11 +40,13 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
     with patch(
         "homeassistant.components.ecovacs.config_flow.EcoVacsAPI",
         return_value=Mock(spec_set=EcoVacsAPI),
-    ):
+    ) as mock_ecovacs:
         result = await _test_user_flow(hass)
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == _USER_INPUT[CONF_USERNAME]
         assert result["data"] == _USER_INPUT
+        assert len(mock_setup_entry.mock_calls) == 1
+        mock_ecovacs.assert_called()
 
 
 @pytest.mark.parametrize(
@@ -68,6 +70,7 @@ async def test_user_flow_error(
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": reason}
+        mock_ecovacs.assert_called()
 
 
 async def test_import_flow(
@@ -77,12 +80,14 @@ async def test_import_flow(
     with patch(
         "homeassistant.components.ecovacs.config_flow.EcoVacsAPI",
         return_value=Mock(spec_set=EcoVacsAPI),
-    ):
+    ) as mock_ecovacs:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data=_USER_INPUT,
         )
+        mock_ecovacs.assert_called()
+
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == _USER_INPUT[CONF_USERNAME]
     assert result["data"] == _USER_INPUT
@@ -138,3 +143,4 @@ async def test_import_flow_error(
             DOMAIN,
             f"deprecated_yaml_import_issue_{reason}",
         ) in issue_registry.issues
+        mock_ecovacs.assert_called()
