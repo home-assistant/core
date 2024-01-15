@@ -94,3 +94,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
             raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
+
+    def local_connection_set(self) -> bool:
+        """Return whether local connection is set."""
+        return self.config_entry.data.get(CONF_HOST) is not None

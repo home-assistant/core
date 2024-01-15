@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EntityCategory, UnitOfTemperature, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -36,7 +36,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         translation_key="drink_stats_coffee",
         icon="mdi:chart-line",
         native_unit_of_measurement="drinks",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda lm: lm.current_status.get("drinks_k1", 0),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -45,7 +45,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         translation_key="drink_stats_flushing",
         icon="mdi:chart-line",
         native_unit_of_measurement="drinks",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda lm: lm.current_status.get("total_flushing", 0),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -92,7 +92,10 @@ async def async_setup_entry(
     entities: list[LaMarzoccoSensorEntity] = []
     for description in ENTITIES:
         if coordinator.lm.model_name in description.supported_models:
-            if description.key == "shot_timer" and not config_entry.data.get(CONF_HOST):
+            if (
+                description.key == "shot_timer"
+                and not coordinator.local_connection_set()
+            ):
                 continue
             entities.append(LaMarzoccoSensorEntity(coordinator, description))
 

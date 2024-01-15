@@ -19,8 +19,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "Your password from the La Marzocco app",
-          "username": "Your username from the La Marzocco app"
+          "username": "Your username from the La Marzocco app",
+          "password": "Your password from the La Marzocco app"
         }
       },
       "machine_selection": {
@@ -44,10 +44,10 @@
         "name": "Current steam temperature"
       },
       "drink_stats_coffee": {
-        "name": "Drink statistics coffee"
+        "name": "Total coffees made"
       },
       "drink_stats_flushing": {
-        "name": "Drink statistics flushing"
+        "name": "Total flushes made"
       },
       "shot_timer": {
         "name": "Shot timer"

@@ -12,8 +12,8 @@ from . import async_init_integration
 from tests.common import MockConfigEntry
 
 SENSORS = (
-    "drink_statistics_coffee",
-    "drink_statistics_coffee",
+    "total_coffees_made",
+    "total_flushes_made",
     "shot_timer",
     "current_coffee_temperature",
     "current_steam_temperature",
