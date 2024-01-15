@@ -20,11 +20,11 @@ from .coordinator import RainbirdData
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.SWITCH,
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
-    Platform.NUMBER,
     Platform.CALENDAR,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
