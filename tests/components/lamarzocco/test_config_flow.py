@@ -14,7 +14,12 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
-from . import PASSWORD_SELECTION, USER_INPUT, get_bluetooth_service_info
+from . import (
+    PASSWORD_SELECTION,
+    USER_INPUT,
+    async_init_integration,
+    get_bluetooth_service_info,
+)
 
 from tests.common import MockConfigEntry
 
@@ -346,7 +351,8 @@ async def test_options_flow(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test options flow."""
-    mock_config_entry.add_to_hass(hass)
+    await async_init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
