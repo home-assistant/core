@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import gpslogger, zone
+from homeassistant.components import zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
 from homeassistant.config import async_process_ha_core_config
@@ -198,9 +198,6 @@ async def test_enter_with_attrs(
     assert state.attributes["activity"] == "idle"
 
 
-@pytest.mark.xfail(
-    reason="The device_tracker component does not support unloading yet."
-)
 async def test_load_unload_entry(
     hass: HomeAssistant, gpslogger_client, webhook_id
 ) -> None:
@@ -214,10 +211,10 @@ async def test_load_unload_entry(
     assert req.status == HTTPStatus.OK
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == STATE_HOME
-    assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
+    assert TRACKER_UPDATE in hass.data[DATA_DISPATCHER]
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert await gpslogger.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.data[DATA_DISPATCHER][TRACKER_UPDATE]
+    assert TRACKER_UPDATE not in hass.data[DATA_DISPATCHER]
