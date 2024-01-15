@@ -10,7 +10,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry
 
 API_KEY = "test-key-123"
 
