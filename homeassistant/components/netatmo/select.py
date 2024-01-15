@@ -61,6 +61,8 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.home.entity_id)},
             name=self.home.name,
+            manufacturer=MANUFACTURER,
+            model="Climate",
             configuration_url=CONF_URL_ENERGY,
         )
 
