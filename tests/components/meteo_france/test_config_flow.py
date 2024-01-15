@@ -80,9 +80,6 @@ def mock_controller_client_single():
 def mock_setup():
     """Prevent setup."""
     with patch(
-        "homeassistant.components.meteo_france.async_setup",
-        return_value=True,
-    ), patch(
         "homeassistant.components.meteo_france.async_setup_entry",
         return_value=True,
     ):
