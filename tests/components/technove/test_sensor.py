@@ -30,8 +30,9 @@ async def test_sensors(
 
     assert entity_entries
     for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=entity_entry.entity_id
+            name=f"{entity_entry.entity_id}-state"
         )
 
 

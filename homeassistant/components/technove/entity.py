@@ -1,4 +1,4 @@
-"""Models for TechnoVE."""
+"""Entity for TechnoVE."""
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -14,8 +14,8 @@ class TechnoVEEntity(CoordinatorEntity[TechnoVEDataUpdateCoordinator]):
     def __init__(self, coordinator: TechnoVEDataUpdateCoordinator, key: str) -> None:
         """Initialize a base TechnoVE entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.data.info.mac_address}_{key}"
         info = self.coordinator.data.info
+        self._attr_unique_id = f"{info.mac_address}_{key}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, info.mac_address)},
             identifiers={(DOMAIN, info.mac_address)},

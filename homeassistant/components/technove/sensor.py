@@ -26,7 +26,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import TechnoVEDataUpdateCoordinator
-from .models import TechnoVEEntity
+from .entity import TechnoVEEntity
 
 STATUS_TYPE = [s.value for s in Status]
 
