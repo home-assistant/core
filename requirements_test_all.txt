@@ -45,7 +45,7 @@ PlexAPI==4.15.7
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==13.0.8
+PyChromecast==13.1.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -427,7 +427,7 @@ arcam-fmj==1.4.0
 async-upnp-client==0.38.0
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.4.1
+asyncsleepiq==1.4.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
