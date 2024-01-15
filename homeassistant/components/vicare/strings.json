@@ -12,6 +12,12 @@
           "active_devices": "Device"
         }
       },
+      "select": {
+        "description": "Select the serial number of the device to connect. The serial number can be found on the device or in the settings of the ViCare app.",
+        "data": {
+          "active_devices": "Device"
+        }
+      },
       "reauth_confirm": {
         "description": "Please verify credentials.",
         "data": {
@@ -21,7 +27,8 @@
       }
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "There are no supported devices linked to this account!"
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
@@ -301,14 +308,15 @@
     "flow_title": "{name} ({host})",
     "step": {
       "init": {
-        "description": "Select the serial number of the device to connect. The serial number can be found on the device or in the settings of the VICare app.",
+        "description": "Select the serial number of the device to connect. The serial number can be found on the device or in the settings of the ViCare app.",
         "data": {
           "active_devices": "Device"
         }
       }
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "There are no supported devices linked to this account!"
     }
   },
   "services": {
