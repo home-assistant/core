@@ -79,17 +79,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         :param user_input: User's selected boards
         """
-        if user_input:
-            return self.async_create_entry(
-                title=self._data[CONF_USER_EMAIL], data=self._data, options=user_input
-            )
-
-        options = {key: value["name"] for key, value in self._ids_boards.items()}
-        return self.async_show_form(
-            step_id="boards",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_BOARD_IDS): cv.multi_select(options)}
-            ),
+        return self.async_create_entry(
+            title=self._data[CONF_USER_EMAIL], data=self._data, options=user_input
         )
 
     def _get_boards(self) -> dict[str, dict[str, str]]:
