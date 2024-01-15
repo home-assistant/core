@@ -106,9 +106,6 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.async_update_entry(
                         self._entry, data=self._data
                     )
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(self._entry.entry_id)
-                    )
                     return self.async_abort(reason="reauth_successful")
 
                 self._async_abort_entries_match(

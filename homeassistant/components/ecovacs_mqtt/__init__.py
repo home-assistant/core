@@ -1,8 +1,6 @@
 """Ecovacs mqtt component."""
 from __future__ import annotations
 
-import asyncio
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -28,25 +26,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    # This is called when an entry/configured device is to be removed. The class
-    # needs to unload itself, and remove callbacks. See the classes for further
-    # details
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-
-    if unload_ok:
+    """Unload config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await hass.data[DOMAIN][entry.entry_id].teardown()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        del hass.data[DOMAIN][entry.entry_id]
         if len(hass.data[DOMAIN]) == 0:
             hass.data.pop(DOMAIN)
-
     return unload_ok
 
 
