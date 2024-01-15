@@ -5,6 +5,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from pylutron import Lutron, LutronEntity, Output
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -78,10 +80,13 @@ class LutronLight(LutronDevice, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _lutron_device: Output
+    _prev_brightness: int | None = None
 
-    def __init__(self, area_name, lutron_device, controller) -> None:
+    def __init__(
+        self, area_name: str, lutron_device: LutronEntity, controller: Lutron
+    ) -> None:
         """Initialize the light."""
-        self._prev_brightness = None
         super().__init__(area_name, lutron_device, controller)
         self._is_fan = lutron_device.type == "CEILING_FAN_TYPE"
 

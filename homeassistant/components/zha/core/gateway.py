@@ -142,7 +142,9 @@ class ZHAGateway:
         self._log_relay_handler = LogRelayHandler(hass, self)
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
+
         self.shutting_down = False
+        self._reload_task: asyncio.Task | None = None
 
     def get_application_controller_data(self) -> tuple[ControllerApplication, dict]:
         """Get an uninitialized instance of a zigpy `ControllerApplication`."""
@@ -231,12 +233,17 @@ class ZHAGateway:
 
     def connection_lost(self, exc: Exception) -> None:
         """Handle connection lost event."""
+        _LOGGER.debug("Connection to the radio was lost: %r", exc)
+
         if self.shutting_down:
             return
 
-        _LOGGER.debug("Connection to the radio was lost: %r", exc)
+        # Ensure we do not queue up multiple resets
+        if self._reload_task is not None:
+            _LOGGER.debug("Ignoring reset, one is already running")
+            return
 
-        self.hass.async_create_task(
+        self._reload_task = self.hass.async_create_task(
             self.hass.config_entries.async_reload(self.config_entry.entry_id)
         )
 
@@ -760,6 +767,10 @@ class ZHAGateway:
 
     async def shutdown(self) -> None:
         """Stop ZHA Controller Application."""
+        if self.shutting_down:
+            _LOGGER.debug("Ignoring duplicate shutdown event")
+            return
+
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
         self.shutting_down = True
 

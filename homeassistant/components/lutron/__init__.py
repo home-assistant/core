@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import logging
 
-from pylutron import Button, Led, Lutron, OccupancyGroup, Output
+from pylutron import Button, Keypad, Led, Lutron, LutronEvent, OccupancyGroup, Output
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -111,7 +111,9 @@ class LutronButton:
     represented as an entity; it simply fires events.
     """
 
-    def __init__(self, hass: HomeAssistant, area_name, keypad, button) -> None:
+    def __init__(
+        self, hass: HomeAssistant, area_name: str, keypad: Keypad, button: Button
+    ) -> None:
         """Register callback for activity on the button."""
         name = f"{keypad.name}: {button.name}"
         if button.name == "Unknown Button":
@@ -131,7 +133,9 @@ class LutronButton:
 
         button.subscribe(self.button_callback, None)
 
-    def button_callback(self, button, context, event, params):
+    def button_callback(
+        self, _button: Button, _context: None, event: LutronEvent, _params: dict
+    ) -> None:
         """Fire an event about a button being pressed or released."""
         # Events per button type:
         #   RaiseLower -> pressed/released
@@ -155,13 +159,15 @@ class LutronButton:
             self._hass.bus.fire(self._event, data)
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class LutronData:
     """Storage class for platform global data."""
 
     binary_sensors: list[tuple[str, OccupancyGroup]]
     buttons: list[LutronButton]
     client: Lutron
+    binary_sensors: list[tuple[str, OccupancyGroup]]
+    buttons: list[LutronButton]
     covers: list[tuple[str, Output]]
     fans: list[tuple[str, Output]]
     lights: list[tuple[str, Output]]
@@ -185,6 +191,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         binary_sensors=[],
         buttons=[],
         client=lutron_client,
+        binary_sensors=[],
+        buttons=[],
         covers=[],
         fans=[],
         lights=[],

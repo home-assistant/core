@@ -261,7 +261,7 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
-        attempts = None if self.hass.state == CoreState.running else 1
+        attempts = None if self.hass.state is CoreState.running else 1
         if (
             transport == Transport.BLE
             and pairing.accessories
@@ -641,7 +641,9 @@ class HKDevice:
         await self.async_add_new_entities()
 
     @callback
-    def async_entity_key_removed(self, entity_key: tuple[int, int | None, int | None]):
+    def async_entity_key_removed(
+        self, entity_key: tuple[int, int | None, int | None]
+    ) -> None:
         """Handle an entity being removed.
 
         Releases the entity from self.entities so it can be added again.
@@ -666,7 +668,7 @@ class HKDevice:
         self.char_factories.append(add_entities_cb)
         self._add_new_entities_for_char([add_entities_cb])
 
-    def _add_new_entities_for_char(self, handlers) -> None:
+    def _add_new_entities_for_char(self, handlers: list[AddCharacteristicCb]) -> None:
         for accessory in self.entity_map.accessories:
             for service in accessory.services:
                 for char in service.characteristics:
@@ -768,7 +770,7 @@ class HKDevice:
         """Request an debounced update from the accessory."""
         await self._debounced_update.async_call()
 
-    async def async_update(self, now=None):
+    async def async_update(self, now: datetime | None = None) -> None:
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
             self.async_update_available_state()
