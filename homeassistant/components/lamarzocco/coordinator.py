@@ -32,7 +32,6 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         self.lm = LaMarzoccoClient(
             callback_websocket_notify=self.async_update_listeners,
         )
-        self._use_bluetooth = False
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
