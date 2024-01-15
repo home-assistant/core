@@ -8,7 +8,7 @@ from functools import lru_cache
 import logging
 import socket
 import sys
-from typing import Any, Generic
+from typing import Any, Generic, Literal
 
 import psutil
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
@@ -72,6 +72,14 @@ SENSOR_TYPE_DEVICE_CLASS = 3
 SENSOR_TYPE_MANDATORY_ARG = 4
 
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
+
+
+@lru_cache
+def get_cpu_icon() -> Literal["mdi:cpu-64-bit", "mdi:cpu-32-bit"]:
+    """Return cpu icon."""
+    if sys.maxsize > 2**32:
+        return "mdi:cpu-64-bit"
+    return "mdi:cpu-32-bit"
 
 
 def get_processor_temperature(
