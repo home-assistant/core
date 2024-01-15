@@ -8,10 +8,8 @@ from psutil._common import shwtemp, snetio, snicaddr
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.systemmonitor.sensor import (
-    _read_cpu_temperature,
-    get_cpu_icon,
-)
+from homeassistant.components.systemmonitor.sensor import get_cpu_icon
+from homeassistant.components.systemmonitor.util import read_cpu_temperature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -324,7 +322,7 @@ async def test_processor_temperature() -> None:
         mock_psutil.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
-        temperature = _read_cpu_temperature()
+        temperature = read_cpu_temperature()
         assert temperature == 50.0
 
     with patch("sys.platform", "nt"), patch(
@@ -333,7 +331,7 @@ async def test_processor_temperature() -> None:
         mock_psutil.sensors_temperatures.side_effect = AttributeError(
             "sensors_temperatures not exist"
         )
-        temperature = _read_cpu_temperature()
+        temperature = read_cpu_temperature()
         assert temperature is None
 
     with patch("sys.platform", "darwin"), patch(
@@ -342,5 +340,5 @@ async def test_processor_temperature() -> None:
         mock_psutil.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
-        temperature = _read_cpu_temperature()
+        temperature = read_cpu_temperature()
         assert temperature == 50.0
