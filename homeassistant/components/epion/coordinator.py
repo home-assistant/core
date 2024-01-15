@@ -39,8 +39,7 @@ class EpionCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except EpionConnectionError as err:
             _LOGGER.error("Epion API connection problem")
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        else:
-            device_data = {}
-            for epion_device in response["devices"]:
-                device_data[epion_device["deviceId"]] = epion_device
-            return device_data
+        device_data = {}
+        for epion_device in response["devices"]:
+            device_data[epion_device["deviceId"]] = epion_device
+        return device_data
