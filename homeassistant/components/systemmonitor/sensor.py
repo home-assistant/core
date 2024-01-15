@@ -107,7 +107,7 @@ def get_process(entity: SystemMonitorSensor[list[psutil.Process]]) -> str:
     return state
 
 
-def get_network_info(entity: SystemMonitorSensor[dict[str, snetio]]) -> float | None:
+def get_network(entity: SystemMonitorSensor[dict[str, snetio]]) -> float | None:
     """Return network in and out."""
     counters = entity.coordinator.data
     if entity.argument in counters:
@@ -116,24 +116,31 @@ def get_network_info(entity: SystemMonitorSensor[dict[str, snetio]]) -> float | 
     return None
 
 
+def get_packets(entity: SystemMonitorSensor[dict[str, snetio]]) -> float | None:
+    """Return packets in and out."""
+    counters = entity.coordinator.data
+    if entity.argument in counters:
+        return counters[entity.argument][IO_COUNTER[entity.entity_description.key]]
+    return None
+
+
 def get_throughput(entity: SystemMonitorSensor[dict[str, snetio]]) -> float | None:
     """Return network throughput in and out."""
     counters = entity.coordinator.data
+    state = None
     if entity.argument in counters:
         counter = counters[entity.argument][IO_COUNTER[entity.entity_description.key]]
         now = dt_util.utcnow()
-        if entity.value and entity.value < counter:
-            entity.update_time = now
-            entity.value = counter
-            return round(
+        if entity.value and entity.update_time and entity.value < counter:
+            state = round(
                 (counter - entity.value)
                 / 1000**2
-                / (now - (entity.update_time or now)).total_seconds(),
+                / (now - (entity.update_time)).total_seconds(),
                 3,
             )
         entity.update_time = now
         entity.value = counter
-    return None
+    return state
 
 
 def get_ip_address(
@@ -269,7 +276,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
         icon="mdi:server-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
-        value_fn=get_network_info,
+        value_fn=get_network,
     ),
     "network_out": SysMonitorSensorEntityDescription[dict[str, snetio]](
         key="network_out",
@@ -280,7 +287,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
         icon="mdi:server-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
-        value_fn=get_network_info,
+        value_fn=get_network,
     ),
     "packets_in": SysMonitorSensorEntityDescription[dict[str, snetio]](
         key="packets_in",
@@ -289,7 +296,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
         icon="mdi:server-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
-        value_fn=get_network_info,
+        value_fn=get_packets,
     ),
     "packets_out": SysMonitorSensorEntityDescription[dict[str, snetio]](
         key="packets_out",
@@ -298,7 +305,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
         icon="mdi:server-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
-        value_fn=get_network_info,
+        value_fn=get_packets,
     ),
     "throughput_network_in": SysMonitorSensorEntityDescription[dict[str, snetio]](
         key="throughput_network_in",
@@ -739,7 +746,7 @@ class SystemMonitorSensor(CoordinatorEntity[MonitorCoordinator[dataT]], SensorEn
             name="System Monitor",
         )
         self.argument = argument
-        self.value: float | None = None
+        self.value: int | None = None
         self.update_time: datetime | None = None
 
     @property
