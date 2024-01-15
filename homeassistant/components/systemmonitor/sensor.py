@@ -478,8 +478,7 @@ async def async_setup_entry(  # noqa: C901
         """Return startup information."""
         disk_arguments = get_all_disk_mounts()
         network_arguments = get_all_network_interfaces()
-        temps = psutil.sensors_temperatures()
-        cpu_temperature = read_cpu_temperature(temps)
+        cpu_temperature = read_cpu_temperature()
         return {
             "disk_arguments": disk_arguments,
             "network_arguments": network_arguments,

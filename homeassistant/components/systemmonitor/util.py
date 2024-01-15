@@ -65,8 +65,10 @@ def get_all_running_processes() -> set[str]:
     return processes
 
 
-def read_cpu_temperature(temps: dict[str, list[shwtemp]]) -> float | None:
+def read_cpu_temperature(temps: dict[str, list[shwtemp]] | None = None) -> float | None:
     """Attempt to read CPU / processor temperature."""
+    if not temps:
+        temps = psutil.sensors_temperatures()
     entry: shwtemp
 
     for name, entries in temps.items():

@@ -13,7 +13,7 @@ from psutil._pslinux import svmem
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -141,4 +141,7 @@ class SystemMonitorCPUtempCoordinator(MonitorCoordinator[dict[str, list[shwtemp]
 
     def update_data(self) -> dict[str, list[shwtemp]]:
         """Fetch data."""
-        return psutil.sensors_temperatures()
+        try:
+            return psutil.sensors_temperatures()
+        except AttributeError as err:
+            raise UpdateFailed("OS does not provide temperature sensors") from err
