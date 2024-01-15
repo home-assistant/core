@@ -1,6 +1,8 @@
 """Provides a binary sensor which is a collection of ffmpeg tools."""
 from __future__ import annotations
 
+from typing import Any
+
 import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
@@ -13,6 +15,7 @@ from homeassistant.components.ffmpeg import (
     CONF_INITIAL_STATE,
     CONF_INPUT,
     CONF_OUTPUT,
+    FFmpegManager,
     get_ffmpeg_manager,
 )
 from homeassistant.components.ffmpeg_motion.binary_sensor import FFmpegBinarySensor
@@ -59,16 +62,18 @@ async def async_setup_platform(
     async_add_entities([entity])
 
 
-class FFmpegNoise(FFmpegBinarySensor):
+class FFmpegNoise(FFmpegBinarySensor[ffmpeg_sensor.SensorNoise]):
     """A binary sensor which use FFmpeg for noise detection."""
 
-    def __init__(self, hass, manager, config):
+    def __init__(
+        self, hass: HomeAssistant, manager: FFmpegManager, config: dict[str, Any]
+    ) -> None:
         """Initialize FFmpeg noise binary sensor."""
 
-        super().__init__(config)
-        self.ffmpeg = ffmpeg_sensor.SensorNoise(manager.binary, self._async_callback)
+        ffmpeg = ffmpeg_sensor.SensorNoise(manager.binary, self._async_callback)
+        super().__init__(ffmpeg, config)
 
-    async def _async_start_ffmpeg(self, entity_ids):
+    async def _async_start_ffmpeg(self, entity_ids: list[str] | None) -> None:
         """Start a FFmpeg instance.
 
         This method is a coroutine.
@@ -77,18 +82,18 @@ class FFmpegNoise(FFmpegBinarySensor):
             return
 
         self.ffmpeg.set_options(
-            time_duration=self._config.get(CONF_DURATION),
-            time_reset=self._config.get(CONF_RESET),
-            peak=self._config.get(CONF_PEAK),
+            time_duration=self._config[CONF_DURATION],
+            time_reset=self._config[CONF_RESET],
+            peak=self._config[CONF_PEAK],
         )
 
         await self.ffmpeg.open_sensor(
-            input_source=self._config.get(CONF_INPUT),
+            input_source=self._config[CONF_INPUT],
             output_dest=self._config.get(CONF_OUTPUT),
             extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
         )
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return BinarySensorDeviceClass.SOUND
