@@ -49,9 +49,7 @@ async def async_setup_entry(
 
         async_add_entities([GPSLoggerEntity(device, gps, battery, accuracy, attrs)])
 
-    hass.data[GPL_DOMAIN]["unsub_device_tracker"][
-        entry.entry_id
-    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    entry.async_on_unload(async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data))
 
     # Restore previously loaded devices
     dev_reg = dr.async_get(hass)
@@ -87,7 +85,6 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         self._name = device
         self._battery = battery
         self._location = location
-        self._unsub_dispatcher = None
         self._unique_id = device
         self._prv_seen = attributes.get(ATTR_LAST_SEEN)
 
@@ -137,8 +134,10 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         await super().async_added_to_hass()
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, TRACKER_UPDATE, self._async_receive_data
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, TRACKER_UPDATE, self._async_receive_data
+            )
         )
 
         # don't restore if we got created with data
@@ -176,11 +175,6 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
             ATTR_SPEED: attr.get(ATTR_SPEED),
         }
         self._battery = attr.get(ATTR_BATTERY_LEVEL)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Clean up after entity before removal."""
-        await super().async_will_remove_from_hass()
-        self._unsub_dispatcher()
 
     @callback
     def _async_receive_data(self, device, location, battery, accuracy, attributes):

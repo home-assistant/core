@@ -1,5 +1,6 @@
 """Support for GPSLogger."""
 from http import HTTPStatus
+import logging
 
 from aiohttp import web
 import voluptuous as vol
@@ -31,10 +32,10 @@ from .const import (
     DOMAIN,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS = [Platform.DEVICE_TRACKER]
-
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
-
 
 DEFAULT_ACCURACY = 200
 DEFAULT_BATTERY = -1
@@ -72,6 +73,14 @@ async def handle_webhook(hass, webhook_id, request):
             text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
         )
 
+    if ATTR_LAST_SEEN not in data and not hass.data[DOMAIN]["warned_no_last_seen"]:
+        _LOGGER.warning(
+            "HTTP Body does not contain %s. Consider adding it for better results. See "
+            "https://www.home-assistant.io/integrations/gpslogger/#setup-on-your-smartphone",
+            ATTR_LAST_SEEN,
+        )
+        hass.data[DOMAIN]["warned_no_last_seen"] = True
+
     attrs = {
         ATTR_ACTIVITY: data.get(ATTR_ACTIVITY),
         ATTR_ALTITUDE: data.get(ATTR_ALTITUDE),
@@ -99,7 +108,7 @@ async def handle_webhook(hass, webhook_id, request):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.data.setdefault(DOMAIN, {"devices": set(), "unsub_device_tracker": {}})
+    hass.data.setdefault(DOMAIN, {"devices": set(), "warned_no_last_seen": False})
     webhook.async_register(
         hass, DOMAIN, "GPSLogger", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
@@ -112,7 +121,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
