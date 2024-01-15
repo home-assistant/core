@@ -224,6 +224,9 @@ async def test_reauth_flow(
         data=mock_config_entry.data,
     )
 
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         PASSWORD_SELECTION,
