@@ -1,0 +1,4 @@
+homeassistant:
+  packages:
+    should_be_a_dict:
+      - platform: template

@@ -2233,6 +2233,30 @@ async def test_yaml_error(
     assert error_records == snapshot
 
 
+@pytest.mark.parametrize(
+    "config_dir",
+    [
+        "packages_dict",
+        "packages_slug",
+        "packages_include_dir_named_dict",
+        "packages_include_dir_named_slug",
+    ],
+)
+async def test_packages_schema_validation_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_dir: str,
+) -> None:
+    """Ensure that package schema validation errors are wrapped in HomeAssistantErrors."""
+
+    base_path = os.path.dirname(__file__)
+    hass.config.config_dir = os.path.join(
+        base_path, "fixtures", "core", "config", "package_schema_validation", config_dir
+    )
+    with pytest.raises(HomeAssistantError):
+        await config_util.async_hass_config_yaml(hass)
+
+
 def test_extract_domain_configs() -> None:
     """Test the extraction of domain configuration."""
     config = {
