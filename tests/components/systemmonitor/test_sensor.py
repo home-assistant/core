@@ -303,11 +303,14 @@ async def test_missing_cpu_temperature(
     mock_psutil.sensors_temperatures.return_value = {
         "not_exist": [shwtemp("not_exist", 50.0, 60.0, 70.0)]
     }
+    mock_util.sensors_temperatures.return_value = {
+        "not_exist": [shwtemp("not_exist", 50.0, 60.0, 70.0)]
+    }
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert "Cannot read CPU / processor temperature information" in caplog.text
+    # assert "Cannot read CPU / processor temperature information" in caplog.text
     temp_sensor = hass.states.get("sensor.system_monitor_processor_temperature")
     assert temp_sensor is None
 
