@@ -64,7 +64,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the FFmpeg component."""
     conf = config.get(DOMAIN, {})
 
-    manager = FFmpegManager(hass, conf[CONF_FFMPEG_BIN])
+    manager = FFmpegManager(hass, conf.get(CONF_FFMPEG_BIN, DEFAULT_BINARY))
 
     await manager.async_get_version()
 
