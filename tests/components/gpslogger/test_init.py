@@ -10,14 +10,14 @@ from homeassistant.components import zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_device_registry
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -270,6 +270,35 @@ async def test_last_seen_goes_backward(
     assert "Skipping update because last_seen went backwards" in caplog.text
 
 
+async def test_use_correct_data(
+    hass: HomeAssistant, gpslogger_client, webhook_id, caplog
+) -> None:
+    """Test an entity only uses received data for itself."""
+    url = f"/api/webhook/{webhook_id}"
+
+    data = {
+        "latitude": HOME_LATITUDE,
+        "longitude": HOME_LONGITUDE,
+        "device": "123",
+    }
+
+    # Enter the Home
+    req = await gpslogger_client.post(url, data=data)
+    await hass.async_block_till_done()
+    assert req.status == HTTPStatus.OK
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.123")
+    assert state.state == STATE_HOME
+
+    data["device"] = "456"
+
+    # Receive data for a different device
+    req = await gpslogger_client.post(url, data=data)
+    await hass.async_block_till_done()
+    assert req.status == HTTPStatus.OK
+    new_state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.123")
+    assert new_state == state
+
+
 async def test_load_unload_entry(
     hass: HomeAssistant, gpslogger_client, webhook_id
 ) -> None:
@@ -290,3 +319,69 @@ async def test_load_unload_entry(
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert TRACKER_UPDATE not in hass.data[DATA_DISPATCHER]
+
+
+@pytest.mark.parametrize("last_seen", [True, False])
+async def test_restore_on_reload(
+    hass: HomeAssistant, gpslogger_client, webhook_id, last_seen
+) -> None:
+    """Test device_tracker entity's state is restored on reload."""
+    url = f"/api/webhook/{webhook_id}"
+    data = {
+        "latitude": HOME_LATITUDE,
+        "longitude": HOME_LONGITUDE,
+        "device": "123",
+        "accuracy": 123,
+        "battery": 23,
+        "speed": 23,
+        "direction": 123,
+        "altitude": 123,
+        "provider": "gps",
+        "activity": "idle",
+        "battery_charging": False,
+    }
+    if last_seen:
+        data["last_seen"] = dt_util.now()
+
+    # Enter the Home
+    req = await gpslogger_client.post(url, data=data)
+    await hass.async_block_till_done()
+    assert req.status == HTTPStatus.OK
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    restored_state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
+    assert isinstance(restored_state, State)
+    assert restored_state.state == state.state
+    assert restored_state.attributes == state.attributes
+
+
+async def test_restore_from_device_registry(
+    hass: HomeAssistant, gpslogger_client, webhook_id
+) -> None:
+    """Test device_tracker entity's state is restored per device registry."""
+    dev_id = "123"
+    dev_entry = dr.DeviceEntry(identifiers={(DOMAIN, dev_id)}, name=dev_id)
+    mock_device_registry(hass, {dev_entry.id: dev_entry})
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    restored_state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{dev_id}")
+    assert isinstance(restored_state, State)
+    assert restored_state.state == STATE_UNKNOWN
+
+    expected_attrs = {"friendly_name": dev_id, "source_type": "gps"}
+    for attr in (
+        "activity",
+        "altitude",
+        "battery_charging",
+        "direction",
+        "last_seen",
+        "provider",
+        "speed",
+    ):
+        expected_attrs[attr] = None
+    assert restored_state.attributes == expected_attrs
