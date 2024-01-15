@@ -90,11 +90,6 @@ class EpionSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_class = description.device_class
         self._attr_suggested_display_precision = description.suggested_display_precision
         self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, epion_device["deviceId"])},
-            manufacturer="Epion",
-            name=epion_device["deviceName"],
-        )
         self.unique_id = f"{self._epion_device['deviceId']}_{self._measurement_key}"
         self.has_entity_name = True
         self.name = description.name
@@ -108,6 +103,23 @@ class EpionSensor(CoordinatorEntity, SensorEntity):
     def available(self) -> bool:
         """Return the availability of this sensor."""
         return self.extract_value() is not None
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        my_device_id = self._epion_device["deviceId"]
+        sw_version: str | None = None
+        if my_device_id in self._epion_coordinator.data:
+            current_device = self._epion_coordinator.data[my_device_id]
+            sw_version = current_device.get("fwVersion")
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._epion_device["deviceId"])},
+            manufacturer="Epion",
+            name=self._epion_device["deviceName"],
+            sw_version=sw_version,
+            model="Epion Air",
+        )
 
     def extract_value(self) -> float | None:
         """Extract the sensor measurement value from the cached data, or None if it can't be found."""
