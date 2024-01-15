@@ -83,7 +83,6 @@ async def test_import_flow(
     assert result["title"] == _USER_INPUT[CONF_USERNAME]
     assert result["data"] == _USER_INPUT
     assert len(issue_registry.issues) == 1
-    # assert (DOMAIN, expected_issue) in issue_registry.issues
 
 
 async def test_import_flow_already_exists(

@@ -8,14 +8,14 @@ from sucks import EcoVacsAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import CONF_CONTINENT, CONF_COUNTRY, DOMAIN
+from .const import CONF_CONTINENT, DOMAIN
 from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
 
-        if user_input is not None:
+        if user_input:
             errors = await self.hass.async_add_executor_job(validate_input, user_input)
 
             if not errors:
