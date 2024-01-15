@@ -1,78 +1,158 @@
 """Tests for the Epion config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, patch
 
 from epion import EpionAuthenticationError, EpionConnectionError
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.epion.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 API_KEY = "test-key-123"
 
 
-@pytest.fixture(name="epion_api")
-def mock_controller():
-    """Mock the Epion API."""
-    api = Mock()
-    with patch("epion.Epion", return_value=api):
-        yield api
-
-
-async def test_user_flow(hass: HomeAssistant, epion_api: Mock) -> None:
-    """Test various error during user initiated flow."""
-
-    # Test with inactive / deactivated account
-    epion_api.get_current.return_value = {"devices": []}
+async def test_user_flow(hass: HomeAssistant) -> None:
+    """Test we can handle a regular successflow setup flow."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_auth"}
 
-    # Test with invalid auth
-    epion_api.get_current.side_effect = EpionAuthenticationError("Invalid API key")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
+    mock_epion_api = _get_mock_epion_api(
+        get_current={
+            "devices": [{"deviceId": "abc", "deviceName": "Test Device"}],
+            "accountId": "abc-123",
+        }
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_auth"}
 
-    # Test with connection timeout
-    epion_api.get_current.side_effect = EpionConnectionError("Timeout problem")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
-    )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "cannot_connect"}
+    with patch(
+        "homeassistant.components.epion.config_flow.Epion",
+        return_value=mock_epion_api,
+    ), patch(
+        "homeassistant.components.epion.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: API_KEY},
+        )
+        await hass.async_block_till_done()
 
-    # Test with valid data
-    epion_api.get_current.return_value = {
-        "devices": [{"deviceId": "abc", "deviceName": "Test Device"}]
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Epion integration"
+    assert result["data"] == {
+        CONF_API_KEY: API_KEY,
     }
-    epion_api.get_current.side_effect = None
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("step_id") == "user"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (EpionAuthenticationError("Invalid auth"), "invalid_auth"),
+        (EpionConnectionError("Timeout error"), "cannot_connect"),
+    ],
+)
+async def test_form_exceptions(
+    hass: HomeAssistant, exception: Exception, error: str
+) -> None:
+    """Test we can handle Form exceptions."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
 
-    data = result.get("data")
-    assert data
-    assert data[CONF_API_KEY] == API_KEY
+    mock_epion_api = _get_mock_epion_api(get_current=exception)
+    with patch(
+        "homeassistant.components.epion.config_flow.Epion",
+        return_value=mock_epion_api,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: API_KEY},
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Test a retry to recover, upon failure
+    mock_epion_api = _get_mock_epion_api(
+        get_current={
+            "devices": [{"deviceId": "abc", "deviceName": "Test Device"}],
+            "accountId": "abc-123",
+        }
+    )
+
+    with patch(
+        "homeassistant.components.epion.config_flow.Epion",
+        return_value=mock_epion_api,
+    ), patch(
+        "homeassistant.components.epion.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: API_KEY},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Epion integration"
+    assert result["data"] == {
+        CONF_API_KEY: API_KEY,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_duplicate_entry(hass: HomeAssistant) -> None:
+    """Test duplicate setup handling."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: API_KEY,
+        },
+        unique_id="account-dupe-123",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_epion_api = _get_mock_epion_api(
+        get_current={
+            "devices": [{"deviceId": "abc", "deviceName": "Test Device"}],
+            "accountId": "account-dupe-123",
+        }
+    )
+
+    with patch(
+        "homeassistant.components.epion.config_flow.Epion",
+        return_value=mock_epion_api,
+    ), patch(
+        "homeassistant.components.epion.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: API_KEY},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_setup_entry.call_count == 0
+
+
+def _get_mock_epion_api(get_current=None) -> MagicMock:
+    """Get a mock Epion API client."""
+    mock_epion_api = MagicMock()
+    if isinstance(get_current, Exception):
+        type(mock_epion_api).get_current = MagicMock(side_effect=get_current)
+    else:
+        type(mock_epion_api).get_current = MagicMock(return_value=get_current)
+    return mock_epion_api
