@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -19,7 +18,7 @@ SIGNAL_REBOOT_COMPLETED = "rainmachine_reboot_completed_{0}"
 SIGNAL_REBOOT_REQUESTED = "rainmachine_reboot_requested_{0}"
 
 
-class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Define an extended DataUpdateCoordinator."""
 
     config_entry: ConfigEntry
