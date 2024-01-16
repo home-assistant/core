@@ -28,7 +28,7 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
         car_type = self.coordinator.data["vehicle_config_car_type"]
 
         self._attr_translation_key = self.key
-        self._attr_unique_id = f"{self.api.vin}-{self.key}"
+        self._attr_unique_id = f"{self.api.vin}-{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.api.vin)},
             manufacturer="Tesla",
