@@ -16,7 +16,7 @@ from .coordinator import HomeassistantAnalyticsDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AnalyticsData:
     """Analytics data class."""
 
