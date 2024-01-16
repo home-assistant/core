@@ -50,6 +50,7 @@ from .const import (
     SERVICE_JOIN,
     SERVICE_SET_TIMER,
     SERVICE_UNJOIN,
+    DEFAULT_PORT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +59,6 @@ ATTR_BLUESOUND_GROUP = "bluesound_group"
 ATTR_MASTER = "master"
 
 DATA_BLUESOUND = "bluesound"
-DEFAULT_PORT = 11000
 
 NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
