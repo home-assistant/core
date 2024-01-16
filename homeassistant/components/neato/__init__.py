@@ -41,11 +41,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [
-    Platform.CAMERA,
-    Platform.VACUUM,
-    Platform.SWITCH,
-    Platform.SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VACUUM,
 ]
 
 

@@ -1381,7 +1381,7 @@
     "ecovacs": {
       "name": "Ecovacs",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "ecowitt": {
@@ -1577,6 +1577,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "epion": {
+      "name": "Epion",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "epson": {
       "name": "Epson",
       "integrations": {
@@ -1679,12 +1685,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
-    },
-    "facebox": {
-      "name": "Facebox",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
     },
     "fail2ban": {
       "name": "Fail2Ban",
@@ -2999,6 +2999,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "lamarzocco": {
+      "name": "La Marzocco",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "lametric": {
       "name": "LaMetric",
       "integration_type": "device",
@@ -3092,12 +3098,6 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "life360": {
-      "name": "Life360",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "lifx": {
       "name": "LIFX",
@@ -3730,6 +3730,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "myuplink": {
+      "name": "myUplink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "nad": {
       "name": "NAD",

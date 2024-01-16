@@ -4,12 +4,12 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import cache
+from functools import cache, lru_cache
 import logging
 import os
 import socket
 import sys
-from typing import Any
+from typing import Any, Literal
 
 import psutil
 import voluptuous as vol
@@ -56,10 +56,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = "arg"
 
-if sys.maxsize > 2**32:
-    CPU_ICON = "mdi:cpu-64-bit"
-else:
-    CPU_ICON = "mdi:cpu-32-bit"
 
 SENSOR_TYPE_NAME = 0
 SENSOR_TYPE_UOM = 1
@@ -68,6 +64,14 @@ SENSOR_TYPE_DEVICE_CLASS = 3
 SENSOR_TYPE_MANDATORY_ARG = 4
 
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
+
+
+@lru_cache
+def get_cpu_icon() -> Literal["mdi:cpu-64-bit", "mdi:cpu-32-bit"]:
+    """Return cpu icon."""
+    if sys.maxsize > 2**32:
+        return "mdi:cpu-64-bit"
+    return "mdi:cpu-32-bit"
 
 
 @dataclass(frozen=True)
@@ -121,19 +125,19 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "load_15m": SysMonitorSensorEntityDescription(
         key="load_15m",
         name="Load (15m)",
-        icon=CPU_ICON,
+        icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "load_1m": SysMonitorSensorEntityDescription(
         key="load_1m",
         name="Load (1m)",
-        icon=CPU_ICON,
+        icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "load_5m": SysMonitorSensorEntityDescription(
         key="load_5m",
         name="Load (5m)",
-        icon=CPU_ICON,
+        icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "memory_free": SysMonitorSensorEntityDescription(
@@ -210,14 +214,14 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "process": SysMonitorSensorEntityDescription(
         key="process",
         name="Process",
-        icon=CPU_ICON,
+        icon=get_cpu_icon(),
         mandatory_arg=True,
     ),
     "processor_use": SysMonitorSensorEntityDescription(
         key="processor_use",
         name="Processor use",
         native_unit_of_measurement=PERCENTAGE,
-        icon=CPU_ICON,
+        icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "processor_temperature": SysMonitorSensorEntityDescription(
@@ -405,7 +409,7 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.add(f"{_type}_{argument}")
+                loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -425,7 +429,7 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.add(f"{_type}_{argument}")
+                loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -449,7 +453,7 @@ async def async_setup_entry(
                 sensor_registry[(_type, argument)] = SensorData(
                     argument, None, None, None, None
                 )
-                loaded_resources.add(f"{_type}_{argument}")
+                loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -478,10 +482,13 @@ async def async_setup_entry(
     # of mount points automatically discovered
     for resource in legacy_resources:
         if resource.startswith("disk_"):
+            check_resource = slugify(resource)
             _LOGGER.debug(
-                "Check resource %s already loaded in %s", resource, loaded_resources
+                "Check resource %s already loaded in %s",
+                check_resource,
+                loaded_resources,
             )
-            if resource not in loaded_resources:
+            if check_resource not in loaded_resources:
                 split_index = resource.rfind("_")
                 _type = resource[:split_index]
                 argument = resource[split_index + 1 :]
@@ -748,7 +755,11 @@ def _getloadavg() -> tuple[float, float, float]:
 
 def _read_cpu_temperature() -> float | None:
     """Attempt to read CPU / processor temperature."""
-    temps = psutil.sensors_temperatures()
+    try:
+        temps = psutil.sensors_temperatures()
+    except AttributeError:
+        # Linux, macOS
+        return None
 
     for name, entries in temps.items():
         for i, entry in enumerate(entries, start=1):

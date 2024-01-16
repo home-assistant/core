@@ -171,7 +171,6 @@ def async_subscribe_events(
     These are the events we need to listen for to do
     the live logbook stream.
     """
-    ent_reg = er.async_get(hass)
     assert is_callback(target), "target must be a callback"
     event_forwarder = event_forwarder_filtered(
         target, entities_filter, entity_ids, device_ids
@@ -193,7 +192,7 @@ def async_subscribe_events(
             new_state := event.data["new_state"]
         ) is None:
             return
-        if _is_state_filtered(ent_reg, new_state, old_state) or (
+        if _is_state_filtered(new_state, old_state) or (
             entities_filter and not entities_filter(new_state.entity_id)
         ):
             return
@@ -232,9 +231,7 @@ def is_sensor_continuous(ent_reg: er.EntityRegistry, entity_id: str) -> bool:
     )
 
 
-def _is_state_filtered(
-    ent_reg: er.EntityRegistry, new_state: State, old_state: State
-) -> bool:
+def _is_state_filtered(new_state: State, old_state: State) -> bool:
     """Check if the logbook should filter a state.
 
     Used when we are in live mode to ensure
@@ -245,7 +242,7 @@ def _is_state_filtered(
         or split_entity_id(new_state.entity_id)[0] in ALWAYS_CONTINUOUS_DOMAINS
         or new_state.last_changed != new_state.last_updated
         or ATTR_UNIT_OF_MEASUREMENT in new_state.attributes
-        or is_sensor_continuous(ent_reg, new_state.entity_id)
+        or ATTR_STATE_CLASS in new_state.attributes
     )
 
 

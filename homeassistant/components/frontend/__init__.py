@@ -610,7 +610,8 @@ class IndexView(web_urldispatcher.AbstractResource):
         else:
             extra_modules = hass.data[DATA_EXTRA_MODULE_URL].urls
             extra_js_es5 = hass.data[DATA_EXTRA_JS_URL_ES5].urls
-        return web.Response(
+
+        response = web.Response(
             text=_async_render_index_cached(
                 template,
                 theme_color=MANIFEST_JSON["theme_color"],
@@ -619,6 +620,8 @@ class IndexView(web_urldispatcher.AbstractResource):
             ),
             content_type="text/html",
         )
+        response.enable_compression()
+        return response
 
     def __len__(self) -> int:
         """Return length of resource."""

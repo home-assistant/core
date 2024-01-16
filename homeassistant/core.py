@@ -46,7 +46,6 @@ import voluptuous as vol
 import yarl
 
 from . import block_async_io, util
-from .backports.functools import cached_property
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -108,11 +107,14 @@ from .util.unit_system import (
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    from functools import cached_property
+
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
-
+else:
+    from .backports.functools import cached_property
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
@@ -425,7 +427,7 @@ class HomeAssistant:
 
         This method is a coroutine.
         """
-        if self.state != CoreState.not_running:
+        if self.state is not CoreState.not_running:
             raise RuntimeError("Home Assistant is already running")
 
         # _async_stop will set this instead of stopping the loop
@@ -474,7 +476,7 @@ class HomeAssistant:
         # Allow automations to set up the start triggers before changing state
         await asyncio.sleep(0)
 
-        if self.state != CoreState.starting:
+        if self.state is not CoreState.starting:
             _LOGGER.warning(
                 "Home Assistant startup has been interrupted. "
                 "Its state may be inconsistent"
@@ -824,7 +826,7 @@ class HomeAssistant:
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
-        if self.state == CoreState.not_running:  # just ignore
+        if self.state is CoreState.not_running:  # just ignore
             return
         # The future is never retrieved, and we only hold a reference
         # to it to prevent it from being garbage collected.
@@ -844,12 +846,12 @@ class HomeAssistant:
         if not force:
             # Some tests require async_stop to run,
             # regardless of the state of the loop.
-            if self.state == CoreState.not_running:  # just ignore
+            if self.state is CoreState.not_running:  # just ignore
                 return
             if self.state in [CoreState.stopping, CoreState.final_write]:
                 _LOGGER.info("Additional call to async_stop was ignored")
                 return
-            if self.state == CoreState.starting:
+            if self.state is CoreState.starting:
                 # This may not work
                 _LOGGER.warning(
                     "Stopping Home Assistant before startup has completed may fail"
@@ -1074,6 +1076,11 @@ class Event:
         self.context = context
         if not context.origin_event:
             context.origin_event = self
+
+    @cached_property
+    def time_fired_timestamp(self) -> float:
+        """Return time fired as a timestamp."""
+        return self.time_fired.timestamp()
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
@@ -1436,12 +1443,22 @@ class State:
         self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
 
-    @property
+    @cached_property
     def name(self) -> str:
         """Name of this state."""
         return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
             "_", " "
         )
+
+    @cached_property
+    def last_updated_timestamp(self) -> float:
+        """Timestamp of last update."""
+        return self.last_updated.timestamp()
+
+    @cached_property
+    def last_changed_timestamp(self) -> float:
+        """Timestamp of last change."""
+        return self.last_changed.timestamp()
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
@@ -1524,12 +1541,12 @@ class State:
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
-            COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(self.last_changed),
+            COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
         }
         if self.last_changed != self.last_updated:
-            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
-                self.last_updated
-            )
+            compressed_state[
+                COMPRESSED_STATE_LAST_UPDATED
+            ] = self.last_updated_timestamp
         return compressed_state
 
     @cached_property

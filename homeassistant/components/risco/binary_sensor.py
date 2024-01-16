@@ -4,7 +4,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pyrisco.common import Zone
+from pyrisco.cloud.zone import Zone as CloudZone
+from pyrisco.local.zone import Zone as LocalZone
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -53,7 +54,7 @@ class RiscoCloudBinarySensor(RiscoCloudZoneEntity, BinarySensorEntity):
     _attr_name = None
 
     def __init__(
-        self, coordinator: RiscoDataUpdateCoordinator, zone_id: int, zone: Zone
+        self, coordinator: RiscoDataUpdateCoordinator, zone_id: int, zone: CloudZone
     ) -> None:
         """Init the zone."""
         super().__init__(coordinator=coordinator, suffix="", zone_id=zone_id, zone=zone)
@@ -70,7 +71,7 @@ class RiscoLocalBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.MOTION
     _attr_name = None
 
-    def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
+    def __init__(self, system_id: str, zone_id: int, zone: LocalZone) -> None:
         """Init the zone."""
         super().__init__(system_id=system_id, suffix="", zone_id=zone_id, zone=zone)
 
@@ -93,7 +94,7 @@ class RiscoLocalAlarmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
 
     _attr_translation_key = "alarmed"
 
-    def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
+    def __init__(self, system_id: str, zone_id: int, zone: LocalZone) -> None:
         """Init the zone."""
         super().__init__(
             system_id=system_id,
@@ -113,7 +114,7 @@ class RiscoLocalArmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
 
     _attr_translation_key = "armed"
 
-    def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
+    def __init__(self, system_id: str, zone_id: int, zone: LocalZone) -> None:
         """Init the zone."""
         super().__init__(
             system_id=system_id,

@@ -417,10 +417,6 @@ class VacuumEntity(
     ) -> None:
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
-        # Don't report core integrations known to still use the deprecated base class;
-        # we don't worry about demo and mqtt has it's own deprecation warnings.
-        if self.platform.platform_name in ("demo", "mqtt"):
-            return
         translation_key = "deprecated_vacuum_base_class"
         translation_placeholders = {"platform": self.platform.platform_name}
         issue_tracker = async_get_issue_tracker(
