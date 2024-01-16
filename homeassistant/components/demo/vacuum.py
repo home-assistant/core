@@ -122,9 +122,6 @@ class StateDemoVacuum(StateVacuumEntity):
 
     def start(self) -> None:
         """Start or resume the cleaning task."""
-        if self.supported_features & VacuumEntityFeature.START == 0:
-            return
-
         if self._state != STATE_CLEANING:
             self._state = STATE_CLEANING
             self._cleaned_area += 1.32
@@ -133,26 +130,17 @@ class StateDemoVacuum(StateVacuumEntity):
 
     def pause(self) -> None:
         """Pause the cleaning task."""
-        if self.supported_features & VacuumEntityFeature.PAUSE == 0:
-            return
-
         if self._state == STATE_CLEANING:
             self._state = STATE_PAUSED
             self.schedule_update_ha_state()
 
     def stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task, do not return to dock."""
-        if self.supported_features & VacuumEntityFeature.STOP == 0:
-            return
-
         self._state = STATE_IDLE
         self.schedule_update_ha_state()
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return dock to charging base."""
-        if self.supported_features & VacuumEntityFeature.RETURN_HOME == 0:
-            return
-
         self._state = STATE_RETURNING
         self.schedule_update_ha_state()
 
@@ -160,9 +148,6 @@ class StateDemoVacuum(StateVacuumEntity):
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        if self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0:
-            return
-
         self._state = STATE_CLEANING
         self._cleaned_area += 1.32
         self._battery_level -= 1
@@ -170,18 +155,12 @@ class StateDemoVacuum(StateVacuumEntity):
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set the vacuum's fan speed."""
-        if self.supported_features & VacuumEntityFeature.FAN_SPEED == 0:
-            return
-
         if fan_speed in self.fan_speed_list:
             self._fan_speed = fan_speed
             self.schedule_update_ha_state()
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum's position."""
-        if self.supported_features & VacuumEntityFeature.LOCATE == 0:
-            return
-
         await self.hass.services.async_call(
             "notify",
             "persistent_notification",
@@ -192,9 +171,6 @@ class StateDemoVacuum(StateVacuumEntity):
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Locate the vacuum's position."""
-        if self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0:
-            return
-
         self._state = STATE_CLEANING
         self.async_write_ha_state()
 
@@ -205,9 +181,6 @@ class StateDemoVacuum(StateVacuumEntity):
         **kwargs: Any,
     ) -> None:
         """Send a command to the vacuum."""
-        if self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0:
-            return
-
         self._state = STATE_IDLE
         self.async_write_ha_state()
 
