@@ -71,6 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _update_config_if_entry_in_setup_retry(self, config: dict) -> None:
+        """If discovery encounters a device that is in SETUP_RETRY update the device config."""
         for entry in self._async_current_entries(include_ignore=True):
             if entry.unique_id != self.unique_id:
                 continue
@@ -89,7 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, mac: str, config: Optional[dict] = None
     ) -> FlowResult:
         """Handle any discovery."""
-        await self.async_set_unique_id(dr.format_mac(mac))
+        await self.async_set_unique_id(dr.format_mac(mac), raise_on_progress=False)
         if config:
             self._update_config_if_entry_in_setup_retry(config)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
@@ -118,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         credentials = await get_credentials(self.hass)
-        if credentials != self._discovered_device.config.credentials:
+        if credentials and credentials != self._discovered_device.config.credentials:
             try:
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
@@ -140,7 +141,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except AuthenticationException:
                 errors["base"] = "invalid_auth"
             except SmartDeviceException:
-                return self.async_abort(reason="cannot_connect")
+                errors["base"] = "cannot_connect"
             else:
                 self._discovered_device = device
                 await set_credentials(self.hass, username, password)
@@ -388,7 +389,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except AuthenticationException:
                 errors["base"] = "invalid_auth"
             except SmartDeviceException:
-                errors["base"] = "unknown"
+                errors["base"] = "cannot_connect"
             else:
                 await set_credentials(self.hass, username, password)
                 await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)

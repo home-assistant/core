@@ -3,7 +3,10 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
+    ConnectionType,
     DeviceConfig,
+    DeviceFamilyType,
+    EncryptType,
     SmartBulb,
     SmartDevice,
     SmartDimmer,
@@ -38,9 +41,16 @@ DEVICE_CONFIG_LEGACY = DeviceConfig(IP_ADDRESS)
 DEVICE_CONFIG_DICT_LEGACY = DEVICE_CONFIG_LEGACY.to_dict(
     credentials_hash=CREDENTIALS_HASH_LEGACY, exclude_credentials=True
 )
-
+CREDENTIALS = Credentials("foo", "bar")
 CREDENTIALS_HASH_AUTH = "abcdefghijklmnopqrstuv=="
-DEVICE_CONFIG_AUTH = DeviceConfig(IP_ADDRESS, credentials=Credentials("foo", "bar"))
+DEVICE_CONFIG_AUTH = DeviceConfig(
+    IP_ADDRESS,
+    credentials=CREDENTIALS,
+    connection_type=ConnectionType(
+        DeviceFamilyType.IotSmartPlugSwitch, EncryptType.Klap
+    ),
+    uses_http=True,
+)
 DEVICE_CONFIG_DICT_AUTH = DEVICE_CONFIG_AUTH.to_dict(
     credentials_hash=CREDENTIALS_HASH_AUTH, exclude_credentials=True
 )

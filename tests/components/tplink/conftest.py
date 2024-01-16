@@ -1,6 +1,7 @@
 """tplink conftest."""
 
 from collections.abc import Generator
+import copy
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
@@ -12,6 +13,7 @@ from . import (
     CREATE_ENTRY_DATA_LEGACY,
     CREDENTIALS_HASH_AUTH,
     DEVICE_CONFIG_AUTH,
+    MAC_ADDRESS,
     _mocked_bulb,
 )
 
@@ -21,19 +23,21 @@ from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 @pytest.fixture
 def mock_discovery():
     """Mock python-kasa discovery."""
-    device = _mocked_bulb(
-        device_config=DEVICE_CONFIG_AUTH, credentials_hash=CREDENTIALS_HASH_AUTH
-    )
-    devices = {
-        "127.0.0.1": _mocked_bulb(
-            device_config=DEVICE_CONFIG_AUTH, credentials_hash=CREDENTIALS_HASH_AUTH
-        )
-    }
     with patch.multiple(
         "homeassistant.components.tplink.Discover",
         discover=DEFAULT,
         discover_single=DEFAULT,
     ) as mock_discovery:
+        device = _mocked_bulb(
+            device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
+            credentials_hash=CREDENTIALS_HASH_AUTH,
+        )
+        devices = {
+            "127.0.0.1": _mocked_bulb(
+                device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
+                credentials_hash=CREDENTIALS_HASH_AUTH,
+            )
+        }
         mock_discovery["discover"].return_value = devices
         mock_discovery["discover_single"].return_value = device
         mock_discovery["mock_device"] = device
@@ -99,7 +103,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="TPLink",
         domain=DOMAIN,
         data={**CREATE_ENTRY_DATA_LEGACY},
-        unique_id="12:34:56:78:90",
+        unique_id=MAC_ADDRESS,
     )
 
 
