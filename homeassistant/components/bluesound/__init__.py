@@ -28,8 +28,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bluesound from a config entry."""
-    _LOGGER.debug("Bluesound async_setup_entry: %r", entry.data)
-
+    _LOGGER.debug("Bluesound async_setup_entry: %s: %r", entry.entry_id, entry.data)
 
     # This creates each HA object for each platform your device requires.
     # It's done by calling the `async_setup_entry` function in each platform module.
@@ -38,6 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a Bluesound config entry."""
-    _LOGGER.debug("Bluesound async_unload_entry with %r", entry)
+    _LOGGER.debug("Bluesound async_unload_entry with %s: %r", entry.entry_id, entry.data)
 
-    return False
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok

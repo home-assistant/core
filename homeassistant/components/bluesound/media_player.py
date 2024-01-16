@@ -25,6 +25,7 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -38,6 +39,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers import entity_platform 
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -139,6 +141,21 @@ def _add_player(hass, async_add_entities, host, port=None, name=None):
     else:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _init_player)
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Bluesound from a config entry."""
+    platform = entity_platform.async_get_current_platform()
+
+    # @callback
+    # def async_create_entities(speaker: SonosSpeaker) -> None:
+    #     """Handle device discovery and create entities."""
+    #     _LOGGER.debug("Creating media_player on %s", speaker.zone_name)
+    #     async_add_entities([SonosMediaPlayerEntity(speaker)])
+
+    return
 
 async def async_setup_platform(
     hass: HomeAssistant,
