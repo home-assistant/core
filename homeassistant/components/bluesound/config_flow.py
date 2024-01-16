@@ -79,6 +79,8 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         host = discovery_info.host
 
+        _LOGGER.warning(f"Bluesound zerconf discovery got host {host}")
+
         # Avoid probing devices that already have an entry
         self._async_abort_entries_match({CONF_HOST: host})
 

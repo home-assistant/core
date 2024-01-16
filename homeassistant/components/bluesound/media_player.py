@@ -195,6 +195,9 @@ async def async_setup_platform(
             DOMAIN, service, async_service_handler, schema=schema
         )
 
+    _LOGGER.warning("Bluesound platform setup complete")
+
+
 
 class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
