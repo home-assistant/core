@@ -77,21 +77,13 @@ from .const import (  # noqa: F401
     CONF_FAN_MODE_VALUES,
     CONF_FANS,
     CONF_HVAC_MODE_AUTO,
-    CONF_HVAC_MODE_AUTO_TT_REG,
     CONF_HVAC_MODE_COOL,
-    CONF_HVAC_MODE_COOL_TT_REG,
     CONF_HVAC_MODE_DRY,
-    CONF_HVAC_MODE_DRY_TT_REG,
     CONF_HVAC_MODE_FAN_ONLY,
-    CONF_HVAC_MODE_FAN_ONLY_TT_REG,
     CONF_HVAC_MODE_HEAT,
     CONF_HVAC_MODE_HEAT_COOL,
-    CONF_HVAC_MODE_HEAT_COOL_TT_REG,
-    CONF_HVAC_MODE_HEAT_TT_REG,
     CONF_HVAC_MODE_OFF,
-    CONF_HVAC_MODE_OFF_TT_REG,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_TT_REGISTERS,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
@@ -145,6 +137,7 @@ from .validators import (
     duplicate_entity_validator,
     duplicate_fan_mode_validator,
     duplicate_modbus_validator,
+    fixedRegList_validator,
     nan_validator,
     number_validator,
     scan_interval_validator,
@@ -250,7 +243,7 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 CLIMATE_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
-            vol.Required(CONF_TARGET_TEMP): cv.positive_int,
+            vol.Required(CONF_TARGET_TEMP): fixedRegList_validator,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_MAX_TEMP, default=35): number_validator,
             vol.Optional(CONF_MIN_TEMP, default=5): number_validator,
@@ -283,15 +276,6 @@ CLIMATE_SCHEMA = vol.All(
                         vol.Optional(CONF_HVAC_MODE_FAN_ONLY): vol.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
-                    },
-                    CONF_HVAC_MODE_TT_REGISTERS: {
-                        vol.Optional(CONF_HVAC_MODE_OFF_TT_REG): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_HEAT_TT_REG): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_COOL_TT_REG): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL_TT_REG): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_AUTO_TT_REG): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_DRY_TT_REG): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY_TT_REG): cv.positive_int,
                     },
                     vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 }

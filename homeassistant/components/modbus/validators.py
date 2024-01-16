@@ -8,6 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
@@ -29,7 +30,6 @@ from .const import (
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_TT_REGISTERS,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_SLAVE_COUNT,
@@ -191,6 +191,25 @@ def number_validator(value: Any) -> int | float:
         raise vol.Invalid(f"invalid number {value}") from err
 
 
+def fixedRegList_validator(value: Any) -> Any:
+    """Check if the number of registers for target temp. inserted is correct."""
+    if isinstance(value, int):
+        return value
+
+    if isinstance(value, list):
+        if len(list(value)) == len(HVACMode):
+            _rv = True
+            for svalue in list(value):
+                if isinstance(svalue, int) is False:
+                    _rv = False
+                    break
+            if _rv is True:
+                return list(value)
+    raise vol.Invalid(
+        f"Invalid target temp register. Required type: integer, allowed 1 or list of {len(HVACMode)} registers"
+    )
+
+
 def nan_validator(value: Any) -> int:
     """Convert nan string to number (can be hex string or int)."""
     if isinstance(value, int):
@@ -268,26 +287,28 @@ def duplicate_entity_validator(config: dict) -> dict:
                 addr += "_" + str(inx)
                 entry_addrs: set[str] = set()
                 entry_addrs.add(addr)
-
-                if CONF_TARGET_TEMP in entry:
+                if CONF_TARGET_TEMP in entry and isinstance(
+                    entry[CONF_TARGET_TEMP], int
+                ):
                     a = str(entry[CONF_TARGET_TEMP])
                     a += "_" + str(inx)
                     entry_addrs.add(a)
+                elif CONF_TARGET_TEMP in entry and isinstance(
+                    entry[CONF_TARGET_TEMP], list
+                ):
+                    _uniqueTTReg = set(entry[CONF_TARGET_TEMP])
+                    for regs in _uniqueTTReg:
+                        a = str(regs)
+                        a += "_" + str(inx)
+                        entry_addrs.add(a)
                 if CONF_HVAC_MODE_REGISTER in entry:
                     a = str(entry[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS])
                     a += "_" + str(inx)
                     entry_addrs.add(a)
-                if (
-                    CONF_HVAC_MODE_REGISTER in entry
-                    and CONF_HVAC_MODE_TT_REGISTERS in entry[CONF_HVAC_MODE_REGISTER]
-                ):
-                    regs = entry[CONF_HVAC_MODE_REGISTER].get(
-                        CONF_HVAC_MODE_TT_REGISTERS
-                    )
-                    for _key, reg in regs.items():
-                        a = str(reg)
-                        a += "_" + str(inx)
-                        entry_addrs.add(a)
+                if CONF_HVAC_ONOFF_REGISTER in entry:
+                    a = str(entry[CONF_HVAC_ONOFF_REGISTER])
+                    a += "_" + str(inx)
+                    entry_addrs.add(a)
                 if CONF_FAN_MODE_REGISTER in entry:
                     a = str(entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS])
                     a += "_" + str(inx)
@@ -366,23 +387,34 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
 
 def check_hvac_target_temp_registers(config: dict) -> dict:
     """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes."""
-    if CONF_HVAC_MODE_REGISTER in config:
-        if CONF_HVAC_MODE_TT_REGISTERS in config[CONF_HVAC_MODE_REGISTER]:
-            errors = []
-            addresses: list[int] = []
-            name = config[CONF_NAME]
-            addresses.append(int(config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]))
-            if CONF_HVAC_ONOFF_REGISTER in config:
-                addresses.append(int(config[CONF_HVAC_ONOFF_REGISTER]))
-            if CONF_FAN_MODE_REGISTER in config:
-                addresses.append(int(config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]))
-            for key, value in config[CONF_HVAC_MODE_REGISTER][
-                CONF_HVAC_MODE_TT_REGISTERS
-            ].items():
-                if value in addresses:
-                    wrn = f"In {name} Register {value} already as {CONF_HVAC_ONOFF_REGISTER} or {CONF_HVAC_MODE_REGISTER} or {CONF_FAN_MODE_REGISTER}. {key} is not loaded! "
-                    _LOGGER.warning(wrn)
-                    errors.append(key)
-            for key in reversed(errors):
-                del config[CONF_HVAC_MODE_REGISTER][CONF_HVAC_MODE_TT_REGISTERS][key]
+    if CONF_TARGET_TEMP not in config:
+        return config
+
+    if isinstance(config[CONF_TARGET_TEMP], list):
+        _uniqueTTReg = config[CONF_TARGET_TEMP]
+    else:
+        _uniqueTTReg = [config[CONF_TARGET_TEMP]]
+
+    if (
+        CONF_HVAC_MODE_REGISTER in config
+        and config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS] in _uniqueTTReg
+    ):
+        wrn = f"In {CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). It is is not loaded!"
+        _LOGGER.warning(wrn)
+        del config[CONF_HVAC_MODE_REGISTER]
+    if (
+        CONF_HVAC_ONOFF_REGISTER in config
+        and config[CONF_HVAC_ONOFF_REGISTER] in _uniqueTTReg
+    ):
+        wrn = f"In {CONF_HVAC_ONOFF_REGISTER} Register overlaps CONF_TARGET_TEMP register(s). It is is not loaded!"
+        _LOGGER.warning(wrn)
+        del config[CONF_HVAC_ONOFF_REGISTER]
+    if (
+        CONF_FAN_MODE_REGISTER in config
+        and config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS] in _uniqueTTReg
+    ):
+        wrn = f"In {CONF_FAN_MODE_REGISTER} Register overlaps CONF_TARGET_TEMP register(s). It is is not loaded!"
+        _LOGGER.warning(wrn)
+        del config[CONF_FAN_MODE_REGISTER]
+
     return config

@@ -12,6 +12,7 @@ This file is responsible for testing:
 
 It uses binary_sensors/sensors to do black box testing of the read calls.
 """
+import contextlib
 from datetime import timedelta
 import logging
 from unittest import mock
@@ -24,6 +25,7 @@ import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
@@ -50,15 +52,10 @@ from homeassistant.components.modbus.const import (
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_COOL,
-    CONF_HVAC_MODE_COOL_TT_REG,
     CONF_HVAC_MODE_DRY,
-    CONF_HVAC_MODE_DRY_TT_REG,
     CONF_HVAC_MODE_HEAT,
     CONF_HVAC_MODE_HEAT_COOL,
-    CONF_HVAC_MODE_HEAT_COOL_TT_REG,
-    CONF_HVAC_MODE_HEAT_TT_REG,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_TT_REGISTERS,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
@@ -90,6 +87,7 @@ from homeassistant.components.modbus.validators import (
     duplicate_entity_validator,
     duplicate_fan_mode_validator,
     duplicate_modbus_validator,
+    fixedRegList_validator,
     nan_validator,
     number_validator,
     struct_validator,
@@ -144,6 +142,30 @@ async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodb
     assert DOMAIN in hass.config.components
     assert caplog.text == ""
     return mock_pymodbus
+
+
+async def test_fixedRegList_validator() -> None:
+    """Test fixed temp registers validator."""
+
+    registers: list(int) = []
+    _reg = 30
+    for _modes in HVACMode:
+        _reg += 1
+        registers.append(_reg)
+
+    for value, value_type in (
+        (15, int),
+        (registers, list),
+    ):
+        assert isinstance(fixedRegList_validator(value), value_type)
+
+    with contextlib.suppress(vol.Invalid):
+        fixedRegList_validator([15, "ab", 17, 18, 19, 20, 21])
+    try:
+        fixedRegList_validator([15, 17])
+    except vol.Invalid:
+        return
+    pytest.fail("fixedRegList_validator not throwing exception")
 
 
 async def test_number_validator() -> None:
@@ -515,12 +537,6 @@ async def test_duplicate_entity_validator(do_config) -> None:
                                 CONF_HVAC_MODE_COOL: 0,
                                 CONF_HVAC_MODE_HEAT: 1,
                             },
-                            CONF_HVAC_MODE_TT_REGISTERS: {
-                                CONF_HVAC_MODE_COOL_TT_REG: 130,
-                                CONF_HVAC_MODE_HEAT_COOL_TT_REG: 132,
-                                CONF_HVAC_MODE_HEAT_TT_REG: 131,
-                                CONF_HVAC_MODE_DRY_TT_REG: 133,
-                            },
                         },
                     },
                     {
@@ -532,12 +548,6 @@ async def test_duplicate_entity_validator(do_config) -> None:
                             CONF_HVAC_MODE_VALUES: {
                                 CONF_HVAC_MODE_COOL: 0,
                                 CONF_HVAC_MODE_HEAT: 1,
-                            },
-                            CONF_HVAC_MODE_TT_REGISTERS: {
-                                CONF_HVAC_MODE_COOL_TT_REG: 130,
-                                CONF_HVAC_MODE_HEAT_COOL_TT_REG: 119,
-                                CONF_HVAC_MODE_HEAT_TT_REG: 131,
-                                CONF_HVAC_MODE_DRY_TT_REG: 117,
                             },
                         },
                     },
@@ -614,6 +624,60 @@ async def test_duplicate_entity_validator(do_config) -> None:
                 ],
             }
         ],
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                        CONF_TARGET_TEMP: [130, 131, 132, 133, 134, 135, 136],
+                        CONF_SLAVE: 0,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 2,
+                                CONF_HVAC_MODE_DRY: 3,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 122,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 120,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_ON: 0,
+                                CONF_FAN_MODE_HIGH: 1,
+                            },
+                        },
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + " 2",
+                        CONF_ADDRESS: 118,
+                        CONF_TARGET_TEMP: [130, 131, 132, 133, 134, 135, 136],
+                        CONF_SLAVE: 0,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 130,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 2,
+                                CONF_HVAC_MODE_DRY: 3,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 122,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 120,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_ON: 0,
+                                CONF_FAN_MODE_HIGH: 1,
+                            },
+                        },
+                    },
+                ],
+            }
+        ],
     ],
 )
 async def test_duplicate_entity_validator_with_climate(do_config) -> None:
@@ -629,6 +693,7 @@ async def test_duplicate_entity_validator_with_climate(do_config) -> None:
             {
                 CONF_NAME: TEST_ENTITY_NAME,
                 CONF_ADDRESS: 1,
+                CONF_TARGET_TEMP: [117, 121, 119, 150, 151, 152, 156],
                 CONF_HVAC_MODE_REGISTER: {
                     CONF_ADDRESS: 119,
                     CONF_HVAC_MODE_VALUES: {
@@ -637,12 +702,6 @@ async def test_duplicate_entity_validator_with_climate(do_config) -> None:
                         CONF_HVAC_MODE_HEAT_COOL: 2,
                         CONF_HVAC_MODE_DRY: 3,
                     },
-                    CONF_HVAC_MODE_TT_REGISTERS: {
-                        CONF_HVAC_MODE_COOL_TT_REG: 130,
-                        CONF_HVAC_MODE_HEAT_COOL_TT_REG: 119,
-                        CONF_HVAC_MODE_HEAT_TT_REG: 131,
-                        CONF_HVAC_MODE_DRY_TT_REG: 117,
-                    },
                 },
                 CONF_HVAC_ONOFF_REGISTER: 117,
                 CONF_FAN_MODE_REGISTER: {
@@ -650,13 +709,34 @@ async def test_duplicate_entity_validator_with_climate(do_config) -> None:
                 },
             },
         ],
+        [
+            {
+                CONF_NAME: TEST_ENTITY_NAME,
+                CONF_ADDRESS: 1,
+                CONF_TARGET_TEMP: 117,
+                CONF_HVAC_MODE_REGISTER: {
+                    CONF_ADDRESS: 117,
+                    CONF_HVAC_MODE_VALUES: {
+                        CONF_HVAC_MODE_COOL: 0,
+                        CONF_HVAC_MODE_HEAT: 1,
+                        CONF_HVAC_MODE_HEAT_COOL: 2,
+                        CONF_HVAC_MODE_DRY: 3,
+                    },
+                },
+                CONF_HVAC_ONOFF_REGISTER: 117,
+                CONF_FAN_MODE_REGISTER: {
+                    CONF_ADDRESS: 117,
+                },
+            },
+        ],
     ],
 )
 async def test_climate_conflict_addresses(do_config) -> None:
-    """Test conflicts among the addresses of target temp."""
+    """Test conflicts among the addresses of target temp and other climate addresses."""
     check_hvac_target_temp_registers(do_config[0])
-    regs = do_config[0].get(CONF_HVAC_MODE_REGISTER)
-    assert len(regs[CONF_HVAC_MODE_TT_REGISTERS]) == 2
+    assert CONF_HVAC_MODE_REGISTER not in do_config[0]
+    assert CONF_HVAC_ONOFF_REGISTER not in do_config[0]
+    assert CONF_FAN_MODE_REGISTER not in do_config[0]
 
 
 @pytest.mark.parametrize(
