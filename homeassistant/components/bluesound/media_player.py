@@ -123,7 +123,7 @@ def _add_player(hass, async_add_entities, host, port=None, name=None):
             _LOGGER.warning("Player already added %s", player.id)
             return
 
-        hass.data.setdefault(DATA_BLUESOUND, []).append(player)
+        hass.data[DATA_BLUESOUND].append(player)
         async_add_entities([player])
         _LOGGER.info("Added device with name: %s", player.name)
 
@@ -148,6 +148,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Bluesound from a config entry."""
     #platform = entity_platform.async_get_current_platform()
+
+    if DATA_BLUESOUND not in hass.data:
+        hass.data[DATA_BLUESOUND] = []
 
     # @callback
     # def async_create_entities(speaker: SonosSpeaker) -> None:
