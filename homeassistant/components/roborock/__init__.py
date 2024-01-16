@@ -36,13 +36,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         home_data = await api_client.get_home_data(user_data)
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
-            "Invalid credentials.",
+            "Invalid credentials",
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
     except RoborockException as err:
         raise ConfigEntryNotReady(
-            "Failed getting Roborock home data.",
+            "Failed to get Roborock home data",
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]
     if len(valid_coordinators) == 0:
         raise ConfigEntryNotReady(
-            "No devices were able to successfully setup.",
+            "No devices were able to successfully setup",
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )

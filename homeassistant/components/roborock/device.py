@@ -54,7 +54,7 @@ class RoborockEntity(Entity):
             else:
                 command_name = command
             raise HomeAssistantError(
-                f"Error while calling {command}.",
+                f"Error while calling {command}",
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
                 translation_placeholders={
