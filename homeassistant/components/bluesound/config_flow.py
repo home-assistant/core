@@ -32,6 +32,29 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
         #super().__init__(DOMAIN, "Bluesound")
         self.discovery_info: dict[str, Any] = {}
 
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow initiated by the user."""
+        if user_input is None:
+            return self._show_setup_form()
+
+        unique_id = user_input[CONF_UUID] = info[CONF_UUID]
+
+        if not unique_id and info[CONF_SERIAL]:
+            _LOGGER.debug(
+                "Printer UUID is missing from IPP response. Falling back to IPP serial"
+                " number"
+            )
+            unique_id = info[CONF_SERIAL]
+        elif not unique_id:
+            _LOGGER.debug("Unable to determine unique id from IPP response")
+
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
+
+        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
