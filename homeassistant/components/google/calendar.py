@@ -80,7 +80,7 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 # Maximum number of upcoming events to consider for state changes between
 # coordinator updates.
-MAX_UPCOMING_EVENTS = 50
+MAX_UPCOMING_EVENTS = 20
 
 # Avoid syncing super old data on initial syncs. Note that old but active
 # recurring events are still included.
