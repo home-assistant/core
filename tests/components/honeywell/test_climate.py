@@ -205,6 +205,16 @@ async def test_mode_service_calls(
         )
     device.set_system_mode.assert_called_once_with("auto")
 
+    device.set_system_mode.reset_mock()
+    device.set_system_mode.side_effect = aiosomecomfort.UnexpectedResponse
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            blocking=True,
+        )
+
 
 async def test_auxheat_service_calls(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
@@ -292,6 +302,15 @@ async def test_fan_modes_service_calls(
     device.set_fan_mode.reset_mock()
 
     device.set_fan_mode.side_effect = aiosomecomfort.SomeComfortError
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_DIFFUSE},
+            blocking=True,
+        )
+
+    device.set_fan_mode.side_effect = aiosomecomfort.UnexpectedResponse
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -430,6 +449,12 @@ async def test_service_calls_off_mode(
 
     device.set_hold_heat.assert_called_once_with(False)
     device.set_hold_cool.assert_called_once_with(False)
+
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()
+
+    device.set_setpoint_cool.reset_mock()
+    device.set_setpoint_heat.reset_mock()
 
     reset_mock(device)
 
@@ -840,6 +865,16 @@ async def test_service_calls_heat_mode(
     device.set_hold_cool.assert_not_called()
     device.set_setpoint_cool.assert_not_called()
     assert "Temperature out of range" in caplog.text
+
+    device.set_hold_heat.side_effect = aiosomecomfort.UnexpectedResponse
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+            blocking=True,
+        )
 
     reset_mock(device)
     caplog.clear()
