@@ -24,19 +24,22 @@ _LOGGER = logging.getLogger(__name__)
 class WittiotDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold WittIOT data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        # entry: ConfigEntry,
         session: ClientSession,
         ip: str,
-        update_interval: timedelta,
     ) -> None:
         """Initialize."""
+        # self.entry = entry
         self.ip = ip
-        self.entry = entry
         self.api = API(ip, session=session)
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=10)
+        )
 
     async def _async_update_data(self) -> dict[str, str | float | int]:
         """Update data."""
@@ -44,9 +47,7 @@ class WittiotDataUpdateCoordinator(DataUpdateCoordinator):
         async with asyncio.timeout(10):
             try:
                 res = await self.api.request_loc_allinfo()
-                _LOGGER.info("Get device data: %s", res)
-                return res
-
             except (WittiotError, ClientConnectorError) as error:
                 raise UpdateFailed(error) from error
+        _LOGGER.debug("Get device data: %s", res)
         return res

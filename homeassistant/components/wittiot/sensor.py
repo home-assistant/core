@@ -188,14 +188,17 @@ TYPE_LEAFCH7_BATT = "leaf_ch7_batt"
 TYPE_LEAFCH8_BATT = "leaf_ch8_batt"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class WittiotSensorEntityDescription(SensorEntityDescription):
     """Class describing WittIOT sensor entities."""
+
+    sensor_type: str = ""
 
 
 SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_TEMPINF,
+        sensor_type=MAIN_DATA,
         name="Indoor Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -203,6 +206,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPOUT,
+        sensor_type=MAIN_DATA,
         name="Outdoor Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -210,6 +214,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_FEELLIKE,
+        sensor_type=MAIN_DATA,
         name="Feel Like",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -218,12 +223,14 @@ SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_DEWP,
         name="Dew Point",
+        sensor_type=MAIN_DATA,
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO2TEMP,
+        sensor_type=MAIN_DATA,
         name="CO2 Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -231,42 +238,49 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_HUMIDITYIN,
+        sensor_type=MAIN_DATA,
         name="Indoor Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_HUMIOUT,
+        sensor_type=MAIN_DATA,
         name="Outdoor Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO2HUMI,
+        sensor_type=MAIN_DATA,
         name="CO2 Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_REL,
+        sensor_type=MAIN_DATA,
         name="Relative",
         native_unit_of_measurement=UnitOfPressure.INHG,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ABS,
+        sensor_type=MAIN_DATA,
         name="Absolute",
         native_unit_of_measurement=UnitOfPressure.INHG,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_WDIR,
+        sensor_type=MAIN_DATA,
         name="Wind Direction",
         icon="mdi:weather-windy",
         native_unit_of_measurement=DEGREE,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_WS,
+        sensor_type=MAIN_DATA,
         name="Wind Speed",
         icon="mdi:weather-windy",
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
@@ -274,6 +288,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_WG,
+        sensor_type=MAIN_DATA,
         name="Wind Gust",
         icon="mdi:weather-windy",
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
@@ -281,6 +296,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_DWM,
+        sensor_type=MAIN_DATA,
         name="Day Wind Max",
         icon="mdi:weather-windy",
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
@@ -288,6 +304,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_UV,
+        sensor_type=MAIN_DATA,
         name="UV-Index",
         native_unit_of_measurement="Index",
         device_class=SensorDeviceClass.ILLUMINANCE,
@@ -295,6 +312,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SR,
+        sensor_type=MAIN_DATA,
         name="Solar Irradiance",
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         device_class=SensorDeviceClass.ILLUMINANCE,
@@ -302,6 +320,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_RR,
+        sensor_type=MAIN_DATA,
         name="Rain Rate",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -309,6 +328,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ER,
+        sensor_type=MAIN_DATA,
         name="Rain Event",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -316,6 +336,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_DR,
+        sensor_type=MAIN_DATA,
         name="Rain Day",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -323,6 +344,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_WR,
+        sensor_type=MAIN_DATA,
         name="Rain Week",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -330,6 +352,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_MR,
+        sensor_type=MAIN_DATA,
         name="Rain Month",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -337,6 +360,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_YR,
+        sensor_type=MAIN_DATA,
         name="Rain Year",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -344,6 +368,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PIEZO_RR,
+        sensor_type=MAIN_DATA,
         name="Piezo Rain Rate",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -351,6 +376,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PIEZO_ER,
+        sensor_type=MAIN_DATA,
         name="Piezo Rain Event",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -358,6 +384,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PIEZO_DR,
+        sensor_type=MAIN_DATA,
         name="Piezo Rain Day",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -365,6 +392,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PIEZO_WR,
+        sensor_type=MAIN_DATA,
         name="Piezo Rain Week",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -372,6 +400,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PIEZO_MR,
+        sensor_type=MAIN_DATA,
         name="Piezo Rain Month",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -379,6 +408,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PIEZO_YR,
+        sensor_type=MAIN_DATA,
         name="Piezo Rain Year",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -386,6 +416,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO2IN,
+        sensor_type=MAIN_DATA,
         name="Indoor CO2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
@@ -393,6 +424,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO2OUT,
+        sensor_type=MAIN_DATA,
         name="CO2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
@@ -400,6 +432,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO224HIN,
+        sensor_type=MAIN_DATA,
         name="Indoor 24H CO2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
@@ -407,6 +440,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO224HOUT,
+        sensor_type=MAIN_DATA,
         name="24H CO2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
@@ -414,42 +448,49 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO2PM25,
+        sensor_type=MAIN_DATA,
         name="CO2 PM2.5",
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO2RTPM25,
+        sensor_type=MAIN_DATA,
         name="CO2 PM2.5 AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO224HPM25,
+        sensor_type=MAIN_DATA,
         name="CO2 24H PM2.5 AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO2PM10,
+        sensor_type=MAIN_DATA,
         name="CO2 PM10",
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO2RTPM10,
+        sensor_type=MAIN_DATA,
         name="CO2 PM10 AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_CO224HPM10,
+        sensor_type=MAIN_DATA,
         name="CO2 24H PM10 AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LIGHTNING,
+        sensor_type=MAIN_DATA,
         name="Thunder Last Distamce",
         icon="mdi:lightning-bolt",
         native_unit_of_measurement=UnitOfLength.MILES,
@@ -457,252 +498,280 @@ SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LIGHTNINGTIME,
+        sensor_type=MAIN_DATA,
         name="Thunder Last Timestamp",
         icon="mdi:lightning-bolt",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LIGHTNINGNUM,
+        sensor_type=MAIN_DATA,
         name="Thunder Daily Count",
         icon="mdi:lightning-bolt",
         state_class=SensorStateClass.TOTAL,
     ),
-)
-MULTI_PM25_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_PM25CH1,
+        sensor_type=PM25_DATA,
         name="CH1 PM2.5",
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM25CH2,
+        sensor_type=PM25_DATA,
         name="CH2 PM2.5",
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM25CH3,
+        sensor_type=PM25_DATA,
         name="CH3 PM2.5",
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM25CH4,
+        sensor_type=PM25_DATA,
         name="CH4 PM2.5",
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM25RTAQICH1,
+        sensor_type=PM25_DATA,
         name="CH1 PM2.5 AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM25RTAQICH2,
+        sensor_type=PM25_DATA,
         name="CH2 PM2.5 AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM25RTAQICH3,
+        sensor_type=PM25_DATA,
         name="CH3 PM2.5 AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM25RTAQICH4,
+        sensor_type=PM25_DATA,
         name="CH4 PM2.5 AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM2524HAQICH1,
+        sensor_type=PM25_DATA,
         name="CH1 PM2.5 24H AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM2524HAQICH2,
+        sensor_type=PM25_DATA,
         name="CH2 PM2.5 24H AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM2524HAQICH3,
+        sensor_type=PM25_DATA,
         name="CH3 PM2.5 24H AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM2524HAQICH4,
+        sensor_type=PM25_DATA,
         name="CH4 PM2.5 24H AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-)
-MULTI_PM25BATT_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_PM25CH1_BATT,
+        sensor_type=PM25_BATT,
         name="CH1 PM2.5 Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM25CH2_BATT,
+        sensor_type=PM25_BATT,
         name="CH2 PM2.5 Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM25CH3_BATT,
+        sensor_type=PM25_BATT,
         name="CH3 PM2.5 Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_PM25CH4_BATT,
+        sensor_type=PM25_BATT,
         name="CH4 PM2.5 Battery",
         icon="mdi:battery",
     ),
-)
-MULTI_LEAK_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_LEAKCH1,
+        sensor_type=LEAK_DATA,
         name="CH1 Leak",
         icon="mdi:water-alert",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAKCH2,
+        sensor_type=LEAK_DATA,
         name="CH2 Leak",
         icon="mdi:water-alert",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAKCH3,
+        sensor_type=LEAK_DATA,
         name="CH3 Leak",
         icon="mdi:water-alert",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAKCH4,
+        sensor_type=LEAK_DATA,
         name="CH4 Leak",
         icon="mdi:water-alert",
     ),
-)
-MULTI_LEAKBATT_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_LEAKCH1_BATT,
+        sensor_type=LEAK_BATT,
         name="CH1 Leak Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAKCH2_BATT,
+        sensor_type=LEAK_BATT,
         name="CH2 Leak Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAKCH3_BATT,
+        sensor_type=LEAK_BATT,
         name="CH3 Leak Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAKCH4_BATT,
+        sensor_type=LEAK_BATT,
         name="CH4 Leak Battery",
         icon="mdi:battery",
     ),
-)
-
-MULTI_SOIL_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH1,
+        sensor_type=SOIL_DATA,
         name="CH1 Soil",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH2,
+        sensor_type=SOIL_DATA,
         name="CH2 Soil",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH3,
+        sensor_type=SOIL_DATA,
         name="CH3 Soil",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH4,
+        sensor_type=SOIL_DATA,
         name="CH4 Soil",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH5,
+        sensor_type=SOIL_DATA,
         name="CH5 Soil",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH6,
+        sensor_type=SOIL_DATA,
         name="CH6 Soil",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH7,
+        sensor_type=SOIL_DATA,
         name="CH7 Soil",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH8,
+        sensor_type=SOIL_DATA,
         name="CH8 Soil",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
-)
-MULTI_SOILBATT_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH1_BATT,
+        sensor_type=SOIL_BATT,
         name="CH1 Soil Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH2_BATT,
+        sensor_type=SOIL_BATT,
         name="CH2 Soil Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH3_BATT,
+        sensor_type=SOIL_BATT,
         name="CH3 Soil Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH4_BATT,
+        sensor_type=SOIL_BATT,
         name="CH4 Soil Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH5_BATT,
+        sensor_type=SOIL_BATT,
         name="CH5 Soil Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH6_BATT,
+        sensor_type=SOIL_BATT,
         name="CH6 Soil Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH7_BATT,
+        sensor_type=SOIL_BATT,
         name="CH7 Soil Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_SOILCH8_BATT,
+        sensor_type=SOIL_BATT,
         name="CH8 Soil Battery",
         icon="mdi:battery",
     ),
-)
-MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH1,
+        sensor_type=TEMPHUMI_DATA,
         name="CH1 T&H Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -710,6 +779,7 @@ MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH2,
+        sensor_type=TEMPHUMI_DATA,
         name="CH2 T&H Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -717,6 +787,7 @@ MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH3,
+        sensor_type=TEMPHUMI_DATA,
         name="CH3 T&H Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -724,6 +795,7 @@ MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH4,
+        sensor_type=TEMPHUMI_DATA,
         name="CH4 T&H Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -731,6 +803,7 @@ MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH5,
+        sensor_type=TEMPHUMI_DATA,
         name="CH5 T&H Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -738,6 +811,7 @@ MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH6,
+        sensor_type=TEMPHUMI_DATA,
         name="CH6 T&H Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -745,6 +819,7 @@ MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH7,
+        sensor_type=TEMPHUMI_DATA,
         name="CH7 T&H Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -752,6 +827,7 @@ MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH8,
+        sensor_type=TEMPHUMI_DATA,
         name="CH8 T&H Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -759,98 +835,111 @@ MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_HUMICH1,
+        sensor_type=TEMPHUMI_DATA,
         name="CH1 T&H Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_HUMICH2,
+        sensor_type=TEMPHUMI_DATA,
         name="CH2 T&H Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_HUMICH3,
+        sensor_type=TEMPHUMI_DATA,
         name="CH3 T&H Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_HUMICH4,
+        sensor_type=TEMPHUMI_DATA,
         name="CH4 T&H Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_HUMICH5,
+        sensor_type=TEMPHUMI_DATA,
         name="CH5 T&H Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_HUMICH6,
+        sensor_type=TEMPHUMI_DATA,
         name="CH6 T&H Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_HUMICH7,
+        sensor_type=TEMPHUMI_DATA,
         name="CH7 T&H Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_HUMICH8,
+        sensor_type=TEMPHUMI_DATA,
         name="CH8 T&H Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
-)
-MULTI_TEMPHUMIBATT_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH1_BATT,
+        sensor_type=TEMPHUMI_BATT,
         name="CH1 T&H Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH2_BATT,
+        sensor_type=TEMPHUMI_BATT,
         name="CH2 T&H Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH3_BATT,
+        sensor_type=TEMPHUMI_BATT,
         name="CH3 T&H Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH4_BATT,
+        sensor_type=TEMPHUMI_BATT,
         name="CH4 T&H Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH5_BATT,
+        sensor_type=TEMPHUMI_BATT,
         name="CH5 T&H Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH6_BATT,
+        sensor_type=TEMPHUMI_BATT,
         name="CH6 T&H Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH7_BATT,
+        sensor_type=TEMPHUMI_BATT,
         name="CH7 T&H Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_TEMPCH8_BATT,
+        sensor_type=TEMPHUMI_BATT,
         name="CH8 T&H Battery",
         icon="mdi:battery",
     ),
-)
-MULTI_TEMP_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH1,
+        sensor_type=TEMP_DATA,
         name="CH1 Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -858,6 +947,7 @@ MULTI_TEMP_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH2,
+        sensor_type=TEMP_DATA,
         name="CH2 Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -865,6 +955,7 @@ MULTI_TEMP_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH3,
+        sensor_type=TEMP_DATA,
         name="CH3 Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -872,6 +963,7 @@ MULTI_TEMP_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH4,
+        sensor_type=TEMP_DATA,
         name="CH4 Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -879,6 +971,7 @@ MULTI_TEMP_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH5,
+        sensor_type=TEMP_DATA,
         name="CH5 Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -886,6 +979,7 @@ MULTI_TEMP_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH6,
+        sensor_type=TEMP_DATA,
         name="CH6 Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -893,6 +987,7 @@ MULTI_TEMP_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH7,
+        sensor_type=TEMP_DATA,
         name="CH7 Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -900,162 +995,165 @@ MULTI_TEMP_SENSOR_DESCRIPTIONS = (
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH8,
+        sensor_type=TEMP_DATA,
         name="CH8 Temp",
         native_unit_of_measurement="°F",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-)
-MULTI_TEMPBATT_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH1_BATT,
+        sensor_type=TEMP_BATT,
         name="CH1 Temp Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH2_BATT,
+        sensor_type=TEMP_BATT,
         name="CH2 Temp Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH3_BATT,
+        sensor_type=TEMP_BATT,
         name="CH3 Temp Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH4_BATT,
+        sensor_type=TEMP_BATT,
         name="CH4 Temp Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH5_BATT,
+        sensor_type=TEMP_BATT,
         name="CH5 Temp Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH6_BATT,
+        sensor_type=TEMP_BATT,
         name="CH6 Temp Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH7_BATT,
+        sensor_type=TEMP_BATT,
         name="CH7 Temp Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_ONLYTEMPCH8_BATT,
+        sensor_type=TEMP_BATT,
         name="CH8 Temp Battery",
         icon="mdi:battery",
     ),
-)
-MULTI_LEAF_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH1,
+        sensor_type=LEAF_DATA,
         name="CH1 Leaf",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH2,
+        sensor_type=LEAF_DATA,
         name="CH2 Leaf",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH3,
+        sensor_type=LEAF_DATA,
         name="CH3 Leaf",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH4,
+        sensor_type=LEAF_DATA,
         name="CH4 Leaf",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH5,
+        sensor_type=LEAF_DATA,
         name="CH5 Leaf",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH6,
+        sensor_type=LEAF_DATA,
         name="CH6 Leaf",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH7,
+        sensor_type=LEAF_DATA,
         name="CH7 Leaf",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH8,
+        sensor_type=LEAF_DATA,
         name="CH8 Leaf",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
-)
-MULTI_LEAFBATT_SENSOR_DESCRIPTIONS = (
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH1_BATT,
+        sensor_type=LEAF_BATT,
         name="CH1 Leaf Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH2_BATT,
+        sensor_type=LEAF_BATT,
         name="CH2 Leaf Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH3_BATT,
+        sensor_type=LEAF_BATT,
         name="CH3 Leaf Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH4_BATT,
+        sensor_type=LEAF_BATT,
         name="CH4 Leaf Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH5_BATT,
+        sensor_type=LEAF_BATT,
         name="CH5 Leaf Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH6_BATT,
+        sensor_type=LEAF_BATT,
         name="CH6 Leaf Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH7_BATT,
+        sensor_type=LEAF_BATT,
         name="CH7 Leaf Battery",
         icon="mdi:battery",
     ),
     WittiotSensorEntityDescription(
         key=TYPE_LEAFCH8_BATT,
+        sensor_type=LEAF_BATT,
         name="CH8 Leaf Battery",
         icon="mdi:battery",
     ),
 )
-
-ALL_SENSOR_DESCRIPTIONS = {
-    SENSOR_DESCRIPTIONS,
-    MULTI_PM25_SENSOR_DESCRIPTIONS,
-    MULTI_PM25BATT_SENSOR_DESCRIPTIONS,
-    MULTI_LEAK_SENSOR_DESCRIPTIONS,
-    MULTI_LEAKBATT_SENSOR_DESCRIPTIONS,
-    MULTI_SOIL_SENSOR_DESCRIPTIONS,
-    MULTI_SOILBATT_SENSOR_DESCRIPTIONS,
-    MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS,
-    MULTI_TEMPHUMIBATT_SENSOR_DESCRIPTIONS,
-    MULTI_TEMP_SENSOR_DESCRIPTIONS,
-    MULTI_TEMPBATT_SENSOR_DESCRIPTIONS,
-    MULTI_LEAF_SENSOR_DESCRIPTIONS,
-    MULTI_LEAFBATT_SENSOR_DESCRIPTIONS,
-}
 
 
 async def async_setup_entry(
@@ -1064,139 +1162,16 @@ async def async_setup_entry(
     """Set up Wittiot sensor entities based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = []
-    for objsensor in ALL_SENSOR_DESCRIPTIONS:
-        for desc in objsensor:
-            if coordinator.data.get(desc.key) not in ("", "--", "--.-", "None"):
-                if objsensor == SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            MAIN_DATA,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_PM25_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            PM25_DATA,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_PM25BATT_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            PM25_BATT,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_LEAK_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            LEAK_DATA,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_LEAKBATT_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            LEAK_BATT,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_SOIL_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            SOIL_DATA,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_SOILBATT_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            SOIL_BATT,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_TEMPHUMI_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            TEMPHUMI_DATA,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_TEMPHUMIBATT_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            TEMPHUMI_BATT,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_TEMP_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            TEMP_DATA,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_TEMPBATT_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            TEMP_BATT,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_LEAF_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            LEAF_DATA,
-                            desc,
-                        )
-                    )
-                elif objsensor == MULTI_LEAFBATT_SENSOR_DESCRIPTIONS:
-                    sensors.append(
-                        LocalWittiotSensor(
-                            coordinator,
-                            entry.data[CONF_IP],
-                            entry.data[DEVICE_NAME],
-                            LEAF_BATT,
-                            desc,
-                        )
-                    )
+    for desc in SENSOR_DESCRIPTIONS:
+        if coordinator.data.get(desc.key) not in ("", "--", "--.-", "None"):
+            sensors.append(
+                LocalWittiotSensor(
+                    coordinator,
+                    entry.data[CONF_IP],
+                    entry.data[DEVICE_NAME],
+                    desc,
+                )
+            )
     async_add_entities(sensors, True)
 
 
@@ -1211,15 +1186,14 @@ class LocalWittiotSensor(CoordinatorEntity[WittiotDataUpdateCoordinator], Sensor
         coordinator: WittiotDataUpdateCoordinator,
         ipadrr: str,
         devname: str,
-        sensortype: str,
         description: WittiotSensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{devname}_{sensortype}")},
+            identifiers={(DOMAIN, f"{devname}_{description.sensor_type}")},
             manufacturer="WittIOT",
-            name=f"{devname}_{sensortype}",
+            name=f"{devname}_{description.sensor_type}",
             model=self.coordinator.data["ver"],
             configuration_url=f"http://{ipadrr}",
         )

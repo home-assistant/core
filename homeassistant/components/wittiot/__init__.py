@@ -1,7 +1,6 @@
 """The WittIOT integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -24,10 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_update_entry(entry, unique_id=entry.data[CONF_IP])
     coordinator = WittiotDataUpdateCoordinator(
         hass,
-        entry,
         async_get_clientsession(hass),
         entry.data[CONF_IP],
-        timedelta(seconds=10),
     )
 
     await coordinator.async_config_entry_first_refresh()

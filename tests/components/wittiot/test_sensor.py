@@ -2,20 +2,25 @@
 import json
 from unittest.mock import patch
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.wittiot.const import (
     CONF_IP,
     CONNECTION_TYPE,
     DEVICE_NAME,
     DOMAIN,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, load_fixture
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -34,44 +39,8 @@ async def test_sensors(hass: HomeAssistant) -> None:
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.gw2000b_wificb44_main_data_indoor_temp")
-    assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "°C"
-    assert state.attributes.get(ATTR_STATE_CLASS) == "measurement"
-    assert state.state == "13.5"
-
-    state = hass.states.get("sensor.gw2000b_wificb44_main_data_outdoor_temp")
-    assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "°C"
-    assert state.attributes.get(ATTR_STATE_CLASS) == "measurement"
-    assert state.state == "26.5"
-
-    state = hass.states.get("sensor.gw2000b_wificb44_main_data_indoor_humidity")
-    assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "humidity"
-    assert state.state == "1"
-
-    state = hass.states.get("sensor.gw2000b_wificb44_main_data_outdoor_humidity")
-    assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "humidity"
-    assert state.state == "53"
-
-    state = hass.states.get("sensor.gw2000b_wificb44_main_data_absolute")
-    assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "hPa"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "pressure"
-    assert state.state == "302.07"
-
-    state = hass.states.get("sensor.gw2000b_wificb44_main_data_wind_speed")
-    assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mph"
-    assert state.attributes.get(ATTR_STATE_CLASS) == "measurement"
-    assert state.state == "0.0"
+    assert len(hass.states.async_all()) == 84
+    for entry in entity_registry.entities.values():
+        state = hass.states.get(entry.entity_id)
+        assert state
+        assert state == snapshot(name=f"{entry.entity_id}-state")
