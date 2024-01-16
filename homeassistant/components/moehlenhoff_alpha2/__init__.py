@@ -52,7 +52,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
+class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):  # pylint: disable=hass-enforce-coordinator-module
     """Keep the base instance in one place and centralize the update."""
 
     def __init__(self, hass: HomeAssistant, base: Alpha2Base) -> None:

@@ -243,7 +243,7 @@ class MikrotikData:
             return []
 
 
-class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Mikrotik Hub Object."""
 
     def __init__(

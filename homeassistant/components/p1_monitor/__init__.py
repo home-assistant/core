@@ -67,7 +67,7 @@ class P1MonitorData(TypedDict):
     watermeter: WaterMeter | None
 
 
-class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
+class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching P1 Monitor data from single endpoint."""
 
     config_entry: ConfigEntry

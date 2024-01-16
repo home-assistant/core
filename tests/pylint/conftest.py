@@ -101,3 +101,24 @@ def enforce_sorted_platforms_checker_fixture(
     )
     enforce_sorted_platforms_checker.module = "homeassistant.components.pylint_test"
     return enforce_sorted_platforms_checker
+
+
+@pytest.fixture(name="hass_enforce_coordinator_module", scope="session")
+def hass_enforce_coordinator_module_fixture() -> ModuleType:
+    """Fixture to the content for the hass_enforce_coordinator_module check."""
+    return _load_plugin_from_file(
+        "hass_enforce_coordinator_module",
+        "pylint/plugins/hass_enforce_coordinator_module.py",
+    )
+
+
+@pytest.fixture(name="enforce_coordinator_module_checker")
+def enforce_coordinator_module_fixture(
+    hass_enforce_coordinator_module, linter
+) -> BaseChecker:
+    """Fixture to provide a hass_enforce_coordinator_module checker."""
+    enforce_coordinator_module_checker = (
+        hass_enforce_coordinator_module.HassEnforceCoordinatorModule(linter)
+    )
+    enforce_coordinator_module_checker.module = "homeassistant.components.pylint_test"
+    return enforce_coordinator_module_checker

@@ -50,7 +50,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class OpenGarageDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class OpenGarageDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching Opengarage data."""
 
     def __init__(
