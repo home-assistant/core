@@ -496,19 +496,33 @@ async def async_setup_entry(  # noqa: C901
 
     disk_coordinators: dict[str, SystemMonitorDiskCoordinator] = {}
     for argument in startup_arguments["disk_arguments"]:
-        disk_coordinators[argument] = SystemMonitorDiskCoordinator(hass, argument)
-    swap_coordinator = SystemMonitorSwapCoordinator(hass)
-    memory_coordinator = SystemMonitorMemoryCoordinator(hass)
-    net_io_coordinator = SystemMonitorNetIOCoordinator(hass)
-    net_addr_coordinator = SystemMonitorNetAddrCoordinator(hass)
-    system_load_coordinator = SystemMonitorLoadCoordinator(hass)
-    processor_coordinator = SystemMonitorProcessorCoordinator(hass)
-    boot_time_coordinator = SystemMonitorBootTimeCoordinator(hass)
-    process_coordinator = SystemMonitorProcessCoordinator(hass)
-    cpu_temp_coordinator = SystemMonitorCPUtempCoordinator(hass)
+        disk_coordinators[argument] = SystemMonitorDiskCoordinator(
+            hass, f"Disk {argument} coordinator", argument
+        )
+    swap_coordinator = SystemMonitorSwapCoordinator(hass, "Swap coordinator")
+    memory_coordinator = SystemMonitorMemoryCoordinator(hass, "Memory coordinator")
+    net_io_coordinator = SystemMonitorNetIOCoordinator(hass, "Net IO coordnator")
+    net_addr_coordinator = SystemMonitorNetAddrCoordinator(
+        hass, "Net address coordinator"
+    )
+    system_load_coordinator = SystemMonitorLoadCoordinator(
+        hass, "System load coordinator"
+    )
+    processor_coordinator = SystemMonitorProcessorCoordinator(
+        hass, "Processor coordinator"
+    )
+    boot_time_coordinator = SystemMonitorBootTimeCoordinator(
+        hass, "Boot time coordinator"
+    )
+    process_coordinator = SystemMonitorProcessCoordinator(hass, "Process coordinator")
+    cpu_temp_coordinator = SystemMonitorCPUtempCoordinator(
+        hass, "CPU temperature coordinator"
+    )
 
     for argument in startup_arguments["disk_arguments"]:
-        disk_coordinators[argument] = SystemMonitorDiskCoordinator(hass, argument)
+        disk_coordinators[argument] = SystemMonitorDiskCoordinator(
+            hass, f"Disk {argument} coordinator", argument
+        )
 
     _LOGGER.debug("Setup from options %s", entry.options)
 
@@ -687,7 +701,7 @@ async def async_setup_entry(  # noqa: C901
                 _LOGGER.debug("Loading legacy %s with argument %s", _type, argument)
                 if not disk_coordinators.get(argument):
                     disk_coordinators[argument] = SystemMonitorDiskCoordinator(
-                        hass, argument
+                        hass, f"Disk {argument} coordinator", argument
                     )
                 entities.append(
                     SystemMonitorSensor(

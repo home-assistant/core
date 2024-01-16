@@ -16,8 +16,6 @@ from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 # psutil define svmem by platform. Create our own definition here to be platform independent.
 svmem = namedtuple(
@@ -44,12 +42,12 @@ dataT = TypeVar(
 class MonitorCoordinator(DataUpdateCoordinator[dataT]):
     """A System monitor Base Data Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"System Monitor {name}",
             update_interval=DEFAULT_SCAN_INTERVAL,
             always_update=False,
         )
@@ -66,9 +64,9 @@ class MonitorCoordinator(DataUpdateCoordinator[dataT]):
 class SystemMonitorDiskCoordinator(MonitorCoordinator[sdiskusage]):
     """A System monitor Disk Data Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, argument: str) -> None:
+    def __init__(self, hass: HomeAssistant, name: str, argument: str) -> None:
         """Initialize the disk coordinator."""
-        super().__init__(hass)
+        super().__init__(hass, name)
         self._argument = argument
 
     def update_data(self) -> sdiskusage:
