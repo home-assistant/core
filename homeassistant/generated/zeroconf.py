@@ -580,6 +580,11 @@ ZEROCONF = {
             "name": "yeelink-*",
         },
     ],
+    "_musc._tcp.local.": [
+        {
+            "doamin": "bluesound",
+        },
+    ],
     "_nanoleafapi._tcp.local.": [
         {
             "domain": "nanoleaf",
