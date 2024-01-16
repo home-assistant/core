@@ -47,10 +47,10 @@
       "message": "Honeywell set temperature failed"
     },
     "sys_mode_failed": {
-      "message": "Honeywell set system mode failed"
+      "message": "Honeywell could not set system mode"
     },
     "fan_mode_failed": {
-      "message": "Honeywell set fan mode failed"
+      "message": "Honeywell could not set fan mode"
     },
     "away_mode_failed": {
       "message": "Honeywell set away mode failed"

@@ -392,28 +392,22 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.set_fan_mode(self._fan_mode_map[fan_mode])
 
-        except (AscConnectionError, UnexpectedResponse) as err:
+        except SomeComfortError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="fan_mode_failed",
             ) from err
-
-        except SomeComfortError as err:
-            raise HomeAssistantError("Honeywell could not set fan mode.") from err
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         try:
             await self._device.set_system_mode(self._hvac_mode_map[hvac_mode])
 
-        except (AscConnectionError, UnexpectedResponse) as err:
+        except SomeComfortError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="sys_mode_failed",
             ) from err
-
-        except SomeComfortError as err:
-            raise HomeAssistantError("Honeywell could not set system mode.") from err
 
     async def _turn_away_mode_on(self) -> None:
         """Turn away on.
