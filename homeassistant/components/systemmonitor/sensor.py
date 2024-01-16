@@ -131,7 +131,7 @@ def get_throughput(entity: SystemMonitorSensor[dict[str, snetio]]) -> float | No
     state = None
     if entity.argument in counters:
         counter = counters[entity.argument][IO_COUNTER[entity.entity_description.key]]
-        now = time.time()
+        now = time.monotonic()
         if (
             (value := entity.value)
             and (update_time := entity.update_time)
