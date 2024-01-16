@@ -469,10 +469,11 @@ class IBeaconCoordinator:
                     "restoring nameless iBeacon %s from address %s", uuid, address
                 )
 
-                service_info = bluetooth.async_last_service_info(
-                    self.hass, address, connectable=False
-                )
-                if not service_info:
+                if not (
+                    service_info := bluetooth.async_last_service_info(
+                        self.hass, address, connectable=False
+                    )
+                ):
                     continue  # no longer available
 
                 # the beacon was ignored, we need to re-process it from scratch

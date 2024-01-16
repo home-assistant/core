@@ -4,6 +4,9 @@ import time
 
 import pytest
 
+from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+)
 from homeassistant.components.ibeacon.const import (
     ATTR_SOURCE,
     CONF_ALLOW_NAMELESS_UUIDS,
@@ -31,6 +34,7 @@ from tests.components.bluetooth import (
     inject_advertisement_with_time_and_source_connectable,
     inject_bluetooth_service_info,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 
@@ -203,6 +207,52 @@ async def test_default_name_allowlisted_restore(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) > before_entity_count
+
+
+async def test_default_name_allowlisted_restore_late(hass: HomeAssistant) -> None:
+    """Test that allowlisting an ignored but no longer advertised nameless iBeacon has no effect."""
+    start_monotonic = time.monotonic()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    before_entity_count = len(hass.states.async_entity_ids())
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO_DBUS,
+            name=BLUECHARM_BEACON_SERVICE_INFO_DBUS.address,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == before_entity_count
+
+    # Fastforward time until the device is no longer advertised
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with patch_bluetooth_time(
+        monotonic_now,
+    ), patch_all_discovered_devices([]):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"new_uuid": "426c7565-4368-6172-6d42-6561636f6e73"},
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == before_entity_count
 
 
 async def test_rotating_major_minor_and_mac_with_name(hass: HomeAssistant) -> None:
