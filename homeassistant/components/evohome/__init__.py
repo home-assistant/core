@@ -472,13 +472,13 @@ class EvoBroker:
 
     async def call_client_api(
         self,
-        client_coro: Awaitable[dict[str, Any] | None],
+        client_api: Awaitable[dict[str, Any] | None],
         update_state: bool = True,
     ) -> dict[str, Any] | None:
         """Call a client API and update the broker state if required."""
 
         try:
-            result = await client_coro
+            result = await client_api
         except evo.RequestFailed as err:
             _handle_exception(err)
             return None
