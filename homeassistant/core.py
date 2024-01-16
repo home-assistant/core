@@ -1541,12 +1541,12 @@ class State:
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
-            COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(self.last_changed),
+            COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
         }
         if self.last_changed != self.last_updated:
-            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
-                self.last_updated
-            )
+            compressed_state[
+                COMPRESSED_STATE_LAST_UPDATED
+            ] = self.last_updated_timestamp
         return compressed_state
 
     @cached_property
