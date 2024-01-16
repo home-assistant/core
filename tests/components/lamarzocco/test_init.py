@@ -62,7 +62,7 @@ async def test_invalid_auth(
     assert len(flows) == 1
 
     flow = flows[0]
-    assert flow.get("step_id") == "user"
+    assert flow.get("step_id") == "reauth_confirm"
     assert flow.get("handler") == DOMAIN
 
     assert "context" in flow
