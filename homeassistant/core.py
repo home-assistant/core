@@ -1078,6 +1078,11 @@ class Event:
             context.origin_event = self
 
     @cached_property
+    def time_fired_timestamp(self) -> float:
+        """Return time fired as a timestamp."""
+        return self.time_fired.timestamp()
+
+    @cached_property
     def _as_dict(self) -> dict[str, Any]:
         """Create a dict representation of this Event.
 
@@ -1444,6 +1449,16 @@ class State:
         return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
             "_", " "
         )
+
+    @cached_property
+    def last_updated_timestamp(self) -> float:
+        """Timestamp of last update."""
+        return self.last_updated.timestamp()
+
+    @cached_property
+    def last_changed_timestamp(self) -> float:
+        """Timestamp of last change."""
+        return self.last_changed.timestamp()
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
