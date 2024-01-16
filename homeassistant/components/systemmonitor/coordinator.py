@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections import namedtuple
 from datetime import datetime
 import logging
 import os
-from typing import TypeVar
+from typing import NamedTuple, TypeVar
 
 import psutil
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
@@ -17,11 +16,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-# psutil define virtual_memory by platform. Create our own definition here to be platform independent.
-virtual_memory = namedtuple(
-    "virtual_memory",
-    ["total", "available", "percent", "used", "free"],
-)
+
+
+class VirtualMemory(NamedTuple):
+    """Represents virtual memory.
+
+    psutil define VirtualMemory by platform.
+    Create our own definition here to be platform independent.
+    """
+
+    total: float
+    available: float
+    percent: float
+    used: float
+    free: float
 
 
 dataT = TypeVar(
@@ -33,7 +41,7 @@ dataT = TypeVar(
     | float
     | list[psutil.Process]
     | sswap
-    | virtual_memory
+    | VirtualMemory
     | tuple[float, float, float]
     | sdiskusage,
 )
@@ -87,13 +95,13 @@ class SystemMonitorSwapCoordinator(MonitorCoordinator[sswap]):
         return psutil.swap_memory()
 
 
-class SystemMonitorMemoryCoordinator(MonitorCoordinator[virtual_memory]):
+class SystemMonitorMemoryCoordinator(MonitorCoordinator[VirtualMemory]):
     """A System monitor Memory Data Update Coordinator."""
 
-    def update_data(self) -> virtual_memory:
+    def update_data(self) -> VirtualMemory:
         """Fetch data."""
         memory = psutil.virtual_memory()
-        return virtual_memory(
+        return VirtualMemory(
             memory.total, memory.available, memory.percent, memory.used, memory.free
         )
 
