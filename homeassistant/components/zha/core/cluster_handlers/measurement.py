@@ -14,7 +14,7 @@ from ..const import (
     REPORT_CONFIG_MIN_INT,
 )
 from . import AttrReportConfig, ClusterHandler
-from .helpers import is_hue_motion_sensor
+from .helpers import is_hue_motion_sensor, is_sonoff_presence_sensor
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -69,6 +69,10 @@ class OccupancySensing(ClusterHandler):
         if is_hue_motion_sensor(self):
             self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
             self.ZCL_INIT_ATTRS["sensitivity"] = True
+        if is_sonoff_presence_sensor(self):
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
+            self.ZCL_INIT_ATTRS["ultrasonic_o_to_u_delay"] = True
+            self.ZCL_INIT_ATTRS["ultrasonic_u_to_o_threshold"] = True
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(

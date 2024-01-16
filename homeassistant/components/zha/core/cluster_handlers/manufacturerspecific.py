@@ -423,3 +423,11 @@ class IkeaRemote(ClusterHandler):
 )
 class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
     """Xiaomi DoorLock Cluster is in fact a MultiStateInput Cluster."""
+
+
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFC11)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFC11)
+class SonoffPresenceSenor(ClusterHandler):
+    """SonoffPresenceSensor cluster handler."""
+
+    ZCL_INIT_ATTRS = {"last_illumination_state": True}
