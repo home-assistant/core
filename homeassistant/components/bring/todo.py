@@ -14,7 +14,6 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -74,8 +73,8 @@ class BringTodoListEntity(
     ) -> None:
         """Initialize BringTodoListEntity."""
         super().__init__(coordinator)
-        self.bringList = bringList
-        self._attr_name = self.bringList["name"]
+        self._listUuid = bringList["listUuid"]
+        self._attr_name = bringList["name"]
         self._attr_unique_id = unique_id
 
     @property
@@ -91,16 +90,11 @@ class BringTodoListEntity(
             for item in self.bringList["items"]
         ]
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator and update the bring list object."""
-        super()._handle_coordinator_update()
-        self.bringList = next(
-            (
-                lst
-                for lst in self.coordinator.data
-                if lst["listUuid"] == self.bringList["listUuid"]
-            ),
+    @property
+    def bringList(self) -> BringData:
+        """Return the bring list."""
+        return next(
+            (lst for lst in self.coordinator.data if lst["listUuid"] == self._listUuid),
         )
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -129,13 +123,15 @@ class BringTodoListEntity(
         - Bring items do not have unique identifiers and are using the name/summery/title. Therefore the name is not to be changed! Should a name be changed anyway, a new item will be created instead and no update for this item is performed and on the next cloud pull update, it will get cleared
         """
 
+        bringList = self.bringList
+
         if TYPE_CHECKING:
             assert item.uid
 
         if item.status == TodoItemStatus.COMPLETED:
             await self.hass.async_add_executor_job(
                 self.coordinator.bring.removeItem,
-                self.bringList["listUuid"],
+                bringList["listUuid"],
                 item.uid,
             )
 
@@ -143,7 +139,7 @@ class BringTodoListEntity(
             try:
                 await self.hass.async_add_executor_job(
                     self.coordinator.bring.updateItem,
-                    self.bringList["listUuid"],
+                    bringList["listUuid"],
                     item.uid,
                     item.description or "",
                 )
@@ -154,12 +150,12 @@ class BringTodoListEntity(
             try:
                 await self.hass.async_add_executor_job(
                     self.coordinator.bring.removeItem,
-                    self.bringList["listUuid"],
+                    bringList["listUuid"],
                     item.uid,
                 )
                 await self.hass.async_add_executor_job(
                     self.coordinator.bring.saveItem,
-                    self.bringList["listUuid"],
+                    bringList["listUuid"],
                     item.summary,
                     item.description or "",
                 )
