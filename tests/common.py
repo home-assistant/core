@@ -74,7 +74,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder
+from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -507,6 +507,11 @@ def load_json_object_fixture(
     return json_loads_object(load_fixture(filename, integration))
 
 
+def json_round_trip(obj: Any) -> Any:
+    """Round trip an object to JSON."""
+    return json_loads(json_dumps(obj))
+
+
 def mock_state_change_event(
     hass: HomeAssistant, new_state: State, old_state: State | None = None
 ) -> None:
@@ -664,7 +669,7 @@ class MockUser(auth_models.User):
 
     def mock_policy(self, policy):
         """Mock a policy for a user."""
-        self._permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
+        self.permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
 
 
 async def register_auth_provider(
@@ -934,12 +939,10 @@ class MockConfigEntry(config_entries.ConfigEntry):
     def add_to_hass(self, hass: HomeAssistant) -> None:
         """Test helper to add entry to hass."""
         hass.config_entries._entries[self.entry_id] = self
-        hass.config_entries._domain_index.setdefault(self.domain, []).append(self)
 
     def add_to_manager(self, manager: config_entries.ConfigEntries) -> None:
         """Test helper to add entry to entry manager."""
         manager._entries[self.entry_id] = self
-        manager._domain_index.setdefault(self.domain, []).append(self)
 
 
 def patch_yaml_files(files_dict, endswith=True):
@@ -1316,8 +1319,13 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
 @contextmanager
 def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
     """Mock a config flow handler."""
-    with patch.dict(config_entries.HANDLERS, {domain: config_flow}):
-        yield
+    original_handler = config_entries.HANDLERS.get(domain)
+    config_entries.HANDLERS[domain] = config_flow
+    _LOGGER.info("Adding mock config flow: %s", domain)
+    yield
+    config_entries.HANDLERS.pop(domain)
+    if original_handler:
+        config_entries.HANDLERS[domain] = original_handler
 
 
 def mock_integration(
