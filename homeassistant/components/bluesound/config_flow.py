@@ -29,7 +29,6 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Set up the instance."""
-        #super().__init__(DOMAIN, "Bluesound")
         self.discovery_info: dict[str, Any] = {}
 
     async def async_step_user(
@@ -39,7 +38,7 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form()
 
-        unique_id = user_input[CONF_UUID] = info[CONF_UUID]
+        unique_id = user_input[CONF_UUID]
 
         if not unique_id:
             _LOGGER.debug("Unable to determine unique id")
@@ -64,6 +63,10 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
         zctype = discovery_info.type
         name = discovery_info.name.replace(f".{zctype}", "")
 
+        unique_id = f"{host}:{port}"
+
+        await self.async_set_unique_id(unique_id)
+
         _LOGGER.debug("Bluesound starting zerconf setup for %s at %s:%d", name, host, port)
 
         self.discovery_info.update(
@@ -74,10 +77,8 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
 
-
         self.context.update({"title_placeholders": {"name": name}})
 
-        await self._async_handle_discovery_without_unique_id()
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
