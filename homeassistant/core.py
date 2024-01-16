@@ -1078,6 +1078,11 @@ class Event:
             context.origin_event = self
 
     @cached_property
+    def time_fired_timestamp(self) -> float:
+        """Return time fired as a timestamp."""
+        return self.time_fired.timestamp()
+
+    @cached_property
     def _as_dict(self) -> dict[str, Any]:
         """Create a dict representation of this Event.
 
@@ -1446,6 +1451,16 @@ class State:
         )
 
     @cached_property
+    def last_updated_timestamp(self) -> float:
+        """Timestamp of last update."""
+        return self.last_updated.timestamp()
+
+    @cached_property
+    def last_changed_timestamp(self) -> float:
+        """Timestamp of last change."""
+        return self.last_changed.timestamp()
+
+    @cached_property
     def _as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the State.
 
@@ -1526,12 +1541,12 @@ class State:
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
-            COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(self.last_changed),
+            COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
         }
         if self.last_changed != self.last_updated:
-            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
-                self.last_updated
-            )
+            compressed_state[
+                COMPRESSED_STATE_LAST_UPDATED
+            ] = self.last_updated_timestamp
         return compressed_state
 
     @cached_property
