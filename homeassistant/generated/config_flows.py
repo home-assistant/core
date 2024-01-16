@@ -69,6 +69,7 @@ FLOWS = {
         "blink",
         "blue_current",
         "bluemaestro",
+        "bluesound",
         "bluetooth",
         "bmw_connected_drive",
         "bond",
