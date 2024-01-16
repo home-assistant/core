@@ -582,7 +582,7 @@ ZEROCONF = {
     ],
     "_musc._tcp.local.": [
         {
-            "doamin": "bluesound",
+            "domain": "bluesound",
         },
     ],
     "_nanoleafapi._tcp.local.": [
