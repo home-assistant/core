@@ -199,39 +199,6 @@ async def async_setup_platform(
                     DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=host
                 )
             )
-            # _add_player(
-            #     hass,
-            #     async_add_entities,
-            #     host.get(CONF_HOST),
-            #     host.get(CONF_PORT),
-            #     host.get(CONF_NAME),
-            # )
-
-#     async def async_service_handler(service: ServiceCall) -> None:
-#         """Map services to method of Bluesound devices."""
-#         if not (method := SERVICE_TO_METHOD.get(service.service)):
-#             return
-
-#         params = {
-#             key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
-#         }
-#         if entity_ids := service.data.get(ATTR_ENTITY_ID):
-#             target_players = [
-#                 player
-#                 for player in hass.data[DATA_BLUESOUND]
-#                 if player.entity_id in entity_ids
-#             ]
-#         else:
-#             target_players = hass.data[DATA_BLUESOUND]
-
-#         for player in target_players:
-#             await getattr(player, method["method"])(**params)
-
-#     for service, method in SERVICE_TO_METHOD.items():
-#         schema = method["schema"]
-#         hass.services.async_register(
-#             DOMAIN, service, async_service_handler, schema=schema
-#         )
 
 
 class BluesoundPlayer(MediaPlayerEntity):
