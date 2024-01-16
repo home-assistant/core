@@ -4,19 +4,19 @@ from __future__ import annotations
 from anova_wifi import AnovaApi, InvalidLogin, NoDevicesFound
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .util import serialize_device_list
 
 
 class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
     """Sets up a config flow for Anova."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -33,7 +33,6 @@ class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             try:
                 await api.authenticate()
-                devices = await api.get_devices()
             except InvalidLogin:
                 errors["base"] = "invalid_auth"
             except NoDevicesFound:
@@ -41,14 +40,11 @@ class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
-                # We store device list in config flow in order to persist found devices on restart, as the Anova api get_devices does not return any devices that are offline.
-                device_list = serialize_device_list(devices)
                 return self.async_create_entry(
                     title="Anova",
                     data={
                         CONF_USERNAME: api.username,
                         CONF_PASSWORD: api.password,
-                        CONF_DEVICES: device_list,
                     },
                 )
 
@@ -59,3 +55,20 @@ class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    if config_entry.version == 2:
+        # It used to be needed to persist devices, however that is no longer the case as the
+        # websocket holds information for all devices on the account.
+        new = {
+            CONF_USERNAME: config_entry.data[CONF_USERNAME],
+            CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
+        }
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=new)
+
+    return True
