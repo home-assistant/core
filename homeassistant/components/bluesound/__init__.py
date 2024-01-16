@@ -40,7 +40,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Bluesound async_unload_entry with %s: %r", entry.entry_id, entry.data)
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # TODO(trainman419): does this work on a list? Will it unload the player?
+        # TODO(trainman419): do we need this?
         # hass.data[DOMAIN].pop(entry.entry_id)
         pass
     return unload_ok
