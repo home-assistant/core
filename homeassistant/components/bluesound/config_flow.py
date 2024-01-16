@@ -12,13 +12,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    CONF_SSL,
     CONF_UUID,
-    CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN
 
@@ -32,46 +29,8 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Set up the instance."""
+        #super().__init__(DOMAIN, "Bluesound")
         self.discovery_info: dict[str, Any] = {}
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initiated by the user."""
-        if user_input is None:
-            return self._show_setup_form()
-
-        try:
-            info = await validate_input(self.hass, user_input)
-        except IPPConnectionUpgradeRequired:
-            return self._show_setup_form({"base": "connection_upgrade"})
-        except (IPPConnectionError, IPPResponseError):
-            _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
-            return self._show_setup_form({"base": "cannot_connect"})
-        except IPPParseError:
-            _LOGGER.debug("IPP Parse Error", exc_info=True)
-            return self.async_abort(reason="parse_error")
-        except IPPVersionNotSupportedError:
-            return self.async_abort(reason="ipp_version_error")
-        except IPPError:
-            _LOGGER.debug("IPP Error", exc_info=True)
-            return self.async_abort(reason="ipp_error")
-
-        unique_id = user_input[CONF_UUID] = info[CONF_UUID]
-
-        if not unique_id and info[CONF_SERIAL]:
-            _LOGGER.debug(
-                "Printer UUID is missing from IPP response. Falling back to IPP serial"
-                " number"
-            )
-            unique_id = info[CONF_SERIAL]
-        elif not unique_id:
-            _LOGGER.debug("Unable to determine unique id from IPP response")
-
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
-
-        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -79,7 +38,7 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         host = discovery_info.host
 
-        _LOGGER.warning(f"Bluesound zerconf discovery got host {host}")
+        _LOGGER.debug(f"Bluesound zerconf discovery got host {host}")
 
         # Avoid probing devices that already have an entry
         self._async_abort_entries_match({CONF_HOST: host})
@@ -87,17 +46,12 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
         port = discovery_info.port
         zctype = discovery_info.type
         name = discovery_info.name.replace(f".{zctype}", "")
-        tls = zctype == "_ipps._tcp.local."
-        base_path = discovery_info.properties.get("rp", "ipp/print")
         unique_id = discovery_info.properties.get("UUID")
 
         self.discovery_info.update(
             {
                 CONF_HOST: host,
                 CONF_PORT: port,
-                CONF_SSL: tls,
-                CONF_VERIFY_SSL: False,
-                CONF_BASE_PATH: f"/{base_path}",
                 CONF_NAME: name,
                 CONF_UUID: unique_id,
             }
@@ -110,22 +64,6 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
             await self._async_set_unique_id_and_abort_if_already_configured(unique_id)
 
         self.context.update({"title_placeholders": {"name": name}})
-
-        try:
-            info = await validate_input(self.hass, self.discovery_info)
-        except IPPConnectionUpgradeRequired:
-            return self.async_abort(reason="connection_upgrade")
-        except (IPPConnectionError, IPPResponseError):
-            _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
-            return self.async_abort(reason="cannot_connect")
-        except IPPParseError:
-            _LOGGER.debug("IPP Parse Error", exc_info=True)
-            return self.async_abort(reason="parse_error")
-        except IPPVersionNotSupportedError:
-            return self.async_abort(reason="ipp_version_error")
-        except IPPError:
-            _LOGGER.debug("IPP Error", exc_info=True)
-            return self.async_abort(reason="ipp_error")
 
         if not unique_id and info[CONF_UUID]:
             _LOGGER.debug(
