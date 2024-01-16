@@ -38,7 +38,7 @@ from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 if TYPE_CHECKING:
     from functools import cached_property
 
-    # The relative imports are below are guarded by TYPE_CHECKING
+    # The relative imports below are guarded by TYPE_CHECKING
     # because they would cause a circular import otherwise.
     from .config_entries import ConfigEntry
     from .helpers import device_registry as dr
