@@ -3,11 +3,7 @@
   "name": "OMIE - Spain and Portugal electricity prices",
   "codeowners": ["@luuuis"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/omie",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["pyomie==0.1.1"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["pyomie==0.1.1"]
 }
