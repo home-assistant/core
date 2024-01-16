@@ -5,6 +5,7 @@ import asyncio
 from collections import deque
 from collections.abc import Callable
 import datetime as dt
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
@@ -28,7 +29,7 @@ from .const import (
     URL,
 )
 from .error import Disconnect
-from .messages import message_to_json
+from .messages import message_to_json_bytes
 from .util import describe_request
 
 if TYPE_CHECKING:
@@ -94,7 +95,7 @@ class WebSocketHandler:
         # to where messages are queued. This allows the implementation
         # to use a deque and an asyncio.Future to avoid the overhead of
         # an asyncio.Queue.
-        self._message_queue: deque[str | None] = deque()
+        self._message_queue: deque[bytes | None] = deque()
         self._ready_future: asyncio.Future[None] | None = None
 
     def __repr__(self) -> str:
@@ -121,7 +122,10 @@ class WebSocketHandler:
         message_queue = self._message_queue
         logger = self._logger
         wsock = self._wsock
-        send_str = wsock.send_str
+        writer = wsock._writer  # pylint: disable=protected-access
+        if TYPE_CHECKING:
+            assert writer is not None
+        send_str = partial(writer.send, binary=False)
         loop = self._hass.loop
         debug = logger.debug
         is_enabled_for = logger.isEnabledFor
@@ -151,7 +155,7 @@ class WebSocketHandler:
                     await send_str(message)
                     continue
 
-                messages: list[str] = [message]
+                messages: list[bytes] = [message]
                 while messages_remaining:
                     # A None message is used to signal the end of the connection
                     if (message := message_queue.popleft()) is None:
@@ -159,7 +163,7 @@ class WebSocketHandler:
                     messages.append(message)
                     messages_remaining -= 1
 
-                coalesced_messages = f'[{",".join(messages)}]'
+                coalesced_messages = b"".join((b"[", b",".join(messages), b"]"))
                 if debug_enabled:
                     debug("%s: Sending %s", self.description, coalesced_messages)
                 await send_str(coalesced_messages)
@@ -181,7 +185,7 @@ class WebSocketHandler:
             self._peak_checker_unsub = None
 
     @callback
-    def _send_message(self, message: str | dict[str, Any]) -> None:
+    def _send_message(self, message: str | bytes | dict[str, Any]) -> None:
         """Send a message to the client.
 
         Closes connection if the client is not reading the messages.
@@ -194,7 +198,9 @@ class WebSocketHandler:
             return
 
         if isinstance(message, dict):
-            message = message_to_json(message)
+            message = message_to_json_bytes(message)
+        elif isinstance(message, str):
+            message = message.encode("utf-8")
 
         message_queue = self._message_queue
         queue_size_before_add = len(message_queue)

@@ -4,6 +4,10 @@ from unittest.mock import patch
 from pybotvac.neato import Neato
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.neato.const import NEATO_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -27,12 +31,9 @@ async def test_full_flow(
     current_request_with_host: None,
 ) -> None:
     """Check full flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "neato",
-        {
-            "neato": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-        },
+    assert await setup.async_setup_component(hass, "neato", {})
+    await async_import_client_credential(
+        hass, NEATO_DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -101,12 +102,9 @@ async def test_reauth(
     current_request_with_host: None,
 ) -> None:
     """Test initialization of the reauth flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "neato",
-        {
-            "neato": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-        },
+    assert await setup.async_setup_component(hass, "neato", {})
+    await async_import_client_credential(
+        hass, NEATO_DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
     MockConfigEntry(
