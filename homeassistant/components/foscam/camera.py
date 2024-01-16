@@ -7,10 +7,8 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -23,6 +21,7 @@ from .const import (
     SERVICE_PTZ_PRESET,
 )
 from .coordinator import FoscamCoordinator
+from .entity import FoscamEntity
 
 DIR_UP = "up"
 DIR_DOWN = "down"
@@ -94,7 +93,7 @@ async def async_setup_entry(
     async_add_entities([HassFoscamCamera(coordinator, config_entry)])
 
 
-class HassFoscamCamera(CoordinatorEntity[FoscamCoordinator], Camera):
+class HassFoscamCamera(CoordinatorEntity[FoscamCoordinator], Camera, FoscamEntity):
     """An implementation of a Foscam IP camera."""
 
     _attr_has_entity_name = True
@@ -108,25 +107,14 @@ class HassFoscamCamera(CoordinatorEntity[FoscamCoordinator], Camera):
         """Initialize a Foscam camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
+        FoscamEntity.__init__(self, coordinator, config_entry)
 
         self._foscam_session = coordinator.session
-        self._username = config_entry.data[CONF_USERNAME]
-        self._password = config_entry.data[CONF_PASSWORD]
         self._stream = config_entry.data[CONF_STREAM]
         self._attr_unique_id = config_entry.entry_id
         self._rtsp_port = config_entry.data[CONF_RTSP_PORT]
         if self._rtsp_port:
             self._attr_supported_features = CameraEntityFeature.STREAM
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry.entry_id)},
-            manufacturer="Foscam",
-            name=config_entry.title,
-        )
-        if dev_info := coordinator.data.get("dev_info"):
-            self._attr_device_info["model"] = dev_info["productName"]
-            self._attr_device_info["sw_version"] = dev_info["firmwareVer"]
-            self._attr_device_info["hw_version"] = dev_info["hardwareVer"]
 
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to hass."""
