@@ -13,7 +13,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -57,21 +56,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
 
     def get_devices() -> list[VacBot]:
-        try:
-            ecovacs_api = EcoVacsAPI(
-                get_client_device_id(),
-                entry.data[CONF_USERNAME],
-                EcoVacsAPI.md5(entry.data[CONF_PASSWORD]),
-                entry.data[CONF_COUNTRY],
-                entry.data[CONF_CONTINENT],
-            )
-            ecovacs_devices = ecovacs_api.devices()
-        except ValueError as ex:
-            _LOGGER.error("Ecovacs login failed due to wrong username/password")
-            raise ConfigEntryError("invalid username or password") from ex
-        except RuntimeError as ex:
-            _LOGGER.exception("Unexpected exception")
-            raise ConfigEntryNotReady from ex
+        ecovacs_api = EcoVacsAPI(
+            get_client_device_id(),
+            entry.data[CONF_USERNAME],
+            EcoVacsAPI.md5(entry.data[CONF_PASSWORD]),
+            entry.data[CONF_COUNTRY],
+            entry.data[CONF_CONTINENT],
+        )
+        ecovacs_devices = ecovacs_api.devices()
 
         _LOGGER.debug("Ecobot devices: %s", ecovacs_devices)
         devices: list[VacBot] = []
