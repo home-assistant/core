@@ -136,7 +136,7 @@ async def test_failed_user_command(
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command",
         side_effect=RoborockException(),
-    ), pytest.raises(HomeAssistantError):
+    ), pytest.raises(HomeAssistantError, match="Error while calling fake_command"):
         await hass.services.async_call(
             Platform.VACUUM,
             SERVICE_SEND_COMMAND,
