@@ -123,7 +123,7 @@ def _add_player(hass, async_add_entities, host, port=None, name=None):
             _LOGGER.warning("Player already added %s", player.id)
             return
 
-        hass.data[DATA_BLUESOUND].append(player)
+        hass.data.setdefault(DATA_BLUESOUND, []).append(player)
         async_add_entities([player])
         _LOGGER.info("Added device with name: %s", player.name)
 
@@ -147,7 +147,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bluesound from a config entry."""
-    platform = entity_platform.async_get_current_platform()
+    #platform = entity_platform.async_get_current_platform()
 
     # @callback
     # def async_create_entities(speaker: SonosSpeaker) -> None:
@@ -155,36 +155,42 @@ async def async_setup_entry(
     #     _LOGGER.debug("Creating media_player on %s", speaker.zone_name)
     #     async_add_entities([SonosMediaPlayerEntity(speaker)])
 
-    return
+    _add_player(
+        hass,
+        async_add_entities,
+        config_entry.data[CONF_HOST],
+        config_entry.data[CONF_PORT],
+        config_entry.data[CONF_NAME]
+    )
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Bluesound platforms."""
-    if DATA_BLUESOUND not in hass.data:
-        hass.data[DATA_BLUESOUND] = []
+# async def async_setup_platform(
+#     hass: HomeAssistant,
+#     config: ConfigType,
+#     async_add_entities: AddEntitiesCallback,
+#     discovery_info: DiscoveryInfoType | None = None,
+# ) -> None:
+#     """Set up the Bluesound platforms."""
+#     if DATA_BLUESOUND not in hass.data:
+#         hass.data[DATA_BLUESOUND] = []
 
-    if discovery_info:
-        _add_player(
-            hass,
-            async_add_entities,
-            discovery_info.get(CONF_HOST),
-            discovery_info.get(CONF_PORT),
-        )
-        return
+#     if discovery_info:
+#         _add_player(
+#             hass,
+#             async_add_entities,
+#             discovery_info.get(CONF_HOST),
+#             discovery_info.get(CONF_PORT),
+#         )
+#         return
 
-    if hosts := config.get(CONF_HOSTS):
-        for host in hosts:
-            _add_player(
-                hass,
-                async_add_entities,
-                host.get(CONF_HOST),
-                host.get(CONF_PORT),
-                host.get(CONF_NAME),
-            )
+#     if hosts := config.get(CONF_HOSTS):
+#         for host in hosts:
+#             _add_player(
+#                 hass,
+#                 async_add_entities,
+#                 host.get(CONF_HOST),
+#                 host.get(CONF_PORT),
+#                 host.get(CONF_NAME),
+#             )
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Map services to method of Bluesound devices."""
