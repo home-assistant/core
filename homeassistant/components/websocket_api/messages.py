@@ -183,9 +183,9 @@ def _state_diff(
     if old_state.state != new_state.state:
         additions[COMPRESSED_STATE_STATE] = new_state.state
     if old_state.last_changed != new_state.last_changed:
-        additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed.timestamp()
+        additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed_timestamp
     elif old_state.last_updated != new_state.last_updated:
-        additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated.timestamp()
+        additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated_timestamp
     if old_state_context.parent_id != new_state_context.parent_id:
         additions[COMPRESSED_STATE_CONTEXT] = {"parent_id": new_state_context.parent_id}
     if old_state_context.user_id != new_state_context.user_id:
