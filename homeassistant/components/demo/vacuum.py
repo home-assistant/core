@@ -35,6 +35,7 @@ SUPPORT_MOST_SERVICES = (
     | VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.RETURN_HOME
     | VacuumEntityFeature.BATTERY
+    | VacuumEntityFeature.FAN_SPEED
 )
 
 SUPPORT_ALL_SERVICES = (
@@ -51,6 +52,7 @@ SUPPORT_ALL_SERVICES = (
     | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.LOCATE
     | VacuumEntityFeature.MAP
+    | VacuumEntityFeature.CLEAN_SPOT
 )
 
 FAN_SPEEDS = ["min", "medium", "high", "max"]
@@ -59,7 +61,6 @@ DEMO_VACUUM_MOST = "1_First_floor"
 DEMO_VACUUM_BASIC = "2_Second_floor"
 DEMO_VACUUM_MINIMAL = "3_Third_floor"
 DEMO_VACUUM_NONE = "4_Fourth_floor"
-DEMO_VACUUM_STATE = "5_Fifth_floor"
 
 
 async def async_setup_entry(
@@ -175,6 +176,40 @@ class StateDemoVacuum(StateVacuumEntity):
         if fan_speed in self.fan_speed_list:
             self._fan_speed = fan_speed
             self.schedule_update_ha_state()
+
+    async def async_locate(self, **kwargs: Any) -> None:
+        """Locate the vacuum's position."""
+        if self.supported_features & VacuumEntityFeature.LOCATE == 0:
+            return
+
+        await self.hass.services.async_call(
+            "notify",
+            "persistent_notification",
+            service_data={"message": "I'm here!", "title": "Locate request"},
+        )
+        self._state = STATE_IDLE
+        self.async_write_ha_state()
+
+    async def async_clean_spot(self, **kwargs: Any) -> None:
+        """Locate the vacuum's position."""
+        if self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0:
+            return
+
+        self._state = STATE_CLEANING
+        self.async_write_ha_state()
+
+    async def async_send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send a command to the vacuum."""
+        if self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0:
+            return
+
+        self._state = STATE_IDLE
+        self.async_write_ha_state()
 
     def __set_state_to_dock(self, _: datetime) -> None:
         self._state = STATE_DOCKED
