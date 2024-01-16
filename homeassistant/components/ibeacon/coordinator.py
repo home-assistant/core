@@ -151,7 +151,9 @@ class IBeaconCoordinator:
         )
         self._ignored_nameless_by_uuid: dict[str, set[str]] = {}
 
-        self._entry.add_update_listener(self.async_config_entry_updated)
+        self._entry.async_on_unload(
+            self._entry.add_update_listener(self.async_config_entry_updated)
+        )
 
     @callback
     def async_device_id_seen(self, device_id: str) -> bool:
