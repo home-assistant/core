@@ -1028,6 +1028,7 @@ omit =
     homeassistant/components/rainmachine/__init__.py
     homeassistant/components/rainmachine/binary_sensor.py
     homeassistant/components/rainmachine/button.py
+    homeassistant/components/rainmachine/coordinator.py
     homeassistant/components/rainmachine/select.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
