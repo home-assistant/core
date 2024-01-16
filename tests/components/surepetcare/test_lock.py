@@ -6,7 +6,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import HOUSEHOLD_ID, MOCK_CAT_FLAP, MOCK_PET_FLAP
-from .test_common import help_setup_mock_entry
+
+from tests.common import MockConfigEntry
 
 EXPECTED_ENTITY_IDS = {
     "lock.cat_flap_locked_in": f"{HOUSEHOLD_ID}-{MOCK_CAT_FLAP['id']}-locked_in",
@@ -18,10 +19,10 @@ EXPECTED_ENTITY_IDS = {
 }
 
 
-async def test_locks(hass: HomeAssistant, surepetcare) -> None:
+async def test_locks(
+    hass: HomeAssistant, surepetcare, mock_config_entry_setup: MockConfigEntry
+) -> None:
     """Test the generation of unique ids."""
-    await help_setup_mock_entry(hass)
-
     entity_registry = er.async_get(hass)
     state_entity_ids = hass.states.async_entity_ids()
 
@@ -76,10 +77,10 @@ async def test_locks(hass: HomeAssistant, surepetcare) -> None:
         assert surepetcare.unlock.call_count == 1
 
 
-async def test_lock_failing(hass: HomeAssistant, surepetcare) -> None:
+async def test_lock_failing(
+    hass: HomeAssistant, surepetcare, mock_config_entry_setup: MockConfigEntry
+) -> None:
     """Test handling of lock failing."""
-    await help_setup_mock_entry(hass)
-
     surepetcare.lock_in.side_effect = SurePetcareError
     surepetcare.lock_out.side_effect = SurePetcareError
     surepetcare.lock.side_effect = SurePetcareError
@@ -93,10 +94,10 @@ async def test_lock_failing(hass: HomeAssistant, surepetcare) -> None:
         assert state.state == "unlocked"
 
 
-async def test_unlock_failing(hass: HomeAssistant, surepetcare) -> None:
+async def test_unlock_failing(
+    hass: HomeAssistant, surepetcare, mock_config_entry_setup: MockConfigEntry
+) -> None:
     """Test handling of unlock failing."""
-    await help_setup_mock_entry(hass)
-
     entity_id = list(EXPECTED_ENTITY_IDS)[0]
 
     await hass.services.async_call(
