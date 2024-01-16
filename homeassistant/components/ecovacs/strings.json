@@ -13,7 +13,7 @@
           "continent": "Continent",
           "country": "Country",
           "password": "[%key:common::config_flow::data::password%]",
-          "username": "E-mail or ShortID"
+          "username": "[%key:common::config_flow::data::email%]"
         }
       }
     }

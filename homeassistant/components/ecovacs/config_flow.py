@@ -128,8 +128,9 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             raise ex
 
         if errors := result.get("errors"):
-            create_repair(errors["base"])
-        else:
-            create_repair()
+            error = errors["base"]
+            create_repair(error)
+            return self.async_abort(reason=error)
 
+        create_repair()
         return result

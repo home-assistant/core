@@ -1,6 +1,6 @@
 """Test Ecovacs config flow."""
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from sucks import EcoVacsAPI
@@ -35,7 +35,7 @@ async def _test_user_flow(hass: HomeAssistant) -> dict[str, Any]:
     )
 
 
-async def test_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test the user config flow."""
     with patch(
         "homeassistant.components.ecovacs.config_flow.EcoVacsAPI",
@@ -45,7 +45,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == _USER_INPUT[CONF_USERNAME]
         assert result["data"] == _USER_INPUT
-        assert len(mock_setup_entry.mock_calls) == 1
+        mock_setup_entry.assert_called()
         mock_ecovacs.assert_called()
 
 
@@ -57,7 +57,10 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
     ],
 )
 async def test_user_flow_error(
-    hass: HomeAssistant, side_effect: Exception, reason: str
+    hass: HomeAssistant,
+    side_effect: Exception,
+    reason: str,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test handling invalid connection."""
     with patch(
@@ -71,10 +74,21 @@ async def test_user_flow_error(
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": reason}
         mock_ecovacs.assert_called()
+        mock_setup_entry.assert_not_called()
+
+        mock_ecovacs.reset_mock(side_effect=True)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=_USER_INPUT,
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == _USER_INPUT[CONF_USERNAME]
+        assert result["data"] == _USER_INPUT
+        mock_setup_entry.assert_called()
 
 
 async def test_import_flow(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_setup_entry
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_setup_entry: AsyncMock
 ) -> None:
     """Test importing yaml config."""
     with patch(
@@ -92,6 +106,7 @@ async def test_import_flow(
     assert result["title"] == _USER_INPUT[CONF_USERNAME]
     assert result["data"] == _USER_INPUT
     assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues
+    mock_setup_entry.assert_called()
 
 
 async def test_import_flow_already_configured(
@@ -136,9 +151,8 @@ async def test_import_flow_error(
             context={"source": SOURCE_IMPORT},
             data=_USER_INPUT,
         )
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": reason}
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == reason
         assert (
             DOMAIN,
             f"deprecated_yaml_import_issue_{reason}",
