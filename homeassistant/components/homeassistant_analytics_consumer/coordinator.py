@@ -6,6 +6,7 @@ from datetime import timedelta
 from python_homeassistant_analytics import (
     HomeassistantAnalyticsClient,
     HomeassistantAnalyticsConnectionError,
+    HomeassistantAnalyticsNotModifiedError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +31,7 @@ class HomeassistantAnalyticsDataUpdateCoordinator(
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(hours=12),
+            update_interval=timedelta(hours=1),
         )
         self._client = client
         self._tracked_integrations = self.config_entry.options[
@@ -44,6 +45,8 @@ class HomeassistantAnalyticsDataUpdateCoordinator(
             raise UpdateFailed(
                 "Error communicating with Homeassistant Analytics"
             ) from err
+        except HomeassistantAnalyticsNotModifiedError:
+            return self.data
         return {
             integration: data.integrations[integration]
             for integration in self._tracked_integrations
