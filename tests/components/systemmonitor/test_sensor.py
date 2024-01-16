@@ -4,7 +4,7 @@ import socket
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from psutil._common import shwtemp, snetio, snicaddr
+from psutil._common import sdiskusage, shwtemp, snetio, snicaddr
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -364,3 +364,58 @@ async def test_processor_temperature(
         assert temp_entity.state == "50.0"
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def test_exception_handling_disk_sensor(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_psutil: Mock,
+    mock_added_config_entry: ConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sensor."""
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
+    assert disk_sensor is not None
+    assert disk_sensor.state == "200.0"  # GiB
+
+    mock_psutil.disk_usage.return_value = None
+    mock_psutil.disk_usage.side_effect = OSError("Could not update /")
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
+    assert disk_sensor is not None
+    assert disk_sensor.state == STATE_UNAVAILABLE
+
+    mock_psutil.disk_usage.return_value = None
+    mock_psutil.disk_usage.side_effect = PermissionError("No access to /")
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
+    assert disk_sensor is not None
+    assert disk_sensor.state == STATE_UNAVAILABLE
+
+    mock_psutil.disk_usage.return_value = sdiskusage(
+        500 * 1024**3, 350 * 1024**3, 150 * 1024**3, 70.0
+    )
+    mock_psutil.disk_usage.side_effect = None
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
+    assert disk_sensor is not None
+    assert disk_sensor.state == "150.0"
+    assert disk_sensor.attributes["unit_of_measurement"] == "GiB"
+
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_use_percent")
+    assert disk_sensor is not None
+    assert disk_sensor.state == "70.0"
+    assert disk_sensor.attributes["unit_of_measurement"] == "%"

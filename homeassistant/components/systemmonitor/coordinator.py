@@ -71,7 +71,12 @@ class SystemMonitorDiskCoordinator(MonitorCoordinator[sdiskusage]):
 
     def update_data(self) -> sdiskusage:
         """Fetch data."""
-        return psutil.disk_usage(self._argument)
+        try:
+            return psutil.disk_usage(self._argument)
+        except PermissionError as err:
+            raise UpdateFailed(f"No permission to access {self._argument}") from err
+        except OSError as err:
+            raise UpdateFailed(f"OS error for {self._argument}") from err
 
 
 class SystemMonitorSwapCoordinator(MonitorCoordinator[sswap]):

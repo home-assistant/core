@@ -119,7 +119,7 @@ def mock_psutil(mock_process: list[MockProcess]) -> Mock:
         autospec=True,
     ) as mock_psutil:
         mock_psutil.disk_usage.return_value = sdiskusage(
-            500 * 1024**2, 300 * 1024**2, 200 * 1024**2, 60.0
+            500 * 1024**3, 300 * 1024**3, 200 * 1024**3, 60.0
         )
         mock_psutil.swap_memory.return_value = sswap(
             100 * 1024**2, 60 * 1024**2, 40 * 1024**2, 60.0, 1, 1
