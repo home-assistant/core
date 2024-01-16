@@ -317,7 +317,7 @@ aioqsw==0.3.5
 aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
-aioridwell==2023.07.0
+aioridwell==2024.01.0
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.34
