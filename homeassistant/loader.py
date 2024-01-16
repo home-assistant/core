@@ -36,10 +36,10 @@ from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 if TYPE_CHECKING:
-    # Typing imports that create a circular dependency
-    # End typing imports that create a circular dependency
     from functools import cached_property
 
+    # The relative imports are below are guarded by TYPE_CHECKING
+    # because they would cause a circular import otherwise.
     from .config_entries import ConfigEntry
     from .helpers import device_registry as dr
     from .helpers.typing import ConfigType
