@@ -425,7 +425,7 @@ async def test_exception_handling_disk_sensor(
     assert disk_sensor.state == "150.0"
     assert disk_sensor.attributes["unit_of_measurement"] == "GiB"
 
-    disk_sensor = hass.states.get("sensor.system_monitor_disk_use_percent")
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_usage")
     assert disk_sensor is not None
     assert disk_sensor.state == "70.0"
     assert disk_sensor.attributes["unit_of_measurement"] == "%"
