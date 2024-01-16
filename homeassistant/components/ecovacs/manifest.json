@@ -1,7 +1,8 @@
 {
   "domain": "ecovacs",
   "name": "Ecovacs",
-  "codeowners": ["@OverloadUT", "@mib1185"],
+  "codeowners": ["@OverloadUT", "@mib1185", "@edenhaus"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecovacs",
   "iot_class": "cloud_push",
   "loggers": ["sleekxmppfs", "sucks"],

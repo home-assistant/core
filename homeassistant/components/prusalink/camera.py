@@ -35,7 +35,11 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
     @property
     def available(self) -> bool:
         """Get if camera is available."""
-        return super().available and self.coordinator.data.get("job") is not None
+        return (
+            super().available
+            and (file := self.coordinator.data.get("file"))
+            and file.get("refs", {}).get("thumbnail")
+        )
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -44,11 +48,11 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         if not self.available:
             return None
 
-        path = self.coordinator.data["job"]["file"]["path"]
+        path = self.coordinator.data["file"]["refs"]["thumbnail"]
 
         if self.last_path == path:
             return self.last_image
 
-        self.last_image = await self.coordinator.api.get_large_thumbnail(path)
+        self.last_image = await self.coordinator.api.get_file(path)
         self.last_path = path
         return self.last_image

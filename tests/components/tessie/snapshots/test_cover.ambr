@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_covers[cover.test_charge_port_door-open_unlock_charge_port-close_charge_port][cover.test_charge_port_door]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Charge port door',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_charge_port_door',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_covers[cover.test_frunk-open_front_trunk-False][cover.test_frunk]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Frunk',
+      'supported_features': <CoverEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_frunk',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_covers[cover.test_trunk-open_close_rear_trunk-open_close_rear_trunk][cover.test_trunk]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Trunk',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_trunk',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_covers[cover.test_vent_windows-vent_windows-close_windows][cover.test_vent_windows]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'Test Vent windows',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_vent_windows',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---

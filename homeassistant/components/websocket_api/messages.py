@@ -116,7 +116,7 @@ def _partial_cached_event_message(event: Event) -> str:
     in cached_event_message.
     """
     return (
-        _message_to_json_or_none({"type": "event", "event": event.as_dict()})
+        _message_to_json_or_none({"type": "event", "event": event.json_fragment})
         or INVALID_JSON_PARTIAL_MESSAGE
     )
 
@@ -183,9 +183,9 @@ def _state_diff(
     if old_state.state != new_state.state:
         additions[COMPRESSED_STATE_STATE] = new_state.state
     if old_state.last_changed != new_state.last_changed:
-        additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed.timestamp()
+        additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed_timestamp
     elif old_state.last_updated != new_state.last_updated:
-        additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated.timestamp()
+        additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated_timestamp
     if old_state_context.parent_id != new_state_context.parent_id:
         additions[COMPRESSED_STATE_CONTEXT] = {"parent_id": new_state_context.parent_id}
     if old_state_context.user_id != new_state_context.user_id:
@@ -204,7 +204,7 @@ def _state_diff(
         for key, value in new_attributes.items():
             if old_attributes.get(key) != value:
                 additions.setdefault(COMPRESSED_STATE_ATTRIBUTES, {})[key] = value
-        if removed := set(old_attributes).difference(new_attributes):
+        if removed := old_attributes.keys() - new_attributes:
             # sets are not JSON serializable by default so we convert to list
             # here if there are any values to avoid jumping into the json_encoder_default
             # for every state diff with a removed attribute

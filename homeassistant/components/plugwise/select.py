@@ -17,7 +17,7 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class PlugwiseSelectEntityDescription(SelectEntityDescription):
     """Class describing Plugwise Select entities."""
 
@@ -49,6 +49,14 @@ SELECT_TYPES = (
         entity_category=EntityCategory.CONFIG,
         command=lambda api, loc, opt: api.set_dhw_mode(opt),
         options_key="dhw_modes",
+    ),
+    PlugwiseSelectEntityDescription(
+        key="select_gateway_mode",
+        translation_key="gateway_mode",
+        icon="mdi:cog-outline",
+        entity_category=EntityCategory.CONFIG,
+        command=lambda api, loc, opt: api.set_gateway_mode(opt),
+        options_key="gateway_modes",
     ),
 )
 

@@ -1,11 +1,17 @@
 """Data update coordinator for Tailwind."""
 from datetime import timedelta
 
-from gotailwind import Tailwind, TailwindDeviceStatus, TailwindError
+from gotailwind import (
+    Tailwind,
+    TailwindAuthenticationError,
+    TailwindDeviceStatus,
+    TailwindError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -35,5 +41,7 @@ class TailwindDataUpdateCoordinator(DataUpdateCoordinator[TailwindDeviceStatus])
         """Fetch data from the Tailwind device."""
         try:
             return await self.tailwind.status()
+        except TailwindAuthenticationError as err:
+            raise ConfigEntryAuthFailed from err
         except TailwindError as err:
             raise UpdateFailed(err) from err

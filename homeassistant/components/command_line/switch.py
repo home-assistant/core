@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
@@ -20,7 +20,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    ManualTriggerEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
@@ -48,6 +51,7 @@ async def async_setup_platform(
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_NAME: Template(device_config.get(CONF_NAME, object_id), hass),
             CONF_ICON: device_config.get(CONF_ICON),
+            CONF_AVAILABILITY: device_config.get(CONF_AVAILABILITY),
         }
 
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
@@ -155,7 +159,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         if TYPE_CHECKING:
             return None
 
-    async def _update_entity_state(self, now) -> None:
+    async def _update_entity_state(self, now: datetime | None = None) -> None:
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()
@@ -197,11 +201,11 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         if await self._switch(self._command_on) and not self._command_state:
             self._attr_is_on = True
             self.async_schedule_update_ha_state()
-        await self._update_entity_state(None)
+        await self._update_entity_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if await self._switch(self._command_off) and not self._command_state:
             self._attr_is_on = False
             self.async_schedule_update_ha_state()
-        await self._update_entity_state(None)
+        await self._update_entity_state()

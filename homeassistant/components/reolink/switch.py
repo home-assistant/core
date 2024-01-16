@@ -25,7 +25,7 @@ from .entity import (
 )
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkSwitchEntityDescription(
     SwitchEntityDescription,
     ReolinkChannelEntityDescription,
@@ -36,7 +36,7 @@ class ReolinkSwitchEntityDescription(
     value: Callable[[Host, int], bool]
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkNVRSwitchEntityDescription(
     SwitchEntityDescription,
     ReolinkHostEntityDescription,
