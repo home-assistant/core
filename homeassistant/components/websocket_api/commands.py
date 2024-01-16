@@ -352,11 +352,11 @@ def handle_get_states(
 
 
 def _send_handle_get_states_response(
-    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
 ) -> None:
     """Send handle get states response."""
     connection.send_message(
-        construct_result_message(msg_id, f'[{",".join(serialized_states)}]')
+        construct_result_message(msg_id, b"[" + b",".join(serialized_states) + b"]")
     )
 
 
@@ -444,11 +444,19 @@ def handle_subscribe_entities(
 
 
 def _send_handle_entities_init_response(
-    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
 ) -> None:
     """Send handle entities init response."""
     connection.send_message(
-        f'{{"id":{msg_id},"type":"event","event":{{"a":{{{",".join(serialized_states)}}}}}}}'
+        b"".join(
+            (
+                b'{"id":',
+                str(msg_id).encode(),
+                b',"type":"event","event":{"a":{',
+                b",".join(serialized_states),
+                b"}}}",
+            )
+        )
     )
 
 
@@ -474,7 +482,9 @@ async def handle_get_services(
 ) -> None:
     """Handle get services command."""
     payload = await _async_get_all_descriptions_json(hass)
-    connection.send_message(construct_result_message(msg["id"], payload))
+    connection.send_message(
+        construct_result_message(msg["id"], payload.encode("utf-8"))
+    )
 
 
 @callback

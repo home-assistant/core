@@ -64,9 +64,17 @@ def result_message(iden: int, result: Any = None) -> dict[str, Any]:
     return {"id": iden, "type": const.TYPE_RESULT, "success": True, "result": result}
 
 
-def construct_result_message(iden: int, payload: str) -> bytes:
+def construct_result_message(iden: int, payload: bytes) -> bytes:
     """Construct a success result message JSON."""
-    return f'{{"id":{iden},"type":"result","success":true,"result":{payload}}}'.encode()
+    return b"".join(
+        (
+            b'{"id":',
+            str(iden).encode("utf-8"),
+            b',"type":"result","success":true,"result":',
+            payload,
+            b"}",
+        )
+    )
 
 
 def error_message(
