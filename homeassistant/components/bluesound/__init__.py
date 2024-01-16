@@ -41,5 +41,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         # TODO(trainman419): does this work on a list? Will it unload the player?
-        hass.data[DOMAIN].pop(entry.entry_id)
+        # hass.data[DOMAIN].pop(entry.entry_id)
+        pass
     return unload_ok
