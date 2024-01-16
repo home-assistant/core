@@ -62,7 +62,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
         super().__init__(coordinator)
         self._device = device
-        self._device.set_update_callback(self._update_callback)
+        device.set_update_callback(self._update_callback)
 
         self._attr_unique_id = device.fingerprint
 
