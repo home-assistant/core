@@ -24,6 +24,7 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .helpers.frame import report
+from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,6 +76,9 @@ FLOW_NOT_COMPLETE_STEPS = {
 }
 
 STEP_ID_OPTIONAL_STEPS = {
+    FlowResultType.EXTERNAL_STEP,
+    FlowResultType.FORM,
+    FlowResultType.MENU,
     FlowResultType.SHOW_PROGRESS,
 }
 
@@ -526,6 +530,7 @@ class FlowHandler:
     MINOR_VERSION = 1
 
     __progress_task: asyncio.Task[Any] | None = None
+    __no_progress_task_reported = False
 
     @property
     def source(self) -> str | None:
@@ -573,25 +578,30 @@ class FlowHandler:
     def async_show_form(
         self,
         *,
-        step_id: str,
+        step_id: str | None = None,
         data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
         description_placeholders: Mapping[str, str | None] | None = None,
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> FlowResult:
-        """Return the definition of a form to gather user input."""
-        return FlowResult(
+        """Return the definition of a form to gather user input.
+
+        The step_id parameter is deprecated and will be removed in a future release.
+        """
+        flow_result = FlowResult(
             type=FlowResultType.FORM,
             flow_id=self.flow_id,
             handler=self.handler,
-            step_id=step_id,
             data_schema=data_schema,
             errors=errors,
             description_placeholders=description_placeholders,
             last_step=last_step,  # Display next or submit button in frontend
             preview=preview,  # Display preview component in frontend
         )
+        if step_id is not None:
+            flow_result["step_id"] = step_id
+        return flow_result
 
     @callback
     def async_create_entry(
@@ -634,19 +644,24 @@ class FlowHandler:
     def async_external_step(
         self,
         *,
-        step_id: str,
+        step_id: str | None = None,
         url: str,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
-        """Return the definition of an external step for the user to take."""
-        return FlowResult(
+        """Return the definition of an external step for the user to take.
+
+        The step_id parameter is deprecated and will be removed in a future release.
+        """
+        flow_result = FlowResult(
             type=FlowResultType.EXTERNAL_STEP,
             flow_id=self.flow_id,
             handler=self.handler,
-            step_id=step_id,
             url=url,
             description_placeholders=description_placeholders,
         )
+        if step_id is not None:
+            flow_result["step_id"] = step_id
+        return flow_result
 
     @callback
     def async_external_step_done(self, *, next_step_id: str) -> FlowResult:
@@ -667,8 +682,26 @@ class FlowHandler:
         description_placeholders: Mapping[str, str] | None = None,
         progress_task: asyncio.Task[Any] | None = None,
     ) -> FlowResult:
-        """Show a progress message to the user, without user input allowed."""
-        result = FlowResult(
+        """Show a progress message to the user, without user input allowed.
+
+        The step_id parameter is deprecated and will be removed in a future release.
+        """
+        if progress_task is None and not self.__no_progress_task_reported:
+            self.__no_progress_task_reported = True
+            cls = self.__class__
+            report_issue = async_suggest_report_issue(self.hass, module=cls.__module__)
+            _LOGGER.warning(
+                (
+                    "%s::%s calls async_show_progress without passing a progress task, "
+                    "this is not valid and will break in Home Assistant Core 2024.8. "
+                    "Please %s"
+                ),
+                cls.__module__,
+                cls.__name__,
+                report_issue,
+            )
+
+        flow_result = FlowResult(
             type=FlowResultType.SHOW_PROGRESS,
             flow_id=self.flow_id,
             handler=self.handler,
@@ -677,8 +710,8 @@ class FlowHandler:
             progress_task=progress_task,
         )
         if step_id is not None:
-            result["step_id"] = step_id
-        return result
+            flow_result["step_id"] = step_id
+        return flow_result
 
     @callback
     def async_show_progress_done(self, *, next_step_id: str) -> FlowResult:
@@ -694,23 +727,26 @@ class FlowHandler:
     def async_show_menu(
         self,
         *,
-        step_id: str,
+        step_id: str | None = None,
         menu_options: list[str] | dict[str, str],
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Show a navigation menu to the user.
 
         Options dict maps step_id => i18n label
+        The step_id parameter is deprecated and will be removed in a future release.
         """
-        return FlowResult(
+        flow_result = FlowResult(
             type=FlowResultType.MENU,
             flow_id=self.flow_id,
             handler=self.handler,
-            step_id=step_id,
             data_schema=vol.Schema({"next_step_id": vol.In(menu_options)}),
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
+        if step_id is not None:
+            flow_result["step_id"] = step_id
+        return flow_result
 
     @callback
     def async_remove(self) -> None:
