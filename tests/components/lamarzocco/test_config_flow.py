@@ -6,11 +6,11 @@ from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 from homeassistant import config_entries
 from homeassistant.components.lamarzocco.const import CONF_MACHINE, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
-from . import PASSWORD_SELECTION, USER_INPUT
+from . import USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -224,12 +224,16 @@ async def test_reauth_flow(
         data=mock_config_entry.data,
     )
 
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        PASSWORD_SELECTION,
+        {CONF_PASSWORD: "new_password"},
     )
 
     assert result2["type"] == FlowResultType.ABORT
     await hass.async_block_till_done()
     assert result2["reason"] == "reauth_successful"
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
