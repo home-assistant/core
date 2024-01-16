@@ -182,8 +182,6 @@ async def async_setup_entry(
             DOMAIN, service, async_service_handler, schema=schema
         )
 
-    _LOGGER.warning("Bluesound platform setup complete")
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -234,9 +232,6 @@ async def async_setup_platform(
 #         hass.services.async_register(
 #             DOMAIN, service, async_service_handler, schema=schema
 #         )
-
-#     _LOGGER.warning("Bluesound platform setup complete")
-
 
 
 class BluesoundPlayer(MediaPlayerEntity):
