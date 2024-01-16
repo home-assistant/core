@@ -1209,6 +1209,9 @@ linear-garage-door==0.2.7
 # homeassistant.components.linode
 linode-api==4.1.9b1
 
+# homeassistant.components.lamarzocco
+lmcloud==0.4.34
+
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
 
