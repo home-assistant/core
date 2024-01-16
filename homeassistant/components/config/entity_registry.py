@@ -43,16 +43,16 @@ def websocket_list_entities(
     msg_json_prefix = (
         f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
         '"success":true,"result": ['
-    )
+    ).encode()
     # Concatenate cached entity registry item JSON serializations
     msg_json = (
         msg_json_prefix
-        + ",".join(
+        + b",".join(
             entry.partial_json_repr
             for entry in registry.entities.values()
             if entry.partial_json_repr is not None
         )
-        + "]}"
+        + b"]}"
     )
     connection.send_message(msg_json)
 
@@ -73,16 +73,16 @@ def websocket_list_entities_for_display(
     msg_json_prefix = (
         f'{{"id":{msg["id"]},"type":"{websocket_api.const.TYPE_RESULT}","success":true,'
         f'"result":{{"entity_categories":{entity_categories},"entities":['
-    )
+    ).encode()
     # Concatenate cached entity registry item JSON serializations
     msg_json = (
         msg_json_prefix
-        + ",".join(
+        + b",".join(
             entry.display_json_repr
             for entry in registry.entities.values()
             if entry.disabled_by is None and entry.display_json_repr is not None
         )
-        + "]}}"
+        + b"]}}"
     )
     connection.send_message(msg_json)
 
