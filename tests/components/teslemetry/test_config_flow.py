@@ -1,6 +1,6 @@
 """Test the Teslemetry config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientConnectionError
 import pytest
@@ -14,12 +14,19 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import CONFIG
 
-from tests.common import MockConfigEntry
+
+@pytest.fixture(autouse=True)
+def teslemetry_config_entry_mock():
+    """Mock Teslemetry api class."""
+    with patch(
+        "homeassistant.components.teslemetry.config_flow.Teslemetry",
+    ) as teslemetry_config_entry_mock:
+        teslemetry_config_entry_mock.return_value.test = AsyncMock()
+        yield teslemetry_config_entry_mock
 
 
 async def test_form(
     hass: HomeAssistant,
-    config_entry_mock: MockConfigEntry,
 ) -> None:
     """Test we get the form."""
 
@@ -54,7 +61,7 @@ async def test_form(
     ],
 )
 async def test_form_errors(
-    hass: HomeAssistant, side_effect, error, teslemetry_mock
+    hass: HomeAssistant, side_effect, error, teslemetry_config_entry_mock
 ) -> None:
     """Test errors are handled."""
 
@@ -62,7 +69,7 @@ async def test_form_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    teslemetry_mock.side_effect = side_effect
+    teslemetry_config_entry_mock.return_value.test.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"],
         CONFIG,
@@ -72,7 +79,7 @@ async def test_form_errors(
     assert result2["errors"] == error
 
     # Complete the flow
-    teslemetry_mock.side_effect = None
+    teslemetry_config_entry_mock.return_value.test.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         CONFIG,

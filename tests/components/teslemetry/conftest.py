@@ -12,7 +12,7 @@ from .const import COMMAND_SUCCESS, CONFIG, WAKE_AWAKE
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=False)
 def teslemetry_mock():
     """Mock Teslemetry api class."""
     with patch(
@@ -25,7 +25,7 @@ def teslemetry_mock():
         yield teslemetry_mock
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=False)
 def teslemetry_vehicle_specific_mock():
     """Mock Teslemetry VehicleSpecific subclass."""
     with patch(
