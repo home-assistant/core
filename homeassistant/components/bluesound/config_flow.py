@@ -48,6 +48,20 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
+    async def async_step_import(
+        self, config: dict[str, Any]
+    ) -> FlowResult:
+        host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT, DEFAULT_PORT)
+        name = config.get(CONF_NAME)
+
+        unique_id = f"{host}:{port}"
+        await self.async_set_unique_id(unique_id)
+
+        self.async_create_entry(title=host, data={CONF_HOST: host,
+                                                  CONF_PORT: port,
+                                                  CONF_NAME: name})
+
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:

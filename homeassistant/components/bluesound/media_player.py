@@ -15,6 +15,7 @@ from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
 import voluptuous as vol
 import xmltodict
 
+from homeassistant import config_entries
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
@@ -195,41 +196,46 @@ async def async_setup_platform(
 
     if hosts := config.get(CONF_HOSTS):
         for host in hosts:
-            _add_player(
-                hass,
-                async_add_entities,
-                host.get(CONF_HOST),
-                host.get(CONF_PORT),
-                host.get(CONF_NAME),
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=host
+                )
             )
+            # _add_player(
+            #     hass,
+            #     async_add_entities,
+            #     host.get(CONF_HOST),
+            #     host.get(CONF_PORT),
+            #     host.get(CONF_NAME),
+            # )
 
-    async def async_service_handler(service: ServiceCall) -> None:
-        """Map services to method of Bluesound devices."""
-        if not (method := SERVICE_TO_METHOD.get(service.service)):
-            return
+#     async def async_service_handler(service: ServiceCall) -> None:
+#         """Map services to method of Bluesound devices."""
+#         if not (method := SERVICE_TO_METHOD.get(service.service)):
+#             return
 
-        params = {
-            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
-        }
-        if entity_ids := service.data.get(ATTR_ENTITY_ID):
-            target_players = [
-                player
-                for player in hass.data[DATA_BLUESOUND]
-                if player.entity_id in entity_ids
-            ]
-        else:
-            target_players = hass.data[DATA_BLUESOUND]
+#         params = {
+#             key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
+#         }
+#         if entity_ids := service.data.get(ATTR_ENTITY_ID):
+#             target_players = [
+#                 player
+#                 for player in hass.data[DATA_BLUESOUND]
+#                 if player.entity_id in entity_ids
+#             ]
+#         else:
+#             target_players = hass.data[DATA_BLUESOUND]
 
-        for player in target_players:
-            await getattr(player, method["method"])(**params)
+#         for player in target_players:
+#             await getattr(player, method["method"])(**params)
 
-    for service, method in SERVICE_TO_METHOD.items():
-        schema = method["schema"]
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
-        )
+#     for service, method in SERVICE_TO_METHOD.items():
+#         schema = method["schema"]
+#         hass.services.async_register(
+#             DOMAIN, service, async_service_handler, schema=schema
+#         )
 
-    _LOGGER.warning("Bluesound platform setup complete")
+#     _LOGGER.warning("Bluesound platform setup complete")
 
 
 

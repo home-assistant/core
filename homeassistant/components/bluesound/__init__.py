@@ -5,6 +5,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.const import CONF_HOSTS
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,14 +16,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bluesound component."""
     conf = config.get(DOMAIN)
 
+    _LOGGER.debug("Bluesound async_setup: %r", conf)
+
     hass.data[DOMAIN] = []
 
     if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-            )
-        )
+        if hosts := conf.get(CONF_HOSTS):
+            for host in hosts:
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=host
+                    )
+                )
 
     return True
 
