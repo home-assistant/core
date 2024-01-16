@@ -1230,6 +1230,9 @@ py-nextbusnext==1.0.2
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
 
+# homeassistant.components.ecovacs
+py-sucks==0.9.8
+
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.1.4
 
