@@ -72,23 +72,23 @@ class EcovacsController:
         try:
             devices = await self._api_client.get_devices()
             credentials = await self._authenticator.authenticate()
-            for device in devices:
-                if isinstance(device, DeviceInfo):
-                    bot = Device(device, self._authenticator)
-                    await bot.initialize(self._mqtt)
-                    self._devices.append(bot)
+            for device_config in devices:
+                if isinstance(device_config, DeviceInfo):
+                    device = Device(device_config, self._authenticator)
+                    await device.initialize(self._mqtt)
+                    self._devices.append(device)
                 else:
                     # Legcay device
-                    device = VacBot(
+                    bot = VacBot(
                         credentials.user_id,
                         EcoVacsAPI.REALM,
                         self._config.device_id[0:8],
                         credentials.token,
-                        device,
+                        device_config,
                         self._config.continent,
                         monitor=True,
                     )
-                    self._legacy_devices.append(device)
+                    self._legacy_devices.append(bot)
         except InvalidAuthenticationError as ex:
             raise ConfigEntryError("Invalid credentials") from ex
         except DeebotError as ex:
