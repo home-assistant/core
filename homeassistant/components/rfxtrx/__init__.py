@@ -76,12 +76,12 @@ def _bytearray_string(data: Any) -> bytearray:
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
 PLATFORMS = [
-    Platform.SWITCH,
-    Platform.SENSOR,
-    Platform.LIGHT,
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.LIGHT,
+    Platform.SENSOR,
     Platform.SIREN,
+    Platform.SWITCH,
 ]
 
 
