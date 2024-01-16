@@ -140,6 +140,7 @@ FLOWS = {
         "enocean",
         "enphase_envoy",
         "environment_canada",
+        "epion",
         "epson",
         "escea",
         "esphome",
