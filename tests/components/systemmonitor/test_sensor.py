@@ -215,11 +215,11 @@ async def test_sensor_process_fails(
 
 
 async def test_sensor_network_sensors(
+    freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
     mock_added_config_entry: ConfigEntry,
     mock_psutil: Mock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test process not exist failure."""
     network_out_sensor = hass.states.get("sensor.system_monitor_network_out_eth1")
