@@ -251,9 +251,6 @@ aiohue==4.7.0
 # homeassistant.components.imap
 aioimaplib==1.0.1
 
-# homeassistant.components.apache_kafka
-aiokafka==0.10.0
-
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
 
@@ -545,9 +542,6 @@ crownstone-uart==2.1.0
 
 # homeassistant.components.datadog
 datadog==0.15.0
-
-# homeassistant.components.metoffice
-datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
 dbus-fast==2.21.1
