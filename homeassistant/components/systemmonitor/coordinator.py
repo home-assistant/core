@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class VirtualMemory(NamedTuple):
     """Represents virtual memory.
 
-    psutil define VirtualMemory by platform.
+    psutil defines virtual memory by platform.
     Create our own definition here to be platform independent.
     """
 
