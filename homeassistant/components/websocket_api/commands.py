@@ -482,9 +482,7 @@ async def handle_get_services(
 ) -> None:
     """Handle get services command."""
     payload = await _async_get_all_descriptions_json(hass)
-    connection.send_message(
-        construct_result_message(msg["id"], payload.encode("utf-8"))
-    )
+    connection.send_message(construct_result_message(msg["id"], payload.encode()))
 
 
 @callback

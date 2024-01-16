@@ -69,7 +69,7 @@ def construct_result_message(iden: int, payload: bytes) -> bytes:
     return b"".join(
         (
             b'{"id":',
-            str(iden).encode("utf-8"),
+            str(iden).encode(),
             b',"type":"result","success":true,"result":',
             payload,
             b"}",
@@ -121,7 +121,7 @@ def cached_event_message(iden: int, event: Event) -> bytes:
         (
             _partial_cached_event_message(event)[:-1],
             b',"id":',
-            str(iden).encode("utf-8"),
+            str(iden).encode(),
             b"}",
         )
     )
@@ -153,7 +153,7 @@ def cached_state_diff_message(iden: int, event: Event) -> bytes:
         (
             _partial_cached_state_diff_message(event)[:-1],
             b',"id":',
-            str(iden).encode("utf-8"),
+            str(iden).encode(),
             b"}",
         )
     )
