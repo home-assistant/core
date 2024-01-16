@@ -13,7 +13,11 @@
           "continent": "Continent",
           "country": "Country",
           "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::email%]"
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "continent": "Your two-letter continent code (na, eu, etc)",
+          "country": "Your two-letter country code (us, uk, etc)"
         }
       }
     }
