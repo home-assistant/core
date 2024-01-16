@@ -261,6 +261,7 @@ FLOWS = {
         "kraken",
         "kulersky",
         "lacrosse_view",
+        "lamarzocco",
         "lametric",
         "landisgyr_heat_meter",
         "lastfm",

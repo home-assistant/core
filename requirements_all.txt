@@ -1212,6 +1212,9 @@ linear-garage-door==0.2.7
 # homeassistant.components.linode
 linode-api==4.1.9b1
 
+# homeassistant.components.lamarzocco
+lmcloud==0.4.34
+
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
 
@@ -2745,7 +2748,7 @@ uvcclient==0.11.0
 vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
-vallox-websocket-api==4.0.2
+vallox-websocket-api==4.0.3
 
 # homeassistant.components.rdw
 vehicle==2.2.1

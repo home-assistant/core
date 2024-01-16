@@ -957,6 +957,9 @@ libsoundtouch==0.8
 # homeassistant.components.linear_garage_door
 linear-garage-door==0.2.7
 
+# homeassistant.components.lamarzocco
+lmcloud==0.4.34
+
 # homeassistant.components.logi_circle
 logi-circle==0.2.3
 
@@ -2080,7 +2083,7 @@ uvcclient==0.11.0
 vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
-vallox-websocket-api==4.0.2
+vallox-websocket-api==4.0.3
 
 # homeassistant.components.rdw
 vehicle==2.2.1
