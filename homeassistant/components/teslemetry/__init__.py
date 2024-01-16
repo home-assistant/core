@@ -41,9 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Setup failed, unable to connect to Teslemetry: %s", e)
         return False
 
-    # Setup Coordinator for Polling
-
-    # Create SSE stream
+    # Create array of classes
     data = []
     for product in products:
         if "vin" not in product:
