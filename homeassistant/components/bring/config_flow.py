@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
@@ -39,31 +38,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    email = data[CONF_EMAIL]
-    password = data[CONF_PASSWORD]
-
-    bring = Bring(email, password)
-
-    def login_and_load_lists() -> None:
-        bring.login()
-        bring.loadLists()
-
-    try:
-        await hass.async_add_executor_job(login_and_load_lists)
-    except BringRequestException as e:
-        raise CannotConnect from e
-    except BringAuthException as e:
-        raise InvalidAuth from e
-
-    # Return info that you want to store in the config entry.
-    return {"title": data[CONF_EMAIL].split("@")[0], "uuid": bring.uuid}
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bring!."""
 
@@ -75,19 +49,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            bring = Bring(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
+
+            def login_and_load_lists() -> None:
+                bring.login()
+                bring.loadLists()
+
             try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
+                await self.hass.async_add_executor_job(login_and_load_lists)
+            except BringRequestException:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except BringAuthException:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["uuid"])
+                await self.async_set_unique_id(bring.uuid)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_EMAIL], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

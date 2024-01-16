@@ -49,7 +49,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "email"
+    assert result["title"] == MOCK_DATA_STEP["email"]
     assert result["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -99,7 +99,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
         )
 
         assert result["type"] == "create_entry"
-        assert result["result"].title == "email"
+        assert result["result"].title == MOCK_DATA_STEP["email"]
 
         assert result["data"] == MOCK_DATA_STEP
 
