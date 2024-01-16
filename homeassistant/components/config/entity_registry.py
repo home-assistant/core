@@ -57,6 +57,9 @@ def websocket_list_entities(
     connection.send_message(msg_json)
 
 
+_ENTITY_CATEGORIES_JSON = json_dumps(er.ENTITY_CATEGORY_INDEX_TO_VALUE)
+
+
 @websocket_api.websocket_command(
     {vol.Required("type"): "config/entity_registry/list_for_display"}
 )
@@ -69,10 +72,9 @@ def websocket_list_entities_for_display(
     """Handle list registry entries command."""
     registry = er.async_get(hass)
     # Build start of response message
-    entity_categories = json_dumps(er.ENTITY_CATEGORY_INDEX_TO_VALUE)
     msg_json_prefix = (
         f'{{"id":{msg["id"]},"type":"{websocket_api.const.TYPE_RESULT}","success":true,'
-        f'"result":{{"entity_categories":{entity_categories},"entities":['
+        f'"result":{{"entity_categories":{_ENTITY_CATEGORIES_JSON},"entities":['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
     msg_json = (
