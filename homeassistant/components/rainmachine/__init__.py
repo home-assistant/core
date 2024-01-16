@@ -53,8 +53,8 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import RainMachineDataUpdateCoordinator
 from .model import RainMachineEntityDescription
-from .util import RainMachineDataUpdateCoordinator
 
 DEFAULT_SSL = True
 
