@@ -112,7 +112,7 @@ async def async_setup_entry(
 
 @callback
 def async_create_preview_light(
-    name: str, validated_config: dict[str, Any]
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
 ) -> LightGroup:
     """Create a preview sensor."""
     return LightGroup(

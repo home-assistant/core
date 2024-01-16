@@ -34,7 +34,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, async_get_hass, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import (
@@ -152,10 +152,9 @@ async def async_setup_entry(
 
 @callback
 def async_create_preview_sensor(
-    name: str, validated_config: dict[str, Any]
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
 ) -> SensorGroup:
     """Create a preview sensor."""
-    hass = async_get_hass()
     return SensorGroup(
         hass,
         None,
