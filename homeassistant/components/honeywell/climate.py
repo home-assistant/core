@@ -358,6 +358,11 @@ class HoneywellUSThermostat(ClimateEntity):
                 "Honeywell set temperature failed: Invalid Response"
             ) from err
 
+        except AscConnectionError as err:
+            raise HomeAssistantError(
+                "Honeywell set temperature failed: Connection Error"
+            ) from err
+
         except SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
             raise ValueError(
@@ -379,6 +384,11 @@ class HoneywellUSThermostat(ClimateEntity):
                     "Honeywell set temperature failed: Invalid Response"
                 ) from err
 
+            except AscConnectionError as err:
+                raise HomeAssistantError(
+                    "Honeywell set temperature failed: Connection Error"
+                ) from err
+
             except SomeComfortError as err:
                 _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
                 raise ValueError(
@@ -389,6 +399,17 @@ class HoneywellUSThermostat(ClimateEntity):
         """Set new target fan mode."""
         try:
             await self._device.set_fan_mode(self._fan_mode_map[fan_mode])
+
+        except UnexpectedResponse as err:
+            raise HomeAssistantError(
+                "Honeywell set fan mode failed: Invalid Response"
+            ) from err
+
+        except AscConnectionError as err:
+            raise HomeAssistantError(
+                "Honeywell set fan mode failed: Connection Error"
+            ) from err
+
         except SomeComfortError as err:
             raise HomeAssistantError("Honeywell could not set fan mode.") from err
 
@@ -396,6 +417,17 @@ class HoneywellUSThermostat(ClimateEntity):
         """Set new target hvac mode."""
         try:
             await self._device.set_system_mode(self._hvac_mode_map[hvac_mode])
+
+        except UnexpectedResponse as err:
+            raise HomeAssistantError(
+                "Honeywell set system mode failed: Invalid Response"
+            ) from err
+
+        except AscConnectionError as err:
+            raise HomeAssistantError(
+                "Honeywell set system mode failed: Connection Error"
+            ) from err
+
         except SomeComfortError as err:
             raise HomeAssistantError("Honeywell could not set system mode.") from err
 
@@ -416,6 +448,16 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self._device.set_hold_cool(True, self._cool_away_temp)
             if mode in HEATING_MODES:
                 await self._device.set_hold_heat(True, self._heat_away_temp)
+
+        except UnexpectedResponse as err:
+            raise HomeAssistantError(
+                "Honeywell set away mode failed: Invalid Response"
+            ) from err
+
+        except AscConnectionError as err:
+            raise HomeAssistantError(
+                "Honeywell set away mode failed: Connection Error"
+            ) from err
 
         except SomeComfortError as err:
             _LOGGER.error(
@@ -441,6 +483,16 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode in HEATING_MODES:
                     await self._device.set_hold_heat(True)
 
+            except UnexpectedResponse as err:
+                raise HomeAssistantError(
+                    "Honeywell set permanent hold failed: Invalid Response"
+                ) from err
+
+            except AscConnectionError as err:
+                raise HomeAssistantError(
+                    "Honeywell set permanent hold failed: Connection Error"
+                ) from err
+
             except SomeComfortError as err:
                 _LOGGER.error("Couldn't set permanent hold")
                 raise HomeAssistantError(
@@ -457,6 +509,17 @@ class HoneywellUSThermostat(ClimateEntity):
             # Disabling all hold modes
             await self._device.set_hold_cool(False)
             await self._device.set_hold_heat(False)
+
+        except UnexpectedResponse as err:
+            raise HomeAssistantError(
+                "Honeywell could not stop hold mode: Invalid Response"
+            ) from err
+
+        except AscConnectionError as err:
+            raise HomeAssistantError(
+                "Honeywell could not stop hold mode: Connection Error"
+            ) from err
+
         except SomeComfortError as err:
             _LOGGER.error("Can not stop hold mode")
             raise HomeAssistantError("Honeywell could not stop hold mode") from err
@@ -475,6 +538,17 @@ class HoneywellUSThermostat(ClimateEntity):
         """Turn auxiliary heater on."""
         try:
             await self._device.set_system_mode("emheat")
+
+        except UnexpectedResponse as err:
+            raise HomeAssistantError(
+                "Honeywell could not set system mode to aux heat: Invalid Response"
+            ) from err
+
+        except AscConnectionError as err:
+            raise HomeAssistantError(
+                "Honeywell could not set system mode to aux heat: Connection Error"
+            ) from err
+
         except SomeComfortError as err:
             raise HomeAssistantError(
                 "Honeywell could not set system mode to aux heat."
@@ -487,6 +561,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self.async_set_hvac_mode(HVACMode.HEAT)
             else:
                 await self.async_set_hvac_mode(HVACMode.OFF)
+
         except HomeAssistantError as err:
             raise HomeAssistantError("Honeywell could turn off aux heat mode.") from err
 
