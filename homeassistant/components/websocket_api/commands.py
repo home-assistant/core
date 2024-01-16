@@ -104,7 +104,7 @@ def pong_message(iden: int) -> dict[str, Any]:
 
 @callback
 def _forward_events_check_permissions(
-    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
     user: User,
     msg_id: int,
     event: Event,
@@ -124,7 +124,7 @@ def _forward_events_check_permissions(
 
 @callback
 def _forward_events_unconditional(
-    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
     msg_id: int,
     event: Event,
 ) -> None:
@@ -362,7 +362,7 @@ def _send_handle_get_states_response(
 
 @callback
 def _forward_entity_changes(
-    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[str | bytes | dict[str, Any] | Callable[[], str]], None],
     entity_ids: set[str],
     user: User,
     msg_id: int,
