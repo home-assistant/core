@@ -146,6 +146,7 @@ homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
 homeassistant.components.downloader.*
 homeassistant.components.dsmr.*
+homeassistant.components.duckdns.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
@@ -182,6 +183,7 @@ homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fully_kiosk.*
 homeassistant.components.generic_hygrostat.*
+homeassistant.components.generic_thermostat.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
@@ -246,6 +248,7 @@ homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
+homeassistant.components.lamarzocco.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lawn_mower.*
@@ -302,6 +305,7 @@ homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
+homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
@@ -320,6 +324,7 @@ homeassistant.components.plugwise.*
 homeassistant.components.poolsense.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
+homeassistant.components.prometheus.*
 homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
