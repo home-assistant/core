@@ -379,16 +379,14 @@ async def test_if_fires_with_template_vars(
                 {
                     "trigger_variables": {
                         "discovery_id": "bla1",
-                        "type": "button_short_press",
-                        "subtype": "button_1",
                     },
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
                         "discovery_id": "{{ discovery_id }}",
-                        "type": "{{ type }}",
-                        "subtype": "{{ sub_type }}",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
                     },
                     "action": {
                         "service": "test.automation",
@@ -663,16 +661,14 @@ async def test_if_fires_on_late_discovery_with_template_vars(
                 {
                     "trigger_variables": {
                         "discovery_id": "bla1",
-                        "type": "button_short_press",
-                        "subtype": "button_1",
                     },
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry_id,
                         "discovery_id": "{{ discovery_id }}",
-                        "type": "{{ type }}",
-                        "subtype": "{{ sub_type }}",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
                     },
                     "action": {
                         "service": "test.automation",

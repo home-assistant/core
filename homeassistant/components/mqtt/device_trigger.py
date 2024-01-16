@@ -24,7 +24,7 @@ from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import debug_info, trigger as mqtt_trigger
 from .config import MQTT_BASE_SCHEMA
@@ -84,28 +84,6 @@ TRIGGER_DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
 )
 
 LOG_NAME = "Device trigger"
-
-TEMPLATED_OPTIONS = (CONF_DISCOVERY_ID, CONF_TYPE, CONF_SUBTYPE)
-
-
-@callback
-def async_render_templates(
-    hass: HomeAssistant, config: ConfigType, variables: TemplateVarsType
-) -> ConfigType:
-    """Render trigger variables."""
-    for option in TEMPLATED_OPTIONS:
-        template = Template(config[option], hass=hass)
-        try:
-            config[option] = template.async_render(
-                variables=variables, parse_result=False
-            )
-        except (jinja2.TemplateError, TemplateError) as exc:
-            raise HomeAssistantError(
-                f"Unable to render template for option {option} "
-                f"failed because of {exc}"
-            ) from exc
-
-    return config
 
 
 @attr.s(slots=True)
@@ -351,7 +329,16 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     mqtt_data = get_mqtt_data(hass)
-    config = async_render_templates(hass, config, trigger_info["variables"])
+    discovery_id_template = Template(config[CONF_DISCOVERY_ID], hass=hass)
+    try:
+        config[CONF_DISCOVERY_ID] = discovery_id_template.async_render(
+            variables=trigger_info["variables"], parse_result=False
+        )
+    except (jinja2.TemplateError, TemplateError) as exc:
+        raise HomeAssistantError(
+            f"Unable to render template for option {CONF_DISCOVERY_ID} "
+            f"failed because of {exc}"
+        ) from exc
 
     device_id = config[CONF_DEVICE_ID]
     discovery_id = config[CONF_DISCOVERY_ID]
