@@ -8,7 +8,7 @@ from homeassistant.helpers import start
 
 async def test_at_start_when_running_awaitable(hass: HomeAssistant) -> None:
     """Test at start when already running."""
-    assert hass.state == CoreState.running
+    assert hass.state is CoreState.running
     assert hass.is_running
 
     calls = []
@@ -33,7 +33,7 @@ async def test_at_start_when_running_callback(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test at start when already running."""
-    assert hass.state == CoreState.running
+    assert hass.state is CoreState.running
     assert hass.is_running
 
     calls = []
@@ -110,7 +110,7 @@ async def test_cancelling_at_start_when_running(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test cancelling at start when already running."""
-    assert hass.state == CoreState.running
+    assert hass.state is CoreState.running
     assert hass.is_running
 
     calls = []
@@ -151,7 +151,7 @@ async def test_cancelling_at_start_when_starting(hass: HomeAssistant) -> None:
 
 async def test_at_started_when_running_awaitable(hass: HomeAssistant) -> None:
     """Test at started when already started."""
-    assert hass.state == CoreState.running
+    assert hass.state is CoreState.running
 
     calls = []
 
@@ -175,7 +175,7 @@ async def test_at_started_when_running_callback(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test at started when already running."""
-    assert hass.state == CoreState.running
+    assert hass.state is CoreState.running
 
     calls = []
 
@@ -257,7 +257,7 @@ async def test_cancelling_at_started_when_running(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test cancelling at start when already running."""
-    assert hass.state == CoreState.running
+    assert hass.state is CoreState.running
     assert hass.is_running
 
     calls = []

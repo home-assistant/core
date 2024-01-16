@@ -46,7 +46,7 @@ from .entity import CharacteristicEntity, HomeKitEntity
 from .utils import folded_name
 
 
-@dataclass
+@dataclass(frozen=True)
 class HomeKitSensorEntityDescription(SensorEntityDescription):
     """Describes Homekit sensor."""
 
@@ -164,7 +164,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_KW_HOUR,
         name="Energy kWh",
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     CharacteristicsTypes.VENDOR_EVE_ENERGY_WATT: HomeKitSensorEntityDescription(

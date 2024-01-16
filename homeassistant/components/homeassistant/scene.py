@@ -29,14 +29,13 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_per_platform,
-    config_validation as cv,
-    entity_platform,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback, EntityPlatform
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.service import (
+    async_extract_entity_ids,
+    async_register_admin_service,
+)
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration
@@ -125,6 +124,7 @@ CREATE_SCENE_SCHEMA = vol.All(
 
 SERVICE_APPLY = "apply"
 SERVICE_CREATE = "create"
+SERVICE_DELETE = "delete"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ class SceneConfig(NamedTuple):
     id: str | None
     name: str
     icon: str | None
-    states: dict
+    states: dict[str, State]
 
 
 @callback
@@ -194,7 +194,9 @@ async def async_setup_platform(
 
         integration = await async_get_integration(hass, SCENE_DOMAIN)
 
-        conf = await conf_util.async_process_component_config(hass, config, integration)
+        conf = await conf_util.async_process_component_and_handle_errors(
+            hass, config, integration
+        )
 
         if not (conf and platform):
             return
@@ -202,7 +204,7 @@ async def async_setup_platform(
         await platform.async_reset()
 
         # Extract only the config for the Home Assistant platform, ignore the rest.
-        for p_type, p_config in config_per_platform(conf, SCENE_DOMAIN):
+        for p_type, p_config in conf_util.config_per_platform(conf, SCENE_DOMAIN):
             if p_type != HA_DOMAIN:
                 continue
 
@@ -269,6 +271,41 @@ async def async_setup_platform(
 
     hass.services.async_register(
         SCENE_DOMAIN, SERVICE_CREATE, create_service, CREATE_SCENE_SCHEMA
+    )
+
+    async def delete_service(call: ServiceCall) -> None:
+        """Delete a dynamically created scene."""
+        entity_ids = await async_extract_entity_ids(hass, call)
+
+        for entity_id in entity_ids:
+            scene = platform.entities.get(entity_id)
+            if scene is None:
+                raise ServiceValidationError(
+                    f"{entity_id} is not a valid scene entity_id",
+                    translation_domain=SCENE_DOMAIN,
+                    translation_key="entity_not_scene",
+                    translation_placeholders={
+                        "entity_id": entity_id,
+                    },
+                )
+            assert isinstance(scene, HomeAssistantScene)
+            if not scene.from_service:
+                raise ServiceValidationError(
+                    f"The scene {entity_id} is not created with service `scene.create`",
+                    translation_domain=SCENE_DOMAIN,
+                    translation_key="entity_not_dynamically_created",
+                    translation_placeholders={
+                        "entity_id": entity_id,
+                    },
+                )
+
+            await platform.async_remove_entity(entity_id)
+
+    hass.services.async_register(
+        SCENE_DOMAIN,
+        SERVICE_DELETE,
+        delete_service,
+        cv.make_entity_service_schema({}),
     )
 
 

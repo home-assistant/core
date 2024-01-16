@@ -232,12 +232,12 @@ async def test_migrate_device_entry(
 
 
 async def test_remove_air_quality_entities(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test remove air_quality entities from registry."""
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         AIR_QUALITY_PLATFORM,
         DOMAIN,
         "123-456",
@@ -247,5 +247,5 @@ async def test_remove_air_quality_entities(
 
     await init_integration(hass, aioclient_mock)
 
-    entry = registry.async_get("air_quality.home")
+    entry = entity_registry.async_get("air_quality.home")
     assert entry is None

@@ -33,6 +33,7 @@ from homeassistant.components.mqtt.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .test_common import (
     help_custom_config,
@@ -139,7 +140,7 @@ async def test_preset_none_in_preset_modes(
 ) -> None:
     """Test the preset mode payload reset configuration."""
     assert await mqtt_mock_entry()
-    assert "not a valid value" in caplog.text
+    assert "preset_modes must not include preset mode 'none'" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1130,8 +1131,9 @@ async def test_set_preset_mode_optimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
-    await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-    assert "'invalid' is not a valid preset mode" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
+        assert "'invalid' is not a valid preset mode" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1187,8 +1189,9 @@ async def test_set_preset_mode_explicit_optimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
-    await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-    assert "'invalid' is not a valid preset mode" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
+        assert "'invalid' is not a valid preset mode" in caplog.text
 
 
 @pytest.mark.parametrize(

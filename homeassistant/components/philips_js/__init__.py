@@ -32,8 +32,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
 
 PLATFORMS = [
-    Platform.MEDIA_PLAYER,
+    Platform.BINARY_SENSOR,
     Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
     Platform.REMOTE,
     Platform.SWITCH,
 ]

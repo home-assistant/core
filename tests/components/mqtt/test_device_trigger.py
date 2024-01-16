@@ -973,11 +973,12 @@ async def test_attach_remove_late2(
 
 
 async def test_entity_device_info_with_connection(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test MQTT device registry integration."""
     await mqtt_mock_entry()
-    registry = dr.async_get(hass)
 
     data = json.dumps(
         {
@@ -991,6 +992,7 @@ async def test_entity_device_info_with_connection(
                 "name": "Beer",
                 "model": "Glass",
                 "hw_version": "rev1",
+                "serial_number": "1234deadbeef",
                 "sw_version": "0.1-beta",
             },
         }
@@ -998,7 +1000,7 @@ async def test_entity_device_info_with_connection(
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(
+    device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
     )
     assert device is not None
@@ -1007,15 +1009,17 @@ async def test_entity_device_info_with_connection(
     assert device.name == "Beer"
     assert device.model == "Glass"
     assert device.hw_version == "rev1"
+    assert device.serial_number == "1234deadbeef"
     assert device.sw_version == "0.1-beta"
 
 
 async def test_entity_device_info_with_identifier(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test MQTT device registry integration."""
     await mqtt_mock_entry()
-    registry = dr.async_get(hass)
 
     data = json.dumps(
         {
@@ -1029,6 +1033,7 @@ async def test_entity_device_info_with_identifier(
                 "name": "Beer",
                 "model": "Glass",
                 "hw_version": "rev1",
+                "serial_number": "1234deadbeef",
                 "sw_version": "0.1-beta",
             },
         }
@@ -1036,22 +1041,24 @@ async def test_entity_device_info_with_identifier(
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.identifiers == {("mqtt", "helloworld")}
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
     assert device.hw_version == "rev1"
+    assert device.serial_number == "1234deadbeef"
     assert device.sw_version == "0.1-beta"
 
 
 async def test_entity_device_info_update(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test device registry update."""
     await mqtt_mock_entry()
-    registry = dr.async_get(hass)
 
     config = {
         "automation_type": "trigger",
@@ -1064,6 +1071,7 @@ async def test_entity_device_info_update(
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
+            "serial_number": "1234deadbeef",
             "sw_version": "0.1-beta",
         },
     }
@@ -1072,7 +1080,7 @@ async def test_entity_device_info_update(
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.name == "Beer"
 
@@ -1081,7 +1089,7 @@ async def test_entity_device_info_update(
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.name == "Milk"
 
@@ -1390,14 +1398,15 @@ async def test_cleanup_device_with_entity2(
 
 
 async def test_trigger_debug_info(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test debug_info.
 
     This is a test helper for MQTT debug_info.
     """
     await mqtt_mock_entry()
-    registry = dr.async_get(hass)
 
     config1 = {
         "platform": "mqtt",
@@ -1429,7 +1438,7 @@ async def test_trigger_debug_info(
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(
+    device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
     )
     assert device is not None

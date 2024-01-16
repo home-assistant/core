@@ -95,7 +95,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 # Platforms for SDM API
-PLATFORMS = [Platform.SENSOR, Platform.CAMERA, Platform.CLIMATE]
+PLATFORMS = [Platform.CAMERA, Platform.CLIMATE, Platform.SENSOR]
 
 # Fetch media events with a disk backed cache, with a limit for each camera
 # device. The largest media items are mp4 clips at ~120kb each, and we target

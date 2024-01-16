@@ -47,13 +47,15 @@ def mock_operating_system_90():
 def macos_adapter():
     """Fixture that mocks the macos adapter."""
     with patch("bleak.get_platform_scanner_backend_type"), patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Darwin"
-    ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "homeassistant.components.bluetooth.platform.system",
         return_value="Darwin",
     ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Darwin"
-    ):
+        "habluetooth.scanner.platform.system",
+        return_value="Darwin",
+    ), patch(
+        "bluetooth_adapters.systems.platform.system",
+        return_value="Darwin",
+    ), patch("habluetooth.scanner.SYSTEM", "Darwin"):
         yield
 
 
@@ -63,7 +65,7 @@ def windows_adapter():
     with patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Windows",
-    ):
+    ), patch("habluetooth.scanner.SYSTEM", "Windows"):
         yield
 
 
@@ -71,14 +73,16 @@ def windows_adapter():
 def no_adapter_fixture():
     """Fixture that mocks no adapters on Linux."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
-    ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "homeassistant.components.bluetooth.platform.system",
         return_value="Linux",
     ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
+        "habluetooth.scanner.platform.system",
+        return_value="Linux",
     ), patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+        "bluetooth_adapters.systems.platform.system",
+        return_value="Linux",
+    ), patch("habluetooth.scanner.SYSTEM", "Linux"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
         {},
@@ -90,14 +94,16 @@ def no_adapter_fixture():
 def one_adapter_fixture():
     """Fixture that mocks one adapter on Linux."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
-    ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "homeassistant.components.bluetooth.platform.system",
         return_value="Linux",
     ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
+        "habluetooth.scanner.platform.system",
+        return_value="Linux",
     ), patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+        "bluetooth_adapters.systems.platform.system",
+        return_value="Linux",
+    ), patch("habluetooth.scanner.SYSTEM", "Linux"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
         {
@@ -122,11 +128,9 @@ def two_adapters_fixture():
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "habluetooth.scanner.platform.system",
         return_value="Linux",
-    ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
+    ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
@@ -164,11 +168,9 @@ def one_adapter_old_bluez():
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "habluetooth.scanner.platform.system",
         return_value="Linux",
-    ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
+    ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",

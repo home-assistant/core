@@ -24,7 +24,7 @@ async def test_user(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.vodafone_station.async_setup_entry"
     ) as mock_setup_entry, patch(
-        "requests.get"
+        "requests.get",
     ) as mock_request_get:
         mock_request_get.return_value.status_code = 200
 
@@ -90,7 +90,7 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
         ), patch(
             "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.logout",
         ), patch(
-            "homeassistant.components.vodafone_station.async_setup_entry"
+            "homeassistant.components.vodafone_station.async_setup_entry",
         ):
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
@@ -122,9 +122,9 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.logout",
     ), patch(
-        "homeassistant.components.vodafone_station.async_setup_entry"
+        "homeassistant.components.vodafone_station.async_setup_entry",
     ), patch(
-        "requests.get"
+        "requests.get",
     ) as mock_request_get:
         mock_request_get.return_value.status_code = 200
 
@@ -170,7 +170,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
     ), patch(
         "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.logout",
     ), patch(
-        "homeassistant.components.vodafone_station.async_setup_entry"
+        "homeassistant.components.vodafone_station.async_setup_entry",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -204,7 +204,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
         ), patch(
             "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.logout",
         ), patch(
-            "homeassistant.components.vodafone_station.async_setup_entry"
+            "homeassistant.components.vodafone_station.async_setup_entry",
         ):
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],

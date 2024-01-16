@@ -11,7 +11,14 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(
-    "device_fixture", ["device-HWE-P1.json", "device-HWE-SKT.json"]
+    "device_fixture",
+    [
+        "HWE-P1",
+        "HWE-SKT",
+        "HWE-WTR",
+        "SDM230",
+        "SDM630",
+    ],
 )
 async def test_diagnostics(
     hass: HomeAssistant,

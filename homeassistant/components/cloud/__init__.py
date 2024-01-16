@@ -5,11 +5,13 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import cast
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
 from homeassistant.components import alexa, google_assistant
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_MODE,
@@ -24,6 +26,7 @@ from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
+    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -51,6 +54,7 @@ from .const import (
     CONF_SERVICEHANDLERS_SERVER,
     CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
+    DATA_PLATFORMS_SETUP,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
@@ -61,10 +65,14 @@ from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT]
+
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
-SIGNAL_CLOUD_CONNECTION_STATE = "CLOUD_CONNECTION_STATE"
+SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
+    "CLOUD_CONNECTION_STATE"
+)
 
 STARTUP_REPAIR_DELAY = 1  # 1 hour
 
@@ -172,6 +180,22 @@ def async_active_subscription(hass: HomeAssistant) -> bool:
     return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
 
 
+async def async_get_or_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
+    """Get or create a cloudhook."""
+    if not async_is_connected(hass):
+        raise CloudNotConnected
+
+    if not async_is_logged_in(hass):
+        raise CloudNotAvailable
+
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloudhooks = cloud.client.cloudhooks
+    if hook := cloudhooks.get(webhook_id):
+        return cast(str, hook["cloudhook_url"])
+
+    return await async_create_cloudhook(hass, webhook_id)
+
+
 @bind_hass
 async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     """Create a cloudhook."""
@@ -262,9 +286,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_manage_legacy_subscription_issue(hass, subscription_info)
 
     loaded = False
+    stt_platform_loaded = asyncio.Event()
+    tts_platform_loaded = asyncio.Event()
+    hass.data[DATA_PLATFORMS_SETUP] = {
+        Platform.STT: stt_platform_loaded,
+        Platform.TTS: tts_platform_loaded,
+    }
 
     async def _on_start() -> None:
-        """Discover platforms."""
+        """Handle cloud started after login."""
         nonlocal loaded
 
         # Prevent multiple discovery
@@ -272,15 +302,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         loaded = True
 
-        stt_platform_loaded = asyncio.Event()
-        tts_platform_loaded = asyncio.Event()
-        stt_info = {"platform_loaded": stt_platform_loaded}
-        tts_info = {"platform_loaded": tts_platform_loaded}
-
-        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
-        await async_load_platform(hass, Platform.STT, DOMAIN, stt_info, config)
-        await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
-        await asyncio.gather(stt_platform_loaded.wait(), tts_platform_loaded.wait())
+        await hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
 
     async def _on_connect() -> None:
         """Handle cloud connect."""
@@ -304,9 +326,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     cloud.register_on_initialized(_on_initialized)
 
     await cloud.initialize()
-    await http_api.async_setup(hass)
+    http_api.async_setup(hass)
 
     account_link.async_setup(hass)
+
+    hass.async_create_task(
+        async_load_platform(
+            hass,
+            Platform.TTS,
+            DOMAIN,
+            {"platform_loaded": tts_platform_loaded},
+            config,
+        )
+    )
 
     async_call_later(
         hass=hass,
@@ -340,3 +372,19 @@ def _remote_handle_prefs_updated(cloud: Cloud[CloudClient]) -> None:
                 await cloud.remote.disconnect()
 
     cloud.client.prefs.async_listen_updates(remote_prefs_updated)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    stt_platform_loaded: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][Platform.STT]
+    stt_platform_loaded.set()
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    return unload_ok

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from pyatmo import DeviceType
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -17,7 +19,7 @@ from .const import (
     NETATMO_CREATE_SELECT,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoHome
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
+class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     """Representation a Netatmo thermostat schedule selector."""
 
     def __init__(
@@ -65,7 +67,7 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
         self._device_name = self._home.name
         self._attr_name = f"{self._device_name}"
 
-        self._model: str = "NATherm1"
+        self._model = DeviceType.NATherm1
         self._config_url = CONF_URL_ENERGY
 
         self._attr_unique_id = f"{self._home_id}-schedule-select"

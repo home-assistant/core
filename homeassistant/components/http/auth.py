@@ -21,6 +21,7 @@ from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.helpers.storage import Store
 from homeassistant.util.network import is_local
 
@@ -98,12 +99,8 @@ def async_user_not_allowed_do_auth(
     if not request:
         return "No request available to validate local access"
 
-    if "cloud" in hass.config.components:
-        # pylint: disable-next=import-outside-toplevel
-        from hass_nabucasa import remote
-
-        if remote.is_cloud_request.get():
-            return "User is local only"
+    if is_cloud_connection(hass):
+        return "User is local only"
 
     try:
         remote_address = ip_address(request.remote)  # type: ignore[arg-type]

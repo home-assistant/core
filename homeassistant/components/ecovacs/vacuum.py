@@ -15,12 +15,12 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ECOVACS_DEVICES
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,15 +28,14 @@ ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Ecovacs vacuums."""
     vacuums = []
-    devices: list[sucks.VacBot] = hass.data[ECOVACS_DEVICES]
+    devices: list[sucks.VacBot] = hass.data[DOMAIN][config_entry.entry_id]
     for device in devices:
         await hass.async_add_executor_job(device.connect_and_wait_until_ready)
         vacuums.append(EcovacsVacuum(device))

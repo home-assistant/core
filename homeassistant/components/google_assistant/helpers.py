@@ -15,7 +15,7 @@ from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
 from yarl import URL
 
-from homeassistant.components import webhook
+from homeassistant.components import matter, webhook
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
@@ -59,7 +59,11 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry | None,]:
+) -> tuple[
+    er.RegistryEntry | None,
+    dr.DeviceEntry | None,
+    ar.AreaEntry | None,
+]:
     """Get registry entries."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -678,10 +682,22 @@ class GoogleEntity:
         elif area_entry and area_entry.name:
             device["roomHint"] = area_entry.name
 
-        # Add deviceInfo
         if not device_entry:
             return device
 
+        # Add Matter info
+        if (
+            "matter" in self.hass.config.components
+            and any(x for x in device_entry.identifiers if x[0] == "matter")
+            and (
+                matter_info := matter.get_matter_device_info(self.hass, device_entry.id)
+            )
+        ):
+            device["matterUniqueId"] = matter_info["unique_id"]
+            device["matterOriginalVendorId"] = matter_info["vendor_id"]
+            device["matterOriginalProductId"] = matter_info["product_id"]
+
+        # Add deviceInfo
         device_info = {}
 
         if device_entry.manufacturer:

@@ -42,7 +42,7 @@ ATTR_USED: Final = "used"
 PIXELS: Final = "px"
 
 
-@dataclass
+@dataclass(frozen=True)
 class SystemBridgeSensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
@@ -218,6 +218,13 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         translation_key="os",
         icon="mdi:devices",
         value=lambda data: f"{data.system.platform} {data.system.platform_version}",
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="processes_count",
+        translation_key="processes",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:counter",
+        value=lambda data: int(data.processes.count),
     ),
     SystemBridgeSensorEntityDescription(
         key="processes_load",

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import mimetypes
 from pathlib import Path
 from typing import Final
 
@@ -9,17 +10,16 @@ from aiohttp import hdrs
 from aiohttp.web import FileResponse, Request, StreamResponse
 from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 
 from homeassistant.core import HomeAssistant
 
 from .const import KEY_HASS
 
 CACHE_TIME: Final = 31 * 86400  # = 1 month
-CACHE_HEADERS: Final[Mapping[str, str]] = {
-    hdrs.CACHE_CONTROL: f"public, max-age={CACHE_TIME}"
-}
-PATH_CACHE = LRU(512)
+CACHE_HEADER = f"public, max-age={CACHE_TIME}"
+CACHE_HEADERS: Mapping[str, str] = {hdrs.CACHE_CONTROL: CACHE_HEADER}
+PATH_CACHE: LRU[tuple[str, Path, bool], tuple[Path | None, str | None]] = LRU(512)
 
 
 def _get_file_path(rel_url: str, directory: Path, follow_symlinks: bool) -> Path | None:
@@ -48,7 +48,7 @@ class CachingStaticResource(StaticResource):
         """Return requested file from disk as a FileResponse."""
         rel_url = request.match_info["filename"]
         key = (rel_url, self._directory, self._follow_symlinks)
-        if (filepath := PATH_CACHE.get(key)) is None:
+        if (filepath_content_type := PATH_CACHE.get(key)) is None:
             hass: HomeAssistant = request.app[KEY_HASS]
             try:
                 filepath = await hass.async_add_executor_job(_get_file_path, *key)
@@ -62,13 +62,24 @@ class CachingStaticResource(StaticResource):
                 # perm error or other kind!
                 request.app.logger.exception(error)
                 raise HTTPNotFound() from error
-            PATH_CACHE[key] = filepath
 
-        if filepath:
+            content_type: str | None = None
+            if filepath is not None:
+                content_type = (mimetypes.guess_type(rel_url))[
+                    0
+                ] or "application/octet-stream"
+            PATH_CACHE[key] = (filepath, content_type)
+        else:
+            filepath, content_type = filepath_content_type
+
+        if filepath and content_type:
             return FileResponse(
                 filepath,
                 chunk_size=self._chunk_size,
-                headers=CACHE_HEADERS,
+                headers={
+                    hdrs.CACHE_CONTROL: CACHE_HEADER,
+                    hdrs.CONTENT_TYPE: content_type,
+                },
             )
 
         return await super()._handle(request)

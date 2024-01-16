@@ -49,7 +49,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import async_capture_events, get_fixture_path
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test light group default state."""
     hass.states.async_set("light.kitchen", "on")
     await async_setup_component(
@@ -80,7 +82,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_EFFECT_LIST) is None
     assert state.attributes.get(ATTR_EFFECT) is None
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("light.bedroom_group")
     assert entry
     assert entry.unique_id == "unique_identifier"
