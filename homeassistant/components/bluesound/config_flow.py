@@ -13,12 +13,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_UUID,
-    DEFAULT_PORT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import DOMAIN, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +63,8 @@ class BlueSoundFlowHandler(ConfigFlow, domain=DOMAIN):
         port = discovery_info.port
         zctype = discovery_info.type
         name = discovery_info.name.replace(f".{zctype}", "")
+
+        _LOGGER.debug("Bluesound starting zerconf setup for %s at %s:%d", name, host, port)
 
         self.discovery_info.update(
             {
