@@ -625,6 +625,14 @@ def test_event_eq() -> None:
     assert event1.as_dict() == event2.as_dict()
 
 
+def test_event_time_fired_timestamp() -> None:
+    """Test time_fired_timestamp."""
+    now = dt_util.utcnow()
+    event = ha.Event("some_type", {"some": "attr"}, time_fired=now)
+    assert event.time_fired_timestamp == now.timestamp()
+    assert event.time_fired_timestamp == now.timestamp()
+
+
 def test_event_json_fragment() -> None:
     """Test event JSON fragments."""
     now = dt_util.utcnow()
@@ -2451,6 +2459,23 @@ async def test_state_change_events_context_id_match_state_time(
     assert _ulid_timestamp(state.context.id) == int(
         state.last_updated.timestamp() * 1000
     )
+
+
+def test_state_timestamps() -> None:
+    """Test timestamp functions for State."""
+    now = dt_util.utcnow()
+    state = ha.State(
+        "light.bedroom",
+        "on",
+        {"brightness": 100},
+        last_changed=now,
+        last_updated=now,
+        context=ha.Context(id="1234"),
+    )
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
 
 
 async def test_state_firing_event_matches_context_id_ulid_time(

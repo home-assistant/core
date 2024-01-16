@@ -1381,7 +1381,7 @@
     "ecovacs": {
       "name": "Ecovacs",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "ecowitt": {
@@ -2996,6 +2996,12 @@
     "lacrosse_view": {
       "name": "LaCrosse View",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "lamarzocco": {
+      "name": "La Marzocco",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
