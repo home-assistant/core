@@ -149,9 +149,6 @@ async def async_setup_entry(
     """Set up Bluesound from a config entry."""
     #platform = entity_platform.async_get_current_platform()
 
-    if DATA_BLUESOUND not in hass.data:
-        hass.data[DATA_BLUESOUND] = []
-
     # @callback
     # def async_create_entities(speaker: SonosSpeaker) -> None:
     #     """Handle device discovery and create entities."""
