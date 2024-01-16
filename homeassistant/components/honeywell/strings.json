@@ -41,5 +41,19 @@
         "name": "Outdoor humidity"
       }
     }
+  },
+  "exceptions": {
+    "temp_failed": {
+      "message": "Honeywell set temperature failed"
+    },
+    "sys_mode_failed": {
+      "message": "Honeywell set system mode failed"
+    },
+    "fan_mode_failed": {
+      "message": "Honeywell set fan mode failed"
+    },
+    "away_mode_failed": {
+      "message": "Honeywell set away mode failed"
+    }
   }
 }

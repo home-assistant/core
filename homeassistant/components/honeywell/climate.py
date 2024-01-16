@@ -354,7 +354,10 @@ class HoneywellUSThermostat(ClimateEntity):
                     await self._device.set_setpoint_heat(temperature)
 
         except (AscConnectionError, UnexpectedResponse) as err:
-            raise HomeAssistantError("Honeywell set temperature failed") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="temp_failed",
+            ) from err
 
         except SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
@@ -373,7 +376,10 @@ class HoneywellUSThermostat(ClimateEntity):
                     await self._device.set_setpoint_heat(temperature)
 
             except (AscConnectionError, UnexpectedResponse) as err:
-                raise HomeAssistantError("Honeywell set temperature failed") from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="temp_failed",
+                ) from err
 
             except SomeComfortError as err:
                 _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
@@ -387,7 +393,10 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._device.set_fan_mode(self._fan_mode_map[fan_mode])
 
         except (AscConnectionError, UnexpectedResponse) as err:
-            raise HomeAssistantError("Honeywell set fan mode failed") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="fan_mode_failed",
+            ) from err
 
         except SomeComfortError as err:
             raise HomeAssistantError("Honeywell could not set fan mode.") from err
@@ -398,7 +407,10 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._device.set_system_mode(self._hvac_mode_map[hvac_mode])
 
         except (AscConnectionError, UnexpectedResponse) as err:
-            raise HomeAssistantError("Honeywell set system mode failed") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sys_mode_failed",
+            ) from err
 
         except SomeComfortError as err:
             raise HomeAssistantError("Honeywell could not set system mode.") from err
@@ -422,7 +434,10 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self._device.set_hold_heat(True, self._heat_away_temp)
 
         except (AscConnectionError, UnexpectedResponse) as err:
-            raise HomeAssistantError("Honeywell set away mode failed") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="away_mode_failed",
+            ) from err
 
         except SomeComfortError as err:
             _LOGGER.error(
