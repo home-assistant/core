@@ -356,7 +356,7 @@ async def test_satellite_restart(hass: HomeAssistant) -> None:
         "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=SATELLITE_INFO,
     ), patch(
-        "homeassistant.components.wyoming.satellite.WyomingSatellite._run_once",
+        "homeassistant.components.wyoming.satellite.WyomingSatellite._connect_and_loop",
         side_effect=RuntimeError(),
     ), patch(
         "homeassistant.components.wyoming.satellite.WyomingSatellite.on_restart",

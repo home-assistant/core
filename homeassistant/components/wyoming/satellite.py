@@ -179,8 +179,12 @@ class WyomingSatellite:
         send_ping = True
 
         # Read events and check for pipeline end in parallel
-        pipeline_ended_task = asyncio.create_task(self._pipeline_ended_event.wait())
-        client_event_task = asyncio.create_task(self._client.read_event())
+        pipeline_ended_task = self.hass.async_create_background_task(
+            self._pipeline_ended_event.wait(), "satellite pipeline ended"
+        )
+        client_event_task = self.hass.async_create_background_task(
+            self._client.read_event(), "satellite event read"
+        )
         pending = {pipeline_ended_task, client_event_task}
 
         while self.is_running and (not self.device.is_muted):
@@ -199,8 +203,8 @@ class WyomingSatellite:
                     # Pipeline run end event was received
                     _LOGGER.debug("Pipeline finished")
                     self._pipeline_ended_event.clear()
-                    pipeline_ended_task = asyncio.create_task(
-                        self._pipeline_ended_event.wait()
+                    pipeline_ended_task = self.hass.async_create_background_task(
+                        self._pipeline_ended_event.wait(), "satellite pipeline ended"
                     )
                     pending.add(pipeline_ended_task)
 
@@ -243,7 +247,9 @@ class WyomingSatellite:
                     _LOGGER.debug("Unexpected event from satellite: %s", client_event)
 
                 # Next event
-                client_event_task = asyncio.create_task(self._client.read_event())
+                client_event_task = self.hass.async_create_background_task(
+                    self._client.read_event(), "satellite event read"
+                )
                 pending.add(client_event_task)
 
     def _run_pipeline_once(self, run_pipeline: RunPipeline) -> None:
