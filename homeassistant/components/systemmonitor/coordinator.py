@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-# psutil constructs svmem by platform. Create our own to overcome the platform dependency.
+# psutil define svmem by platform. Create our own definition here to be platform independent.
 svmem = namedtuple(
     "svmem",
     ["total", "available", "percent", "used", "free"],
