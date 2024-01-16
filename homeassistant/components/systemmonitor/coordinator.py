@@ -17,9 +17,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-# psutil define svmem by platform. Create our own definition here to be platform independent.
-svmem = namedtuple(
-    "svmem",
+# psutil define virtual_memory by platform. Create our own definition here to be platform independent.
+virtual_memory = namedtuple(
+    "virtual_memory",
     ["total", "available", "percent", "used", "free"],
 )
 
@@ -33,7 +33,7 @@ dataT = TypeVar(
     | float
     | list[psutil.Process]
     | sswap
-    | svmem
+    | virtual_memory
     | tuple[float, float, float]
     | sdiskusage,
 )
@@ -82,13 +82,13 @@ class SystemMonitorSwapCoordinator(MonitorCoordinator[sswap]):
         return psutil.swap_memory()
 
 
-class SystemMonitorMemoryCoordinator(MonitorCoordinator[svmem]):
+class SystemMonitorMemoryCoordinator(MonitorCoordinator[virtual_memory]):
     """A System monitor Memory Data Update Coordinator."""
 
-    def update_data(self) -> svmem:
+    def update_data(self) -> virtual_memory:
         """Fetch data."""
         memory = psutil.virtual_memory()
-        return svmem(
+        return virtual_memory(
             memory.total, memory.available, memory.percent, memory.used, memory.free
         )
 

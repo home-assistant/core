@@ -56,7 +56,7 @@ from .coordinator import (
     SystemMonitorProcessorCoordinator,
     SystemMonitorSwapCoordinator,
     dataT,
-    svmem,
+    virtual_memory,
 )
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
 
@@ -237,7 +237,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: round(entity.coordinator.data[1], 2),
     ),
-    "memory_free": SysMonitorSensorEntityDescription[svmem](
+    "memory_free": SysMonitorSensorEntityDescription[virtual_memory](
         key="memory_free",
         translation_key="memory_free",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
@@ -246,7 +246,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: round(entity.coordinator.data.available / 1024**2, 1),
     ),
-    "memory_use": SysMonitorSensorEntityDescription[svmem](
+    "memory_use": SysMonitorSensorEntityDescription[virtual_memory](
         key="memory_use",
         translation_key="memory_use",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
@@ -259,7 +259,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
             1,
         ),
     ),
-    "memory_use_percent": SysMonitorSensorEntityDescription[svmem](
+    "memory_use_percent": SysMonitorSensorEntityDescription[virtual_memory](
         key="memory_use_percent",
         translation_key="memory_use_percent",
         native_unit_of_measurement=PERCENTAGE,
