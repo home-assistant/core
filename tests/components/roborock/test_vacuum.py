@@ -89,6 +89,7 @@ async def test_commands(
         assert mock_send_command.call_args[0][0] == command
         assert mock_send_command.call_args[0][1] == called_params
 
+
 async def test_failed_user_command(
     hass: HomeAssistant,
     bypass_api_fixture,
