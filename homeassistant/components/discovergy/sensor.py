@@ -193,6 +193,7 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
 
     entity_description: DiscovergySensorEntityDescription
     data_key: str
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -205,9 +206,6 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
 
         self.data_key = data_key
         self.entity_description = description
-
-        self._attr_has_entity_name = True
-        self._attr_device_class = SensorDeviceClass.POWER
 
         meter = coordinator.meter
         self._attr_unique_id = f"{meter.full_serial_number}-{data_key}"
