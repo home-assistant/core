@@ -291,3 +291,33 @@ async def test_gateway_force_multi_pan_channel(
 
     _, config = zha_gateway.get_application_controller_data()
     assert config["network"]["channel"] == expected_channel
+
+
+async def test_single_reload_on_multiple_connection_loss(
+    hass: HomeAssistant,
+    zigpy_app_controller: ControllerApplication,
+    config_entry: MockConfigEntry,
+):
+    """Test that we only reload once when we lose the connection multiple times."""
+    config_entry.add_to_hass(hass)
+
+    zha_gateway = ZHAGateway(hass, {}, config_entry)
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    ):
+        await zha_gateway.async_initialize()
+
+        with patch.object(
+            hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+        ) as mock_reload:
+            zha_gateway.connection_lost(RuntimeError())
+            zha_gateway.connection_lost(RuntimeError())
+            zha_gateway.connection_lost(RuntimeError())
+            zha_gateway.connection_lost(RuntimeError())
+            zha_gateway.connection_lost(RuntimeError())
+
+        assert len(mock_reload.mock_calls) == 1
+
+        await hass.async_block_till_done()

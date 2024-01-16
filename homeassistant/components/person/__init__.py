@@ -92,7 +92,13 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @bind_hass
-async def async_create_person(hass, name, *, user_id=None, device_trackers=None):
+async def async_create_person(
+    hass: HomeAssistant,
+    name: str,
+    *,
+    user_id: str | None = None,
+    device_trackers: list[str] | None = None,
+) -> None:
     """Create a new person."""
     await hass.data[DOMAIN][1].async_create_item(
         {

@@ -6,7 +6,6 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping, MutableMapping
 import dataclasses
-from datetime import timedelta
 from enum import Enum, IntFlag, auto
 import functools as ft
 import logging
@@ -88,7 +87,7 @@ FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) 
 # How many times per hour we allow capabilities to be updated before logging a warning
 CAPABILITIES_UPDATE_LIMIT = 100
 
-CONTEXT_RECENT_TIME = timedelta(seconds=5)  # Time that a context is considered recent
+CONTEXT_RECENT_TIME_SECONDS = 5  # Time that a context is considered recent
 
 
 @callback
@@ -1164,8 +1163,7 @@ class Entity(
 
         if (
             self._context_set is not None
-            and hass.loop.time() - self._context_set
-            > CONTEXT_RECENT_TIME.total_seconds()
+            and hass.loop.time() - self._context_set > CONTEXT_RECENT_TIME_SECONDS
         ):
             self._context = None
             self._context_set = None
