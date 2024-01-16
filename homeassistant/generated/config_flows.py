@@ -126,6 +126,7 @@ FLOWS = {
         "ecobee",
         "ecoforest",
         "econet",
+        "ecovacs",
         "ecowitt",
         "edl21",
         "efergy",
