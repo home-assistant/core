@@ -99,7 +99,7 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
 def get_serial(device_config: PyViCareDeviceConfig) -> str:
     """Return the serial number for a device config."""
     # we cannot always use device_config.getConfig().serial as it returns the gateway serial for all connected devices
-    if device_config.getModel() == "Heatbox1":
+    if device_config.getModel() in ["Heatbox1", "Heatbox2_SRC"]:
         return device_config.getConfig().serial
     # we cannot always use device.getSerial() either as there is a different API endpoint used for gateways that does not provide the serial (yet)
     return device_config.asAutoDetectDevice().getSerial()
