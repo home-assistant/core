@@ -2225,7 +2225,7 @@ python-matter-server==5.1.1
 python-miio==0.5.12
 
 # homeassistant.components.mpd
-python-mpd2==3.0.5
+python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
