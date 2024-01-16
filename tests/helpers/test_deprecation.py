@@ -429,7 +429,7 @@ def test_test_check_if_deprecated_constant_invalid(
 
 
 @pytest.mark.parametrize(
-    ("module_global", "expected"),
+    ("module_globals", "expected"),
     [
         ({"CONSTANT": 1}, ["CONSTANT"]),
         ({"_DEPRECATED_CONSTANT": 1}, ["_DEPRECATED_CONSTANT", "CONSTANT"]),
@@ -440,7 +440,7 @@ def test_test_check_if_deprecated_constant_invalid(
     ],
 )
 def test_dir_with_deprecated_constants(
-    module_global: dict[str, Any], expected: list[str]
+    module_globals: dict[str, Any], expected: list[str]
 ) -> None:
     """Test dir() with deprecated constants."""
-    assert dir_with_deprecated_constants(module_global) == expected
+    assert dir_with_deprecated_constants([*module_globals.keys()]) == expected

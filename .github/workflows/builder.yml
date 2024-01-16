@@ -10,7 +10,8 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: "3.11"
+  DEFAULT_PYTHON: "3.12"
+  PIP_TIMEOUT: 60
 
 jobs:
   init:
@@ -178,6 +179,15 @@ jobs:
           sed -i "s|noaa-coops|# noaa-coops|g" requirements_all.txt
           sed -i "s|pyezviz|# pyezviz|g" requirements_all.txt
           sed -i "s|pykrakenapi|# pykrakenapi|g" requirements_all.txt
+
+      - name: Adjustments for 64-bit
+        if: matrix.arch == 'amd64' || matrix.arch == 'aarch64'
+        run: |
+          # Some speedups are only available on 64-bit, and since
+          # we build 32bit images on 64bit hosts, we only enable
+          # the speed ups on 64bit since the wheels for 32bit
+          # are not available.
+          sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" requirements_all.txt
 
       - name: Download Translations
         run: python3 -m script.translations download

@@ -216,9 +216,9 @@ class PollableSensor(Sensor):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
-        assert self._cancel_refresh_handle
-        self._cancel_refresh_handle()
-        self._cancel_refresh_handle = None
+        if self._cancel_refresh_handle is not None:
+            self._cancel_refresh_handle()
+            self._cancel_refresh_handle = None
         self.debug("stopped polling during device removal")
         await super().async_will_remove_from_hass()
 
@@ -585,7 +585,7 @@ class SmartEnergySummation(SmartEnergyMetering):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"TS011F", "ZLinky_TIC"},
+    models={"TS011F", "ZLinky_TIC", "TICMeter"},
     stop_on_match_group=CLUSTER_HANDLER_SMARTENERGY_METERING,
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -597,7 +597,7 @@ class PolledSmartEnergySummation(SmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier1SmartEnergySummation(PolledSmartEnergySummation):
@@ -611,7 +611,7 @@ class Tier1SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier2SmartEnergySummation(PolledSmartEnergySummation):
@@ -625,7 +625,7 @@ class Tier2SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier3SmartEnergySummation(PolledSmartEnergySummation):
@@ -639,7 +639,7 @@ class Tier3SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier4SmartEnergySummation(PolledSmartEnergySummation):
@@ -653,7 +653,7 @@ class Tier4SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier5SmartEnergySummation(PolledSmartEnergySummation):
@@ -667,7 +667,7 @@ class Tier5SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier6SmartEnergySummation(PolledSmartEnergySummation):

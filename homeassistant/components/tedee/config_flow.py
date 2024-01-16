@@ -6,6 +6,7 @@ from pytedee_async import (
     TedeeAuthException,
     TedeeClient,
     TedeeClientException,
+    TedeeDataUpdateException,
     TedeeLocalAuthException,
 )
 import voluptuous as vol
@@ -13,6 +14,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN, NAME
 
@@ -34,13 +36,19 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 host = user_input[CONF_HOST]
             local_access_token = user_input[CONF_LOCAL_ACCESS_TOKEN]
-            tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
+            tedee_client = TedeeClient(
+                local_token=local_access_token,
+                local_ip=host,
+                session=async_get_clientsession(self.hass),
+            )
             try:
                 local_bridge = await tedee_client.get_local_bridge()
             except (TedeeAuthException, TedeeLocalAuthException):
                 errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
             except TedeeClientException:
                 errors[CONF_HOST] = "invalid_host"
+            except TedeeDataUpdateException:
+                errors["base"] = "cannot_connect"
             else:
                 if self.reauth_entry:
                     self.hass.config_entries.async_update_entry(

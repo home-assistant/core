@@ -8,9 +8,9 @@ import logging
 from typing import Any
 
 from roborock import RoborockException, RoborockInvalidCredentials
-from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
+from roborock.web_api import RoborockApiClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -35,9 +35,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         home_data = await api_client.get_home_data(user_data)
     except RoborockInvalidCredentials as err:
-        raise ConfigEntryAuthFailed("Invalid credentials.") from err
+        raise ConfigEntryAuthFailed(
+            "Invalid credentials",
+            translation_domain=DOMAIN,
+            translation_key="invalid_credentials",
+        ) from err
     except RoborockException as err:
-        raise ConfigEntryNotReady("Failed getting Roborock home_data.") from err
+        raise ConfigEntryNotReady(
+            "Failed to get Roborock home data",
+            translation_domain=DOMAIN,
+            translation_key="home_data_fail",
+        ) from err
     _LOGGER.debug("Got home data %s", home_data)
     device_map: dict[str, HomeDataDevice] = {
         device.duid: device for device in home_data.devices + home_data.received_devices
@@ -57,7 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if isinstance(coord, RoborockDataUpdateCoordinator)
     ]
     if len(valid_coordinators) == 0:
-        raise ConfigEntryNotReady("No coordinators were able to successfully setup.")
+        raise ConfigEntryNotReady(
+            "No devices were able to successfully setup",
+            translation_domain=DOMAIN,
+            translation_key="no_coordinators",
+        )
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         coordinator.roborock_device_info.device.duid: coordinator
         for coordinator in valid_coordinators

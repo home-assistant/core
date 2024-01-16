@@ -50,8 +50,8 @@ class StreamlabsCoordinator(DataUpdateCoordinator[dict[str, StreamlabsData]]):
             res[location_id] = StreamlabsData(
                 is_away=location["homeAway"] == "away",
                 name=location["name"],
-                daily_usage=round(water_usage["today"], 1),
-                monthly_usage=round(water_usage["thisMonth"], 1),
-                yearly_usage=round(water_usage["thisYear"], 1),
+                daily_usage=water_usage["today"],
+                monthly_usage=water_usage["thisMonth"],
+                yearly_usage=water_usage["thisYear"],
             )
         return res
