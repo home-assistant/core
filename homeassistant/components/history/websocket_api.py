@@ -302,13 +302,9 @@ def _history_compressed_state(state: State, no_attributes: bool) -> dict[str, An
     comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state.state}
     if not no_attributes or state.domain in history.NEED_ATTRIBUTE_DOMAINS:
         comp_state[COMPRESSED_STATE_ATTRIBUTES] = state.attributes
-    comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
-        state.last_updated
-    )
+    comp_state[COMPRESSED_STATE_LAST_UPDATED] = state.last_updated_timestamp
     if state.last_changed != state.last_updated:
-        comp_state[COMPRESSED_STATE_LAST_CHANGED] = dt_util.utc_to_timestamp(
-            state.last_changed
-        )
+        comp_state[COMPRESSED_STATE_LAST_CHANGED] = state.last_changed_timestamp
     return comp_state
 
 
