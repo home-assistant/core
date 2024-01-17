@@ -1,4 +1,4 @@
-"""Support for La Marzocco updates entity."""
+"""Support for La Marzocco update entities."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -28,7 +28,7 @@ class LaMarzoccoUpdateEntityDescription(
     LaMarzoccoEntityDescription,
     UpdateEntityDescription,
 ):
-    """Description of an La Marzocco updates."""
+    """Description of a La Marzocco update entities."""
 
     current_fw_fn: Callable[[LaMarzoccoClient], str]
     latest_fw_fn: Callable[[LaMarzoccoClient], str]
