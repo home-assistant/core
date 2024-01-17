@@ -1,6 +1,5 @@
 """Test the Tessie binary sensor platform."""
 
-from homeassistant.components.tessie.binary_sensor import DESCRIPTIONS
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -16,7 +15,7 @@ async def test_binary_sensors(hass: HomeAssistant) -> None:
 
     await setup_platform(hass)
 
-    assert len(hass.states.async_all("binary_sensor")) == len(DESCRIPTIONS)
+    assert len(hass.states.async_all("binary_sensor")) == 20
 
     state = hass.states.get("binary_sensor.test_battery_heater").state
     is_on = state == STATE_ON
