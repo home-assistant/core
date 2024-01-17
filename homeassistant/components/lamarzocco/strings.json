@@ -43,6 +43,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "brew_active": {
+        "name": "Brewing active"
+      },
+      "water_tank": {
+        "name": "Water tank empty"
+      }
+    },
     "sensor": {
       "current_temp_coffee": {
         "name": "Current coffee temperature"
