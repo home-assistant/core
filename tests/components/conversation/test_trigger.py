@@ -44,14 +44,16 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
         },
     )
 
-    await hass.services.async_call(
+    service_response = await hass.services.async_call(
         "conversation",
         "process",
         {
             "text": "Ha ha ha",
         },
         blocking=True,
+        return_response=True,
     )
+    assert service_response["response"]["speech"]["plain"]["speech"] == "Done"
 
     await hass.async_block_till_done()
     assert len(calls) == 1
