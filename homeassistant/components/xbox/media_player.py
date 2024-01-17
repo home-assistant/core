@@ -22,6 +22,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -157,42 +158,71 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        await self.client.smartglass.wake_up(self._console.id)
+        try:
+            await self.client.smartglass.wake_up(self._console.id)
+        except Exception as e:
+            raise HomeAssistantError("Error turning Xbox on") from e
 
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
-        await self.client.smartglass.turn_off(self._console.id)
+        try:
+            await self.client.smartglass.turn_off(self._console.id)
+        except Exception as e:
+            raise HomeAssistantError("Error turning Xbox off") from e
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        if mute:
-            await self.client.smartglass.mute(self._console.id)
-        else:
-            await self.client.smartglass.unmute(self._console.id)
+        try:
+            if mute:
+                await self.client.smartglass.mute(self._console.id)
+            else:
+                await self.client.smartglass.unmute(self._console.id)
+        except Exception as e:
+            raise HomeAssistantError(f"Error setting Xbox mute to {mute}") from e
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
-        await self.client.smartglass.volume(self._console.id, VolumeDirection.Up)
+        try:
+            await self.client.smartglass.volume(self._console.id, VolumeDirection.Up)
+        except Exception as e:
+            raise HomeAssistantError("Error turning Xbox volume up") from e
 
     async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
-        await self.client.smartglass.volume(self._console.id, VolumeDirection.Down)
+        try:
+            await self.client.smartglass.volume(self._console.id, VolumeDirection.Down)
+        except Exception as e:
+            raise HomeAssistantError("Error turning Xbox volume down") from e
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self.client.smartglass.play(self._console.id)
+        try:
+            await self.client.smartglass.play(self._console.id)
+        except Exception as e:
+            raise HomeAssistantError("Error sending play command to Xbox") from e
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self.client.smartglass.pause(self._console.id)
+        try:
+            await self.client.smartglass.pause(self._console.id)
+        except Exception as e:
+            raise HomeAssistantError("Error sending pause command to Xbox") from e
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        await self.client.smartglass.previous(self._console.id)
+        try:
+            await self.client.smartglass.previous(self._console.id)
+        except Exception as e:
+            raise HomeAssistantError(
+                "Error sending previous track command to Xbox"
+            ) from e
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        await self.client.smartglass.next(self._console.id)
+        try:
+            await self.client.smartglass.next(self._console.id)
+        except Exception as e:
+            raise HomeAssistantError("Error sending next track command to Xbox") from e
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
@@ -208,12 +238,15 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Launch an app on the Xbox."""
-        if media_id == "Home":
-            await self.client.smartglass.go_home(self._console.id)
-        elif media_id == "TV":
-            await self.client.smartglass.show_tv_guide(self._console.id)
-        else:
-            await self.client.smartglass.launch_app(self._console.id, media_id)
+        try:
+            if media_id == "Home":
+                await self.client.smartglass.go_home(self._console.id)
+            elif media_id == "TV":
+                await self.client.smartglass.show_tv_guide(self._console.id)
+            else:
+                await self.client.smartglass.launch_app(self._console.id, media_id)
+        except Exception as e:
+            raise HomeAssistantError("Error launching app on Xbox") from e
 
     @property
     def device_info(self) -> DeviceInfo:

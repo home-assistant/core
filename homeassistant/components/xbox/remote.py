@@ -22,6 +22,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -81,27 +82,38 @@ class XboxRemote(CoordinatorEntity[XboxUpdateCoordinator], RemoteEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Xbox on."""
-        await self.client.smartglass.wake_up(self._console.id)
+        try:
+            await self.client.smartglass.wake_up(self._console.id)
+        except Exception as e:
+            raise HomeAssistantError("Error turning Xbox on") from e
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the Xbox off."""
-        await self.client.smartglass.turn_off(self._console.id)
+        try:
+            await self.client.smartglass.turn_off(self._console.id)
+        except Exception as e:
+            raise HomeAssistantError("Error turning Xbox off") from e
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send controller or text input to the Xbox."""
-        num_repeats = kwargs[ATTR_NUM_REPEATS]
-        delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+        try:
+            num_repeats = kwargs[ATTR_NUM_REPEATS]
+            delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
-        for _ in range(num_repeats):
-            for single_command in command:
-                try:
-                    button = InputKeyType(single_command)
-                    await self.client.smartglass.press_button(self._console.id, button)
-                except ValueError:
-                    await self.client.smartglass.insert_text(
-                        self._console.id, single_command
-                    )
-                await asyncio.sleep(delay)
+            for _ in range(num_repeats):
+                for single_command in command:
+                    try:
+                        button = InputKeyType(single_command)
+                        await self.client.smartglass.press_button(
+                            self._console.id, button
+                        )
+                    except ValueError:
+                        await self.client.smartglass.insert_text(
+                            self._console.id, single_command
+                        )
+                    await asyncio.sleep(delay)
+        except Exception as e:
+            raise HomeAssistantError("Error sending command to Xbox") from e
 
     @property
     def device_info(self) -> DeviceInfo:
