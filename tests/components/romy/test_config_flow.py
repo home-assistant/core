@@ -281,7 +281,7 @@ async def test_zero_conf_unlocked_interface_robot(hass: HomeAssistant) -> None:
         )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
