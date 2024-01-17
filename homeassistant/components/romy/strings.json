@@ -32,7 +32,6 @@
   "entity": {
     "vacuum": {
       "romy": {
-        "name": "romy",
         "state_attributes": {
           "fan_speed": {
             "state": {
