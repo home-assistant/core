@@ -1,4 +1,4 @@
-"""Support for La Marzocco updates."""
+"""Support for La Marzocco updates entity."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
