@@ -89,7 +89,7 @@ async def test_show_user_form_with_wrong_host(
         )
 
     assert result["errors"].get("host") == "cannot_connect"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
 
 async def test_show_user_with_locked_interface_robot_with_wrong_password(
