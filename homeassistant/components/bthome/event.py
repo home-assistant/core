@@ -1,4 +1,4 @@
-"""Support for Homekit motion sensors."""
+"""Support for bthome event entities."""
 from __future__ import annotations
 
 from homeassistant.components.event import (
