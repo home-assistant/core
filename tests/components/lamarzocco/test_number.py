@@ -29,7 +29,7 @@ async def test_coffee_boiler(
     """Test the La Marzocco coffee temperature Number."""
     serial_number = mock_lamarzocco.serial_number
 
-    state = hass.states.get(f"number.{serial_number}_coffee_temperature_set")
+    state = hass.states.get(f"number.{serial_number}_coffee_target_temperature")
 
     assert state
     assert state == snapshot
@@ -47,7 +47,7 @@ async def test_coffee_boiler(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"number.{serial_number}_coffee_temperature_set",
+            ATTR_ENTITY_ID: f"number.{serial_number}_coffee_target_temperature",
             ATTR_VALUE: 95,
         },
         blocking=True,
@@ -63,7 +63,7 @@ async def test_coffee_boiler(
 @pytest.mark.parametrize(
     ("entity_name", "value", "func_name", "kwargs"),
     [
-        ("steam_temperature_set", 131, "set_steam_temp", {"temperature": 131}),
+        ("steam_target_temperature", 131, "set_steam_temp", {"temperature": 131}),
         ("tea_water_duration", 15, "set_dose_hot_water", {"value": 15}),
     ],
 )
@@ -120,7 +120,7 @@ async def test_gs3_exclusive_none(
 ) -> None:
     """Ensure GS3 exclusive is None for unsupported models."""
 
-    ENTITIES = ("steam_temperature_set", "tea_water_duration")
+    ENTITIES = ("steam_target_temperature", "tea_water_duration")
 
     serial_number = mock_lamarzocco.serial_number
     for entity in ENTITIES:

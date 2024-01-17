@@ -32,7 +32,7 @@ class LaMarzoccoNumberEntityDescription(
     LaMarzoccoEntityDescription,
     NumberEntityDescription,
 ):
-    """Description of an La Marzocco number entity."""
+    """Description of a La Marzocco number entity."""
 
     native_value_fn: Callable[[LaMarzoccoClient], float | int]
     set_value_fn: Callable[

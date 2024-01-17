@@ -53,10 +53,10 @@
     },
     "number": {
       "coffee_temp": {
-        "name": "Coffee temperature set"
+        "name": "Coffee target temperature"
       },
       "steam_temp": {
-        "name": "Steam temperature set"
+        "name": "Steam target temperature"
       },
       "tea_water_duration": {
         "name": "Tea water duration"
