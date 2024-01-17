@@ -8,6 +8,7 @@ from homeassistant.components.event import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -54,6 +55,10 @@ class BTHomeEventEntity(EventEntity):
         self.address = address
         self.event_class = event_class
         self.entity_description = DESCRIPTIONS_BY_EVENT_CLASS[event_class]
+        self._attr_unique_id = f"{address}-{event_class}"
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, address)}
+        )
 
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
