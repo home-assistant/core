@@ -1,4 +1,4 @@
-"""Test the Gaposa config flow."""
+"""HERE Test the Gaposa config flow."""
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -18,7 +18,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "pygaposa.Gaposa.login",

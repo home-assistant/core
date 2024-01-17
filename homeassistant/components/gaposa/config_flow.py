@@ -15,12 +15,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DEFAULT_GATEWAY_NAME,
-    DOMAIN,
-)
+from .const import CONF_PASSWORD, CONF_USERNAME, DEFAULT_GATEWAY_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
