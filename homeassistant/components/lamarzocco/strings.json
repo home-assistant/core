@@ -53,7 +53,7 @@
     },
     "button": {
       "start_backflush": {
-        "name": "Start Backflush"
+        "name": "Start backflush"
       }
     },
     "number": {
