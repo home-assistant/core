@@ -2,7 +2,7 @@
 # name: test_start_backflush
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Start Backflush',
+      'friendly_name': 'GS01234 Start backflush',
       'icon': 'mdi:water-sync',
     }),
     'context': <ANY>,
@@ -34,7 +34,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:water-sync',
-    'original_name': 'Start Backflush',
+    'original_name': 'Start backflush',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
     'supported_features': 0,
