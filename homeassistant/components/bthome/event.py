@@ -109,6 +109,7 @@ async def async_setup_entry(
             continue
         unique_id_split = ent_reg_entry.unique_id.split("-")
         device_id: str | None = None
+        # Matches logic in PassiveBluetoothProcessorEntity
         if len(unique_id_split) == 3:
             address, event_class, device_id = unique_id_split
         else:
