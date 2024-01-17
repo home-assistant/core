@@ -31,7 +31,7 @@ async def test_has_services(
 async def test_add_meter_readings(
     hass: HomeAssistant,
 ) -> None:
-    """Test the add meter reading service."""
+    """Test the add_meter_readings service."""
 
     await async_init_integration(hass)
 
@@ -55,7 +55,7 @@ async def test_add_meter_readings(
 async def test_add_meter_readings_exception(
     hass: HomeAssistant,
 ) -> None:
-    """Test the add meter reading service."""
+    """Test the add_meter_readings service with a None response (generic RequestExceptionwas raised)."""
 
     await async_init_integration(hass)
 
@@ -81,7 +81,7 @@ async def test_add_meter_readings_exception(
 async def test_add_meter_readings_invalid(
     hass: HomeAssistant,
 ) -> None:
-    """Test the add meter reading service."""
+    """Test the add_meter_readings service with an invalid_meter_reading response."""
 
     await async_init_integration(hass)
 
@@ -108,7 +108,7 @@ async def test_add_meter_readings_invalid(
 async def test_add_meter_readings_duplicate(
     hass: HomeAssistant,
 ) -> None:
-    """Test the add meter reading service."""
+    """Test the add_meter_readings service with a duplicated_meter_reading response."""
 
     await async_init_integration(hass)
 
