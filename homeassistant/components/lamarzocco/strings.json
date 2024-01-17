@@ -118,5 +118,55 @@
         "name": "Gateway firmware"
       }
     }
+  },
+  "services": {
+    "set_auto_on_off_enable": {
+      "name": "Enable/Disable auto on/off",
+      "description": "Enable or disable auto on/off for a specific day of the week",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service."
+        },
+        "day_of_week": {
+          "name": "Day of week",
+          "description": "Enable or disable auto on/off for a specific day of the week"
+        },
+        "enable": {
+          "name": "Enable",
+          "description": "Boolean value indicating whether to enable or disable auto on/off"
+        }
+      }
+    },
+    "set_auto_on_off_times": {
+      "name": "Set Auto on/off times",
+      "description": "Set the auto on and off times for each day of the week",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service."
+        },
+        "day_of_week": {
+          "name": "Day of week",
+          "description": "The day of the week to change (mon, tue, wed, thu, fri, sat, sun)"
+        },
+        "hour_on": {
+          "name": "Hour on",
+          "description": "The hour to turn the machine on (0-23)"
+        },
+        "minute_on": {
+          "name": "Minute on",
+          "description": "The minute to turn the machine on (0-59)"
+        },
+        "hour_off": {
+          "name": "Hour off",
+          "description": "The hour to turn the machine off (0-23)"
+        },
+        "minute_off": {
+          "name": "Minute off",
+          "description": "The minute to turn the machine off (0-59)"
+        }
+      }
+    }
   }
 }

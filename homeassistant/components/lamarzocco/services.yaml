@@ -1,0 +1,78 @@
+set_auto_on_off_enable:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: lamarzocco
+    day_of_week:
+      example: mon
+      selector:
+        select:
+          options:
+            - mon
+            - tue
+            - wed
+            - thu
+            - fri
+            - sat
+            - sun
+    enable:
+      example: "on"
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
+
+set_auto_on_off_times:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: lamarzocco
+    day_of_week:
+      example: mon
+      selector:
+        select:
+          options:
+            - mon
+            - tue
+            - wed
+            - thu
+            - fri
+            - sat
+            - sun
+    hour_on:
+      example: 6
+      selector:
+        number:
+          min: 0
+          max: 23
+          step: 1
+          mode: slider
+    minute_on:
+      example: 6
+      selector:
+        number:
+          min: 0
+          max: 59
+          step: 1
+          mode: slider
+    hour_off:
+      example: 5
+      selector:
+        number:
+          min: 0
+          max: 23
+          step: 1
+          mode: slider
+    minute_off:
+      example: 10
+      selector:
+        number:
+          min: 0
+          max: 59
+          step: 1
+          mode: slider
