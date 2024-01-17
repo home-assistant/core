@@ -47,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             info.get(CONF_TITLE),
             info.get(CONF_ICON),
             url_path,
-            {"url": info[CONF_URL], "allow": info[CONF_ALLOW]},
+            {CONF_URL: info[CONF_URL], CONF_ALLOW: info[CONF_ALLOW]},
             require_admin=info[CONF_REQUIRE_ADMIN],
         )
 
