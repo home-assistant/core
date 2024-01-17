@@ -6,6 +6,7 @@ set_auto_on_off_enable:
         config_entry:
           integration: lamarzocco
     day_of_week:
+      required: true
       example: mon
       selector:
         select:
@@ -17,7 +18,9 @@ set_auto_on_off_enable:
             - fri
             - sat
             - sun
+          translation_key: day_of_week
     enable:
+      required: true
       example: "on"
       selector:
         select:
@@ -33,6 +36,7 @@ set_auto_on_off_times:
         config_entry:
           integration: lamarzocco
     day_of_week:
+      required: true
       example: mon
       selector:
         select:
@@ -44,35 +48,36 @@ set_auto_on_off_times:
             - fri
             - sat
             - sun
+          translation_key: day_of_week
     hour_on:
+      required: true
       example: 6
       selector:
         number:
           min: 0
           max: 23
           step: 1
-          mode: slider
     minute_on:
+      required: true
       example: 6
       selector:
         number:
           min: 0
           max: 59
           step: 1
-          mode: slider
     hour_off:
+      required: true
       example: 5
       selector:
         number:
           min: 0
           max: 23
           step: 1
-          mode: slider
     minute_off:
+      required: true
       example: 10
       selector:
         number:
           min: 0
           max: 59
           step: 1
-          mode: slider

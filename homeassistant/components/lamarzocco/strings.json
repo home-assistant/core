@@ -168,5 +168,18 @@
         }
       }
     }
+  },
+  "selector": {
+    "day_of_week": {
+      "options": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
+      }
+    }
   }
 }
