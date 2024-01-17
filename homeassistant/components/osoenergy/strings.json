@@ -25,5 +25,56 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "power_load": {
+        "name": "Power load"
+      },
+      "tapping_capacity_kwh": {
+        "name": "Tapping capacity kWh"
+      },
+      "capacity_mixed_water_40": {
+        "name": "Capacity mixed water 40°C"
+      },
+      "v40_min": {
+        "name": "Mixed water at 40\u00b0C"
+      },
+      "v40_level_min": {
+        "name": "Minimum level of mixed water at 40\u00b0C"
+      },
+      "v40_level_max": {
+        "name": "Maximum level of mixed water at 40\u00b0C"
+      },
+      "volume": {
+        "name": "Volume"
+      },
+      "heater_mode": {
+        "name": "Heater mode",
+        "state": {
+          "auto": "Auto",
+          "extra_energy": "Extra Energy",
+          "ffr": "FFR",
+          "legionella": "Legionella",
+          "manual": "Manual",
+          "off": "Off",
+          "power_save": "Power Save",
+          "voltage": "Voltage"
+        }
+      },
+      "optimization_mode": {
+        "name": "Optimization mode",
+        "state": {
+          "advanced": "Advanced",
+          "grid_company": "Grid Company",
+          "off": "Off",
+          "oso": "OSO",
+          "smart_company": "Smart Company"
+        }
+      },
+      "profile": {
+        "name": "Profile local"
+      }
+    }
   }
 }

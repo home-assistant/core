@@ -15,6 +15,7 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -23,10 +24,13 @@ _T = TypeVar(
     "_T", OSOEnergyBinarySensorData, OSOEnergySensorData, OSOEnergyWaterHeaterData
 )
 
+MANUFACTURER = "OSO Energy"
 PLATFORMS = [
+    Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 PLATFORM_LOOKUP = {
+    Platform.SENSOR: "sensor",
     Platform.WATER_HEATER: "water_heater",
 }
 
@@ -78,4 +82,13 @@ class OSOEnergyEntity(Entity, Generic[_T]):
         """Initialize the instance."""
         self.osoenergy = osoenergy
         self.device = osoenergy_device
-        self._attr_unique_id = osoenergy_device.device_id
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.device_id)},
+            manufacturer=MANUFACTURER,
+            model=self.device.device_type,
+            name=self.device.device_name,
+        )

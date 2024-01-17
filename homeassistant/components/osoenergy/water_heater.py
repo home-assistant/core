@@ -1,6 +1,7 @@
 """Support for OSO Energy water heaters."""
 from typing import Any
 
+from apyosoenergyapi import OSOEnergy
 from apyosoenergyapi.helper.const import OSOEnergyWaterHeaterData
 
 from homeassistant.components.water_heater import (
@@ -14,7 +15,6 @@ from homeassistant.components.water_heater import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OSOEnergyEntity
@@ -33,9 +33,6 @@ CURRENT_OPERATION_MAP: dict[str, Any] = {
         "extraenergy": STATE_HIGH_DEMAND,
     },
 }
-HEATER_MIN_TEMP = 10
-HEATER_MAX_TEMP = 80
-MANUFACTURER = "OSO Energy"
 
 
 async def async_setup_entry(
@@ -60,15 +57,14 @@ class OSOEnergyWaterHeater(
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device.device_id)},
-            manufacturer=MANUFACTURER,
-            model=self.device.device_type,
-            name=self.device.device_name,
-        )
+    def __init__(
+        self,
+        instance: OSOEnergy,
+        osoenergy_device: OSOEnergyWaterHeaterData,
+    ) -> None:
+        """Initialize the Advantage Air timer control."""
+        super().__init__(instance, osoenergy_device)
+        self._attr_unique_id = osoenergy_device.device_id
 
     @property
     def available(self) -> bool:
