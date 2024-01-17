@@ -25,6 +25,7 @@ class LaMarzoccoEntityDescription(EntityDescription):
         LaMarzoccoModel.LINEA_MICRA,
         LaMarzoccoModel.LINEA_MINI,
     )
+    supported_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
 
 
 class LaMarzoccoEntity(CoordinatorEntity[LaMarzoccoUpdateCoordinator]):
