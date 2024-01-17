@@ -51,6 +51,11 @@
         "name": "Water tank empty"
       }
     },
+    "button": {
+      "start_backflush": {
+        "name": "Start backflush"
+      }
+    },
     "number": {
       "coffee_temp": {
         "name": "Coffee target temperature"
