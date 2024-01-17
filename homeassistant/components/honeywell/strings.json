@@ -54,6 +54,12 @@
     },
     "away_mode_failed": {
       "message": "Honeywell set away mode failed"
+    },
+    "temp_failed_value": {
+      "message": "Honeywell set temperature failed: invalid temperature {temperature}."
+    },
+    "temp_failed_range": {
+      "message": "Honeywell set temperature failed: temperature out of range. Mode: {mode}, Heat Temperuature: {heat}, Cool Temperature: {cool}."
     }
   }
 }

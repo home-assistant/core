@@ -33,7 +33,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -361,8 +361,10 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
-            raise ValueError(
-                f"Honeywell set temperature failed: invalid temperature {temperature}."
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temp_failed_value",
+                translation_placeholders={"temp": temperature},
             ) from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -383,8 +385,10 @@ class HoneywellUSThermostat(ClimateEntity):
 
             except SomeComfortError as err:
                 _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
-                raise ValueError(
-                    f"Honeywell set temperature failed: invalid temperature: {temperature}."
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="temp_failed_value",
+                    translation_placeholders={"temp": str(temperature)},
                 ) from err
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -440,8 +444,14 @@ class HoneywellUSThermostat(ClimateEntity):
                 self._heat_away_temp,
                 self._cool_away_temp,
             )
-            raise ValueError(
-                f"Honeywell set temperature failed: temperature out of range. Mode: {mode}, Heat Temperuature: {self._heat_away_temp}, Cool Temperature: {self._cool_away_temp}."
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temp_failed_range",
+                translation_placeholders={
+                    "heat": str(self._heat_away_temp),
+                    "cool": str(self._cool_away_temp),
+                    "mode": mode,
+                },
             ) from err
 
     async def _turn_hold_mode_on(self) -> None:
