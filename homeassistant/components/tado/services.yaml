@@ -64,6 +64,11 @@ set_climate_temperature_offset:
 
 add_meter_reading:
   fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: tado
     reading:
       default: 0
       selector:
