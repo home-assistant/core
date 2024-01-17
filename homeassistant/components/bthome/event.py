@@ -26,7 +26,7 @@ from .coordinator import BTHomePassiveBluetoothProcessorCoordinator
 DESCRIPTIONS_BY_EVENT_CLASS = {
     EVENT_CLASS_BUTTON: EventEntityDescription(
         key=EVENT_CLASS_BUTTON,
-        name="Button",
+        translation_key="button",
         event_types=[
             "press",
             "double_press",
@@ -39,7 +39,7 @@ DESCRIPTIONS_BY_EVENT_CLASS = {
     ),
     EVENT_CLASS_DIMMER: EventEntityDescription(
         key=EVENT_CLASS_DIMMER,
-        name="Dimmer",
+        translation_key="dimmer",
         event_types=["rotate_left", "rotate_right"],
     ),
 }
