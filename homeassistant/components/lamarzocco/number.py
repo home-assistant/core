@@ -40,22 +40,6 @@ class LaMarzoccoNumberEntityDescription(
     ]
 
 
-@dataclass(frozen=True, kw_only=True)
-class LaMarzoccoKeyNumberEntityDescription(
-    LaMarzoccoEntityDescription,
-    NumberEntityDescription,
-):
-    """Description of an La Marzocco number entity with keys."""
-
-    native_value_fn: Callable[[LaMarzoccoClient, int], float | int]
-    set_value_fn: Callable[
-        [LaMarzoccoClient, float | int, int], Coroutine[Any, Any, bool]
-    ]
-    number_keys: int | None = None
-    enabled_fn: Callable[[LaMarzoccoClient], bool] = lambda _: True
-    not_settable_reason: str = ""
-
-
 ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
     LaMarzoccoNumberEntityDescription(
         key="coffee_temp",
