@@ -7,7 +7,7 @@ import enum
 import functools
 import numbers
 import random
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, Union
 
 from zigpy import types
 
@@ -319,7 +319,7 @@ class ElectricalMeasurement(PollableSensor):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement: str = UnitOfPower.WATT
-    _div_mul_prefix = "ac_power"
+    _div_mul_prefix: Union[str, None] = "ac_power"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -346,9 +346,7 @@ class ElectricalMeasurement(PollableSensor):
             multiplier = getattr(
                 self._cluster_handler, f"{self._div_mul_prefix}_multiplier"
             )
-            divisor = getattr(
-                self._cluster_handler, f"{self._div_mul_prefix}_divisor"
-            )
+            divisor = getattr(self._cluster_handler, f"{self._div_mul_prefix}_divisor")
         else:
             multiplier = self._multiplier
             divisor = self._divisor
