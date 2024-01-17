@@ -60,6 +60,9 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         return True
 
     async def _async_update_data(self):
+        self.logger.info(
+            "Gaposa coordinator on_document_updated %s", str(self.update_interval)
+        )
         try:
             result = await self.update_gateway()
         except ConfigEntryAuthFailed:
@@ -87,7 +90,5 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
 
     def on_document_updated(self):
         """Handle document updated."""
-        for client, _user in self.gaposa.clients:
-            for device in client.devices:
-                for motor in device.motors:
-                    motor.async_write_ha_state()
+        self.logger.info("Gaposa coordinator on_document_updated")
+        self.async_request_refresh()
