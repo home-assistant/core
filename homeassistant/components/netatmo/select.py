@@ -15,6 +15,7 @@ from .const import (
     DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_SCHEDULE,
+    MANUFACTURER,
     NETATMO_CREATE_SELECT,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoHome

@@ -167,6 +167,34 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[netatmo-12:34:56:00:01:ae]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'https://my.netatmo.com/app/energy',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '12:34:56:00:01:ae',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Netatmo',
+    'model': 'Smart Thermostat',
+    'name': 'Livingroom',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#0]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -503,6 +531,62 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[netatmo-12:34:56:03:a0:ac]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'https://my.netatmo.com/app/energy',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '12:34:56:03:a0:ac',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Netatmo',
+    'model': 'Smart Valve',
+    'name': 'Valve2',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[netatmo-12:34:56:03:a5:54]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'https://my.netatmo.com/app/energy',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '12:34:56:03:a5:54',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Netatmo',
+    'model': 'Smart Valve',
+    'name': 'Valve1',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[netatmo-12:34:56:10:b9:0e]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -552,6 +636,34 @@
     'manufacturer': 'Netatmo',
     'model': 'Smart Video Doorbell',
     'name': 'Netatmo-Doorbell',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[netatmo-12:34:56:20:f5:8c]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'https://my.netatmo.com/app/energy',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '12:34:56:20:f5:8c',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Netatmo',
+    'model': 'OpenTherm Modulating Thermostat',
+    'name': 'Bureau Modulate',
     'name_by_user': None,
     'serial_number': None,
     'suggested_area': None,
@@ -997,8 +1109,8 @@
       ),
     }),
     'is_new': False,
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Netatmo',
+    'model': 'Climate',
     'name': 'MYHOME',
     'name_by_user': None,
     'serial_number': None,
