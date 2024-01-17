@@ -1328,6 +1328,8 @@ build.json @home-assistant/supervisor
 /tests/components/tasmota/ @emontnemery
 /homeassistant/components/tautulli/ @ludeeus @tkdrob
 /tests/components/tautulli/ @ludeeus @tkdrob
+/homeassistant/components/technove/ @Moustachauve
+/tests/components/technove/ @Moustachauve
 /homeassistant/components/tedee/ @patrickhilker @zweckj
 /tests/components/tedee/ @patrickhilker @zweckj
 /homeassistant/components/tellduslive/ @fredrike
