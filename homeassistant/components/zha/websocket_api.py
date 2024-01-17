@@ -819,8 +819,6 @@ async def websocket_read_zigbee_cluster_attributes(
     success = {}
     failure = {}
     if zha_device is not None:
-        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
-            manufacturer = zha_device.manufacturer_code
         cluster = zha_device.async_get_cluster(
             endpoint_id, cluster_id, cluster_type=cluster_type
         )
@@ -1300,8 +1298,6 @@ def async_load_api(hass: HomeAssistant) -> None:
         zha_device = zha_gateway.get_device(ieee)
         response = None
         if zha_device is not None:
-            if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
-                manufacturer = zha_device.manufacturer_code
             response = await zha_device.write_zigbee_attribute(
                 endpoint_id,
                 cluster_id,
