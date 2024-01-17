@@ -508,6 +508,7 @@ FLOWS = {
         "tankerkoenig",
         "tasmota",
         "tautulli",
+        "technove",
         "tedee",
         "tellduslive",
         "tesla_wall_connector",

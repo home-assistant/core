@@ -404,6 +404,7 @@ homeassistant.components.tailwind.*
 homeassistant.components.tami4.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
+homeassistant.components.technove.*
 homeassistant.components.tedee.*
 homeassistant.components.text.*
 homeassistant.components.threshold.*
