@@ -161,7 +161,9 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_ATTRIBUTE): vol.Any(cv.positive_int, str),
             vol.Required(ATTR_VALUE): vol.Any(int, cv.boolean, cv.string),
-            vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+            vol.Optional(ATTR_MANUFACTURER): vol.All(
+                vol.Coerce(int), vol.Range(min=-1)
+            ),
         }
     ),
     SERVICE_WARNING_DEVICE_SQUAWK: vol.Schema(
@@ -210,7 +212,9 @@ SERVICE_SCHEMAS = {
                 vol.Required(ATTR_COMMAND_TYPE): cv.string,
                 vol.Exclusive(ATTR_ARGS, "attrs_params"): _ensure_list_if_present,
                 vol.Exclusive(ATTR_PARAMS, "attrs_params"): dict,
-                vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+                vol.Optional(ATTR_MANUFACTURER): vol.All(
+                    vol.Coerce(int), vol.Range(min=-1)
+                ),
             }
         ),
         cv.deprecated(ATTR_ARGS),
@@ -223,7 +227,9 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_COMMAND): cv.positive_int,
             vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
-            vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+            vol.Optional(ATTR_MANUFACTURER): vol.All(
+                vol.Coerce(int), vol.Range(min=-1)
+            ),
         }
     ),
 }
