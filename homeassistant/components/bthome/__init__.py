@@ -79,11 +79,6 @@ def process_service_info(
                     data=entry.data
                     | {CONF_DISCOVERED_EVENT_CLASSES: list(discovered_event_classes)},
                 )
-                async_dispatcher_send(
-                    hass,
-                    format_discovered_event_class_name(address),
-                    event_class,
-                )
 
             ble_event = BTHomeBleEvent(
                 device_id=device.id,
@@ -99,6 +94,9 @@ def process_service_info(
                 format_event_dispatcher_name(address, event_class),
                 ble_event,
             )
+            async_dispatcher_send(
+                hass, format_discovered_device_key(address), device_key
+            )
 
     # If payload is encrypted and the bindkey is not verified then we need to reauth
     if data.encryption_scheme != EncryptionScheme.NONE and not data.bindkey_verified:
@@ -112,9 +110,9 @@ def format_event_dispatcher_name(address: str, event_class: str) -> str:
     return f"{DOMAIN}_event_{address}_{event_class}"
 
 
-def format_discovered_event_class_name(address: str) -> str:
-    """Format a discovered event class name."""
-    return f"{DOMAIN}_discovered_event_class_{address}"
+def format_discovered_device_key(address: str) -> str:
+    """Format a discovered device key."""
+    return f"{DOMAIN}_discovered_device_key_{address}"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

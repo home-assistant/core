@@ -1,6 +1,10 @@
 """Support for bthome event entities."""
 from __future__ import annotations
 
+import logging
+
+from sensor_state_data import DeviceKey
+
 from homeassistant.components.event import (
     EventDeviceClass,
     EventEntity,
@@ -8,11 +12,11 @@ from homeassistant.components.event import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import format_discovered_event_class_name, format_event_dispatcher_name
+from . import format_discovered_device_key, format_event_dispatcher_name
 from .const import (
     DOMAIN,
     EVENT_CLASS_BUTTON,
@@ -22,6 +26,8 @@ from .const import (
     BTHomeBleEvent,
 )
 from .coordinator import BTHomePassiveBluetoothProcessorCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 DESCRIPTIONS_BY_EVENT_CLASS = {
     EVENT_CLASS_BUTTON: EventEntityDescription(
@@ -51,15 +57,22 @@ class BTHomeEventEntity(EventEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, address: str, event_class: str) -> None:
+    def __init__(self, address: str, event_class: str, device_id: str | None) -> None:
         """Initialise a BTHome event entity."""
-        self.address = address
-        self.event_class = event_class
+        self._update_signal = format_event_dispatcher_name(address, event_class)
         self.entity_description = DESCRIPTIONS_BY_EVENT_CLASS[event_class]
-        self._attr_unique_id = f"{address}-{event_class}"
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, address)}
-        )
+        # Matches logic in PassiveBluetoothProcessorEntity
+        if device_id:
+            self._attr_device_info = dr.DeviceInfo(
+                identifiers={(DOMAIN, f"{address}-{device_id}")}
+            )
+            self._attr_unique_id = f"{address}-{event_class}-{device_id}"
+        else:
+            self._attr_device_info = dr.DeviceInfo(
+                identifiers={(DOMAIN, address)},
+                connections={(dr.CONNECTION_BLUETOOTH, address)},
+            )
+            self._attr_unique_id = f"{address}-{event_class}"
 
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
@@ -67,7 +80,7 @@ class BTHomeEventEntity(EventEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                format_event_dispatcher_name(self.address, self.event_class),
+                self._update_signal,
                 self._handle_event,
             )
         )
@@ -88,19 +101,40 @@ async def async_setup_entry(
         entry.entry_id
     ]
     address = coordinator.address
-    async_add_entities(
-        BTHomeEventEntity(address, event_class)
-        for event_class in coordinator.discovered_event_classes
-    )
+    discovered_event_entities: set[tuple[str, str | None]] = set()
+    ent_reg = er.async_get(hass)
+    to_add: list[BTHomeEventEntity] = []
+    for ent_reg_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        if ent_reg_entry.domain != "event":
+            continue
+        unique_id_split = ent_reg_entry.unique_id.split("-")
+        device_id: str | None = None
+        if len(unique_id_split) == 3:
+            address, event_class, device_id = unique_id_split
+        else:
+            address, event_class = unique_id_split
+            device_id = None
+        discovery_key = (event_class, device_id)
+        discovered_event_entities.add(discovery_key)
+        to_add.append(BTHomeEventEntity(address, event_class, device_id))
 
-    def _async_discovered_event_class(event_class: str) -> None:
+    async_add_entities(to_add)
+
+    @callback
+    def _async_discovered_event_class(device_key: DeviceKey) -> None:
         """Handle a discovered event class."""
-        async_add_entities([BTHomeEventEntity(address, event_class)])
+        event_class = device_key.key
+        device_id = device_key.device_id
+        discovery_key = (event_class, device_id)
+        if discovery_key in discovered_event_entities:
+            return
+        discovered_event_entities.add(discovery_key)
+        async_add_entities([BTHomeEventEntity(address, event_class, device_id)])
 
     entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            format_discovered_event_class_name(address),
+            format_discovered_device_key(address),
             _async_discovered_event_class,
         )
     )
