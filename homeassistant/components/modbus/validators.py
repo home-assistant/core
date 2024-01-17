@@ -191,20 +191,21 @@ def number_validator(value: Any) -> int | float:
         raise vol.Invalid(f"invalid number {value}") from err
 
 
-def fixedRegList_validator(value: Any) -> Any:
+def fixedRegList_validator(value: Any) -> list:
     """Check if the number of registers for target temp. inserted is correct."""
     if isinstance(value, int):
-        return value
+        value = [value] * 7
+        return list(value)
 
-    if isinstance(value, list):
-        if len(list(value)) == len(HVACMode):
-            _rv = True
-            for svalue in list(value):
-                if isinstance(svalue, int) is False:
-                    _rv = False
-                    break
-            if _rv is True:
-                return list(value)
+    if len(list(value)) == len(HVACMode):
+        _rv = True
+        for svalue in list(value):
+            if isinstance(svalue, int) is False:
+                _rv = False
+                break
+        if _rv is True:
+            return list(value)
+
     raise vol.Invalid(
         f"Invalid target temp register. Required type: integer, allowed 1 or list of {len(HVACMode)} registers"
     )
@@ -390,10 +391,7 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
     if CONF_TARGET_TEMP not in config:
         return config
 
-    if isinstance(config[CONF_TARGET_TEMP], list):
-        _uniqueTTReg = config[CONF_TARGET_TEMP]
-    else:
-        _uniqueTTReg = [config[CONF_TARGET_TEMP]]
+    _uniqueTTReg = set(config[CONF_TARGET_TEMP])
 
     if (
         CONF_HVAC_MODE_REGISTER in config

@@ -25,7 +25,6 @@ import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.climate import HVACMode
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
@@ -147,17 +146,13 @@ async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodb
 async def test_fixedRegList_validator() -> None:
     """Test fixed temp registers validator."""
 
-    registers: list(int) = []
-    _reg = 30
-    for _modes in HVACMode:
-        _reg += 1
-        registers.append(_reg)
+    registers: list(int) = [30, 31, 32, 33, 34, 35, 36]
 
-    for value, value_type in (
-        (15, int),
-        (registers, list),
+    for value in (
+        15,
+        registers,
     ):
-        assert isinstance(fixedRegList_validator(value), value_type)
+        assert isinstance(fixedRegList_validator(value), list)
 
     with contextlib.suppress(vol.Invalid):
         fixedRegList_validator([15, "ab", 17, 18, 19, 20, 21])
@@ -713,7 +708,7 @@ async def test_duplicate_entity_validator_with_climate(do_config) -> None:
             {
                 CONF_NAME: TEST_ENTITY_NAME,
                 CONF_ADDRESS: 1,
-                CONF_TARGET_TEMP: 117,
+                CONF_TARGET_TEMP: [117],
                 CONF_HVAC_MODE_REGISTER: {
                     CONF_ADDRESS: 117,
                     CONF_HVAC_MODE_VALUES: {

@@ -75,6 +75,17 @@ from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 
+HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY = {
+    HVACMode.AUTO: 0,
+    HVACMode.COOL: 1,
+    HVACMode.DRY: 2,
+    HVACMode.FAN_ONLY: 3,
+    HVACMode.HEAT: 4,
+    HVACMode.HEAT_COOL: 5,
+    HVACMode.OFF: 6,
+    None: 0,
+}
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -112,16 +123,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             CONF_TARGET_TEMP_WRITE_REGISTERS
         ]
         self._unit = config[CONF_TEMPERATURE_UNIT]
-        self._hvacmodeToIndexArray = {
-            HVACMode.AUTO: 0,
-            HVACMode.COOL: 1,
-            HVACMode.DRY: 2,
-            HVACMode.FAN_ONLY: 3,
-            HVACMode.HEAT: 4,
-            HVACMode.HEAT_COOL: 5,
-            HVACMode.OFF: 6,
-            None: 0,
-        }
         self._attr_current_temperature = None
         self._attr_target_temperature = None
         self._attr_temperature_unit = (
@@ -401,14 +402,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     def _GetMeTargetTempRegister(self) -> int:
         """Get the target temp register for a specific HVAC mode."""
-        if isinstance(self._target_temperature_register, int):
-            return int(self._target_temperature_register)
-
-        try:
-            return int(
-                self._target_temperature_register[
-                    self._hvacmodeToIndexArray[self._attr_hvac_mode]
-                ]
-            )
-        except KeyError:
-            return int(self._target_temperature_register[0])
+        return int(
+            self._target_temperature_register[
+                HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+            ]
+        )
