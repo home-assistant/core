@@ -625,6 +625,14 @@ def test_event_eq() -> None:
     assert event1.as_dict() == event2.as_dict()
 
 
+def test_event_time_fired_timestamp() -> None:
+    """Test time_fired_timestamp."""
+    now = dt_util.utcnow()
+    event = ha.Event("some_type", {"some": "attr"}, time_fired=now)
+    assert event.time_fired_timestamp == now.timestamp()
+    assert event.time_fired_timestamp == now.timestamp()
+
+
 def test_event_json_fragment() -> None:
     """Test event JSON fragments."""
     now = dt_util.utcnow()
@@ -734,9 +742,9 @@ def test_state_as_dict_json() -> None:
         context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
     )
     expected = (
-        '{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
-        '"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
-        '"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
+        b'{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
+        b'"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
+        b'"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
     )
     as_dict_json_1 = state.as_dict_json
     assert as_dict_json_1 == expected
@@ -844,7 +852,7 @@ def test_state_as_compressed_state_json() -> None:
         last_changed=last_time,
         context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
     )
-    expected = '"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    expected = b'"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
     as_compressed_state = state.as_compressed_state_json
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
@@ -2451,6 +2459,23 @@ async def test_state_change_events_context_id_match_state_time(
     assert _ulid_timestamp(state.context.id) == int(
         state.last_updated.timestamp() * 1000
     )
+
+
+def test_state_timestamps() -> None:
+    """Test timestamp functions for State."""
+    now = dt_util.utcnow()
+    state = ha.State(
+        "light.bedroom",
+        "on",
+        {"brightness": 100},
+        last_changed=now,
+        last_updated=now,
+        context=ha.Context(id="1234"),
+    )
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
 
 
 async def test_state_firing_event_matches_context_id_ulid_time(
