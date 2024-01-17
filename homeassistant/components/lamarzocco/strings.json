@@ -51,6 +51,24 @@
         "name": "Water tank empty"
       }
     },
+    "select": {
+      "prebrew_infusion_select": {
+        "name": "Prebrew/-infusion mode",
+        "state": {
+          "disabled": "Disabled",
+          "prebrew": "Prebrew",
+          "preinfusion": "Preinfusion"
+        }
+      },
+      "steam_temp_select": {
+        "name": "Steam level",
+        "state": {
+          "1": "1",
+          "2": "2",
+          "3": "3"
+        }
+      }
+    },
     "sensor": {
       "current_temp_coffee": {
         "name": "Current coffee temperature"
