@@ -102,18 +102,18 @@ async def test_flow_user_init_data_error_and_recover(
 async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> None:
     """Test we abort user data set when entry is already configured."""
 
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data=MOCK_DATA_STEP,
+        unique_id=f"{MOCK_DATA_STEP[CONF_START]} {MOCK_DATA_STEP[CONF_DESTINATION]}",
+    )
+    entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.swiss_public_transport.config_flow.OpendataTransport.async_get_data",
         autospec=True,
         return_value=True,
     ):
-        entry = MockConfigEntry(
-            domain=config_flow.DOMAIN,
-            data=MOCK_DATA_STEP,
-            unique_id=f"{MOCK_DATA_STEP[CONF_START]} {MOCK_DATA_STEP[CONF_DESTINATION]}",
-        )
-        entry.add_to_hass(hass)
-
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN, context={"source": "user"}
         )
