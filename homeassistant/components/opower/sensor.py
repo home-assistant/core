@@ -172,10 +172,10 @@ async def async_setup_entry(
     entities: list[OpowerSensor] = []
     forecasts = coordinator.data.values()
     for forecast in forecasts:
-        device_id = f"{coordinator.api.utility.subdomain()}_{forecast.account.utility_account_id}"
+        device_id = f"{coordinator.api.utility.subdomain()}_{forecast.account.uuid}"
         device = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name=f"{forecast.account.meter_type.name} account {forecast.account.utility_account_id}",
+            name=f"{forecast.account.meter_type.name} account {forecast.account.uuid}",
             manufacturer="Opower",
             model=coordinator.api.utility.name(),
             entry_type=DeviceEntryType.SERVICE,
@@ -196,7 +196,7 @@ async def async_setup_entry(
                 OpowerSensor(
                     coordinator,
                     sensor,
-                    forecast.account.utility_account_id,
+                    forecast.account.uuid,
                     device,
                     device_id,
                 )
@@ -214,7 +214,7 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
         self,
         coordinator: OpowerCoordinator,
         description: OpowerEntityDescription,
-        utility_account_id: str,
+        uuid: str,
         device: DeviceInfo,
         device_id: str,
     ) -> None:
@@ -223,13 +223,13 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device_id}_{description.key}"
         self._attr_device_info = device
-        self.utility_account_id = utility_account_id
+        self.uuid = uuid
 
     @property
     def native_value(self) -> StateType:
         """Return the state."""
         if self.coordinator.data is not None:
             return self.entity_description.value_fn(
-                self.coordinator.data[self.utility_account_id]
+                self.coordinator.data[self.uuid]
             )
         return None

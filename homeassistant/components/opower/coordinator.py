@@ -85,7 +85,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         # Because Opower provides historical usage/cost with a delay of a couple of days
         # we need to insert data into statistics.
         await self._insert_statistics()
-        return {forecast.account.utility_account_id: forecast for forecast in forecasts}
+        return {forecast.account.uuid: forecast for forecast in forecasts}
 
     async def _insert_statistics(self) -> None:
         """Insert Opower statistics."""
@@ -94,9 +94,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 (
                     self.api.utility.subdomain(),
                     account.meter_type.name.lower(),
-                    # Some utilities like AEP have "-" in their account id.
+                    # Some utilities like AEP have "-" in their uuid.
                     # Replace it with "_" to avoid "Invalid statistic_id"
-                    account.utility_account_id.replace("-", "_"),
+                    account.uuid.replace("-", "_"),
                 )
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
@@ -163,7 +163,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     "Opower",
                     self.api.utility.subdomain(),
                     account.meter_type.name.lower(),
-                    account.utility_account_id,
+                    account.uuid,
                 )
             )
             cost_metadata = StatisticMetaData(
