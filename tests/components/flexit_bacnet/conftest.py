@@ -1,5 +1,6 @@
 """Configuration for Flexit Nordic (BACnet) tests."""
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -22,30 +23,23 @@ async def flow_id(hass: HomeAssistant) -> str:
     return result["flow_id"]
 
 
-@pytest.fixture(autouse=True)
-def mock_serial_number_and_device_name():
-    """Mock serial number of the device."""
+@pytest.fixture
+def mock_flexit_bacnet() -> Generator[AsyncMock, None, None]:
+    """Mock data from the device."""
     with patch(
-        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.serial_number",
-        "0000-0001",
-    ), patch(
-        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.device_name",
-        "Device Name",
-    ):
-        yield
+        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet",
+        autospec=True,
+    ) as flexit_bacnet_mock:
+        flexit_bacnet = flexit_bacnet_mock.return_value
+        flexit_bacnet.serial_number = "0000-0001"
+        flexit_bacnet.device_name = "Device Name"
+        flexit_bacnet.update.return_value = None
 
-
-@pytest.fixture(autouse=True)
-def mock_flexit_bacnet_update():
-    """Mock update of device update."""
-    with patch(
-        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update",
-    ) as flexit_bacnet_update_mock:
-        yield flexit_bacnet_update_mock
+        yield flexit_bacnet
 
 
 @pytest.fixture
-def mock_setup_entry():
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.flexit_bacnet.async_setup_entry", return_value=True

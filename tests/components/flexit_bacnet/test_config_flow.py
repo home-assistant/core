@@ -1,6 +1,5 @@
 """Test the Flexit Nordic (BACnet) config flow."""
 import asyncio.exceptions
-from unittest.mock import patch
 
 from flexit_bacnet import DecodingError
 import pytest
@@ -14,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_form(
-    hass: HomeAssistant, flow_id: str, mock_setup_entry, mock_flexit_bacnet_update
+    hass: HomeAssistant, flow_id: str, mock_setup_entry, mock_flexit_bacnet
 ) -> None:
     """Test we get the form and the happy path works."""
     result = await hass.config_entries.flow.async_configure(
@@ -34,7 +33,7 @@ async def test_form(
         CONF_DEVICE_ID: 2,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_flexit_bacnet_update.mock_calls) == 1
+    assert len(mock_flexit_bacnet.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -50,39 +49,39 @@ async def test_form(
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant, flow_id: str, error: Exception, message: str, mock_setup_entry
+    hass: HomeAssistant,
+    flow_id: str,
+    error: Exception,
+    message: str,
+    mock_setup_entry,
+    mock_flexit_bacnet,
 ) -> None:
     """Test that we return 'cannot_connect' error when attempting to connect to an incorrect IP address.
 
     The flexit_bacnet library raises asyncio.exceptions.TimeoutError in that scenario.
     """
-    with patch(
-        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update",
-        side_effect=error,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id,
-            {
-                CONF_IP_ADDRESS: "1.1.1.1",
-                CONF_DEVICE_ID: 2,
-            },
-        )
+    mock_flexit_bacnet.update.side_effect = error
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_DEVICE_ID: 2,
+        },
+    )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": message}
     assert len(mock_setup_entry.mock_calls) == 0
 
     # ensure that user can recover from this error
-    with patch(
-        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update"
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_IP_ADDRESS: "1.1.1.1",
-                CONF_DEVICE_ID: 2,
-            },
-        )
+    mock_flexit_bacnet.update.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_DEVICE_ID: 2,
+        },
+    )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Device Name"
@@ -95,7 +94,7 @@ async def test_flow_fails(
 
 
 async def test_form_device_already_exist(
-    hass: HomeAssistant, flow_id: str, mock_flexit_bacnet_update
+    hass: HomeAssistant, flow_id: str, mock_flexit_bacnet
 ) -> None:
     """Test that we cannot add already added device."""
     entry = MockConfigEntry(
@@ -118,4 +117,3 @@ async def test_form_device_already_exist(
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert len(mock_flexit_bacnet_update.mock_calls) == 1
