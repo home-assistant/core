@@ -111,7 +111,7 @@ class FlowManagerResourceView(_BaseFlowManagerView):
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
         except data_entry_flow.InvalidData as ex:
-            return self.json(ex.schema_errors, HTTPStatus.BAD_REQUEST)
+            return self.json({"errors": ex.schema_errors}, HTTPStatus.BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 

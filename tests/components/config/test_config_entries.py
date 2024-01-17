@@ -1019,12 +1019,7 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
         )
         assert resp.status == HTTPStatus.BAD_REQUEST
         data = await resp.json()
-        assert data == {
-            "message": (
-                "User input malformed: invalid is not a valid option for "
-                "dictionary value @ data['choices']"
-            )
-        }
+        assert data == {"errors": {"choices": "invalid is not a valid option"}}
 
 
 async def test_get_single(
