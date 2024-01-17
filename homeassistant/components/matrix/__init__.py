@@ -223,9 +223,12 @@ class MatrixBot:
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
         for command in commands:
             # Set the command for all listening_rooms, unless otherwise specified.
-            command.setdefault(CONF_ROOMS, list(self._listening_rooms.values()))
+            if rooms := command.get(CONF_ROOMS):
+                command[CONF_ROOMS] = [self._listening_rooms[room] for room in rooms]
+            else:
+                command[CONF_ROOMS] = list(self._listening_rooms.values())
 
-            # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_expression are set.
+            # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_EXPRESSION are set.
             if (word_command := command.get(CONF_WORD)) is not None:
                 for room_id in command[CONF_ROOMS]:
                     self._word_commands.setdefault(room_id, {})
