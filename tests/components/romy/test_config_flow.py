@@ -65,7 +65,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
         )
 
     assert "errors" not in result
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_show_user_form_with_wrong_host(
