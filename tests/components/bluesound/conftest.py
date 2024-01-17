@@ -1,17 +1,16 @@
 """Configuration for Sonos tests."""
 from copy import copy
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
-from soco import SoCo
 
-from homeassistant.components import ssdp, zeroconf
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components import zeroconf
 from homeassistant.components.bluesound import DOMAIN
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_HOSTS
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 
 
 class BluesoundMockEventListener:
@@ -88,21 +87,20 @@ async def async_autosetup_bluesound(async_setup_bluesound):
 
 
 @pytest.fixture
-def async_setup_bluesound(hass, config_entry, fire_zgs_event):
+def async_setup_bluesound(hass, config_entry):
     """Return a coroutine to set up a Bluesound integration instance on demand."""
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        await fire_zgs_event()
 
     return _wrapper
 
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
-    """Create a mock Sonos config entry."""
+    """Create a mock Bluesound config entry."""
     return MockConfigEntry(domain=DOMAIN, title="Bluesound")
 
 

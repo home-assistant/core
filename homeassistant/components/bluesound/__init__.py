@@ -36,20 +36,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bluesound component."""
     conf = config.get(DOMAIN)
 
-    _LOGGER.debug("Bluesound async_setup: %r", conf)
+    _LOGGER.debug("Bluesound async_setup: %r: %r", config, conf)
 
     hass.data[DOMAIN] = []
 
-    if conf is not None:
-        if hosts := conf.get(CONF_HOSTS):
-            for host in hosts:
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": config_entries.SOURCE_IMPORT},
-                        data=host,
-                    )
-                )
+    # TODO(trainman419): figure out if this is the yaml config entry point, and either make it work or delete it.
+    # if conf is not None:
+    #     if hosts := conf.get(CONF_HOSTS):
+    #         for host in hosts:
+    #             hass.async_create_task(
+    #                 hass.config_entries.flow.async_init(
+    #                     DOMAIN,
+    #                     context={"source": config_entries.SOURCE_IMPORT},
+    #                     data=host,
+    #                 )
+    #             )
 
     return True
 
