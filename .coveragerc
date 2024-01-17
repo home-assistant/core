@@ -150,7 +150,6 @@ omit =
     homeassistant/components/braviatv/coordinator.py
     homeassistant/components/braviatv/media_player.py
     homeassistant/components/braviatv/remote.py
-    homeassistant/components/bring/__init__.py
     homeassistant/components/bring/const.py
     homeassistant/components/bring/coordinator.py
     homeassistant/components/bring/todo.py
