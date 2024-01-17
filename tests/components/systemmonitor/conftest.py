@@ -115,11 +115,11 @@ def mock_process() -> list[MockProcess]:
 def mock_psutil(mock_process: list[MockProcess]) -> Mock:
     """Mock psutil."""
     with patch(
-        "homeassistant.components.systemmonitor.sensor.psutil",
+        "homeassistant.components.systemmonitor.coordinator.psutil",
         autospec=True,
     ) as mock_psutil:
         mock_psutil.disk_usage.return_value = sdiskusage(
-            500 * 1024**2, 300 * 1024**2, 200 * 1024**2, 60.0
+            500 * 1024**3, 300 * 1024**3, 200 * 1024**3, 60.0
         )
         mock_psutil.swap_memory.return_value = sswap(
             100 * 1024**2, 60 * 1024**2, 40 * 1024**2, 60.0, 1, 1
@@ -240,7 +240,9 @@ def mock_util(mock_process) -> Mock:
 @pytest.fixture
 def mock_os() -> Mock:
     """Mock os."""
-    with patch("homeassistant.components.systemmonitor.sensor.os") as mock_os, patch(
+    with patch(
+        "homeassistant.components.systemmonitor.coordinator.os"
+    ) as mock_os, patch(
         "homeassistant.components.systemmonitor.util.os"
     ) as mock_os_util:
         mock_os_util.name = "nt"
