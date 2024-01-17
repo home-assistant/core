@@ -218,14 +218,14 @@ async def async_setup_entry(
     entities: list[LaMarzoccoKeyNumberEntity] = []
     for description in KEY_ENTITIES:
         if description.supported_fn(coordinator):
-            num_keys = KEYS_PER_MODEL[coordinator.lm.model_name]
-            if num_keys is None:
-                entities.append(LaMarzoccoKeyNumberEntity(coordinator, description))
-            else:
+            if (num_keys := KEYS_PER_MODEL[coordinator.lm.model_name]) is not None:
                 for key in range(1, num_keys + 1):
                     entities.append(
                         LaMarzoccoKeyNumberEntity(coordinator, description, key)
                     )
+            else:
+                entities.append(LaMarzoccoKeyNumberEntity(coordinator, description))
+
     async_add_entities(entities)
 
 

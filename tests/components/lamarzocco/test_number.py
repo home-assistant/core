@@ -7,7 +7,6 @@ from lmcloud.const import LaMarzoccoModel
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.lamarzocco.const import KEYS_PER_MODEL
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -226,7 +225,7 @@ async def test_pre_brew_infusion_key_numbers(
     state = hass.states.get(f"number.{serial_number}_{entity_name}")
     assert state is None
 
-    for key in range(1, KEYS_PER_MODEL[mock_lamarzocco.model_name] + 1):
+    for key in range(1, 5):
         state = hass.states.get(f"number.{serial_number}_{entity_name}_key_{key}")
         assert state
         assert state == snapshot(name=f"{serial_number}_{entity_name}_key_{key}-state")
@@ -263,9 +262,9 @@ async def test_disabled_entites(
     )
 
     serial_number = mock_lamarzocco.serial_number
-    assert KEYS_PER_MODEL[mock_lamarzocco.model_name] is not None
+
     for entity_name in ENTITIES:
-        for key in range(1, KEYS_PER_MODEL[mock_lamarzocco.model_name] + 1):
+        for key in range(1, 5):
             state = hass.states.get(f"number.{serial_number}_{entity_name}_key_{key}")
             assert state is None
 
@@ -288,7 +287,7 @@ async def test_not_existing_key_entites(
         "preinfusion_time",
         "set_dose",
     ):
-        for key in range(1, KEYS_PER_MODEL[LaMarzoccoModel.GS3_AV] + 1):
+        for key in range(1, 5):
             state = hass.states.get(f"number.{serial_number}_{entity}_key_{key}")
             assert state is None
 
