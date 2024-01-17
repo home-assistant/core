@@ -73,7 +73,6 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         self.motor = motor
         self.lastCommand: str | None = None
         self.lastCommandTime: datetime | None = None
-        self.delayed_refresh_task: asyncio.Task | None = None
 
         # A unique_id for this entity with in this domain. This means for example if you
         # have a sensor on this cover, you must ensure the value returned is unique,
@@ -95,7 +94,9 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         # called where ever there are changes.
         # The call back registration is done once this entity is registered with HA
         # (rather than in the __init__)
-        # self._roller.register_callback(self.async_write_ha_state)
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
@@ -189,26 +190,29 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         """Open the cover."""
         self.lastCommand = "UP"
         self.lastCommandTime = datetime.now()
-        await self.motor.up()
-        self.async_write_ha_state()
-        self.delayed_refresh_task = asyncio.create_task(self.schedule_delayed_refresh())
+        await self.motor.up(False)
+        self.schedule_delayed_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self.lastCommand = "DOWN"
         self.lastCommandTime = datetime.now()
-        await self.motor.down()
-        self.async_write_ha_state()
-        self.delayed_refresh_task = asyncio.create_task(self.schedule_delayed_refresh())
+        await self.motor.down(False)
+        self.schedule_delayed_refresh()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self.lastCommand = "STOP"
         self.lastCommandTime = datetime.now()
-        await self.motor.stop()
-        self.async_write_ha_state()
+        await self.motor.stop(False)
+        self.schedule_delayed_refresh()
 
-    async def schedule_delayed_refresh(self) -> None:
+    def schedule_delayed_refresh(self) -> None:
         """Wait for the cover to stop moving and update HA state."""
+        self.hass.async_create_task(self.delayed_refresh())
+
+    async def delayed_refresh(self) -> None:
+        """Refresh after a delay."""
         await asyncio.sleep(OPERATION_DELAY)
+        _LOGGER.info(f"delayed_refresh for {self.motor.name}")
         self.async_write_ha_state()

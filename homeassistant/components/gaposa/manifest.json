@@ -8,8 +8,8 @@
   "homekit": {},
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "loggers": ["GAPOSA"],
-  "requirements": ["pygaposa==0.1.0"],
+  "loggers": ["gaposa"],
+  "requirements": ["pygaposa==0.2.3"],
   "ssdp": [],
   "zeroconf": []
 }
