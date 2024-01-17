@@ -182,8 +182,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
         else:
             self._attr_unique_id = evo_device.zoneId
 
-        self._attr_name = evo_device.name
-
         if evo_broker.client_v1:
             self._attr_precision = PRECISION_TENTHS
         else:
@@ -218,6 +216,11 @@ class EvoZone(EvoChild, EvoClimateEntity):
         await self._evo_broker.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the evohome entity."""
+        return self._evo_device.name  # zones can be easily renamed
 
     @property
     def hvac_mode(self) -> HVACMode | None:

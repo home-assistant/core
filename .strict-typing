@@ -248,6 +248,7 @@ homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
+homeassistant.components.lamarzocco.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lawn_mower.*
@@ -304,6 +305,7 @@ homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
+homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
@@ -402,6 +404,7 @@ homeassistant.components.tailwind.*
 homeassistant.components.tami4.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
+homeassistant.components.technove.*
 homeassistant.components.tedee.*
 homeassistant.components.text.*
 homeassistant.components.threshold.*
