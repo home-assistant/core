@@ -66,7 +66,7 @@ repos:
         files: ^(homeassistant|pylint)/.+\.py$
       - id: pylint
         name: pylint
-        entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y
+        entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y --exit-zero --fail-on=W,E,F
         language: script
         types: [python]
         files: ^homeassistant/.+\.py$

@@ -98,7 +98,7 @@ def modernforms_exception_handler(
     return handler
 
 
-class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):  # pylint: disable=hass-enforce-coordinator-module
+class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):
     """Class to manage fetching Modern Forms data from single endpoint."""
 
     def __init__(

@@ -15,7 +15,7 @@ POLL_SWITCH_PORT = 300
 POLL_GATEWAY = 300
 
 
-class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):  # pylint: disable=hass-enforce-coordinator-module
+class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):
     """Coordinator for getting details about ports on a switch."""
 
     def __init__(
@@ -36,7 +36,7 @@ class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):  # p
         return {p.port_id: p for p in ports}
 
 
-class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):  # pylint: disable=hass-enforce-coordinator-module
+class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
     """Coordinator for getting details about the site's gateway."""
 
     def __init__(

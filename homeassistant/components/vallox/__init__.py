@@ -155,7 +155,7 @@ class ValloxState:
         return next_filter_change_date
 
 
-class ValloxDataUpdateCoordinator(DataUpdateCoordinator[ValloxState]):  # pylint: disable=hass-enforce-coordinator-module
+class ValloxDataUpdateCoordinator(DataUpdateCoordinator[ValloxState]):
     """The DataUpdateCoordinator for Vallox."""
 
 

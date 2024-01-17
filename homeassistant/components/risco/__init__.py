@@ -197,7 +197,7 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):  # pylint: disable=hass-enforce-coordinator-module
+class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
     """Class to manage fetching risco data."""
 
     def __init__(
@@ -221,7 +221,7 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):  # pylint: disab
             raise UpdateFailed(error) from error
 
 
-class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):  # pylint: disable=hass-enforce-coordinator-module
+class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     """Class to manage fetching risco data."""
 
     def __init__(

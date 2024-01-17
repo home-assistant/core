@@ -265,7 +265,7 @@ def _truncate_timeline(timeline: Timeline, max_events: int) -> Timeline:
     )
 
 
-class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):  # pylint: disable=hass-enforce-coordinator-module
+class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     """Coordinator for calendar RPC calls that use an efficient sync."""
 
     config_entry: ConfigEntry
@@ -320,7 +320,7 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):  # pylint:
         return None
 
 
-class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):  # pylint: disable=hass-enforce-coordinator-module
+class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     """Coordinator for calendar RPC calls.
 
     This sends a polling RPC, not using sync, as a workaround

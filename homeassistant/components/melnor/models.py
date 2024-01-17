@@ -20,7 +20,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):  # pylint: disable=hass-enforce-coordinator-module
+class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Melnor data update coordinator."""
 
     _device: Device
@@ -42,7 +42,7 @@ class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):  # pylint: dis
         return self._device
 
 
-class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
+class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     """Base class for melnor entities."""
 
     _device: Device

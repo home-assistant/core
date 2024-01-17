@@ -74,7 +74,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):  # pylint: disable=hass-enforce-coordinator-module
+class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
     """Define an object to hold GIOS data."""
 
     def __init__(

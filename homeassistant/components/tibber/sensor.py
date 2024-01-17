@@ -498,7 +498,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
         self.async_write_ha_state()
 
 
-class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
+class TibberRtDataCoordinator(DataUpdateCoordinator):
     """Handle Tibber realtime data."""
 
     def __init__(
@@ -562,7 +562,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
         return self.data.get("data", {}).get("liveMeasurement")
 
 
-class TibberDataCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
+class TibberDataCoordinator(DataUpdateCoordinator[None]):
     """Handle Tibber data and insert statistics."""
 
     config_entry: ConfigEntry

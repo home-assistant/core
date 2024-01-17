@@ -131,7 +131,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
 
-class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):  # pylint: disable=hass-enforce-coordinator-module
+class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
     """Update coordinator for the printer."""
 
     config_entry: ConfigEntry
@@ -176,7 +176,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):  # pylint: disa
         return timedelta(seconds=30)
 
 
-class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):  # pylint: disable=hass-enforce-coordinator-module
+class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):
     """Printer update coordinator."""
 
     async def _fetch_data(self) -> PrinterStatus:
@@ -184,7 +184,7 @@ class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):  # pylint: d
         return await self.api.get_status()
 
 
-class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):  # pylint: disable=hass-enforce-coordinator-module
+class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):
     """Printer legacy update coordinator."""
 
     async def _fetch_data(self) -> LegacyPrinterStatus:
@@ -192,7 +192,7 @@ class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]): 
         return await self.api.get_legacy_printer()
 
 
-class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):  # pylint: disable=hass-enforce-coordinator-module
+class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
     """Job update coordinator."""
 
     async def _fetch_data(self) -> JobInfo:
@@ -200,7 +200,7 @@ class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):  # pylint: disa
         return await self.api.get_job()
 
 
-class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
+class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
     """Defines a base PrusaLink entity."""
 
     _attr_has_entity_name = True

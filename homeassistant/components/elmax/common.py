@@ -34,7 +34,7 @@ from .const import DEFAULT_TIMEOUT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):  # pylint: disable=hass-enforce-coordinator-module
+class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     """Coordinator helper to handle Elmax API polling."""
 
     def __init__(
