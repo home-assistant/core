@@ -470,11 +470,16 @@ class HoneywellUSThermostat(ClimateEntity):
             except SomeComfortError as err:
                 _LOGGER.error("Couldn't set permanent hold")
                 raise HomeAssistantError(
-                    "Honeywell couldn't set permanent hold."
+                    translation_domain=DOMAIN,
+                    translation_key="set_hold_failed",
                 ) from err
         else:
             _LOGGER.error("Invalid system mode returned: %s", mode)
-            raise HomeAssistantError(f"Honeywell invalid system mode returned {mode}.")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_mode_failed",
+                translation_placeholders={"mode": mode},
+            )
 
     async def _turn_away_mode_off(self) -> None:
         """Turn away/hold off."""
@@ -486,7 +491,10 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except SomeComfortError as err:
             _LOGGER.error("Can not stop hold mode")
-            raise HomeAssistantError("Honeywell could not stop hold mode") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="stop_hold_failed",
+            ) from err
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -505,7 +513,8 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except SomeComfortError as err:
             raise HomeAssistantError(
-                "Honeywell could not set system mode to aux heat."
+                translation_domain=DOMAIN,
+                translation_key="set_aux_failed",
             ) from err
 
     async def async_turn_aux_heat_off(self) -> None:
@@ -517,7 +526,10 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self.async_set_hvac_mode(HVACMode.OFF)
 
         except HomeAssistantError as err:
-            raise HomeAssistantError("Honeywell could turn off aux heat mode.") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="disable_aux_failed",
+            ) from err
 
     async def async_update(self) -> None:
         """Get the latest state from the service."""
