@@ -20,7 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -81,15 +80,6 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
     entity_description: LaMarzoccoUpdateEntityDescription
     _attr_supported_features = UpdateEntityFeature.INSTALL
 
-    def __init__(
-        self,
-        coordinator: LaMarzoccoUpdateCoordinator,
-        description: LaMarzoccoUpdateEntityDescription,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, description)
-        self._attr_in_progress = False
-
     @property
     def installed_version(self) -> str | None:
         """Return the current firmware version."""
@@ -104,7 +94,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        self._attr_in_progress = False
+        self._attr_in_progress = True
         self.async_write_ha_state()
         success = await self.coordinator.lm.update_firmware(
             self.entity_description.component
