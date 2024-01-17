@@ -1,4 +1,4 @@
-"""Tests for the La Marzocco Water Heaters."""
+"""Tests for the La Marzocco select entities."""
 
 
 from unittest.mock import MagicMock

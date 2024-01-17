@@ -22,7 +22,7 @@ class LaMarzoccoSelectEntityDescription(
     LaMarzoccoEntityDescription,
     SelectEntityDescription,
 ):
-    """Description of an La Marzocco Water Heater."""
+    """Description of a La Marzocco select entity."""
 
     current_option_fn: Callable[[LaMarzoccoClient], str]
     select_option_fn: Callable[
@@ -39,7 +39,7 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         select_option_fn=lambda coordinator, option: coordinator.lm.set_steam_level(
             int(option)
         ),
-        current_option_fn=lambda lm: lm.current_status.get("steam_level_set", 3),
+        current_option_fn=lambda lm: lm.current_status["steam_level_set"],
         supported_fn=lambda coordinator: coordinator.lm.model_name
         == LaMarzoccoModel.LINEA_MICRA,
     ),
@@ -66,7 +66,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up water heater type entities."""
+    """Set up select entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
@@ -77,7 +77,7 @@ async def async_setup_entry(
 
 
 class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
-    """Water heater representing espresso machine temperature data."""
+    """La Marzocco select entity."""
 
     entity_description: LaMarzoccoSelectEntityDescription
 
