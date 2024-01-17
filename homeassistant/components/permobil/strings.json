@@ -28,7 +28,7 @@
       "code_request_error": "Error requesting application code",
       "invalid_email": "Invalid email",
       "invalid_code": "The code you gave is incorrect",
-      "unsigned_eula": "Please sign the EULA in the MyPermobil app"
+      "unsigned_eula": "Please sign the EULA in the {app_name} app"
     }
   },
   "entity": {

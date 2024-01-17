@@ -152,7 +152,10 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if errors or not user_input:
             return self.async_show_form(
-                step_id="email_code", data_schema=GET_TOKEN_SCHEMA, errors=errors
+                step_id="email_code",
+                data_schema=GET_TOKEN_SCHEMA,
+                errors=errors,
+                description_placeholders={"app_name": "MyPermobil"},
             )
 
         return self.async_create_entry(title=self.data[CONF_EMAIL], data=self.data)
