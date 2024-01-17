@@ -53,3 +53,10 @@ class TessieCoverStates(IntEnum):
 
     CLOSED = 0
     OPEN = 1
+
+
+class TessieChargeCableLockStates(StrEnum):
+    """Tessie Charge Cable Lock states."""
+
+    ENGAGED = "Engaged"
+    DISENGAGED = "Disengaged"

@@ -804,6 +804,7 @@ async def test_states_filters_visible(
     hass: HomeAssistant, hass_admin_user: MockUser, websocket_client
 ) -> None:
     """Test we only get entities that we're allowed to see."""
+    hass_admin_user.groups = []
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"test.entity": True}}})
     hass.states.async_set("test.entity", "hello")
     hass.states.async_set("test.not_visible_entity", "invisible")
@@ -1048,6 +1049,7 @@ async def test_subscribe_unsubscribe_entities(
     }
     hass_admin_user.groups = []
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
+    assert not hass_admin_user.is_admin
 
     await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
 

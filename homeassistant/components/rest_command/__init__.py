@@ -1,8 +1,11 @@
 """Support for exposing regular REST commands as services."""
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 import logging
+from typing import Any
 
 import aiohttp
 from aiohttp import hdrs
@@ -86,9 +89,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_register_rest_command(name, command_config)
 
     @callback
-    def async_register_rest_command(name, command_config):
+    def async_register_rest_command(name: str, command_config: dict[str, Any]) -> None:
         """Create service for rest command."""
-        websession = async_get_clientsession(hass, command_config.get(CONF_VERIFY_SSL))
+        websession = async_get_clientsession(hass, command_config[CONF_VERIFY_SSL])
         timeout = command_config[CONF_TIMEOUT]
         method = command_config[CONF_METHOD]
 

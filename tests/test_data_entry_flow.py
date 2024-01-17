@@ -358,30 +358,39 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
         VERSION = 5
         data = None
         start_task_two = False
-        progress_task: asyncio.Task[None] | None = None
+        task_one: asyncio.Task[None] | None = None
+        task_two: asyncio.Task[None] | None = None
 
         async def async_step_init(self, user_input=None):
-            async def long_running_task_one() -> None:
+            async def long_running_job_one() -> None:
                 await task_one_evt.wait()
-                self.start_task_two = True
 
-            async def long_running_task_two() -> None:
+            async def long_running_job_two() -> None:
                 await task_two_evt.wait()
                 self.data = {"title": "Hello"}
 
-            if not task_one_evt.is_set():
+            uncompleted_task: asyncio.Task[None] | None = None
+            if not self.task_one:
+                self.task_one = hass.async_create_task(long_running_job_one())
+
+            progress_action = None
+            if not self.task_one.done():
                 progress_action = "task_one"
-                if not self.progress_task:
-                    self.progress_task = hass.async_create_task(long_running_task_one())
-            elif not task_two_evt.is_set():
-                progress_action = "task_two"
-                if self.start_task_two:
-                    self.progress_task = hass.async_create_task(long_running_task_two())
-                    self.start_task_two = False
-            if not task_one_evt.is_set() or not task_two_evt.is_set():
+                uncompleted_task = self.task_one
+
+            if not uncompleted_task:
+                if not self.task_two:
+                    self.task_two = hass.async_create_task(long_running_job_two())
+
+                if not self.task_two.done():
+                    progress_action = "task_two"
+                    uncompleted_task = self.task_two
+
+            if uncompleted_task:
+                assert progress_action
                 return self.async_show_progress(
                     progress_action=progress_action,
-                    progress_task=self.progress_task,
+                    progress_task=uncompleted_task,
                 )
 
             return self.async_show_progress_done(next_step_id="finish")
@@ -498,7 +507,55 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
     assert result["reason"] == "error"
 
 
-async def test_show_progress_legacy(hass: HomeAssistant, manager) -> None:
+async def test_show_progress_hidden_from_frontend(hass: HomeAssistant, manager) -> None:
+    """Test show progress done is not sent to frontend."""
+    manager.hass = hass
+    async_show_progress_done_called = False
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+        data = None
+        progress_task: asyncio.Task[None] | None = None
+
+        async def async_step_init(self, user_input=None):
+            async def long_running_job() -> None:
+                return
+
+            if not self.progress_task:
+                self.progress_task = hass.async_create_task(long_running_job())
+            if self.progress_task.done():
+                nonlocal async_show_progress_done_called
+                async_show_progress_done_called = True
+                return self.async_show_progress_done(next_step_id="finish")
+            return self.async_show_progress(
+                step_id="init",
+                progress_action="task",
+                # Set to None to simulate flow manager has not yet called when
+                # frontend loads
+                progress_task=None,
+            )
+
+        async def async_step_finish(self, user_input=None):
+            return self.async_create_entry(title=None, data=self.data)
+
+    result = await manager.async_init("test")
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "task"
+    assert len(manager.async_progress()) == 1
+    assert len(manager.async_progress_by_handler("test")) == 1
+    assert manager.async_get(result["flow_id"])["handler"] == "test"
+
+    await hass.async_block_till_done()
+    assert not async_show_progress_done_called
+
+    # Frontend refreshes the flow
+    result = await manager.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert async_show_progress_done_called
+
+
+async def test_show_progress_legacy(hass: HomeAssistant, manager, caplog) -> None:
     """Test show progress logic.
 
     This tests the deprecated version where the config flow is responsible for
@@ -571,7 +628,10 @@ async def test_show_progress_legacy(hass: HomeAssistant, manager) -> None:
     result = await manager.async_configure(
         result["flow_id"], {"task_finished": 2, "title": "Hello"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE
+    # Note: The SHOW_PROGRESS_DONE is hidden from frontend; FlowManager automatically
+    # calls the flow again
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Hello"
 
     await hass.async_block_till_done()
     assert len(events) == 2  # 1 for task one and 1 for task two
@@ -581,10 +641,12 @@ async def test_show_progress_legacy(hass: HomeAssistant, manager) -> None:
         "refresh": True,
     }
 
-    # Frontend refreshes the flow
-    result = await manager.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Hello"
+    # Check for deprecation warning
+    assert (
+        "tests.test_data_entry_flow::TestFlow calls async_show_progress without passing"
+        " a progress task, this is not valid and will break in Home Assistant "
+        "Core 2024.8."
+    ) in caplog.text
 
 
 async def test_show_progress_fires_only_when_changed(

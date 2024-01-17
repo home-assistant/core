@@ -31,6 +31,7 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Swiss public transport config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -59,6 +60,9 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_START]} {user_input[CONF_DESTINATION]}"
+                )
                 return self.async_create_entry(
                     title=f"{user_input[CONF_START]} {user_input[CONF_DESTINATION]}",
                     data=user_input,
@@ -98,6 +102,9 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="unknown")
 
+        await self.async_set_unique_id(
+            f"{import_input[CONF_START]} {import_input[CONF_DESTINATION]}"
+        )
         return self.async_create_entry(
             title=import_input[CONF_NAME],
             data=import_input,
