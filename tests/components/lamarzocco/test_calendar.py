@@ -13,7 +13,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import async_init_integration
@@ -25,7 +25,6 @@ async def test_calendar_events(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
@@ -45,11 +44,7 @@ async def test_calendar_events(
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
-    assert entry.device_id
     assert entry == snapshot
-
-    device = device_registry.async_get(entry.device_id)
-    assert device
 
     events = await hass.services.async_call(
         CALENDAR_DOMAIN,

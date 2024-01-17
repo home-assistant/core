@@ -74,7 +74,7 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
 
         # check first if auto/on off is turned on in general
         # because could still be on for that day but disabled
-        if self.coordinator.lm.current_status.get("global_auto") != "Enabled":
+        if self.coordinator.lm.current_status["global_auto"] != "Enabled":
             return None
 
         # parse the schedule for the day
