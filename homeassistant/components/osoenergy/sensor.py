@@ -1,7 +1,6 @@
 """Support for OSO Energy sensors."""
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from apyosoenergyapi import OSOEnergy
 from apyosoenergyapi.helper.const import OSOEnergySensorData
@@ -21,14 +20,6 @@ import homeassistant.util.dt as dt_util
 
 from . import OSOEnergyEntity
 from .const import DOMAIN
-
-ENUM_VALUE_MAPPING: dict[str, dict[str, Any]] = {
-    "heater_mode": {"powersave": "power_save", "extraenergy": "extra_energy"},
-    "optimization_mode": {
-        "gridcompany": "grid_company",
-        "smartcompany": "smart_company",
-    },
-}
 
 
 def _get_local_hour(utc_hour: int):
@@ -53,86 +44,91 @@ def _convert_profile_to_local(values):
     return profile
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class OSOEnergySensorEntityDescription(SensorEntityDescription):
     """Class describing OSO Energy heater sensor entities."""
 
-    value: Callable[[OSOEnergy], StateType] = round
+    value: Callable[[OSOEnergy], StateType]
 
 
-SENSOR_TYPES: tuple[OSOEnergySensorEntityDescription, ...] = (
-    OSOEnergySensorEntityDescription(
+SENSOR_TYPES: dict[str, OSOEnergySensorEntityDescription] = {
+    "profile": OSOEnergySensorEntityDescription(
         key="profile",
         translation_key="profile",
         value=lambda device: _convert_profile_to_local(device.state),
     ),
-    OSOEnergySensorEntityDescription(
+    "heater_mode": OSOEnergySensorEntityDescription(
         key="heater_mode",
         translation_key="heater_mode",
         device_class=SensorDeviceClass.ENUM,
-        value=lambda device: ENUM_VALUE_MAPPING["heater_mode"].get(
-            device.state.lower(), device.state.lower()
-        ),
+        options=[
+            "auto",
+            "manual",
+            "off",
+            "legionella",
+            "powersave",
+            "extraenergy",
+            "voltage",
+            "ffr",
+        ],
+        value=lambda device: device.state.lower(),
     ),
-    OSOEnergySensorEntityDescription(
+    "optimization_mode": OSOEnergySensorEntityDescription(
         key="optimization_mode",
         translation_key="optimization_mode",
         device_class=SensorDeviceClass.ENUM,
-        value=lambda device: ENUM_VALUE_MAPPING["optimization_mode"].get(
-            device.state.lower(), device.state.lower()
-        ),
+        options=["off", "oso", "gridcompany", "smartcompany", "advanced"],
+        value=lambda device: device.state.lower(),
     ),
-    OSOEnergySensorEntityDescription(
+    "power_load": OSOEnergySensorEntityDescription(
         key="power_load",
-        translation_key="power_load",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value=lambda device: device.state,
     ),
-    OSOEnergySensorEntityDescription(
+    "tapping_capacity_kwh": OSOEnergySensorEntityDescription(
         key="tapping_capacity_kwh",
         translation_key="tapping_capacity_kwh",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda device: device.state,
     ),
-    OSOEnergySensorEntityDescription(
+    "capacity_mixed_water_40": OSOEnergySensorEntityDescription(
         key="capacity_mixed_water_40",
         translation_key="capacity_mixed_water_40",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         value=lambda device: device.state,
     ),
-    OSOEnergySensorEntityDescription(
+    "v40_min": OSOEnergySensorEntityDescription(
         key="v40_min",
         translation_key="v40_min",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         value=lambda device: device.state,
     ),
-    OSOEnergySensorEntityDescription(
+    "v40_level_min": OSOEnergySensorEntityDescription(
         key="v40_level_min",
         translation_key="v40_level_min",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         value=lambda device: device.state,
     ),
-    OSOEnergySensorEntityDescription(
+    "v40_level_max": OSOEnergySensorEntityDescription(
         key="v40_level_max",
         translation_key="v40_level_max",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         value=lambda device: device.state,
     ),
-    OSOEnergySensorEntityDescription(
+    "volume": OSOEnergySensorEntityDescription(
         key="volume",
-        translation_key="volume",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         value=lambda device: device.state,
     ),
-)
+}
 
 
 async def async_setup_entry(
@@ -144,9 +140,9 @@ async def async_setup_entry(
     entities = []
     if devices:
         for dev in devices:
-            for description in SENSOR_TYPES:
-                if dev.osoEnergyType.lower() == description.key:
-                    entities.append(OSOEnergySensor(osoenergy, description, dev))
+            description = SENSOR_TYPES.get(dev.osoEnergyType.lower())
+            if description is not None:
+                entities.append(OSOEnergySensor(osoenergy, description, dev))
 
     async_add_entities(entities, True)
 
@@ -154,7 +150,6 @@ async def async_setup_entry(
 class OSOEnergySensor(OSOEnergyEntity[OSOEnergySensorData], SensorEntity):
     """OSO Energy Sensor Entity."""
 
-    _attr_has_entity_name = True
     entity_description: OSOEnergySensorEntityDescription
 
     def __init__(

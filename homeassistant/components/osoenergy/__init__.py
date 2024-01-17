@@ -82,11 +82,7 @@ class OSOEnergyEntity(Entity, Generic[_T]):
         """Initialize the instance."""
         self.osoenergy = osoenergy
         self.device = osoenergy_device
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device.device_id)},
             manufacturer=MANUFACTURER,
             model=self.device.device_type,
