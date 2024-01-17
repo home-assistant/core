@@ -13,7 +13,7 @@ class HassEnforceCoordinatorModule(BaseChecker):
     priority = -1
     msgs = {
         "C7461": (
-            "Derived data update coordinator must be placed in the 'coordinator' module",
+            "Derived data update coordinator is recommended to be placed in the 'coordinator' module",
             "hass-enforce-coordinator-module",
             "Used when derived data update coordinator should be placed in its own module.",
         ),
