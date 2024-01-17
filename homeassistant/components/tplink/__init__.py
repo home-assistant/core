@@ -130,7 +130,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if config_dict := entry.data.get(CONF_DEVICE_CONFIG):
         try:
             config = DeviceConfig.from_dict(config_dict)
-        except SmartDeviceException:
+        except (
+            SmartDeviceException,
+            KeyError,
+        ):  # Remove KeyError when library raises SmartDeviceException
             _LOGGER.warning(
                 "Invalid connection type dict for %s: %s", host, config_dict
             )

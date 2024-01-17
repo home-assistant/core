@@ -31,11 +31,13 @@ def mock_discovery():
         device = _mocked_bulb(
             device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
             credentials_hash=CREDENTIALS_HASH_AUTH,
+            alias=None,
         )
         devices = {
             "127.0.0.1": _mocked_bulb(
                 device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
                 credentials_hash=CREDENTIALS_HASH_AUTH,
+                alias=None,
             )
         }
         mock_discovery["discover"].return_value = devices

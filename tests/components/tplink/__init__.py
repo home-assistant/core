@@ -77,7 +77,9 @@ def _mock_protocol() -> TPLinkSmartHomeProtocol:
 
 
 def _mocked_bulb(
-    device_config=DEVICE_CONFIG_LEGACY, credentials_hash=CREDENTIALS_HASH_LEGACY
+    device_config=DEVICE_CONFIG_LEGACY,
+    credentials_hash=CREDENTIALS_HASH_LEGACY,
+    alias=ALIAS,
 ) -> SmartBulb:
     bulb = MagicMock(auto_spec=SmartBulb, name="Mocked bulb")
     bulb.update = AsyncMock()
