@@ -101,7 +101,7 @@ async def async_setup_entry(
         entry.entry_id
     ]
     address = coordinator.address
-    discovered_event_entities: set[DeviceKey] = set()
+    discovered_device_keys: set[DeviceKey] = set()
     ent_reg = er.async_get(hass)
     to_add: list[BTHomeEventEntity] = []
     for ent_reg_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
@@ -115,17 +115,17 @@ async def async_setup_entry(
             address, event_class = unique_id_split
             device_id = None
         discovery_key = DeviceKey(event_class, device_id)
-        discovered_event_entities.add(discovery_key)
+        discovered_device_keys.add(discovery_key)
         to_add.append(BTHomeEventEntity(address, event_class, device_id))
 
     async_add_entities(to_add)
 
     @callback
-    def _async_discovered_event_class(device_key: DeviceKey) -> None:
-        """Handle a discovered event class."""
-        if device_key in discovered_event_entities:
+    def _async_discovered_device_key(device_key: DeviceKey) -> None:
+        """Handle a discovered device key."""
+        if device_key in discovered_device_keys:
             return
-        discovered_event_entities.add(discovery_key)
+        discovered_device_keys.add(discovery_key)
         async_add_entities(
             [BTHomeEventEntity(address, device_key.key, device_key.device_id)]
         )
@@ -134,6 +134,6 @@ async def async_setup_entry(
         async_dispatcher_connect(
             hass,
             format_discovered_device_key(address),
-            _async_discovered_event_class,
+            _async_discovered_device_key,
         )
     )
