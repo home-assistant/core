@@ -39,7 +39,8 @@ from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
 
-UDP_PORT = 10500  # Set to 0 to let the OS pick a free random port
+UDP_PORT_MIN = 10500  # Set to 0 to let the OS pick a free random port
+UDP_PORT_MAX = 10520
 UDP_MAX_PACKET_SIZE = 1024
 
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
@@ -107,6 +108,22 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setblocking(False)
+
+        def find_port(port: int, port_max: int) -> int:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            while port <= port_max:
+                try:
+                    sock.bind(("", port))
+                    sock.close()
+                    return port
+                except OSError:
+                    port += 1
+            raise OSError("No free ports")
+
+        if UDP_PORT_MIN == 0:
+            UDP_PORT = 0
+        else:
+            UDP_PORT = find_port(UDP_PORT_MIN, UDP_PORT_MAX)
 
         sock.bind(("", UDP_PORT))
 
