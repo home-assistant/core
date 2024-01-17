@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from lmcloud import LMCloud as LaMarzoccoClient
-from lmcloud.const import LaMarzoccoModel
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -19,12 +18,6 @@ class LaMarzoccoEntityDescription(EntityDescription):
     """Description for all LM entities."""
 
     available_fn: Callable[[LaMarzoccoClient], bool] = lambda _: True
-    supported_models: tuple[LaMarzoccoModel, ...] = (
-        LaMarzoccoModel.GS3_AV,
-        LaMarzoccoModel.GS3_MP,
-        LaMarzoccoModel.LINEA_MICRA,
-        LaMarzoccoModel.LINEA_MINI,
-    )
     supported_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
 
 

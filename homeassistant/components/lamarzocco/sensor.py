@@ -59,6 +59,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         value_fn=lambda lm: lm.current_status.get("brew_active_duration", 0),
         available_fn=lambda lm: lm.websocket_connected,
         entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=lambda coordinator: coordinator.local_connection_configured,
     ),
     LaMarzoccoSensorEntityDescription(
         key="current_temp_coffee",
@@ -89,17 +90,11 @@ async def async_setup_entry(
     """Set up sensor entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[LaMarzoccoSensorEntity] = []
-    for description in ENTITIES:
-        if coordinator.lm.model_name in description.supported_models:
-            if (
-                description.key == "shot_timer"
-                and not coordinator.local_connection_configured
-            ):
-                continue
-            entities.append(LaMarzoccoSensorEntity(coordinator, description))
-
-    async_add_entities(entities)
+    async_add_entities(
+        LaMarzoccoSensorEntity(coordinator, description)
+        for description in ENTITIES
+        if description.supported_fn(coordinator)
+    )
 
 
 class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
