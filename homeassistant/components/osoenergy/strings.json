@@ -28,31 +28,31 @@
   },
   "entity": {
     "sensor": {
-      "tapping_capacity_kwh": {
-        "name": "Tapping capacity kWh"
+      "tapping_capacity": {
+        "name": "Tapping capacity"
       },
       "capacity_mixed_water_40": {
         "name": "Capacity mixed water 40°C"
       },
       "v40_min": {
-        "name": "Mixed water at 40\u00b0C"
+        "name": "Mixed water at 40°C"
       },
       "v40_level_min": {
-        "name": "Minimum level of mixed water at 40\u00b0C"
+        "name": "Minimum level of mixed water at 40°C"
       },
       "v40_level_max": {
-        "name": "Maximum level of mixed water at 40\u00b0C"
+        "name": "Maximum level of mixed water at 40°C"
       },
       "heater_mode": {
         "name": "Heater mode",
         "state": {
           "auto": "Auto",
-          "extraenergy": "Extra Energy",
-          "ffr": "FFR",
+          "extraenergy": "Extra energy",
+          "ffr": "Fast frequency reserve",
           "legionella": "Legionella",
           "manual": "Manual",
           "off": "Off",
-          "powersave": "Power Save",
+          "powersave": "Power save",
           "voltage": "Voltage"
         }
       },
@@ -60,10 +60,10 @@
         "name": "Optimization mode",
         "state": {
           "advanced": "Advanced",
-          "gridcompany": "Grid Company",
+          "gridcompany": "Grid company",
           "off": "Off",
           "oso": "OSO",
-          "smartcompany": "Smart Company"
+          "smartcompany": "Smart company"
         }
       },
       "profile": {

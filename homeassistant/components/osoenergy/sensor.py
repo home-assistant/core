@@ -87,9 +87,9 @@ SENSOR_TYPES: dict[str, OSOEnergySensorEntityDescription] = {
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value=lambda device: device.state,
     ),
-    "tapping_capacity_kwh": OSOEnergySensorEntityDescription(
-        key="tapping_capacity_kwh",
-        translation_key="tapping_capacity_kwh",
+    "tapping_capacity": OSOEnergySensorEntityDescription(
+        key="tapping_capacity",
+        translation_key="tapping_capacity",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda device: device.state,
