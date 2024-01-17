@@ -237,7 +237,7 @@ async def test_zero_conf_locked_interface_robot(hass: HomeAssistant) -> None:
         )
 
     assert result["step_id"] == "password"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
 
 async def test_zero_conf_uninitialized_robot(hass: HomeAssistant) -> None:
