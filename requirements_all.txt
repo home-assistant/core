@@ -276,7 +276,7 @@ aiohue==4.7.0
 aioimaplib==1.0.1
 
 # homeassistant.components.apache_kafka
-aiokafka==0.7.2
+aiokafka==0.10.0
 
 # homeassistant.components.kef
 aiokef==0.2.16
@@ -669,7 +669,7 @@ datadog==0.15.0
 datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
-dbus-fast==2.21.0
+dbus-fast==2.21.1
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -953,6 +953,9 @@ gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
 govee-ble==0.27.3
+
+# homeassistant.components.govee_light_local
+govee-local-api==1.4.1
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -2222,7 +2225,7 @@ python-matter-server==5.1.1
 python-miio==0.5.12
 
 # homeassistant.components.mpd
-python-mpd2==3.0.5
+python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
@@ -2818,7 +2821,7 @@ wled==0.17.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==1.4.0
+wyoming==1.5.0
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
