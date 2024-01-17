@@ -58,8 +58,8 @@
       "steam_temp": {
         "name": "Steam temperature set"
       },
-      "dose_hot_water": {
-        "name": "Dose hot water"
+      "tea_water_duration": {
+        "name": "Tea water duration"
       }
     },
     "select": {

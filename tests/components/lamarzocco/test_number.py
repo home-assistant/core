@@ -64,7 +64,7 @@ async def test_coffee_boiler(
     ("entity_name", "value", "func_name", "kwargs"),
     [
         ("steam_temperature_set", 131, "set_steam_temp", {"temperature": 131}),
-        ("dose_hot_water", 15, "set_dose_hot_water", {"value": 15}),
+        ("tea_water_duration", 15, "set_dose_hot_water", {"value": 15}),
     ],
 )
 async def test_gs3_exclusive(
@@ -120,7 +120,7 @@ async def test_gs3_exclusive_none(
 ) -> None:
     """Ensure GS3 exclusive is None for unsupported models."""
 
-    ENTITIES = ("steam_temperature_set", "dose_hot_water")
+    ENTITIES = ("steam_temperature_set", "tea_water_duration")
 
     serial_number = mock_lamarzocco.serial_number
     for entity in ENTITIES:

@@ -71,8 +71,8 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         ),
     ),
     LaMarzoccoNumberEntityDescription(
-        key="dose_hot_water",
-        translation_key="dose_hot_water",
+        key="tea_water_duration",
+        translation_key="tea_water_duration",
         icon="mdi:water-percent",
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
