@@ -163,7 +163,7 @@ class OSOEnergySensor(OSOEnergyEntity[OSOEnergySensorData], SensorEntity):
         description: OSOEnergySensorEntityDescription,
         osoenergy_device: OSOEnergySensorData,
     ) -> None:
-        """Initialize the Advantage Air timer control."""
+        """Initialize the OSO Energy sensor."""
         super().__init__(instance, osoenergy_device)
 
         device_id = osoenergy_device.device_id

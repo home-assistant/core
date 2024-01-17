@@ -62,7 +62,7 @@ class OSOEnergyWaterHeater(
         instance: OSOEnergy,
         osoenergy_device: OSOEnergyWaterHeaterData,
     ) -> None:
-        """Initialize the Advantage Air timer control."""
+        """Initialize the OSO Energy water heater."""
         super().__init__(instance, osoenergy_device)
         self._attr_unique_id = osoenergy_device.device_id
 
