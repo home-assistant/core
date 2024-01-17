@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_HOST,
     DEGREE,
     PERCENTAGE,
     UnitOfIrradiance,
@@ -27,7 +28,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 # from homeassistant.helpers.entity import EntityDescription
 from .const import (
-    CONF_IP,
     DEVICE_NAME,
     DOMAIN,
     LEAF_BATT,
@@ -1167,7 +1167,7 @@ async def async_setup_entry(
             sensors.append(
                 LocalWittiotSensor(
                     coordinator,
-                    entry.data[CONF_IP],
+                    entry.data[CONF_HOST],
                     entry.data[DEVICE_NAME],
                     desc,
                 )

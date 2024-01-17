@@ -4,7 +4,7 @@
       "user": {
         "title": "Device IP address",
         "data": {
-          "ip": "Device IP address"
+          "host": "Device IP address"
         },
         "description": "Please enter the IP address of the device to view the data"
       }

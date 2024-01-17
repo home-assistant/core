@@ -8,9 +8,10 @@ from wittiot import API
 from wittiot.errors import WittiotError
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_IP, CONNECTION_TYPE, DEVICE_NAME, DOMAIN, LOCAL
+from .const import CONNECTION_TYPE, DEVICE_NAME, DOMAIN, LOCAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,10 +22,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the local step."""
         errors = {}
-        data_schema = vol.Schema({vol.Required(CONF_IP): str})
+        data_schema = vol.Schema({vol.Required(CONF_HOST): str})
 
         if user_input is not None:
-            ip = user_input[CONF_IP].replace(" ", "")
+            ip = user_input[CONF_HOST].replace(" ", "")
 
             api = API(ip, session=aiohttp_client.async_get_clientsession(self.hass))
 
@@ -46,7 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=unique_id,
                     data={
                         DEVICE_NAME: unique_id,
-                        CONF_IP: ip,
+                        CONF_HOST: ip,
                         CONNECTION_TYPE: LOCAL,
                     },
                 )
