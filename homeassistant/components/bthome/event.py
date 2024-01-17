@@ -49,6 +49,7 @@ class BTHomeEventEntity(EventEntity):
     """Representation of a BTHome event entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, address: str, event_class: str) -> None:
         """Initialise a BTHome event entity."""
