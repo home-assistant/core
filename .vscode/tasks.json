@@ -157,6 +157,20 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "Install integration requirements",
+      "detail": "Install all requirements of a given integration.",
+      "type": "shell",
+      "command": "pip3 install `cat homeassistant/components/${input:integrationName}/manifest.json | jq -r '.requirements | join(\" \")'`",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
     }
   ],
   "inputs": [
