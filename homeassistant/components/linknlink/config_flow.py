@@ -3,6 +3,7 @@ import errno
 from functools import partial
 import logging
 import socket
+from typing import Any
 
 import linknlink as llk
 from linknlink.exceptions import (
@@ -36,10 +37,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define a device for the config flow."""
         if device.type not in DEVICE_TYPES:
             _LOGGER.error(
-                (
-                    "Unsupported device: %s. If it worked before, please open "
-                    "an issue at https://github.com/home-assistant/core/issues"
-                ),
+                ("Unsupported device: %s"),
                 hex(device.devtype),
             )
             raise AbortFlow("not_supported")
@@ -79,11 +77,13 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_device(device)
         return await self.async_step_auth()
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
-        if user_input is not None:
+        if user_input:
             host = user_input[CONF_HOST]
             timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
@@ -254,7 +254,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
         )
 
-        if user_input is not None:
+        if user_input:
             return self.async_create_entry(
                 title=user_input[CONF_NAME],
                 data={

@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-# Do not edit/remove. Adding is ok.
 LINKNLINK_DEVICES = {
     "Living Room": (
         "192.168.2.12",

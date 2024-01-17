@@ -18,74 +18,38 @@ from linknlink.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = 10
 
 
-class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
+class LinknLinkCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     """In charge of get the data for a site."""
 
     api: llk.Device
+    config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, mac: str) -> None:
         """Initialize the data service."""
         super().__init__(
             hass,
             _LOGGER,
-            name=config.title,
-            update_interval=timedelta(seconds=SCAN_INTERVAL),
+            name=f"{DOMAIN}-{mac}",
+            update_interval=timedelta(seconds=30),
         )
-        self.name = config.title
-        self.hass = hass
-        self.config = config
         self.fw_version: int | None = None
         self.authorized: bool | None = None
-        self.reset_jobs: list[CALLBACK_TYPE] = []
 
     @property
     def available(self) -> bool | None:
         """Return True if the device is available."""
-        return self.api.auth()
+        return self.authorized
 
-    def unload(self) -> None:
-        """Cancel jobs."""
-        while self.reset_jobs:
-            self.reset_jobs.pop()()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.api.mac.hex())},
-            name=self.config.title,
-            manufacturer=self.api.manufacturer,
-            model=self.api.model,
-            sw_version=str(self.fw_version),
-        )
-
-    @staticmethod
-    async def async_update(hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Update the device and related entities.
-
-        Triggered when the device is renamed on the frontend.
-        """
-        device_registry = dr.async_get(hass)
-        assert entry.unique_id
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, entry.unique_id)}
-        )
-        assert device_entry
-        device_registry.async_update_device(device_entry.id, name=entry.title)
+    async def async_update(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Handle options update."""
         await hass.config_entries.async_reload(entry.entry_id)
 
     def _get_firmware_version(self) -> int | None:
@@ -97,7 +61,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
 
     async def async_setup(self) -> bool:
         """Set up the device and related entities."""
-        config = self.config
+        config = self.config_entry
 
         api = llk.gendevice(
             config.data[CONF_TYPE],
@@ -127,7 +91,8 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
             return False
 
         self.authorized = True
-        self.reset_jobs.append(config.add_update_listener(self.async_update))
+        unlisten = config.add_update_listener(self.async_update)
+        config.async_on_unload(unlisten)
 
         return True
 
@@ -181,12 +146,3 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
             data = await self.async_request(self.api.check_sensors)
             return data
         return {}
-
-
-class LinknLinkEntity(CoordinatorEntity[Coordinator]):
-    """To manage the device info."""
-
-    def __init__(self, coordinator: Coordinator, context: Any = None) -> None:
-        """Initialize coordinator entity."""
-        super().__init__(coordinator, context)
-        self._attr_device_info = coordinator.device_info

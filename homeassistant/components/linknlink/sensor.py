@@ -13,7 +13,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import Coordinator, LinknLinkEntity
+from .coordinator import LinknLinkCoordinator
+from .entity import LinknLinkEntity
 
 HUMITURE_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -38,7 +39,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the linknlink sensor."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: LinknLinkCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         LinknLinkSensor(coordinator, description) for description in HUMITURE_SENSORS
     )
@@ -47,19 +48,17 @@ async def async_setup_entry(
 class LinknLinkSensor(LinknLinkEntity, SensorEntity):
     """Representation of a linknlink sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: LinknLinkCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._attr_native_value = float(self.coordinator.data[description.key])
         self._attr_unique_id = f"{coordinator.api.mac.hex()}-{description.key}"
+        self._update_attr()
 
     @callback
     def _handle_coordinator_update(self) -> None:

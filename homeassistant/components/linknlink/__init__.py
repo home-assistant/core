@@ -4,21 +4,23 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, get_domains
-from .coordinator import Coordinator
+from .coordinator import LinknLinkCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a linknlink device from a config entry."""
-    coordinator = Coordinator(hass, entry)
+    coordinator = LinknLinkCoordinator(hass, entry.data[CONF_MAC])
     if not await coordinator.async_setup():
         _LOGGER.error(
-            "Unable to setup linknlink device - config=%s", coordinator.config.data
+            "Unable to setup linknlink device - config=%s",
+            coordinator.config_entry.data,
         )
         raise ConfigEntryNotReady
 
@@ -35,11 +37,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    device: Coordinator = hass.data[DOMAIN][entry.entry_id]
+    device: LinknLinkCoordinator = hass.data[DOMAIN][entry.entry_id]
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, get_domains(device.api.type)
     )
     if unload_ok:
-        device.unload()
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
