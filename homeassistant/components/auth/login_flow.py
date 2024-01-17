@@ -371,7 +371,7 @@ class LoginFlowResourceView(LoginFlowBaseView):
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
-        except data_entry_flow.InvalidData:
+        except vol.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
 
         return await self._async_flow_result_to_response(request, client_id, result)

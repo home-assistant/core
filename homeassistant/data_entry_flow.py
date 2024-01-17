@@ -94,7 +94,7 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
-class InvalidData(FlowError):
+class InvalidData(vol.Invalid):  # type: ignore[misc]
     """Invalid data provided."""
 
     def __init__(
@@ -352,7 +352,11 @@ class FlowManager(abc.ABC):
                     schema_errors.get("base", []).append(str(error))
 
                 raise InvalidData(
-                    "Schema validation failed", schema_errors=schema_errors
+                    "Schema validation failed",
+                    path=ex.path,
+                    error_message=ex.error_message,
+                    error_type=ex.error_type,
+                    schema_errors=schema_errors,
                 ) from ex
 
         # Handle a menu navigation choice
