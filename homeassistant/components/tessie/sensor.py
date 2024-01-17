@@ -42,6 +42,10 @@ class TessieSensorEntityDescription(SensorEntityDescription):
 
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     TessieSensorEntityDescription(
+        key="charge_state_charging_state",
+        icon="mdi:ev-station",
+    ),
+    TessieSensorEntityDescription(
         key="charge_state_usable_battery_level",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,

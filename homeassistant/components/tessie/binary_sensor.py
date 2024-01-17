@@ -38,11 +38,6 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
-        key="charge_state_charging_state",
-        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        is_on=lambda x: x == "Charging",
-    ),
-    TessieBinarySensorEntityDescription(
         key="charge_state_preconditioning_enabled",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
