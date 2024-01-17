@@ -187,7 +187,7 @@ async def test_show_user_with_locked_interface_robot_with_connection_loss(
         )
 
     assert result["step_id"] == "password"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     mocked_disconnected_romy = _create_mocked_romy(
         is_initialized=False,
