@@ -40,6 +40,7 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         icon_off="mdi:water-check",
         is_on_fn=lambda lm: not lm.current_status.get("water_reservoir_contact"),
         entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=lambda coordinator: coordinator.local_connection_configured,
     ),
     LaMarzoccoBinarySensorEntityDescription(
         key="brew_active",
@@ -62,17 +63,11 @@ async def async_setup_entry(
     """Set up binary sensor entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[LaMarzoccoBinarySensorEntity] = []
-    for description in ENTITIES:
-        if coordinator.lm.model_name in description.supported_models:
-            if (
-                description.key == "brew_active"
-                and not coordinator.local_connection_configured
-            ):
-                continue
-            entities.append(LaMarzoccoBinarySensorEntity(coordinator, description))
-
-    async_add_entities(entities)
+    async_add_entities(
+        LaMarzoccoBinarySensorEntity(coordinator, description)
+        for description in ENTITIES
+        if description.supported_fn(coordinator)
+    )
 
 
 class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):

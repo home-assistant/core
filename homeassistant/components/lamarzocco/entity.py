@@ -19,6 +19,7 @@ class LaMarzoccoEntityDescription(EntityDescription):
     """Description for all LM entities."""
 
     available_fn: Callable[[LaMarzoccoClient], bool] = lambda _: True
+    supported_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
     supported_models: tuple[LaMarzoccoModel, ...] = (
         LaMarzoccoModel.GS3_AV,
         LaMarzoccoModel.GS3_MP,
