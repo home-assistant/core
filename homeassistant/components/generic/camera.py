@@ -178,7 +178,7 @@ class GenericCamera(Camera):
             return self._last_image
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this device."""
         return self._name
 
