@@ -665,9 +665,6 @@ crownstone-uart==2.1.0
 # homeassistant.components.datadog
 datadog==0.15.0
 
-# homeassistant.components.metoffice
-datapoint==0.9.8;python_version<'3.12'
-
 # homeassistant.components.bluetooth
 dbus-fast==2.21.1
 
@@ -2798,9 +2795,6 @@ watchdog==2.3.1
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
-
-# homeassistant.components.cisco_webex_teams
-webexteamssdk==1.1.1;python_version<'3.12'
 
 # homeassistant.components.assist_pipeline
 webrtc-noise-gain==1.2.3
