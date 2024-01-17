@@ -275,6 +275,9 @@ aiohue==4.7.0
 # homeassistant.components.imap
 aioimaplib==1.0.1
 
+# homeassistant.components.apache_kafka
+aiokafka==0.10.0
+
 # homeassistant.components.kef
 aiokef==0.2.16
 
