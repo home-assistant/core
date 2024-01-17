@@ -48,6 +48,10 @@
       "name": "[%key:common::action::turn_off%]",
       "description": "Stops the current cleaning task and returns to its dock."
     },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles the vacuum cleaner on/off."
+    },
     "stop": {
       "name": "[%key:common::action::stop%]",
       "description": "Stops the current cleaning task."

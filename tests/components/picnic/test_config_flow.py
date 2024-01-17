@@ -6,8 +6,8 @@ from python_picnic_api.session import PicnicAuthError
 import requests
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.components.picnic.const import DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY_CODE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

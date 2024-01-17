@@ -5,7 +5,11 @@ from collections.abc import Generator
 
 import pytest
 
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntity
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    VacuumEntity,
+    VacuumEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -89,7 +93,7 @@ async def test_deprecated_base_class(
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test vacuum platform via config entry."""
         async_add_entities([entity1])
 
     mock_platform(
@@ -121,3 +125,23 @@ async def test_deprecated_base_class(
         issue.translation_placeholders
         == {"platform": "test"} | translation_placeholders_extra
     )
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockVacuumEntity(VacuumEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockVacuumEntity()
+    assert entity.supported_features_compat is VacuumEntityFeature(1)
+    assert "MockVacuumEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "VacuumEntityFeature.TURN_ON" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is VacuumEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

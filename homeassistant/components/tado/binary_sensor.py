@@ -32,14 +32,14 @@ from .entity import TadoDeviceEntity, TadoZoneEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class TadoBinarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     state_fn: Callable[[Any], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TadoBinarySensorEntityDescription(
     BinarySensorEntityDescription, TadoBinarySensorEntityDescriptionMixin
 ):

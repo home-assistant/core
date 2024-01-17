@@ -28,14 +28,14 @@ from .entity import TractiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class TractiveRequiredKeysMixin:
     """Mixin for required keys."""
 
     method: Literal["async_set_buzzer", "async_set_led", "async_set_live_tracking"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TractiveSwitchEntityDescription(
     SwitchEntityDescription, TractiveRequiredKeysMixin
 ):

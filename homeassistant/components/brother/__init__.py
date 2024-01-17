@@ -4,22 +4,17 @@ from __future__ import annotations
 from asyncio import timeout
 from datetime import timedelta
 import logging
-import sys
-from typing import Any
+
+from brother import Brother, BrotherSensors, SnmpError, UnsupportedModelError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_CONFIG_ENTRY, DOMAIN, SNMP
 from .utils import get_snmp_engine
-
-if sys.version_info < (3, 12):
-    from brother import Brother, BrotherSensors, SnmpError, UnsupportedModelError
-else:
-    BrotherSensors = Any
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -30,10 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Brother from a config entry."""
-    if sys.version_info >= (3, 12):
-        raise HomeAssistantError(
-            "Brother Printer is not supported on Python 3.12. Please use Python 3.11."
-        )
     host = entry.data[CONF_HOST]
     printer_type = entry.data[CONF_TYPE]
 

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_I3
+from aioshelly.const import MODEL_I3, RPC_GENERATIONS
 
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
@@ -37,14 +37,14 @@ from .utils import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class ShellyBlockEventDescription(EventEntityDescription):
     """Class to describe Shelly event."""
 
     removal_condition: Callable[[dict, Block], bool] | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class ShellyRpcEventDescription(EventEntityDescription):
     """Class to describe Shelly event."""
 
@@ -80,7 +80,7 @@ async def async_setup_entry(
 
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
 
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
         if TYPE_CHECKING:
             assert coordinator

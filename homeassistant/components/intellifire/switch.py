@@ -18,7 +18,7 @@ from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
-@dataclass()
+@dataclass(frozen=True)
 class IntellifireSwitchRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -27,7 +27,7 @@ class IntellifireSwitchRequiredKeysMixin:
     value_fn: Callable[[IntellifirePollData], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireSwitchEntityDescription(
     SwitchEntityDescription, IntellifireSwitchRequiredKeysMixin
 ):

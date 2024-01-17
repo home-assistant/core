@@ -1,4 +1,6 @@
 """Test Radarr integration."""
+import pytest
+
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -9,6 +11,7 @@ from . import create_entry, mock_connection_invalid_auth, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test unload."""
     entry = await setup_integration(hass, aioclient_mock)
@@ -43,6 +46,7 @@ async def test_async_setup_entry_auth_failed(
     assert not hass.data.get(DOMAIN)
 
 
+@pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 async def test_device_info(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

@@ -23,13 +23,13 @@
           "language": "Language for named holidays"
         },
         "data_description": {
-          "excludes": "List of workdays to exclude",
-          "days_offset": "Days offset",
-          "workdays": "List of workdays",
+          "excludes": "List of workdays to exclude, notice the keyword `holiday` and read the documentation on how to use it correctly",
+          "days_offset": "Days offset from current day",
+          "workdays": "List of working days",
           "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
           "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
-          "province": "State, Territory, Province, Region of Country",
-          "language": "Choose the language you want to configure named holidays after"
+          "province": "State, territory, province or region of country",
+          "language": "Language to use when configuring named holiday exclusions"
         }
       }
     },
@@ -130,6 +130,26 @@
               "province": "[%key:component::workday::issues::bad_country::fix_flow::step::province::data_description::province%]"
             }
           }
+        }
+      }
+    },
+    "bad_named_holiday": {
+      "title": "Configured named holiday {remove_holidays} for {title} does not exist",
+      "fix_flow": {
+        "step": {
+          "named_holiday": {
+            "title": "[%key:component::workday::issues::bad_named_holiday::title%]",
+            "description": "Remove named holiday `{remove_holidays}` as it can't be found in country {country}.",
+            "data": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]"
+            },
+            "data_description": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]"
+            }
+          }
+        },
+        "error": {
+          "remove_holiday_error": "[%key:component::workday::config::error::remove_holiday_error%]"
         }
       }
     }

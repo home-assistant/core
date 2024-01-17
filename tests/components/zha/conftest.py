@@ -46,7 +46,7 @@ def disable_request_retry_delay():
     with patch(
         "homeassistant.components.zha.core.cluster_handlers.RETRYABLE_REQUEST_DECORATOR",
         zigpy.util.retryable_request(tries=3, delay=0),
-    ), patch("homeassistant.components.zha.STARTUP_FAILURE_DELAY_S", 0.01):
+    ):
         yield
 
 

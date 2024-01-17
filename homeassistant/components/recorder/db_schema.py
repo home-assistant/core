@@ -296,7 +296,7 @@ class Events(Base):
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=None,
-            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
+            time_fired_ts=event.time_fired_timestamp,
             context_id=None,
             context_id_bin=ulid_to_bytes_or_none(event.context.id),
             context_user_id=None,
@@ -495,16 +495,16 @@ class States(Base):
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
-            dbstate.last_updated_ts = dt_util.utc_to_timestamp(event.time_fired)
+            dbstate.last_updated_ts = event.time_fired_timestamp
             dbstate.last_changed_ts = None
             return dbstate
 
         dbstate.state = state.state
-        dbstate.last_updated_ts = dt_util.utc_to_timestamp(state.last_updated)
+        dbstate.last_updated_ts = state.last_updated_timestamp
         if state.last_updated == state.last_changed:
             dbstate.last_changed_ts = None
         else:
-            dbstate.last_changed_ts = dt_util.utc_to_timestamp(state.last_changed)
+            dbstate.last_changed_ts = state.last_changed_timestamp
 
         return dbstate
 

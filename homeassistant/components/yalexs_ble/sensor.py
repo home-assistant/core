@@ -27,14 +27,14 @@ from .entity import YALEXSBLEEntity
 from .models import YaleXSBLEData
 
 
-@dataclass
+@dataclass(frozen=True)
 class YaleXSBLERequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[LockState, LockInfo, ConnectionInfo], int | float | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class YaleXSBLESensorEntityDescription(
     SensorEntityDescription, YaleXSBLERequiredKeysMixin
 ):

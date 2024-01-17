@@ -22,7 +22,7 @@ from .const import ATTRIBUTION, DOMAIN
 from .coordinator import CO2SignalCoordinator
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class CO2SensorEntityDescription(SensorEntityDescription):
     """Provide a description of a CO2 sensor."""
 

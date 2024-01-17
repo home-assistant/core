@@ -24,7 +24,7 @@ from . import PECOCoordinatorData
 from .const import ATTR_CONTENT, CONF_COUNTY, DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class PECOSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -32,7 +32,7 @@ class PECOSensorEntityDescriptionMixin:
     attribute_fn: Callable[[PECOCoordinatorData], dict[str, str]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PECOSensorEntityDescription(
     SensorEntityDescription, PECOSensorEntityDescriptionMixin
 ):

@@ -37,7 +37,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             hass=hass,
             logger=LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=15),
+            update_interval=timedelta(minutes=5),
         )
 
     async def update_supported_data_sets(self):

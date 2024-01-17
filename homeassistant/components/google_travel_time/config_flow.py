@@ -4,7 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
@@ -23,7 +23,6 @@ from .const import (
     CONF_AVOID,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
-    CONF_LANGUAGE,
     CONF_ORIGIN,
     CONF_TIME,
     CONF_TIME_TYPE,

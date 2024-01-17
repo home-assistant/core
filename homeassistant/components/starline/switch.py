@@ -8,13 +8,14 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlineRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -22,7 +23,7 @@ class StarlineRequiredKeysMixin:
     icon_off: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlineSwitchEntityDescription(
     SwitchEntityDescription, StarlineRequiredKeysMixin
 ):
@@ -48,11 +49,18 @@ SWITCH_TYPES: tuple[StarlineSwitchEntityDescription, ...] = (
         icon_on="mdi:access-point-network",
         icon_off="mdi:access-point-network-off",
     ),
+    # Deprecated and should be removed in 2024.8
     StarlineSwitchEntityDescription(
         key="poke",
         translation_key="horn",
         icon_on="mdi:bullhorn-outline",
         icon_off="mdi:bullhorn-outline",
+    ),
+    StarlineSwitchEntityDescription(
+        key="valet",
+        translation_key="service_mode",
+        icon_on="mdi:wrench-clock",
+        icon_off="mdi:car-wrench",
     ),
 )
 
@@ -119,6 +127,16 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
+        if self._key == "poke":
+            create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_horn_switch",
+                breaks_in_ha_version="2024.8.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_horn_switch",
+            )
         self._account.api.set_car_state(self._device.device_id, self._key, True)
 
     def turn_off(self, **kwargs: Any) -> None:

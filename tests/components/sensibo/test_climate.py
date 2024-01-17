@@ -55,7 +55,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -438,7 +438,7 @@ async def test_climate_temperature_is_none(
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-    ), pytest.raises(ValueError):
+    ), pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -1330,10 +1330,7 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-    ), pytest.raises(
-        HomeAssistantError,
-        match="Climate swing mode faulty_swing_mode is not supported by the integration, please open an issue",
-    ):
+    ), pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_SWING_MODE,
@@ -1343,10 +1340,7 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-    ), pytest.raises(
-        HomeAssistantError,
-        match="Climate fan mode faulty_fan_mode is not supported by the integration, please open an issue",
-    ):
+    ), pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,

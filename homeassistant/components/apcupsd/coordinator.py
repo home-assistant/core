@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-from apcaccess import status
+import aioapcaccess
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -90,13 +90,8 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
         Note that the result dict uses upper case for each resource, where our
         integration uses lower cases as keys internally.
         """
-
         async with asyncio.timeout(10):
             try:
-                raw = await self.hass.async_add_executor_job(
-                    status.get, self._host, self._port
-                )
-                result: OrderedDict[str, str] = status.parse(raw)
-                return result
-            except OSError as error:
+                return await aioapcaccess.request_status(self._host, self._port)
+            except (OSError, asyncio.IncompleteReadError) as error:
                 raise UpdateFailed(error) from error

@@ -16,12 +16,6 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES
 from . import MockAsyncTcpClient
 
 
-@pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
-    """Mock the TTS cache dir with empty dir."""
-    return mock_tts_cache_dir
-
-
 async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     """Test supported properties."""
     state = hass.states.get("tts.test_tts")

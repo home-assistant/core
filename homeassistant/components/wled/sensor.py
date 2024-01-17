@@ -31,7 +31,7 @@ from .coordinator import WLEDDataUpdateCoordinator
 from .models import WLEDEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WLEDSensorEntityDescription(SensorEntityDescription):
     """Describes WLED sensor entity."""
 

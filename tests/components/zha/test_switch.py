@@ -197,6 +197,17 @@ async def test_switch(
             tsn=None,
         )
 
+    await async_setup_component(hass, "homeassistant", {})
+
+    cluster.read_attributes.reset_mock()
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert len(cluster.read_attributes.mock_calls) == 1
+    assert cluster.read_attributes.call_args == call(
+        ["on_off"], allow_cache=False, only_cache=False, manufacturer=None
+    )
+
     # test joining a new switch to the network and HA
     await async_test_rejoin(hass, zigpy_device, [cluster], (1,))
 

@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_LANGUAGE, CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -33,7 +33,6 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
-    CONF_COUNTRY,
     CONF_EXCLUDES,
     CONF_OFFSET,
     CONF_PROVINCE,
@@ -155,6 +154,14 @@ DATA_SCHEMA_SETUP = vol.Schema(
 
 DATA_SCHEMA_OPT = vol.Schema(
     {
+        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
+            SelectSelectorConfig(
+                options=ALLOWED_DAYS,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="days",
+            )
+        ),
         vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): SelectSelector(
             SelectSelectorConfig(
                 options=ALLOWED_DAYS,
@@ -165,14 +172,6 @@ DATA_SCHEMA_OPT = vol.Schema(
         ),
         vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): NumberSelector(
             NumberSelectorConfig(min=-10, max=10, step=1, mode=NumberSelectorMode.BOX)
-        ),
-        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
-            SelectSelectorConfig(
-                options=ALLOWED_DAYS,
-                multiple=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key="days",
-            )
         ),
         vol.Optional(CONF_ADD_HOLIDAYS, default=[]): SelectSelector(
             SelectSelectorConfig(

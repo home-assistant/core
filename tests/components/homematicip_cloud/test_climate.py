@@ -3,6 +3,7 @@ import datetime
 
 from homematicip.base.enums import AbsenceType
 from homematicip.functionalHomes import IndoorClimateHome
+import pytest
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -23,6 +24,7 @@ from homeassistant.components.homematicip_cloud.climate import (
     PERMANENT_END_TIME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from .helper import HAPID, async_manipulate_test_data, get_and_check_entity_basics
@@ -340,12 +342,13 @@ async def test_hmip_heating_group_cool(
     assert ha_state.attributes[ATTR_PRESET_MODE] == "none"
     assert ha_state.attributes[ATTR_PRESET_MODES] == []
 
-    await hass.services.async_call(
-        "climate",
-        "set_preset_mode",
-        {"entity_id": entity_id, "preset_mode": "Cool2"},
-        blocking=True,
-    )
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {"entity_id": entity_id, "preset_mode": "Cool2"},
+            blocking=True,
+        )
 
     assert len(hmip_device.mock_calls) == service_call_counter + 12
     # fire_update_event shows that set_active_profile has not been called.

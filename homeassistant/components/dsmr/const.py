@@ -11,7 +11,6 @@ LOGGER = logging.getLogger(__package__)
 
 PLATFORMS = [Platform.SENSOR]
 CONF_DSMR_VERSION = "dsmr_version"
-CONF_PROTOCOL = "protocol"
 CONF_TIME_BETWEEN_UPDATE = "time_between_update"
 
 CONF_SERIAL_ID = "serial_id"

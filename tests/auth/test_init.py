@@ -894,10 +894,7 @@ async def test_auth_module_expired_session(mock_hass) -> None:
     assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow() + MFA_SESSION_EXPIRATION,
-    ):
+    with freeze_time(dt_util.utcnow() + MFA_SESSION_EXPIRATION):
         step = await manager.login_flow.async_configure(
             step["flow_id"], {"pin": "test-pin"}
         )
