@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.components import frontend
-from homeassistant.const import CONF_ICON, CONF_URL
+from homeassistant.const import CONF_ICON, CONF_URL, CONF_ALLOW
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -23,6 +23,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_TITLE): cv.string,
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
+                    vol.Optional(CONF_ALLOW, default="fullscreen"): cv.string,
                     vol.Required(CONF_URL): vol.Any(
                         vol.Match(
                             CONF_RELATIVE_URL_REGEX, msg=CONF_RELATIVE_URL_ERROR_MSG
@@ -46,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             info.get(CONF_TITLE),
             info.get(CONF_ICON),
             url_path,
-            {"url": info[CONF_URL]},
+            {"url": info[CONF_URL], "allow": info[CONF_ALLOW]},
             require_admin=info[CONF_REQUIRE_ADMIN],
         )
 
