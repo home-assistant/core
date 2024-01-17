@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.components import frontend
-from homeassistant.const import CONF_ICON, CONF_URL, CONF_ALLOW
+from homeassistant.const import CONF_ICON, CONF_URL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -10,6 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 DOMAIN = "panel_iframe"
 
 CONF_TITLE = "title"
+CONF_ALLOW = "allow"
 
 CONF_RELATIVE_URL_ERROR_MSG = "Invalid relative URL. Absolute path required."
 CONF_RELATIVE_URL_REGEX = r"\A/"
