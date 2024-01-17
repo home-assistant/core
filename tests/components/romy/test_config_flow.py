@@ -46,8 +46,6 @@ INPUT_CONFIG_PASS = {
 }
 
 
-# user conf tests
-###################
 async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the user set up form with config."""
 
