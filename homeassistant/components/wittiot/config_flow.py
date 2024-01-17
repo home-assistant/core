@@ -31,31 +31,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 devices = await api.request_loc_info()
             except WittiotError:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=data_schema,
-                    errors={"base": "cannot_connect"},
-                )
+                errors["base"] = "cannot_connect"
             _LOGGER.debug("New data received: %s", devices)
 
             if not devices:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=data_schema,
-                    errors={"base": "cannot_connect"},
-                )
-            unique_id = devices["dev_name"]
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+                errors["base"] = "cannot_connect"
 
-            return self.async_create_entry(
-                title=unique_id,
-                data={
-                    DEVICE_NAME: unique_id,
-                    CONF_IP: ip,
-                    CONNECTION_TYPE: LOCAL,
-                },
-            )
+            if not errors:
+                unique_id = devices["dev_name"]
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=unique_id,
+                    data={
+                        DEVICE_NAME: unique_id,
+                        CONF_IP: ip,
+                        CONNECTION_TYPE: LOCAL,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",

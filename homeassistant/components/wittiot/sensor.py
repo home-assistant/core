@@ -1204,4 +1204,6 @@ class LocalWittiotSensor(CoordinatorEntity[WittiotDataUpdateCoordinator], Sensor
     def native_value(self) -> StateType:
         """Return the state."""
         state = self.coordinator.data[self.entity_description.key]
-        return state
+        if state not in ("", "--", "--.-", "None"):
+            return state
+        return None

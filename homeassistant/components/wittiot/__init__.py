@@ -6,7 +6,6 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_IP, DOMAIN
 from .coordinator import WittiotDataUpdateCoordinator
@@ -20,10 +19,8 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WittIOT from a config entry."""
 
-    hass.config_entries.async_update_entry(entry, unique_id=entry.data[CONF_IP])
     coordinator = WittiotDataUpdateCoordinator(
         hass,
-        async_get_clientsession(hass),
         entry.data[CONF_IP],
     )
 
