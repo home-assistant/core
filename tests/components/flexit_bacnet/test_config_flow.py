@@ -13,19 +13,18 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, flow_id: str, mock_setup_entry) -> None:
+async def test_form(
+    hass: HomeAssistant, flow_id: str, mock_setup_entry, mock_flexit_bacnet_update
+) -> None:
     """Test we get the form and the happy path works."""
-    with patch(
-        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update"
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id,
-            {
-                CONF_IP_ADDRESS: "1.1.1.1",
-                CONF_DEVICE_ID: 2,
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_DEVICE_ID: 2,
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Device Name"
@@ -35,6 +34,7 @@ async def test_form(hass: HomeAssistant, flow_id: str, mock_setup_entry) -> None
         CONF_DEVICE_ID: 2,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_flexit_bacnet_update.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -94,7 +94,9 @@ async def test_flow_fails(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_device_already_exist(hass: HomeAssistant, flow_id: str) -> None:
+async def test_form_device_already_exist(
+    hass: HomeAssistant, flow_id: str, mock_flexit_bacnet_update
+) -> None:
     """Test that we cannot add already added device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -105,16 +107,15 @@ async def test_form_device_already_exist(hass: HomeAssistant, flow_id: str) -> N
         unique_id="0000-0001",
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update"
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id,
-            {
-                CONF_IP_ADDRESS: "1.1.1.1",
-                CONF_DEVICE_ID: 2,
-            },
-        )
-        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_DEVICE_ID: 2,
+        },
+    )
+    await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert len(mock_flexit_bacnet_update.mock_calls) == 1

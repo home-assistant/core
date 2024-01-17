@@ -35,6 +35,15 @@ def mock_serial_number_and_device_name():
         yield
 
 
+@pytest.fixture(autouse=True)
+def mock_flexit_bacnet_update():
+    """Mock update of device update."""
+    with patch(
+        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update",
+    ) as flexit_bacnet_update_mock:
+        yield flexit_bacnet_update_mock
+
+
 @pytest.fixture
 def mock_setup_entry():
     """Mock setting up a config entry."""
