@@ -664,8 +664,8 @@
     },
     "bluesound": {
       "name": "Bluesound",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "bluetooth": {

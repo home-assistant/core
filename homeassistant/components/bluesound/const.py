@@ -1,4 +1,6 @@
 """Constants for the Bluesound HiFi wireless speakers and audio integrations component."""
+
+
 from homeassistant.const import Platform
 
 DOMAIN = "bluesound"

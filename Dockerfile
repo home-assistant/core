@@ -15,9 +15,9 @@ WORKDIR /usr/src
 ## Setup Home Assistant Core dependencies
 COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
-RUN apk add alpine-sdk autoconf bluez-dev libffi-dev openssl-dev glib-dev eudev-dev libxml2-dev libxslt-dev libpng-dev libjpeg-turbo-dev tiff-dev cups-dev gmp-dev mpfr-dev mpc1-dev ffmpeg-dev gammu-dev yaml-dev openblas-dev fftw-dev lapack-dev gfortran blas-dev eigen-dev freetype-dev glew-dev harfbuzz-dev hdf5-dev libdc1394-dev libtbb-dev mesa-dev openexr-dev openjpeg-dev uchardet-dev
 RUN \
     pip3 install \
+        --only-binary=:all: \
         -r homeassistant/requirements.txt
 
 COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
@@ -32,12 +32,14 @@ RUN \
         LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
         MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
         pip3 install \
+            --only-binary=:all: \
             -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
 RUN \
     pip3 install \
+        --only-binary=:all: \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant
