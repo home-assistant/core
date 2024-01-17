@@ -215,5 +215,5 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
     async def refresh_ha_after_motion(self) -> None:
         """Refresh after a delay."""
         await asyncio.sleep(MOTION_DELAY)
-        _LOGGER.info(f"delayed_refresh for {self.motor.name}")
+        _LOGGER.info(f"delayed_refresh for {self.motor.name} {self.motor.state}")
         self.async_write_ha_state()

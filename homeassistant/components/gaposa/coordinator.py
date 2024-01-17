@@ -76,10 +76,12 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         else:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
 
+        return self._get_data_from_devices()
+
+    def _get_data_from_devices(self):
         # Coordinator data consists of a Dictionary of the controllable motors, with
         # the dictionalry key being a unique id for the motor of the form
         # <device serial number>.motors.<channel number>
-
         data: TypedDict[str, Motor] = {}
 
         for client, _user in self.gaposa.clients:
@@ -92,4 +94,4 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
     def on_document_updated(self):
         """Handle document updated."""
         self.logger.info("Gaposa coordinator on_document_updated")
-        self.async_refresh()
+        self.async_set_updated_data(self._get_data_from_devices())
