@@ -1,4 +1,4 @@
-"""Support for La Marzocco Switches."""
+"""Support for La Marzocco updates."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -29,7 +29,7 @@ class LaMarzoccoUpdateEntityDescription(
     LaMarzoccoEntityDescription,
     UpdateEntityDescription,
 ):
-    """Description of an La Marzocco Switch."""
+    """Description of an La Marzocco updates."""
 
     current_fw_fn: Callable[[LaMarzoccoClient], str]
     latest_fw_fn: Callable[[LaMarzoccoClient], str]
@@ -79,6 +79,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
     """Entity representing the update state."""
 
     entity_description: LaMarzoccoUpdateEntityDescription
+    _attr_supported_features = UpdateEntityFeature.INSTALL
 
     def __init__(
         self,
@@ -87,17 +88,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, description)
-        self._update_in_progress = False
-
-    @property
-    def supported_features(self) -> UpdateEntityFeature:
-        """Flag supported features."""
-        return UpdateEntityFeature.INSTALL
-
-    @property
-    def in_progress(self) -> bool:
-        """Return if an update is in progress."""
-        return self._update_in_progress
+        self._attr_in_progress = False
 
     @property
     def installed_version(self) -> str | None:
@@ -113,12 +104,12 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        self._update_in_progress = True
+        self._attr_in_progress = False
         self.async_write_ha_state()
         success = await self.coordinator.lm.update_firmware(
             self.entity_description.component
         )
         if not success:
             raise HomeAssistantError("Update failed")
-        self._update_in_progress = False
+        self._attr_in_progress = False
         self.async_write_ha_state()
