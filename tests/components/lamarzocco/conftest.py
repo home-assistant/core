@@ -87,9 +87,10 @@ def mock_lamarzocco(
         lamarzocco.serial_number = serial_number
 
         lamarzocco.firmware_version = "1.1"
-        lamarzocco.latest_firmware_version = "1.1"
+        lamarzocco.latest_firmware_version = "1.2"
         lamarzocco.gateway_version = "v2.2-rc0"
         lamarzocco.latest_gateway_version = "v3.1-rc4"
+        lamarzocco.update_firmware.return_value = True
 
         lamarzocco.current_status = load_json_object_fixture(
             "current_status.json", DOMAIN
