@@ -45,7 +45,7 @@
   "entity": {
     "binary_sensor": {
       "brew_active": {
-        "name": "Currently making coffee"
+        "name": "Brewing active"
       },
       "water_tank": {
         "name": "Water tank empty"

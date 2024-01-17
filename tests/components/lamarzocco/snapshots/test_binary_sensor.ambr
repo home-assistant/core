@@ -1,19 +1,19 @@
 # serializer version: 1
-# name: test_binary_sensors[GS01234_currently_making_coffee-binary_sensor]
+# name: test_binary_sensors[GS01234_brewing_active-binary_sensor]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'GS01234 Currently making coffee',
+      'friendly_name': 'GS01234 Brewing active',
       'icon': 'mdi:cup-off',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gs01234_currently_making_coffee',
+    'entity_id': 'binary_sensor.gs01234_brewing_active',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[GS01234_currently_making_coffee-entry]
+# name: test_binary_sensors[GS01234_brewing_active-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -25,7 +25,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.gs01234_currently_making_coffee',
+    'entity_id': 'binary_sensor.gs01234_brewing_active',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -35,7 +35,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': 'mdi:cup-off',
-    'original_name': 'Currently making coffee',
+    'original_name': 'Brewing active',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
     'supported_features': 0,

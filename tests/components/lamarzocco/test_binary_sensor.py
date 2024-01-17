@@ -13,7 +13,7 @@ from . import async_init_integration
 from tests.common import MockConfigEntry
 
 BINARY_SENSORS = (
-    "currently_making_coffee",
+    "brewing_active",
     "water_tank_empty",
 )
 
@@ -51,9 +51,7 @@ async def test_brew_active_does_not_exists(
     """Test the La Marzocco currently_making_coffee doesn't exist if host not set."""
 
     await async_init_integration(hass, mock_config_entry)
-    state = hass.states.get(
-        f"sensor.{mock_lamarzocco.serial_number}_currently_making_coffee"
-    )
+    state = hass.states.get(f"sensor.{mock_lamarzocco.serial_number}_brewing_active")
     assert state is None
 
 
@@ -67,7 +65,7 @@ async def test_brew_active_unavailable(
     mock_lamarzocco.websocket_connected = False
     await async_init_integration(hass, mock_config_entry)
     state = hass.states.get(
-        f"binary_sensor.{mock_lamarzocco.serial_number}_currently_making_coffee"
+        f"binary_sensor.{mock_lamarzocco.serial_number}_brewing_active"
     )
     assert state
     assert state.state == STATE_UNAVAILABLE
