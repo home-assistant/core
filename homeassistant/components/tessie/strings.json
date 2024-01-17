@@ -68,7 +68,15 @@
     },
     "sensor": {
       "charge_state_charging_state": {
-        "name": "Charging"
+        "name": "Charging",
+        "state": {
+          "starting": "Starting",
+          "charging": "Charging",
+          "disconnected": "Disconnected",
+          "stopped": "Stopped",
+          "complete": "Complete",
+          "nopower": "No power"
+        }
       },
       "charge_state_usable_battery_level": {
         "name": "Battery level"
