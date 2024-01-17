@@ -94,6 +94,16 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
+class InvalidData(FlowError):
+    """Invalid data provided."""
+
+    def __init__(
+        self, *args: object, schema_errors: dict[str, Any], **kwargs: Any
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.schema_errors = schema_errors
+
+
 class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
@@ -318,27 +328,53 @@ class FlowManager(abc.ABC):
                 if isinstance(ex, vol.MultipleInvalid):
                     raised_errors = ex.errors
 
-                errors = {}
+                schema_errors: dict[str, Any] = {}
                 for error in raised_errors:
-                    path = "base"
-                    if (
-                        error.path
-                        and len(error.path) == 1
-                        and error.path[0] in data_schema.schema
-                    ):
-                        path = error.path[0]
+                    if error.path:
+                        current_path_schema = data_schema.schema
+                        current_path_errors = schema_errors
+                        for path_part in error.path[:-1]:
+                            if path_part not in current_path_schema:
+                                current_path_schema = None
+                                break
+                            current_path_schema = current_path_schema[path_part]
+                            current_path_errors = current_path_errors.setdefault(
+                                path_part, {}
+                            )
+                        if (
+                            current_path_schema
+                            and error.path[-1] in current_path_schema
+                        ):
+                            current_path_errors[error.path[-1]] = error.error_message
+                            continue
 
-                    errors[path] = error.error_message
+                    # If we get here, we could not identify the path of the error.
+                    schema_errors.get("base", []).append(str(error))
 
-                return FlowResult(
-                    {
-                        **cur_step,
-                        "errors": errors,
-                        "data_schema": flow.add_suggested_values_to_schema(
-                            data_schema, user_input
-                        ),
-                    }
-                )
+                class SchemaInvalidError(
+                    InvalidData,
+                    ex.__class__,  # type: ignore[name-defined, misc]
+                ):
+                    """Error that contains schema errors."""
+
+                    def __getattribute__(self, name: str) -> Any:
+                        """Get attribute."""
+                        try:
+                            cause = super().__getattribute__("__cause__")
+                        except AttributeError:
+                            cause = None
+
+                        if cause:
+                            try:
+                                return getattr(cause, name)
+                            except AttributeError:
+                                pass
+
+                        return super().__getattribute__(name)
+
+                raise SchemaInvalidError(
+                    "Schema validation failed", schema_errors=schema_errors
+                ) from ex
 
         # Handle a menu navigation choice
         if cur_step["type"] == FlowResultType.MENU and user_input:
