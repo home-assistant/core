@@ -35,7 +35,7 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         """Return the next upcoming event."""
         # only need to check the next 6 days, because if we don't find anything there
         # then there is no event scheduled
-        for date in self._asnyc_date_range(
+        for date in self._get_date_range(
             dt_util.now(), dt_util.now() + timedelta(days=6)
         ):
             scheduled = self._async_get_calendar_event(date)
@@ -55,13 +55,13 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
 
         events: list[CalendarEvent] = []
 
-        for date in self._asnyc_date_range(start_date, end_date):
+        for date in self._get_date_range(start_date, end_date):
             scheduled = self._async_get_calendar_event(date)
             if scheduled:
                 events.append(scheduled)
         return events
 
-    def _asnyc_date_range(
+    def _get_date_range(
         self, start_date: datetime, end_date: datetime
     ) -> Iterator[datetime]:
         current_date = start_date
