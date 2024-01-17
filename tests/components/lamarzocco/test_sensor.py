@@ -1,9 +1,10 @@
 """Tests for La Marzocco sensors."""
 from unittest.mock import MagicMock
 
+import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -44,16 +45,13 @@ async def test_sensors(
         assert entry == snapshot(name=f"{serial_number}_{sensor}-entry")
 
 
+@pytest.mark.usefixtures("remove_local_connection")
 async def test_shot_timer_not_exists(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the La Marzocco shot timer doesn't exist if host not set."""
-
-    data = mock_config_entry.data.copy()
-    del data[CONF_HOST]
-    hass.config_entries.async_update_entry(mock_config_entry, data=data)
 
     await async_init_integration(hass, mock_config_entry)
     state = hass.states.get(f"sensor.{mock_lamarzocco.serial_number}_shot_timer")

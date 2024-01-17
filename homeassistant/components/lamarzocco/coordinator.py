@@ -32,6 +32,9 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         self.lm = LaMarzoccoClient(
             callback_websocket_notify=self.async_update_listeners,
         )
+        self.local_connection_configured = (
+            self.config_entry.data.get(CONF_HOST) is not None
+        )
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
@@ -94,8 +97,3 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
             raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
-
-    @property
-    def local_connection_set(self) -> bool:
-        """Return whether local connection is set."""
-        return self.config_entry.data.get(CONF_HOST) is not None

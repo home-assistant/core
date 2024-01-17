@@ -113,3 +113,14 @@ def mock_lamarzocco(
         lamarzocco.lm_local_api.websocket_connect = websocket_connect_mock
 
         yield lamarzocco
+
+
+@pytest.fixture
+def remove_local_connection(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Remove the local connection."""
+    data = mock_config_entry.data.copy()
+    del data[CONF_HOST]
+    hass.config_entries.async_update_entry(mock_config_entry, data=data)
+    return mock_config_entry
