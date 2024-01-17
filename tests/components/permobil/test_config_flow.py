@@ -71,7 +71,11 @@ async def test_sucessful_config_flow(hass: HomeAssistant, my_permobil: Mock) -> 
 async def test_config_flow_incorrect_code(
     hass: HomeAssistant, my_permobil: Mock
 ) -> None:
-    """Test the config flow from start to until email code verification and have the API return API error."""
+    """Test email code verification with API error.
+
+    Test the config flow from start to until email code verification
+    and have the API return API error.
+    """
     my_permobil.request_application_token.side_effect = MyPermobilAPIException
     # init flow
     with patch(
@@ -112,7 +116,11 @@ async def test_config_flow_incorrect_code(
 async def test_config_flow_unsigned_eula(
     hass: HomeAssistant, my_permobil: Mock
 ) -> None:
-    """Test the config flow from start to until email code verification and the user has not accepted the eula."""
+    """Test email code verification with unsigned eula error.
+
+    Test the config flow from start to until email code verification
+    and have the API return that the eula is unsigned.
+    """
     my_permobil.request_application_token.side_effect = MyPermobilEulaException
     # init flow
     with patch(
@@ -168,7 +176,12 @@ async def test_config_flow_unsigned_eula(
 async def test_config_flow_incorrect_region(
     hass: HomeAssistant, my_permobil: Mock
 ) -> None:
-    """Test the config flow from start to until the request for email code and have the API return error."""
+    """Test when the user does not exist in the selected region.
+
+    Test the config flow from start to until the request for email
+    code and have the API return error because there is not user for
+    that email.
+    """
     my_permobil.request_application_code.side_effect = MyPermobilAPIException
     # init flow
     with patch(
@@ -200,7 +213,11 @@ async def test_config_flow_incorrect_region(
 async def test_config_flow_region_request_error(
     hass: HomeAssistant, my_permobil: Mock
 ) -> None:
-    """Test the config flow from start to until the request for regions and have the API return error."""
+    """Test region request error.
+
+    Test the config flow from start to until the request for regions
+    and have the API return an error.
+    """
     my_permobil.request_region_names.side_effect = MyPermobilAPIException
     # init flow
     # here the request_region_names raises a MyPermobilAPIException
@@ -222,7 +239,13 @@ async def test_config_flow_region_request_error(
 async def test_config_flow_invalid_email(
     hass: HomeAssistant, my_permobil: Mock
 ) -> None:
-    """Test the config flow from start to until the request for regions and have the API return error."""
+    """Test an incorrectly formatted email.
+
+    Test that the email must be formatted correctly. The schema for the
+    input should already check for this, but since the API does a
+    separate check that might not overlap 100% with the schema,
+    this test is still needed.
+    """
     my_permobil.set_email.side_effect = MyPermobilClientException()
     # init flow
     # here the set_email raises a MyPermobilClientException
