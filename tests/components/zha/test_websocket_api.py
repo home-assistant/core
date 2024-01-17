@@ -12,8 +12,8 @@ import voluptuous as vol
 import zigpy.backups
 import zigpy.profiles.zha
 import zigpy.types
-import zigpy.util
 from zigpy.types.named import EUI64
+import zigpy.util
 import zigpy.zcl.clusters.general as general
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zcl.clusters.security as security
