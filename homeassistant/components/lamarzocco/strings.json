@@ -44,11 +44,11 @@
   },
   "entity": {
     "binary_sensor": {
-      "water_tank": {
-        "name": "Water tank empty"
-      },
       "brew_active": {
         "name": "Currently making coffee"
+      },
+      "water_tank": {
+        "name": "Water tank empty"
       }
     },
     "sensor": {
