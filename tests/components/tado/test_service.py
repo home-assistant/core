@@ -65,7 +65,7 @@ async def test_add_meter_readings_exception(
             "homeassistant.components.tado.TadoConnector.set_meter_reading",
             return_value=None,
         ),
-        pytest.raises(ServiceValidationError),
+        pytest.raises(ServiceValidationError) as exc,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -76,6 +76,8 @@ async def test_add_meter_readings_exception(
             },
             blocking=True,
         )
+
+        assert "Could not add meter reading" in str(exc)
 
 
 async def test_add_meter_readings_invalid(
@@ -92,7 +94,7 @@ async def test_add_meter_readings_invalid(
             "homeassistant.components.tado.TadoConnector.set_meter_reading",
             return_value=json.loads(fixture),
         ),
-        pytest.raises(ServiceValidationError),
+        pytest.raises(ServiceValidationError) as exc,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -103,6 +105,8 @@ async def test_add_meter_readings_invalid(
             },
             blocking=True,
         )
+
+        assert "invalid new reading" in str(exc)
 
 
 async def test_add_meter_readings_duplicate(
@@ -119,7 +123,7 @@ async def test_add_meter_readings_duplicate(
             "homeassistant.components.tado.TadoConnector.set_meter_reading",
             return_value=json.loads(fixture),
         ),
-        pytest.raises(ServiceValidationError),
+        pytest.raises(ServiceValidationError) as exc,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -130,3 +134,5 @@ async def test_add_meter_readings_duplicate(
             },
             blocking=True,
         )
+
+        assert "reading already exists for date" in str(exc)
