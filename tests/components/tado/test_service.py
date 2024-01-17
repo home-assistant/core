@@ -41,7 +41,7 @@ async def test_add_meter_readings(
         "homeassistant.components.tado.TadoConnector.set_meter_reading",
         return_value=json.loads(fixture),
     ):
-        await hass.services.async_call(
+        response: None = await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_METER_READING,
             service_data={
@@ -50,6 +50,7 @@ async def test_add_meter_readings(
             },
             blocking=True,
         )
+        assert response is None
 
 
 async def test_add_meter_readings_exception(
