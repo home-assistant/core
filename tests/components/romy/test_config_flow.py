@@ -288,7 +288,7 @@ async def test_zero_conf_unlocked_interface_robot(hass: HomeAssistant) -> None:
         user_input={CONF_HOST: "1.2.3.4"},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     assert result["data"]
     assert result["data"][CONF_HOST] == "1.2.3.4"
