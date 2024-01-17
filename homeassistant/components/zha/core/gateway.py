@@ -298,6 +298,34 @@ class ZHAGateway:
         """Maximum configured radio concurrency."""
         return self.application_controller._concurrent_requests_semaphore.max_value  # pylint: disable=protected-access
 
+    async def async_fetch_updated_state_mains(self) -> None:
+        """Fetch updated state for mains powered devices."""
+        _LOGGER.debug("Fetching current state for mains powered devices")
+
+        now = time.time()
+
+        # Only delay startup to poll mains-powered devices that are online
+        online_devices = [
+            dev
+            for dev in self.devices.values()
+            if dev.is_mains_powered
+            and dev.last_seen is not None
+            and (now - dev.last_seen) < dev.consider_unavailable_time
+        ]
+
+        # Prioritize devices that have recently been contacted
+        online_devices.sort(key=lambda dev: cast(float, dev.last_seen), reverse=True)
+
+        # Make sure that we always leave slots for non-startup requests
+        max_poll_concurrency = max(1, self.radio_concurrency - 4)
+
+        await gather_with_limited_concurrency(
+            max_poll_concurrency,
+            *(dev.async_initialize(from_cache=False) for dev in online_devices),
+        )
+
+        _LOGGER.debug("completed fetching current state for mains powered devices")
+
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and load entities."""
 
@@ -308,34 +336,8 @@ class ZHAGateway:
 
         async def fetch_updated_state() -> None:
             """Fetch updated state for mains powered devices."""
-            _LOGGER.debug("Fetching current state for mains powered devices")
-
-            now = time.time()
-
-            # Only delay startup to poll mains-powered devices that are online
-            online_devices = [
-                dev
-                for dev in self.devices.values()
-                if dev.is_mains_powered
-                and dev.last_seen is not None
-                and (now - dev.last_seen) < dev.consider_unavailable_time
-            ]
-
-            # Prioritize devices that have recently been contacted
-            online_devices.sort(
-                key=lambda dev: cast(float, dev.last_seen), reverse=True
-            )
-
-            # Make sure that we always leave slots for non-startup requests
-            max_poll_concurrency = max(1, self.radio_concurrency - 4)
-
-            await gather_with_limited_concurrency(
-                max_poll_concurrency,
-                *(dev.async_initialize(from_cache=False) for dev in online_devices),
-            )
-            _LOGGER.debug(
-                "completed fetching current state for mains powered devices - allowing polled requests"
-            )
+            await self.async_fetch_updated_state_mains()
+            _LOGGER.debug("Allowing polled requests")
             self.hass.data[DATA_ZHA].allow_polling = True
 
         # background the fetching of state for mains powered devices
