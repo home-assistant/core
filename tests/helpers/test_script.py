@@ -4602,6 +4602,9 @@ async def test_validate_action_config(
         cv.SCRIPT_ACTION_PARALLEL: {
             "parallel": [templated_device_action("parallel_event")],
         },
+        cv.SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: {
+            "set_conversation_response": "Hello world"
+        },
     }
     expected_templates = {
         cv.SCRIPT_ACTION_CHECK_CONDITION: None,
