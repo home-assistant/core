@@ -245,6 +245,9 @@
       "charge_state_charge_port_door_open": {
         "name": "Charge port door"
       },
+      "charge_state_charging_state": {
+        "name": "Charging"
+      },
       "charge_state_preconditioning_enabled": {
         "name": "Preconditioning enabled"
       },
