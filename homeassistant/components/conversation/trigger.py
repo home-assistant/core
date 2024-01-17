@@ -94,7 +94,7 @@ async def async_attach_trigger(
         ):
             automation_result = await future
             if isinstance(
-                result, ScriptRunResult
+                automation_result, ScriptRunResult
             ) and automation_result.conversation_response not in (None, UNDEFINED):
                 return automation_result.conversation_response
 
