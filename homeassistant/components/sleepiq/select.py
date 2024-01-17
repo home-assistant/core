@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 from asyncsleepiq import (
+    CoreTemps,
     FootWarmingTemps,
     Side,
     SleepIQBed,
+    SleepIQCoreClimate,
     SleepIQFootWarmer,
     SleepIQPreset,
 )
@@ -14,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, FOOT_WARMER
+from .const import CORE_CLIMATE, DOMAIN, FOOT_WARMER
 from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity, SleepIQSleeperEntity, sleeper_for_side
 
@@ -34,6 +36,12 @@ async def async_setup_entry(
             entities.append(
                 SleepIQFootWarmingTempSelectEntity(
                     data.data_coordinator, bed, foot_warmer
+                )
+            )
+        for core_climate in bed.foundation.core_climates:
+            entities.append(
+                SleepIQCoreClimateTempSelectEntity(
+                    data.data_coordinator, bed, core_climate
                 )
             )
     async_add_entities(entities)
@@ -110,6 +118,49 @@ class SleepIQFootWarmingTempSelectEntity(
             await self.foot_warmer.turn_off()
         else:
             await self.foot_warmer.turn_on(temperature, timer)
+
+        self._attr_current_option = option
+        await self.coordinator.async_request_refresh()
+        self.async_write_ha_state()
+
+
+class SleepIQCoreClimateTempSelectEntity(
+    SleepIQSleeperEntity[SleepIQDataUpdateCoordinator], SelectEntity
+):
+    """Representation of a SleepIQ core climate temperature select entity."""
+
+    _attr_icon = "mdi:thermostat"
+    _attr_options = [e.name.lower() for e in CoreTemps]
+    _attr_translation_key = "core_climate_temp"
+
+    def __init__(
+        self,
+        coordinator: SleepIQDataUpdateCoordinator,
+        bed: SleepIQBed,
+        core_climate: SleepIQCoreClimate,
+    ) -> None:
+        """Initialize the select entity."""
+        self.core_climate = core_climate
+        sleeper = sleeper_for_side(bed, core_climate.side)
+        super().__init__(coordinator, bed, sleeper, CORE_CLIMATE)
+        self._async_update_attrs()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update entity attributes."""
+        self._attr_current_option = CoreTemps(
+            self.core_climate.temperature
+        ).name.lower()
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the current preset."""
+        temperature = CoreTemps[option.upper()]
+        timer = self.core_climate.timer or 120
+
+        if temperature == 0:
+            await self.core_climate.turn_off()
+        else:
+            await self.core_climate.turn_on(temperature, timer)
 
         self._attr_current_option = option
         await self.coordinator.async_request_refresh()

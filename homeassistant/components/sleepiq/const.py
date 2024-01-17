@@ -13,6 +13,8 @@ PRESSURE = "pressure"
 SLEEP_NUMBER = "sleep_number"
 FOOT_WARMING_TIMER = "foot_warming_timer"
 FOOT_WARMER = "foot_warmer"
+CORE_CLIMATE_TIMER = "core_climate_timer"
+CORE_CLIMATE = "core_climate"
 ENTITY_TYPES = {
     ACTUATOR: "Position",
     FIRMNESS: "Firmness",
@@ -21,6 +23,8 @@ ENTITY_TYPES = {
     SLEEP_NUMBER: "SleepNumber",
     FOOT_WARMING_TIMER: "Foot Warming Timer",
     FOOT_WARMER: "Foot Warmer",
+    CORE_CLIMATE_TIMER: "Core Climate Timer",
+    CORE_CLIMATE: "Core Climate",
 }
 
 LEFT = "left"
