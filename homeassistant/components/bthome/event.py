@@ -83,10 +83,8 @@ async def async_setup_entry(
     ]
     address = coordinator.address
     async_add_entities(
-        [
-            BTHomeEventEntity(address, event_class)
-            for event_class in coordinator.discovered_event_classes
-        ]
+        BTHomeEventEntity(address, event_class)
+        for event_class in coordinator.discovered_event_classes
     )
 
     def _async_discovered_event_class(event_class: str) -> None:
