@@ -351,28 +351,7 @@ class FlowManager(abc.ABC):
                     # If we get here, we could not identify the path of the error.
                     schema_errors.get("base", []).append(str(error))
 
-                class SchemaInvalidError(
-                    InvalidData,
-                    ex.__class__,  # type: ignore[name-defined, misc]
-                ):
-                    """Error that contains schema errors."""
-
-                    def __getattribute__(self, name: str) -> Any:
-                        """Get attribute."""
-                        try:
-                            cause = super().__getattribute__("__cause__")
-                        except AttributeError:
-                            cause = None
-
-                        if cause:
-                            try:
-                                return getattr(cause, name)
-                            except AttributeError:
-                                pass
-
-                        return super().__getattribute__(name)
-
-                raise SchemaInvalidError(
+                raise InvalidData(
                     "Schema validation failed", schema_errors=schema_errors
                 ) from ex
 

@@ -112,10 +112,6 @@ class FlowManagerResourceView(_BaseFlowManagerView):
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
         except data_entry_flow.InvalidData as ex:
             return self.json(ex.schema_errors, HTTPStatus.BAD_REQUEST)
-        except vol.Invalid as ex:
-            return self.json_message(
-                f"User input malformed: {ex}", HTTPStatus.BAD_REQUEST
-            )
 
         result = self._prepare_result_json(result)
 
