@@ -355,7 +355,6 @@ class FlowManager(abc.ABC):
                     "Schema validation failed",
                     path=ex.path,
                     error_message=ex.error_message,
-                    error_type=ex.error_type,
                     schema_errors=schema_errors,
                 ) from ex
 
