@@ -248,6 +248,7 @@ homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
+homeassistant.components.lamarzocco.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lawn_mower.*

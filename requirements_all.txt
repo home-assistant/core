@@ -276,7 +276,7 @@ aiohue==4.7.0
 aioimaplib==1.0.1
 
 # homeassistant.components.apache_kafka
-aiokafka==0.7.2
+aiokafka==0.10.0
 
 # homeassistant.components.kef
 aiokef==0.2.16
@@ -347,7 +347,7 @@ aioraven==0.5.0
 aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
-aioridwell==2023.07.0
+aioridwell==2024.01.0
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.34
@@ -669,7 +669,7 @@ datadog==0.15.0
 datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
-dbus-fast==2.21.0
+dbus-fast==2.21.1
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -787,6 +787,9 @@ env-canada==0.6.0
 # homeassistant.components.season
 ephem==4.1.5
 
+# homeassistant.components.epion
+epion==0.0.3
+
 # homeassistant.components.epson
 epson-projector==0.5.1
 
@@ -843,7 +846,7 @@ fjaraskupan==2.2.0
 flexit_bacnet==2.1.0
 
 # homeassistant.components.flipr
-flipr-api==1.5.0
+flipr-api==1.5.1
 
 # homeassistant.components.flux_led
 flux-led==1.0.4
@@ -951,6 +954,9 @@ gotailwind==0.2.2
 # homeassistant.components.govee_ble
 govee-ble==0.27.3
 
+# homeassistant.components.govee_light_local
+govee-local-api==1.4.1
+
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
 
@@ -1041,7 +1047,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.40
+holidays==0.41
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240112.0
@@ -1205,6 +1211,9 @@ linear-garage-door==0.2.7
 
 # homeassistant.components.linode
 linode-api==4.1.9b1
+
+# homeassistant.components.lamarzocco
+lmcloud==0.4.34
 
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
@@ -1440,7 +1449,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.1.0
+opower==0.2.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1789,7 +1798,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.9
+pyfritzhome==0.6.10
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -2159,7 +2168,7 @@ python-awair==0.2.4
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.16
+python-bsblan==0.5.18
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
@@ -2216,7 +2225,7 @@ python-matter-server==5.1.1
 python-miio==0.5.12
 
 # homeassistant.components.mpd
-python-mpd2==3.0.5
+python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
@@ -2739,7 +2748,7 @@ uvcclient==0.11.0
 vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
-vallox-websocket-api==4.0.2
+vallox-websocket-api==4.0.3
 
 # homeassistant.components.rdw
 vehicle==2.2.1
@@ -2812,7 +2821,7 @@ wled==0.17.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==1.4.0
+wyoming==1.5.0
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11

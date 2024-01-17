@@ -321,7 +321,8 @@ build.json @home-assistant/supervisor
 /tests/components/ecoforest/ @pjanuario
 /homeassistant/components/econet/ @w1ll1am23
 /tests/components/econet/ @w1ll1am23
-/homeassistant/components/ecovacs/ @OverloadUT @mib1185
+/homeassistant/components/ecovacs/ @OverloadUT @mib1185 @edenhaus
+/tests/components/ecovacs/ @OverloadUT @mib1185 @edenhaus
 /homeassistant/components/ecowitt/ @pvizeli
 /tests/components/ecowitt/ @pvizeli
 /homeassistant/components/efergy/ @tkdrob
@@ -359,6 +360,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50
+/homeassistant/components/epion/ @lhgravendeel
+/tests/components/epion/ @lhgravendeel
 /homeassistant/components/epson/ @pszafer
 /tests/components/epson/ @pszafer
 /homeassistant/components/epsonworkforce/ @ThaStealth
@@ -492,6 +495,8 @@ build.json @home-assistant/supervisor
 /tests/components/google_travel_time/ @eifinger
 /homeassistant/components/govee_ble/ @bdraco @PierreAronnax
 /tests/components/govee_ble/ @bdraco @PierreAronnax
+/homeassistant/components/govee_light_local/ @Galorhallen
+/tests/components/govee_light_local/ @Galorhallen
 /homeassistant/components/gpsd/ @fabaff
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
@@ -685,6 +690,8 @@ build.json @home-assistant/supervisor
 /tests/components/kulersky/ @emlove
 /homeassistant/components/lacrosse_view/ @IceBotYT
 /tests/components/lacrosse_view/ @IceBotYT
+/homeassistant/components/lamarzocco/ @zweckj
+/tests/components/lamarzocco/ @zweckj
 /homeassistant/components/lametric/ @robbiet480 @frenck @bachya
 /tests/components/lametric/ @robbiet480 @frenck @bachya
 /homeassistant/components/landisgyr_heat_meter/ @vpathuis
