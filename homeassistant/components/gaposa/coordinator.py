@@ -61,7 +61,8 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         self.logger.info(
-            "Gaposa coordinator on_document_updated %s", str(self.update_interval)
+            "Gaposa coordinator _async_update_data, interval: %s",
+            str(self.update_interval),
         )
         try:
             result = await self.update_gateway()
@@ -91,4 +92,4 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
     def on_document_updated(self):
         """Handle document updated."""
         self.logger.info("Gaposa coordinator on_document_updated")
-        self.async_request_refresh()
+        self.async_refresh()

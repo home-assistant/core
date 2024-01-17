@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, OPERATION_DELAY
+from .const import DOMAIN, MOTION_DELAY
 from .coordinator import DataUpdateCoordinatorGaposa
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,7 +106,9 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        _LOGGER.info(f"_handle_coordinator_update for {self.motor.name}")
+        _LOGGER.info(
+            f"_handle_coordinator_update for {self.motor.name} {self.motor.state}"
+        )
         self.async_write_ha_state()
 
     # Information about the devices that is partially visible in the UI.
@@ -180,7 +182,7 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         """Return if the cover is moving or not."""
         if self.lastCommandTime is not None and self.lastCommand != "STOP":
             now = datetime.now()
-            complete = self.lastCommandTime + timedelta(seconds=OPERATION_DELAY)
+            complete = self.lastCommandTime + timedelta(seconds=MOTION_DELAY)
             return now < complete
         return False
 
@@ -191,28 +193,27 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         self.lastCommand = "UP"
         self.lastCommandTime = datetime.now()
         await self.motor.up(False)
-        self.schedule_delayed_refresh()
+        self.schedule_refresh_ha_after_motion()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self.lastCommand = "DOWN"
         self.lastCommandTime = datetime.now()
         await self.motor.down(False)
-        self.schedule_delayed_refresh()
+        self.schedule_refresh_ha_after_motion()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self.lastCommand = "STOP"
         self.lastCommandTime = datetime.now()
         await self.motor.stop(False)
-        self.schedule_delayed_refresh()
 
-    def schedule_delayed_refresh(self) -> None:
+    def schedule_refresh_ha_after_motion(self) -> None:
         """Wait for the cover to stop moving and update HA state."""
-        self.hass.async_create_task(self.delayed_refresh())
+        self.hass.async_create_task(self.refresh_ha_after_motion())
 
-    async def delayed_refresh(self) -> None:
+    async def refresh_ha_after_motion(self) -> None:
         """Refresh after a delay."""
-        await asyncio.sleep(OPERATION_DELAY)
+        await asyncio.sleep(MOTION_DELAY)
         _LOGGER.info(f"delayed_refresh for {self.motor.name}")
         self.async_write_ha_state()
