@@ -3,7 +3,6 @@ import asyncio
 from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from python_otbr_api.tlv_parser import TLVError
 from zeroconf.asyncio import AsyncServiceInfo
@@ -21,7 +20,7 @@ from . import (
     TEST_BORDER_AGENT_ID,
 )
 
-from tests.common import async_fire_time_changed, flush_store
+from tests.common import flush_store
 
 # Same as DATASET_1, but PAN ID moved to the end
 DATASET_1_REORDERED = (
@@ -596,22 +595,17 @@ async def test_set_preferred_border_agent_id(hass: HomeAssistant) -> None:
 
 
 async def test_automatically_set_preferred_dataset(
-    hass: HomeAssistant, mock_async_zeroconf: None, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_async_zeroconf: None
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset."""
     add_service_listener_called = asyncio.Event()
     remove_service_listener_called = asyncio.Event()
-    wait_called = asyncio.Event()
 
     async def mock_add_service_listener(type_: str, listener: Any):
         add_service_listener_called.set()
 
     async def mock_remove_service_listener(listener: Any):
         remove_service_listener_called.set()
-
-    async def mock_wait(*args, **kwargs):
-        wait_called.set()
-        return await asyncio.wait(*args, **kwargs)
 
     mock_async_zeroconf.async_add_service_listener = AsyncMock(
         side_effect=mock_add_service_listener
@@ -622,7 +616,8 @@ async def test_automatically_set_preferred_dataset(
     mock_async_zeroconf.async_get_service_info = AsyncMock()
 
     with patch(
-        "homeassistant.components.thread.dataset_store.wait", side_effect=mock_wait
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
     ):
         await dataset_store.async_add_dataset(
             hass,
@@ -636,9 +631,6 @@ async def test_automatically_set_preferred_dataset(
         mock_async_zeroconf.async_add_service_listener.assert_called_once_with(
             "_meshcop._udp.local.", ANY
         )
-
-        await wait_called.wait()
-        wait_called.clear()
 
         # Discover a service matching our router
         listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
@@ -651,13 +643,7 @@ async def test_automatically_set_preferred_dataset(
             None, ROUTER_DISCOVERY_HASS["type_"], ROUTER_DISCOVERY_HASS["name"]
         )
 
-        # Wait for discovery of other routers to time out
-        await wait_called.wait()
-        freezer.tick(31)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-        # Wait for discovery to stop
+        # Wait for discovery of other routers to time out and discovery to stop
         await remove_service_listener_called.wait()
 
     store = await dataset_store.async_get_store(hass)
@@ -669,7 +655,7 @@ async def test_automatically_set_preferred_dataset(
 
 
 async def test_automatically_set_preferred_dataset_own_and_other_router(
-    hass: HomeAssistant, mock_async_zeroconf: None, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_async_zeroconf: None
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset.
 
@@ -677,17 +663,12 @@ async def test_automatically_set_preferred_dataset_own_and_other_router(
     """
     add_service_listener_called = asyncio.Event()
     remove_service_listener_called = asyncio.Event()
-    wait_called = asyncio.Event()
 
     async def mock_add_service_listener(type_: str, listener: Any):
         add_service_listener_called.set()
 
     async def mock_remove_service_listener(listener: Any):
         remove_service_listener_called.set()
-
-    async def mock_wait(*args, **kwargs):
-        wait_called.set()
-        return await asyncio.wait(*args, **kwargs)
 
     mock_async_zeroconf.async_add_service_listener = AsyncMock(
         side_effect=mock_add_service_listener
@@ -698,7 +679,8 @@ async def test_automatically_set_preferred_dataset_own_and_other_router(
     mock_async_zeroconf.async_get_service_info = AsyncMock()
 
     with patch(
-        "homeassistant.components.thread.dataset_store.wait", side_effect=mock_wait
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
     ):
         await dataset_store.async_add_dataset(
             hass,
@@ -712,9 +694,6 @@ async def test_automatically_set_preferred_dataset_own_and_other_router(
         mock_async_zeroconf.async_add_service_listener.assert_called_once_with(
             "_meshcop._udp.local.", ANY
         )
-
-        await wait_called.wait()
-        wait_called.clear()
 
         # Discover a service matching our router
         listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
@@ -728,7 +707,6 @@ async def test_automatically_set_preferred_dataset_own_and_other_router(
         )
 
         # Discover another router
-        await wait_called.wait()
         listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
             mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
         )
@@ -751,7 +729,7 @@ async def test_automatically_set_preferred_dataset_own_and_other_router(
 
 
 async def test_automatically_set_preferred_dataset_other_router(
-    hass: HomeAssistant, mock_async_zeroconf: None, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_async_zeroconf: None
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset.
 
@@ -774,72 +752,9 @@ async def test_automatically_set_preferred_dataset_other_router(
     )
     mock_async_zeroconf.async_get_service_info = AsyncMock()
 
-    await dataset_store.async_add_dataset(
-        hass,
-        "source",
-        DATASET_1,
-        preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
-    )
-
-    # Wait for discovery to start
-    await add_service_listener_called.wait()
-    mock_async_zeroconf.async_add_service_listener.assert_called_once_with(
-        "_meshcop._udp.local.", ANY
-    )
-
-    # Discover another router
-    listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
-        mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
-    )
-    mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
-        **ROUTER_DISCOVERY_GOOGLE_1
-    )
-    listener.add_service(
-        None, ROUTER_DISCOVERY_GOOGLE_1["type_"], ROUTER_DISCOVERY_GOOGLE_1["name"]
-    )
-
-    # Wait for discovery to stop
-    await remove_service_listener_called.wait()
-
-    store = await dataset_store.async_get_store(hass)
-    assert (
-        list(store.datasets.values())[0].preferred_border_agent_id
-        == TEST_BORDER_AGENT_ID.hex()
-    )
-    assert await dataset_store.async_get_preferred_dataset(hass) is None
-
-
-async def test_automatically_set_preferred_dataset_no_router(
-    hass: HomeAssistant, mock_async_zeroconf: None, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test automatically setting the first dataset as the preferred dataset.
-
-    In this test case no routers are found.
-    """
-    add_service_listener_called = asyncio.Event()
-    remove_service_listener_called = asyncio.Event()
-    wait_called = asyncio.Event()
-
-    async def mock_add_service_listener(type_: str, listener: Any):
-        add_service_listener_called.set()
-
-    async def mock_remove_service_listener(listener: Any):
-        remove_service_listener_called.set()
-
-    async def mock_wait(*args, **kwargs):
-        wait_called.set()
-        return await asyncio.wait(*args, **kwargs)
-
-    mock_async_zeroconf.async_add_service_listener = AsyncMock(
-        side_effect=mock_add_service_listener
-    )
-    mock_async_zeroconf.async_remove_service_listener = AsyncMock(
-        side_effect=mock_remove_service_listener
-    )
-    mock_async_zeroconf.async_get_service_info = AsyncMock()
-
     with patch(
-        "homeassistant.components.thread.dataset_store.wait", side_effect=mock_wait
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
     ):
         await dataset_store.async_add_dataset(
             hass,
@@ -854,13 +769,70 @@ async def test_automatically_set_preferred_dataset_no_router(
             "_meshcop._udp.local.", ANY
         )
 
-        # Wait for discovery of routers to time out
-        await wait_called.wait()
-        freezer.tick(31)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        # Discover another router
+        listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
+            mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
+        )
+        mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
+            **ROUTER_DISCOVERY_GOOGLE_1
+        )
+        listener.add_service(
+            None, ROUTER_DISCOVERY_GOOGLE_1["type_"], ROUTER_DISCOVERY_GOOGLE_1["name"]
+        )
 
         # Wait for discovery to stop
+        await remove_service_listener_called.wait()
+
+    store = await dataset_store.async_get_store(hass)
+    assert (
+        list(store.datasets.values())[0].preferred_border_agent_id
+        == TEST_BORDER_AGENT_ID.hex()
+    )
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+
+async def test_automatically_set_preferred_dataset_no_router(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
+    """Test automatically setting the first dataset as the preferred dataset.
+
+    In this test case no routers are found.
+    """
+    add_service_listener_called = asyncio.Event()
+    remove_service_listener_called = asyncio.Event()
+
+    async def mock_add_service_listener(type_: str, listener: Any):
+        add_service_listener_called.set()
+
+    async def mock_remove_service_listener(listener: Any):
+        remove_service_listener_called.set()
+
+    mock_async_zeroconf.async_add_service_listener = AsyncMock(
+        side_effect=mock_add_service_listener
+    )
+    mock_async_zeroconf.async_remove_service_listener = AsyncMock(
+        side_effect=mock_remove_service_listener
+    )
+    mock_async_zeroconf.async_get_service_info = AsyncMock()
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        await dataset_store.async_add_dataset(
+            hass,
+            "source",
+            DATASET_1,
+            preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+        )
+
+        # Wait for discovery to start
+        await add_service_listener_called.wait()
+        mock_async_zeroconf.async_add_service_listener.assert_called_once_with(
+            "_meshcop._udp.local.", ANY
+        )
+
+        # Wait for discovery of other routers to time out and discovery to stop
         await remove_service_listener_called.wait()
 
     store = await dataset_store.async_get_store(hass)

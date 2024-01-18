@@ -1,7 +1,7 @@
 """Persistently store thread datasets."""
 from __future__ import annotations
 
-from asyncio import FIRST_COMPLETED, Event, Task, wait
+from asyncio import Event, Task, wait
 import dataclasses
 from datetime import datetime
 import logging
@@ -19,6 +19,7 @@ from homeassistant.util import dt as dt_util, ulid as ulid_util
 
 from . import discovery
 
+BORDER_AGENT_DISCOVERY_TIMEOUT = 30
 DATA_STORE = "thread.datasets"
 STORAGE_KEY = "thread.datasets"
 STORAGE_VERSION_MAJOR = 1
@@ -341,6 +342,7 @@ class DatasetStore:
             key: str, data: discovery.ThreadRouterDiscoveryData
         ) -> None:
             """Handle router discovered."""
+            _LOGGER.debug("discovered router with id %s", data.border_agent_id)
             if not data.border_agent_id:
                 return
 
@@ -359,32 +361,24 @@ class DatasetStore:
         found_own_router = self.hass.async_create_task(own_router_evt.wait())
         found_other_router = self.hass.async_create_task(other_router_evt.wait())
         pending = {found_own_router, found_other_router}
-        while pending:
-            (done, pending) = await wait(
-                pending,
-                timeout=30,
-                return_when=FIRST_COMPLETED,
-            )
-            if found_other_router in done:
-                # We found another router on the network, don't set the dataset
-                # as preferred
-                _LOGGER.debug("Other router found, do not set dataset as default")
-                break
+        (done, pending) = await wait(pending, timeout=BORDER_AGENT_DISCOVERY_TIMEOUT)
+        if found_other_router in done:
+            # We found another router on the network, don't set the dataset
+            # as preferred
+            _LOGGER.debug("Other router found, do not set dataset as default")
 
-            if not done:
-                # Note that asyncio.wait does not raise TimeoutError, it instead returns
-                # an empty done set when return_when=FIRST_COMPLETED if the wait times
-                # out.
-                if found_own_router in pending:
-                    # Either the router is not there, or mDNS is not working. In any case,
-                    # don't set the router as preferred.
-                    _LOGGER.debug("Own router not found, do not set dataset as default")
-                    break
-                # We've discovered the router connected to the dataset, but we did not
-                # find any other router on the network - mark the dataset as preferred.
-                _LOGGER.debug("No other router found, set dataset as default")
-                self.preferred_dataset = dataset_id
-                break
+        # Note that asyncio.wait does not raise TimeoutError, it instead returns
+        # the jobs which did not finish in the pending-set.
+        elif found_own_router in pending:
+            # Either the router is not there, or mDNS is not working. In any case,
+            # don't set the router as preferred.
+            _LOGGER.debug("Own router not found, do not set dataset as default")
+
+        else:
+            # We've discovered the router connected to the dataset, but we did not
+            # find any other router on the network - mark the dataset as preferred.
+            _LOGGER.debug("No other router found, set dataset as default")
+            self.preferred_dataset = dataset_id
 
         for task in pending:
             task.cancel()
