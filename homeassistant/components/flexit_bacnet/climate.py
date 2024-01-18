@@ -79,20 +79,20 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
 
     async def async_update(self) -> None:
         """Refresh unit state."""
-        await self.coordinator.device.update()
+        await self.device.update()
 
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        return self.coordinator.device.room_temperature
+        return self.device.room_temperature
 
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        if self.coordinator.device.ventilation_mode == VENTILATION_MODE_AWAY:
-            return self.coordinator.device.air_temp_setpoint_away
+        if self.device.ventilation_mode == VENTILATION_MODE_AWAY:
+            return self.device.air_temp_setpoint_away
 
-        return self.coordinator.device.air_temp_setpoint_home
+        return self.device.air_temp_setpoint_home
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -100,10 +100,10 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
             return
 
         try:
-            if self.coordinator.device.ventilation_mode == VENTILATION_MODE_AWAY:
-                await self.coordinator.device.set_air_temp_setpoint_away(temperature)
+            if self.device.ventilation_mode == VENTILATION_MODE_AWAY:
+                await self.device.set_air_temp_setpoint_away(temperature)
             else:
-                await self.coordinator.device.set_air_temp_setpoint_home(temperature)
+                await self.device.set_air_temp_setpoint_home(temperature)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
         finally:
@@ -115,14 +115,14 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
 
         Requires ClimateEntityFeature.PRESET_MODE.
         """
-        return VENTILATION_TO_PRESET_MODE_MAP[self.coordinator.device.ventilation_mode]
+        return VENTILATION_TO_PRESET_MODE_MAP[self.device.ventilation_mode]
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         ventilation_mode = PRESET_TO_VENTILATION_MODE_MAP[preset_mode]
 
         try:
-            await self.coordinator.device.set_ventilation_mode(ventilation_mode)
+            await self.device.set_ventilation_mode(ventilation_mode)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
         finally:
@@ -131,7 +131,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        if self.coordinator.device.ventilation_mode == VENTILATION_MODE_STOP:
+        if self.device.ventilation_mode == VENTILATION_MODE_STOP:
             return HVACMode.OFF
 
         return HVACMode.FAN_ONLY
@@ -140,13 +140,9 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
         """Set new target hvac mode."""
         try:
             if hvac_mode == HVACMode.OFF:
-                await self.coordinator.device.set_ventilation_mode(
-                    VENTILATION_MODE_STOP
-                )
+                await self.device.set_ventilation_mode(VENTILATION_MODE_STOP)
             else:
-                await self.coordinator.device.set_ventilation_mode(
-                    VENTILATION_MODE_HOME
-                )
+                await self.device.set_ventilation_mode(VENTILATION_MODE_HOME)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
         finally:

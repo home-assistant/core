@@ -1,6 +1,8 @@
 """Base entity for the Flexit Nordic (BACnet) integration."""
 from __future__ import annotations
 
+from flexit_bacnet import FlexitBACnet
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -23,3 +25,8 @@ class FlexitEntity(CoordinatorEntity[FlexitCoordinator]):
             model="Nordic",
             serial_number=coordinator.device.serial_number,
         )
+
+    @property
+    def device(self) -> FlexitBACnet:
+        """Return the device."""
+        return self.coordinator.data

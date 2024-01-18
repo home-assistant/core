@@ -17,7 +17,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class FlexitCoordinator(DataUpdateCoordinator):
+class FlexitCoordinator(DataUpdateCoordinator[FlexitBACnet]):
     """Class to manage fetching data from a Flexit Nordic (BACnet) device."""
 
     config_entry: ConfigEntry
