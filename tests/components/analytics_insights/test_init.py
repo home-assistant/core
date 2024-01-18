@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.homeassistant_analytics_consumer.const import DOMAIN
+from homeassistant.components.analytics_insights.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.homeassistant_analytics_consumer import setup_integration
+from tests.components.analytics_insights import setup_integration
 
 
 async def test_load_unload_entry(

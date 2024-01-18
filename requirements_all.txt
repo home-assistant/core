@@ -2188,7 +2188,7 @@ python-gc100==1.0.3a0
 # homeassistant.components.gitlab_ci
 python-gitlab==1.6.0
 
-# homeassistant.components.homeassistant_analytics_consumer
+# homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.4.0
 
 # homeassistant.components.homewizard

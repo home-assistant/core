@@ -8,7 +8,7 @@ from python_homeassistant_analytics import (
 from python_homeassistant_analytics.models import Integration
 
 from homeassistant import config_entries
-from homeassistant.components.homeassistant_analytics_consumer.const import (
+from homeassistant.components.analytics_insights.const import (
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
 )
@@ -20,19 +20,17 @@ from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
-    integration_dicts = load_json_object_fixture(
-        "homeassistant_analytics_consumer/integrations.json"
-    )
+    integration_dicts = load_json_object_fixture("analytics_insights/integrations.json")
     integrations = {
         key: Integration.from_dict(value) for key, value in integration_dicts.items()
     }
     with patch(
-        "homeassistant.components.homeassistant_analytics_consumer.config_flow.HomeassistantAnalyticsClient.get_current_analytics",
+        "homeassistant.components.analytics_insights.config_flow.HomeassistantAnalyticsClient.get_current_analytics",
         return_value=CurrentAnalytics.from_json(
-            load_fixture("homeassistant_analytics_consumer/current_data.json")
+            load_fixture("analytics_insights/current_data.json")
         ),
     ), patch(
-        "homeassistant.components.homeassistant_analytics_consumer.config_flow.HomeassistantAnalyticsClient.get_integrations",
+        "homeassistant.components.analytics_insights.config_flow.HomeassistantAnalyticsClient.get_integrations",
         return_value=integrations,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -57,7 +55,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
 
     with patch(
-        "homeassistant.components.homeassistant_analytics_consumer.config_flow.HomeassistantAnalyticsClient.get_current_analytics",
+        "homeassistant.components.analytics_insights.config_flow.HomeassistantAnalyticsClient.get_current_analytics",
         side_effect=HomeassistantAnalyticsConnectionError,
     ):
         result = await hass.config_entries.flow.async_init(
