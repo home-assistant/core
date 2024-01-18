@@ -285,7 +285,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
             )
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
-    hass.state = CoreState.running
+    hass.set_state(CoreState.running)
 
     @callback
     def clear_instance(event):
