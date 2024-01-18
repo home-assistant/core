@@ -110,6 +110,41 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
 )
 
 
+async def _set_prebrew_on(
+    lm: LaMarzoccoClient,
+    value: float,
+    key: int,
+) -> bool:
+    return await lm.configure_prebrew(
+        on_time=int(value * 1000),
+        off_time=int(lm.current_status[f"prebrewing_toff_k{key}"] * 1000),
+        key=key,
+    )
+
+
+async def _set_prebrew_off(
+    lm: LaMarzoccoClient,
+    value: float,
+    key: int,
+) -> bool:
+    return await lm.configure_prebrew(
+        on_time=int(lm.current_status[f"prebrewing_ton_k{key}"] * 1000),
+        off_time=int(value * 1000),
+        key=key,
+    )
+
+
+async def _set_preinfusion(
+    lm: LaMarzoccoClient,
+    value: float,
+    key: int,
+) -> bool:
+    return await lm.configure_prebrew(
+        off_time=int(value * 1000),
+        key=key,
+    )
+
+
 KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
     LaMarzoccoKeyNumberEntityDescription(
         key="prebrew_off",
@@ -121,20 +156,12 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         native_min_value=1,
         native_max_value=10,
         entity_category=EntityCategory.CONFIG,
-        set_value_fn=lambda lm, off_time, key: lm.configure_prebrew(
-            on_time=int(lm.current_status[f"prebrewing_ton_k{key}"] * 1000),
-            off_time=int(off_time * 1000),
-            key=key,
-        ),
+        set_value_fn=_set_prebrew_off,
         native_value_fn=lambda lm, key: lm.current_status[f"prebrewing_ton_k{key}"],
         enabled_fn=lambda lm: lm.current_status["enable_prebrewing"],
         not_settable_reason="Prebrewing is not enabled",
         supported_fn=lambda coordinator: coordinator.lm.model_name
-        in (
-            LaMarzoccoModel.LINEA_MICRA,
-            LaMarzoccoModel.LINEA_MINI,
-            LaMarzoccoModel.GS3_AV,
-        ),
+        != LaMarzoccoModel.GS3_MP,
     ),
     LaMarzoccoKeyNumberEntityDescription(
         key="prebrew_on",
@@ -146,20 +173,12 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         native_min_value=2,
         native_max_value=10,
         entity_category=EntityCategory.CONFIG,
-        set_value_fn=lambda lm, on_time, key: lm.configure_prebrew(
-            on_time=int(on_time * 1000),
-            off_time=int(lm.current_status[f"prebrewing_toff_k{key}"] * 1000),
-            key=key,
-        ),
+        set_value_fn=_set_prebrew_on,
         native_value_fn=lambda lm, key: lm.current_status[f"prebrewing_toff_k{key}"],
         enabled_fn=lambda lm: lm.current_status["enable_prebrewing"],
         not_settable_reason="Prebrewing is not enabled",
         supported_fn=lambda coordinator: coordinator.lm.model_name
-        in (
-            LaMarzoccoModel.LINEA_MICRA,
-            LaMarzoccoModel.LINEA_MINI,
-            LaMarzoccoModel.GS3_AV,
-        ),
+        != LaMarzoccoModel.GS3_MP,
     ),
     LaMarzoccoKeyNumberEntityDescription(
         key="preinfusion_off",
@@ -171,18 +190,12 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         native_min_value=2,
         native_max_value=29,
         entity_category=EntityCategory.CONFIG,
-        set_value_fn=lambda lm, off_time, key: lm.configure_prebrew(
-            off_time=int(off_time * 1000), key=key
-        ),
+        set_value_fn=_set_preinfusion,
         native_value_fn=lambda lm, key: lm.current_status[f"preinfusion_k{key}"],
         enabled_fn=lambda lm: lm.current_status["enable_preinfusion"],
         not_settable_reason="Preinfusion is not enabled",
         supported_fn=lambda coordinator: coordinator.lm.model_name
-        in (
-            LaMarzoccoModel.LINEA_MICRA,
-            LaMarzoccoModel.LINEA_MINI,
-            LaMarzoccoModel.GS3_AV,
-        ),
+        != LaMarzoccoModel.GS3_MP,
     ),
     LaMarzoccoKeyNumberEntityDescription(
         key="dose",
