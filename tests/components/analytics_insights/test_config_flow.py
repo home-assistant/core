@@ -45,7 +45,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant analytics"
+    assert result["title"] == "Home Assistant Analytics Insights"
     assert result["data"] == {}
     assert result["options"] == {CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify"]}
     assert len(mock_setup_entry.mock_calls) == 1
