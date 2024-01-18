@@ -78,7 +78,7 @@ class EcovacsController:
                     await device.initialize(self._mqtt)
                     self._devices.append(device)
                 else:
-                    # Legcay device
+                    # Legacy device
                     bot = VacBot(
                         credentials.user_id,
                         EcoVacsAPI.REALM,

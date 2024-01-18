@@ -290,10 +290,9 @@ class EcovacsVacuum(
                 # Convert from int to list
                 rooms[room_name] = [room_values, room.id]
 
-        attributes: dict[str, Any] = {
+        return {
             _ATTR_ROOMS: rooms,
         }
-        return attributes
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
