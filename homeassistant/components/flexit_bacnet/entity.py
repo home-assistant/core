@@ -17,7 +17,7 @@ class FlexitEntity(CoordinatorEntity[FlexitCoordinator]):
 
     def __init__(self, coordinator: FlexitCoordinator) -> None:
         """Initialize a Flexit Nordic (BACnet) entity."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, coordinator.device.serial_number),
