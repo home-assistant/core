@@ -126,7 +126,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _entry_unique_id_from_identifers(self, all_identifiers: set[str]) -> str | None:
         """Search existing entries for an identifier and return the unique id."""
-        for entry in self._async_current_entries():
+        for entry in self._async_current_entries(include_ignore=True):
             if not all_identifiers.isdisjoint(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             ):
@@ -186,7 +186,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_not_supported")
         host = discovery_info.host
-        self._async_abort_entries_match({CONF_ADDRESS: host})
         service_type = discovery_info.type[:-1]  # Remove leading .
         name = discovery_info.name.replace(f".{service_type}.", "")
         properties = discovery_info.properties
@@ -195,6 +194,15 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         unique_id = get_unique_id(service_type, name, properties)
         if unique_id is None:
             return self.async_abort(reason="unknown")
+
+        # The unique id for the zeroconf service may not be
+        # the same as the unique id for the device. If the
+        # device is already configured so if we don't
+        # find a match here, we will fallback to
+        # looking up the device by all its identifiers
+        # in the next block.
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_ADDRESS: host})
 
         if existing_unique_id := self._entry_unique_id_from_identifers({unique_id}):
             await self.async_set_unique_id(existing_unique_id)
