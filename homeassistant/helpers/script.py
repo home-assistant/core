@@ -1036,7 +1036,7 @@ class _ScriptRun:
 
     async def _async_set_conversation_response_step(self):
         """Set conversation response."""
-        self._step_log("setting variables")
+        self._step_log("setting conversation response")
         resp: template.Template | None = self._action[CONF_SET_CONVERSATION_RESPONSE]
         if resp is None:
             self._conversation_response = None
