@@ -64,14 +64,14 @@ class BTHomeEventEntity(EventEntity):
         # event_class is something like "button" or "dimmer"
         # and it maybe postfixed with "_1", "_2", etc
         base_event_class, _, postfix = event_class.partition("_")
-        postfix_id = int(postfix) if postfix else 0
-        postfix_one_indexed = postfix_id + 1
         self.entity_description = replace(
             DESCRIPTIONS_BY_EVENT_CLASS[base_event_class], key=event_class
         )
+        postfix_one_indexed = int(postfix) + 1 if postfix else None
+        postfix_name = f" {postfix_one_indexed}" if postfix else ""
         # We report button 0 as button 1, button 1 as button 2, etc to the user since
         # humans expect to count from 1 and not 0
-        self._attr_name = f"{base_event_class.title()} {postfix_one_indexed}"
+        self._attr_name = f"{base_event_class.title()}{postfix_name}"
         # Matches logic in PassiveBluetoothProcessorEntity
         if device_id:
             self._attr_device_info = dr.DeviceInfo(
