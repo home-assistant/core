@@ -70,7 +70,7 @@ add_meter_reading:
         config_entry:
           integration: tado
     reading:
-      default: 0
+      required: true
       selector:
         number:
           mode: box
