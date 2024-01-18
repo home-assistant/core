@@ -1,4 +1,5 @@
 """The tests for the MQTT cover platform."""
+from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
 
@@ -22,7 +23,6 @@ from homeassistant.components.mqtt.cover import (
     CONF_TILT_STATUS_TEMPLATE,
     CONF_TILT_STATUS_TOPIC,
     MQTT_COVER_ATTRIBUTES_BLOCKED,
-    MqttCover,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -196,8 +196,21 @@ async def test_opening_and_closing_state_via_custom_state_payload(
         }
     ],
 )
+@pytest.mark.parametrize(
+    ("position", "assert_state"),
+    [
+        (0, STATE_CLOSED),
+        (1, STATE_OPEN),
+        (30, STATE_OPEN),
+        (99, STATE_OPEN),
+        (100, STATE_OPEN),
+    ],
+)
 async def test_open_closed_state_from_position_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    position: int,
+    assert_state: str,
 ) -> None:
     """Test the state after setting the position using optimistic mode."""
     await mqtt_mock_entry()
@@ -208,24 +221,201 @@ async def test_open_closed_state_from_position_optimistic(
     await hass.services.async_call(
         cover.DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: 0},
+        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: position},
         blocking=True,
     )
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == assert_state
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == position
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "position-topic",
+                    "set_position_topic": "set-position-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "optimistic": True,
+                    "position_closed": 10,
+                    "position_open": 90,
+                }
+            }
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("position", "assert_state"),
+    [
+        (0, STATE_CLOSED),
+        (1, STATE_CLOSED),
+        (10, STATE_CLOSED),
+        (11, STATE_OPEN),
+        (30, STATE_OPEN),
+        (99, STATE_OPEN),
+        (100, STATE_OPEN),
+    ],
+)
+async def test_open_closed_state_from_position_optimistic_alt_positions(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    position: int,
+    assert_state: str,
+) -> None:
+    """Test the state after setting the position.
+
+    Test with alt opened and closed positions using optimistic mode.
+    """
+    await mqtt_mock_entry()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
 
     await hass.services.async_call(
         cover.DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: 100},
+        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: position},
         blocking=True,
     )
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == assert_state
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == position
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "tilt_command_topic": "set-position-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "optimistic": True,
+                }
+            }
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("tilt_position", "tilt_toggled_position"),
+    [(0, 100), (1, 0), (99, 0), (100, 0)],
+)
+async def test_tilt_open_closed_toggle_optimistic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    tilt_position: int,
+    tilt_toggled_position: int,
+) -> None:
+    """Test the tilt state after setting and toggling the tilt position.
+
+    Test opened and closed tilt positions using optimistic mode.
+    """
+    await mqtt_mock_entry()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: tilt_position},
+        blocking=True,
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(ATTR_CURRENT_TILT_POSITION) == tilt_position
+
+    # toggle cover tilt
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test"},
+        blocking=True,
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(ATTR_CURRENT_TILT_POSITION) == tilt_toggled_position
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "tilt_command_topic": "set-position-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "optimistic": True,
+                    "tilt_min": 5,
+                    "tilt_max": 95,
+                    "tilt_closed_value": 15,
+                    "tilt_opened_value": 85,
+                }
+            }
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("tilt_position", "tilt_toggled_position"),
+    [(0, 88), (11, 88), (12, 11), (30, 11), (90, 11), (100, 11)],
+)
+async def test_tilt_open_closed_toggle_optimistic_alt_positions(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    tilt_position: int,
+    tilt_toggled_position: int,
+) -> None:
+    """Test the tilt state after setting and toggling the tilt position.
+
+    Test with alt opened and closed tilt positions using optimistic mode.
+    """
+    await mqtt_mock_entry()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: tilt_position},
+        blocking=True,
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(ATTR_CURRENT_TILT_POSITION) == tilt_position
+
+    # toggle cover tilt
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test"},
+        blocking=True,
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(ATTR_CURRENT_TILT_POSITION) == tilt_toggled_position
 
 
 @pytest.mark.parametrize(
@@ -2235,350 +2425,6 @@ async def test_tilt_position_altered_range(
     )
 
 
-async def test_find_percentage_in_range_defaults(hass: HomeAssistant) -> None:
-    """Test find percentage in range with default range."""
-    mqtt_cover = MqttCover(
-        hass,
-        {
-            "name": "cover.test",
-            "state_topic": "state-topic",
-            "get_position_topic": None,
-            "command_topic": "command-topic",
-            "availability_topic": None,
-            "tilt_command_topic": "tilt-command-topic",
-            "tilt_status_topic": "tilt-status-topic",
-            "qos": 0,
-            "retain": False,
-            "state_open": "OPEN",
-            "state_closed": "CLOSE",
-            "position_open": 100,
-            "position_closed": 0,
-            "payload_open": "OPEN",
-            "payload_close": "CLOSE",
-            "payload_stop": "STOP",
-            "payload_available": None,
-            "payload_not_available": None,
-            "optimistic": False,
-            "value_template": None,
-            "tilt_open_position": 100,
-            "tilt_closed_position": 0,
-            "tilt_min": 0,
-            "tilt_max": 100,
-            "tilt_optimistic": False,
-            "set_position_topic": None,
-            "set_position_template": None,
-            "unique_id": None,
-            "device_config": None,
-        },
-        None,
-        None,
-    )
-
-    assert mqtt_cover.find_percentage_in_range(44) == 44
-    assert mqtt_cover.find_percentage_in_range(44, "cover") == 44
-
-
-async def test_find_percentage_in_range_altered(hass: HomeAssistant) -> None:
-    """Test find percentage in range with altered range."""
-    mqtt_cover = MqttCover(
-        hass,
-        {
-            "name": "cover.test",
-            "state_topic": "state-topic",
-            "get_position_topic": None,
-            "command_topic": "command-topic",
-            "availability_topic": None,
-            "tilt_command_topic": "tilt-command-topic",
-            "tilt_status_topic": "tilt-status-topic",
-            "qos": 0,
-            "retain": False,
-            "state_open": "OPEN",
-            "state_closed": "CLOSE",
-            "position_open": 180,
-            "position_closed": 80,
-            "payload_open": "OPEN",
-            "payload_close": "CLOSE",
-            "payload_stop": "STOP",
-            "payload_available": None,
-            "payload_not_available": None,
-            "optimistic": False,
-            "value_template": None,
-            "tilt_open_position": 180,
-            "tilt_closed_position": 80,
-            "tilt_min": 80,
-            "tilt_max": 180,
-            "tilt_optimistic": False,
-            "set_position_topic": None,
-            "set_position_template": None,
-            "unique_id": None,
-            "device_config": None,
-        },
-        None,
-        None,
-    )
-
-    assert mqtt_cover.find_percentage_in_range(120) == 40
-    assert mqtt_cover.find_percentage_in_range(120, "cover") == 40
-
-
-async def test_find_percentage_in_range_defaults_inverted(hass: HomeAssistant) -> None:
-    """Test find percentage in range with default range but inverted."""
-    mqtt_cover = MqttCover(
-        hass,
-        {
-            "name": "cover.test",
-            "state_topic": "state-topic",
-            "get_position_topic": None,
-            "command_topic": "command-topic",
-            "availability_topic": None,
-            "tilt_command_topic": "tilt-command-topic",
-            "tilt_status_topic": "tilt-status-topic",
-            "qos": 0,
-            "retain": False,
-            "state_open": "OPEN",
-            "state_closed": "CLOSE",
-            "position_open": 0,
-            "position_closed": 100,
-            "payload_open": "OPEN",
-            "payload_close": "CLOSE",
-            "payload_stop": "STOP",
-            "payload_available": None,
-            "payload_not_available": None,
-            "optimistic": False,
-            "value_template": None,
-            "tilt_open_position": 100,
-            "tilt_closed_position": 0,
-            "tilt_min": 100,
-            "tilt_max": 0,
-            "tilt_optimistic": False,
-            "set_position_topic": None,
-            "set_position_template": None,
-            "unique_id": None,
-            "device_config": None,
-        },
-        None,
-        None,
-    )
-
-    assert mqtt_cover.find_percentage_in_range(44) == 56
-    assert mqtt_cover.find_percentage_in_range(44, "cover") == 56
-
-
-async def test_find_percentage_in_range_altered_inverted(hass: HomeAssistant) -> None:
-    """Test find percentage in range with altered range and inverted."""
-    mqtt_cover = MqttCover(
-        hass,
-        {
-            "name": "cover.test",
-            "state_topic": "state-topic",
-            "get_position_topic": None,
-            "command_topic": "command-topic",
-            "availability_topic": None,
-            "tilt_command_topic": "tilt-command-topic",
-            "tilt_status_topic": "tilt-status-topic",
-            "qos": 0,
-            "retain": False,
-            "state_open": "OPEN",
-            "state_closed": "CLOSE",
-            "position_open": 80,
-            "position_closed": 180,
-            "payload_open": "OPEN",
-            "payload_close": "CLOSE",
-            "payload_stop": "STOP",
-            "payload_available": None,
-            "payload_not_available": None,
-            "optimistic": False,
-            "value_template": None,
-            "tilt_open_position": 180,
-            "tilt_closed_position": 80,
-            "tilt_min": 180,
-            "tilt_max": 80,
-            "tilt_optimistic": False,
-            "set_position_topic": None,
-            "set_position_template": None,
-            "unique_id": None,
-            "device_config": None,
-        },
-        None,
-        None,
-    )
-
-    assert mqtt_cover.find_percentage_in_range(120) == 60
-    assert mqtt_cover.find_percentage_in_range(120, "cover") == 60
-
-
-async def test_find_in_range_defaults(hass: HomeAssistant) -> None:
-    """Test find in range with default range."""
-    mqtt_cover = MqttCover(
-        hass,
-        {
-            "name": "cover.test",
-            "state_topic": "state-topic",
-            "get_position_topic": None,
-            "command_topic": "command-topic",
-            "availability_topic": None,
-            "tilt_command_topic": "tilt-command-topic",
-            "tilt_status_topic": "tilt-status-topic",
-            "qos": 0,
-            "retain": False,
-            "state_open": "OPEN",
-            "state_closed": "CLOSE",
-            "position_open": 100,
-            "position_closed": 0,
-            "payload_open": "OPEN",
-            "payload_close": "CLOSE",
-            "payload_stop": "STOP",
-            "payload_available": None,
-            "payload_not_available": None,
-            "optimistic": False,
-            "value_template": None,
-            "tilt_open_position": 100,
-            "tilt_closed_position": 0,
-            "tilt_min": 0,
-            "tilt_max": 100,
-            "tilt_optimistic": False,
-            "set_position_topic": None,
-            "set_position_template": None,
-            "unique_id": None,
-            "device_config": None,
-        },
-        None,
-        None,
-    )
-
-    assert mqtt_cover.find_in_range_from_percent(44) == 44
-    assert mqtt_cover.find_in_range_from_percent(44, "cover") == 44
-
-
-async def test_find_in_range_altered(hass: HomeAssistant) -> None:
-    """Test find in range with altered range."""
-    mqtt_cover = MqttCover(
-        hass,
-        {
-            "name": "cover.test",
-            "state_topic": "state-topic",
-            "get_position_topic": None,
-            "command_topic": "command-topic",
-            "availability_topic": None,
-            "tilt_command_topic": "tilt-command-topic",
-            "tilt_status_topic": "tilt-status-topic",
-            "qos": 0,
-            "retain": False,
-            "state_open": "OPEN",
-            "state_closed": "CLOSE",
-            "position_open": 180,
-            "position_closed": 80,
-            "payload_open": "OPEN",
-            "payload_close": "CLOSE",
-            "payload_stop": "STOP",
-            "payload_available": None,
-            "payload_not_available": None,
-            "optimistic": False,
-            "value_template": None,
-            "tilt_open_position": 180,
-            "tilt_closed_position": 80,
-            "tilt_min": 80,
-            "tilt_max": 180,
-            "tilt_optimistic": False,
-            "set_position_topic": None,
-            "set_position_template": None,
-            "unique_id": None,
-            "device_config": None,
-        },
-        None,
-        None,
-    )
-
-    assert mqtt_cover.find_in_range_from_percent(40) == 120
-    assert mqtt_cover.find_in_range_from_percent(40, "cover") == 120
-
-
-async def test_find_in_range_defaults_inverted(hass: HomeAssistant) -> None:
-    """Test find in range with default range but inverted."""
-    mqtt_cover = MqttCover(
-        hass,
-        {
-            "name": "cover.test",
-            "state_topic": "state-topic",
-            "get_position_topic": None,
-            "command_topic": "command-topic",
-            "availability_topic": None,
-            "tilt_command_topic": "tilt-command-topic",
-            "tilt_status_topic": "tilt-status-topic",
-            "qos": 0,
-            "retain": False,
-            "state_open": "OPEN",
-            "state_closed": "CLOSE",
-            "position_open": 0,
-            "position_closed": 100,
-            "payload_open": "OPEN",
-            "payload_close": "CLOSE",
-            "payload_stop": "STOP",
-            "payload_available": None,
-            "payload_not_available": None,
-            "optimistic": False,
-            "value_template": None,
-            "tilt_open_position": 100,
-            "tilt_closed_position": 0,
-            "tilt_min": 100,
-            "tilt_max": 0,
-            "tilt_optimistic": False,
-            "set_position_topic": None,
-            "set_position_template": None,
-            "unique_id": None,
-            "device_config": None,
-        },
-        None,
-        None,
-    )
-
-    assert mqtt_cover.find_in_range_from_percent(56) == 44
-    assert mqtt_cover.find_in_range_from_percent(56, "cover") == 44
-
-
-async def test_find_in_range_altered_inverted(hass: HomeAssistant) -> None:
-    """Test find in range with altered range and inverted."""
-    mqtt_cover = MqttCover(
-        hass,
-        {
-            "name": "cover.test",
-            "state_topic": "state-topic",
-            "get_position_topic": None,
-            "command_topic": "command-topic",
-            "availability_topic": None,
-            "tilt_command_topic": "tilt-command-topic",
-            "tilt_status_topic": "tilt-status-topic",
-            "qos": 0,
-            "retain": False,
-            "state_open": "OPEN",
-            "state_closed": "CLOSE",
-            "position_open": 80,
-            "position_closed": 180,
-            "payload_open": "OPEN",
-            "payload_close": "CLOSE",
-            "payload_stop": "STOP",
-            "payload_available": None,
-            "payload_not_available": None,
-            "optimistic": False,
-            "value_template": None,
-            "tilt_open_position": 180,
-            "tilt_closed_position": 80,
-            "tilt_min": 180,
-            "tilt_max": 80,
-            "tilt_optimistic": False,
-            "set_position_topic": None,
-            "set_position_template": None,
-            "unique_id": None,
-            "device_config": None,
-        },
-        None,
-        None,
-    )
-
-    assert mqtt_cover.find_in_range_from_percent(60) == 120
-    assert mqtt_cover.find_in_range_from_percent(60, "cover") == 120
-
-
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_when_connection_lost(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -3582,7 +3428,7 @@ async def test_publishing_with_custom_encoding(
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = cover.DOMAIN
-    config = DEFAULT_CONFIG
+    config = deepcopy(DEFAULT_CONFIG)
     config[mqtt.DOMAIN][domain]["position_topic"] = "some-position-topic"
 
     await help_test_publishing_with_custom_encoding(

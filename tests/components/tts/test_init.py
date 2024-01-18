@@ -4,6 +4,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import ffmpeg, tts
@@ -78,6 +79,7 @@ async def test_config_entry_unload(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_tts_entity: MockTTSEntity,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we can unload config entry."""
     entity_id = f"{tts.DOMAIN}.{TEST_DOMAIN}"
@@ -93,26 +95,24 @@ async def test_config_entry_unload(
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     now = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.services.async_call(
-            tts.DOMAIN,
-            "speak",
-            {
-                ATTR_ENTITY_ID: entity_id,
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-            },
-            blocking=True,
-        )
-        assert len(calls) == 1
+    freezer.move_to(now)
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "speak",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            tts.ATTR_MESSAGE: "There is someone at the door.",
+        },
+        blocking=True,
+    )
+    assert len(calls) == 1
 
-        assert (
-            await retrieve_media(
-                hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
-            )
-            == HTTPStatus.OK
-        )
-        await hass.async_block_till_done()
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -1406,7 +1406,9 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
 
     with patch.dict(
         hass.data[tts.DATA_TTS_MANAGER].providers, {}, clear=True
-    ), patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True):
+    ), patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True), patch.dict(
+        hass.data[tts.DOMAIN]._entities, {}, clear=True
+    ):
         assert tts.async_resolve_engine(hass, None) is None
 
     with patch.dict(hass.data[tts.DATA_TTS_MANAGER].providers, {"cloud": object()}):

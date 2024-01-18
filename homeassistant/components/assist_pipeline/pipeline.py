@@ -43,6 +43,7 @@ from homeassistant.helpers.collection import (
 )
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import (
     dt as dt_util,
     language as language_util,
@@ -115,6 +116,7 @@ async def _async_resolve_default_pipeline_settings(
     hass: HomeAssistant,
     stt_engine_id: str | None,
     tts_engine_id: str | None,
+    pipeline_name: str,
 ) -> dict[str, str | None]:
     """Resolve settings for a default pipeline.
 
@@ -123,7 +125,6 @@ async def _async_resolve_default_pipeline_settings(
     """
     conversation_language = "en"
     pipeline_language = "en"
-    pipeline_name = "Home Assistant"
     stt_engine = None
     stt_language = None
     tts_engine = None
@@ -195,9 +196,6 @@ async def _async_resolve_default_pipeline_settings(
             )
             tts_engine_id = None
 
-    if stt_engine_id == "cloud" and tts_engine_id == "cloud":
-        pipeline_name = "Home Assistant Cloud"
-
     return {
         "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
         "conversation_language": conversation_language,
@@ -221,12 +219,17 @@ async def _async_create_default_pipeline(
     The default pipeline will use the homeassistant conversation agent and the
     default stt / tts engines.
     """
-    pipeline_settings = await _async_resolve_default_pipeline_settings(hass, None, None)
+    pipeline_settings = await _async_resolve_default_pipeline_settings(
+        hass, stt_engine_id=None, tts_engine_id=None, pipeline_name="Home Assistant"
+    )
     return await pipeline_store.async_create_item(pipeline_settings)
 
 
 async def async_create_default_pipeline(
-    hass: HomeAssistant, stt_engine_id: str, tts_engine_id: str
+    hass: HomeAssistant,
+    stt_engine_id: str,
+    tts_engine_id: str,
+    pipeline_name: str,
 ) -> Pipeline | None:
     """Create a pipeline with default settings.
 
@@ -236,7 +239,7 @@ async def async_create_default_pipeline(
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_store = pipeline_data.pipeline_store
     pipeline_settings = await _async_resolve_default_pipeline_settings(
-        hass, stt_engine_id, tts_engine_id
+        hass, stt_engine_id, tts_engine_id, pipeline_name=pipeline_name
     )
     if (
         pipeline_settings["stt_engine"] != stt_engine_id
@@ -272,6 +275,48 @@ def async_get_pipelines(hass: HomeAssistant) -> Iterable[Pipeline]:
     pipeline_data: PipelineData = hass.data[DOMAIN]
 
     return pipeline_data.pipeline_store.data.values()
+
+
+async def async_update_pipeline(
+    hass: HomeAssistant,
+    pipeline: Pipeline,
+    *,
+    conversation_engine: str | UndefinedType = UNDEFINED,
+    conversation_language: str | UndefinedType = UNDEFINED,
+    language: str | UndefinedType = UNDEFINED,
+    name: str | UndefinedType = UNDEFINED,
+    stt_engine: str | None | UndefinedType = UNDEFINED,
+    stt_language: str | None | UndefinedType = UNDEFINED,
+    tts_engine: str | None | UndefinedType = UNDEFINED,
+    tts_language: str | None | UndefinedType = UNDEFINED,
+    tts_voice: str | None | UndefinedType = UNDEFINED,
+    wake_word_entity: str | None | UndefinedType = UNDEFINED,
+    wake_word_id: str | None | UndefinedType = UNDEFINED,
+) -> None:
+    """Update a pipeline."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+
+    updates: dict[str, Any] = pipeline.to_json()
+    updates.pop("id")
+    # Refactor this once we bump to Python 3.12
+    # and have https://peps.python.org/pep-0692/
+    for key, val in (
+        ("conversation_engine", conversation_engine),
+        ("conversation_language", conversation_language),
+        ("language", language),
+        ("name", name),
+        ("stt_engine", stt_engine),
+        ("stt_language", stt_language),
+        ("tts_engine", tts_engine),
+        ("tts_language", tts_language),
+        ("tts_voice", tts_voice),
+        ("wake_word_entity", wake_word_entity),
+        ("wake_word_id", wake_word_id),
+    ):
+        if val is not UNDEFINED:
+            updates[key] = val
+
+    await pipeline_data.pipeline_store.async_update_item(pipeline.id, updates)
 
 
 class PipelineEventType(StrEnum):
@@ -369,6 +414,7 @@ class PipelineStage(StrEnum):
     STT = "stt"
     INTENT = "intent"
     TTS = "tts"
+    END = "end"
 
 
 PIPELINE_STAGE_ORDER = [
@@ -1024,35 +1070,32 @@ class PipelineRun:
             )
         )
 
-        if tts_input := tts_input.strip():
-            try:
-                # Synthesize audio and get URL
-                tts_media_id = tts_generate_media_source_id(
-                    self.hass,
-                    tts_input,
-                    engine=self.tts_engine,
-                    language=self.pipeline.tts_language,
-                    options=self.tts_options,
-                )
-                tts_media = await media_source.async_resolve_media(
-                    self.hass,
-                    tts_media_id,
-                    None,
-                )
-            except Exception as src_error:
-                _LOGGER.exception("Unexpected error during text-to-speech")
-                raise TextToSpeechError(
-                    code="tts-failed",
-                    message="Unexpected error during text-to-speech",
-                ) from src_error
+        try:
+            # Synthesize audio and get URL
+            tts_media_id = tts_generate_media_source_id(
+                self.hass,
+                tts_input,
+                engine=self.tts_engine,
+                language=self.pipeline.tts_language,
+                options=self.tts_options,
+            )
+            tts_media = await media_source.async_resolve_media(
+                self.hass,
+                tts_media_id,
+                None,
+            )
+        except Exception as src_error:
+            _LOGGER.exception("Unexpected error during text-to-speech")
+            raise TextToSpeechError(
+                code="tts-failed",
+                message="Unexpected error during text-to-speech",
+            ) from src_error
 
-            _LOGGER.debug("TTS result %s", tts_media)
-            tts_output = {
-                "media_id": tts_media_id,
-                **asdict(tts_media),
-            }
-        else:
-            tts_output = {}
+        _LOGGER.debug("TTS result %s", tts_media)
+        tts_output = {
+            "media_id": tts_media_id,
+            **asdict(tts_media),
+        }
 
         self.process_event(
             PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
@@ -1345,7 +1388,11 @@ class PipelineInput:
                         self.conversation_id,
                         self.device_id,
                     )
-                    current_stage = PipelineStage.TTS
+                    if tts_input.strip():
+                        current_stage = PipelineStage.TTS
+                    else:
+                        # Skip TTS
+                        current_stage = PipelineStage.END
 
                 if self.run.end_stage != PipelineStage.INTENT:
                     # text-to-speech
@@ -1656,7 +1703,7 @@ class PipelineRuns:
                 pipeline_run.abort_wake_word_detection = True
 
 
-@dataclass
+@dataclass(slots=True)
 class DeviceAudioQueue:
     """Audio capture queue for a satellite device."""
 
@@ -1670,6 +1717,14 @@ class DeviceAudioQueue:
     """Flag to be set if audio samples were dropped because the queue was full."""
 
 
+@dataclass(slots=True)
+class AssistDevice:
+    """Assist device."""
+
+    domain: str
+    unique_id_prefix: str
+
+
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
@@ -1677,12 +1732,12 @@ class PipelineData:
         """Initialize."""
         self.pipeline_store = pipeline_store
         self.pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]] = {}
-        self.pipeline_devices: set[str] = set()
+        self.pipeline_devices: dict[str, AssistDevice] = {}
         self.pipeline_runs = PipelineRuns(pipeline_store)
         self.device_audio_queues: dict[str, DeviceAudioQueue] = {}
 
 
-@dataclass
+@dataclass(slots=True)
 class PipelineRunDebug:
     """Debug data for a pipelinerun."""
 

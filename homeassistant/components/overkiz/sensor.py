@@ -44,7 +44,7 @@ from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
@@ -484,6 +484,10 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         if (
             state is None
             or state.value is None
+            # It seems that in some cases we return `None` if state.value is falsy.
+            # This is probably incorrect and should be fixed in a follow up PR.
+            # To ensure measurement sensors do not get an `unknown` state on
+            # a falsy value (e.g. 0 or 0.0) we also check the state_class.
             or self.state_class != SensorStateClass.MEASUREMENT
             and not state.value
         ):

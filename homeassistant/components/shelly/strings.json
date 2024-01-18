@@ -71,9 +71,6 @@
           "ble_scanner_mode": "Bluetooth scanner mode"
         }
       }
-    },
-    "abort": {
-      "ble_unsupported": "Bluetooth support requires firmware version {ble_min_version} or newer."
     }
   },
   "selector": {
@@ -163,6 +160,14 @@
     "push_update_failure": {
       "title": "Shelly device {device_name} push update failure",
       "description": "Home Assistant is not receiving push updates from the Shelly device {device_name} with IP address {ip_address}. Check the CoIoT configuration in the web panel of the device and your network configuration."
+    },
+    "deprecated_valve_switch": {
+      "title": "The switch entity for Shelly Gas Valve is deprecated",
+      "description": "The switch entity for Shelly Gas Valve is deprecated. A valve entity {entity} is available and should be used going forward. For this new valve entity you need to use {service} service."
+    },
+    "deprecated_valve_switch_entity": {
+      "title": "Deprecated switch entity for Shelly Gas Valve detected in {info}",
+      "description": "Your Shelly Gas Valve entity `{entity}` is being used in `{info}`. A valve entity is available and should be used going forward.\n\nPlease adjust `{info}` to fix this issue."
     }
   }
 }

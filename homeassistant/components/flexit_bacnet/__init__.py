@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await device.update()
     except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
         raise ConfigEntryNotReady(
-            f"Timeout while connecting to {entry.data['address']}"
+            f"Timeout while connecting to {entry.data[CONF_IP_ADDRESS]}"
         ) from exc
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device

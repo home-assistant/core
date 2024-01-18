@@ -817,29 +817,5 @@
         "name": "Sterilization"
       }
     }
-  },
-  "issues": {
-    "service_deprecation_turn_off": {
-      "title": "Tuya vacuum support for vacuum.turn_off is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tuya::issues::service_deprecation_turn_off::title%]",
-            "description": "Tuya vacuum support for the vacuum.turn_off service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.stop and select submit below to mark this issue as resolved."
-          }
-        }
-      }
-    },
-    "service_deprecation_turn_on": {
-      "title": "Tuya vacuum support for vacuum.turn_on is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tuya::issues::service_deprecation_turn_on::title%]",
-            "description": "Tuya vacuum support for the vacuum.turn_on service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.start and select submit below to mark this issue as resolved."
-          }
-        }
-      }
-    }
   }
 }

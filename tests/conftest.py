@@ -40,7 +40,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components.device_tracker.legacy import Device
-from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -488,6 +487,8 @@ def aiohttp_client(
         if isinstance(__param, Application):
             server_kwargs = server_kwargs or {}
             server = TestServer(__param, loop=loop, **server_kwargs)
+            # Registering a view after starting the server should still work.
+            server.app._router.freeze = lambda: None
             client = CoalescingClient(server, loop=loop, **kwargs)
         elif isinstance(__param, BaseTestServer):
             client = TestClient(__param, loop=loop, **kwargs)
@@ -972,7 +973,7 @@ async def _mqtt_mock_entry(
     mock_mqtt_instance = None
 
     async def _setup_mqtt_entry(
-        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]]
+        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]],
     ) -> MagicMock:
         """Set up the MQTT config entry."""
         assert await setup_entry(hass, entry)
@@ -1096,21 +1097,18 @@ async def mqtt_mock_entry(
         yield _setup_mqtt_entry
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def mock_network() -> Generator[None, None, None]:
     """Mock network."""
-    mock_adapter = Adapter(
-        name="eth0",
-        index=0,
-        enabled=True,
-        auto=True,
-        default=True,
-        ipv4=[IPv4ConfiguredAddress(address="10.10.10.10", network_prefix=24)],
-        ipv6=[],
-    )
     with patch(
-        "homeassistant.components.network.network.async_load_adapters",
-        return_value=[mock_adapter],
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=[
+            Mock(
+                nice_name="eth0",
+                ips=[Mock(is_IPv6=False, ip="10.10.10.10", network_prefix=24)],
+                index=0,
+            )
+        ],
     ):
         yield
 
@@ -1133,7 +1131,7 @@ def mock_zeroconf() -> Generator[None, None, None]:
     with patch(
         "homeassistant.components.zeroconf.HaZeroconf", autospec=True
     ) as mock_zc, patch(
-        "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
+        "homeassistant.components.zeroconf.AsyncServiceBrowser", autospec=True
     ):
         zc = mock_zc.return_value
         # DNSCache has strong Cython type checks, and MagicMock does not work
@@ -1511,7 +1509,7 @@ async def async_setup_recorder_instance(
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running
-            if hass.state == CoreState.running:
+            if hass.state is CoreState.running:
                 await async_recorder_block_till_done(hass)
             return instance
 
@@ -1547,7 +1545,7 @@ async def mock_enable_bluetooth(
 @pytest.fixture(scope="session")
 def mock_bluetooth_adapters() -> Generator[None, None, None]:
     """Fixture to mock bluetooth adapters."""
-    with patch(
+    with patch("bluetooth_auto_recovery.recover_adapter"), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",

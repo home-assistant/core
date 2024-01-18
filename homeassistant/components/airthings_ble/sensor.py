@@ -1,6 +1,7 @@
 """Support for airthings ble sensors."""
 from __future__ import annotations
 
+import dataclasses
 import logging
 
 from airthings_ble import AirthingsDevice
@@ -167,10 +168,13 @@ async def async_setup_entry(
     # we need to change some units
     sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
     if not is_metric:
-        for val in sensors_mapping.values():
+        for key, val in sensors_mapping.items():
             if val.native_unit_of_measurement is not VOLUME_BECQUEREL:
                 continue
-            val.native_unit_of_measurement = VOLUME_PICOCURIE
+            sensors_mapping[key] = dataclasses.replace(
+                val,
+                native_unit_of_measurement=VOLUME_PICOCURIE,
+            )
 
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors)

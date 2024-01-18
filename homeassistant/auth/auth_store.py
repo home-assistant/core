@@ -171,7 +171,6 @@ class AuthStore:
                 groups.append(group)
 
             user.groups = groups
-            user.invalidate_permission_cache()
 
         for attr_name, value in (
             ("name", name),

@@ -120,34 +120,30 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT))
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
     swap_type = config.get(CONF_SWAP)
+    swap_dict = {
+        CONF_SWAP_BYTE: validator.swap_byte,
+        CONF_SWAP_WORD: validator.swap_word,
+        CONF_SWAP_WORD_BYTE: validator.swap_word,
+    }
+    swap_type_validator = swap_dict[swap_type] if swap_type else OPTIONAL
     for entry in (
         (count, validator.count, CONF_COUNT),
         (structure, validator.structure, CONF_STRUCTURE),
         (
             slave_count,
             validator.slave_count,
-            f"{CONF_VIRTUAL_COUNT} / {CONF_SLAVE_COUNT}",
+            f"{CONF_VIRTUAL_COUNT} / {CONF_SLAVE_COUNT}:",
         ),
+        (swap_type, swap_type_validator, f"{CONF_SWAP}:{swap_type}"),
     ):
         if entry[0] is None:
             if entry[1] == DEMANDED:
-                error = f"{name}: `{entry[2]}:` missing, demanded with `{CONF_DATA_TYPE}: {data_type}`"
+                error = f"{name}: `{entry[2]}` missing, demanded with `{CONF_DATA_TYPE}: {data_type}`"
                 raise vol.Invalid(error)
         elif entry[1] == ILLEGAL:
-            error = (
-                f"{name}: `{entry[2]}:` illegal with `{CONF_DATA_TYPE}: {data_type}`"
-            )
+            error = f"{name}: `{entry[2]}` illegal with `{CONF_DATA_TYPE}: {data_type}`"
             raise vol.Invalid(error)
 
-    if swap_type:
-        swap_type_validator = {
-            CONF_SWAP_BYTE: validator.swap_byte,
-            CONF_SWAP_WORD: validator.swap_word,
-            CONF_SWAP_WORD_BYTE: validator.swap_word,
-        }[swap_type]
-        if swap_type_validator == ILLEGAL:
-            error = f"{name}: `{CONF_SWAP}:{swap_type}` illegal with `{CONF_DATA_TYPE}: {data_type}`"
-            raise vol.Invalid(error)
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
         try:
             size = struct.calcsize(structure)

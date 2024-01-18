@@ -20,8 +20,8 @@ MOCK_CURRENT_TRANSFER_RATES = 20000000, 10000000
 MOCK_CURRENT_TRANSFER_RATES_HTTP = dict(enumerate(MOCK_CURRENT_TRANSFER_RATES))
 MOCK_LOAD_AVG_HTTP = {"load_avg_1": 1.1, "load_avg_5": 1.2, "load_avg_15": 1.3}
 MOCK_LOAD_AVG = list(MOCK_LOAD_AVG_HTTP.values())
-MOCK_TEMPERATURES_HTTP = {"2.4GHz": 40.2, "CPU": 71.2}
-MOCK_TEMPERATURES = {**MOCK_TEMPERATURES_HTTP, "5.0GHz": 0}
+MOCK_TEMPERATURES = {"2.4GHz": 40.2, "5.0GHz": 0, "CPU": 71.2}
+MOCK_TEMPERATURES_HTTP = {**MOCK_TEMPERATURES, "5.0GHz_2": 40.3, "6.0GHz": 40.4}
 
 
 @pytest.fixture(name="patch_setup_entry")
@@ -118,9 +118,9 @@ def mock_controller_connect_http(mock_devices_http):
             MOCK_CURRENT_TRANSFER_RATES_HTTP
         )
         service_mock.return_value.async_get_loadavg.return_value = MOCK_LOAD_AVG_HTTP
-        service_mock.return_value.async_get_temperatures.return_value = (
-            MOCK_TEMPERATURES_HTTP
-        )
+        service_mock.return_value.async_get_temperatures.return_value = {
+            k: v for k, v in MOCK_TEMPERATURES_HTTP.items() if k != "5.0GHz"
+        }
         yield service_mock
 
 
@@ -140,6 +140,6 @@ def mock_controller_connect_http_sens_detect():
     """Mock a successful sensor detection using http library."""
     with patch(
         f"{ASUSWRT_BASE}.bridge.AsusWrtHttpBridge._get_available_temperature_sensors",
-        return_value=[*MOCK_TEMPERATURES],
+        return_value=[*MOCK_TEMPERATURES_HTTP],
     ) as mock_sens_detect:
         yield mock_sens_detect

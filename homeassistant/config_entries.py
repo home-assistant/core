@@ -2,7 +2,15 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Generator, Iterable, Mapping
+from collections import UserDict
+from collections.abc import (
+    Callable,
+    Coroutine,
+    Generator,
+    Iterable,
+    Mapping,
+    ValuesView,
+)
 from contextvars import ContextVar
 from copy import deepcopy
 from enum import Enum, StrEnum
@@ -205,6 +213,7 @@ class ConfigEntry:
     __slots__ = (
         "entry_id",
         "version",
+        "minor_version",
         "domain",
         "title",
         "data",
@@ -233,7 +242,9 @@ class ConfigEntry:
 
     def __init__(
         self,
+        *,
         version: int,
+        minor_version: int,
         domain: str,
         title: str,
         data: Mapping[str, Any],
@@ -252,6 +263,7 @@ class ConfigEntry:
 
         # Version of the configuration.
         self.version = version
+        self.minor_version = minor_version
 
         # Domain the configuration belongs to
         self.domain = domain
@@ -331,6 +343,13 @@ class ConfigEntry:
         self._integration_for_domain: loader.Integration | None = None
         self._tries = 0
         self._setup_again_job: HassJob | None = None
+
+    def __repr__(self) -> str:
+        """Representation of ConfigEntry."""
+        return (
+            f"<ConfigEntry entry_id={self.entry_id} version={self.version} domain={self.domain} "
+            f"title={self.title} state={self.state} unique_id={self.unique_id}>"
+        )
 
     async def async_setup(
         self,
@@ -451,7 +470,7 @@ class ConfigEntry:
                 wait_time,
             )
 
-            if hass.state == CoreState.running:
+            if hass.state is CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
                     hass, wait_time, self._async_get_setup_again_job(hass)
                 )
@@ -474,6 +493,12 @@ class ConfigEntry:
         if self.domain != integration.domain:
             return
 
+        #
+        # It is important that this function does not yield to the
+        # event loop by using `await` or `async with` or similar until
+        # after the state has been set. Otherwise we risk that any `call_soon`s
+        # created by an integration will be executed before the state is set.
+        #
         if result:
             self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
@@ -631,7 +656,8 @@ class ConfigEntry:
         while isinstance(handler, functools.partial):
             handler = handler.func  # type: ignore[unreachable]
 
-        if self.version == handler.VERSION:
+        same_major_version = self.version == handler.VERSION
+        if same_major_version and self.minor_version == handler.MINOR_VERSION:
             return True
 
         if not (integration := self._integration_for_domain):
@@ -639,6 +665,8 @@ class ConfigEntry:
         component = integration.get_component()
         supports_migrate = hasattr(component, "async_migrate_entry")
         if not supports_migrate:
+            if same_major_version:
+                return True
             _LOGGER.error(
                 "Migration handler not found for entry %s for %s",
                 self.title,
@@ -676,6 +704,7 @@ class ConfigEntry:
         return {
             "entry_id": self.entry_id,
             "version": self.version,
+            "minor_version": self.minor_version,
             "domain": self.domain,
             "title": self.title,
             "data": dict(self.data),
@@ -974,6 +1003,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         entry = ConfigEntry(
             version=result["version"],
+            minor_version=result["minor_version"],
             domain=result["handler"],
             title=result["title"],
             data=result["data"],
@@ -1042,6 +1072,67 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         )
 
 
+class ConfigEntryItems(UserDict[str, ConfigEntry]):
+    """Container for config items, maps config_entry_id -> entry.
+
+    Maintains two additional indexes:
+    - domain -> list[ConfigEntry]
+    - domain -> unique_id -> ConfigEntry
+    """
+
+    def __init__(self) -> None:
+        """Initialize the container."""
+        super().__init__()
+        self._domain_index: dict[str, list[ConfigEntry]] = {}
+        self._domain_unique_id_index: dict[str, dict[str, ConfigEntry]] = {}
+
+    def values(self) -> ValuesView[ConfigEntry]:
+        """Return the underlying values to avoid __iter__ overhead."""
+        return self.data.values()
+
+    def __setitem__(self, entry_id: str, entry: ConfigEntry) -> None:
+        """Add an item."""
+        data = self.data
+        if entry_id in data:
+            # This is likely a bug in a test that is adding the same entry twice.
+            # In the future, once we have fixed the tests, this will raise HomeAssistantError.
+            _LOGGER.error("An entry with the id %s already exists", entry_id)
+            self._unindex_entry(entry_id)
+        data[entry_id] = entry
+        self._domain_index.setdefault(entry.domain, []).append(entry)
+        if entry.unique_id is not None:
+            self._domain_unique_id_index.setdefault(entry.domain, {})[
+                entry.unique_id
+            ] = entry
+
+    def _unindex_entry(self, entry_id: str) -> None:
+        """Unindex an entry."""
+        entry = self.data[entry_id]
+        domain = entry.domain
+        self._domain_index[domain].remove(entry)
+        if not self._domain_index[domain]:
+            del self._domain_index[domain]
+        if (unique_id := entry.unique_id) is not None:
+            del self._domain_unique_id_index[domain][unique_id]
+            if not self._domain_unique_id_index[domain]:
+                del self._domain_unique_id_index[domain]
+
+    def __delitem__(self, entry_id: str) -> None:
+        """Remove an item."""
+        self._unindex_entry(entry_id)
+        super().__delitem__(entry_id)
+
+    def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
+        """Get entries for a domain."""
+        return self._domain_index.get(domain, [])
+
+    def get_entry_by_domain_and_unique_id(
+        self, domain: str, unique_id: str
+    ) -> ConfigEntry | None:
+        """Get entry by domain and unique id."""
+        return self._domain_unique_id_index.get(domain, {}).get(unique_id)
+
+
 class ConfigEntries:
     """Manage the configuration entries.
 
@@ -1054,8 +1145,7 @@ class ConfigEntries:
         self.flow = ConfigEntriesFlowManager(hass, self, hass_config)
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
-        self._entries: dict[str, ConfigEntry] = {}
-        self._domain_index: dict[str, list[ConfigEntry]] = {}
+        self._entries = ConfigEntryItems()
         self._store = storage.Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -1078,23 +1168,29 @@ class ConfigEntries:
     @callback
     def async_get_entry(self, entry_id: str) -> ConfigEntry | None:
         """Return entry with matching entry_id."""
-        return self._entries.get(entry_id)
+        return self._entries.data.get(entry_id)
 
     @callback
     def async_entries(self, domain: str | None = None) -> list[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries.values())
-        return list(self._domain_index.get(domain, []))
+        return list(self._entries.get_entries_for_domain(domain))
+
+    @callback
+    def async_entry_for_domain_unique_id(
+        self, domain: str, unique_id: str
+    ) -> ConfigEntry | None:
+        """Return entry for a domain with a matching unique id."""
+        return self._entries.get_entry_by_domain_and_unique_id(domain, unique_id)
 
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
-        if entry.entry_id in self._entries:
+        if entry.entry_id in self._entries.data:
             raise HomeAssistantError(
                 f"An entry with the id {entry.entry_id} already exists."
             )
         self._entries[entry.entry_id] = entry
-        self._domain_index.setdefault(entry.domain, []).append(entry)
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
@@ -1112,9 +1208,6 @@ class ConfigEntries:
         await entry.async_remove(self.hass)
 
         del self._entries[entry.entry_id]
-        self._domain_index[entry.domain].remove(entry)
-        if not self._domain_index[entry.domain]:
-            del self._domain_index[entry.domain]
         self._async_schedule_save()
 
         dev_reg = device_registry.async_get(self.hass)
@@ -1174,13 +1267,10 @@ class ConfigEntries:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
         if config is None:
-            self._entries = {}
-            self._domain_index = {}
+            self._entries = ConfigEntryItems()
             return
 
-        entries = {}
-        domain_index: dict[str, list[ConfigEntry]] = {}
-
+        entries: ConfigEntryItems = ConfigEntryItems()
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
 
@@ -1196,6 +1286,7 @@ class ConfigEntries:
 
             config_entry = ConfigEntry(
                 version=entry["version"],
+                minor_version=entry.get("minor_version", 1),
                 domain=domain,
                 entry_id=entry_id,
                 data=entry["data"],
@@ -1214,9 +1305,7 @@ class ConfigEntries:
                 pref_disable_polling=entry.get("pref_disable_polling"),
             )
             entries[entry_id] = config_entry
-            domain_index.setdefault(domain, []).append(config_entry)
 
-        self._domain_index = domain_index
         self._entries = entries
 
     async def async_setup(self, entry_id: str) -> bool:
@@ -1349,8 +1438,15 @@ class ConfigEntries:
         """
         changed = False
 
+        if unique_id is not UNDEFINED and entry.unique_id != unique_id:
+            # Reindex the entry if the unique_id has changed
+            entry_id = entry.entry_id
+            del self._entries[entry_id]
+            entry.unique_id = unique_id
+            self._entries[entry_id] = entry
+            changed = True
+
         for attr, value in (
-            ("unique_id", unique_id),
             ("title", title),
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
@@ -1563,38 +1659,41 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if self.unique_id is None:
             return
 
-        for entry in self._async_current_entries(include_ignore=True):
-            if entry.unique_id != self.unique_id:
-                continue
-            should_reload = False
-            if (
-                updates is not None
-                and self.hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, **updates}
-                )
-                and reload_on_update
-                and entry.state
-                in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY)
-            ):
-                # Existing config entry present, and the
-                # entry data just changed
-                should_reload = True
-            elif (
-                self.source in DISCOVERY_SOURCES
-                and entry.state is ConfigEntryState.SETUP_RETRY
-            ):
-                # Existing config entry present in retry state, and we
-                # just discovered the unique id so we know its online
-                should_reload = True
-            # Allow ignored entries to be configured on manual user step
-            if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
-                continue
-            if should_reload:
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id),
-                    f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
-                )
-            raise data_entry_flow.AbortFlow(error)
+        if not (
+            entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                self.handler, self.unique_id
+            )
+        ):
+            return
+
+        should_reload = False
+        if (
+            updates is not None
+            and self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, **updates}
+            )
+            and reload_on_update
+            and entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY)
+        ):
+            # Existing config entry present, and the
+            # entry data just changed
+            should_reload = True
+        elif (
+            self.source in DISCOVERY_SOURCES
+            and entry.state is ConfigEntryState.SETUP_RETRY
+        ):
+            # Existing config entry present in retry state, and we
+            # just discovered the unique id so we know its online
+            should_reload = True
+        # Allow ignored entries to be configured on manual user step
+        if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
+            return
+        if should_reload:
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(entry.entry_id),
+                f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+            )
+        raise data_entry_flow.AbortFlow(error)
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True
@@ -1623,11 +1722,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             ):
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
-        for entry in self._async_current_entries(include_ignore=True):
-            if entry.unique_id == unique_id:
-                return entry
-
-        return None
+        return self.hass.config_entries.async_entry_for_domain_unique_id(
+            self.handler, unique_id
+        )
 
     @callback
     def _set_confirm_only(

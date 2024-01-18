@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
@@ -28,7 +28,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the event type manager."""
         super().__init__(recorder, CACHE_SIZE)
-        self._non_existent_event_types: LRU = LRU(CACHE_SIZE)
+        self._non_existent_event_types: LRU[str, None] = LRU(CACHE_SIZE)
 
     def load(self, events: list[Event], session: Session) -> None:
         """Load the event_type to event_type_ids mapping into memory.

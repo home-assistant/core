@@ -125,7 +125,7 @@ class ValloxCellStateSensor(ValloxSensorEntity):
         return VALLOX_CELL_STATE_TO_STR.get(super_native_value)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxSensorEntityDescription(SensorEntityDescription):
     """Describes Vallox sensor entity."""
 

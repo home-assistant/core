@@ -80,20 +80,24 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Store an AugustGateway()."""
         self._august_gateway: AugustGateway | None = None
         self._aiohttp_session: aiohttp.ClientSession | None = None
         self._user_auth_details: dict[str, Any] = {}
         self._needs_reset = True
-        self._mode = None
+        self._mode: str | None = None
         super().__init__()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         return await self.async_step_user_validate()
 
-    async def async_step_user_validate(self, user_input=None):
+    async def async_step_user_validate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle authentication."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -177,7 +181,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._needs_reset = True
         return await self.async_step_reauth_validate()
 
-    async def async_step_reauth_validate(self, user_input=None):
+    async def async_step_reauth_validate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle reauth and validation."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}

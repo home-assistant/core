@@ -7,12 +7,14 @@ from typing import Any, cast
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
+    BLOCK_GENERATIONS,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_EM3,
     MODEL_I3,
     MODEL_NAMES,
+    RPC_GENERATIONS,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
 
@@ -32,6 +34,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
+    CONF_GEN,
     DEFAULT_COAP_PORT,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
@@ -267,15 +270,6 @@ def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
     return sleep_period * 60  # minutes to seconds
 
 
-def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
-    """Return the device sleep period in seconds or 0 for non sleeping devices.
-
-    sys.sleep.wakeup_period value is deprecated and not available in Shelly
-    firmware 1.0.0 or later.
-    """
-    return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
-
-
 def get_rpc_device_wakeup_period(status: dict[str, Any]) -> int:
     """Return the device wakeup period in seconds or 0 for non sleeping devices."""
     return cast(int, status["sys"].get("wakeup_period", 0))
@@ -288,12 +282,12 @@ def get_info_auth(info: dict[str, Any]) -> bool:
 
 def get_info_gen(info: dict[str, Any]) -> int:
     """Return the device generation from shelly info."""
-    return int(info.get("gen", 1))
+    return int(info.get(CONF_GEN, 1))
 
 
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
-    if get_info_gen(info) == 2:
+    if get_info_gen(info) in RPC_GENERATIONS:
         return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
@@ -332,7 +326,7 @@ def get_rpc_entity_name(
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
     """Return the device generation from config entry."""
-    return entry.data.get("gen", 1)
+    return entry.data.get(CONF_GEN, 1)
 
 
 def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
@@ -367,7 +361,9 @@ def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
 def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     """Return true if rpc channel consumption type is set to light."""
     con_types = config["sys"].get("ui_data", {}).get("consumption_types")
-    return con_types is not None and con_types[channel].lower().startswith("light")
+    if con_types is None or len(con_types) <= channel:
+        return False
+    return cast(str, con_types[channel]).lower().startswith("light")
 
 
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
@@ -429,4 +425,4 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
-    return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL
+    return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL

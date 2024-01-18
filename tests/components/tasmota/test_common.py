@@ -4,6 +4,7 @@ import json
 from unittest.mock import ANY
 
 from hatasmota.const import (
+    CONF_DEEP_SLEEP,
     CONF_MAC,
     CONF_OFFLINE,
     CONF_ONLINE,
@@ -188,6 +189,76 @@ async def help_test_availability_when_connection_lost(
     assert state.state != STATE_UNAVAILABLE
 
 
+async def help_test_deep_sleep_availability_when_connection_lost(
+    hass,
+    mqtt_client_mock,
+    mqtt_mock,
+    domain,
+    config,
+    sensor_config=None,
+    object_id="tasmota_test",
+):
+    """Test availability after MQTT disconnection when deep sleep is enabled.
+
+    This is a test helper for the TasmotaAvailability mixin.
+    """
+    config[CONF_DEEP_SLEEP] = 1
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
+
+    # Device online
+    state = hass.states.get(f"{domain}.{object_id}")
+    assert state.state != STATE_UNAVAILABLE
+
+    # Disconnected from MQTT server -> state changed to unavailable
+    mqtt_mock.connected = False
+    await hass.async_add_executor_job(mqtt_client_mock.on_disconnect, None, None, 0)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.{object_id}")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Reconnected to MQTT server -> state no longer unavailable
+    mqtt_mock.connected = True
+    await hass.async_add_executor_job(mqtt_client_mock.on_connect, None, None, None, 0)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.{object_id}")
+    assert state.state != STATE_UNAVAILABLE
+
+    # Receive LWT again
+    async_fire_mqtt_message(
+        hass,
+        get_topic_tele_will(config),
+        config_get_state_online(config),
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.{object_id}")
+    assert state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(
+        hass,
+        get_topic_tele_will(config),
+        config_get_state_offline(config),
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.{object_id}")
+    assert state.state != STATE_UNAVAILABLE
+
+
 async def help_test_availability(
     hass,
     mqtt_mock,
@@ -234,6 +305,55 @@ async def help_test_availability(
     await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{object_id}")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def help_test_deep_sleep_availability(
+    hass,
+    mqtt_mock,
+    domain,
+    config,
+    sensor_config=None,
+    object_id="tasmota_test",
+):
+    """Test availability when deep sleep is enabled.
+
+    This is a test helper for the TasmotaAvailability mixin.
+    """
+    config[CONF_DEEP_SLEEP] = 1
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.{object_id}")
+    assert state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(
+        hass,
+        get_topic_tele_will(config),
+        config_get_state_online(config),
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.{object_id}")
+    assert state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(
+        hass,
+        get_topic_tele_will(config),
+        config_get_state_offline(config),
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.{object_id}")
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_availability_discovery_update(

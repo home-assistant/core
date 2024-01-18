@@ -1,13 +1,9 @@
 """A Local To-do todo platform."""
 
-from collections.abc import Iterable
-import dataclasses
 import logging
-from typing import Any
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
-from ical.exceptions import CalendarParseError
 from ical.store import TodoStore
 from ical.todo import Todo, TodoStatus
 
@@ -59,26 +55,18 @@ async def async_setup_entry(
     async_add_entities([entity], True)
 
 
-def _todo_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
-    """Convert TodoItem dataclass items to dictionary of attributes for ical consumption."""
-    result: dict[str, str] = {}
-    for name, value in obj:
-        if value is None:
-            continue
-        if name == "status":
-            result[name] = ICS_TODO_STATUS_MAP_INV[value]
-        else:
-            result[name] = value
-    return result
-
-
 def _convert_item(item: TodoItem) -> Todo:
     """Convert a HomeAssistant TodoItem to an ical Todo."""
-    try:
-        return Todo(**dataclasses.asdict(item, dict_factory=_todo_dict_factory))
-    except CalendarParseError as err:
-        _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, err)
-        raise HomeAssistantError("Error parsing todo input fields") from err
+    todo = Todo()
+    if item.uid:
+        todo.uid = item.uid
+    if item.summary:
+        todo.summary = item.summary
+    if item.status:
+        todo.status = ICS_TODO_STATUS_MAP_INV[item.status]
+    todo.due = item.due
+    todo.description = item.description
+    return todo
 
 
 class LocalTodoListEntity(TodoListEntity):
@@ -139,7 +127,7 @@ class LocalTodoListEntity(TodoListEntity):
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
-        """Add an item to the To-do list."""
+        """Delete an item from the To-do list."""
         store = TodoStore(self._calendar)
         for uid in uids:
             store.delete(uid)

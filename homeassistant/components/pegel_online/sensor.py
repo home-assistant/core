@@ -21,14 +21,14 @@ from .coordinator import PegelOnlineDataUpdateCoordinator
 from .entity import PegelOnlineEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class PegelOnlineRequiredKeysMixin:
     """Mixin for required keys."""
 
     measurement_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class PegelOnlineSensorEntityDescription(
     SensorEntityDescription, PegelOnlineRequiredKeysMixin
 ):

@@ -55,6 +55,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'wyoming',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -65,6 +66,7 @@
       'disabled_by': None,
       'domain': 'wyoming',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -97,6 +99,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'wyoming',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -107,6 +110,7 @@
       'disabled_by': None,
       'domain': 'wyoming',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -139,6 +143,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'wyoming',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -149,6 +154,7 @@
       'disabled_by': None,
       'domain': 'wyoming',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

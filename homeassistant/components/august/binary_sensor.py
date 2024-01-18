@@ -105,12 +105,12 @@ def _native_datetime() -> datetime:
     return datetime.now()
 
 
-@dataclass
+@dataclass(frozen=True)
 class AugustBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes August binary_sensor entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class AugustDoorbellRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -118,7 +118,7 @@ class AugustDoorbellRequiredKeysMixin:
     is_time_based: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class AugustDoorbellBinarySensorEntityDescription(
     BinarySensorEntityDescription, AugustDoorbellRequiredKeysMixin
 ):
