@@ -255,7 +255,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_create_entry(
-            title=f"{DOMAIN}-{device.model}",
+            title=f"{DOMAIN}-{device.mac.hex()}",
             data={
                 CONF_HOST: device.host[0],
                 CONF_MAC: device.mac.hex(),
