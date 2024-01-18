@@ -4,7 +4,7 @@ from typing import Any
 
 from aiohttp import ClientResponseError
 from yalexs.activity import SOURCE_PUBNUB, ActivityType
-from yalexs.lock import LockStatus
+from yalexs.lock import Lock, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
@@ -39,7 +39,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
 
     _attr_name = None
 
-    def __init__(self, data, device):
+    def __init__(self, data: AugustData, device: Lock) -> None:
         """Initialize the lock."""
         super().__init__(data, device)
         self._lock_status = None
@@ -82,7 +82,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             )
             self._data.async_signal_device_id_update(self._device_id)
 
-    def _update_lock_status_from_detail(self):
+    def _update_lock_status_from_detail(self) -> bool:
         self._attr_available = self._detail.bridge_is_online
 
         if self._lock_status != self._detail.lock_status:
