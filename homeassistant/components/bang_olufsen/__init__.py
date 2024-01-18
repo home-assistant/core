@@ -8,9 +8,10 @@ from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.device_registry as dr
 
 from .const import DOMAIN
 from .websocket import BangOlufsenWebsocket
@@ -29,6 +30,18 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+
+    # Remove casts to str
+    assert entry.unique_id
+
+    # Create device now as BangOlufsenWebsocket needs a device for debug logging, firing events etc.
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+        name=entry.title,
+        model=entry.data[CONF_MODEL],
+    )
 
     client = MozartClient(host=entry.data[CONF_HOST], websocket_reconnect=True)
 

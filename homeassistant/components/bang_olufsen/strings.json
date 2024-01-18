@@ -1,19 +1,17 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+    "error": {
       "api_exception": "[%key:common::config_flow::error::invalid_host%]",
       "client_connector_error": "[%key:common::config_flow::error::invalid_host%]",
       "timeout_error": "[%key:common::config_flow::error::timeout_connect%]",
       "value_error": "[%key:common::config_flow::error::invalid_host%]"
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
     "flow_title": "{name}",
     "step": {
-      "confirm": {
-        "title": "Setup Bang & Olufsen device.",
-        "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
