@@ -35,7 +35,7 @@ def mock_flexit_bacnet() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet",
         return_value=flexit_bacnet,
     ), patch(
-        "homeassistant.components.flexit_bacnet.FlexitBACnet",
+        "homeassistant.components.flexit_bacnet.coordinator.FlexitBACnet",
         return_value=flexit_bacnet,
     ):
         flexit_bacnet.serial_number = "0000-0001"
