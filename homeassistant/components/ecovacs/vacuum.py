@@ -24,6 +24,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
@@ -334,11 +335,20 @@ class EcovacsVacuum(
         if params is None:
             params = {}
         elif isinstance(params, list):
-            raise ValueError("List params are not supported!")
+            raise ServiceValidationError(
+                "Params must be a dict!",
+                translation_domain=DOMAIN,
+                translation_key="vacuum_send_command_params_dict",
+            )
 
         if command in ["spot_area", "custom_area"]:
             if params is None:
-                raise RuntimeError("Params are required!")
+                raise ServiceValidationError(
+                    f"Params are required for {command}!",
+                    translation_domain=DOMAIN,
+                    translation_key="vacuum_send_command_params_required",
+                    translation_placeholders={"command": command},
+                )
 
             if command in "spot_area":
                 await self._device.execute_command(

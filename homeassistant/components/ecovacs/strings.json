@@ -37,6 +37,14 @@
       }
     }
   },
+  "exceptions": {
+    "vacuum_send_command_params_dict": {
+      "message": "Params must be a dictionary and not a list"
+    },
+    "vacuum_send_command_params_required": {
+      "message": "Params are required for the command: {command}"
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The Ecovacs YAML configuration import failed",
