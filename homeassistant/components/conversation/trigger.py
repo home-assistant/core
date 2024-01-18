@@ -7,7 +7,7 @@ from hassil.recognize import PUNCTUATION, RecognizeResult
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import ScriptRunResult
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
@@ -61,7 +61,6 @@ async def async_attach_trigger(
 
     job = HassJob(action)
 
-    @callback
     async def call_action(sentence: str, result: RecognizeResult) -> str | None:
         """Call action with right context."""
 
