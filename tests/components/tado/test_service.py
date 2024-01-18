@@ -11,7 +11,7 @@ from homeassistant.components.tado.const import (
     SERVICE_ADD_METER_READING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .util import async_init_integration
 
@@ -66,7 +66,7 @@ async def test_add_meter_readings_exception(
             "homeassistant.components.tado.TadoConnector.set_meter_reading",
             return_value=None,
         ),
-        pytest.raises(ServiceValidationError) as exc,
+        pytest.raises(HomeAssistantError) as exc,
     ):
         await hass.services.async_call(
             DOMAIN,

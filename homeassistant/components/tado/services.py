@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import selector
 
 from .const import (
@@ -45,7 +45,7 @@ def setup_services(hass: HomeAssistant) -> None:
         )
 
         if not response:
-            raise ServiceValidationError("Could not add meter reading")
+            raise HomeAssistantError("Could not add meter reading")
 
         if ATTR_MESSAGE in response:
             raise ServiceValidationError(response[ATTR_MESSAGE])
