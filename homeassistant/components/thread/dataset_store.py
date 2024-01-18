@@ -372,13 +372,16 @@ class DatasetStore:
                 break
 
             if not done:
+                # Note that asyncio.wait does not raise TimeoutError, it instead returns
+                # an empty done set when return_when=FIRST_COMPLETED if the wait times
+                # out.
                 if found_own_router in pending:
                     # Either the router is not there, or mDNS is not working. In any case,
-                    # don't set the router as preferred
+                    # don't set the router as preferred.
                     _LOGGER.debug("Own router not found, do not set dataset as default")
                     break
-                # We did not find any other router on the network, mark the dataset as
-                # preferred
+                # We've discovered the router connected to the dataset, but we did not
+                # find any other router on the network - mark the dataset as preferred.
                 _LOGGER.debug("No other router found, set dataset as default")
                 self.preferred_dataset = dataset_id
                 break
