@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from lmcloud import LMCloud as LaMarzoccoClient
-from lmcloud.const import LaMarzoccoModel
+from lmcloud.const import KEYS_PER_MODEL, LaMarzoccoModel
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, KEYS_PER_MODEL
+from .const import DOMAIN
 from .coordinator import LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
@@ -218,13 +218,11 @@ async def async_setup_entry(
     entities: list[LaMarzoccoKeyNumberEntity] = []
     for description in KEY_ENTITIES:
         if description.supported_fn(coordinator):
-            if (num_keys := KEYS_PER_MODEL[coordinator.lm.model_name]) is not None:
-                for key in range(1, num_keys + 1):
-                    entities.append(
-                        LaMarzoccoKeyNumberEntity(coordinator, description, key)
-                    )
-            else:
-                entities.append(LaMarzoccoKeyNumberEntity(coordinator, description))
+            num_keys = KEYS_PER_MODEL[coordinator.lm.model_name]
+            for key in range(min(num_keys, 1), num_keys + 1):
+                entities.append(
+                    LaMarzoccoKeyNumberEntity(coordinator, description, key)
+                )
 
     async_add_entities(entities)
 
@@ -246,7 +244,7 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
 
 
 class LaMarzoccoKeyNumberEntity(LaMarzoccoEntity, NumberEntity):
-    """Number representing espresso machine temperature data with keys."""
+    """Number representing espresso machine with key support."""
 
     entity_description: LaMarzoccoKeyNumberEntityDescription
 
@@ -254,11 +252,11 @@ class LaMarzoccoKeyNumberEntity(LaMarzoccoEntity, NumberEntity):
         self,
         coordinator: LaMarzoccoUpdateCoordinator,
         description: LaMarzoccoKeyNumberEntityDescription,
-        key: int | None = None,
+        key: int,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, description)
-        if key is None:
+        if key == 0:
             key = 1
         else:
             self._attr_translation_key = f"{description.translation_key}_key"
