@@ -13,6 +13,8 @@ from .coordinator import FlexitCoordinator
 class FlexitEntity(CoordinatorEntity[FlexitCoordinator]):
     """Defines a Flexit entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: FlexitCoordinator) -> None:
         """Initialize a Flexit Nordic (BACnet) entity."""
         super().__init__(coordinator=coordinator)
