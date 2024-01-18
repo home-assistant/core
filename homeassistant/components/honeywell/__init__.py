@@ -13,9 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
-    CONF_DEV_ID,
     CONF_HEAT_AWAY_TEMPERATURE,
-    CONF_LOC_ID,
     DOMAIN,
 )
 
@@ -70,15 +68,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             "Failed to initialize the Honeywell client: Connection error"
         ) from ex
 
-    loc_id = config_entry.data.get(CONF_LOC_ID)
-    dev_id = config_entry.data.get(CONF_DEV_ID)
-
     devices = {}
     for location in client.locations_by_id.values():
-        if not loc_id or location.locationid == loc_id:
-            for device in location.devices_by_id.values():
-                if not dev_id or device.deviceid == dev_id:
-                    devices[device.deviceid] = device
+        for device in location.devices_by_id.values():
+            devices[device.deviceid] = device
 
     if len(devices) == 0:
         _LOGGER.debug("No devices found")
