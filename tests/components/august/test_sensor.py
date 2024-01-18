@@ -351,8 +351,7 @@ async def test_restored_state(
         ],
     )
 
-    august_entry = await _create_august_with_devices(hass, [lock_one])
-    august_entry.add_to_hass(hass)
+    await _create_august_with_devices(hass, [lock_one])
 
     await hass.async_block_till_done()
 

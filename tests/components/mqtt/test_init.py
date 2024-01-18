@@ -804,6 +804,7 @@ def test_entity_device_info_schema() -> None:
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
+            "serial_number": "1234deadbeef",
             "sw_version": "0.1-beta",
             "configuration_url": "http://example.com",
         }
@@ -819,6 +820,7 @@ def test_entity_device_info_schema() -> None:
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
+            "serial_number": "1234deadbeef",
             "sw_version": "0.1-beta",
             "via_device": "test-hub",
             "configuration_url": "http://example.com",

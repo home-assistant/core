@@ -39,7 +39,7 @@ from .const import (
     WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoDevice
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,11 +79,11 @@ async def async_setup_entry(
     )
 
 
-class NetatmoCamera(NetatmoBase, Camera):
+class NetatmoCamera(NetatmoBaseEntity, Camera):
     """Representation of a Netatmo camera."""
 
     _attr_brand = MANUFACTURER
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
     _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(
@@ -97,7 +97,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._camera = cast(NaModules.Camera, netatmo_device.device)
         self._id = self._camera.entity_id
         self._home_id = self._camera.home.entity_id
-        self._device_name = self._attr_name = self._camera.name
+        self._device_name = self._camera.name
         self._model = self._camera.device_type
         self._config_url = CONF_URL_SECURITY
         self._attr_unique_id = f"{self._id}-{self._model}"
