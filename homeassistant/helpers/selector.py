@@ -1101,6 +1101,42 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
+class ServiceSelectorConfig(TypedDict):
+    """Class to represent an service selector config."""
+
+    domain: str | list[str]
+
+
+@SELECTORS.register("service")
+class ServiceSelector(Selector[ServiceSelectorConfig]):
+    """Selector for a single-choice service select."""
+
+    selector_type = "service"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
+        }
+    )
+
+    def __init__(self, config: ServiceSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        service = cv.service(data)
+        if allowed_domains := cv.ensure_list(self.config.get("domain")):
+            domain = split_entity_id(service)[0]
+            if domain not in allowed_domains:
+                raise vol.Invalid(
+                    f"Service {service} belongs to domain {domain}, "
+                    f"expected {allowed_domains}"
+                )
+
+        return service
+
+
 class TargetSelectorConfig(TypedDict, total=False):
     """Class to represent a target selector config."""
 

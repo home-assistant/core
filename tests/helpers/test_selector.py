@@ -1108,3 +1108,28 @@ def test_condition_selector_schema(
 def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test trigger sequence selector."""
     _test_selector("trigger", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {},
+            ("notify.test_device", "light.turn_on"),
+            (None, True, 1),
+        ),
+        (
+            {"domain": "notify"},
+            ("notify.test_device",),
+            ("light.turn_on", None, True, 1),
+        ),
+        (
+            {"domain": ["notify", "light"]},
+            ("notify.test_device", "light.turn_on"),
+            ("switch.turn_on", None, True, 1),
+        ),
+    ),
+)
+def test_service_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test service selector."""
+    _test_selector("service", schema, valid_selections, invalid_selections)
