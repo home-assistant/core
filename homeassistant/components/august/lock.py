@@ -91,7 +91,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         return False
 
     @callback
-    def _update_from_data(self):
+    def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
         activity_stream = self._data.activity_stream
         device_id = self._device_id
