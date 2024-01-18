@@ -283,12 +283,9 @@ async def async_remove_config_entry_device(
     ):
         # can not remove interface device
         return False
-    entity_registry = er.async_get(hass)
-    enitites = er.async_entries_for_device(
-        entity_registry, device_entry.id, include_disabled_entities=True
-    )
-    for entity in enitites:
-        await knx_module.config_store.delete_entity(entity.entity_id)
+    for entity in knx_module.config_store.get_entity_entries():
+        if entity.device_id == device_entry.id:
+            await knx_module.config_store.delete_entity(entity.entity_id)
     return True
 
 
