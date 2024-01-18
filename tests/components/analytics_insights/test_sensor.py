@@ -3,7 +3,10 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from python_homeassistant_analytics import HomeassistantAnalyticsConnectionError
+from python_homeassistant_analytics import (
+    HomeassistantAnalyticsConnectionError,
+    HomeassistantAnalyticsNotModifiedError,
+)
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -60,3 +63,23 @@ async def test_connection_error(
         hass.states.get("sensor.homeassistant_analytics_spotify").state
         == STATE_UNAVAILABLE
     )
+
+
+async def test_data_not_modified(
+    hass: HomeAssistant,
+    mock_analytics_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test not updating data if its not modified."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.homeassistant_analytics_spotify").state == "24388"
+    mock_analytics_client.return_value.get_current_analytics.side_effect = (
+        HomeassistantAnalyticsNotModifiedError()
+    )
+    freezer.tick(delta=timedelta(hours=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.homeassistant_analytics_spotify").state == "24388"

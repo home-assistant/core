@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'spotify_active_installations',
+    'unique_id': 'core_spotify_active_installations',
     'unit_of_measurement': 'active installations',
   })
 # ---
@@ -75,7 +75,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'youtube_active_installations',
+    'unique_id': 'core_youtube_active_installations',
     'unit_of_measurement': 'active installations',
   })
 # ---
