@@ -81,9 +81,9 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
     ),
     FlexitSensorEntityDescription(
         key="fireplace_ventilation_remaining_duration",
-        # device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        # suggested_unit_of_measurement= UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         translation_key="fireplace_ventilation_remaining_duration",
         value_fn=lambda data: data.fireplace_ventilation_remaining_duration,
@@ -91,8 +91,9 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
     ),
     FlexitSensorEntityDescription(
         key="rapid_ventilation_remaining_duration",
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        # suggested_unit_of_measurement= UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         translation_key="rapid_ventilation_remaining_duration",
         value_fn=lambda data: data.rapid_ventilation_remaining_duration,
@@ -103,10 +104,8 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="supply_air_fan_control_signal",
         native_unit_of_measurement=PERCENTAGE,
-        # unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.supply_air_fan_control_signal,
     ),
-    # What sensor type should be used for this sensor?
     FlexitSensorEntityDescription(
         key="supply_air_fan_rpm",
         state_class=SensorStateClass.MEASUREMENT,
@@ -128,16 +127,6 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
         translation_key="exhaust_air_fan_rpm",
         value_fn=lambda data: data.exhaust_air_fan_rpm,
     ),
-    # This does not make sense to be a sensor, since it's value is always the same, i.e. 0.8 kW
-    # Could this be added as some form of extra attribute somewhere?
-    # FlexitSensorEntityDescription(
-    #     key="electric_heater_nominal_power",
-    #     device_class=SensorDeviceClass.POWER,
-    #     native_unit_of_measurement=UnitOfPower.KILO_WATT,
-    #     translation_key="electric_heater_nominal_power",
-    #     value_fn=lambda data: data.electric_heater_nominal_power,
-    #     suggested_display_precision=3,
-    # ),
     FlexitSensorEntityDescription(
         key="electric_heater_power",
         device_class=SensorDeviceClass.POWER,
@@ -154,7 +143,6 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.HOURS,
         translation_key="air_filter_operating_time",
         value_fn=lambda data: data.air_filter_operating_time,
-        # should we have a last_reset?
     ),
     FlexitSensorEntityDescription(
         key="heat_exchanger_efficiency",
@@ -171,29 +159,6 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
         value_fn=lambda data: data.heat_exchanger_speed,
     ),
 )
-
-# These attributes are already in the climate entity
-#   operation_mode
-#   ventilation_mode
-
-# Comfort button state: shows true or false if the hvac is in mode HOME or AWAY, and is probably not needed as a sensor
-# room humidity 1,2,3: gives readings if extra wireless hardware is installed (so not needed)
-# If the sensor with bacnet address 59 is non existent use 95 AND 96 for in machine humidity sensors
-
-# These attributes exist in flexit_bacnet but seem too redundant as sensors since they almost never change
-#   air_temp_setpoint_away
-#   air_temp_setpoint_home
-#   fan_setpoint_supply_air_home
-#   fan_setpoint_extract_air_home
-#   fan_setpoint_supply_air_high
-#   fan_setpoint_extract_air_high
-#   fan_setpoint_supply_air_away
-#   fan_setpoint_extract_air_away
-#   fan_setpoint_supply_air_cooker
-#   fan_setpoint_extract_air_cooker
-#   fan_setpoint_supply_air_fire
-#   fan_setpoint_extract_air_fire
-#   air_filter_exchange_interval
 
 
 async def async_setup_entry(
@@ -224,8 +189,6 @@ class FlexitSensor(FlexitEntity, CoordinatorEntity, SensorEntity):
 
     # Should it have a entity_name?
     # _attr_has_entity_name = True
-
-    # Poll is default
 
     entity_description: FlexitSensorEntityDescription
 
