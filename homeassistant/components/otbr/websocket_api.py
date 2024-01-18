@@ -1,6 +1,8 @@
 """Websocket API for OTBR."""
 
-from typing import cast
+from collections.abc import Callable, Coroutine
+from functools import wraps
+from typing import Any, cast
 
 import python_otbr_api
 from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
@@ -77,6 +79,45 @@ async def websocket_info(
     )
 
 
+def async_get_otbr_data(
+    orig_func: Callable[
+        [HomeAssistant, websocket_api.ActiveConnection, dict, OTBRData],
+        Coroutine[Any, Any, None],
+    ],
+) -> Callable[
+    [HomeAssistant, websocket_api.ActiveConnection, dict], Coroutine[Any, Any, None]
+]:
+    """Decorate function to get OTBR data."""
+
+    @wraps(orig_func)
+    async def async_check_border_agent_id_func(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Fetch OTBR data and pass to orig_func."""
+        if DOMAIN not in hass.data:
+            connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
+            return
+
+        data: OTBRData = hass.data[DOMAIN]
+
+        try:
+            border_agent_id = await data.get_border_agent_id()
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "get_border_agent_id_failed", str(exc))
+            return
+
+        # The border agent ID is checked when the OTBR config entry is setup,
+        # we can assert it's not None
+        assert border_agent_id is not None
+        if border_agent_id.hex() != msg["border_agent_id"]:
+            connection.send_error(msg["id"], "unknown_router", "")
+            return
+
+        await orig_func(hass, connection, msg, data)
+
+    return async_check_border_agent_id_func
+
+
 @websocket_api.websocket_command(
     {
         "type": "otbr/create_network",
@@ -85,29 +126,14 @@ async def websocket_info(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@async_get_otbr_data
 async def websocket_create_network(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    data: OTBRData,
 ) -> None:
     """Create a new Thread network."""
-    if DOMAIN not in hass.data:
-        connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
-        return
-
-    data: OTBRData = hass.data[DOMAIN]
-
-    try:
-        border_agent_id = await data.get_border_agent_id()
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "get_border_agent_id_failed", str(exc))
-        return
-
-    # The border agent ID is checked when the OTBR config entry is setup,
-    # we can assert it's not None
-    assert border_agent_id is not None
-    if border_agent_id.hex() != msg["border_agent_id"]:
-        connection.send_error(msg["id"], "unknown_router", "")
-        return
-
     channel = await get_allowed_channel(hass, data.url) or DEFAULT_CHANNEL
 
     try:
@@ -167,29 +193,14 @@ async def websocket_create_network(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@async_get_otbr_data
 async def websocket_set_network(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    data: OTBRData,
 ) -> None:
     """Set the Thread network to be used by the OTBR."""
-    if DOMAIN not in hass.data:
-        connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
-        return
-
-    data: OTBRData = hass.data[DOMAIN]
-
-    try:
-        border_agent_id = await data.get_border_agent_id()
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "get_border_agent_id_failed", str(exc))
-        return
-
-    # The border agent ID is checked when the OTBR config entry is setup,
-    # we can assert it's not None
-    assert border_agent_id is not None
-    if border_agent_id.hex() != msg["border_agent_id"]:
-        connection.send_error(msg["id"], "unknown_router", "")
-        return
-
     dataset_tlv = await async_get_dataset(hass, msg["dataset_id"])
 
     if not dataset_tlv:
@@ -243,33 +254,14 @@ async def websocket_set_network(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
+@async_get_otbr_data
 async def websocket_set_channel(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    data: OTBRData,
 ) -> None:
     """Set current channel."""
-    if DOMAIN not in hass.data:
-        connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
-        return
-
-    data: OTBRData = hass.data[DOMAIN]
-
-    try:
-        border_agent_id = await data.get_border_agent_id()
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "get_border_agent_id_failed", str(exc))
-        return
-
-    # The border agent ID is checked when the OTBR config entry is setup,
-    # we can assert it's not None
-    assert border_agent_id is not None
-    if border_agent_id.hex() != msg["border_agent_id"]:
-        connection.send_error(
-            msg["id"],
-            "unknown_router",
-            f"{border_agent_id.hex()} != {msg['border_agent_id']}",
-        )
-        return
-
     if is_multiprotocol_url(data.url):
         connection.send_error(
             msg["id"],
