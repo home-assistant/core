@@ -20,11 +20,16 @@ pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 @pytest.mark.parametrize(
-    ("entity_name", "method_name"),
+    ("entity_name", "method_name", "args_on", "args_off"),
     [
-        ("", "set_power"),
-        ("_auto_on_off", "set_auto_on_off_global"),
-        ("_steam_boiler", "set_steam"),
+        ("", "set_power", (True, None), (False, None)),
+        (
+            "_auto_on_off",
+            "set_auto_on_off_global",
+            (True,),
+            (False,),
+        ),
+        ("_steam_boiler", "set_steam", (True, None), (False, None)),
     ],
 )
 async def test_switches(
@@ -34,6 +39,8 @@ async def test_switches(
     snapshot: SnapshotAssertion,
     entity_name: str,
     method_name: str,
+    args_on: tuple,
+    args_off: tuple,
 ) -> None:
     """Test the La Marzocco switches."""
     serial_number = mock_lamarzocco.serial_number
@@ -58,7 +65,7 @@ async def test_switches(
     )
 
     assert len(control_fn.mock_calls) == 1
-    control_fn.assert_called_once_with(False)
+    control_fn.assert_called_once_with(*args_off)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -70,7 +77,7 @@ async def test_switches(
     )
 
     assert len(control_fn.mock_calls) == 2
-    control_fn.assert_called_with(True)
+    control_fn.assert_called_with(*args_on)
 
 
 async def test_device(
