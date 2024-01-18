@@ -44,7 +44,7 @@ class FlexitCoordinator(DataUpdateCoordinator[FlexitBACnet]):
             await self.device.update()
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise ConfigEntryNotReady(
-                f"Timeout while connecting to {self.config_entry.data['address']}"
+                f"Timeout while connecting to {self.config_entry.data[CONF_IP_ADDRESS]}"
             ) from exc
 
         return self.device
