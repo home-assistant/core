@@ -70,7 +70,6 @@ async def test_get_triggers(
             "platform": "device",
             "domain": DOMAIN,
             "device_id": device_entry.id,
-            "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
             "metadata": {},
@@ -191,7 +190,6 @@ async def test_discover_bad_triggers(
             "platform": "device",
             "domain": DOMAIN,
             "device_id": device_entry.id,
-            "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
             "metadata": {},
@@ -241,7 +239,6 @@ async def test_update_remove_triggers(
             "platform": "device",
             "domain": DOMAIN,
             "device_id": device_entry.id,
-            "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
             "metadata": {},
@@ -284,7 +281,7 @@ async def test_if_fires_on_mqtt_message(
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
         '  "payload": "short_press",'
-        '  "topic": "foobar/triggers/button1",'
+        '  "topic": "foobar/triggers/button",'
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
@@ -292,7 +289,7 @@ async def test_if_fires_on_mqtt_message(
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
         '  "payload": "long_press",'
-        '  "topic": "foobar/triggers/button1",'
+        '  "topic": "foobar/triggers/button",'
         '  "type": "button_long_press",'
         '  "subtype": "button_2" }'
     )
@@ -311,7 +308,7 @@ async def test_if_fires_on_mqtt_message(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        "discovery_id": "bla1",
+                        "discovery_id": "I am ignored",
                         "type": "button_short_press",
                         "subtype": "button_1",
                     },
@@ -325,9 +322,9 @@ async def test_if_fires_on_mqtt_message(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        "discovery_id": "bla2",
-                        "type": "button_1",
-                        "subtype": "button_long_press",
+                        "discovery_id": "I am ignored too",
+                        "type": "button_long_press",
+                        "subtype": "button_2",
                     },
                     "action": {
                         "service": "test.automation",
@@ -339,13 +336,13 @@ async def test_if_fires_on_mqtt_message(
     )
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    async_fire_mqtt_message(hass, "foobar/triggers/button", "short_press")
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "short_press"
 
     # Fake long press.
-    async_fire_mqtt_message(hass, "foobar/triggers/button1", "long_press")
+    async_fire_mqtt_message(hass, "foobar/triggers/button", "long_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "long_press"
@@ -392,7 +389,6 @@ async def test_if_fires_on_mqtt_message_template(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        "discovery_id": "bla1",
                         "type": "button_short_press",
                         "subtype": "button_1",
                     },
@@ -406,9 +402,8 @@ async def test_if_fires_on_mqtt_message_template(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        "discovery_id": "bla2",
-                        "type": "button_1",
-                        "subtype": "button_long_press",
+                        "type": "button_long_press",
+                        "subtype": "button_2",
                     },
                     "action": {
                         "service": "test.automation",
@@ -449,7 +444,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
         '  "payload": "short_press",'
-        '  "topic": "foobar/triggers/button1",'
+        '  "topic": "foobar/triggers/button",'
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
@@ -457,7 +452,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
         '  "payload": "long_press",'
-        '  "topic": "foobar/triggers/button1",'
+        '  "topic": "foobar/triggers/button",'
         '  "type": "button_long_press",'
         '  "subtype": "button_2" }'
     )
@@ -475,7 +470,6 @@ async def test_if_fires_on_mqtt_message_late_discover(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        "discovery_id": "bla1",
                         "type": "button_short_press",
                         "subtype": "button_1",
                     },
@@ -489,9 +483,8 @@ async def test_if_fires_on_mqtt_message_late_discover(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        "discovery_id": "bla2",
-                        "type": "button_1",
-                        "subtype": "button_long_press",
+                        "type": "button_long_press",
+                        "subtype": "button_2",
                     },
                     "action": {
                         "service": "test.automation",
@@ -507,13 +500,13 @@ async def test_if_fires_on_mqtt_message_late_discover(
     await hass.async_block_till_done()
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    async_fire_mqtt_message(hass, "foobar/triggers/button", "short_press")
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "short_press"
 
     # Fake long press.
-    async_fire_mqtt_message(hass, "foobar/triggers/button1", "long_press")
+    async_fire_mqtt_message(hass, "foobar/triggers/button", "long_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "long_press"
@@ -1411,9 +1404,9 @@ async def test_trigger_debug_info(
     config1 = {
         "platform": "mqtt",
         "automation_type": "trigger",
-        "topic": "test-topic",
+        "topic": "test-topic1",
         "type": "foo",
-        "subtype": "bar",
+        "subtype": "bar1",
         "device": {
             "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
             "manufacturer": "Whatever",
@@ -1427,7 +1420,7 @@ async def test_trigger_debug_info(
         "automation_type": "trigger",
         "topic": "test-topic2",
         "type": "foo",
-        "subtype": "bar",
+        "subtype": "bar2",
         "device": {
             "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
         },
