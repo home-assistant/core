@@ -78,7 +78,7 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         self.device = device
         vacuum = self.device.vacuum
 
-        self.error = None
+        self.error: str | None = None
         self._attr_unique_id = vacuum["did"]
         self._attr_name = vacuum.get("nick", vacuum["did"])
 
@@ -89,7 +89,7 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         self.device.lifespanEvents.subscribe(lambda _: self.schedule_update_ha_state())
         self.device.errorEvents.subscribe(self.on_error)
 
-    def on_error(self, error):
+    def on_error(self, error: str) -> None:
         """Handle an error event from the robot.
 
         This will not change the entity's state. If the error caused the state
@@ -129,7 +129,7 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
     def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
         if self.device.battery_status is not None:
-            return self.device.battery_status * 100
+            return self.device.battery_status * 100  # type: ignore[no-any-return]
 
         return None
 
@@ -143,7 +143,7 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return self.device.fan_speed
+        return self.device.fan_speed  # type: ignore[no-any-return]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
