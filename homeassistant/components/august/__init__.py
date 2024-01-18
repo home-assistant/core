@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import ValuesView
+from collections.abc import Callable, Coroutine, Iterable, ValuesView
 from datetime import datetime
 from itertools import chain
 import logging
-from typing import Any
+from typing import Any, ParamSpec, TypeVar
 
 from aiohttp import ClientError, ClientResponseError
 from yalexs.const import DEFAULT_BRAND
@@ -33,6 +33,9 @@ from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 from .util import async_create_august_clientsession
+
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +107,7 @@ async def async_setup_august(
 @callback
 def _async_trigger_ble_lock_discovery(
     hass: HomeAssistant, locks_with_offline_keys: list[LockDetail]
-):
+) -> None:
     """Update keys for the yalexs-ble integration if available."""
     for lock_detail in locks_with_offline_keys:
         discovery_flow.async_create_flow(
@@ -213,7 +216,7 @@ class AugustData(AugustSubscriberMixin):
                 self._hass, self._async_initial_sync(), "august-initial-sync"
             )
 
-    async def _async_initial_sync(self):
+    async def _async_initial_sync(self) -> None:
         """Attempt to request an initial sync."""
         # We don't care if this fails because we only want to wake
         # locks that are actually online anyways and they will be
@@ -274,7 +277,9 @@ class AugustData(AugustSubscriberMixin):
     async def _async_refresh(self, time):
         await self._async_refresh_device_detail_by_ids(self._subscriptions.keys())
 
-    async def _async_refresh_device_detail_by_ids(self, device_ids_list):
+    async def _async_refresh_device_detail_by_ids(
+        self, device_ids_list: Iterable[str]
+    ) -> None:
         """Refresh each device in sequence.
 
         This used to be a gather but it was less reliable with august's
@@ -358,7 +363,7 @@ class AugustData(AugustSubscriberMixin):
             return device.device_name
         return None
 
-    async def async_lock(self, device_id):
+    async def async_lock(self, device_id: str):
         """Lock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -367,7 +372,9 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
-    async def async_status_async(self, device_id, hyper_bridge):
+    async def async_status_async(
+        self, device_id: str, hyper_bridge: bool
+    ) -> str | None:
         """Request status of the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -377,7 +384,7 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
-    async def async_lock_async(self, device_id, hyper_bridge):
+    async def async_lock_async(self, device_id: str, hyper_bridge: bool) -> str | None:
         """Lock the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -387,7 +394,7 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
-    async def async_unlock(self, device_id):
+    async def async_unlock(self, device_id: str):
         """Unlock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -396,7 +403,9 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
-    async def async_unlock_async(self, device_id, hyper_bridge):
+    async def async_unlock_async(
+        self, device_id: str, hyper_bridge: bool
+    ) -> str | None:
         """Unlock the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -407,8 +416,12 @@ class AugustData(AugustSubscriberMixin):
         )
 
     async def _async_call_api_op_requires_bridge(
-        self, device_id, func, *args, **kwargs
-    ):
+        self,
+        device_id: str,
+        func: Callable[_P, Coroutine[Any, Any, _R]],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> _R | None:
         """Call an API that requires the bridge to be online and will change the device state."""
         ret = None
         try:
@@ -421,7 +434,7 @@ class AugustData(AugustSubscriberMixin):
 
         return ret
 
-    def _remove_inoperative_doorbells(self):
+    def _remove_inoperative_doorbells(self) -> None:
         for doorbell in list(self.doorbells):
             device_id = doorbell.device_id
             if self._device_detail_by_id.get(device_id):
@@ -435,7 +448,7 @@ class AugustData(AugustSubscriberMixin):
             )
             del self._doorbells_by_id[device_id]
 
-    def _remove_inoperative_locks(self):
+    def _remove_inoperative_locks(self) -> None:
         # Remove non-operative locks as there must
         # be a bridge (August Connect) for them to
         # be usable
