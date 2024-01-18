@@ -28,7 +28,7 @@ from .const import CONF_SYSTEM_ID, DOMAIN
 from .coordinator import PVOutputDataUpdateCoordinator
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class PVOutputSensorEntityDescription(SensorEntityDescription):
     """Describes a PVOutput sensor entity."""
 

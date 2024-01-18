@@ -127,10 +127,7 @@ async def test_state_update(hass: HomeAssistant) -> None:
     assert state.state == "14.0"
 
     new_status = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
-    with (
-        patch("apcaccess.status.parse", return_value=new_status),
-        patch("apcaccess.status.get", return_value=b""),
-    ):
+    with patch("aioapcaccess.request_status", return_value=new_status):
         future = utcnow() + timedelta(minutes=2)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -154,11 +151,8 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
     # Setup HASS for calling the update_entity service.
     await async_setup_component(hass, "homeassistant", {})
 
-    with (
-        patch("apcaccess.status.parse") as mock_parse,
-        patch("apcaccess.status.get", return_value=b"") as mock_get,
-    ):
-        mock_parse.return_value = MOCK_STATUS | {
+    with patch("aioapcaccess.request_status") as mock_request_status:
+        mock_request_status.return_value = MOCK_STATUS | {
             "LOADPCT": "15.0 Percent",
             "BCHARGE": "99.0 Percent",
         }
@@ -174,8 +168,7 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         )
         # Even if we requested updates for two entities, our integration should smartly
         # group the API calls to just one.
-        assert mock_parse.call_count == 1
-        assert mock_get.call_count == 1
+        assert mock_request_status.call_count == 1
 
         # The new state should be effective.
         state = hass.states.get("sensor.ups_load")
@@ -194,10 +187,9 @@ async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
     # Setup HASS for calling the update_entity service.
     await async_setup_component(hass, "homeassistant", {})
 
-    with (
-        patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse,
-        patch("apcaccess.status.get", return_value=b"") as mock_get,
-    ):
+    with patch(
+        "aioapcaccess.request_status", return_value=MOCK_STATUS
+    ) as mock_request_status:
         # Fast-forward time to just pass the initial debouncer cooldown.
         future = utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN)
         async_fire_time_changed(hass, future)
@@ -207,5 +199,4 @@ async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: ["sensor.ups_load", "sensor.ups_input_voltage"]},
             blocking=True,
         )
-        assert mock_parse.call_count == 1
-        assert mock_get.call_count == 1
+        assert mock_request_status.call_count == 1

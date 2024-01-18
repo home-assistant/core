@@ -24,7 +24,7 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockSwitchDescriptionMixin:
     """Define an entity description mixin for switch entities."""
 
@@ -36,7 +36,7 @@ class RoborockSwitchDescriptionMixin:
     attribute: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockSwitchDescription(
     SwitchEntityDescription, RoborockSwitchDescriptionMixin
 ):

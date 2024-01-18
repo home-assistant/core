@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import apprise
 import voluptuous as vol
@@ -61,11 +62,11 @@ def get_service(
 class AppriseNotificationService(BaseNotificationService):
     """Implement the notification service for Apprise."""
 
-    def __init__(self, a_obj):
+    def __init__(self, a_obj: apprise.Apprise) -> None:
         """Initialize the service."""
         self.apprise = a_obj
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a specified target.
 
         If no target/tags are specified, then services are notified as is

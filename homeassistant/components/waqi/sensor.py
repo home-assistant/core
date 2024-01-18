@@ -153,7 +153,7 @@ async def async_setup_platform(
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class WAQIMixin:
     """Mixin for required keys."""
 
@@ -161,7 +161,7 @@ class WAQIMixin:
     value_fn: Callable[[WAQIAirQuality], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class WAQISensorEntityDescription(SensorEntityDescription, WAQIMixin):
     """Describes WAQI sensor entity."""
 

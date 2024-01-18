@@ -12,6 +12,14 @@
       "title": "The configured currency is no longer in use",
       "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration."
     },
+    "legacy_templates_false": {
+      "title": "`legacy_templates` config key is being removed",
+      "description": "Nothing will change with your templates.\n\nRemove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "legacy_templates_true": {
+      "title": "The support for legacy templates is being removed",
+      "description": "Please do the following steps:\n- Adopt your configuration to support template rendering to native python types.\n- Remove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file.\n- Restart Home Assistant to fix this issue."
+    },
     "python_version": {
       "title": "Support for Python {current_python_version} is being removed",
       "description": "Support for running Home Assistant in the current used Python version {current_python_version} is deprecated and will be removed in Home Assistant {breaks_in_ha_version}. Please upgrade Python to {required_python_version} to prevent your Home Assistant instance from breaking."

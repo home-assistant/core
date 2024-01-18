@@ -31,14 +31,14 @@ from .const import ATTR_EXTRUDER, ATTR_PLATFORM, DOMAIN
 from .entity import Dremel3DPrinterEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class Dremel3DPrinterSensorEntityMixin:
     """Mixin for Dremel 3D Printer sensor."""
 
     value_fn: Callable[[Dremel3DPrinter, str], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Dremel3DPrinterSensorEntityDescription(
     SensorEntityDescription, Dremel3DPrinterSensorEntityMixin
 ):

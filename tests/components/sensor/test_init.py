@@ -4,10 +4,12 @@ from __future__ import annotations
 from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from types import ModuleType
 from typing import Any
 
 import pytest
 
+from homeassistant.components import sensor
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
@@ -50,6 +52,8 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_restore_state_shutdown_restart,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -2424,7 +2428,7 @@ async def test_name(hass: HomeAssistant) -> None:
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test sensor platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])
 
     mock_platform(
@@ -2519,3 +2523,68 @@ async def test_entity_category_config_raises_error(
     )
 
     assert not hass.states.get("sensor.test")
+
+
+@pytest.mark.parametrize(
+    "module",
+    [sensor, sensor.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(("enum"), list(sensor.SensorStateClass))
+@pytest.mark.parametrize(("module"), [sensor, sensor.const])
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: sensor.SensorStateClass,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, "STATE_CLASS_", "2025.1"
+    )
+
+
+@pytest.mark.parametrize(
+    ("enum"),
+    [
+        sensor.SensorDeviceClass.AQI,
+        sensor.SensorDeviceClass.BATTERY,
+        sensor.SensorDeviceClass.CO,
+        sensor.SensorDeviceClass.CO2,
+        sensor.SensorDeviceClass.CURRENT,
+        sensor.SensorDeviceClass.DATE,
+        sensor.SensorDeviceClass.ENERGY,
+        sensor.SensorDeviceClass.FREQUENCY,
+        sensor.SensorDeviceClass.GAS,
+        sensor.SensorDeviceClass.HUMIDITY,
+        sensor.SensorDeviceClass.ILLUMINANCE,
+        sensor.SensorDeviceClass.MONETARY,
+        sensor.SensorDeviceClass.NITROGEN_DIOXIDE,
+        sensor.SensorDeviceClass.NITROGEN_MONOXIDE,
+        sensor.SensorDeviceClass.NITROUS_OXIDE,
+        sensor.SensorDeviceClass.OZONE,
+        sensor.SensorDeviceClass.PM1,
+        sensor.SensorDeviceClass.PM10,
+        sensor.SensorDeviceClass.PM25,
+        sensor.SensorDeviceClass.POWER_FACTOR,
+        sensor.SensorDeviceClass.POWER,
+        sensor.SensorDeviceClass.PRESSURE,
+        sensor.SensorDeviceClass.SIGNAL_STRENGTH,
+        sensor.SensorDeviceClass.SULPHUR_DIOXIDE,
+        sensor.SensorDeviceClass.TEMPERATURE,
+        sensor.SensorDeviceClass.TIMESTAMP,
+        sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        sensor.SensorDeviceClass.VOLTAGE,
+    ],
+)
+def test_deprecated_constants_sensor_device_class(
+    caplog: pytest.LogCaptureFixture,
+    enum: sensor.SensorStateClass,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, sensor, enum, "DEVICE_CLASS_", "2025.1"
+    )

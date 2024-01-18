@@ -58,7 +58,7 @@ def _rssi_convert(value: int | None) -> str | None:
     return f"{value*8-120}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class RfxtrxSensorEntityDescription(SensorEntityDescription):
     """Description of sensor entities."""
 

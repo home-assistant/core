@@ -3,6 +3,13 @@ from __future__ import annotations
 
 from typing import TypeVar
 
+from .scaling import (  # noqa: F401
+    int_states_in_range,
+    scale_ranged_value_to_int_range,
+    scale_to_ranged_value,
+    states_in_range,
+)
+
 _T = TypeVar("_T")
 
 
@@ -69,8 +76,7 @@ def ranged_value_to_percentage(
     (1,255), 127: 50
     (1,255), 10: 4
     """
-    offset = low_high_range[0] - 1
-    return int(((value - offset) * 100) // states_in_range(low_high_range))
+    return scale_ranged_value_to_int_range(low_high_range, (1, 100), value)
 
 
 def percentage_to_ranged_value(
@@ -87,15 +93,4 @@ def percentage_to_ranged_value(
     (1,255), 50: 127.5
     (1,255), 4: 10.2
     """
-    offset = low_high_range[0] - 1
-    return states_in_range(low_high_range) * percentage / 100 + offset
-
-
-def states_in_range(low_high_range: tuple[float, float]) -> float:
-    """Given a range of low and high values return how many states exist."""
-    return low_high_range[1] - low_high_range[0] + 1
-
-
-def int_states_in_range(low_high_range: tuple[float, float]) -> int:
-    """Given a range of low and high values return how many integer states exist."""
-    return int(states_in_range(low_high_range))
+    return scale_to_ranged_value((1, 100), low_high_range, percentage)

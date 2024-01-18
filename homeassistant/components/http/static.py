@@ -1,7 +1,7 @@
 """Static file handling for HTTP component."""
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 import mimetypes
 from pathlib import Path
 from typing import Final
@@ -10,7 +10,7 @@ from aiohttp import hdrs
 from aiohttp.web import FileResponse, Request, StreamResponse
 from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 
 from homeassistant.core import HomeAssistant
 
@@ -19,9 +19,7 @@ from .const import KEY_HASS
 CACHE_TIME: Final = 31 * 86400  # = 1 month
 CACHE_HEADER = f"public, max-age={CACHE_TIME}"
 CACHE_HEADERS: Mapping[str, str] = {hdrs.CACHE_CONTROL: CACHE_HEADER}
-PATH_CACHE: MutableMapping[
-    tuple[str, Path, bool], tuple[Path | None, str | None]
-] = LRU(512)
+PATH_CACHE: LRU[tuple[str, Path, bool], tuple[Path | None, str | None]] = LRU(512)
 
 
 def _get_file_path(rel_url: str, directory: Path, follow_symlinks: bool) -> Path | None:

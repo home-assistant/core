@@ -25,7 +25,7 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockTimeDescriptionMixin:
     """Define an entity description mixin for time entities."""
 
@@ -37,7 +37,7 @@ class RoborockTimeDescriptionMixin:
     get_value: Callable[[AttributeCache], datetime.time]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockTimeDescription(TimeEntityDescription, RoborockTimeDescriptionMixin):
     """Class to describe an Roborock time entity."""
 

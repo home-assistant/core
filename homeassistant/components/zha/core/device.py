@@ -166,6 +166,9 @@ class ZHADevice(LogMixin):
 
         if not self.is_coordinator:
             keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
+            self.debug(
+                "starting availability checks - interval: %s", keep_alive_interval
+            )
             self.unsubs.append(
                 async_track_time_interval(
                     self.hass,
@@ -447,36 +450,37 @@ class ZHADevice(LogMixin):
             self._checkins_missed_count = 0
             return
 
-        if (
-            self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
-            or self.manufacturer == "LUMI"
-            or not self._endpoints
-        ):
+        if self.hass.data[const.DATA_ZHA].allow_polling:
+            if (
+                self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
+                or self.manufacturer == "LUMI"
+                or not self._endpoints
+            ):
+                self.debug(
+                    (
+                        "last_seen is %s seconds ago and ping attempts have been exhausted,"
+                        " marking the device unavailable"
+                    ),
+                    difference,
+                )
+                self.update_available(False)
+                return
+
+            self._checkins_missed_count += 1
             self.debug(
-                (
-                    "last_seen is %s seconds ago and ping attempts have been exhausted,"
-                    " marking the device unavailable"
-                ),
-                difference,
+                "Attempting to checkin with device - missed checkins: %s",
+                self._checkins_missed_count,
             )
-            self.update_available(False)
-            return
+            if not self.basic_ch:
+                self.debug("does not have a mandatory basic cluster")
+                self.update_available(False)
+                return
 
-        self._checkins_missed_count += 1
-        self.debug(
-            "Attempting to checkin with device - missed checkins: %s",
-            self._checkins_missed_count,
-        )
-        if not self.basic_ch:
-            self.debug("does not have a mandatory basic cluster")
-            self.update_available(False)
-            return
-
-        try:
-            await self.basic_ch.read_attribute(ATTR_MANUFACTURER)
-            self._checkins_missed_count = 0
-        except HomeAssistantError:
-            self.debug("Failed to ping device")
+            try:
+                await self.basic_ch.read_attribute(ATTR_MANUFACTURER)
+                self._checkins_missed_count = 0
+            except HomeAssistantError:
+                self.debug("Failed to ping device")
 
     def update_available(self, available: bool) -> None:
         """Update device availability and signal entities."""
@@ -589,12 +593,17 @@ class ZHADevice(LogMixin):
         self.debug("started initialization")
         await self._zdo_handler.async_initialize(from_cache)
         self._zdo_handler.debug("'async_initialize' stage succeeded")
-        await asyncio.gather(
-            *(
-                endpoint.async_initialize(from_cache)
-                for endpoint in self._endpoints.values()
-            )
-        )
+
+        # We intentionally do not use `gather` here! This is so that if, for example,
+        # three `device.async_initialize()`s are spawned, only three concurrent requests
+        # will ever be in flight at once. Startup concurrency is managed at the device
+        # level.
+        for endpoint in self._endpoints.values():
+            try:
+                await endpoint.async_initialize(from_cache)
+            except Exception:  # pylint: disable=broad-exception-caught
+                self.debug("Failed to initialize endpoint", exc_info=True)
+
         self.debug("power source: %s", self.power_source)
         self.status = DeviceStatus.INITIALIZED
         self.debug("completed initialization")

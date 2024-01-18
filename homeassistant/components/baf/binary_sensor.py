@@ -21,14 +21,14 @@ from .entity import BAFEntity
 from .models import BAFData
 
 
-@dataclass
+@dataclass(frozen=True)
 class BAFBinarySensorDescriptionMixin:
     """Required values for BAF binary sensors."""
 
     value_fn: Callable[[Device], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BAFBinarySensorDescription(
     BinarySensorEntityDescription,
     BAFBinarySensorDescriptionMixin,

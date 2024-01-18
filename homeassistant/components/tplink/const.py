@@ -13,7 +13,6 @@ ATTR_TODAY_ENERGY_KWH: Final = "today_energy_kwh"
 ATTR_TOTAL_ENERGY_KWH: Final = "total_energy_kwh"
 
 CONF_DIMMER: Final = "dimmer"
-CONF_DISCOVERY: Final = "discovery"
 CONF_LIGHT: Final = "light"
 CONF_STRIP: Final = "strip"
 CONF_SWITCH: Final = "switch"

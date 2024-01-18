@@ -1,6 +1,4 @@
 """The tests for the person component."""
-from collections.abc import Callable
-from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
@@ -31,8 +29,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import DEVICE_TRACKER, DEVICE_TRACKER_2
 
 from tests.common import MockUser, mock_component, mock_restore_cache
-from tests.test_util import mock_real_ip
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import WebSocketGenerator
 
 
 async def test_minimal_setup(hass: HomeAssistant) -> None:
@@ -850,63 +847,3 @@ async def test_entities_in_person(hass: HomeAssistant) -> None:
         "device_tracker.paulus_iphone",
         "device_tracker.paulus_ipad",
     ]
-
-
-@pytest.mark.parametrize(
-    ("ip", "status_code", "expected_fn"),
-    [
-        (
-            "192.168.0.10",
-            HTTPStatus.OK,
-            lambda user: {
-                user["user_id"]: {"name": user["name"], "picture": user["picture"]}
-            },
-        ),
-        (
-            "::ffff:192.168.0.10",
-            HTTPStatus.OK,
-            lambda user: {
-                user["user_id"]: {"name": user["name"], "picture": user["picture"]}
-            },
-        ),
-        (
-            "1.2.3.4",
-            HTTPStatus.BAD_REQUEST,
-            lambda _: {"code": "not_local", "message": "Not local"},
-        ),
-        (
-            "2001:db8::1",
-            HTTPStatus.BAD_REQUEST,
-            lambda _: {"code": "not_local", "message": "Not local"},
-        ),
-    ],
-)
-async def test_list_persons(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    hass_admin_user: MockUser,
-    ip: str,
-    status_code: HTTPStatus,
-    expected_fn: Callable[[dict[str, Any]], dict[str, Any]],
-) -> None:
-    """Test listing persons from a not local ip address."""
-
-    user_id = hass_admin_user.id
-    admin = {"id": "1234", "name": "Admin", "user_id": user_id, "picture": "/bla"}
-    config = {
-        DOMAIN: [
-            admin,
-            {"id": "5678", "name": "Only a person"},
-        ]
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
-
-    await async_setup_component(hass, "api", {})
-    mock_real_ip(hass.http.app)(ip)
-    client = await hass_client_no_auth()
-
-    resp = await client.get("/api/person/list")
-
-    assert resp.status == status_code
-    result = await resp.json()
-    assert result == expected_fn(admin)

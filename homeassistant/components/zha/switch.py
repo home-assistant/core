@@ -109,8 +109,7 @@ class Switch(ZhaEntity, SwitchEntity):
     async def async_update(self) -> None:
         """Attempt to retrieve on off state from the switch."""
         await super().async_update()
-        if self._on_off_cluster_handler:
-            await self._on_off_cluster_handler.read_attribute("on_off")
+        await self._on_off_cluster_handler.read_attribute("on_off")
 
 
 @GROUP_MATCH()
@@ -254,12 +253,11 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
         await super().async_update()
-        if self._cluster_handler:
-            await self._cluster_handler.read_attributes(
-                [self._attribute_name]
-                if self._inverter_attribute_name is None
-                else [self._attribute_name, self._inverter_attribute_name]
-            )
+        await self._cluster_handler.read_attributes(
+            [self._attribute_name]
+            if self._inverter_attribute_name is None
+            else [self._attribute_name, self._inverter_attribute_name]
+        )
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

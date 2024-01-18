@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_URL,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -77,7 +77,7 @@ async def test_entity_lifecycle(
             ATTR_LATITUDE: -31.0,
             ATTR_LONGITUDE: 150.0,
             ATTR_FRIENDLY_NAME: "Title 1",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 15.5), 7) == 0
@@ -90,7 +90,7 @@ async def test_entity_lifecycle(
             ATTR_LATITUDE: -31.1,
             ATTR_LONGITUDE: 150.1,
             ATTR_FRIENDLY_NAME: "Title 2",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 20.5), 7) == 0
@@ -103,7 +103,7 @@ async def test_entity_lifecycle(
             ATTR_LATITUDE: -31.2,
             ATTR_LONGITUDE: 150.2,
             ATTR_FRIENDLY_NAME: "Title 3",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 25.5), 7) == 0

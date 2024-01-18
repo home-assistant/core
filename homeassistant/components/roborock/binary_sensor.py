@@ -22,14 +22,14 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockBinarySensorDescriptionMixin:
     """A class that describes binary sensor entities."""
 
     value_fn: Callable[[DeviceProp], bool | int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockBinarySensorDescription(
     BinarySensorEntityDescription, RoborockBinarySensorDescriptionMixin
 ):
