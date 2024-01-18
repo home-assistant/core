@@ -1,12 +1,10 @@
 """The Flexit Nordic (BACnet) integration."""
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from flexit_bacnet import FlexitBACnet
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -27,12 +25,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import FlexitCoordinator
 from .const import DOMAIN
 from .entity import FlexitEntity
-
-_LOGGER = logging.getLogger(__name__)
-
-ENTITY_ID_SENSOR_FORMAT = (
-    SENSOR_DOMAIN + ".{}_{}"
-)  # should use f"{some_value} {some_other_value}"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -168,8 +160,6 @@ async def async_setup_entry(
     """Set up Flexit (bacnet) sensor from a config entry."""
     coordinator: FlexitCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    _LOGGER.info("Setting up Flexit (bacnet) sensor from a config entry")
-
     async_add_entities(
         FlexitSensor(coordinator, description, config_entry.entry_id)
         for description in SENSOR_TYPES
@@ -177,7 +167,7 @@ async def async_setup_entry(
 
 
 class FlexitSensor(FlexitEntity, SensorEntity):
-    """Representation of a Flexit Sensor."""
+    """Representation of a Flexit (bacnet) Sensor."""
 
     # Should it have a name?
     # _attr_name = None
@@ -194,9 +184,6 @@ class FlexitSensor(FlexitEntity, SensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = entity_description
-        self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(
-            coordinator.device.device_name, entity_description.key
-        )
         self._attr_unique_id = f"{entry_id}-{entity_description.key}"
 
     @property
