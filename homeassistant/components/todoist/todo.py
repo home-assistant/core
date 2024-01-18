@@ -127,6 +127,12 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
         """Update a To-do item."""
         uid: str = cast(str, item.uid)
         if update_data := _task_api_data(item):
+            # In order to not lose any recurrence metadata for the task, we need to
+            # ensure that we send the `due_string` param if the task has it set.
+            api_data = next((d for d in self.coordinator.data if d.id == uid), None)
+            if api_data is not None:
+                if due := api_data.due:
+                    update_data["due_string"] = due.string
             await self.coordinator.api.update_task(task_id=uid, **update_data)
         if item.status is not None:
             # Only update status if changed
