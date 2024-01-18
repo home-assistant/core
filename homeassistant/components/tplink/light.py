@@ -194,7 +194,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if not modes:
             modes.add(ColorMode.ONOFF)
         self._attr_supported_color_modes = modes
-        self._update_attrs()
+        self._async_update_attrs()
 
     @callback
     def _async_extract_brightness_transition(
@@ -284,7 +284,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         return ColorMode.BRIGHTNESS
 
     @callback
-    def _update_attrs(self) -> None:
+    def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         device = self.device
         self._attr_is_on = device.is_on
@@ -301,7 +301,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_attrs()
+        self._async_update_attrs()
         super()._handle_coordinator_update()
 
 
@@ -312,9 +312,9 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     @callback
-    def _update_attrs(self) -> None:
+    def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        super()._update_attrs()
+        super()._async_update_attrs()
         device = self.device
         if (effect := device.effect) and effect["enable"]:
             self._attr_effect = effect["name"]
