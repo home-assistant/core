@@ -10,16 +10,11 @@ from homeassistant.components.lamarzocco.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
-from . import (
-    CONF_PASSWORD,
-    USER_INPUT,
-    async_init_integration,
-    get_bluetooth_service_info,
-)
+from . import USER_INPUT, async_init_integration, get_bluetooth_service_info
 
 from tests.common import MockConfigEntry
 
