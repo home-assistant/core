@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/analytics_insights",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["python-homeassistant-analytics"],
+  "loggers": ["python_homeassistant_analytics"],
   "requirements": ["python-homeassistant-analytics==0.4.0"]
 }
