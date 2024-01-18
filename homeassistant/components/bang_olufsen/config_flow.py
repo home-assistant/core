@@ -1,7 +1,7 @@
 """Config flow for the Bang & Olufsen integration."""
 from __future__ import annotations
 
-import ipaddress
+from ipaddress import AddressValueError, IPv4Address
 from typing import Any, TypedDict
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -69,8 +69,8 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
             # Check if the IP address is a valid address.
             try:
-                ipaddress.ip_address(self._host)
-            except ValueError:
+                IPv4Address(self._host)
+            except AddressValueError:
                 return self.async_show_form(
                     step_id="user",
                     data_schema=data_schema,
@@ -122,7 +122,13 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if ATTR_FRIENDLY_NAME not in discovery_info.properties:
             return self.async_abort(reason="not_mozart_device")
 
+        # Ensure that an IPv4 address is received
         self._host = discovery_info.host
+        try:
+            IPv4Address(self._host)
+        except AddressValueError:
+            return self.async_abort(reason="ipv6_address")
+
         self._model = discovery_info.hostname[:-16].replace("-", " ")
         self._serial_number = discovery_info.properties[ATTR_SERIAL_NUMBER]
         self._beolink_jid = f"{discovery_info.properties[ATTR_TYPE_NUMBER]}.{discovery_info.properties[ATTR_ITEM_NUMBER]}.{self._serial_number}@products.bang-olufsen.com"

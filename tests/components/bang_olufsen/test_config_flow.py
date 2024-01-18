@@ -19,6 +19,7 @@ from .const import (
     TEST_DATA_USER,
     TEST_DATA_USER_INVALID,
     TEST_DATA_ZEROCONF,
+    TEST_DATA_ZEROCONF_IPV6,
     TEST_DATA_ZEROCONF_NOT_MOZART,
 )
 
@@ -88,9 +89,7 @@ async def test_config_flow_api_exception(
     assert mock_client.get_beolink_self.call_count == 1
 
 
-async def test_config_flow(
-    hass: HomeAssistant, mock_client: MockMozartClient, mock_setup_entry
-) -> None:
+async def test_config_flow(hass: HomeAssistant, mock_client: MockMozartClient) -> None:
     """Test config flow."""
 
     result_init = await hass.config_entries.flow.async_init(
@@ -114,7 +113,7 @@ async def test_config_flow(
 
 
 async def test_config_flow_zeroconf(
-    hass: HomeAssistant, mock_client: MockMozartClient, mock_setup_entry
+    hass: HomeAssistant, mock_client: MockMozartClient
 ) -> None:
     """Test zeroconf discovery."""
 
@@ -141,3 +140,16 @@ async def test_config_flow_zeroconf_not_mozart_device(hass: HomeAssistant) -> No
 
     assert result_user["type"] == FlowResultType.ABORT
     assert result_user["reason"] == "not_mozart_device"
+
+
+async def test_config_flow_zeroconf_ipv6(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery with IPv6 IP address."""
+
+    result_user = await hass.config_entries.flow.async_init(
+        handler=DOMAIN,
+        context={CONF_SOURCE: SOURCE_ZEROCONF},
+        data=TEST_DATA_ZEROCONF_IPV6,
+    )
+
+    assert result_user["type"] == FlowResultType.ABORT
+    assert result_user["reason"] == "ipv6_address"
