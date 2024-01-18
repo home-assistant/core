@@ -46,7 +46,6 @@ import voluptuous as vol
 import yarl
 
 from . import block_async_io, util
-from .backports.functools import cached_property
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -87,7 +86,7 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from .helpers.json import json_dumps, json_fragment
+from .helpers.json import json_bytes, json_fragment
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
@@ -108,11 +107,14 @@ from .util.unit_system import (
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    from functools import cached_property
+
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
-
+else:
+    from .backports.functools import cached_property
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
@@ -1037,7 +1039,7 @@ class Context:
     @cached_property
     def json_fragment(self) -> json_fragment:
         """Return a JSON fragment of the context."""
-        return json_fragment(json_dumps(self._as_dict))
+        return json_fragment(json_bytes(self._as_dict))
 
 
 class EventOrigin(enum.Enum):
@@ -1074,6 +1076,11 @@ class Event:
         self.context = context
         if not context.origin_event:
             context.origin_event = self
+
+    @cached_property
+    def time_fired_timestamp(self) -> float:
+        """Return time fired as a timestamp."""
+        return self.time_fired.timestamp()
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
@@ -1119,7 +1126,7 @@ class Event:
     @cached_property
     def json_fragment(self) -> json_fragment:
         """Return an event as a JSON fragment."""
-        return json_fragment(json_dumps(self._as_dict))
+        return json_fragment(json_bytes(self._as_dict))
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -1436,12 +1443,22 @@ class State:
         self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
 
-    @property
+    @cached_property
     def name(self) -> str:
         """Name of this state."""
         return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
             "_", " "
         )
+
+    @cached_property
+    def last_updated_timestamp(self) -> float:
+        """Timestamp of last update."""
+        return self.last_updated.timestamp()
+
+    @cached_property
+    def last_changed_timestamp(self) -> float:
+        """Timestamp of last change."""
+        return self.last_changed.timestamp()
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
@@ -1495,9 +1512,9 @@ class State:
         return ReadOnlyDict(as_dict)
 
     @cached_property
-    def as_dict_json(self) -> str:
+    def as_dict_json(self) -> bytes:
         """Return a JSON string of the State."""
-        return json_dumps(self._as_dict)
+        return json_bytes(self._as_dict)
 
     @cached_property
     def json_fragment(self) -> json_fragment:
@@ -1524,23 +1541,23 @@ class State:
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
-            COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(self.last_changed),
+            COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
         }
         if self.last_changed != self.last_updated:
-            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
-                self.last_updated
-            )
+            compressed_state[
+                COMPRESSED_STATE_LAST_UPDATED
+            ] = self.last_updated_timestamp
         return compressed_state
 
     @cached_property
-    def as_compressed_state_json(self) -> str:
+    def as_compressed_state_json(self) -> bytes:
         """Build a compressed JSON key value pair of a state for adds.
 
         The JSON string is a key value pair of the entity_id and the compressed state.
 
         It is used for sending multiple states in a single message.
         """
-        return json_dumps({self.entity_id: self.as_compressed_state})[1:-1]
+        return json_bytes({self.entity_id: self.as_compressed_state})[1:-1]
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:

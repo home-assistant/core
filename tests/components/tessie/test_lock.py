@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
@@ -9,6 +11,7 @@ from homeassistant.components.lock import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .common import TEST_VEHICLE_STATE_ONLINE, setup_platform
 
@@ -20,7 +23,7 @@ async def test_locks(hass: HomeAssistant) -> None:
 
     await setup_platform(hass)
 
-    assert len(hass.states.async_all("lock")) == 1
+    assert len(hass.states.async_all("lock")) == 2
 
     entity_id = "lock.test_lock"
 
@@ -40,6 +43,28 @@ async def test_locks(hass: HomeAssistant) -> None:
         mock_run.assert_called_once()
 
     with patch("homeassistant.components.tessie.lock.unlock") as mock_run:
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        assert hass.states.get(entity_id).state == STATE_UNLOCKED
+        mock_run.assert_called_once()
+
+    # Test charge cable lock set value functions
+    entity_id = "lock.test_charge_cable_lock"
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_LOCK,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+
+    with patch(
+        "homeassistant.components.tessie.lock.open_unlock_charge_port"
+    ) as mock_run:
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,

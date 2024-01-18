@@ -29,7 +29,7 @@ from .deprecation import (
     dir_with_deprecated_constants,
 )
 from .frame import report
-from .json import JSON_DUMP, find_paths_unserializable_data
+from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -277,11 +277,11 @@ class DeviceEntry:
         }
 
     @cached_property
-    def json_repr(self) -> str | None:
+    def json_repr(self) -> bytes | None:
         """Return a cached JSON representation of the entry."""
         try:
             dict_repr = self.dict_repr
-            return JSON_DUMP(dict_repr)
+            return json_bytes(dict_repr)
         except (ValueError, TypeError):
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
