@@ -56,9 +56,10 @@ class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
                 '"entity_description" must be either set as class variable or passed on init!'
             )
 
+        self._attr_unique_id = f"{device.device_info.did}_{self.entity_description.key}"
+
         self._device = device
         self._capability = capability
-        self._attr_unique_id = f"{device.device_info.did}_{self.entity_description.key}"
         self._subscribed_events: set[type[Event]] = set()
 
     @property
