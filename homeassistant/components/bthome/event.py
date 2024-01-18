@@ -64,9 +64,8 @@ class BTHomeEventEntity(EventEntity):
         # event_class is something like "button" or "dimmer"
         # and it maybe postfixed with "_1", "_2", etc
         base_event_class, _, postfix = event_class.partition("_")
-        self.entity_description = replace(
-            DESCRIPTIONS_BY_EVENT_CLASS[base_event_class], key=event_class
-        )
+        base_description = DESCRIPTIONS_BY_EVENT_CLASS[base_event_class]
+        self.entity_description = replace(base_description, key=event_class)
         postfix_one_indexed = int(postfix) + 1 if postfix else None
         postfix_name = f" {postfix_one_indexed}" if postfix else ""
         # We report button button 1 as button 2, etc to the user since
