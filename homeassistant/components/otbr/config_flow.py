@@ -28,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_CHANNEL, DOMAIN
-from .util import get_allowed_channel
+from .util import generate_default_network_name, get_allowed_channel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.create_active_dataset(
                     python_otbr_api.ActiveDataSet(
                         channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
-                        network_name="home-assistant",
+                        network_name=generate_default_network_name(),
                     )
                 )
             await api.set_enabled(True)

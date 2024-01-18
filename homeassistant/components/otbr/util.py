@@ -5,6 +5,7 @@ from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
 import logging
+import random
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import python_otbr_api
@@ -46,6 +47,11 @@ INSECURE_PASSPHRASES = (
     # Thread documentation default
     "J01NME",
 )
+
+
+def generate_default_network_name() -> str:
+    """Generate a default network name."""
+    return f"home-assistant-{random.randbytes(2).hex()}"
 
 
 def _handle_otbr_error(

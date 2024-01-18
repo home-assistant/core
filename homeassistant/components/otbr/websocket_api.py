@@ -16,7 +16,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_CHANNEL, DOMAIN
-from .util import OTBRData, get_allowed_channel, update_issues
+from .util import (
+    OTBRData,
+    generate_default_network_name,
+    get_allowed_channel,
+    update_issues,
+)
 
 
 @callback
@@ -102,7 +107,7 @@ async def websocket_create_network(
     try:
         await data.create_active_dataset(
             python_otbr_api.ActiveDataSet(
-                channel=channel, network_name="home-assistant"
+                channel=channel, network_name=generate_default_network_name()
             )
         )
     except HomeAssistantError as exc:
