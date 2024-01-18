@@ -1,6 +1,7 @@
 """Support for bthome event entities."""
 from __future__ import annotations
 
+from dataclasses import replace
 import logging
 
 from sensor_state_data import DeviceKey
@@ -60,7 +61,15 @@ class BTHomeEventEntity(EventEntity):
     def __init__(self, address: str, event_class: str, device_id: str | None) -> None:
         """Initialise a BTHome event entity."""
         self._update_signal = format_event_dispatcher_name(address, event_class)
-        self.entity_description = DESCRIPTIONS_BY_EVENT_CLASS[event_class]
+        # event_class is something like "button" or "dimmer"
+        # and it maybe postfixed with "_1", "_2", etc
+        event_class_split = event_class.split("_")
+        base_event_class = event_class_split[0]
+        self.entity_description = replace(
+            DESCRIPTIONS_BY_EVENT_CLASS[base_event_class], key=event_class
+        )
+        event_class_postfix = event_class_split[1] or "0"
+        self._attr_name = f"{base_event_class.title()} {event_class_postfix}"
         # Matches logic in PassiveBluetoothProcessorEntity
         if device_id:
             self._attr_device_info = dr.DeviceInfo(
