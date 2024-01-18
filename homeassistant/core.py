@@ -393,15 +393,22 @@ class HomeAssistant:
         self._stop_future: concurrent.futures.Future[None] | None = None
         self._shutdown_jobs: list[HassJobWithArgs] = []
 
-    @property
+    @cached_property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
 
-    @property
+    @cached_property
     def is_stopping(self) -> bool:
         """Return if Home Assistant is stopping."""
         return self.state in (CoreState.stopping, CoreState.final_write)
+
+    def set_state(self, state: CoreState) -> None:
+        """Set the current state."""
+        self.state = state
+        for prop in ("is_running", "is_stopping"):
+            with suppress(AttributeError):
+                delattr(self, prop)
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -451,7 +458,7 @@ class HomeAssistant:
         _LOGGER.info("Starting Home Assistant")
         setattr(self.loop, "_thread_ident", threading.get_ident())
 
-        self.state = CoreState.starting
+        self.set_state(CoreState.starting)
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
@@ -483,7 +490,7 @@ class HomeAssistant:
             )
             return
 
-        self.state = CoreState.running
+        self.set_state(CoreState.running)
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
@@ -894,7 +901,7 @@ class HomeAssistant:
 
         self.exit_code = exit_code
 
-        self.state = CoreState.stopping
+        self.set_state(CoreState.stopping)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
@@ -907,7 +914,7 @@ class HomeAssistant:
             self._async_log_running_tasks("stop integrations")
 
         # Stage 3 - Final write
-        self.state = CoreState.final_write
+        self.set_state(CoreState.final_write)
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
             async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
@@ -920,7 +927,7 @@ class HomeAssistant:
             self._async_log_running_tasks("final write")
 
         # Stage 4 - Close
-        self.state = CoreState.not_running
+        self.set_state(CoreState.not_running)
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
         # Make a copy of running_tasks since a task can finish
@@ -971,7 +978,7 @@ class HomeAssistant:
             )
             self._async_log_running_tasks("close")
 
-        self.state = CoreState.stopped
+        self.set_state(CoreState.stopped)
 
         if self._stopped is not None:
             self._stopped.set()
