@@ -6,19 +6,14 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "invalid_continent_length": "The continent code must be 2 characters long."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "continent": "Continent",
           "country": "Country",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "continent": "For some countries, you will need to set Worldwide.\nPossible to use a custom two letter country code if the predefined list does not work."
         }
       }
     }
@@ -54,16 +49,18 @@
     "deprecated_yaml_import_issue_unknown": {
       "title": "The Ecovacs YAML configuration import failed",
       "description": "Configuring Ecovacs using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    }
-  },
-  "selector": {
-    "continent": {
-      "options": {
-        "as": "Asia",
-        "eu": "Europe",
-        "na": "North America",
-        "ww": "Worldwide"
-      }
+    },
+    "deprecated_yaml_import_issue_invalid_country_length": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there is an invalid country specified in the YAML configuration.\n\nPlease change the country to the [Alpha-2 code of your country]({countries_url}) and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_invalid_continent_length": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there is an invalid continent specified in the YAML configuration.\n\nPlease correct the continent to be one of {continent_list} and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_continent_not_match": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there is an unexpected continent specified in the YAML configuration.\n\nFrom the given country, the continent '{continent}' is expected. Change the continent and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.\n\nIf the contintent '{continent}' is not applicable, please open an issue on [GitHub]({github_issue_url})."
     }
   }
 }

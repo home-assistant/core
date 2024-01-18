@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ClientError
 from deebot_client.authentication import Authenticator
 from deebot_client.exceptions import InvalidAuthenticationError
 from deebot_client.models import Configuration
 from deebot_client.util import md5
-from deebot_client.util.continents import get_continent
+from deebot_client.util.continents import COUNTRIES_TO_CONTINENTS, get_continent
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -18,6 +18,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import aiohttp_client, selector
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.loader import async_get_issue_tracker
 
 from .const import CONF_CONTINENT, DOMAIN
 from .util import get_client_device_id
@@ -54,9 +55,6 @@ async def _validate_input(
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected exception during login")
         errors["base"] = "unknown"
-
-    if (continent := user_input.get(CONF_CONTINENT)) and len(continent) != 2:
-        errors["CONF_CONTINENT"] = "invalid_continent_length"
 
     return errors
 
@@ -98,20 +96,11 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                             )
                         ),
                         vol.Required(CONF_COUNTRY): selector.CountrySelector(),
-                        vol.Optional(CONF_CONTINENT): selector.SelectSelector(
-                            selector.SelectSelectorConfig(
-                                options=["as", "eu", "na", "ww"],
-                                translation_key=CONF_CONTINENT,
-                                custom_value=True,
-                                sort=True,
-                            )
-                        ),
                     }
                 ),
                 user_input
                 or {
                     CONF_COUNTRY: self.hass.config.country,
-                    CONF_CONTINENT: get_continent(self.hass.config.country),
                 },
             ),
             errors=errors,
@@ -120,7 +109,11 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import configuration from yaml."""
 
-        def create_repair(error: str | None = None) -> None:
+        def create_repair(
+            error: str | None = None, placeholders: dict[str, Any] | None = None
+        ) -> None:
+            if placeholders is None:
+                placeholders = {}
             if error:
                 async_create_issue(
                     self.hass,
@@ -131,9 +124,8 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                     issue_domain=DOMAIN,
                     severity=IssueSeverity.WARNING,
                     translation_key=f"deprecated_yaml_import_issue_{error}",
-                    translation_placeholders={
-                        "url": "/config/integrations/dashboard/add?domain=ecovacs"
-                    },
+                    translation_placeholders=placeholders
+                    | {"url": "/config/integrations/dashboard/add?domain=ecovacs"},
                 )
             else:
                 async_create_issue(
@@ -145,11 +137,39 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                     issue_domain=DOMAIN,
                     severity=IssueSeverity.WARNING,
                     translation_key="deprecated_yaml",
-                    translation_placeholders={
+                    translation_placeholders=placeholders
+                    | {
                         "domain": DOMAIN,
                         "integration_title": "Ecovacs",
                     },
                 )
+
+        error = None
+        placeholders = None
+        if len(user_input[CONF_COUNTRY]) != 2:
+            error = "invalid_country_length"
+            placeholders = {"countries_url": "https://www.iso.org/obp/ui/#search/code/"}
+        elif len(user_input[CONF_CONTINENT]) != 2:
+            error = "invalid_continent_length"
+            placeholders = {
+                "continent_list": ",".join(
+                    sorted(set(COUNTRIES_TO_CONTINENTS.values()))
+                )
+            }
+        elif user_input[CONF_CONTINENT].lower() != (
+            continent := get_continent(user_input[CONF_COUNTRY])
+        ):
+            error = "continent_not_match"
+            placeholders = {
+                "continent": continent,
+                "github_issue_url": cast(
+                    str, async_get_issue_tracker(self.hass, integration_domain=DOMAIN)
+                ),
+            }
+
+        if error:
+            create_repair(error, placeholders)
+            return self.async_abort(reason=error)
 
         try:
             result = await self.async_step_user(user_input)
