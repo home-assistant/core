@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, ValuesView
+from collections.abc import Callable, Coroutine, Iterable, ValuesView
 from datetime import datetime
 from itertools import chain
 import logging
-from typing import Any
+from typing import Any, ParamSpec, TypeVar
 
 from aiohttp import ClientError, ClientResponseError
 from yalexs.const import DEFAULT_BRAND
@@ -33,6 +33,9 @@ from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 from .util import async_create_august_clientsession
+
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -360,7 +363,7 @@ class AugustData(AugustSubscriberMixin):
             return device.device_name
         return None
 
-    async def async_lock(self, device_id):
+    async def async_lock(self, device_id: str):
         """Lock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -369,7 +372,9 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
-    async def async_status_async(self, device_id, hyper_bridge):
+    async def async_status_async(
+        self, device_id: str, hyper_bridge: bool
+    ) -> str | None:
         """Request status of the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -379,7 +384,7 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
-    async def async_lock_async(self, device_id, hyper_bridge):
+    async def async_lock_async(self, device_id: str, hyper_bridge: bool) -> str | None:
         """Lock the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -389,7 +394,7 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
-    async def async_unlock(self, device_id):
+    async def async_unlock(self, device_id: str):
         """Unlock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -398,7 +403,9 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
-    async def async_unlock_async(self, device_id, hyper_bridge):
+    async def async_unlock_async(
+        self, device_id: str, hyper_bridge: bool
+    ) -> str | None:
         """Unlock the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -409,8 +416,12 @@ class AugustData(AugustSubscriberMixin):
         )
 
     async def _async_call_api_op_requires_bridge(
-        self, device_id, func, *args, **kwargs
-    ):
+        self,
+        device_id: str,
+        func: Callable[_P, Coroutine[Any, Any, _R]],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> _R | None:
         """Call an API that requires the bridge to be online and will change the device state."""
         ret = None
         try:
