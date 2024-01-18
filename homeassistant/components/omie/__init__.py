@@ -25,11 +25,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cet_tomorrow = lambda: cet_today() + timedelta(days=1)
     cet_yesterday = lambda: cet_today() - timedelta(days=1)
 
-    spot = OMIEDailyCoordinator(
+    spot_today = OMIEDailyCoordinator(
         hass, "spot", market_updater=spot_price, market_date=cet_today
     )
 
-    spot_next = OMIEDailyCoordinator(
+    spot_tomorrow = OMIEDailyCoordinator(
         hass,
         "spot_next",
         market_updater=spot_price,
@@ -37,14 +37,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         none_before="13:30",
     )
 
-    spot_previous = OMIEDailyCoordinator(
+    spot_yesterday = OMIEDailyCoordinator(
         hass, "spot_previous", market_updater=spot_price, market_date=cet_yesterday
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = OMIESources(
-        today=spot,
-        tomorrow=spot_next,
-        yesterday=spot_previous,
+        today=spot_today,
+        tomorrow=spot_tomorrow,
+        yesterday=spot_yesterday,
     )
 
     hass.async_create_task(
@@ -55,8 +55,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data.pop(DOMAIN)
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_unload(entry, "sensor")
-    )
-    return True
+    unload_ok = await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
