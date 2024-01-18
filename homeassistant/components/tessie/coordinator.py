@@ -20,7 +20,7 @@ TESSIE_SYNC_INTERVAL = 10
 _LOGGER = logging.getLogger(__name__)
 
 
-class TessieDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Tessie API."""
 
     def __init__(
@@ -41,7 +41,6 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.vin = vin
         self.session = async_get_clientsession(hass)
         self.data = self._flatten(data)
-        self.did_first_update = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
@@ -50,7 +49,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 session=self.session,
                 api_key=self.api_key,
                 vin=self.vin,
-                use_cache=self.did_first_update,
+                use_cache=False,
             )
         except ClientResponseError as e:
             if e.status == HTTPStatus.UNAUTHORIZED:
@@ -58,7 +57,6 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise ConfigEntryAuthFailed from e
             raise e
 
-        self.did_first_update = True
         if vehicle["state"] == TessieStatus.ONLINE:
             # Vehicle is online, all data is fresh
             return self._flatten(vehicle)

@@ -160,7 +160,7 @@ def adb_decorator(
     """
 
     def _adb_decorator(
-        func: _FuncType[_ADBDeviceT, _P, _R]
+        func: _FuncType[_ADBDeviceT, _P, _R],
     ) -> _ReturnFuncType[_ADBDeviceT, _P, _R]:
         """Wrap the provided ADB method and catch exceptions."""
 
@@ -313,7 +313,7 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def _adb_screencap(self) -> bytes | None:
         """Take a screen capture from the device."""
-        return await self.aftv.adb_screencap()
+        return await self.aftv.adb_screencap()  # type: ignore[no-any-return]
 
     async def _async_get_screencap(self, prev_app_id: str | None = None) -> None:
         """Take a screen capture from the device when enabled."""
@@ -331,7 +331,7 @@ class ADBDevice(MediaPlayerEntity):
             await self._adb_get_screencap(no_throttle=force)
 
     @Throttle(MIN_TIME_BETWEEN_SCREENCAPS)
-    async def _adb_get_screencap(self, **kwargs) -> None:
+    async def _adb_get_screencap(self, **kwargs: Any) -> None:
         """Take a screen capture from the device every 60 seconds."""
         if media_data := await self._adb_screencap():
             self._media_image = media_data, "image/png"

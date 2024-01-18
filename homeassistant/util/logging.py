@@ -189,7 +189,7 @@ def catch_log_coro_exception(
 
 
 def async_create_catching_coro(
-    target: Coroutine[Any, Any, _T]
+    target: Coroutine[Any, Any, _T],
 ) -> Coroutine[Any, Any, _T | None]:
     """Wrap a coroutine to catch and log exceptions.
 

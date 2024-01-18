@@ -32,6 +32,7 @@ from homeassistant.components import (
     switch,
     timer,
     vacuum,
+    valve,
     water_heater,
 )
 from homeassistant.const import (
@@ -972,6 +973,31 @@ class VacuumCapabilities(AlexaEntity):
                 self.entity, allow_remote_resume=support_resume
             )
 
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.entity)
+
+
+@ENTITY_ADAPTERS.register(valve.DOMAIN)
+class ValveCapabilities(AlexaEntity):
+    """Class to represent Valve capabilities."""
+
+    def default_display_categories(self) -> list[str]:
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
+        """Yield the supported interfaces."""
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & valve.ValveEntityFeature.SET_POSITION:
+            yield AlexaRangeController(
+                self.entity, instance=f"{valve.DOMAIN}.{valve.ATTR_POSITION}"
+            )
+        elif supported & (
+            valve.ValveEntityFeature.CLOSE | valve.ValveEntityFeature.OPEN
+        ):
+            yield AlexaModeController(self.entity, instance=f"{valve.DOMAIN}.state")
+        if supported & valve.ValveEntityFeature.STOP:
+            yield AlexaToggleController(self.entity, instance=f"{valve.DOMAIN}.stop")
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 

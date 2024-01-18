@@ -21,7 +21,7 @@ WAIT = timedelta(seconds=TESSIE_SYNC_INTERVAL)
 
 
 async def test_coordinator_online(hass: HomeAssistant, mock_get_state) -> None:
-    """Tests that the coordinator handles online vehciles."""
+    """Tests that the coordinator handles online vehicles."""
 
     mock_get_state.return_value = TEST_VEHICLE_STATE_ONLINE
     await setup_platform(hass)

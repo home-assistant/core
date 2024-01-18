@@ -49,7 +49,7 @@ INSECURE_PASSPHRASES = (
 
 
 def _handle_otbr_error(
-    func: Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]
+    func: Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]:
     """Handle OTBR errors."""
 

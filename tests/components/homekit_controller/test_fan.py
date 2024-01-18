@@ -749,7 +749,7 @@ async def test_v2_oscillate_read(hass: HomeAssistant) -> None:
 
 
 async def test_v2_set_percentage_non_standard_rotation_range(
-    hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
     """Test that we set fan speed with a non-standard rotation range."""
     helper = await setup_test_component(

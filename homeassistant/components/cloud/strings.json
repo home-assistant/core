@@ -1,4 +1,10 @@
 {
+  "config": {
+    "step": {},
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
   "system_health": {
     "info": {
       "can_reach_cert_server": "Reach Certificate Server",

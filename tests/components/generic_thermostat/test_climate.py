@@ -41,6 +41,7 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -388,7 +389,7 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, setup_comp_2) -> Non
     await common.async_set_preset_mode(hass, "none")
     state = hass.states.get(ENTITY)
     assert state.attributes.get("preset_mode") == "none"
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await common.async_set_preset_mode(hass, "Sleep")
     state = hass.states.get(ENTITY)
     assert state.attributes.get("preset_mode") == "none"

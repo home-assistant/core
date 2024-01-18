@@ -29,6 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import TPLinkDataUpdateCoordinator
+from .models import TPLinkData
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -102,7 +103,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
         )
 
-    hass.data[DOMAIN][entry.entry_id] = TPLinkDataUpdateCoordinator(hass, device)
+    parent_coordinator = TPLinkDataUpdateCoordinator(hass, device, timedelta(seconds=5))
+    child_coordinators: list[TPLinkDataUpdateCoordinator] = []
+
+    if device.is_strip:
+        child_coordinators = [
+            # The child coordinators only update energy data so we can
+            # set a longer update interval to avoid flooding the device
+            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60))
+            for child in device.children
+        ]
+
+    hass.data[DOMAIN][entry.entry_id] = TPLinkData(
+        parent_coordinator, child_coordinators
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -111,7 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass_data: dict[str, Any] = hass.data[DOMAIN]
-    device: SmartDevice = hass_data[entry.entry_id].device
+    data: TPLinkData = hass_data[entry.entry_id]
+    device = data.parent_coordinator.device
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass_data.pop(entry.entry_id)
     await device.protocol.close()

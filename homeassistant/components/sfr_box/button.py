@@ -30,7 +30,7 @@ _P = ParamSpec("_P")
 
 
 def with_error_wrapping(
-    func: Callable[Concatenate[SFRBoxButton, _P], Awaitable[_T]]
+    func: Callable[Concatenate[SFRBoxButton, _P], Awaitable[_T]],
 ) -> Callable[Concatenate[SFRBoxButton, _P], Coroutine[Any, Any, _T]]:
     """Catch SFR errors."""
 

@@ -245,6 +245,7 @@ async def test_state_via_state_topic_with_position_template(
 @pytest.mark.parametrize(
     ("message", "asserted_state", "valve_position"),
     [
+        ("invalid", STATE_UNKNOWN, None),
         ("0", STATE_CLOSED, 0),
         ("opening", STATE_OPENING, None),
         ("50", STATE_OPEN, 50),
@@ -288,6 +289,113 @@ async def test_state_via_state_topic_through_position(
     state = hass.states.get("valve.test")
     assert state.state == asserted_state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == valve_position
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                valve.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "reports_position": True,
+                }
+            }
+        }
+    ],
+)
+async def test_opening_closing_state_is_reset(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the controlling state via topic through position.
+
+    Test  a `opening` or `closing` state update is reset correctly after sequential updates.
+    """
+    await mqtt_mock_entry()
+
+    state = hass.states.get("valve.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    messages = [
+        ('{"position": 0, "state": "opening"}', STATE_OPENING, 0),
+        ('{"position": 50, "state": "opening"}', STATE_OPENING, 50),
+        ('{"position": 60}', STATE_OPENING, 60),
+        ('{"position": 100, "state": "opening"}', STATE_OPENING, 100),
+        ('{"position": 100, "state": null}', STATE_OPEN, 100),
+        ('{"position": 90, "state": "closing"}', STATE_CLOSING, 90),
+        ('{"position": 40}', STATE_CLOSING, 40),
+        ('{"position": 0}', STATE_CLOSED, 0),
+        ('{"position": 10}', STATE_OPEN, 10),
+        ('{"position": 0, "state": "opening"}', STATE_OPENING, 0),
+        ('{"position": 0, "state": "closing"}', STATE_CLOSING, 0),
+        ('{"position": 0}', STATE_CLOSED, 0),
+    ]
+
+    for message, asserted_state, valve_position in messages:
+        async_fire_mqtt_message(hass, "state-topic", message)
+
+        state = hass.states.get("valve.test")
+        assert state.state == asserted_state
+        assert state.attributes.get(ATTR_CURRENT_POSITION) == valve_position
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "message", "err_message"),
+    [
+        (
+            {
+                mqtt.DOMAIN: {
+                    valve.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "state-topic",
+                        "command_topic": "command-topic",
+                        "reports_position": False,
+                    }
+                }
+            },
+            '{"position": 0}',
+            "Missing required `state` attribute in json payload",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    valve.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "state-topic",
+                        "command_topic": "command-topic",
+                        "reports_position": True,
+                    }
+                }
+            },
+            '{"state": "opening"}',
+            "Missing required `position` attribute in json payload",
+        ),
+    ],
+)
+async def test_invalid_state_updates(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    message: str,
+    err_message: str,
+) -> None:
+    """Test the controlling state via topic through position.
+
+    Test  a `opening` or `closing` state update is reset correctly after sequential updates.
+    """
+    await mqtt_mock_entry()
+
+    state = hass.states.get("valve.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "state-topic", message)
+    state = hass.states.get("valve.test")
+    assert err_message in caplog.text
 
 
 @pytest.mark.parametrize(

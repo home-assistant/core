@@ -25,13 +25,13 @@ from zwave_js_server.util.node import (
     async_set_config_parameter,
 )
 
-from homeassistant.components.group import expand_entity_ids
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.group import expand_entity_ids
 
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
@@ -49,7 +49,7 @@ T = TypeVar("T", ZwaveNode, Endpoint)
 
 
 def parameter_name_does_not_need_bitmask(
-    val: dict[str, int | str | list[str]]
+    val: dict[str, int | str | list[str]],
 ) -> dict[str, int | str | list[str]]:
     """Validate that if a parameter name is provided, bitmask is not as well."""
     if (

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Mapping
 import logging
+import string
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -67,7 +68,7 @@ def component_translation_path(
 
 
 def load_translations_files(
-    translation_files: dict[str, str]
+    translation_files: dict[str, str],
 ) -> dict[str, dict[str, Any]]:
     """Load and parse translation.json files."""
     loaded = {}
@@ -196,23 +197,25 @@ class _TranslationCache:
         """Initialize the cache."""
         self.hass = hass
         self.loaded: dict[str, set[str]] = {}
-        self.cache: dict[str, dict[str, dict[str, Any]]] = {}
+        self.cache: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
 
     async def async_fetch(
         self,
         language: str,
         category: str,
         components: set[str],
-    ) -> list[dict[str, dict[str, Any]]]:
+    ) -> dict[str, str]:
         """Load resources into the cache."""
         components_to_load = components - self.loaded.setdefault(language, set())
 
         if components_to_load:
             await self._async_load(language, components_to_load)
 
-        cached = self.cache.get(language, {})
-
-        return [cached.get(component, {}).get(category, {}) for component in components]
+        result: dict[str, str] = {}
+        category_cache = self.cache.get(language, {}).get(category, {})
+        for component in components.intersection(category_cache):
+            result.update(category_cache[component])
+        return result
 
     async def _async_load(self, language: str, components: set[str]) -> None:
         """Populate the cache for a given set of components."""
@@ -242,6 +245,42 @@ class _TranslationCache:
 
         self.loaded[language].update(components)
 
+    def _validate_placeholders(
+        self,
+        language: str,
+        updated_resources: dict[str, Any],
+        cached_resources: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Validate if updated resources have same placeholders as cached resources."""
+        if cached_resources is None:
+            return updated_resources
+
+        mismatches: set[str] = set()
+
+        for key, value in updated_resources.items():
+            if key not in cached_resources:
+                continue
+            tuples = list(string.Formatter().parse(value))
+            updated_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
+
+            tuples = list(string.Formatter().parse(cached_resources[key]))
+            cached_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
+            if updated_placeholders != cached_placeholders:
+                _LOGGER.error(
+                    (
+                        "Validation of translation placeholders for localized (%s) string "
+                        "%s failed"
+                    ),
+                    language,
+                    key,
+                )
+                mismatches.add(key)
+
+        for mismatch in mismatches:
+            del updated_resources[mismatch]
+
+        return updated_resources
+
     @callback
     def _build_category_cache(
         self,
@@ -252,6 +291,7 @@ class _TranslationCache:
         """Extract resources into the cache."""
         resource: dict[str, Any] | str
         cached = self.cache.setdefault(language, {})
+
         categories: set[str] = set()
         for resource in translation_strings.values():
             categories.update(resource)
@@ -268,20 +308,22 @@ class _TranslationCache:
                     translation_strings, components, category
                 )
 
+            category_cache = cached.setdefault(category, {})
+
             for component, resource in new_resources.items():
-                category_cache: dict[str, Any] = cached.setdefault(
-                    component, {}
-                ).setdefault(category, {})
+                component_cache = category_cache.setdefault(component, {})
 
                 if isinstance(resource, dict):
-                    category_cache.update(
-                        recursive_flatten(
-                            f"component.{component}.{category}.",
-                            resource,
-                        )
+                    resources_flatten = recursive_flatten(
+                        f"component.{component}.{category}.",
+                        resource,
                     )
+                    resources_flatten = self._validate_placeholders(
+                        language, resources_flatten, component_cache
+                    )
+                    component_cache.update(resources_flatten)
                 else:
-                    category_cache[f"component.{component}.{category}"] = resource
+                    component_cache[f"component.{component}.{category}"] = resource
 
 
 @bind_hass
@@ -291,7 +333,7 @@ async def async_get_translations(
     category: str,
     integrations: Iterable[str] | None = None,
     config_flow: bool | None = None,
-) -> dict[str, Any]:
+) -> dict[str, str]:
     """Return all backend translations.
 
     If integration specified, load it for that one.
@@ -305,7 +347,7 @@ async def async_get_translations(
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
     elif category in ("state", "entity_component", "services"):
-        components = set(hass.config.components)
+        components = hass.config.components
     else:
         # Only 'state' supports merging, so remove platforms from selection
         components = {
@@ -314,12 +356,8 @@ async def async_get_translations(
 
     async with lock:
         if TRANSLATION_FLATTEN_CACHE in hass.data:
-            cache = hass.data[TRANSLATION_FLATTEN_CACHE]
+            cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
         else:
             cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
-        cached = await cache.async_fetch(language, category, components)
 
-    result = {}
-    for entry in cached:
-        result.update(entry)
-    return result
+        return await cache.async_fetch(language, category, components)

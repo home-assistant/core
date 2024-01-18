@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.disable_request_retries()
 
     async def async_get_data_from_api(
-        api_coro: Callable[..., Coroutine[Any, Any, dict[str, Any]]]
+        api_coro: Callable[..., Coroutine[Any, Any, dict[str, Any]]],
     ) -> dict[str, Any]:
         """Get data from a particular API coroutine."""
         try:

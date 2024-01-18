@@ -7,7 +7,7 @@ from .common import TEST_VEHICLE_STATE_ONLINE, setup_platform
 
 
 async def test_sensors(hass: HomeAssistant) -> None:
-    """Tests that the sensors are correct."""
+    """Tests that the sensor entities are correct."""
 
     assert len(hass.states.async_all("sensor")) == 0
 

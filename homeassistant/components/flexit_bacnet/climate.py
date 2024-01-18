@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,6 +27,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
+    MAX_TEMP,
+    MIN_TEMP,
     PRESET_TO_VENTILATION_MODE_MAP,
     VENTILATION_TO_PRESET_MODE_MAP,
 )
@@ -65,8 +67,10 @@ class FlexitClimateEntity(ClimateEntity):
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
 
-    _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_max_temp = MAX_TEMP
+    _attr_min_temp = MIN_TEMP
 
     def __init__(self, device: FlexitBACnet) -> None:
         """Initialize the unit."""
