@@ -409,6 +409,8 @@ async def test_update_todo_item_status(
                     content="Soda",
                     description="6-pack",
                     is_completed=False,
+                    # Create a mock task with a string value in the Due object and verify it
+                    # gets preserved when verifying the kwargs to update below
                     due=Due(date="2024-01-01", is_recurring=True, string="every day"),
                 )
             ],
