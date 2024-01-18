@@ -343,7 +343,7 @@ class DatasetStore:
         ) -> None:
             """Handle router discovered."""
             _LOGGER.debug("discovered router with id %s", data.border_agent_id)
-            if data.border_agent_id and data.border_agent_id == border_agent_id:
+            if data.border_agent_id == border_agent_id:
                 own_router_evt.set()
                 return
 
