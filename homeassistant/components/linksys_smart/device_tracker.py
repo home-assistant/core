@@ -7,12 +7,17 @@ import logging
 import requests
 import voluptuous as vol
 
+import base64
+
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -21,7 +26,7 @@ DEFAULT_TIMEOUT = 10
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PASSWORD): cv.string})
 
 
 def get_scanner(
@@ -40,6 +45,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
+        self.key = base64.b64encode(bytes("admin:" + config[CONF_PASSWORD], "utf-8")).decode("utf-8")
         self.last_results = {}
 
         # Check if the access point is accessible
@@ -73,10 +79,10 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             result = data["responses"][0]
             devices = result["output"]["devices"]
             for device in devices:
-                if not (macs := device["knownMACAddresses"]):
+                if not (device["knownInterfaces"]):
                     _LOGGER.warning("Skipping device without known MAC address")
                     continue
-                mac = macs[-1]
+                mac = device["knownInterfaces"][0]["macAddress"]
                 if not device["connections"]:
                     _LOGGER.debug("Device %s is not connected", mac)
                     continue
@@ -96,14 +102,18 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
         return True
 
     def _make_request(self):
-        # Weirdly enough, this doesn't seem to require authentication
+        # This endpoint now requires authentication.
+
         data = [
             {
                 "request": {"sinceRevision": 0},
-                "action": "http://linksys.com/jnap/devicelist/GetDevices",
+                "action": "http://linksys.com/jnap/devicelist/GetDevices3",
             }
         ]
-        headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
+        headers = {
+            "X-JNAP-Action": "http://linksys.com/jnap/core/Transaction",
+            "X-JNAP-Authorization": "Basic " + self.key
+        }
         return requests.post(
             f"http://{self.host}/JNAP/",
             timeout=DEFAULT_TIMEOUT,
