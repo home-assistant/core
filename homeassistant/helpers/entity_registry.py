@@ -133,7 +133,7 @@ EventEntityRegistryUpdatedData = (
 EntityOptionsType = Mapping[str, Mapping[str, Any]]
 ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
 
-DISLAY_DICT_OPTIONAL = (
+DISPLAY_DICT_OPTIONAL = (
     ("ai", "area_id"),
     ("di", "device_id"),
     ("tk", "translation_key"),
@@ -208,7 +208,7 @@ class RegistryEntry:
         Returns None if there's no data needed for display.
         """
         display_dict: dict[str, Any] = {"ei": self.entity_id, "pl": self.platform}
-        for key, attr_name in DISLAY_DICT_OPTIONAL:
+        for key, attr_name in DISPLAY_DICT_OPTIONAL:
             if (attr_val := getattr(self, attr_name)) is not None:
                 display_dict[key] = attr_val
         if (category := self.entity_category) is not None:
