@@ -30,10 +30,15 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_discover_devices, get_credentials, mac_alias, set_credentials
+from . import (
+    async_discover_devices,
+    create_async_tplink_clientsession,
+    get_credentials,
+    mac_alias,
+    set_credentials,
+)
 from .const import CONF_DEVICE_CONFIG, CONNECT_TIMEOUT, DOMAIN
 
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
@@ -323,8 +328,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 host, credentials=credentials
             )
             if self._discovered_device.config.uses_http:
-                self._discovered_device.config.http_client = create_async_httpx_client(
-                    self.hass, verify_ssl=False
+                self._discovered_device.config.http_client = (
+                    create_async_tplink_clientsession(self.hass)
                 )
         except TimeoutException:
             # Try connect() to legacy devices if discovery fails
@@ -352,7 +357,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             config.credentials = credentials
         config.timeout = CONNECT_TIMEOUT
         if config.uses_http:
-            config.http_client = create_async_httpx_client(self.hass, verify_ssl=False)
+            config.http_client = create_async_tplink_clientsession(self.hass)
 
         self._discovered_device = await SmartDevice.connect(config=config)
         await self.async_set_unique_id(

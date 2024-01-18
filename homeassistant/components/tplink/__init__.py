@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Final, Optional
 
+from aiohttp import ClientSession
 from kasa import (
     AuthenticationException,
     Credentials,
@@ -14,6 +15,7 @@ from kasa import (
     SmartDevice,
     SmartDeviceException,
 )
+from kasa.httpclient import get_cookie_jar
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -35,8 +37,8 @@ from homeassistant.helpers import (
     device_registry as dr,
     discovery_flow,
 )
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -55,6 +57,13 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 _LOGGER = logging.getLogger(__name__)
 
 DATA_STORE: Final = "store"
+
+
+def create_async_tplink_clientsession(hass: HomeAssistant) -> ClientSession:
+    """Return aiohttp clientsession with cookie jar configured."""
+    return async_create_clientsession(
+        hass, verify_ssl=False, cookie_jar=get_cookie_jar()
+    )
 
 
 @callback
@@ -141,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config = DeviceConfig(host)
     config.timeout = CONNECT_TIMEOUT
     if config.uses_http is True:
-        config.http_client = create_async_httpx_client(hass, verify_ssl=False)
+        config.http_client = create_async_tplink_clientsession(hass)
     if credentials:
         config.credentials = credentials
     try:
