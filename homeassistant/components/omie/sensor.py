@@ -50,7 +50,7 @@ async def async_setup_entry(
         _entity_component_unrecorded_attributes = frozenset(
             {
                 f"{day}_{attr}"
-                for day in ("today", "tomorrow", "yesterday")
+                for day in ("today", "tomorrow")
                 for attr in ("average", "hours", "provisional")
             }
         )
