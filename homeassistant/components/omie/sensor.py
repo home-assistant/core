@@ -107,7 +107,6 @@ async def async_setup_entry(
 
                 today_hourly_data = day_hourly_data(today_date)
                 tomorrow_hourly_data = day_hourly_data(today_date + timedelta(days=1))
-                yesterday_hourly_data = day_hourly_data(today_date - timedelta(days=1))
 
                 # to work out the start of the current hour we truncate from minutes downwards
                 # rather than create a new datetime to ensure correctness across DST boundaries
@@ -119,7 +118,6 @@ async def async_setup_entry(
                     {}
                     | _day_attributes("today", today_hourly_data)
                     | _day_attributes("tomorrow", tomorrow_hourly_data)
-                    | _day_attributes("yesterday", yesterday_hourly_data)
                 )
 
                 self.async_schedule_update_ha_state()
