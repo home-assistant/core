@@ -366,6 +366,52 @@ async def test_create_network_fails_6(
     assert msg["error"]["code"] == "factory_reset_failed"
 
 
+async def test_create_network_fails_7(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan,
+    websocket_client,
+) -> None:
+    """Test create network."""
+    with patch(
+        "python_otbr_api.OTBR.get_border_agent_id",
+        side_effect=python_otbr_api.OTBRError,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_network",
+                "border_agent_id": TEST_BORDER_AGENT_ID.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "get_border_agent_id_failed"
+
+
+async def test_create_network_fails_8(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan,
+    websocket_client,
+) -> None:
+    """Test create network."""
+    with patch(
+        "python_otbr_api.OTBR.get_border_agent_id",
+        return_value=TEST_BORDER_AGENT_ID,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_network",
+                "border_agent_id": "blah",
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unknown_router"
+
+
 async def test_set_network(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -593,6 +639,54 @@ async def test_set_network_fails_3(
     assert msg["error"]["code"] == "set_enabled_failed"
 
 
+async def test_set_network_fails_4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan,
+    websocket_client,
+) -> None:
+    """Test create network."""
+    with patch(
+        "python_otbr_api.OTBR.get_border_agent_id",
+        side_effect=python_otbr_api.OTBRError,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/set_network",
+                "border_agent_id": TEST_BORDER_AGENT_ID.hex(),
+                "dataset_id": "abc",
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "get_border_agent_id_failed"
+
+
+async def test_set_network_fails_5(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan,
+    websocket_client,
+) -> None:
+    """Test create network."""
+    with patch(
+        "python_otbr_api.OTBR.get_border_agent_id",
+        return_value=TEST_BORDER_AGENT_ID,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/set_network",
+                "border_agent_id": "blah",
+                "dataset_id": "abc",
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unknown_router"
+
+
 async def test_set_channel(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -670,7 +764,7 @@ async def test_set_channel_no_entry(
     assert msg["error"]["code"] == "not_loaded"
 
 
-async def test_set_channel_fails(
+async def test_set_channel_fails_1(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry_thread,
@@ -698,3 +792,51 @@ async def test_set_channel_fails(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "set_channel_failed"
+
+
+async def test_set_channel_fails_2(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan,
+    websocket_client,
+) -> None:
+    """Test create network."""
+    with patch(
+        "python_otbr_api.OTBR.get_border_agent_id",
+        side_effect=python_otbr_api.OTBRError,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/set_channel",
+                "border_agent_id": TEST_BORDER_AGENT_ID.hex(),
+                "channel": 12,
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "get_border_agent_id_failed"
+
+
+async def test_set_channel_fails_3(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan,
+    websocket_client,
+) -> None:
+    """Test create network."""
+    with patch(
+        "python_otbr_api.OTBR.get_border_agent_id",
+        return_value=TEST_BORDER_AGENT_ID,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/set_channel",
+                "border_agent_id": "blah",
+                "channel": 12,
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unknown_router"
