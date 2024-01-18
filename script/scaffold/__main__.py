@@ -4,8 +4,9 @@ from pathlib import Path
 import subprocess
 import sys
 
+from script.util import valid_integration
+
 from . import docs, error, gather_info, generate
-from .util import valid_integration
 
 TEMPLATES = [
     p.name for p in (Path(__file__).parent / "templates").glob("*") if p.is_dir()

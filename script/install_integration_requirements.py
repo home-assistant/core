@@ -3,9 +3,10 @@
 import argparse
 from pathlib import Path
 import subprocess
+import sys
 
 from .gen_requirements_all import gather_recursive_requirements
-from .scaffold.util import valid_integration
+from .util import valid_integration
 
 
 def get_arguments() -> argparse.Namespace:

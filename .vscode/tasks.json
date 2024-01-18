@@ -162,7 +162,7 @@
       "label": "Install integration requirements",
       "detail": "Install all requirements of a given integration.",
       "type": "shell",
-      "command": "python3 -m script.install_integration_requirements ${input:integrationName}",
+      "command": "${command:python.interpreterPath} -m script.install_integration_requirements ${input:integrationName}",
       "group": {
         "kind": "build",
         "isDefault": true
