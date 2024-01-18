@@ -5,21 +5,11 @@ import subprocess
 import sys
 
 from . import docs, error, gather_info, generate
-from .const import COMPONENT_DIR
+from .util import valid_integration
 
 TEMPLATES = [
     p.name for p in (Path(__file__).parent / "templates").glob("*") if p.is_dir()
 ]
-
-
-def valid_integration(integration):
-    """Test if it's a valid integration."""
-    if not (COMPONENT_DIR / integration).exists():
-        raise argparse.ArgumentTypeError(
-            f"The integration {integration} does not exist."
-        )
-
-    return integration
 
 
 def get_arguments() -> argparse.Namespace:

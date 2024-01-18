@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 
 from .gen_requirements_all import gather_recursive_requirements
-from .scaffold.__main__ import valid_integration
+from .scaffold.util import valid_integration
 
 
 def get_arguments() -> argparse.Namespace:
