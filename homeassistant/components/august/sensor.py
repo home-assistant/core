@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from yalexs.activity import ActivityType
 from yalexs.doorbell import Doorbell
@@ -179,7 +179,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
 
     _attr_translation_key = "operator"
 
-    def __init__(self, data, device):
+    def __init__(self, data: AugustData, device) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self._data = data
@@ -211,9 +211,9 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
             self._attr_entity_picture = lock_activity.operator_thumbnail_url
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
-        attributes = {}
+        attributes: dict[str, Any] = {}
 
         if self._operated_remote is not None:
             attributes[ATTR_OPERATION_REMOTE] = self._operated_remote
@@ -291,7 +291,7 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
         self._update_from_data()
 
     @callback
-    def _update_from_data(self):
+    def _update_from_data(self) -> None:
         """Get the latest state of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self._detail)
         self._attr_available = self._attr_native_value is not None

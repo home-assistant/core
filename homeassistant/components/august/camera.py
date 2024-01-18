@@ -1,7 +1,9 @@
 """Support for August doorbell camera."""
 from __future__ import annotations
 
+from aiohttp import ClientSession
 from yalexs.activity import ActivityType
+from yalexs.doorbell import Doorbell
 from yalexs.util import update_doorbell_image_from_activity
 
 from homeassistant.components.camera import Camera
@@ -37,7 +39,9 @@ class AugustCamera(AugustEntityMixin, Camera):
 
     _attr_translation_key = "camera"
 
-    def __init__(self, data, device, session, timeout):
+    def __init__(
+        self, data: AugustData, device: Doorbell, session: ClientSession, timeout: int
+    ) -> None:
         """Initialize an August security camera."""
         super().__init__(data, device)
         self._timeout = timeout

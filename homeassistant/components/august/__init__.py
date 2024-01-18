@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import ValuesView
+from collections.abc import Iterable, ValuesView
 from datetime import datetime
 from itertools import chain
 import logging
@@ -104,7 +104,7 @@ async def async_setup_august(
 @callback
 def _async_trigger_ble_lock_discovery(
     hass: HomeAssistant, locks_with_offline_keys: list[LockDetail]
-):
+) -> None:
     """Update keys for the yalexs-ble integration if available."""
     for lock_detail in locks_with_offline_keys:
         discovery_flow.async_create_flow(
@@ -213,7 +213,7 @@ class AugustData(AugustSubscriberMixin):
                 self._hass, self._async_initial_sync(), "august-initial-sync"
             )
 
-    async def _async_initial_sync(self):
+    async def _async_initial_sync(self) -> None:
         """Attempt to request an initial sync."""
         # We don't care if this fails because we only want to wake
         # locks that are actually online anyways and they will be
@@ -274,7 +274,9 @@ class AugustData(AugustSubscriberMixin):
     async def _async_refresh(self, time):
         await self._async_refresh_device_detail_by_ids(self._subscriptions.keys())
 
-    async def _async_refresh_device_detail_by_ids(self, device_ids_list):
+    async def _async_refresh_device_detail_by_ids(
+        self, device_ids_list: Iterable[str]
+    ) -> None:
         """Refresh each device in sequence.
 
         This used to be a gather but it was less reliable with august's
@@ -421,7 +423,7 @@ class AugustData(AugustSubscriberMixin):
 
         return ret
 
-    def _remove_inoperative_doorbells(self):
+    def _remove_inoperative_doorbells(self) -> None:
         for doorbell in list(self.doorbells):
             device_id = doorbell.device_id
             if self._device_detail_by_id.get(device_id):
@@ -435,7 +437,7 @@ class AugustData(AugustSubscriberMixin):
             )
             del self._doorbells_by_id[device_id]
 
-    def _remove_inoperative_locks(self):
+    def _remove_inoperative_locks(self) -> None:
         # Remove non-operative locks as there must
         # be a bridge (August Connect) for them to
         # be usable
