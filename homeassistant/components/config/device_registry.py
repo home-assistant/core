@@ -17,7 +17,7 @@ from homeassistant.helpers.device_registry import (
 )
 
 
-async def async_setup(hass):
+async def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Device Registry views."""
 
     websocket_api.async_register_command(hass, websocket_list_devices)
