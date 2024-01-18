@@ -31,16 +31,14 @@ async def async_get_config_entry_diagnostics(
     data["statistics"] = {"stats": coordinator.lm.statistics}  # wrap to satisfy mypy
 
     # build a firmware section
-    data["firmware"] = {}
-    data["firmware"]["machine"] = {}
-    data["firmware"]["machine"]["version"] = coordinator.lm.firmware_version
-    data["firmware"]["machine"][
-        "latest_version"
-    ] = coordinator.lm.latest_firmware_version
-    data["firmware"]["gateway"] = {}
-    data["firmware"]["gateway"]["version"] = coordinator.lm.gateway_version
-    data["firmware"]["gateway"][
-        "latest_version"
-    ] = coordinator.lm.latest_gateway_version
-
+    data["firmware"] = {
+        "machine": {
+            "version": coordinator.lm.firmware_version,
+            "latest_version": coordinator.lm.latest_firmware_version,
+        },
+        "gateway": {
+            "version": coordinator.lm.gateway_version,
+            "latest_version": coordinator.lm.latest_gateway_version,
+        },
+    }
     return async_redact_data(data, TO_REDACT)
