@@ -86,7 +86,7 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from .helpers.json import json_dumps, json_fragment
+from .helpers.json import json_bytes, json_fragment
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
@@ -1039,7 +1039,7 @@ class Context:
     @cached_property
     def json_fragment(self) -> json_fragment:
         """Return a JSON fragment of the context."""
-        return json_fragment(json_dumps(self._as_dict))
+        return json_fragment(json_bytes(self._as_dict))
 
 
 class EventOrigin(enum.Enum):
@@ -1126,7 +1126,7 @@ class Event:
     @cached_property
     def json_fragment(self) -> json_fragment:
         """Return an event as a JSON fragment."""
-        return json_fragment(json_dumps(self._as_dict))
+        return json_fragment(json_bytes(self._as_dict))
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -1512,9 +1512,9 @@ class State:
         return ReadOnlyDict(as_dict)
 
     @cached_property
-    def as_dict_json(self) -> str:
+    def as_dict_json(self) -> bytes:
         """Return a JSON string of the State."""
-        return json_dumps(self._as_dict)
+        return json_bytes(self._as_dict)
 
     @cached_property
     def json_fragment(self) -> json_fragment:
@@ -1550,14 +1550,14 @@ class State:
         return compressed_state
 
     @cached_property
-    def as_compressed_state_json(self) -> str:
+    def as_compressed_state_json(self) -> bytes:
         """Build a compressed JSON key value pair of a state for adds.
 
         The JSON string is a key value pair of the entity_id and the compressed state.
 
         It is used for sending multiple states in a single message.
         """
-        return json_dumps({self.entity_id: self.as_compressed_state})[1:-1]
+        return json_bytes({self.entity_id: self.as_compressed_state})[1:-1]
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
