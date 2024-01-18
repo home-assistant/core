@@ -65,19 +65,22 @@ async def websocket_info(
     assert border_agent_id is not None
     connection.send_result(
         msg["id"],
-        {
-            "active_dataset_tlvs": dataset_tlvs.hex() if dataset_tlvs else None,
-            "border_agent_id": border_agent_id.hex(),
-            "channel": dataset.channel if dataset else None,
-            "extended_address": extended_address.hex(),
-            "url": data.url,
-        },
+        [
+            {
+                "active_dataset_tlvs": dataset_tlvs.hex() if dataset_tlvs else None,
+                "border_agent_id": border_agent_id.hex(),
+                "channel": dataset.channel if dataset else None,
+                "extended_address": extended_address.hex(),
+                "url": data.url,
+            }
+        ],
     )
 
 
 @websocket_api.websocket_command(
     {
         "type": "otbr/create_network",
+        vol.Required("border_agent_id"): str,
     }
 )
 @websocket_api.require_admin
@@ -91,6 +94,20 @@ async def websocket_create_network(
         return
 
     data: OTBRData = hass.data[DOMAIN]
+
+    try:
+        border_agent_id = await data.get_border_agent_id()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "get_border_agent_id_failed", str(exc))
+        return
+
+    # The border agent ID is checked when the OTBR config entry is setup,
+    # we can assert it's not None
+    assert border_agent_id is not None
+    if border_agent_id.hex() != msg["border_agent_id"]:
+        connection.send_error(msg["id"], "unknown_router", "")
+        return
+
     channel = await get_allowed_channel(hass, data.url) or DEFAULT_CHANNEL
 
     try:
@@ -144,6 +161,7 @@ async def websocket_create_network(
 @websocket_api.websocket_command(
     {
         "type": "otbr/set_network",
+        vol.Required("border_agent_id"): str,
         vol.Required("dataset_id"): str,
     }
 )
@@ -157,6 +175,21 @@ async def websocket_set_network(
         connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
         return
 
+    data: OTBRData = hass.data[DOMAIN]
+
+    try:
+        border_agent_id = await data.get_border_agent_id()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "get_border_agent_id_failed", str(exc))
+        return
+
+    # The border agent ID is checked when the OTBR config entry is setup,
+    # we can assert it's not None
+    assert border_agent_id is not None
+    if border_agent_id.hex() != msg["border_agent_id"]:
+        connection.send_error(msg["id"], "unknown_router", "")
+        return
+
     dataset_tlv = await async_get_dataset(hass, msg["dataset_id"])
 
     if not dataset_tlv:
@@ -166,7 +199,6 @@ async def websocket_set_network(
     if channel := dataset.get(MeshcopTLVType.CHANNEL):
         thread_dataset_channel = cast(tlv_parser.Channel, channel).channel
 
-    data: OTBRData = hass.data[DOMAIN]
     allowed_channel = await get_allowed_channel(hass, data.url)
 
     if allowed_channel and thread_dataset_channel != allowed_channel:
@@ -205,6 +237,7 @@ async def websocket_set_network(
 @websocket_api.websocket_command(
     {
         "type": "otbr/set_channel",
+        vol.Required("border_agent_id"): str,
         vol.Required("channel"): int,
     }
 )
@@ -219,6 +252,23 @@ async def websocket_set_channel(
         return
 
     data: OTBRData = hass.data[DOMAIN]
+
+    try:
+        border_agent_id = await data.get_border_agent_id()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "get_border_agent_id_failed", str(exc))
+        return
+
+    # The border agent ID is checked when the OTBR config entry is setup,
+    # we can assert it's not None
+    assert border_agent_id is not None
+    if border_agent_id.hex() != msg["border_agent_id"]:
+        connection.send_error(
+            msg["id"],
+            "unknown_router",
+            f"{border_agent_id.hex()} != {msg['border_agent_id']}",
+        )
+        return
 
     if is_multiprotocol_url(data.url):
         connection.send_error(
