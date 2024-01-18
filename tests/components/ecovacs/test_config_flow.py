@@ -15,7 +15,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 
-from .const import VALID_ENTRY_DATA
+from .const import IMPORT_DATA, VALID_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
@@ -103,7 +103,7 @@ async def test_import_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=VALID_ENTRY_DATA,
+        data=IMPORT_DATA.copy(),
     )
     mock_authenticate.assert_called()
 
@@ -124,7 +124,7 @@ async def test_import_flow_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=VALID_ENTRY_DATA,
+        data=IMPORT_DATA.copy(),
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -152,7 +152,7 @@ async def test_import_flow_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=VALID_ENTRY_DATA,
+        data=IMPORT_DATA.copy(),
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == reason

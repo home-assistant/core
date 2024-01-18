@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import VALID_ENTRY_DATA
+from .const import IMPORT_DATA
 
 from tests.common import MockConfigEntry
 
@@ -66,7 +66,7 @@ async def test_invalid_auth(
     ("config", "expect_call"),
     [
         ({}, False),
-        ({DOMAIN: VALID_ENTRY_DATA}, True),
+        ({DOMAIN: IMPORT_DATA.copy()}, True),
     ],
 )
 async def test_async_setup_import(

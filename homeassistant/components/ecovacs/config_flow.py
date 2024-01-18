@@ -171,6 +171,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             create_repair(error, placeholders)
             return self.async_abort(reason=error)
 
+        user_input.pop(CONF_CONTINENT)
         try:
             result = await self.async_step_user(user_input)
         except AbortFlow as ex:
