@@ -69,6 +69,8 @@ def process_service_info(
                 sw_version=sensor_device_info.sw_version,
                 hw_version=sensor_device_info.hw_version,
             )
+            # event_class may be postfixed with a number, ie 'button_1'
+            # but if there is only one button then it will be 'button'
             event_class = event.device_key.key
             event_type = event.event_type
 
