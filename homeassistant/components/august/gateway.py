@@ -34,6 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 class AugustGateway:
     """Handle the connection to August."""
 
+    api: ApiAsync
+
     def __init__(self, hass: HomeAssistant, aiohttp_session: ClientSession) -> None:
         """Init the connection."""
         self._aiohttp_session = aiohttp_session
@@ -41,7 +43,6 @@ class AugustGateway:
         self._access_token_cache_file: str | None = None
         self._hass: HomeAssistant = hass
         self._config: Mapping[str, Any] | None = None
-        self.api: ApiAsync | None = None
         self.authenticator: AuthenticatorAsync | None = None
         self.authentication: Authentication | None = None
 
