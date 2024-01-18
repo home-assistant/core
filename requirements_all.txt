@@ -2659,7 +2659,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.6.0
+thermopro-ble==0.7.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks-smoke==0.1.8
