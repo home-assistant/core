@@ -673,7 +673,6 @@ omit =
     homeassistant/components/lightwave/*
     homeassistant/components/limitlessled/light.py
     homeassistant/components/linknlink/coordinator.py
-    homeassistant/components/linknlink/helpers.py
     homeassistant/components/linknlink/sensor.py
     homeassistant/components/linksys_smart/device_tracker.py
     homeassistant/components/linode/*

@@ -1,4 +1,5 @@
 """LinknLink Entities."""
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -15,15 +16,11 @@ class LinknLinkEntity(CoordinatorEntity[LinknLinkCoordinator]):
         """Initialize coordinator entity."""
         super().__init__(coordinator)
         self.api = coordinator.api
-        self.fw_version = coordinator.fw_version
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.api.mac.hex())},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.api.mac.hex())},
             name=self.api.name,
             manufacturer=self.api.manufacturer,
             model=self.api.model,
-            sw_version=str(self.fw_version),
+            sw_version=str(coordinator.fw_version),
         )

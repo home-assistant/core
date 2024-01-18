@@ -39,17 +39,7 @@ async def test_flow_user_works(hass: HomeAssistant) -> None:
             {"host": device.host, "timeout": device.timeout},
         )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "finish"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"name": device.name},
-    )
-
     assert result["type"] == "create_entry"
-    assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
 
     assert mock_hello.call_count == 1
@@ -81,7 +71,7 @@ async def test_flow_user_already_in_progress(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "already_in_progress"
+    assert result["reason"] == "already_configured"
 
 
 async def test_flow_user_mac_already_configured(hass: HomeAssistant) -> None:
@@ -347,13 +337,7 @@ async def test_flow_reset_works(hass: HomeAssistant) -> None:
             {"host": device.host, "timeout": device.timeout},
         )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"name": device.name},
-    )
-
     assert result["type"] == "create_entry"
-    assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
 
 
@@ -382,13 +366,7 @@ async def test_flow_unlock_works(hass: HomeAssistant) -> None:
         {"unlock": True},
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"name": device.name},
-    )
-
     assert result["type"] == "create_entry"
-    assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
 
     assert mock_api.set_lock.call_args == call(False)
@@ -524,13 +502,7 @@ async def test_flow_do_not_unlock(hass: HomeAssistant) -> None:
         {"unlock": False},
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"name": device.name},
-    )
-
     assert result["type"] == "create_entry"
-    assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
 
     assert mock_api.set_lock.call_count == 0
@@ -555,18 +527,11 @@ async def test_dhcp_can_finish(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "finish"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Living Room"
-    assert result2["data"] == {
+    assert result["type"] == "create_entry"
+    assert result["title"] == f"linknlink-{device.mac}"
+    assert result["data"] == {
         "host": "1.2.3.4",
         "mac": "ec0b12a43ba1",
         "timeout": 10,
