@@ -6,7 +6,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_continent_length": "The continent code must be 2 characters long."
     },
     "step": {
       "user": {
@@ -17,7 +18,7 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "continent": "Your two-letter continent code"
+          "continent": "For some countries, you will need to set Worldwide.\nPossible to use a custom two letter country code if the predefined list does not work."
         }
       }
     }
@@ -53,6 +54,16 @@
     "deprecated_yaml_import_issue_unknown": {
       "title": "The Ecovacs YAML configuration import failed",
       "description": "Configuring Ecovacs using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    }
+  },
+  "selector": {
+    "continent": {
+      "options": {
+        "as": "Asia",
+        "eu": "Europe",
+        "na": "North America",
+        "ww": "Worldwide"
+      }
     }
   }
 }

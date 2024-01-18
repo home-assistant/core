@@ -9,7 +9,7 @@ from deebot_client.authentication import Authenticator
 from deebot_client.exceptions import InvalidAuthenticationError
 from deebot_client.models import Configuration
 from deebot_client.util import md5
-from deebot_client.util.continents import COUNTRIES_TO_CONTINENTS, get_continent
+from deebot_client.util.continents import get_continent
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -55,6 +55,9 @@ async def _validate_input(
         _LOGGER.exception("Unexpected exception during login")
         errors["base"] = "unknown"
 
+    if (continent := user_input.get(CONF_CONTINENT)) and len(continent) != 2:
+        errors["CONF_CONTINENT"] = "invalid_continent_length"
+
     return errors
 
 
@@ -97,7 +100,8 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                         vol.Required(CONF_COUNTRY): selector.CountrySelector(),
                         vol.Optional(CONF_CONTINENT): selector.SelectSelector(
                             selector.SelectSelectorConfig(
-                                options=list(set(COUNTRIES_TO_CONTINENTS.values())),
+                                options=["as", "eu", "na", "ww"],
+                                translation_key=CONF_CONTINENT,
                                 custom_value=True,
                                 sort=True,
                             )
