@@ -69,8 +69,9 @@ class BTHomeEventEntity(EventEntity):
         )
         postfix_one_indexed = int(postfix) + 1 if postfix else None
         postfix_name = f" {postfix_one_indexed}" if postfix else ""
-        # We report button 0 as button 1, button 1 as button 2, etc to the user since
-        # humans expect to count from 1 and not 0
+        # We report button button 1 as button 2, etc to the user since
+        # the first button has no postfix, and it would be confusing
+        # to report the second button as button 1
         self._attr_name = f"{base_event_class.title()}{postfix_name}"
         # Matches logic in PassiveBluetoothProcessorEntity
         if device_id:
