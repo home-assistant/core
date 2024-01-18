@@ -86,13 +86,28 @@ async def test_options_flow(hass: HomeAssistant, enable_bluetooth: None) -> None
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ALLOW_NAMELESS_UUIDS: [uuid]}
 
-    # restart
+    # test save duplicate uuid
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ALLOW_NAMELESS_UUIDS: [uuid],
+            "new_uuid": uuid,
+        },
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_ALLOW_NAMELESS_UUIDS: [uuid]}
+
     # delete
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={

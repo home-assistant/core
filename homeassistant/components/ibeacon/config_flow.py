@@ -70,7 +70,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 # don't modify current_uuids in memory, cause HA will think that the new
                 # data is equal to the old, and will refuse to write them to disk.
                 updated_uuids = user_input.get("allow_nameless_uuids", [])
-                if new_uuid:
+                if new_uuid and new_uuid not in updated_uuids:
                     updated_uuids.append(new_uuid)
 
                 data = {CONF_ALLOW_NAMELESS_UUIDS: list(updated_uuids)}
