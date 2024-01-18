@@ -122,14 +122,15 @@ class APIEventStream(HomeAssistantView):
     name = "api:stream"
 
     @require_admin
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.StreamResponse:
         """Provide a streaming interface for the event bus."""
         hass = request.app["hass"]
         stop_obj = object()
-        to_write = asyncio.Queue()
+        to_write: asyncio.Queue[object | str] = asyncio.Queue()
 
-        if restrict := request.query.get("restrict"):
-            restrict = restrict.split(",") + [EVENT_HOMEASSISTANT_STOP]
+        restrict: list[str] | None = None
+        if restrict_str := request.query.get("restrict"):
+            restrict = restrict_str.split(",") + [EVENT_HOMEASSISTANT_STOP]
 
         async def forward_events(event):
             """Forward events to the open request."""
@@ -446,7 +447,7 @@ class APIErrorLog(HomeAssistantView):
     name = "api:error_log"
 
     @require_admin
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.FileResponse:
         """Retrieve API error log."""
         return web.FileResponse(request.app["hass"].data[DATA_LOGGING])
 
