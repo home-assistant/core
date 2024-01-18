@@ -44,18 +44,10 @@ class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
         self,
         device: Device,
         capability: CapabilityT,
-        entity_description: _EntityDescriptionT | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize entity."""
         super().__init__(**kwargs)
-        if entity_description:
-            self.entity_description = entity_description
-        elif not hasattr(self, "entity_description"):
-            raise ValueError(
-                '"entity_description" must be either set as class variable or passed on init!'
-            )
-
         self._attr_unique_id = f"{device.device_info.did}_{self.entity_description.key}"
 
         self._device = device
