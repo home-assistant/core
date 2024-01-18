@@ -169,9 +169,6 @@ async def async_setup_entry(
 class FlexitSensor(FlexitEntity, SensorEntity):
     """Representation of a Flexit (bacnet) Sensor."""
 
-    # Should it have a name?
-    # _attr_name = None
-
     entity_description: FlexitSensorEntityDescription
 
     def __init__(
