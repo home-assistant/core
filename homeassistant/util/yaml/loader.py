@@ -215,7 +215,9 @@ class SafeLineLoader(PythonSafeLoader):
 LoaderType = FastSafeLoader | PythonSafeLoader
 
 
-def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE | None:
+def load_yaml(
+    fname: str | os.PathLike[str], secrets: Secrets | None = None
+) -> JSON_TYPE | None:
     """Load a YAML file."""
     try:
         with open(fname, encoding="utf-8") as conf_file:
@@ -225,7 +227,9 @@ def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE | None:
         raise HomeAssistantError(exc) from exc
 
 
-def load_yaml_dict(fname: str, secrets: Secrets | None = None) -> dict:
+def load_yaml_dict(
+    fname: str | os.PathLike[str], secrets: Secrets | None = None
+) -> dict:
     """Load a YAML file and ensure the top level is a dict.
 
     Raise if the top level is not a dict.
@@ -355,10 +359,7 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDi
         filename = os.path.splitext(os.path.basename(fname))[0]
         if os.path.basename(fname) == SECRET_YAML:
             continue
-        loaded_yaml = load_yaml(fname, loader.secrets)
-        if loaded_yaml is None:
-            continue
-        mapping[filename] = loaded_yaml
+        mapping[filename] = load_yaml(fname, loader.secrets)
     return _add_reference(mapping, loader, node)
 
 

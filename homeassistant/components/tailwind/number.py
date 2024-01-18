@@ -5,12 +5,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from gotailwind import Tailwind, TailwindDeviceStatus
+from gotailwind import Tailwind, TailwindDeviceStatus, TailwindError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -65,16 +66,6 @@ class TailwindNumberEntity(TailwindEntity, NumberEntity):
 
     entity_description: TailwindNumberEntityDescription
 
-    def __init__(
-        self,
-        coordinator: TailwindDataUpdateCoordinator,
-        description: TailwindNumberEntityDescription,
-    ) -> None:
-        """Initiate Tailwind number entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.device_id}-{description.key}"
-
     @property
     def native_value(self) -> int | None:
         """Return the number value."""
@@ -82,5 +73,12 @@ class TailwindNumberEntity(TailwindEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
-        await self.entity_description.set_value_fn(self.coordinator.tailwind, value)
+        try:
+            await self.entity_description.set_value_fn(self.coordinator.tailwind, value)
+        except TailwindError as exc:
+            raise HomeAssistantError(
+                str(exc),
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from exc
         await self.coordinator.async_request_refresh()

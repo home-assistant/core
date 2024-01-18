@@ -1,0 +1,450 @@
+{
+  "custom": { "AtTcpEnable": false, "end": 0 },
+  "webd": {
+    "adminPassword": "****************",
+    "ownerModeEnabled": false,
+    "hideAdminPassword": true,
+    "end": ""
+  },
+  "lcd": { "end": "" },
+  "sim": {
+    "pin": { "mode": "Disabled", "retry": 3, "end": "" },
+    "puk": { "retry": 10 },
+    "mep": {},
+    "phoneNumber": "(555) 555-5555",
+    "iccid": "1234567890123456789",
+    "imsi": "123456789012345",
+    "SPN": "",
+    "status": "Ready",
+    "end": ""
+  },
+  "sms": {
+    "ready": true,
+    "sendEnabled": true,
+    "sendSupported": true,
+    "alertSupported": true,
+    "alertEnabled": false,
+    "alertNumList": "",
+    "alertCfgList": [
+      { "category": "FWUpdate", "enabled": false },
+      { "category": "DataUsageWarning", "enabled": false },
+      { "category": "DataUsageExceeded", "enabled": false },
+      { "category": "LTEFailoverLTE", "enabled": false },
+      { "category": "LTEFailoverETH", "enabled": false },
+      {}
+    ],
+    "unreadMsgs": 1,
+    "msgCount": 1,
+    "msgs": [
+      {
+        "id": "1",
+        "rxTime": "20/01/23 03:39:35 PM",
+        "text": "text",
+        "sender": "889",
+        "read": false
+      },
+      {}
+    ],
+    "trans": [{}],
+    "sendMsg": [
+      {
+        "clientId": "eternalegypt.eternalegypt",
+        "enc": "Gsm7Bit",
+        "errorCode": 0,
+        "msgId": 1,
+        "receiver": "+15555555555",
+        "status": "Succeeded",
+        "text": "test SMS from Home Assistant",
+        "txTime": "1367252824"
+      },
+      {}
+    ],
+    "end": ""
+  },
+  "session": {
+    "userRole": "Admin",
+    "lang": "en",
+    "secToken": "secret"
+  },
+  "general": {
+    "defaultLanguage": "en",
+    "PRIid": "12345678",
+    "genericResetStatus": "NotStarted",
+    "manufacturer": "Netgear",
+    "model": "LM1200",
+    "HWversion": "1.0",
+    "FWversion": "EC25AFFDR07A09M4G",
+    "appVersion": "NTG9X07C_20.06.09.00",
+    "buildDate": "Unknown",
+    "BLversion": "",
+    "PRIversion": "04.19",
+    "IMEI": "123456789012345",
+    "SVN": "9",
+    "MEID": "",
+    "ESN": "0",
+    "FSN": "FFFFFFFFFFFFF",
+    "activated": true,
+    "webAppVersion": "LM1200-HDATA_03.03.103.201",
+    "HIDenabled": false,
+    "TCAaccepted": true,
+    "LEDenabled": true,
+    "showAdvHelp": true,
+    "keyLockState": "Unlocked",
+    "devTemperature": 30,
+    "verMajor": 1000,
+    "verMinor": 0,
+    "environment": "Application",
+    "currTime": 1367257216,
+    "timeZoneOffset": -14400,
+    "deviceName": "LM1200",
+    "useMetricSystem": true,
+    "factoryResetStatus": "NotStarted",
+    "setupCompleted": true,
+    "languageSelected": false,
+    "systemAlertList": { "list": [{}], "count": 0 },
+    "apiVersion": "2.0",
+    "companyName": "NETGEAR",
+    "configURL": "/Forms/config",
+    "profileURL": "/Forms/profile",
+    "pinChangeURL": "/Forms/pinChange",
+    "portCfgURL": "/Forms/portCfg",
+    "portFilterURL": "/Forms/portFilter",
+    "wifiACLURL": "/Forms/wifiACL",
+    "supportedLangList": [
+      {
+        "id": "en",
+        "isCurrent": "true",
+        "isDefault": "true",
+        "label": "English",
+        "token1": "/romfs/lcd/en_us.tr",
+        "token2": ""
+      },
+      {
+        "id": "de_DE",
+        "isCurrent": "false",
+        "isDefault": "false",
+        "label": "Deutsch (German)",
+        "token1": "/romfs/lcd/de_de.tr",
+        "token2": ""
+      },
+      {
+        "id": "ar_AR",
+        "isCurrent": "false",
+        "isDefault": "false",
+        "label": "العربية (Arabic)",
+        "token1": "/romfs/lcd/ar_AR.tr",
+        "token2": ""
+      },
+      {
+        "id": "es_ES",
+        "isCurrent": "false",
+        "isDefault": "false",
+        "label": "Español (Spanish)",
+        "token1": "/romfs/lcd/es_es.tr",
+        "token2": ""
+      },
+      {
+        "id": "fr_FR",
+        "isCurrent": "false",
+        "isDefault": "false",
+        "label": "Français (French)",
+        "token1": "/romfs/lcd/fr_fr.tr",
+        "token2": ""
+      },
+      {
+        "id": "it_IT",
+        "isCurrent": "false",
+        "isDefault": "false",
+        "label": "Italiano (Italian)",
+        "token1": "/romfs/lcd/it_it.tr",
+        "token2": ""
+      },
+      {
+        "id": "pl_PL",
+        "isCurrent": "false",
+        "isDefault": "false",
+        "label": "Polski (Polish)",
+        "token1": "/romfs/lcd/pl_pl.tr",
+        "token2": ""
+      },
+      {
+        "id": "fi_FI",
+        "isCurrent": "false",
+        "isDefault": "false",
+        "label": "Suomi (Finnish)",
+        "token1": "/romfs/lcd/fi_fi.tr",
+        "token2": ""
+      },
+      {
+        "id": "sv_SE",
+        "isCurrent": "false",
+        "isDefault": "false",
+        "label": "Svenska (Swedish)",
+        "token1": "/romfs/lcd/sv_se.tr",
+        "token2": ""
+      },
+      {
+        "id": "tu_TU",
+        "isCurrent": "false",
+        "isDefault": "false",
+        "label": "Türkçe (Turkish)",
+        "token1": "/romfs/lcd/tu_tu.tr",
+        "token2": ""
+      },
+      {}
+    ]
+  },
+  "power": {
+    "PMState": "Init",
+    "SmState": "Online",
+    "autoOff": {
+      "onUSBdisconnect": { "enable": false, "countdownTimer": 0, "end": "" },
+      "onIdle": { "timer": { "onAC": 0, "onBattery": 0, "end": "" } }
+    },
+    "standby": {
+      "onIdle": {
+        "timer": { "onAC": 0, "onBattery": 600, "onUSB": 0, "end": "" }
+      }
+    },
+    "autoOn": { "enable": true, "end": "" },
+    "buttonHoldTime": 3,
+    "deviceTempCritical": false,
+    "resetreason": 16,
+    "resetRequired": "NoResetRequired",
+    "lpm": false,
+    "end": ""
+  },
+  "wwan": {
+    "netScanStatus": "NotStarted",
+    "inactivityCause": 307,
+    "currentNWserviceType": "LteService",
+    "registerRejectCode": 0,
+    "netSelEnabled": "Enabled",
+    "netRegMode": "Auto",
+    "IPv6": "1234:abcd::1234:abcd",
+    "roaming": false,
+    "IP": "10.0.0.5",
+    "registerNetworkDisplay": "T-Mobile",
+    "RAT": "Only4G",
+    "bandRegion": [
+      { "index": 0, "name": "Auto", "current": false },
+      { "index": 1, "name": "LTE Only", "current": true },
+      { "index": 2, "name": "WCDMA Only", "current": false },
+      {}
+    ],
+    "autoconnect": "HomeNetwork",
+    "profileList": [
+      {
+        "index": 1,
+        "id": "T-Mobile 9",
+        "name": "T Mobile",
+        "apn": "fast.t-mobile.com",
+        "username": "",
+        "password": "",
+        "authtype": "None",
+        "ipaddr": "0.0.0.0",
+        "type": "IPV4V6",
+        "pdproamingtype": "IPV4"
+      },
+      {
+        "index": 2,
+        "id": "Mint",
+        "name": "Mint",
+        "apn": "wholesale",
+        "username": "",
+        "password": "",
+        "authtype": "None",
+        "ipaddr": "0.0.0.0",
+        "type": "IPV4V6",
+        "pdproamingtype": "IPV4"
+      },
+      {}
+    ],
+    "profile": {
+      "default": "T-Mobile 9",
+      "defaultLTE": "T-Mobile 9",
+      "full": false,
+      "promptForApnSelection": false,
+      "end": ""
+    },
+    "dataUsage": {
+      "total": {
+        "lteBillingTx": 0,
+        "lteBillingRx": 0,
+        "cdmaBillingTx": 0,
+        "cdmaBillingRx": 0,
+        "gwBillingTx": 0,
+        "gwBillingRx": 0,
+        "lteLifeTx": 0,
+        "lteLifeRx": 0,
+        "cdmaLifeTx": 0,
+        "cdmaLifeRx": 0,
+        "gwLifeTx": 0,
+        "gwLifeRx": 0,
+        "end": ""
+      },
+      "server": { "accountType": "", "subAccountType": "", "end": "" },
+      "serverDataRemaining": 0,
+      "serverDataTransferred": 0,
+      "serverDataTransferredIntl": 0,
+      "serverDataValidState": "Invalid",
+      "serverDaysLeft": 0,
+      "serverErrorCode": "",
+      "serverLowBalance": false,
+      "serverMsisdn": "",
+      "serverRechargeUrl": "",
+      "dataWarnEnable": true,
+      "prepaidAccountState": "Hot",
+      "accountType": "Unknown",
+      "share": {
+        "enabled": false,
+        "dataTransferredOthers": 0,
+        "lastSync": "0",
+        "end": ""
+      },
+      "generic": {
+        "dataLimitValid": false,
+        "usageHighWarning": 80,
+        "lastSucceeded": "0",
+        "billingDay": 1,
+        "nextBillingDate": "1369627200",
+        "lastSync": "0",
+        "billingCycleRemainder": 27,
+        "billingCycleLimit": 0,
+        "dataTransferred": 42484315,
+        "dataTransferredRoaming": 0,
+        "lastReset": "1366948800",
+        "end": ""
+      }
+    },
+    "netManualNoCvg": false,
+    "connection": "Connected",
+    "connectionType": "IPv4AndIPv6",
+    "currentPSserviceType": "LTE",
+    "ca": { "end": "" },
+    "connectionText": "4G",
+    "sessDuration": 4282,
+    "sessStartTime": 1367252934,
+    "dataTransferred": { "totalb": "345036", "rxb": "184700", "txb": "160336" },
+    "signalStrength": {
+      "rssi": 0,
+      "rscp": 0,
+      "ecio": 0,
+      "rsrp": -113,
+      "rsrq": -20,
+      "bars": 2,
+      "sinr": 0,
+      "end": ""
+    }
+  },
+  "wwanadv": {
+    "curBand": "LTE B4",
+    "radioQuality": 52,
+    "country": "USA",
+    "RAC": 0,
+    "LAC": 12345,
+    "MCC": "123",
+    "MNC": "456",
+    "MNCFmt": 3,
+    "cellId": 12345678,
+    "chanId": 2300,
+    "primScode": -1,
+    "plmnSrvErrBitMask": 0,
+    "chanIdUl": 20300,
+    "txLevel": 4,
+    "rxLevel": -113,
+    "end": ""
+  },
+  "ethernet": {
+    "offload": { "ipv4Addr": "0.0.0.0", "ipv6Addr": "", "end": "" }
+  },
+  "wifi": {
+    "enabled": true,
+    "maxClientSupported": 0,
+    "maxClientLimit": 0,
+    "maxClientCnt": 0,
+    "channel": 0,
+    "hiddenSSID": true,
+    "passPhrase": "",
+    "RTSthreshold": 0,
+    "fragThreshold": 0,
+    "SSID": "",
+    "clientCount": 0,
+    "country": "",
+    "wps": { "supported": "Disabled", "end": "" },
+    "guest": {
+      "maxClientCnt": 0,
+      "enabled": false,
+      "SSID": "",
+      "passPhrase": "",
+      "generatePassphrase": false,
+      "hiddenSSID": true,
+      "chan": 0,
+      "DHCP": { "range": { "end": "" } }
+    },
+    "offload": { "end": "" },
+    "end": ""
+  },
+  "router": {
+    "gatewayIP": "192.168.5.1",
+    "DMZaddress": "192.168.5.4",
+    "DMZenabled": false,
+    "forceSetup": false,
+    "DHCP": {
+      "serverEnabled": true,
+      "DNS1": "1.1.1.1",
+      "DNS2": "1.1.2.2",
+      "DNSmode": "Auto",
+      "USBpcIP": "0.0.0.0",
+      "leaseTime": 43200,
+      "range": { "high": "192.168.5.99", "low": "192.168.5.20", "end": "" }
+    },
+    "usbMode": "None",
+    "usbNetworkTethering": true,
+    "portFwdEnabled": false,
+    "portFwdList": [{}],
+    "portFilteringEnabled": false,
+    "portFilteringMode": "None",
+    "portFilterWhiteList": [{}],
+    "portFilterBlackList": [{}],
+    "hostName": "routerlogin",
+    "domainName": "net",
+    "ipPassThroughEnabled": false,
+    "ipPassThroughSupported": true,
+    "Ipv6Supported": true,
+    "UPNPsupported": false,
+    "UPNPenabled": false,
+    "clientList": { "list": [{}], "count": 0 },
+    "end": ""
+  },
+  "fota": {
+    "fwupdater": {
+      "available": false,
+      "chkallow": true,
+      "chkstatus": "Initial",
+      "dloadProg": 0,
+      "error": false,
+      "lastChkDate": 1367200419,
+      "state": "NoNewFw",
+      "isPostponable": false,
+      "statusCode": 200,
+      "chkTimeLeft": 0,
+      "dloadSize": 0,
+      "end": ""
+    }
+  },
+  "failover": {
+    "mode": "Auto",
+    "backhaul": "LTE",
+    "supported": true,
+    "monitorPeriod": 10,
+    "wanConnected": false,
+    "keepaliveEnable": false,
+    "keepaliveSleep": 15,
+    "ipv4Targets": [{ "id": "0", "string": "8.8.8.8" }, {}],
+    "ipv6Targets": [{}],
+    "end": ""
+  },
+  "eventlog": { "level": 0, "end": 0 },
+  "ui": { "serverDaysLeftHide": false, "promptActivation": true, "end": 0 }
+}

@@ -233,7 +233,7 @@ def remotews_fixture() -> Mock:
     remotews.app_list_data = None
 
     async def _start_listening(
-        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None
+        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
         remotews.ws_event_callback = ws_event_callback
 
@@ -272,7 +272,7 @@ def remoteencws_fixture() -> Mock:
     remoteencws.__aexit__ = AsyncMock()
 
     def _start_listening(
-        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None
+        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
         remoteencws.ws_event_callback = ws_event_callback
 

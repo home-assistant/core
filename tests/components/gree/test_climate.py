@@ -50,6 +50,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -538,7 +539,7 @@ async def test_send_invalid_preset_mode(
     """Test for sending preset mode command to the device."""
     await async_setup_gree(hass)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_PRESET_MODE,
@@ -699,7 +700,7 @@ async def test_send_invalid_fan_mode(
     """Test for sending fan mode command to the device."""
     await async_setup_gree(hass)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_FAN_MODE,
@@ -780,7 +781,7 @@ async def test_send_invalid_swing_mode(
     """Test for sending swing mode command to the device."""
     await async_setup_gree(hass)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_SWING_MODE,

@@ -16,6 +16,7 @@ APPLICATION_CREDENTIALS = [
     "iotty",
     "lametric",
     "lyric",
+    "myuplink",
     "neato",
     "nest",
     "netatmo",

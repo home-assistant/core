@@ -220,7 +220,6 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     def async_register_scanner(
         self,
         scanner: BaseHaScanner,
-        connectable: bool,
         connection_slots: int | None = None,
     ) -> CALLBACK_TYPE:
         """Register a scanner."""
@@ -228,7 +227,5 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             if history := self.storage.async_get_advertisement_history(scanner.source):
                 scanner.restore_discovered_devices(history)
 
-        unregister = super().async_register_scanner(
-            scanner, connectable, connection_slots
-        )
+        unregister = super().async_register_scanner(scanner, connection_slots)
         return partial(self._async_unregister_scanner, scanner, unregister)

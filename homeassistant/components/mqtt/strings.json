@@ -1,28 +1,12 @@
 {
   "issues": {
-    "deprecation_mqtt_legacy_vacuum_yaml": {
-      "title": "MQTT vacuum entities with legacy schema found in your configuration.yaml",
-      "description": "MQTT vacuum entities that use the legacy schema are deprecated, please adjust your configuration.yaml and restart Home Assistant to fix this issue."
-    },
-    "deprecation_mqtt_legacy_vacuum_discovery": {
-      "title": "MQTT vacuum entities with legacy schema added through MQTT discovery",
-      "description": "MQTT vacuum entities that use the legacy schema are deprecated, please adjust your devices to use the correct schema and restart Home Assistant to fix this issue."
-    },
-    "entity_name_is_device_name_yaml": {
-      "title": "Manual configured MQTT entities with a name that is equal to the device name",
-      "description": "Some MQTT entities have an entity name equal to the device name. This is not expected. The entity name is set to `null` as a work-a-round to avoid a duplicate name. Please update your configuration and restart Home Assistant to fix this issue.\n\nList of affected entities:\n\n{config}"
-    },
-    "entity_name_startswith_device_name_yaml": {
-      "title": "Manual configured MQTT entities with a name that starts with the device name",
-      "description": "Some MQTT entities have an entity name that starts with the device name. This is not expected. To avoid a duplicate name the device name prefix is stripped off the entity name as a work-a-round. Please update your configuration and restart Home Assistant to fix this issue. \n\nList of affected entities:\n\n{config}"
+    "deprecation_mqtt_schema_vacuum_yaml": {
+      "title": "MQTT vacuum entities with deprecated `schema` config settings found in your configuration.yaml",
+      "description": "The `schema` setting for MQTT vacuum entities is deprecated and should be removed. Please adjust your configuration.yaml and restart Home Assistant to fix this issue."
     },
     "deprecated_climate_aux_property": {
       "title": "MQTT entities with auxiliary heat support found",
       "description": "Entity `{entity_id}` has auxiliary heat support enabled, which has been deprecated for MQTT climate devices. Please adjust your configuration and remove deprecated config options from your configuration and restart Home Assistant to fix this issue."
-    },
-    "invalid_entity_category": {
-      "title": "An MQTT {domain} with an invalid entity category was found",
-      "description": "Home Assistant detected a manually configured MQTT `{domain}` entity that has an `entity_category` set to `config`. \nConfiguration file: **{config_file}**\nNear line: **{line}**\n\nConfig with invalid setting:\n\n```yaml\n{config}\n```\n\nWhen set, make sure `entity_category` for a `{domain}` is set to `diagnostic` or `None`. Update your YAML configuration and restart Home Assistant to fix this issue."
     },
     "invalid_platform_config": {
       "title": "Invalid config found for mqtt {domain} item",
@@ -64,11 +48,11 @@
           "client_key": "The private key file that belongs to your client certificate.",
           "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
           "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
-          "set_ca_cert": "Select `Auto` for automatic CA validation or `Custom` and click `next` to set a custom CA certificate to allow validating your MQTT brokers certificate.",
-          "set_client_cert": "Enable and click `next` to set a client certifificate and private ket to authenticate against your MQTT broker.",
-          "transport": "The transport to use for the connextion to your MQTT broker.",
+          "set_ca_cert": "Select `Auto` for automatic CA validation, or `Custom` and click `next` to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
+          "set_client_cert": "Enable and click `next` to set a client certifificate and private key to authenticate against your MQTT broker.",
+          "transport": "The transport to be used for the connection to your MQTT broker.",
           "ws_headers": "The WebSocket headers to pass through the WebSocket based connection to your MQTT broker.",
-          "ws_path": "The WebSocket path to use for the connection to your MQTT broker."
+          "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
         }
       },
       "hassio_confirm": {
@@ -183,17 +167,17 @@
         },
         "data_description": {
           "discovery": "Option to enable MQTT automatic discovery.",
-          "discovery_prefix": "The prefix of configuration topics the MQTT interation will subscribe to.",
+          "discovery_prefix": "The prefix of configuration topics the MQTT integration will subscribe to.",
           "birth_enable": "When set, Home Assistant will publish an online message to your MQTT broker when MQTT is ready.",
-          "birth_topic": "The MQTT topic where Home Assistant will publish a birth message.",
-          "birth_payload": "The birth message that is published when MQTT is ready and connected.",
-          "birth_qos": "The quality of service of the birth message that is published when MQTT is ready and connected",
-          "birth_retain": "When set, Home Assistant will retain the birth message published to your MQTT broker.",
-          "will_enable": "When set, Home Assistant will ask your broker to publish a will message when MQTT is stopped or looses the connection to your broker.",
-          "will_topic": "The MQTT topic your MQTT broker will publish a will message to.",
-          "will_payload": "The message your MQTT broker will publish when the connection is lost.",
-          "will_qos": "The quality of service of the will message that is published by your MQTT broker.",
-          "will_retain": "When set, your MQTT broker will retain the will message."
+          "birth_topic": "The MQTT topic where Home Assistant will publish a `birth` message.",
+          "birth_payload": "The `birth` message that is published when MQTT is ready and connected.",
+          "birth_qos": "The quality of service of the `birth` message that is published when MQTT is ready and connected",
+          "birth_retain": "When set, Home Assistant will retain the `birth` message published to your MQTT broker.",
+          "will_enable": "When set, Home Assistant will ask your broker to publish a `will` message when MQTT is stopped or when it looses the connection to your broker.",
+          "will_topic": "The MQTT topic your MQTT broker will publish a `will` message to.",
+          "will_payload": "The message your MQTT broker `will` publish when the MQTT integration is stopped or when the connection is lost.",
+          "will_qos": "The quality of service of the `will` message that is published by your MQTT broker.",
+          "will_retain": "When set, your MQTT broker will retain the `will` message."
         }
       }
     },

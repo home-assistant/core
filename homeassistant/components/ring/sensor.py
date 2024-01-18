@@ -10,7 +10,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -194,6 +198,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
@@ -234,6 +239,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         translation_key="wifi_signal_category",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:wifi",
+        entity_category=EntityCategory.DIAGNOSTIC,
         cls=HealthDataRingSensor,
     ),
     RingSensorEntityDescription(
@@ -243,6 +249,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         icon="mdi:wifi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
         cls=HealthDataRingSensor,
     ),
 )

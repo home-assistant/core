@@ -42,17 +42,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class GiosSensorRequiredKeysMixin:
-    """Class for GIOS entity required keys."""
-
-    value: Callable[[GiosSensors], StateType]
-
-
-@dataclass(frozen=True)
-class GiosSensorEntityDescription(SensorEntityDescription, GiosSensorRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class GiosSensorEntityDescription(SensorEntityDescription):
     """Class describing GIOS sensor entities."""
 
+    value: Callable[[GiosSensors], StateType]
     subkey: str | None = None
 
 

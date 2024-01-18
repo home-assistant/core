@@ -17,7 +17,6 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -147,23 +146,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         await self.send(
             RoborockCommand.SET_CUSTOM_MODE,
             [self._device_status.get_fan_speed_code(fan_speed)],
-        )
-
-    async def async_start_pause(self) -> None:
-        """Start, pause or resume the cleaning task."""
-        if self.state == STATE_CLEANING:
-            await self.async_pause()
-        else:
-            await self.async_start()
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_deprecation_start_pause",
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_deprecation_start_pause",
         )
 
     async def async_send_command(
