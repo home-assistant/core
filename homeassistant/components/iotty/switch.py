@@ -32,12 +32,6 @@ class IottyLightSwitch(SwitchEntity):
         """Initialize the LightSwitch device."""
         super().__init__()
 
-        if iotty_cloud is None:
-            raise ValueError("iotty_cloud")
-
-        if iotty_device is None:
-            raise ValueError("iotty_device")
-
         _LOGGER.debug(
             "Creating new SWITCH (%s) %s",
             iotty_device.device_type,
@@ -51,11 +45,6 @@ class IottyLightSwitch(SwitchEntity):
     def device_id(self) -> str:
         """Get the ID of this iotty Device."""
         return self._iotty_device.device_id
-
-    @property
-    def name(self) -> str:
-        """Get the name of this iotty Device."""
-        return self._iotty_device.name
 
     @property
     def is_on(self) -> bool:
@@ -93,9 +82,6 @@ async def async_setup_entry(
     hass_data = hass.data[DOMAIN]
 
     iotty = hass_data[config_entry.entry_id]
-    if iotty is None:
-        _LOGGER.error("Cannot retrieve iotty MW component")
-        raise ValueError("iotty")
 
     _ls_list = await iotty.devices(LS_DEVICE_TYPE_UID)
 
