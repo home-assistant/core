@@ -328,10 +328,8 @@ class KNXModule:
         )
 
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
-        self._group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
-        self._knx_event_callback: TelegramQueue.Callback = (
-            self.register_event_callback()
-        )
+        self.group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
+        self.knx_event_callback: TelegramQueue.Callback = self.register_event_callback()
 
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
