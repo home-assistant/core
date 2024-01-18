@@ -309,7 +309,7 @@ async def test_if_fires_on_mqtt_message(
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
                         # CONF_DISCOVERY is not used any longer and was removed with
-                        # HA Core 2024.2.0. Cleanup planned with HA Core 2024.8.0
+                        # HA Core 2024.2.0.
                         "discovery_id": "I am ignored",
                         "type": "button_short_press",
                         "subtype": "button_1",
@@ -325,7 +325,7 @@ async def test_if_fires_on_mqtt_message(
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
                         # CONF_DISCOVERY is not used any longer and was removed with
-                        # HA Core 2024.2.0. Cleanup planned with HA Core 2024.8.0
+                        # HA Core 2024.2.0.
                         "discovery_id": "I am ignored too",
                         "type": "button_long_press",
                         "subtype": "button_2",

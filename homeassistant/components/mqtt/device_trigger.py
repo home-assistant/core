@@ -63,12 +63,11 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_DEVICE_ID): str,
         # CONF_DISCOVERY is not used any longer and was removed with
-        # HA Core 2024.2.0. Cleanup planned with HA Core 2024.8.0
+        # HA Core 2024.2.0.
         vol.Remove(CONF_DISCOVERY_ID): str,
         vol.Required(CONF_TYPE): cv.string,
         vol.Required(CONF_SUBTYPE): cv.string,
     },
-    extra=True,
 )
 
 TRIGGER_DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
