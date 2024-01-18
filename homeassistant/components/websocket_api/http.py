@@ -404,7 +404,7 @@ class WebSocketHandler:
                     debug("%s: Received %s", self.description, command_msg_data)
 
                 # command_msg_data is always deserialized from JSON as a list
-                if type(command_msg_data) is not list:  # noqa: E721 # pylint: disable=unidiomatic-typecheck
+                if type(command_msg_data) is not list:  # noqa: E721
                     async_handle_str(command_msg_data)
                     continue
 
