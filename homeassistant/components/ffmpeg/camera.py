@@ -1,6 +1,8 @@
 """Support for Cameras with FFmpeg as decoder."""
 from __future__ import annotations
 
+from typing import Any
+
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG
@@ -14,7 +16,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG, async_get_image
+from . import (
+    CONF_EXTRA_ARGUMENTS,
+    CONF_INPUT,
+    DATA_FFMPEG,
+    FFmpegManager,
+    async_get_image,
+)
 
 DEFAULT_NAME = "FFmpeg"
 DEFAULT_ARGUMENTS = "-pred 1"
@@ -43,14 +51,14 @@ class FFmpegCamera(Camera):
 
     _attr_supported_features = CameraEntityFeature.STREAM
 
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Initialize a FFmpeg camera."""
         super().__init__()
 
-        self._manager = hass.data[DATA_FFMPEG]
-        self._name = config.get(CONF_NAME)
-        self._input = config.get(CONF_INPUT)
-        self._extra_arguments = config.get(CONF_EXTRA_ARGUMENTS)
+        self._manager: FFmpegManager = hass.data[DATA_FFMPEG]
+        self._name: str = config[CONF_NAME]
+        self._input: str = config[CONF_INPUT]
+        self._extra_arguments: str = config[CONF_EXTRA_ARGUMENTS]
 
     async def stream_source(self):
         """Return the stream source."""

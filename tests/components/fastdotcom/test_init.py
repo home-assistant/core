@@ -65,23 +65,25 @@ async def test_delayed_speedtest_during_startup(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=5.0
+        "homeassistant.components.fastdotcom.coordinator.fast_com"
     ), patch.object(hass, "state", CoreState.starting):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
     state = hass.states.get("sensor.fast_com_download")
-    assert state is not None
-    # Assert state is unknown as coordinator is not allowed to start and fetch data yet
-    assert state.state == STATE_UNKNOWN
+    # Assert state is Unknown as fast.com isn't starting until HA has started
+    assert state.state is STATE_UNKNOWN
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=5.0
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.fast_com_download")
     assert state is not None
-    assert state.state == "0"
+    assert state.state == "5.0"
 
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
 

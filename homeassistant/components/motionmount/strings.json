@@ -32,6 +32,14 @@
       "motionmount_turn": {
         "name": "Turn"
       }
+    },
+    "select": {
+      "motionmount_preset": {
+        "name": "Preset",
+        "state": {
+          "0_wall": "0: Wall"
+        }
+      }
     }
   }
 }

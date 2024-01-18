@@ -43,7 +43,7 @@ async def test_component_translation_path(
         "switch",
         {"switch": [{"platform": "test"}, {"platform": "test_embedded"}]},
     )
-    assert await async_setup_component(hass, "test_package", {"test_package"})
+    assert await async_setup_component(hass, "test_package", {"test_package": None})
 
     (
         int_test,

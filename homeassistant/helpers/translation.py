@@ -197,23 +197,25 @@ class _TranslationCache:
         """Initialize the cache."""
         self.hass = hass
         self.loaded: dict[str, set[str]] = {}
-        self.cache: dict[str, dict[str, dict[str, Any]]] = {}
+        self.cache: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
 
     async def async_fetch(
         self,
         language: str,
         category: str,
         components: set[str],
-    ) -> list[dict[str, dict[str, Any]]]:
+    ) -> dict[str, str]:
         """Load resources into the cache."""
         components_to_load = components - self.loaded.setdefault(language, set())
 
         if components_to_load:
             await self._async_load(language, components_to_load)
 
-        cached = self.cache.get(language, {})
-
-        return [cached.get(component, {}).get(category, {}) for component in components]
+        result: dict[str, str] = {}
+        category_cache = self.cache.get(language, {}).get(category, {})
+        for component in components.intersection(category_cache):
+            result.update(category_cache[component])
+        return result
 
     async def _async_load(self, language: str, components: set[str]) -> None:
         """Populate the cache for a given set of components."""
@@ -289,6 +291,7 @@ class _TranslationCache:
         """Extract resources into the cache."""
         resource: dict[str, Any] | str
         cached = self.cache.setdefault(language, {})
+
         categories: set[str] = set()
         for resource in translation_strings.values():
             categories.update(resource)
@@ -305,10 +308,10 @@ class _TranslationCache:
                     translation_strings, components, category
                 )
 
+            category_cache = cached.setdefault(category, {})
+
             for component, resource in new_resources.items():
-                category_cache: dict[str, Any] = cached.setdefault(
-                    component, {}
-                ).setdefault(category, {})
+                component_cache = category_cache.setdefault(component, {})
 
                 if isinstance(resource, dict):
                     resources_flatten = recursive_flatten(
@@ -316,11 +319,11 @@ class _TranslationCache:
                         resource,
                     )
                     resources_flatten = self._validate_placeholders(
-                        language, resources_flatten, category_cache
+                        language, resources_flatten, component_cache
                     )
-                    category_cache.update(resources_flatten)
+                    component_cache.update(resources_flatten)
                 else:
-                    category_cache[f"component.{component}.{category}"] = resource
+                    component_cache[f"component.{component}.{category}"] = resource
 
 
 @bind_hass
@@ -330,7 +333,7 @@ async def async_get_translations(
     category: str,
     integrations: Iterable[str] | None = None,
     config_flow: bool | None = None,
-) -> dict[str, Any]:
+) -> dict[str, str]:
     """Return all backend translations.
 
     If integration specified, load it for that one.
@@ -344,7 +347,7 @@ async def async_get_translations(
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
     elif category in ("state", "entity_component", "services"):
-        components = set(hass.config.components)
+        components = hass.config.components
     else:
         # Only 'state' supports merging, so remove platforms from selection
         components = {
@@ -353,12 +356,8 @@ async def async_get_translations(
 
     async with lock:
         if TRANSLATION_FLATTEN_CACHE in hass.data:
-            cache = hass.data[TRANSLATION_FLATTEN_CACHE]
+            cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
         else:
             cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
-        cached = await cache.async_fetch(language, category, components)
 
-    result = {}
-    for entry in cached:
-        result.update(entry)
-    return result
+        return await cache.async_fetch(language, category, components)
