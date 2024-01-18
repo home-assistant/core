@@ -140,7 +140,7 @@ class AugustData(AugustSubscriberMixin):
         self._config_entry = config_entry
         self._hass = hass
         self._august_gateway = august_gateway
-        self.activity_stream: ActivityStream | None = None
+        self.activity_stream: ActivityStream = None  # type: ignore[assignment]
         self._api = august_gateway.api
         self._device_detail_by_id: dict[str, LockDetail | DoorbellDetail] = {}
         self._doorbells_by_id: dict[str, Doorbell] = {}
@@ -153,7 +153,7 @@ class AugustData(AugustSubscriberMixin):
         """Brand of the device."""
         return self._config_entry.data.get(CONF_BRAND, DEFAULT_BRAND)
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Async setup of august device data and activities."""
         token = self._august_gateway.access_token
         # This used to be a gather but it was less reliable with august's recent api changes.
@@ -248,16 +248,16 @@ class AugustData(AugustSubscriberMixin):
         device = self.get_device_detail(device_id)
         activities = activities_from_pubnub_message(device, date_time, message)
         activity_stream = self.activity_stream
-        assert activity_stream is not None
         if activities:
             activity_stream.async_process_newer_device_activities(activities)
             self.async_signal_device_id_update(device.device_id)
         activity_stream.async_schedule_house_id_refresh(device.house_id)
 
     @callback
-    def async_stop(self):
+    def async_stop(self) -> None:
         """Stop the subscriptions."""
-        self._pubnub_unsub()
+        if self._pubnub_unsub:
+            self._pubnub_unsub()
         self.activity_stream.async_stop()
 
     @property
@@ -303,7 +303,7 @@ class AugustData(AugustSubscriberMixin):
                     exc_info=err,
                 )
 
-    async def _async_refresh_device_detail_by_id(self, device_id):
+    async def _async_refresh_device_detail_by_id(self, device_id: str) -> None:
         if device_id in self._locks_by_id:
             if self.activity_stream and self.activity_stream.pubnub.connected:
                 saved_attrs = _save_live_attrs(self._device_detail_by_id[device_id])
