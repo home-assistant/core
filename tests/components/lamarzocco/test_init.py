@@ -85,7 +85,7 @@ async def test_found_bluetooth_is_set_on_reset(
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
 ) -> None:
-    """Test if the first refresh throws BluetoothDeviceNotFound."""
+    """Assert we're not searching for a new BT device when we already found one previously."""
 
     await async_init_integration(hass, mock_config_entry)
 
