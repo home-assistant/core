@@ -4,6 +4,7 @@
 from unittest.mock import Mock
 
 from aiohttp.client_exceptions import ClientConnectorError
+from mozart_api.exceptions import ApiException
 import pytest
 
 from homeassistant.components.bang_olufsen.const import DOMAIN
@@ -14,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MockMozartClient
 from .const import (
-    TEST_DATA_CONFIRM,
+    TEST_DATA_CREATE_ENTRY,
     TEST_DATA_USER,
     TEST_DATA_USER_INVALID,
     TEST_DATA_ZEROCONF,
@@ -35,8 +36,8 @@ async def test_config_flow_timeout_error(
         context={CONF_SOURCE: SOURCE_USER},
         data=TEST_DATA_USER,
     )
-    assert result_user["type"] == FlowResultType.ABORT
-    assert result_user["reason"] == "timeout_error"
+    assert result_user["type"] == FlowResultType.FORM
+    assert result_user["errors"] == {"base": "timeout_error"}
 
     assert mock_client.get_beolink_self.call_count == 1
 
@@ -52,8 +53,8 @@ async def test_config_flow_client_connector_error(
         context={CONF_SOURCE: SOURCE_USER},
         data=TEST_DATA_USER,
     )
-    assert result_user["type"] == FlowResultType.ABORT
-    assert result_user["reason"] == "client_connector_error"
+    assert result_user["type"] == FlowResultType.FORM
+    assert result_user["errors"] == {"base": "client_connector_error"}
 
     assert mock_client.get_beolink_self.call_count == 1
 
@@ -61,13 +62,30 @@ async def test_config_flow_client_connector_error(
 async def test_config_flow_value_error(hass: HomeAssistant) -> None:
     """Test we handle value_error."""
 
-    result_init = await hass.config_entries.flow.async_init(
+    result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
         data=TEST_DATA_USER_INVALID,
     )
-    assert result_init["type"] == FlowResultType.ABORT
-    assert result_init["reason"] == "value_error"
+    assert result_user["type"] == FlowResultType.FORM
+    assert result_user["errors"] == {"base": "value_error"}
+
+
+async def test_config_flow_api_exception(
+    hass: HomeAssistant, mock_client: MockMozartClient
+) -> None:
+    """Test we handle api_exception."""
+    mock_client.get_beolink_self.side_effect = ApiException()
+
+    result_user = await hass.config_entries.flow.async_init(
+        handler=DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=TEST_DATA_USER,
+    )
+    assert result_user["type"] == FlowResultType.FORM
+    assert result_user["errors"] == {"base": "api_exception"}
+
+    assert mock_client.get_beolink_self.call_count == 1
 
 
 async def test_config_flow(
@@ -75,30 +93,22 @@ async def test_config_flow(
 ) -> None:
     """Test config flow."""
 
-    result_user = await hass.config_entries.flow.async_init(
+    result_init = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
         data=None,
     )
 
-    assert result_user["type"] == FlowResultType.FORM
-    assert result_user["step_id"] == "user"
+    assert result_init["type"] == FlowResultType.FORM
+    assert result_init["step_id"] == "user"
 
-    result_confirm = await hass.config_entries.flow.async_configure(
-        flow_id=result_user["flow_id"],
+    result_user = await hass.config_entries.flow.async_configure(
+        flow_id=result_init["flow_id"],
         user_input=TEST_DATA_USER,
     )
 
-    assert result_confirm["type"] == FlowResultType.FORM
-    assert result_confirm["step_id"] == "confirm"
-
-    result_entry = await hass.config_entries.flow.async_configure(
-        flow_id=result_confirm["flow_id"],
-        user_input=TEST_DATA_USER,
-    )
-
-    assert result_entry["type"] == FlowResultType.CREATE_ENTRY
-    assert result_entry["data"] == TEST_DATA_CONFIRM
+    assert result_user["type"] == FlowResultType.CREATE_ENTRY
+    assert result_user["data"] == TEST_DATA_CREATE_ENTRY
 
     assert mock_client.get_beolink_self.call_count == 1
 
@@ -114,16 +124,8 @@ async def test_config_flow_zeroconf(
         data=TEST_DATA_ZEROCONF,
     )
 
-    assert result_zeroconf["type"] == FlowResultType.FORM
-    assert result_zeroconf["step_id"] == "confirm"
-
-    result_confirm = await hass.config_entries.flow.async_configure(
-        flow_id=result_zeroconf["flow_id"],
-        user_input=TEST_DATA_USER,
-    )
-
-    assert result_confirm["type"] == FlowResultType.CREATE_ENTRY
-    assert result_confirm["data"] == TEST_DATA_CONFIRM
+    assert result_zeroconf["type"] == FlowResultType.CREATE_ENTRY
+    assert result_zeroconf["data"] == TEST_DATA_CREATE_ENTRY
 
     assert mock_client.get_beolink_self.call_count == 0
 

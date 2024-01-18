@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.bang_olufsen.const import DOMAIN
 
 from .const import (
-    TEST_DATA_CONFIRM,
+    TEST_DATA_CREATE_ENTRY,
     TEST_FRIENDLY_NAME,
     TEST_JID_1,
     TEST_NAME,
@@ -43,7 +43,7 @@ def mock_config_entry():
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER,
-        data=TEST_DATA_CONFIRM,
+        data=TEST_DATA_CREATE_ENTRY,
         title=TEST_NAME,
     )
 
