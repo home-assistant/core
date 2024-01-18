@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
 
@@ -254,18 +254,12 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
         )
 
-        if user_input:
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data={
-                    CONF_HOST: device.host[0],
-                    CONF_MAC: device.mac.hex(),
-                    CONF_TYPE: device.devtype,
-                    CONF_TIMEOUT: device.timeout,
-                },
-            )
-
-        data_schema = {vol.Required(CONF_NAME, default=device.name): str}
-        return self.async_show_form(
-            step_id="finish", data_schema=vol.Schema(data_schema), errors={}
+        return self.async_create_entry(
+            title=f"{DOMAIN}-{device.model}",
+            data={
+                CONF_HOST: device.host[0],
+                CONF_MAC: device.mac.hex(),
+                CONF_TYPE: device.devtype,
+                CONF_TIMEOUT: device.timeout,
+            },
         )
