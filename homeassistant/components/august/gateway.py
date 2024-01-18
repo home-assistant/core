@@ -132,7 +132,7 @@ class AugustGateway:
 
         return self.authentication
 
-    async def async_reset_authentication(self):
+    async def async_reset_authentication(self) -> None:
         """Remove the cache file."""
         await self._hass.async_add_executor_job(self._reset_authentication)
 
