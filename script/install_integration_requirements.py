@@ -22,7 +22,7 @@ def get_arguments() -> argparse.Namespace:
     return arguments
 
 
-def main() -> None:
+def main() -> int | None:
     """Install requirements for a given integration."""
     if not Path("requirements_all.txt").is_file():
         print("Run from project root")
@@ -33,10 +33,13 @@ def main() -> None:
     requirements = gather_recursive_requirements(args.integration)
 
     cmd = [
+        sys.executable,
+        "-m",
         "pip",
         "install",
         "-c",
         "homeassistant/package_constraints.txt",
+        "-U",
         *requirements,
     ]
     print(" ".join(cmd))
@@ -47,4 +50,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
