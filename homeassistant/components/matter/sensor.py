@@ -261,16 +261,4 @@ DISCOVERY_SCHEMAS = [
             clusters.Pm10ConcentrationMeasurement.Attributes.MeasuredValue,
         ),
     ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
-            key="TotalVolatileOrganicCompoundsSensor",
-            device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(
-            clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Attributes.MeasuredValue,
-        ),
-    ),
 ]

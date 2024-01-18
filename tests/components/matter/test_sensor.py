@@ -355,15 +355,3 @@ async def test_air_quality_sensor(
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_pm10")
     assert state
     assert state.state == "50.0"
-
-    # TVOCs
-    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_vocs")
-    assert state
-    assert state.state == "189.0"
-
-    set_node_attribute(air_quality_sensor_node, 1, 1070, 0, 50)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_vocs")
-    assert state
-    assert state.state == "50.0"
