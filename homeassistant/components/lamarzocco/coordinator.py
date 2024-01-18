@@ -107,13 +107,11 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                         "Found Bluetooth adapters, initializing with Bluetooth"
                     )
 
-                    bt_scanner = bluetooth.async_get_scanner(self.hass)
-
                     try:
                         await self.lm.init_bluetooth(
                             username=username,
                             init_client=False,
-                            bluetooth_scanner=bt_scanner,
+                            bluetooth_scanner=bluetooth.async_get_scanner(self.hass),
                         )
                     except (BluetoothConnectionFailed, BluetoothDeviceNotFound) as ex:
                         _LOGGER.debug(ex, exc_info=True)
