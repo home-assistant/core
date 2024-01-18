@@ -486,7 +486,7 @@ class Person(collection.CollectionEntity, RestoreEntity):
         else:
             # Wait for hass start to not have race between person
             # and device trackers finishing setup.
-            async def person_start_hass(now: Event) -> None:
+            async def person_start_hass(_: Event) -> None:
                 await self.async_update_config(self._config)
 
             self.hass.bus.async_listen_once(
