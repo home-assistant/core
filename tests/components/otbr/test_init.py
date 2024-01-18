@@ -5,7 +5,6 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import aiohttp
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 import python_otbr_api
 from zeroconf.asyncio import AsyncServiceInfo
@@ -29,7 +28,7 @@ from . import (
     TEST_BORDER_AGENT_ID,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 DATASET_NO_CHANNEL = bytes.fromhex(
@@ -39,19 +38,12 @@ DATASET_NO_CHANNEL = bytes.fromhex(
 )
 
 
-async def test_import_dataset(
-    hass: HomeAssistant, mock_async_zeroconf: None, freezer: FrozenDateTimeFactory
-) -> None:
+async def test_import_dataset(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
     """Test the active dataset is imported at setup."""
     add_service_listener_called = asyncio.Event()
-    wait_called = asyncio.Event()
 
     async def mock_add_service_listener(type_: str, listener: Any):
         add_service_listener_called.set()
-
-    async def mock_wait(*args, **kwargs):
-        wait_called.set()
-        return await asyncio.wait(*args, **kwargs)
 
     mock_async_zeroconf.async_add_service_listener = AsyncMock(
         side_effect=mock_add_service_listener
@@ -75,7 +67,8 @@ async def test_import_dataset(
     ), patch(
         "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
     ), patch(
-        "homeassistant.components.thread.dataset_store.wait", side_effect=mock_wait
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -84,9 +77,6 @@ async def test_import_dataset(
         mock_async_zeroconf.async_add_service_listener.assert_called_once_with(
             "_meshcop._udp.local.", ANY
         )
-
-        await wait_called.wait()
-        wait_called.clear()
 
         # Discover a service matching our router
         listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
@@ -99,10 +89,7 @@ async def test_import_dataset(
             None, ROUTER_DISCOVERY_HASS["type_"], ROUTER_DISCOVERY_HASS["name"]
         )
 
-        # Wait for discovery of other routers
-        await wait_called.wait()
-        freezer.tick(31)
-        async_fire_time_changed(hass)
+        # Wait for discovery of other routers to time out
         await hass.async_block_till_done()
 
     dataset_store = await thread.dataset_store.async_get_store(hass)
