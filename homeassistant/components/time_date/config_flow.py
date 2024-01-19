@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -120,13 +120,6 @@ async def ws_start_preview(
             )
         )
 
-    subscriptions: list[CALLBACK_TYPE] = []
-
-    @callback
-    def async_unsubscripe_subscriptions() -> None:
-        while subscriptions:
-            subscriptions.pop()()
-
     preview_entity = TimeDateSensor(validated[CONF_DISPLAY_OPTIONS])
     preview_entity.hass = hass
     preview_entity.platform = entity_platform
@@ -135,5 +128,3 @@ async def ws_start_preview(
     connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
         async_preview_updated
     )
-
-    connection.subscriptions[msg["id"]] = async_unsubscripe_subscriptions
