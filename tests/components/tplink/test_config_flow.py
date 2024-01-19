@@ -152,10 +152,10 @@ async def test_discovery_auth(
 
 
 @pytest.mark.parametrize(
-    ("error_type", "errors_msg"),
+    ("error_type", "errors_msg", "error_placement"),
     [
-        (AuthenticationException, "invalid_auth"),
-        (SmartDeviceException, "cannot_connect"),
+        (AuthenticationException, "invalid_auth", CONF_PASSWORD),
+        (SmartDeviceException, "cannot_connect", "base"),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -166,6 +166,7 @@ async def test_discovery_auth_errors(
     mock_init,
     error_type,
     errors_msg,
+    error_placement,
 ) -> None:
     """Test setting up discovery."""
     mock_discovery["mock_device"].update.side_effect = AuthenticationException
@@ -195,7 +196,7 @@ async def test_discovery_auth_errors(
     )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": errors_msg}
+    assert result2["errors"] == {error_placement: errors_msg}
 
     await hass.async_block_till_done()
 
@@ -458,10 +459,10 @@ async def test_manual_auth(
 
 
 @pytest.mark.parametrize(
-    ("error_type", "errors_msg"),
+    ("error_type", "errors_msg", "error_placement"),
     [
-        (AuthenticationException, "invalid_auth"),
-        (SmartDeviceException, "cannot_connect"),
+        (AuthenticationException, "invalid_auth", CONF_PASSWORD),
+        (SmartDeviceException, "cannot_connect", "base"),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -472,6 +473,7 @@ async def test_manual_auth_errors(
     mock_init,
     error_type,
     errors_msg,
+    error_placement,
 ) -> None:
     """Test manually setup auth errors."""
     result = await hass.config_entries.flow.async_init(
@@ -503,7 +505,7 @@ async def test_manual_auth_errors(
     await hass.async_block_till_done()
     assert result3["type"] == FlowResultType.FORM
     assert result3["step_id"] == "user_auth_confirm"
-    assert result3["errors"] == {"base": errors_msg}
+    assert result3["errors"] == {error_placement: errors_msg}
 
 
 async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
@@ -749,10 +751,10 @@ async def test_reauth_update_from_discovery_with_ip_change(
 
 
 @pytest.mark.parametrize(
-    ("error_type", "errors_msg"),
+    ("error_type", "errors_msg", "error_placement"),
     [
-        (AuthenticationException, "invalid_auth"),
-        (SmartDeviceException, "cannot_connect"),
+        (AuthenticationException, "invalid_auth", CONF_PASSWORD),
+        (SmartDeviceException, "cannot_connect", "base"),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -763,6 +765,7 @@ async def test_reauth_errors(
     mock_connect: AsyncMock,
     error_type,
     errors_msg,
+    error_placement,
 ) -> None:
     """Test reauth errors."""
     mock_added_config_entry.async_start_reauth(hass)
@@ -789,7 +792,7 @@ async def test_reauth_errors(
     )
     mock_discovery["mock_device"].update.assert_called_once_with()
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": errors_msg}
+    assert result2["errors"] == {error_placement: errors_msg}
 
     mock_discovery["discover_single"].reset_mock()
     mock_discovery["mock_device"].update.reset_mock(side_effect=True)

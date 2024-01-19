@@ -335,7 +335,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         credentials: Optional[Credentials],
         raise_on_progress: bool,
     ) -> SmartDevice:
-        """Try to connect."""
+        """Try to discover the device and call update.
+
+        Will try to connect to legacy devices if discovery fails.
+        """
         try:
             self._discovered_device = await Discover.discover_single(
                 host, credentials=credentials
@@ -380,7 +383,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self._discovered_device
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-        """Handle reauth upon an API authentication error."""
+        """Start the reauthentication flow if the device needs updated credentials."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )

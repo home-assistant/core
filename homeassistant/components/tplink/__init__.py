@@ -246,5 +246,5 @@ async def set_credentials(hass: HomeAssistant, username: str, password: str) -> 
 
 
 def mac_alias(mac: str) -> str:
-    """Convert a MAC address to a short address."""
+    """Convert a MAC address to a short address for the UI."""
     return mac.replace(":", "")[-4:].upper()
