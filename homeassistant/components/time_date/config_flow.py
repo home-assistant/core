@@ -11,8 +11,6 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -132,16 +130,6 @@ async def ws_start_preview(
     preview_entity = TimeDateSensor(validated[CONF_DISPLAY_OPTIONS])
     preview_entity.hass = hass
     preview_entity.platform = entity_platform
-
-    if msg["flow_type"] == "options_flow":
-        flow_status = hass.config_entries.options.async_get(msg["flow_id"])
-        config_entry_id = flow_status["handler"]
-        config_entry = hass.config_entries.async_get_entry(config_entry_id)
-        if not config_entry:
-            raise HomeAssistantError
-        entity_registry = er.async_get(hass)
-        entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
-        preview_entity.registry_entry = entries[0]
 
     connection.send_result(msg["id"])
     connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
