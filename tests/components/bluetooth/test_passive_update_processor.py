@@ -553,7 +553,7 @@ async def test_no_updates_once_stopping(
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     assert len(all_events) == 1
 
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
 
     # We should stop processing events once hass is stopping
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
