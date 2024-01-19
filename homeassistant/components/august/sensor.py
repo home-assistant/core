@@ -4,9 +4,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, cast
 
-from yalexs.activity import ActivityType
+from yalexs.activity import ActivityType, LockOperationActivity
 from yalexs.doorbell import Doorbell
 from yalexs.keypad import KeypadDetail
 from yalexs.lock import Lock, LockDetail
@@ -158,7 +158,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-async def _async_migrate_old_unique_ids(hass, devices):
+async def _async_migrate_old_unique_ids(hass: HomeAssistant, devices) -> None:
     """Keypads now have their own serial number."""
     registry = er.async_get(hass)
     for device in devices:
@@ -184,11 +184,11 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
         super().__init__(data, device)
         self._data = data
         self._device = device
-        self._operated_remote = None
-        self._operated_keypad = None
-        self._operated_manual = None
-        self._operated_tag = None
-        self._operated_autorelock = None
+        self._operated_remote: bool | None = None
+        self._operated_keypad: bool | None = None
+        self._operated_manual: bool | None = None
+        self._operated_tag: bool | None = None
+        self._operated_autorelock: bool | None = None
         self._operated_time = None
         self._attr_unique_id = f"{self._device_id}_lock_operator"
         self._update_from_data()
@@ -202,6 +202,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
 
         self._attr_available = True
         if lock_activity is not None:
+            lock_activity = cast(LockOperationActivity, lock_activity)
             self._attr_native_value = lock_activity.operated_by
             self._operated_remote = lock_activity.operated_remote
             self._operated_keypad = lock_activity.operated_keypad
