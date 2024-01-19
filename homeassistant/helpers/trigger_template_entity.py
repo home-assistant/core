@@ -25,10 +25,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import config_validation as cv
-from .entity import Entity
+from .entity import CalculatedState, Entity
 from .template import attach as template_attach, render_complex
 from .typing import ConfigType
 
@@ -235,21 +236,22 @@ class ManualTriggerEntity(TriggerBaseEntity):
         Ex: self._process_manual_data(payload)
         """
 
-        with contextlib.suppress(ValueError):
-            # If state is not valid this silently continue
-            # Faulty states should not be handled here but later
-            # in the respective platforms state update
-            self.async_write_ha_state()
+        state: CalculatedState
         this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
+        if state := self._async_calculate_state():
+            this = State(
+                entity_id=self.entity_id,
+                state=state.state,
+                attributes=state.attributes,
+                last_changed=dt_util.now(),
+                last_updated=dt_util.now(),
+            ).as_dict()
 
         run_variables: dict[str, Any] = {"value": value}
         # Silently try if variable is a json and store result in `value_json` if it is.
         with contextlib.suppress(*JSON_DECODE_EXCEPTIONS):
             run_variables["value_json"] = json_loads(run_variables["value"])
         variables = {"this": this, **(run_variables or {})}
-
         self._render_templates(variables)
 
 
