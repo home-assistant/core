@@ -9,21 +9,29 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.tessie.const import TessieSeatHeaterOptions
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .common import ERROR_UNKNOWN, TEST_RESPONSE, setup_platform
 
 
-async def test_select(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
+async def test_select(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that the select entities are correct."""
 
-    assert len(hass.states.async_all(SELECT_DOMAIN)) == 0
+    entry = await setup_platform(hass, [Platform.SELECT])
 
-    await setup_platform(hass)
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-    assert hass.states.async_all(SELECT_DOMAIN) == snapshot(name="all")
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-state"
+        )
 
     entity_id = "select.test_seat_heater_left"
 
@@ -47,7 +55,7 @@ async def test_select(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
 async def test_errors(hass: HomeAssistant) -> None:
     """Tests unknown error is handled."""
 
-    await setup_platform(hass)
+    await setup_platform(hass, [Platform.SELECT])
     entity_id = "select.test_seat_heater_left"
 
     # Test setting cover open with unknown error
