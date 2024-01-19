@@ -36,9 +36,11 @@ async def test_covers(
 ) -> None:
     """Tests that the window cover entity is correct."""
 
+    assert len(hass.states.async_all(COVER_DOMAIN)) == 0
+
     await setup_platform(hass)
 
-    assert hass.states.get(entity_id) == snapshot(name=entity_id)
+    assert hass.states.get(entity_id) == snapshot
 
     # Test open windows
     if openfunc:
