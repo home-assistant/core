@@ -8,20 +8,28 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
 
-async def test_updates(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
+async def test_updates(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that update entity is correct."""
 
-    assert len(hass.states.async_all("update")) == 0
+    entry = await setup_platform(hass, [Platform.UPDATE])
 
-    await setup_platform(hass)
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-    assert hass.states.async_all("update") == snapshot(name="all")
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-state"
+        )
 
     entity_id = "update.test_update"
 
