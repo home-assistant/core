@@ -43,13 +43,13 @@
         "name": "Supply air fan control signal"
       },
       "supply_air_fan_rpm": {
-        "name": "Supply air fan rpm"
+        "name": "Supply air fan"
       },
       "exhaust_air_fan_control_signal": {
         "name": "Exhaust air fan control signal"
       },
       "exhaust_air_fan_rpm": {
-        "name": "Exhaust air fan rpm"
+        "name": "Exhaust air fan"
       },
       "electric_heater_power": {
         "name": "Electric heater power"

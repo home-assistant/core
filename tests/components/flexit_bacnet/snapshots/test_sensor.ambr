@@ -100,6 +100,53 @@
     'state': '0.396365851163864',
   })
 # ---
+# name: test_sensors[sensor.device_name_exhaust_air_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_name_exhaust_air_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exhaust air fan',
+    'platform': 'flexit_bacnet',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'exhaust_air_fan_rpm',
+    'unique_id': '0000-0001-exhaust_air_fan_rpm',
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensors[sensor.device_name_exhaust_air_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Device Name Exhaust air fan',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'rpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_name_exhaust_air_fan',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2606',
+  })
+# ---
 # name: test_sensors[sensor.device_name_exhaust_air_fan_control_signal-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -574,6 +621,53 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '19.0',
+  })
+# ---
+# name: test_sensors[sensor.device_name_supply_air_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_name_supply_air_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Supply air fan',
+    'platform': 'flexit_bacnet',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'supply_air_fan_rpm',
+    'unique_id': '0000-0001-supply_air_fan_rpm',
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensors[sensor.device_name_supply_air_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Device Name Supply air fan',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'rpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_name_supply_air_fan',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2784',
   })
 # ---
 # name: test_sensors[sensor.device_name_supply_air_fan_control_signal-entry]
