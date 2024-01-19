@@ -7,9 +7,10 @@ provide credentials from yaml for backwards compatibility.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any, Protocol
+from typing import Any, Final, NotRequired, Protocol, TypedDict
 
 import voluptuous as vol
 
@@ -45,7 +46,7 @@ DOMAIN = "application_credentials"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 DATA_STORAGE = "storage"
-CONF_AUTH_DOMAIN = "auth_domain"
+CONF_AUTH_DOMAIN: Final = "auth_domain"
 DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 
 CREATE_FIELDS = {
@@ -77,27 +78,37 @@ class AuthorizationServer:
     token_url: str
 
 
-class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
+class ItemData(TypedDict):
+    domain: str
+    client_id: str
+    client_secret: str
+    auth_domain: NotRequired[str]
+    name: NotRequired[str]
+
+
+class ApplicationCredentialsStorageCollection(
+    collection.DictStorageCollection[ItemData]
+):
     """Application credential collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
 
-    async def _process_create_data(self, data: dict[str, str]) -> dict[str, str]:
+    async def _process_create_data(self, data: Mapping[str, Any]) -> ItemData:
         """Validate the config is valid."""
-        result = self.CREATE_SCHEMA(data)
+        result: ItemData = self.CREATE_SCHEMA(data)
         domain = result[CONF_DOMAIN]
         if not await _get_platform(self.hass, domain):
             raise ValueError(f"No application_credentials platform for {domain}")
         return result
 
     @callback
-    def _get_suggested_id(self, info: dict[str, str]) -> str:
+    def _get_suggested_id(self, info: ItemData) -> str:
         """Suggest an ID based on the config."""
         return f"{info[CONF_DOMAIN]}.{info[CONF_CLIENT_ID]}"
 
     async def _update_data(
-        self, item: dict[str, str], update_data: dict[str, str]
-    ) -> dict[str, str]:
+        self, item: collection.DictItemBase[ItemData], update_data: dict[str, str]
+    ) -> collection.DictItemBase[ItemData]:
         """Return a new updated data object."""
         raise ValueError("Updates not supported")
 
@@ -108,7 +119,7 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
         # Cannot delete a credential currently in use by a ConfigEntry
         current = self.data[item_id]
-        entries = self.hass.config_entries.async_entries(current[CONF_DOMAIN])
+        entries = self.hass.config_entries.async_entries(current["data"][CONF_DOMAIN])
         for entry in entries:
             if entry.data.get("auth_implementation") == item_id:
                 raise HomeAssistantError(
@@ -117,7 +128,7 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
         await super().async_delete_item(item_id)
 
-    async def async_import_item(self, info: dict[str, str]) -> None:
+    async def async_import_item(self, info: ItemData) -> None:
         """Import an yaml credential if it does not already exist."""
         suggested_id = self._get_suggested_id(info)
         if self.id_manager.has_id(slugify(suggested_id)):
@@ -126,15 +137,15 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
     def async_client_credentials(self, domain: str) -> dict[str, ClientCredential]:
         """Return ClientCredentials in storage for the specified domain."""
-        credentials = {}
+        credentials: dict[str, ClientCredential] = {}
         for item in self.async_items():
-            if item[CONF_DOMAIN] != domain:
+            if item["data"][CONF_DOMAIN] != domain:
                 continue
-            auth_domain = item.get(CONF_AUTH_DOMAIN, item[CONF_ID])
+            auth_domain = item["data"].get(CONF_AUTH_DOMAIN, item[CONF_ID])
             credentials[auth_domain] = ClientCredential(
-                client_id=item[CONF_CLIENT_ID],
-                client_secret=item[CONF_CLIENT_SECRET],
-                name=item.get(CONF_NAME),
+                client_id=item["data"][CONF_CLIENT_ID],
+                client_secret=item["data"][CONF_CLIENT_SECRET],
+                name=item["data"].get(CONF_NAME),
             )
         return credentials
 
@@ -174,8 +185,10 @@ async def async_import_client_credential(
     """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:
         raise ValueError("Integration 'application_credentials' not setup")
-    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
-    item = {
+    storage_collection: ApplicationCredentialsStorageCollection = hass.data[DOMAIN][
+        DATA_STORAGE
+    ]
+    item: ItemData = {
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
         CONF_CLIENT_SECRET: credential.client_secret,
@@ -221,7 +234,9 @@ async def _async_provide_implementation(
     if not platform:
         return []
 
-    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
+    storage_collection: ApplicationCredentialsStorageCollection = hass.data[DOMAIN][
+        DATA_STORAGE
+    ]
     credentials = storage_collection.async_client_credentials(domain)
     if hasattr(platform, "async_get_auth_implementation"):
         return [
@@ -245,11 +260,13 @@ async def _async_config_entry_app_credentials(
     ):
         return None
 
-    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
+    storage_collection: ApplicationCredentialsStorageCollection = hass.data[DOMAIN][
+        DATA_STORAGE
+    ]
     for item in storage_collection.async_items():
         item_id = item[CONF_ID]
         if (
-            item[CONF_DOMAIN] == config_entry.domain
+            item["data"][CONF_DOMAIN] == config_entry.domain
             and item.get(CONF_AUTH_DOMAIN, item_id) == auth_domain
         ):
             return item_id

@@ -1,9 +1,11 @@
 """Support to keep track of user controlled booleans for within automation."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from typing import Any, Self
+from typing import Any, NotRequired, Self
 
+from typing_extensions import TypedDict
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -61,24 +63,32 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-class InputBooleanStorageCollection(collection.DictStorageCollection):
+class ItemData(TypedDict):
+    name: str
+    initial: NotRequired[bool | None]
+    icon: NotRequired[str | None]
+
+
+class InputBooleanStorageCollection(collection.DictStorageCollection[ItemData]):
     """Input boolean collection stored in storage."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
-    async def _process_create_data(self, data: dict) -> dict:
+    async def _process_create_data(self, data: Mapping[str, Any]) -> ItemData:
         """Validate the config is valid."""
         return self.CREATE_UPDATE_SCHEMA(data)
 
     @callback
-    def _get_suggested_id(self, info: dict) -> str:
+    def _get_suggested_id(self, info: ItemData) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, item: dict, update_data: dict) -> dict:
+    async def _update_data(
+        self, item: collection.DictItemBase[ItemData], update_data: dict[str, Any]
+    ) -> collection.DictItemBase[ItemData]:
         """Return a new updated data object."""
-        update_data = self.CREATE_UPDATE_SCHEMA(update_data)
-        return {CONF_ID: item[CONF_ID]} | update_data
+        data: ItemData = self.CREATE_UPDATE_SCHEMA(update_data)
+        return {CONF_ID: item[CONF_ID], "data": data}
 
 
 @bind_hass

@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass
 from itertools import groupby
 import logging
 from operator import attrgetter
-from typing import Any, Generic, TypedDict
+from typing import Any, Generic, Self, TypedDict
 
 from typing_extensions import TypeVar
 import voluptuous as vol
@@ -34,6 +34,7 @@ CHANGE_UPDATED = "updated"
 CHANGE_REMOVED = "removed"
 
 _ItemT = TypeVar("_ItemT")
+_DataT = TypeVar("_DataT", bound=Mapping[str, Any])
 _StoreT = TypeVar("_StoreT", bound="SerializedStorageCollection")
 _StorageCollectionT = TypeVar("_StorageCollectionT", bound="StorageCollection")
 _EntityT = TypeVar("_EntityT", bound=Entity, default=Entity)
@@ -114,12 +115,12 @@ class CollectionEntity(Entity):
 
     @classmethod
     @abstractmethod
-    def from_storage(cls, config: ConfigType) -> CollectionEntity:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Create instance from storage."""
 
     @classmethod
     @abstractmethod
-    def from_yaml(cls, config: ConfigType) -> CollectionEntity:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Create instance from yaml config."""
 
     @abstractmethod
@@ -234,7 +235,7 @@ class SerializedStorageCollection(TypedDict):
     items: list[dict[str, Any]]
 
 
-class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
+class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _DataT, _StoreT]):
     """Offer a CRUD interface on top of JSON storage."""
 
     def __init__(
@@ -278,20 +279,20 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
         )
 
     @abstractmethod
-    async def _process_create_data(self, data: dict) -> dict:
+    async def _process_create_data(self, data: Mapping[str, Any]) -> _DataT:
         """Validate the config is valid."""
 
     @callback
     @abstractmethod
-    def _get_suggested_id(self, info: dict) -> str:
+    def _get_suggested_id(self, info: _DataT) -> str:
         """Suggest an ID based on the config."""
 
     @abstractmethod
-    async def _update_data(self, item: _ItemT, update_data: dict) -> _ItemT:
+    async def _update_data(self, item: _ItemT, update_data: dict[str, Any]) -> _ItemT:
         """Return a new updated item."""
 
     @abstractmethod
-    def _create_item(self, item_id: str, data: dict) -> _ItemT:
+    def _create_item(self, item_id: str, data: _DataT) -> _ItemT:
         """Create an item from validated config."""
 
     @abstractmethod
@@ -305,7 +306,7 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
         The serialized representation must include the item_id in the "id" key.
         """
 
-    async def async_create_item(self, data: dict) -> _ItemT:
+    async def async_create_item(self, data: Mapping[str, Any]) -> _ItemT:
         """Create a new item."""
         validated_data = await self._process_create_data(data)
         item_id = self.id_manager.generate_id(self._get_suggested_id(validated_data))
@@ -315,7 +316,7 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
         await self.notify_changes([CollectionChangeSet(CHANGE_ADDED, item_id, item)])
         return item
 
-    async def async_update_item(self, item_id: str, updates: dict) -> _ItemT:
+    async def async_update_item(self, item_id: str, updates: dict[str, Any]) -> _ItemT:
         """Update item."""
         if item_id not in self.data:
             raise ItemNotFound(item_id)
@@ -367,20 +368,29 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
         """Return JSON-compatible date for storing to file."""
 
 
-class DictStorageCollection(StorageCollection[dict, SerializedStorageCollection]):
+class DictItemBase(TypedDict, Generic[_DataT]):
+    id: str
+    data: _DataT
+
+
+class DictStorageCollection(
+    StorageCollection[DictItemBase[_DataT], _DataT, SerializedStorageCollection]
+):
     """A specialized StorageCollection where the items are untyped dicts."""
 
-    def _create_item(self, item_id: str, data: dict) -> dict:
+    def _create_item(self, item_id: str, data: _DataT) -> DictItemBase[_DataT]:
         """Create an item from its validated, serialized representation."""
-        return {CONF_ID: item_id} | data
+        return {CONF_ID: item_id, "data": data}
 
-    def _deserialize_item(self, data: dict) -> dict:
+    def _deserialize_item(self, data: dict[str, Any]) -> DictItemBase[_DataT]:
         """Create an item from its validated, serialized representation."""
-        return data
+        return {CONF_ID: data.pop(CONF_ID), "data": data["data"]}
 
-    def _serialize_item(self, item_id: str, item: dict) -> dict:
+    def _serialize_item(
+        self, item_id: str, item: DictItemBase[_DataT]
+    ) -> dict[str, Any]:
         """Return the serialized representation of an item for storing."""
-        return item
+        return {CONF_ID: item[CONF_ID], **item["data"]}
 
     @callback
     def _data_to_save(self) -> SerializedStorageCollection:
