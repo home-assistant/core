@@ -6,7 +6,6 @@ from dataclasses import dataclass
 import datetime as dt
 from datetime import date, datetime, timedelta
 import logging
-import statistics
 from typing import Any, TypeVar
 from zoneinfo import ZoneInfo
 
@@ -70,7 +69,7 @@ async def async_setup_entry(
             {
                 f"{day}_{attr}"
                 for day in ("today", "tomorrow")
-                for attr in ("average", "hours", "provisional")
+                for attr in ("hours", "provisional")
             }
         )
 
@@ -167,16 +166,9 @@ def _day_attributes(
     day_name: str, hourly_data: Mapping[datetime, float | None]
 ) -> dict[str, Any]:
     return {
-        f"{day_name}_average": _day_average(hourly_data),
         f"{day_name}_hours": hourly_data or None,
         f"{day_name}_provisional": _is_provisional(hourly_data),
     }
-
-
-def _day_average(hours_in_day: Mapping[datetime, float | None]) -> float | None:
-    """Return the arithmetic mean of the hours' prices if possible."""
-    values = [v for v in (hours_in_day or {}).values() if v is not None]
-    return None if len(values) == 0 else round(statistics.mean(values), 2)
 
 
 def _is_provisional(hourly_data: Mapping[dt.datetime, float | None]) -> bool:
