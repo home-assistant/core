@@ -416,21 +416,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return state attributes."""
         if last_reset := self.last_reset:
             state_class = self.state_class
-            if state_class != SensorStateClass.TOTAL and not self._last_reset_reported:
-                self._last_reset_reported = True
-                report_issue = self._suggest_report_issue()
-                # This should raise in Home Assistant Core 2022.5
-                _LOGGER.warning(
-                    (
-                        "Entity %s (%s) with state_class %s has set last_reset. Setting"
-                        " last_reset for entities with state_class other than 'total'"
-                        " is not supported. Please update your configuration if"
-                        " state_class is manually configured, otherwise %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    state_class,
-                    report_issue,
+            if state_class != SensorStateClass.TOTAL:
+                raise ValueError(
+                    f"Entity {self.entity_id} ({type(self)}) with state_class {state_class} has set last_reset."
+                    " Setting last_reset for entities with state_class other than 'total'"
+                    " is not supported. Please update your configuration if"
+                    " state_class is manually configured."
                 )
 
             if state_class == SensorStateClass.TOTAL:
