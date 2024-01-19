@@ -276,7 +276,7 @@ aiohue==4.7.0
 aioimaplib==1.0.1
 
 # homeassistant.components.apache_kafka
-aiokafka==0.7.2
+aiokafka==0.10.0
 
 # homeassistant.components.kef
 aiokef==0.2.16
@@ -380,7 +380,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==68
+aiounifi==69
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -665,11 +665,8 @@ crownstone-uart==2.1.0
 # homeassistant.components.datadog
 datadog==0.15.0
 
-# homeassistant.components.metoffice
-datapoint==0.9.8;python_version<'3.12'
-
 # homeassistant.components.bluetooth
-dbus-fast==2.21.0
+dbus-fast==2.21.1
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -957,6 +954,9 @@ gotailwind==0.2.2
 # homeassistant.components.govee_ble
 govee-ble==0.27.3
 
+# homeassistant.components.govee_light_local
+govee-local-api==1.4.1
+
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
 
@@ -1212,6 +1212,9 @@ linear-garage-door==0.2.7
 # homeassistant.components.linode
 linode-api==4.1.9b1
 
+# homeassistant.components.lamarzocco
+lmcloud==0.4.35
+
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
 
@@ -1446,7 +1449,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.1.0
+opower==0.2.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1511,7 +1514,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.36.2
+plugwise==0.36.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1611,7 +1614,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.1.1
+pyDuotecno==2024.1.2
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
@@ -1858,7 +1861,7 @@ pyisy==3.1.14
 pyitachip2ir==0.0.7
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.6
+pyjvcprojector==1.0.9
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -2222,7 +2225,7 @@ python-matter-server==5.1.1
 python-miio==0.5.12
 
 # homeassistant.components.mpd
-python-mpd2==3.0.5
+python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
@@ -2259,7 +2262,10 @@ python-smarttub==0.0.36
 python-songpal==0.16
 
 # homeassistant.components.tado
-python-tado==0.17.3
+python-tado==0.17.4
+
+# homeassistant.components.technove
+python-technove==1.1.1
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -2394,7 +2400,7 @@ renault-api==0.2.1
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.6
+reolink-aio==0.8.7
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2745,7 +2751,7 @@ uvcclient==0.11.0
 vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
-vallox-websocket-api==4.0.2
+vallox-websocket-api==4.0.3
 
 # homeassistant.components.rdw
 vehicle==2.2.1
@@ -2793,9 +2799,6 @@ watchdog==2.3.1
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
 
-# homeassistant.components.cisco_webex_teams
-webexteamssdk==1.1.1;python_version<'3.12'
-
 # homeassistant.components.assist_pipeline
 webrtc-noise-gain==1.2.3
 
@@ -2818,7 +2821,7 @@ wled==0.17.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==1.4.0
+wyoming==1.5.0
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
@@ -2905,7 +2908,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.60.4
+zigpy==0.60.6
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
