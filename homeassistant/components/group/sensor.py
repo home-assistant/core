@@ -363,6 +363,9 @@ class SensorGroup(GroupEntity, SensorEntity):
                         )
                     continue
                 except (KeyError, HomeAssistantError):
+                    # This exception handling can be simplified or removed
+                    # once sensor entity doesn't allow incorrect unit of measurement
+                    # with a device class
                     valid_states.append(False)
                     if entity_id not in self._state_incorrect:
                         self._state_incorrect.add(entity_id)
@@ -415,7 +418,13 @@ class SensorGroup(GroupEntity, SensorEntity):
     def _calculate_state_class(
         self, state_class: SensorStateClass | None
     ) -> SensorStateClass | None:
-        """Calculate state class."""
+        """Calculate state class.
+
+        If user has configured a state class we will use that.
+        If a state class is not set then test if same state class
+        on source entities and use that.
+        Otherwise return no state class.
+        """
         if state_class:
             return state_class
         state_classes: list[SensorStateClass] = []
@@ -451,7 +460,13 @@ class SensorGroup(GroupEntity, SensorEntity):
     def _calculate_device_class(
         self, device_class: SensorDeviceClass | None
     ) -> SensorDeviceClass | None:
-        """Calculate device class."""
+        """Calculate device class.
+
+        If user has configured a device class we will use that.
+        If a device class is not set then test if same device class
+        on source entities and use that.
+        Otherwise return no device class.
+        """
         if device_class:
             return device_class
         device_classes: list[SensorDeviceClass] = []
@@ -487,7 +502,12 @@ class SensorGroup(GroupEntity, SensorEntity):
     def _calculate_unit_of_measurement(
         self, unit_of_measurement: str | None
     ) -> str | None:
-        """Calculate the unit of measurement."""
+        """Calculate the unit of measurement.
+
+        If user has configured a unit of measurement we will use that.
+        If a device class is set then test if unit of measurements are compatible.
+        If no device class or uom's not compatible we will use no unit of measurement.
+        """
         if unit_of_measurement:
             return unit_of_measurement
 
@@ -501,6 +521,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                 return None
             unit_of_measurements.append(_unit_of_measurement)
 
+        # Ensure only valid unit of measurements for the specific device class can be used
         if (device_class := self.device_class) in UNIT_CONVERTERS and all(
             x in UNIT_CONVERTERS[device_class].VALID_UNITS for x in unit_of_measurements
         ):
