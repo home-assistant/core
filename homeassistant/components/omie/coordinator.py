@@ -26,28 +26,6 @@ _HOURS = list(range(25))
 _SCHEDULE_MAX_DELAY = timedelta(seconds=3)
 """The maximum delay after the scheduled time that we will fetch from OMIE to avoid thundering herd."""
 
-ADJUSTMENT_END_DATE = date(2024, 1, 1)
-"""The date on which the adjustment mechanism is no longer applicable."""
-
-# language=Markdown
-#
-# OMIE market sessions and the values that they influence. Time shown below is publication time in the CET timezone plus 10 minutes.
-#
-# ```
-# | Time  | Name        | Spot | Adj  | Spot+1 | Ajd+1 |
-# |-------|-------------|------|------|--------|-------|
-# | 02:30 | Intraday 4  |  X   |  X   |        |       |
-# | 05:30 | Intraday 5  |  X   |  X   |        |       |
-# | 10:30 | Intraday 6  |  X   |  X   |        |       |
-# | 13:30 | Day-ahead   |      |      |   X    |   X   |
-# | 16:30 | Intraday 1  |      |      |   X    |   X   |
-# | 18:30 | Intraday 2  |  X   |  X   |   X    |   X   |
-# | 22:30 | Intraday 3  |      |      |   X    |   X   |
-# ```
-#
-# References:
-# - https://www.omie.es/en/mercado-de-electricidad
-# - https://www.omie.es/sites/default/files/inline-files/intraday_and_continuous_markets.pdf
 
 DateFactory = Callable[[], date]
 """Used by the coordinator to work out the market date to fetch."""
