@@ -17,71 +17,34 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .conftest import FilterTest
-from .const import (
-    AZURE_DATA_EXPLORER_PATH,
-    BASE_CONFIG_FULL,
-    BASIC_OPTIONS,
-    IMPORT_CONFIG,
-)
+from .const import AZURE_DATA_EXPLORER_PATH, BASE_CONFIG_FULL, BASIC_OPTIONS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.parametrize(
+    ("sideeffect"),
+    [None, KustoServiceError("test"), KustoAuthenticationError("test", Exception)],
+    ids=["No_error", "KustoServiceError", "KustoAuthenticationError"],
+)
 async def test_put_event_on_queue_with_managed_client(
     hass,
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+    sideeffect,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
-    hass.states.async_set("sensor.test_sensor", STATE_ON)
-
-    async_fire_time_changed(
-        hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
-    )
-
-    await hass.async_block_till_done()
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.assert_called_once()
-
-
-async def test_put_event_on_queue_with_managed_client_with_error_KustoServiceError(
-    hass,
-    entry_managed,
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-) -> None:
-    """Test listening to events from Hass. and writing to ADX with managed client with error KustoServiceError."""
-
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.side_effect = (
-        KustoServiceError("test")
+        sideeffect
     )
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
 
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
-    )
-
-    await hass.async_block_till_done()
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.assert_called_once()
-
-
-async def test_put_event_on_queue_with_managed_client_with_error_KustoAuthenticationError(
-    hass,
-    entry_managed,
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-) -> None:
-    """Test listening to events from Hass. and writing to ADX with managed client with error KustoAuthenticationError."""
-
-    hass.states.async_set("sensor.test_sensor", STATE_ON)
-
-    async_fire_time_changed(
-        hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
-    )
-
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.side_effect = (
-        KustoAuthenticationError("test", Exception)
     )
 
     await hass.async_block_till_done()
@@ -119,7 +82,6 @@ async def test_import(hass) -> None:
             },
         }
     }
-    config[DOMAIN].update(IMPORT_CONFIG)
     assert await async_setup_component(hass, DOMAIN, config)
 
 
@@ -154,55 +116,6 @@ async def test_unload_entry(
     assert await hass.config_entries.async_unload(entry_managed.entry_id)
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.assert_not_called()
     assert entry_managed.state == ConfigEntryState.NOT_LOADED
-
-
-async def test_failed_test_connection_KustoServiceError(
-    hass, mock_execute_query
-) -> None:
-    """Test Error when no getting proper connection with KustoServiceError."""
-
-    mock_execute_query.side_effect = KustoServiceError("test")
-
-    entry = MockConfigEntry(
-        domain=azure_data_explorer.DOMAIN,
-        data=BASE_CONFIG_FULL,
-        title="cluster",
-        options=BASIC_OPTIONS,
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
-
-
-async def test_failed_test_connection_KustoAuthenticationError(
-    hass, mock_execute_query
-) -> None:
-    """Test Error when no getting proper connection with KustoAuthenticationError."""
-    entry = MockConfigEntry(
-        domain=azure_data_explorer.DOMAIN,
-        data=BASE_CONFIG_FULL,
-        title="cluster",
-        options=BASIC_OPTIONS,
-    )
-    entry.add_to_hass(hass)
-    mock_execute_query.side_effect = KustoAuthenticationError("test", Exception)
-    await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
-
-
-async def test_failed_test_connection_Exception(hass, mock_execute_query) -> None:
-    """Test Error when no getting proper connection with Exception."""
-    entry = MockConfigEntry(
-        domain=azure_data_explorer.DOMAIN,
-        data=BASE_CONFIG_FULL,
-        title="cluster",
-        options=BASIC_OPTIONS,
-    )
-    entry.add_to_hass(hass)
-    mock_execute_query.side_effect = Exception
-    await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_late_event(
@@ -321,14 +234,20 @@ async def test_filter(
         mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.reset_mock()
 
 
-async def test_Mailformed_event(
+@pytest.mark.parametrize(
+    ("event"),
+    [(None), ("______\nMicrosof}")],
+    ids=["None_event", "Mailformed_event"],
+)
+async def test_event(
     hass,
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+    event,
 ) -> None:
     """Test listening to events from Hass. and getting an event with a newline in the state."""
 
-    hass.states.async_set("sensor.test_sensor", "______\nMicrosof}")
+    hass.states.async_set("sensor.test_sensor", event)
 
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
@@ -338,18 +257,24 @@ async def test_Mailformed_event(
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.assert_not_called()
 
 
-async def test_None_event(
-    hass,
-    entry_managed,
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
-) -> None:
-    """Test listening to events from Hass. and getting an event with a newline in the state."""
-
-    hass.states.async_set("sensor.test_sensor", None)
-
-    async_fire_time_changed(
-        hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
+@pytest.mark.parametrize(
+    ("sideeffect"),
+    [
+        (KustoServiceError("test")),
+        (KustoAuthenticationError("test", Exception)),
+        (Exception),
+    ],
+    ids=["KustoServiceError", "KustoAuthenticationError", "Exception"],
+)
+async def test_connection(hass, mock_execute_query, sideeffect) -> None:
+    """Test Error when no getting proper connection with Exception."""
+    entry = MockConfigEntry(
+        domain=azure_data_explorer.DOMAIN,
+        data=BASE_CONFIG_FULL,
+        title="cluster",
+        options=BASIC_OPTIONS,
     )
-
-    await hass.async_block_till_done()
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.assert_not_called()
+    entry.add_to_hass(hass)
+    mock_execute_query.side_effect = sideeffect
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.SETUP_ERROR

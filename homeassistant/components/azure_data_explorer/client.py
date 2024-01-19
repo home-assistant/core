@@ -37,10 +37,6 @@ class AzureDataExplorerClient:
         self._cluster_ingest_uri = data[CONF_ADX_CLUSTER_INGEST_URI]
         self._database = data[CONF_ADX_DATABASE_NAME]
         self._table = data[CONF_ADX_TABLE_NAME]
-        # self._cluster_query_uri = self._cluster_ingest_uri.replace(
-        #     "https://ingest-", "https://"
-        # )
-
         self._ingestion_properties = IngestionProperties(
             database=self._database,
             table=self._table,

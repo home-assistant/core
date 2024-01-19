@@ -8,7 +8,7 @@ from homeassistant.components.azure_data_explorer.const import DOMAIN
 from .const import BASE_CONFIG, UPDATE_OPTIONS
 
 
-async def test_form(hass, mock_setup_entry) -> None:
+async def test_config_flow(hass, mock_setup_entry) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -34,7 +34,7 @@ async def test_form(hass, mock_setup_entry) -> None:
         (Exception(), "unknown"),
     ],
 )
-async def test_connection_error(
+async def test_config_flow_errors(
     test_input,
     expected,
     hass,
