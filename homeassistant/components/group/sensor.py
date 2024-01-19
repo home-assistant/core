@@ -340,8 +340,10 @@ class SensorGroup(GroupEntity, SensorEntity):
                 try:
                     numeric_state = float(state.state)
                     if (
-                        uom := state.attributes["unit_of_measurement"]
-                    ) in self._valid_units:
+                        self._valid_units
+                        and (uom := state.attributes["unit_of_measurement"])
+                        in self._valid_units
+                    ):
                         numeric_state = UNIT_CONVERTERS[self.device_class].convert(
                             numeric_state, uom, self.native_unit_of_measurement
                         )
@@ -361,9 +363,9 @@ class SensorGroup(GroupEntity, SensorEntity):
                         )
                     continue
                 except (KeyError, HomeAssistantError):
-                    # This exception handling can be simplified or removed
+                    # This exception handling can be simplified
                     # once sensor entity doesn't allow incorrect unit of measurement
-                    # with a device class, see PR #107639
+                    # with a device class, implementation see PR #107639
                     valid_states.append(False)
                     if entity_id not in self._state_incorrect:
                         self._state_incorrect.add(entity_id)
