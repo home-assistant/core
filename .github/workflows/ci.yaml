@@ -797,16 +797,16 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && (steps.pytest-full.conclusion == 'failure' || steps.pytest-partial.conclusion == 'failure')
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.2.0
         with:
           name: pytest-${{ github.run_number }}
           path: pytest-*.txt
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.2.0
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
-          path: coverage.xml
+          path: coverage-${{ matrix.python-version }}-${{ matrix.group }}.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -921,16 +921,16 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.2.0
         with:
           name: pytest-${{ github.run_number }}
-          path: pytest-*.txt
+          path: pytest-${{ github.run_number }}.txt
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.2.0
         with:
           name: coverage-${{ matrix.python-version }}-mariadb
-          path: coverage.xml
+          path: coverage-${{ matrix.python-version }}-mariadb.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -1046,16 +1046,16 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.2.0
         with:
           name: pytest-${{ github.run_number }}
-          path: pytest-*.txt
+          path: pytest-${{ github.run_number }}.txt
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v4.2.0
         with:
           name: coverage-${{ matrix.python-version }}-postgresql
-          path: coverage.xml
+          path: coverage-${{ matrix.python-version }}-postgresql.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -1072,7 +1072,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.1
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.1
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
         uses: Wandalen/wretry.action@v1.3.0
