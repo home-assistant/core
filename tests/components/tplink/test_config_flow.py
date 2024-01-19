@@ -685,6 +685,8 @@ async def test_reauth_update_from_discovery(
 ) -> None:
     """Test reauth flow."""
     mock_added_config_entry.state = config_entries.ConfigEntryState.SETUP_RETRY
+    # FIXME: we should never manually set the state of the config entry,
+    # we should mock the failure to get it into the bad state
     mock_added_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
@@ -708,6 +710,42 @@ async def test_reauth_update_from_discovery(
     assert discovery_result["type"] == FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
     assert mock_added_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
+
+
+async def test_reauth_update_from_discovery_with_ip_change(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+    mock_added_config_entry.state = config_entries.ConfigEntryState.SETUP_RETRY
+    # FIXME: we should never manually set the state of the config entry,
+    # we should mock the failure to get it into the bad state
+    mock_added_config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    [result] = flows
+    assert result["step_id"] == "reauth_confirm"
+    assert mock_added_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_LEGACY
+
+    discovery_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_HOST: "127.0.0.2",
+            CONF_MAC: MAC_ADDRESS,
+            CONF_ALIAS: ALIAS,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+        },
+    )
+    await hass.async_block_till_done()
+    assert discovery_result["type"] == FlowResultType.ABORT
+    assert discovery_result["reason"] == "already_configured"
+    assert mock_added_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
+    assert mock_added_config_entry.data[CONF_HOST] == "127.0.0.2"
 
 
 @pytest.mark.parametrize(
