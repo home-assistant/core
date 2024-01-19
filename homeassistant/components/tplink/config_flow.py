@@ -390,12 +390,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
-        errors = {}
+        errors: dict[str, str] = {}
         reauth_entry = self.reauth_entry
         assert reauth_entry is not None
+        entry_data = reauth_entry.data
+        host = entry_data[CONF_HOST]
 
         if user_input:
-            host = reauth_entry.data[CONF_HOST]
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             credentials = Credentials(username, password)
@@ -416,15 +417,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         # Old config entries will not have these values.
-        entry_data = reauth_entry.data
         alias = entry_data.get(CONF_ALIAS) or "unknown"
         model = entry_data.get(CONF_MODEL) or "unknown"
 
-        placeholders = {
-            "name": alias,
-            "model": model,
-            "host": entry_data.get(CONF_HOST),
-        }
+        placeholders = {"name": alias, "model": model, "host": host}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="reauth_confirm",
