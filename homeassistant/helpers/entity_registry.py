@@ -136,6 +136,7 @@ ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
 DISPLAY_DICT_OPTIONAL = (
     ("ai", "area_id"),
     ("di", "device_id"),
+    ("ic", "icon"),
     ("tk", "translation_key"),
 )
 
