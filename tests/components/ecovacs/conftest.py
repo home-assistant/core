@@ -34,15 +34,24 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_authenticator() -> Mock:
+def mock_authenticator() -> Generator[Mock, None, None]:
     """Mock the authenticator."""
     mock_authenticator = Mock(spec_set=Authenticator)
     mock_authenticator.authenticate.return_value = Credentials("token", "user_id", 0)
     with patch(
         "homeassistant.components.ecovacs.controller.Authenticator",
         return_value=mock_authenticator,
+    ), patch(
+        "homeassistant.components.ecovacs.config_flow.Authenticator",
+        return_value=mock_authenticator,
     ):
         yield mock_authenticator
+
+
+@pytest.fixture
+def mock_authenticator_authenticate(mock_authenticator: Mock) -> AsyncMock:
+    """Mock authenticator.authenticate."""
+    return mock_authenticator.authenticate
 
 
 @pytest.fixture

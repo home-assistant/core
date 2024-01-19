@@ -1,6 +1,6 @@
 """Test init of ecovacs."""
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 import pytest
@@ -63,19 +63,27 @@ async def test_invalid_auth(
 
 
 @pytest.mark.parametrize(
-    ("config", "expect_call"),
+    ("config", "config_entries_expected"),
     [
-        ({}, False),
-        ({DOMAIN: IMPORT_DATA.copy()}, True),
+        ({}, 0),
+        ({DOMAIN: IMPORT_DATA.copy()}, 1),
     ],
 )
 async def test_async_setup_import(
-    hass: HomeAssistant, config: dict[str, Any], expect_call: bool
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    config_entries_expected: int,
+    mock_setup_entry: AsyncMock,
+    mock_authenticator_authenticate: AsyncMock,
 ) -> None:
     """Test async_setup config import."""
-    with patch.object(hass.config_entries.flow, "async_init", autospec=True) as mock:
-        assert await async_setup_component(hass, DOMAIN, config)
-        if expect_call:
-            mock.assert_called_once()
-        else:
-            mock.assert_not_called()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == config_entries_expected
+    if config_entries_expected:
+        mock_setup_entry.assert_called()
+        mock_authenticator_authenticate.assert_called()
+    else:
+        mock_setup_entry.assert_not_called()
+        mock_authenticator_authenticate.assert_not_called()
