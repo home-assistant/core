@@ -1,0 +1,12 @@
+{
+  "config": {
+    "step": {
+      "user": {},
+      "creds": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
+      }
+    }
+  }
+}
