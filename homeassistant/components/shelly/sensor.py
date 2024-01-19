@@ -907,6 +907,9 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        removal_condition=lambda config, _status, key: (
+            config[key]["sta"]["enable"] is False
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
