@@ -21,7 +21,6 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -53,9 +52,6 @@ class LaMarzoccoKeyNumberEntityDescription(
     set_value_fn: Callable[
         [LaMarzoccoClient, float | int, int], Coroutine[Any, Any, bool]
     ]
-    number_keys: int | None = None
-    enabled_fn: Callable[[LaMarzoccoClient], bool] = lambda _: True
-    not_settable_reason: str = ""
 
 
 ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
@@ -158,8 +154,7 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         set_value_fn=_set_prebrew_off,
         native_value_fn=lambda lm, key: lm.current_status[f"prebrewing_ton_k{key}"],
-        enabled_fn=lambda lm: lm.current_status["enable_prebrewing"],
-        not_settable_reason="Prebrewing is not enabled",
+        available_fn=lambda lm: lm.current_status["enable_prebrewing"],
         supported_fn=lambda coordinator: coordinator.lm.model_name
         != LaMarzoccoModel.GS3_MP,
     ),
@@ -175,8 +170,7 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         set_value_fn=_set_prebrew_on,
         native_value_fn=lambda lm, key: lm.current_status[f"prebrewing_toff_k{key}"],
-        enabled_fn=lambda lm: lm.current_status["enable_prebrewing"],
-        not_settable_reason="Prebrewing is not enabled",
+        available_fn=lambda lm: lm.current_status["enable_prebrewing"],
         supported_fn=lambda coordinator: coordinator.lm.model_name
         != LaMarzoccoModel.GS3_MP,
     ),
@@ -192,8 +186,7 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         set_value_fn=_set_preinfusion,
         native_value_fn=lambda lm, key: lm.current_status[f"preinfusion_k{key}"],
-        enabled_fn=lambda lm: lm.current_status["enable_preinfusion"],
-        not_settable_reason="Preinfusion is not enabled",
+        available_fn=lambda lm: lm.current_status["enable_preinfusion"],
         supported_fn=lambda coordinator: coordinator.lm.model_name
         != LaMarzoccoModel.GS3_MP,
     ),
@@ -265,29 +258,31 @@ class LaMarzoccoKeyNumberEntity(LaMarzoccoEntity, NumberEntity):
         self,
         coordinator: LaMarzoccoUpdateCoordinator,
         description: LaMarzoccoKeyNumberEntityDescription,
-        key: int,
+        pyhsical_key: int,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, description)
-        if key == 0:
-            key = 1
+
+        # Physical Key on the machine the entity represents.
+        if pyhsical_key == 0:
+            pyhsical_key = 1
         else:
             self._attr_translation_key = f"{description.translation_key}_key"
-            self._attr_translation_placeholders = {"key": str(key)}
-            self._attr_unique_id = f"{super()._attr_unique_id}_key{key}"
+            self._attr_translation_placeholders = {"key": str(pyhsical_key)}
+            self._attr_unique_id = f"{super()._attr_unique_id}_key{pyhsical_key}"
             self._attr_entity_registry_enabled_default = False
-        self.key = key
+        self.pyhsical_key = pyhsical_key
 
     @property
     def native_value(self) -> float:
         """Return the current value."""
-        return self.entity_description.native_value_fn(self.coordinator.lm, self.key)
+        return self.entity_description.native_value_fn(
+            self.coordinator.lm, self.pyhsical_key
+        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
-        if not self.entity_description.enabled_fn(self.coordinator.lm):
-            raise HomeAssistantError(
-                f"Not possible to set: {self.entity_description.not_settable_reason}"
-            )
-        await self.entity_description.set_value_fn(self.coordinator.lm, value, self.key)
+        await self.entity_description.set_value_fn(
+            self.coordinator.lm, value, self.pyhsical_key
+        )
         self.async_write_ha_state()

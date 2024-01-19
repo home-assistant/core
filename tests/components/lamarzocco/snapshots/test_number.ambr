@@ -514,7 +514,7 @@
     'entity_id': 'number.gs01234_preinfusion_time_key_1',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': 'unavailable',
   })
 # ---
 # name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-configure_prebrew-kwargs2-GS3 AV][GS01234_preinfusion_time_key_2-state]
@@ -533,7 +533,7 @@
     'entity_id': 'number.gs01234_preinfusion_time_key_2',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': 'unavailable',
   })
 # ---
 # name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-configure_prebrew-kwargs2-GS3 AV][GS01234_preinfusion_time_key_3-state]
@@ -552,7 +552,7 @@
     'entity_id': 'number.gs01234_preinfusion_time_key_3',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': 'unavailable',
   })
 # ---
 # name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-configure_prebrew-kwargs2-GS3 AV][GS01234_preinfusion_time_key_4-state]
@@ -571,7 +571,7 @@
     'entity_id': 'number.gs01234_preinfusion_time_key_4',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': 'unavailable',
   })
 # ---
 # name: test_pre_brew_infusion_numbers[prebrew_off_time-6-kwargs0-Linea Mini]
@@ -810,7 +810,7 @@
     'entity_id': 'number.lm01234_preinfusion_time',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': 'unavailable',
   })
 # ---
 # name: test_pre_brew_infusion_numbers[preinfusion_time-7-kwargs2-Linea Mini].1
@@ -865,7 +865,7 @@
     'entity_id': 'number.mr01234_preinfusion_time',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': 'unavailable',
   })
 # ---
 # name: test_pre_brew_infusion_numbers[preinfusion_time-7-kwargs2-Micra].1

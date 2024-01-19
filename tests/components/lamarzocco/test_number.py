@@ -12,9 +12,8 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 pytestmark = pytest.mark.usefixtures("init_integration")
@@ -269,6 +268,26 @@ async def test_disabled_entites(
             assert state is None
 
 
+# @pytest.mark.parametrize("device_fixture", [LaMarzoccoModel.LINEA_MICRA])
+# async def test_disabled_entites2(
+#     hass: HomeAssistant,
+#     mock_lamarzocco: MagicMock,
+# ) -> None:
+#     """Test the La Marzocco prebrew/-infusion sensors for GS3AV model."""
+
+#     ENTITIES = (
+#         # "prebrew_off_time",
+#         # "prebrew_on_time",
+#         "preinfusion_time",
+#     )
+
+#     serial_number = mock_lamarzocco.serial_number
+
+#     for entity_name in ENTITIES:
+#         state = hass.states.get(f"number.{serial_number}_{entity_name}")
+#         assert state is None
+
+
 @pytest.mark.parametrize(
     "device_fixture",
     [LaMarzoccoModel.GS3_MP, LaMarzoccoModel.LINEA_MICRA, LaMarzoccoModel.LINEA_MINI],
@@ -325,16 +344,4 @@ async def test_not_settable_entites(
 
     state = hass.states.get(f"number.{serial_number}_preinfusion_time")
     assert state
-
-    with pytest.raises(
-        HomeAssistantError, match="Not possible to set: Preinfusion is not enabled"
-    ):
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {
-                ATTR_ENTITY_ID: f"number.{serial_number}_preinfusion_time",
-                ATTR_VALUE: 6,
-            },
-            blocking=True,
-        )
+    assert state.state == STATE_UNAVAILABLE
