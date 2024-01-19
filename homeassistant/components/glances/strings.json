@@ -100,6 +100,12 @@
       },
       "raid_used": {
         "name": "{sensor_label} used"
+      },
+      "gpu_memory_usage": {
+        "name": "{sensor_label} memory usage"
+      },
+      "gpu_processor_usage": {
+        "name": "{sensor_label} processor usage"
       }
     }
   },
