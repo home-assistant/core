@@ -282,17 +282,17 @@ class IpBanManager:
             # Write in a single write call to avoid interleaved writes
             out.write("\n" + yaml.dump(ip_))
 
-    def _write_bans(self) -> None:
+    def _write_bans(self, ip_bans: dict[IPv4Address | IPv6Address, IpBan]) -> None:
         """Write IP bans to config file."""
-        ip_bans = {
+        to_write = {
             str(ip_ban.ip_address): {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
-            for ip_ban in self.ip_bans_lookup.values()
+            for ip_ban in ip_bans.values()
         }
 
         with open(self.path, "r+", encoding="utf8") as out:
             out.seek(0)
             out.truncate()
-            out.write("\n" + yaml.dump(ip_bans))
+            out.write("\n" + yaml.dump(to_write))
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
@@ -304,7 +304,9 @@ class IpBanManager:
         """Remove an IP address from the banned list."""
         if remote_addr in self.ip_bans_lookup:
             self.ip_bans_lookup.pop(remote_addr)
-            await self.hass.async_add_executor_job(self._write_bans)
+            await self.hass.async_add_executor_job(
+                self._write_bans, self.ip_bans_lookup
+            )
             return
 
         raise ValueError(f"IP address {remote_addr} is not banned")

@@ -24,6 +24,7 @@ from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import json_loads
@@ -695,8 +696,6 @@ async def test_get_services(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
     """Test get_services command."""
-    local_services = hass.services.async_services()
-
     for id_ in (5, 6):
         await websocket_client.send_json({"id": id_, "type": "get_services"})
 

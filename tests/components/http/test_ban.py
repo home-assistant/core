@@ -427,13 +427,18 @@ async def test_single_ban_file_entry(
 
 
 @pytest.mark.parametrize(
-    "ip_addr",
+    ("ip_addrs", "to_remove"),
     [
-        "200.201.202.204",
-        "2001:db8::ff00:42:8329",
+        (["200.201.202.204", "200.201.202.205"], "200.201.202.205"),
+        (
+            ["2001:db8::ff00:42:8329", "2001:db8::ff00:42:8330"],
+            "2001:db8::ff00:42:8329",
+        ),
     ],
 )
-async def test_unban_service_success(hass: HomeAssistant, ip_addr: str) -> None:
+async def test_unban_service_success(
+    hass: HomeAssistant, ip_addrs: list[str], to_remove: str
+) -> None:
     """Test that unban service works."""
     app = web.Application()
     app["hass"] = hass
@@ -442,18 +447,19 @@ async def test_unban_service_success(hass: HomeAssistant, ip_addr: str) -> None:
     m_open = mock_open()
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
         manager: IpBanManager = app[KEY_BAN_MANAGER]
-        await manager.async_add_ban(ip_address(ip_addr))
+        for ip_addr in ip_addrs:
+            await manager.async_add_ban(ip_address(ip_addr))
 
-        assert len(manager.ip_bans_lookup) == 1
+        assert len(manager.ip_bans_lookup) == 2
         await hass.services.async_call(
             DOMAIN,
             "unban_ip",
             {
-                "ip_address": ip_addr,
+                "ip_address": to_remove,
             },
             blocking=True,
         )
-        assert len(manager.ip_bans_lookup) == 0
+        assert len(manager.ip_bans_lookup) == 1
 
 
 @pytest.mark.parametrize(
