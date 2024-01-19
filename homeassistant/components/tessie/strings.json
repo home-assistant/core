@@ -89,7 +89,7 @@
         "name": "Battery range"
       },
       "charge_state_time_to_full_charge": {
-        "name": "Time to charged"
+        "name": "Time to full charge"
       },
       "drive_state_speed": {
         "name": "Speed"
