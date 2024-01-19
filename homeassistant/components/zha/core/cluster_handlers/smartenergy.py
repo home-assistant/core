@@ -72,36 +72,54 @@ class Metering(ClusterHandler):
     """Metering cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="instantaneous_demand", config=REPORT_CONFIG_OP),
-        AttrReportConfig(attr="current_summ_delivered", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(
-            attr="current_tier1_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=smartenergy.Metering.AttributeDefs.instantaneous_demand.name,
+            config=REPORT_CONFIG_OP,
         ),
         AttrReportConfig(
-            attr="current_tier2_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=smartenergy.Metering.AttributeDefs.current_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
         AttrReportConfig(
-            attr="current_tier3_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=smartenergy.Metering.AttributeDefs.current_tier1_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
         AttrReportConfig(
-            attr="current_tier4_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=smartenergy.Metering.AttributeDefs.current_tier2_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
         AttrReportConfig(
-            attr="current_tier5_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=smartenergy.Metering.AttributeDefs.current_tier3_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
         AttrReportConfig(
-            attr="current_tier6_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=smartenergy.Metering.AttributeDefs.current_tier4_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
-        AttrReportConfig(attr="current_summ_received", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="status", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(
+            attr=smartenergy.Metering.AttributeDefs.current_tier5_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=smartenergy.Metering.AttributeDefs.current_tier6_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=smartenergy.Metering.AttributeDefs.current_summ_received.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=smartenergy.Metering.AttributeDefs.status.name,
+            config=REPORT_CONFIG_ASAP,
+        ),
     )
     ZCL_INIT_ATTRS = {
-        "demand_formatting": True,
-        "divisor": True,
-        "metering_device_type": True,
-        "multiplier": True,
-        "summation_formatting": True,
-        "unit_of_measure": True,
+        smartenergy.Metering.AttributeDefs.demand_formatting.name: True,
+        smartenergy.Metering.AttributeDefs.divisor.name: True,
+        smartenergy.Metering.AttributeDefs.metering_device_type.name: True,
+        smartenergy.Metering.AttributeDefs.multiplier.name: True,
+        smartenergy.Metering.AttributeDefs.summation_formatting.name: True,
+        smartenergy.Metering.AttributeDefs.unit_of_measure.name: True,
     }
 
     metering_device_type = {
@@ -153,12 +171,14 @@ class Metering(ClusterHandler):
     @property
     def divisor(self) -> int:
         """Return divisor for the value."""
-        return self.cluster.get("divisor") or 1
+        return self.cluster.get(smartenergy.Metering.AttributeDefs.divisor.name) or 1
 
     @property
     def device_type(self) -> str | int | None:
         """Return metering device type."""
-        dev_type = self.cluster.get("metering_device_type")
+        dev_type = self.cluster.get(
+            smartenergy.Metering.AttributeDefs.metering_device_type.name
+        )
         if dev_type is None:
             return None
         return self.metering_device_type.get(dev_type, dev_type)
@@ -166,14 +186,21 @@ class Metering(ClusterHandler):
     @property
     def multiplier(self) -> int:
         """Return multiplier for the value."""
-        return self.cluster.get("multiplier") or 1
+        return self.cluster.get(smartenergy.Metering.AttributeDefs.multiplier.name) or 1
 
     @property
     def status(self) -> int | None:
         """Return metering device status."""
-        if (status := self.cluster.get("status")) is None:
+        if (
+            status := self.cluster.get(smartenergy.Metering.AttributeDefs.status.name)
+        ) is None:
             return None
-        if self.cluster.get("metering_device_type") == 0:
+        if (
+            self.cluster.get(
+                smartenergy.Metering.AttributeDefs.metering_device_type.name
+            )
+            == 0
+        ):
             # Electric metering device type
             return self.DeviceStatusElectric(status)
         return self.DeviceStatusDefault(status)
@@ -181,18 +208,18 @@ class Metering(ClusterHandler):
     @property
     def unit_of_measurement(self) -> int:
         """Return unit of measurement."""
-        return self.cluster.get("unit_of_measure")
+        return self.cluster.get(smartenergy.Metering.AttributeDefs.unit_of_measure.name)
 
     async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
 
         fmting = self.cluster.get(
-            "demand_formatting", 0xF9
+            smartenergy.Metering.AttributeDefs.demand_formatting.name, 0xF9
         )  # 1 digit to the right, 15 digits to the left
         self._format_spec = self.get_formatting(fmting)
 
         fmting = self.cluster.get(
-            "summation_formatting", 0xF9
+            smartenergy.Metering.AttributeDefs.summation_formatting.name, 0xF9
         )  # 1 digit to the right, 15 digits to the left
         self._summa_format = self.get_formatting(fmting)
 

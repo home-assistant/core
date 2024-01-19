@@ -65,29 +65,56 @@ class ElectricalMeasurementClusterHandler(ClusterHandler):
         POWER_QUALITY_MEASUREMENT = 256
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="active_power", config=REPORT_CONFIG_OP),
-        AttrReportConfig(attr="active_power_max", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="apparent_power", config=REPORT_CONFIG_OP),
-        AttrReportConfig(attr="rms_current", config=REPORT_CONFIG_OP),
-        AttrReportConfig(attr="rms_current_max", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="rms_voltage", config=REPORT_CONFIG_OP),
-        AttrReportConfig(attr="rms_voltage_max", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="ac_frequency", config=REPORT_CONFIG_OP),
-        AttrReportConfig(attr="ac_frequency_max", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=homeautomation.ElectricalMeasurement.AttributeDefs.active_power.name,
+            config=REPORT_CONFIG_OP,
+        ),
+        AttrReportConfig(
+            attr=homeautomation.ElectricalMeasurement.AttributeDefs.active_power_max.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=homeautomation.ElectricalMeasurement.AttributeDefs.apparent_power.name,
+            config=REPORT_CONFIG_OP,
+        ),
+        AttrReportConfig(
+            attr=homeautomation.ElectricalMeasurement.AttributeDefs.rms_current.name,
+            config=REPORT_CONFIG_OP,
+        ),
+        AttrReportConfig(
+            attr=homeautomation.ElectricalMeasurement.AttributeDefs.rms_current_max.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=homeautomation.ElectricalMeasurement.AttributeDefs.rms_voltage.name,
+            config=REPORT_CONFIG_OP,
+        ),
+        AttrReportConfig(
+            attr=homeautomation.ElectricalMeasurement.AttributeDefs.rms_voltage_max.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=homeautomation.ElectricalMeasurement.AttributeDefs.ac_frequency.name,
+            config=REPORT_CONFIG_OP,
+        ),
+        AttrReportConfig(
+            attr=homeautomation.ElectricalMeasurement.AttributeDefs.ac_frequency_max.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
     ZCL_INIT_ATTRS = {
-        "ac_current_divisor": True,
-        "ac_current_multiplier": True,
-        "ac_power_divisor": True,
-        "ac_power_multiplier": True,
-        "ac_voltage_divisor": True,
-        "ac_voltage_multiplier": True,
-        "ac_frequency_divisor": True,
-        "ac_frequency_multiplier": True,
-        "measurement_type": True,
-        "power_divisor": True,
-        "power_multiplier": True,
-        "power_factor": True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.ac_current_divisor.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.ac_current_multiplier.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.ac_power_divisor.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.ac_power_multiplier.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.ac_voltage_divisor.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.ac_voltage_multiplier.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.ac_frequency_divisor.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.ac_frequency_multiplier.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.measurement_type.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.power_divisor.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.power_multiplier.name: True,
+        homeautomation.ElectricalMeasurement.AttributeDefs.power_factor.name: True,
     }
 
     async def async_update(self):
@@ -113,51 +140,93 @@ class ElectricalMeasurementClusterHandler(ClusterHandler):
     @property
     def ac_current_divisor(self) -> int:
         """Return ac current divisor."""
-        return self.cluster.get("ac_current_divisor") or 1
+        return (
+            self.cluster.get(
+                homeautomation.ElectricalMeasurement.AttributeDefs.ac_current_divisor.name
+            )
+            or 1
+        )
 
     @property
     def ac_current_multiplier(self) -> int:
         """Return ac current multiplier."""
-        return self.cluster.get("ac_current_multiplier") or 1
+        return (
+            self.cluster.get(
+                homeautomation.ElectricalMeasurement.AttributeDefs.ac_current_multiplier.name
+            )
+            or 1
+        )
 
     @property
     def ac_voltage_divisor(self) -> int:
         """Return ac voltage divisor."""
-        return self.cluster.get("ac_voltage_divisor") or 1
+        return (
+            self.cluster.get(
+                homeautomation.ElectricalMeasurement.AttributeDefs.ac_voltage_divisor.name
+            )
+            or 1
+        )
 
     @property
     def ac_voltage_multiplier(self) -> int:
         """Return ac voltage multiplier."""
-        return self.cluster.get("ac_voltage_multiplier") or 1
+        return (
+            self.cluster.get(
+                homeautomation.ElectricalMeasurement.AttributeDefs.ac_voltage_multiplier.name
+            )
+            or 1
+        )
 
     @property
     def ac_frequency_divisor(self) -> int:
         """Return ac frequency divisor."""
-        return self.cluster.get("ac_frequency_divisor") or 1
+        return (
+            self.cluster.get(
+                homeautomation.ElectricalMeasurement.AttributeDefs.ac_frequency_divisor.name
+            )
+            or 1
+        )
 
     @property
     def ac_frequency_multiplier(self) -> int:
         """Return ac frequency multiplier."""
-        return self.cluster.get("ac_frequency_multiplier") or 1
+        return (
+            self.cluster.get(
+                homeautomation.ElectricalMeasurement.AttributeDefs.ac_frequency_multiplier.name
+            )
+            or 1
+        )
 
     @property
     def ac_power_divisor(self) -> int:
         """Return active power divisor."""
         return self.cluster.get(
-            "ac_power_divisor", self.cluster.get("power_divisor") or 1
+            homeautomation.ElectricalMeasurement.AttributeDefs.ac_power_divisor.name,
+            self.cluster.get(
+                homeautomation.ElectricalMeasurement.AttributeDefs.power_divisor.name
+            )
+            or 1,
         )
 
     @property
     def ac_power_multiplier(self) -> int:
         """Return active power divisor."""
         return self.cluster.get(
-            "ac_power_multiplier", self.cluster.get("power_multiplier") or 1
+            homeautomation.ElectricalMeasurement.AttributeDefs.ac_power_multiplier.name,
+            self.cluster.get(
+                homeautomation.ElectricalMeasurement.AttributeDefs.power_multiplier.name
+            )
+            or 1,
         )
 
     @property
     def measurement_type(self) -> str | None:
         """Return Measurement type."""
-        if (meas_type := self.cluster.get("measurement_type")) is None:
+        if (
+            meas_type := self.cluster.get(
+                homeautomation.ElectricalMeasurement.AttributeDefs.measurement_type.name
+            )
+        ) is None:
             return None
 
         meas_type = self.MeasurementType(meas_type)

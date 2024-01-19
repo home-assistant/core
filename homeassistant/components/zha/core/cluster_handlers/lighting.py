@@ -26,29 +26,46 @@ class ColorClusterHandler(ClusterHandler):
     """Color cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="current_x", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="current_y", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="current_hue", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="current_saturation", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="color_temperature", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=lighting.Color.AttributeDefs.current_x.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=lighting.Color.AttributeDefs.current_y.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=lighting.Color.AttributeDefs.current_hue.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=lighting.Color.AttributeDefs.current_saturation.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=lighting.Color.AttributeDefs.color_temperature.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
     MAX_MIREDS: int = 500
     MIN_MIREDS: int = 153
     ZCL_INIT_ATTRS = {
-        "color_mode": False,
-        "color_temp_physical_min": True,
-        "color_temp_physical_max": True,
-        "color_capabilities": True,
-        "color_loop_active": False,
-        "enhanced_current_hue": False,
-        "start_up_color_temperature": True,
-        "options": True,
+        lighting.Color.AttributeDefs.color_mode.name: False,
+        lighting.Color.AttributeDefs.color_temp_physical_min.name: True,
+        lighting.Color.AttributeDefs.color_temp_physical_max.name: True,
+        lighting.Color.AttributeDefs.color_capabilities.name: True,
+        lighting.Color.AttributeDefs.color_loop_active.name: False,
+        lighting.Color.AttributeDefs.enhanced_current_hue.name: False,
+        lighting.Color.AttributeDefs.start_up_color_temperature.name: True,
+        lighting.Color.AttributeDefs.options.name: True,
     }
 
     @cached_property
     def color_capabilities(self) -> lighting.Color.ColorCapabilities:
         """Return ZCL color capabilities of the light."""
-        color_capabilities = self.cluster.get("color_capabilities")
+        color_capabilities = self.cluster.get(
+            lighting.Color.AttributeDefs.color_capabilities.name
+        )
         if color_capabilities is None:
             return lighting.Color.ColorCapabilities.XY_attributes
         return lighting.Color.ColorCapabilities(color_capabilities)
@@ -56,47 +73,49 @@ class ColorClusterHandler(ClusterHandler):
     @property
     def color_mode(self) -> int | None:
         """Return cached value of the color_mode attribute."""
-        return self.cluster.get("color_mode")
+        return self.cluster.get(lighting.Color.AttributeDefs.color_mode.name)
 
     @property
     def color_loop_active(self) -> int | None:
         """Return cached value of the color_loop_active attribute."""
-        return self.cluster.get("color_loop_active")
+        return self.cluster.get(lighting.Color.AttributeDefs.color_loop_active.name)
 
     @property
     def color_temperature(self) -> int | None:
         """Return cached value of color temperature."""
-        return self.cluster.get("color_temperature")
+        return self.cluster.get(lighting.Color.AttributeDefs.color_temperature.name)
 
     @property
     def current_x(self) -> int | None:
         """Return cached value of the current_x attribute."""
-        return self.cluster.get("current_x")
+        return self.cluster.get(lighting.Color.AttributeDefs.current_x.name)
 
     @property
     def current_y(self) -> int | None:
         """Return cached value of the current_y attribute."""
-        return self.cluster.get("current_y")
+        return self.cluster.get(lighting.Color.AttributeDefs.current_y.name)
 
     @property
     def current_hue(self) -> int | None:
         """Return cached value of the current_hue attribute."""
-        return self.cluster.get("current_hue")
+        return self.cluster.get(lighting.Color.AttributeDefs.current_hue.name)
 
     @property
     def enhanced_current_hue(self) -> int | None:
         """Return cached value of the enhanced_current_hue attribute."""
-        return self.cluster.get("enhanced_current_hue")
+        return self.cluster.get(lighting.Color.AttributeDefs.enhanced_current_hue.name)
 
     @property
     def current_saturation(self) -> int | None:
         """Return cached value of the current_saturation attribute."""
-        return self.cluster.get("current_saturation")
+        return self.cluster.get(lighting.Color.AttributeDefs.current_saturation.name)
 
     @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this cluster handler supports."""
-        min_mireds = self.cluster.get("color_temp_physical_min", self.MIN_MIREDS)
+        min_mireds = self.cluster.get(
+            lighting.Color.AttributeDefs.color_temp_physical_min.name, self.MIN_MIREDS
+        )
         if min_mireds == 0:
             self.warning(
                 (
@@ -111,7 +130,9 @@ class ColorClusterHandler(ClusterHandler):
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this cluster handler supports."""
-        max_mireds = self.cluster.get("color_temp_physical_max", self.MAX_MIREDS)
+        max_mireds = self.cluster.get(
+            lighting.Color.AttributeDefs.color_temp_physical_max.name, self.MAX_MIREDS
+        )
         if max_mireds == 0:
             self.warning(
                 (
@@ -169,7 +190,9 @@ class ColorClusterHandler(ClusterHandler):
     @property
     def options(self) -> lighting.Color.Options:
         """Return ZCL options of the cluster handler."""
-        return lighting.Color.Options(self.cluster.get("options", 0))
+        return lighting.Color.Options(
+            self.cluster.get(lighting.Color.AttributeDefs.options.name, 0)
+        )
 
     @property
     def execute_if_off_supported(self) -> bool:
