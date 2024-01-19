@@ -466,6 +466,8 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     deps_dir = os.path.join(config_dir, "deps")
     if (lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
         sys.path.insert(0, lib_dir)
+    if deps_dir not in sys.path:
+        sys.path.insert(0, deps_dir)
     return deps_dir
 
 
