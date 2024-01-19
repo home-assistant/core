@@ -32,6 +32,8 @@ _DataT = TypeVar("_DataT")
 
 _LOGGER = logging.getLogger(__name__)
 
+_ATTRIBUTION = "Data provided by OMIE.es"
+
 
 @dataclass(frozen=True)
 class OMIEPriceEntityDescription(SensorEntityDescription):
@@ -79,6 +81,7 @@ async def async_setup_entry(
             self._attr_device_info = device_info
             self._attr_unique_id = slugify(description.key)
             self._attr_should_poll = False
+            self._attr_attribution = _ATTRIBUTION
 
         async def async_added_to_hass(self) -> None:
             """Register callbacks."""
