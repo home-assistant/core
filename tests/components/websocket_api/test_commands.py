@@ -723,7 +723,7 @@ async def test_get_config(
         "whitelist_external_dirs",
         "allowlist_external_urls",
     )
-    config = hass.config.as_dict().copy()
+    config = hass.config.as_dict()
 
     for key in ignore_order_keys:
         if key in result:
