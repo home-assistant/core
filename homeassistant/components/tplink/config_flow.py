@@ -70,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle integration discovery."""
         return await self._async_handle_discovery(
             discovery_info[CONF_HOST],
-            dr.format_mac(discovery_info[CONF_MAC]),
+            discovery_info[CONF_MAC],
             discovery_info[CONF_DEVICE_CONFIG],
         )
 
