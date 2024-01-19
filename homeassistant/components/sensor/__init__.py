@@ -59,6 +59,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA_BASE,
 )
 from homeassistant.helpers.deprecation import (
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -119,12 +120,6 @@ __all__ = [
     "SensorExtraStoredData",
     "SensorStateClass",
 ]
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 # mypy: disallow-any-generics
 
@@ -954,3 +949,13 @@ def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> st
         value = f"{numerical_value:z.{precision}f}"
 
     return value
+
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

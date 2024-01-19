@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 import yarl
 
-from . import config as conf_util, config_entries, core, loader
+from . import config as conf_util, config_entries, core, loader, requirements
 from .components import http
 from .const import (
     FORMAT_DATETIME,
@@ -229,7 +229,7 @@ def open_hass_ui(hass: core.HomeAssistant) -> None:
         )
 
 
-async def load_registries(hass: core.HomeAssistant) -> None:
+async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     """Load the registries and cache the result of platform.uname().processor."""
     if DATA_REGISTRIES_LOADED in hass.data:
         return
@@ -256,6 +256,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         hass.async_add_executor_job(_cache_uname_processor),
         template.async_load_custom_templates(hass),
         restore_state.async_load(hass),
+        hass.config_entries.async_initialize(),
     )
 
 
@@ -270,8 +271,7 @@ async def async_from_config_dict(
     start = monotonic()
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await hass.config_entries.async_initialize()
-    await load_registries(hass)
+    await async_load_base_functionality(hass)
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
@@ -527,11 +527,13 @@ async def async_setup_multi_components(
     config: dict[str, Any],
 ) -> None:
     """Set up multiple domains. Log on failure."""
+    # Avoid creating tasks for domains that were setup in a previous stage
+    domains_not_yet_setup = domains - hass.config.components
     futures = {
         domain: hass.async_create_task(
             async_setup_component(hass, domain, config), f"setup component {domain}"
         )
-        for domain in domains
+        for domain in domains_not_yet_setup
     }
     results = await asyncio.gather(*futures.values(), return_exceptions=True)
     for idx, domain in enumerate(futures):
@@ -555,6 +557,8 @@ async def _async_set_up_integrations(
 
     domains_to_setup = _get_domains(hass, config)
 
+    needed_requirements: set[str] = set()
+
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start rightaway
     integration_cache: dict[str, loader.Integration] = {}
@@ -570,6 +574,25 @@ async def _async_set_up_integrations(
             ).values()
             if isinstance(int_or_exc, loader.Integration)
         ]
+
+        manifest_deps: set[str] = set()
+        for itg in integrations_to_process:
+            manifest_deps.update(itg.dependencies)
+            manifest_deps.update(itg.after_dependencies)
+            needed_requirements.update(itg.requirements)
+
+        if manifest_deps:
+            # If there are dependencies, try to preload all
+            # the integrations manifest at once and add them
+            # to the list of requirements we need to install
+            # so we can try to check if they are already installed
+            # in a single call below which avoids each integration
+            # having to wait for the lock to do it individually
+            deps = await loader.async_get_integrations(hass, manifest_deps)
+            for dependant_itg in deps.values():
+                if isinstance(dependant_itg, loader.Integration):
+                    needed_requirements.update(dependant_itg.requirements)
+
         resolve_dependencies_tasks = [
             itg.resolve_dependencies()
             for itg in integrations_to_process
@@ -590,6 +613,14 @@ async def _async_set_up_integrations(
                 to_resolve.add(dep)
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
+
+    # Optimistically check if requirements are already installed
+    # ahead of setting up the integrations so we can prime the cache
+    # We do not wait for this since its an optimization only
+    hass.async_create_background_task(
+        requirements.async_load_installed_versions(hass, needed_requirements),
+        "check installed requirements",
+    )
 
     # Initialize recorder
     if "recorder" in domains_to_setup:

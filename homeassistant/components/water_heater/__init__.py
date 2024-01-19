@@ -30,6 +30,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -85,10 +86,6 @@ _DEPRECATED_SUPPORT_OPERATION_MODE = DeprecatedConstantEnum(
 _DEPRECATED_SUPPORT_AWAY_MODE = DeprecatedConstantEnum(
     WaterHeaterEntityFeature.AWAY_MODE, "2025.1"
 )
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
@@ -241,7 +238,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
+        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features_compat:
             data[ATTR_OPERATION_LIST] = self.operation_list
 
         return data
@@ -277,7 +274,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        supported_features = self.supported_features
+        supported_features = self.supported_features_compat
 
         if WaterHeaterEntityFeature.OPERATION_MODE in supported_features:
             data[ATTR_OPERATION_MODE] = self.current_operation
@@ -441,3 +438,11 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

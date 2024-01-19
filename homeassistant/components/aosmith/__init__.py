@@ -37,16 +37,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await status_coordinator.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
-    for junction_id, status_data in status_coordinator.data.items():
+    for junction_id, aosmith_device in status_coordinator.data.items():
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, junction_id)},
             manufacturer="A. O. Smith",
-            name=status_data.get("name"),
-            model=status_data.get("model"),
-            serial_number=status_data.get("serial"),
-            suggested_area=status_data.get("install", {}).get("location"),
-            sw_version=status_data.get("data", {}).get("firmwareVersion"),
+            name=aosmith_device.name,
+            model=aosmith_device.model,
+            serial_number=aosmith_device.serial,
+            suggested_area=aosmith_device.install_location,
+            sw_version=aosmith_device.status.firmware_version,
         )
 
     energy_coordinator = AOSmithEnergyCoordinator(

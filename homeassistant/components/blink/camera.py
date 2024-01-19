@@ -79,6 +79,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, camera.serial)},
             serial_number=camera.serial,
+            sw_version=camera.attributes.get("version"),
             name=name,
             manufacturer=DEFAULT_BRAND,
             model=camera.camera_type,

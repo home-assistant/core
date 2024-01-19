@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .conftest import MockLock
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 
 
 async def help_test_async_lock_service(
@@ -369,6 +369,11 @@ async def test_lock_with_illegal_default_code(
         == rf"The code for lock.test_lock doesn't match pattern ^\d{{{4}}}$"
     )
     assert exc.value.translation_key == "add_default_code"
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(lock)
 
 
 @pytest.mark.parametrize(("enum"), list(LockEntityFeature))
