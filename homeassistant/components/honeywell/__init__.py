@@ -50,10 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
-
-    entries = hass.config_entries.async_entries(DOMAIN)
     session = async_get_clientsession(hass)
 
+    entries = hass.config_entries.async_entries(DOMAIN)
     if len(entries) > 1:
         count = 0
         for entry in entries:
