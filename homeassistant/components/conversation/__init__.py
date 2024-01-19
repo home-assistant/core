@@ -349,7 +349,9 @@ async def websocket_hass_agent_debug(
                     "targets": {
                         state.entity_id: {"matched": is_matched}
                         for state, is_matched in _get_debug_targets(hass, result)
-                    },
+                    }
+                    if (not result.unmatched_entities)
+                    else {},
                     # True if match was completed with nothing left over
                     "match": (not result.unmatched_entities),
                     # Text of the sentence template that matched (or was closest)
