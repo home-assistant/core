@@ -9,7 +9,12 @@ import re
 from typing import Any, Literal
 
 from aiohttp import web
-from hassil.recognize import RecognizeResult
+from hassil.recognize import (
+    MISSING_ENTITY,
+    RecognizeResult,
+    UnmatchedRangeEntity,
+    UnmatchedTextEntity,
+)
 import voluptuous as vol
 
 from homeassistant import core
@@ -322,13 +327,16 @@ async def websocket_hass_agent_debug(
         {
             "results": [
                 {
+                    # Name of the matching intent (or the closest)
                     "intent": {
                         "name": result.intent.name,
                     },
+                    # Slot values that would be received by the intent
                     "slots": {  # direct access to values
                         entity_key: entity.value
                         for entity_key, entity in result.entities.items()
                     },
+                    # Extra slot details, such as the originally matched text
                     "details": {
                         entity_key: {
                             "name": entity.name,
@@ -337,10 +345,19 @@ async def websocket_hass_agent_debug(
                         }
                         for entity_key, entity in result.entities.items()
                     },
+                    # Entities/areas/etc. that would be targeted
                     "targets": {
                         state.entity_id: {"matched": is_matched}
                         for state, is_matched in _get_debug_targets(hass, result)
                     },
+                    # True if match was completed with nothing left over
+                    "match": (not result.unmatched_entities),
+                    # Text of the sentence template that matched (or was closest)
+                    "sentence_template": ""
+                    if (result.intent_sentence is None)
+                    else result.intent_sentence.text,
+                    # When match is incomplete, this will contain the best slot guesses
+                    "unmatched_slots": _get_unmatched_slots(result),
                 }
                 if result is not None
                 else None
@@ -391,6 +408,25 @@ def _get_debug_targets(
         # For queries, a target is "matched" based on its state
         is_matched = (state_names is None) or (state.state in state_names)
         yield state, is_matched
+
+
+def _get_unmatched_slots(
+    result: RecognizeResult,
+) -> dict[str, str | int]:
+    """Return a dict of unmatched text/range slot entities."""
+    unmatched_slots: dict[str, str | int] = {}
+    for entity in result.unmatched_entities_list:
+        if isinstance(entity, UnmatchedTextEntity):
+            if entity.text == MISSING_ENTITY:
+                # Don't report <missing> since these are just missing context
+                # slots.
+                continue
+
+            unmatched_slots[entity.name] = entity.text
+        elif isinstance(entity, UnmatchedRangeEntity):
+            unmatched_slots[entity.name] = entity.value
+
+    return unmatched_slots
 
 
 class ConversationProcessView(http.HomeAssistantView):

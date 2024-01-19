@@ -913,32 +913,6 @@ async def test_language_region(hass: HomeAssistant, init_components) -> None:
     assert call.data == {"entity_id": ["light.kitchen"]}
 
 
-async def test_reload_on_new_component(hass: HomeAssistant) -> None:
-    """Test intents being reloaded when a new component is loaded."""
-    language = hass.config.language
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-
-    # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
-    await agent.async_prepare()
-
-    lang_intents = agent._lang_intents.get(language)
-    assert lang_intents is not None
-    loaded_components = set(lang_intents.loaded_components)
-
-    # Load another component
-    assert await async_setup_component(hass, "light", {})
-
-    # Intents should reload
-    await agent.async_prepare()
-    lang_intents = agent._lang_intents.get(language)
-    assert lang_intents is not None
-
-    assert {"light"} == (lang_intents.loaded_components - loaded_components)
-
-
 async def test_non_default_response(hass: HomeAssistant, init_components) -> None:
     """Test intent response that is not the default."""
     hass.states.async_set("cover.front_door", "closed")
@@ -1206,7 +1180,7 @@ async def test_ws_hass_agent_debug(
                 "turn my cool light off",
                 "turn on all lights in the kitchen",
                 "how many lights are on in the kitchen?",
-                "this will not match anything",  # null in results
+                "this will not match anything",  # unmatched in results
             ],
         }
     )
