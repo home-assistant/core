@@ -106,8 +106,8 @@ async def test_create_network(
     ) as get_active_dataset_tlvs_mock, patch(
         "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
     ) as mock_add, patch(
-        "homeassistant.components.otbr.util.random.randbytes",
-        return_value=bytes.fromhex("1234"),
+        "homeassistant.components.otbr.util.random.randint",
+        return_value=0x1234,
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
 
@@ -117,7 +117,7 @@ async def test_create_network(
 
     create_dataset_mock.assert_called_once_with(
         python_otbr_api.models.ActiveDataSet(
-            channel=15, network_name="home-assistant-1234"
+            channel=15, network_name="home-assistant-1234", pan_id=0x1234
         )
     )
     factory_reset_mock.assert_called_once_with()
