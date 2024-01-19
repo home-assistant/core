@@ -365,7 +365,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                 except (KeyError, HomeAssistantError):
                     # This exception handling can be simplified or removed
                     # once sensor entity doesn't allow incorrect unit of measurement
-                    # with a device class
+                    # with a device class, see PR #107639
                     valid_states.append(False)
                     if entity_id not in self._state_incorrect:
                         self._state_incorrect.add(entity_id)
