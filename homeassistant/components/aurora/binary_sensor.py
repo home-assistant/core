@@ -1,4 +1,6 @@
 """Support for Aurora Forecast binary sensor."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,6 +29,6 @@ class AuroraSensor(AuroraEntity, BinarySensorEntity):
     """Implementation of an aurora sensor."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if aurora is visible."""
         return self.coordinator.data > self.coordinator.threshold
