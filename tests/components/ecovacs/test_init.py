@@ -81,9 +81,5 @@ async def test_async_setup_import(
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == config_entries_expected
-    if config_entries_expected:
-        mock_setup_entry.assert_called()
-        mock_authenticator_authenticate.assert_called()
-    else:
-        mock_setup_entry.assert_not_called()
-        mock_authenticator_authenticate.assert_not_called()
+    assert mock_setup_entry.call_count == config_entries_expected
+    assert mock_authenticator_authenticate.call_count == config_entries_expected
