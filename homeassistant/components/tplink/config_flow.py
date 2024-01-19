@@ -149,7 +149,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._discovered_device, credentials
                 )
             except AuthenticationException:
-                errors["base"] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
             else:
@@ -235,7 +235,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._discovered_device, credentials
                 )
             except AuthenticationException:
-                errors["base"] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
             else:
@@ -405,7 +405,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     raise_on_progress=True,
                 )
             except AuthenticationException:
-                errors["base"] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
             else:
