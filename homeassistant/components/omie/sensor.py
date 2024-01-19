@@ -23,7 +23,6 @@ from homeassistant.util.dt import utcnow
 
 from .const import CET, DOMAIN
 from .model import OMIESources
-from .translations import DEVICE_NAMES
 
 _DataT = TypeVar("_DataT")
 
@@ -36,14 +35,13 @@ async def async_setup_entry(
     """Set up OMIE from its config entry."""
     coordinators: OMIESources = hass.data[DOMAIN][entry.entry_id]
 
-    device_names = DEVICE_NAMES.get_all(hass.config.language)
     device_info = DeviceInfo(
-        configuration_url=f"https://www.omie.es/{DEVICE_NAMES.lang(hass.config.language)}/market-results",
+        configuration_url="https://www.omie.es/en/market-results",
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, entry.entry_id)},
-        manufacturer=device_names.device_manufacturer,
-        name=device_names.device_name,
-        model=device_names.device_model,
+        manufacturer="OMI Group",
+        name="OMIE",
+        model="MIBEL market results",
     )
 
     class PriceEntity(SensorEntity):
