@@ -2416,6 +2416,7 @@ class Config:
 
         Async friendly.
         """
+        allowlist_external_dirs = list(self.allowlist_external_dirs)
         return {
             "latitude": self.latitude,
             "longitude": self.longitude,
@@ -2426,9 +2427,9 @@ class Config:
             "components": list(self.components),
             "config_dir": self.config_dir,
             # legacy, backwards compat
-            "whitelist_external_dirs": list(self.allowlist_external_dirs),
-            "allowlist_external_dirs": list(self.allowlist_external_dirs),
-            "allowlist_external_urls": list(self.allowlist_external_urls),
+            "whitelist_external_dirs": allowlist_external_dirs,
+            "allowlist_external_dirs": allowlist_external_dirs,
+            "allowlist_external_urls": allowlist_external_dirs,
             "version": __version__,
             "config_source": self.config_source,
             "recovery_mode": self.recovery_mode,
