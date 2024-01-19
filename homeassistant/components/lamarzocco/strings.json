@@ -155,21 +155,13 @@
           "name": "Day of week",
           "description": "The day of the week to change (mon, tue, wed, thu, fri, sat, sun)"
         },
-        "hour_on": {
-          "name": "Hour on",
-          "description": "The hour to turn the machine on (0-23)"
+        "time_on": {
+          "name": "Time on",
+          "description": "The time to turn the machine on"
         },
-        "minute_on": {
-          "name": "Minute on",
-          "description": "The minute to turn the machine on (0-59)"
-        },
-        "hour_off": {
-          "name": "Hour off",
-          "description": "The hour to turn the machine off (0-23)"
-        },
-        "minute_off": {
-          "name": "Minute off",
-          "description": "The minute to turn the machine off (0-59)"
+        "time_off": {
+          "name": "Time off",
+          "description": "The time to turn the machine off"
         }
       }
     }

@@ -16,10 +16,8 @@ from .const import (
     CONF_CONFIG_ENTRY,
     CONF_DAY_OF_WEEK,
     CONF_ENABLE,
-    CONF_HOUR_OFF,
-    CONF_HOUR_ON,
-    CONF_MINUTE_OFF,
-    CONF_MINUTE_ON,
+    CONF_TIME_OFF,
+    CONF_TIME_ON,
     DAYS,
     DOMAIN,
     SERVICE_AUTO_ON_OFF_ENABLE,
@@ -51,14 +49,8 @@ SET_AUTO_ON_OFF_ENABLE_SCHEMA = CONFIG_ENTRY_SCHEMA.extend(
 SET_AUTO_ON_OFF_TIMES_SCHEMA = CONFIG_ENTRY_SCHEMA.extend(
     {
         vol.Required(CONF_DAY_OF_WEEK): vol.In(DAYS),
-        vol.Required(CONF_HOUR_ON): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),
-        vol.Optional(CONF_MINUTE_ON, default=0): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=59)
-        ),
-        vol.Required(CONF_HOUR_OFF): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),
-        vol.Optional(CONF_MINUTE_OFF, default=0): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=59)
-        ),
+        vol.Required(CONF_TIME_ON): cv.time,
+        vol.Required(CONF_TIME_OFF): cv.time,
     }
 )
 
@@ -124,12 +116,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def _set_auto_on_off_times(service: ServiceCall) -> None:
         """Service call to configure auto on/off hours for a day."""
         day_of_week = service.data[CONF_DAY_OF_WEEK]
-        hour_on = service.data[CONF_HOUR_ON]
-        minute_on = service.data[CONF_MINUTE_ON]
-        hour_off = service.data[CONF_HOUR_OFF]
-        minute_off = service.data[CONF_MINUTE_OFF]
+        time_on = service.data[CONF_TIME_ON]
+        time_off = service.data[CONF_TIME_OFF]
 
         coordinator = __get_coordinator(hass, service)
+
+        hour_on, minute_on, _ = time_on.split(":")
+        hour_off, minute_off, _ = time_off.split(":")
 
         _LOGGER.debug(
             "Setting auto on/off hours for %s from %s:%s to %s:%s",

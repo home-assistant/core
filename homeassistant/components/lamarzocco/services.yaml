@@ -49,35 +49,13 @@ set_auto_on_off_times:
             - sat
             - sun
           translation_key: day_of_week
-    hour_on:
+    time_on:
       required: true
-      example: 6
+      example: "05:00:00"
       selector:
-        number:
-          min: 0
-          max: 23
-          step: 1
-    minute_on:
+        time:
+    time_off:
       required: true
-      example: 6
+      example: "09:00:00"
       selector:
-        number:
-          min: 0
-          max: 59
-          step: 1
-    hour_off:
-      required: true
-      example: 5
-      selector:
-        number:
-          min: 0
-          max: 23
-          step: 1
-    minute_off:
-      required: true
-      example: 10
-      selector:
-        number:
-          min: 0
-          max: 59
-          step: 1
+        time:
