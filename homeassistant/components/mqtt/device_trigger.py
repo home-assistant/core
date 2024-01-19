@@ -338,11 +338,11 @@ async def async_attach_trigger(
     discovery_id: str | None = config.get(CONF_DISCOVERY_ID)
     if discovery_id is not None:
         for trig_id, trig in mqtt_data.device_triggers.items():
-            if (discovery_data := trig.discovery_data) is not None:
-                discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-                if discovery_id == discovery_hash[1]:
-                    trigger_id = trig_id
-                    break
+            if (
+                discovery_data := trig.discovery_data
+            ) is not None and discovery_id == discovery_data[ATTR_DISCOVERY_HASH][1]:
+                trigger_id = trig_id
+                break
     if trigger_id is None:
         trigger_type = config[CONF_TYPE]
         trigger_subtype = config[CONF_SUBTYPE]
