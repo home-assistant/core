@@ -435,7 +435,12 @@ def issue_for_unsupported_firmware(hass: HomeAssistant, entry: ConfigEntry) -> N
         hass,
         DOMAIN,
         FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
-        data={"host": entry.data["host"], "gen": get_device_entry_gen(entry)},
+        data={
+            "host": entry.data["host"],
+            "gen": get_device_entry_gen(entry),
+            "username": entry.data["username"],
+            "password": entry.data["password"],
+        },
         is_fixable=(entry.data["sleep_period"] == 0),
         is_persistent=False,
         severity=ir.IssueSeverity.ERROR,

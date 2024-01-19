@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import cast
 
+from aiohttp import BasicAuth
 from aioshelly.common import trigger_ota_http
 import voluptuous as vol
 
@@ -16,10 +17,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 class FirmwareUpdateFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, host: str, gen: int) -> None:
+    def __init__(self, host: str, gen: int, auth: BasicAuth) -> None:
         """Init FirmwareUpdateFlow."""
         self._host = host
         self._gen = gen
+        self._auth = auth
         super().__init__()
 
     async def async_step_init(
@@ -43,7 +45,9 @@ class FirmwareUpdateFlow(RepairsFlow):
         """Update firmware."""
 
         aiohttp_session = async_get_clientsession(self.hass)
-        update = await trigger_ota_http(aiohttp_session, self._host, self._gen)
+        update = await trigger_ota_http(
+            aiohttp_session, self._host, self._gen, self._auth
+        )
         if update:
             return self.async_create_entry(data={})
         return self.async_show_form(
@@ -61,6 +65,9 @@ async def async_create_fix_flow(
     if data is not None and "firmware_unsupported" in issue_id:
         host = cast(str, data["host"])
         gen = int(cast(str, data["gen"]))
-        return FirmwareUpdateFlow(host, gen)
+        username = cast(str, data["username"])
+        password = cast(str, data["password"])
+        auth = BasicAuth(username, password)
+        return FirmwareUpdateFlow(host, gen, auth)
 
     return ConfirmRepairFlow()
