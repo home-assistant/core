@@ -123,7 +123,7 @@ class APIEventStream(HomeAssistantView):
     name = "api:stream"
 
     @require_admin
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.StreamResponse:
         """Provide a streaming interface for the event bus."""
         hass: HomeAssistant = request.app["hass"]
         stop_obj = object()
@@ -464,7 +464,7 @@ class APIErrorLog(HomeAssistantView):
     name = "api:error_log"
 
     @require_admin
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.FileResponse:
         """Retrieve API error log."""
         hass: HomeAssistant = request.app["hass"]
         return web.FileResponse(hass.data[DATA_LOGGING])
