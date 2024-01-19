@@ -293,7 +293,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_reload_requires_auth_entries(self) -> None:
-        for flow in self.hass.config_entries.flow.async_progress_by_handler(
+        _config_entries = self.hass.config_entries
+        for flow in _config_entries.flow.async_progress_by_handler(
             DOMAIN, include_uninitialized=True
         ):
             context: dict[str, Any] = flow["context"]
@@ -304,10 +305,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 reauth_entry := self.reauth_entry
             ) and entry_id == reauth_entry.entry_id:
                 continue
-            if entry := self.hass.config_entries.async_get_entry(entry_id):
-                await self.hass.config_entries.async_reload(entry.entry_id)
+            if entry := _config_entries.async_get_entry(entry_id):
+                await _config_entries.async_reload(entry.entry_id)
                 if entry.state is ConfigEntryState.LOADED:
-                    self.hass.config_entries.flow.async_abort(flow["flow_id"])
+                    _config_entries.flow.async_abort(flow["flow_id"])
 
     @callback
     def _async_create_entry_from_device(self, device: SmartDevice) -> FlowResult:
