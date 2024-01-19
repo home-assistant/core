@@ -3,6 +3,7 @@ import json
 from unittest.mock import patch
 
 import pytest
+from requests.exceptions import RequestException
 
 from homeassistant.components.tado.const import (
     ATTR_CONFIG_ENTRY,
@@ -56,15 +57,15 @@ async def test_add_meter_readings(
 async def test_add_meter_readings_exception(
     hass: HomeAssistant,
 ) -> None:
-    """Test the add_meter_readings service with a None response (generic RequestExceptionwas raised)."""
+    """Test the add_meter_readings service with a RequestException."""
 
     await async_init_integration(hass)
 
     config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     with (
         patch(
-            "homeassistant.components.tado.TadoConnector.set_meter_reading",
-            return_value=None,
+            "PyTado.interface.Tado.set_eiq_meter_readings",
+            side_effect=RequestException("Error"),
         ),
         pytest.raises(HomeAssistantError) as exc,
     ):
@@ -78,7 +79,7 @@ async def test_add_meter_readings_exception(
             blocking=True,
         )
 
-        assert "Could not add meter reading" in str(exc)
+        assert "Could not set meter reading" in str(exc)
 
 
 async def test_add_meter_readings_invalid(
