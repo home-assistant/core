@@ -42,6 +42,11 @@
       }
     }
   },
+  "exceptions": {
+    "service_error": {
+      "message": "Service call encountered error: {error}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "brew_active": {

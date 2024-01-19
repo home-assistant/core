@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from lmcloud.exceptions import RequestNotSuccessful
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.calendar import (
@@ -11,8 +13,18 @@ from homeassistant.components.calendar import (
     EVENT_START_DATETIME,
     SERVICE_GET_EVENTS,
 )
+from homeassistant.components.lamarzocco.calendar import (
+    ATTR_DAY_OF_WEEK,
+    ATTR_ENABLE,
+    ATTR_TIME_OFF,
+    ATTR_TIME_ON,
+    SERVICE_AUTO_ON_OFF_ENABLE,
+    SERVICE_AUTO_ON_OFF_TIMES,
+)
+from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -93,3 +105,80 @@ async def test_no_calendar_events_global_disable(
         return_response=True,
     )
     assert events == snapshot
+
+
+# test services
+
+
+async def test_service_auto_on_off_enable(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the La Marzocco auto on/off enable service."""
+
+    await async_init_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_AUTO_ON_OFF_ENABLE,
+        {
+            ATTR_DAY_OF_WEEK: "mon",
+            ATTR_ENABLE: True,
+        },
+        blocking=True,
+    )
+
+    assert len(mock_lamarzocco.set_auto_on_off_enable.mock_calls) == 1
+    mock_lamarzocco.set_auto_on_off_enable.assert_called_once_with(
+        day_of_week="mon", enable=True
+    )
+
+
+async def test_service_set_auto_on_off_times(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the La Marzocco auto on/off times service."""
+
+    await async_init_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_AUTO_ON_OFF_TIMES,
+        {ATTR_DAY_OF_WEEK: "tue", ATTR_TIME_ON: "08:30:00", ATTR_TIME_OFF: "17:00:00"},
+        blocking=True,
+    )
+
+    assert len(mock_lamarzocco.set_auto_on_off.mock_calls) == 1
+    mock_lamarzocco.set_auto_on_off.assert_called_once_with(
+        day_of_week="tue", hour_on=8, minute_on=30, hour_off=17, minute_off=0
+    )
+
+
+async def test_service_call_error(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an exception during the service call."""
+
+    mock_lamarzocco.set_auto_on_off_enable.side_effect = RequestNotSuccessful(
+        "BadRequest"
+    )
+
+    await async_init_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        HomeAssistantError, match="Service call encountered an error: BadRequest"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_AUTO_ON_OFF_ENABLE,
+            {
+                ATTR_DAY_OF_WEEK: "mon",
+                ATTR_ENABLE: True,
+            },
+            blocking=True,
+        )

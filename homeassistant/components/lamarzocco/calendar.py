@@ -1,17 +1,51 @@
 """Calendar platform for La Marzocco espresso machines."""
-from collections.abc import Iterator
-from datetime import datetime, timedelta
+from collections.abc import Callable, Coroutine, Iterator
+from datetime import datetime, time, timedelta
+import logging
+from typing import Any, Final
+
+from lmcloud.exceptions import AuthFail, RequestNotSuccessful
+import voluptuous as vol
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .entity import LaMarzoccoBaseEntity
 
-CALENDAR_KEY = "auto_on_off_schedule"
+_LOGGER = logging.getLogger(__name__)
+
+
+CALENDAR_KEY: Final = "auto_on_off_schedule"
+SERVICE_AUTO_ON_OFF_ENABLE: Final = "set_auto_on_off_enable"
+SERVICE_AUTO_ON_OFF_TIMES: Final = "set_auto_on_off_times"
+
+ATTR_DAY_OF_WEEK: Final = "day_of_week"
+ATTR_ENABLE: Final = "enable"
+ATTR_TIME_ON: Final = "time_on"
+ATTR_TIME_OFF: Final = "time_off"
+
+
+SET_DAY_OF_WEEK_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DAY_OF_WEEK): vol.In(
+            [
+                "mon",
+                "tue",
+                "wed",
+                "thu",
+                "fri",
+                "sat",
+                "sun",
+            ]
+        ),
+    }
+)
 
 
 async def async_setup_entry(
@@ -22,7 +56,29 @@ async def async_setup_entry(
     """Set up switch entities and services."""
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    platform = entity_platform.async_get_current_platform()
     async_add_entities([LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY)])
+
+    platform.async_register_entity_service(
+        SERVICE_AUTO_ON_OFF_ENABLE,
+        SET_DAY_OF_WEEK_SCHEMA.extend(
+            {
+                vol.Required(ATTR_ENABLE): cv.boolean,
+            }
+        ),
+        "set_auto_on_off_enable",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_AUTO_ON_OFF_TIMES,
+        SET_DAY_OF_WEEK_SCHEMA.extend(
+            {
+                vol.Required(ATTR_TIME_ON): cv.time,
+                vol.Required(ATTR_TIME_OFF): cv.time,
+            }
+        ),
+        "set_auto_on_off_times",
+    )
 
 
 class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
@@ -98,4 +154,47 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
             ),
             summary=f"Machine {self.coordinator.lm.true_model_name} ({self.coordinator.lm.serial_number}) on",
             description="Machine is scheduled to turn on at the start time and off at the end time",
+        )
+
+    async def _call_service(
+        self, func: Callable[..., Coroutine[Any, Any, Any]], *args: Any, **kwargs: Any
+    ) -> None:
+        """Call a service and handle exceptions."""
+        try:
+            await func(*args, **kwargs)
+        except (AuthFail, RequestNotSuccessful, TimeoutError) as exc:
+            raise HomeAssistantError(
+                f"Service call encountered an error: {exc}",
+                translation_key="service_error",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+
+    async def set_auto_on_off_enable(self, day_of_week: str, enable: bool) -> None:
+        """Service call to enable auto on/off."""
+
+        _LOGGER.debug("Setting auto on/off for %s to %s", day_of_week, enable)
+        await self._call_service(
+            self.coordinator.lm.set_auto_on_off_enable,
+            day_of_week=day_of_week,
+            enable=enable,
+        )
+
+    async def set_auto_on_off_times(
+        self, day_of_week: str, time_on: time, time_off: time
+    ) -> None:
+        """Service call to configure auto on/off hours for a day."""
+
+        _LOGGER.debug(
+            "Setting auto on/off hours for %s from %s to %s",
+            day_of_week,
+            time_on,
+            time_off,
+        )
+        await self._call_service(
+            self.coordinator.lm.set_auto_on_off,
+            day_of_week=day_of_week,
+            hour_on=time_on.hour,
+            minute_on=time_on.minute,
+            hour_off=time_on.hour,
+            minute_off=time_on.minute,
         )
