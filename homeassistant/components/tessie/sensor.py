@@ -116,7 +116,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         icon="mdi:car-shift-pattern",
         options=["p", "d", "r", "n"],
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: x.lower() if isinstance(x, str) else None,
+        value_fn=lambda x: x.lower() if isinstance(x, str) else x,
     ),
     TessieSensorEntityDescription(
         key="vehicle_state_odometer",
