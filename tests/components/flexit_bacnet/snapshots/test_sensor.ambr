@@ -1,19 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.device_name_air_filter_operating_time0]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Name Air filter operating time',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_name_air_filter_operating_time',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '8820.0',
-  })
-# ---
-# name: test_sensors[sensor.device_name_air_filter_operating_time0].1
+# name: test_sensors[sensor.device_name_air_filter_operating_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -52,35 +38,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensors[sensor.device_name_air_filter_operating_time0].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_air_filter_operating_time1]
+# name: test_sensors[sensor.device_name_air_filter_operating_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Name Air filter operating time',
@@ -94,88 +52,7 @@
     'state': '8820.0',
   })
 # ---
-# name: test_sensors[sensor.device_name_air_filter_operating_time1].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_name_air_filter_operating_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Air filter operating time',
-    'platform': 'flexit_bacnet',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'air_filter_operating_time',
-    'unique_id': '0000-0001-air_filter_operating_time',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-  })
-# ---
-# name: test_sensors[sensor.device_name_air_filter_operating_time1].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_electric_heater_power]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Name Electric heater power',
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_name_electric_heater_power',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.396365851163864',
-  })
-# ---
-# name: test_sensors[sensor.device_name_electric_heater_power].1
+# name: test_sensors[sensor.device_name_electric_heater_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -209,49 +86,21 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensors[sensor.device_name_electric_heater_power].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_exhaust_air_fan_control_signal]
+# name: test_sensors[sensor.device_name_electric_heater_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Name Exhaust air fan control signal',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      'device_class': 'power',
+      'friendly_name': 'Device Name Electric heater power',
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_exhaust_air_fan_control_signal',
+    'entity_id': 'sensor.device_name_electric_heater_power',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '70',
+    'state': '0.396365851163864',
   })
 # ---
-# name: test_sensors[sensor.device_name_exhaust_air_fan_control_signal].1
+# name: test_sensors[sensor.device_name_exhaust_air_fan_control_signal-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -284,49 +133,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.device_name_exhaust_air_fan_control_signal].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_exhaust_air_fan_rpm]
+# name: test_sensors[sensor.device_name_exhaust_air_fan_control_signal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Name Exhaust air fan rpm',
+      'friendly_name': 'Device Name Exhaust air fan control signal',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'rpm',
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_exhaust_air_fan_rpm',
+    'entity_id': 'sensor.device_name_exhaust_air_fan_control_signal',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '2606',
+    'state': '70',
   })
 # ---
-# name: test_sensors[sensor.device_name_exhaust_air_fan_rpm].1
+# name: test_sensors[sensor.device_name_exhaust_air_fan_rpm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -359,49 +180,21 @@
     'unit_of_measurement': 'rpm',
   })
 # ---
-# name: test_sensors[sensor.device_name_exhaust_air_fan_rpm].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_exhaust_air_temperature]
+# name: test_sensors[sensor.device_name_exhaust_air_fan_rpm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Device Name Exhaust air temperature',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'friendly_name': 'Device Name Exhaust air fan rpm',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'rpm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_exhaust_air_temperature',
+    'entity_id': 'sensor.device_name_exhaust_air_fan_rpm',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '-3.3',
+    'state': '2606',
   })
 # ---
-# name: test_sensors[sensor.device_name_exhaust_air_temperature].1
+# name: test_sensors[sensor.device_name_exhaust_air_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -432,49 +225,21 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[sensor.device_name_exhaust_air_temperature].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_extract_air_temperature]
+# name: test_sensors[sensor.device_name_exhaust_air_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Device Name Extract air temperature',
+      'friendly_name': 'Device Name Exhaust air temperature',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_extract_air_temperature',
+    'entity_id': 'sensor.device_name_exhaust_air_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '19.0',
+    'state': '-3.3',
   })
 # ---
-# name: test_sensors[sensor.device_name_extract_air_temperature].1
+# name: test_sensors[sensor.device_name_extract_air_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -505,50 +270,21 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[sensor.device_name_extract_air_temperature].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_fireplace_ventilation_remaining_duration]
+# name: test_sensors[sensor.device_name_extract_air_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Device Name Fireplace ventilation remaining duration',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'device_class': 'temperature',
+      'friendly_name': 'Device Name Extract air temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_fireplace_ventilation_remaining_duration',
+    'entity_id': 'sensor.device_name_extract_air_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.0',
+    'state': '19.0',
   })
 # ---
-# name: test_sensors[sensor.device_name_fireplace_ventilation_remaining_duration].1
+# name: test_sensors[sensor.device_name_fireplace_ventilation_remaining_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -587,49 +323,22 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[sensor.device_name_fireplace_ventilation_remaining_duration].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_heat_exchanger_efficiency]
+# name: test_sensors[sensor.device_name_fireplace_ventilation_remaining_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Name Heat exchanger efficiency',
+      'device_class': 'duration',
+      'friendly_name': 'Device Name Fireplace ventilation remaining duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_heat_exchanger_efficiency',
+    'entity_id': 'sensor.device_name_fireplace_ventilation_remaining_duration',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '81',
+    'state': '10.0',
   })
 # ---
-# name: test_sensors[sensor.device_name_heat_exchanger_efficiency].1
+# name: test_sensors[sensor.device_name_heat_exchanger_efficiency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -662,49 +371,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.device_name_heat_exchanger_efficiency].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_heat_exchanger_speed]
+# name: test_sensors[sensor.device_name_heat_exchanger_efficiency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Name Heat exchanger speed',
+      'friendly_name': 'Device Name Heat exchanger efficiency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_heat_exchanger_speed',
+    'entity_id': 'sensor.device_name_heat_exchanger_efficiency',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '81',
   })
 # ---
-# name: test_sensors[sensor.device_name_heat_exchanger_speed].1
+# name: test_sensors[sensor.device_name_heat_exchanger_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -737,49 +418,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.device_name_heat_exchanger_speed].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_outside_air_temperature]
+# name: test_sensors[sensor.device_name_heat_exchanger_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Device Name Outside air temperature',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'friendly_name': 'Device Name Heat exchanger speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_outside_air_temperature',
+    'entity_id': 'sensor.device_name_heat_exchanger_speed',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '-8.6',
+    'state': '100',
   })
 # ---
-# name: test_sensors[sensor.device_name_outside_air_temperature].1
+# name: test_sensors[sensor.device_name_outside_air_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -810,50 +463,21 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[sensor.device_name_outside_air_temperature].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_rapid_ventilation_remaining_duration]
+# name: test_sensors[sensor.device_name_outside_air_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Device Name Rapid ventilation remaining duration',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'device_class': 'temperature',
+      'friendly_name': 'Device Name Outside air temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_rapid_ventilation_remaining_duration',
+    'entity_id': 'sensor.device_name_outside_air_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '30.0',
+    'state': '-8.6',
   })
 # ---
-# name: test_sensors[sensor.device_name_rapid_ventilation_remaining_duration].1
+# name: test_sensors[sensor.device_name_rapid_ventilation_remaining_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -892,49 +516,22 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[sensor.device_name_rapid_ventilation_remaining_duration].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_room_temperature]
+# name: test_sensors[sensor.device_name_rapid_ventilation_remaining_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Device Name Room temperature',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'device_class': 'duration',
+      'friendly_name': 'Device Name Rapid ventilation remaining duration',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_room_temperature',
+    'entity_id': 'sensor.device_name_rapid_ventilation_remaining_duration',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '19.0',
+    'state': '30.0',
   })
 # ---
-# name: test_sensors[sensor.device_name_room_temperature].1
+# name: test_sensors[sensor.device_name_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -965,49 +562,21 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[sensor.device_name_room_temperature].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_supply_air_fan_control_signal]
+# name: test_sensors[sensor.device_name_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Name Supply air fan control signal',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      'device_class': 'temperature',
+      'friendly_name': 'Device Name Room temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_supply_air_fan_control_signal',
+    'entity_id': 'sensor.device_name_room_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '74',
+    'state': '19.0',
   })
 # ---
-# name: test_sensors[sensor.device_name_supply_air_fan_control_signal].1
+# name: test_sensors[sensor.device_name_supply_air_fan_control_signal-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1040,49 +609,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.device_name_supply_air_fan_control_signal].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_supply_air_fan_rpm]
+# name: test_sensors[sensor.device_name_supply_air_fan_control_signal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Name Supply air fan rpm',
+      'friendly_name': 'Device Name Supply air fan control signal',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'rpm',
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_supply_air_fan_rpm',
+    'entity_id': 'sensor.device_name_supply_air_fan_control_signal',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '2784',
+    'state': '74',
   })
 # ---
-# name: test_sensors[sensor.device_name_supply_air_fan_rpm].1
+# name: test_sensors[sensor.device_name_supply_air_fan_rpm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1115,49 +656,21 @@
     'unit_of_measurement': 'rpm',
   })
 # ---
-# name: test_sensors[sensor.device_name_supply_air_fan_rpm].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.device_name_supply_air_temperature]
+# name: test_sensors[sensor.device_name_supply_air_fan_rpm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Device Name Supply air temperature',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'friendly_name': 'Device Name Supply air fan rpm',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'rpm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_name_supply_air_temperature',
+    'entity_id': 'sensor.device_name_supply_air_fan_rpm',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '19.1',
+    'state': '2784',
   })
 # ---
-# name: test_sensors[sensor.device_name_supply_air_temperature].1
+# name: test_sensors[sensor.device_name_supply_air_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1188,31 +701,17 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[sensor.device_name_supply_air_temperature].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
+# name: test_sensors[sensor.device_name_supply_air_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Device Name Supply air temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'flexit_bacnet',
-        '0000-0001',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Flexit',
-    'model': 'Nordic',
-    'name': 'Device Name',
-    'name_by_user': None,
-    'serial_number': '0000-0001',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
+    'context': <ANY>,
+    'entity_id': 'sensor.device_name_supply_air_temperature',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19.1',
   })
 # ---
