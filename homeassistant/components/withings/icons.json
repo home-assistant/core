@@ -70,6 +70,46 @@
       "workout_distance": {
         "default": "mdi:map-marker-distance"
       },
+      "workout_type": {
+        "state": {
+          "walk": "mdi:walk",
+          "run": "mdi:run",
+          "hiking": "mdi:hiking",
+          "skating": "mdi:skateboarding",
+          "bicycling": "mdi:bike",
+          "swimming": "mdi:swim",
+          "surfing": "mdi:surfing",
+          "kitesurfing": "mdi:kitesurfing",
+          "windsurfing": "mdi:kitesurfing",
+          "tennis": "mdi:tennis",
+          "table_tennis": "mdi:table-tennis",
+          "squash": "mdi:racquetball",
+          "badminton": "mdi:badminton",
+          "lift_weights": "mdi:weight-lifter",
+          "basket_ball": "mdi:basketball",
+          "soccer": "mdi:soccer",
+          "football": "mdi:football",
+          "rugby": "mdi:rugby",
+          "volley_ball": "mdi:volleyball",
+          "waterpolo": "mdi:water-polo",
+          "horse_riding": "mdi:horse-human",
+          "golf": "mdi:golf",
+          "yoga": "mdi:yoga",
+          "dancing": "mdi:human-female-dance",
+          "boxing": "mdi:boxing-glove",
+          "fencing": "mdi:fencing",
+          "martial_arts": "mdi:karate",
+          "skiing": "mdi:ski",
+          "snowboarding": "mdi:snowboard",
+          "rowing": "mdi:rowing",
+          "baseball": "mdi:baseball",
+          "handball": "mdi:handball",
+          "hockey": "mdi:hockey-sticks",
+          "ice_hockey": "mdi:hockey-sticks",
+          "climbing": "mdi:carabiner",
+          "ice_skating": "mdi:skate"
+        }
+      },
       "workout_elevation": {
         "default": "mdi:stairs-up"
       },
