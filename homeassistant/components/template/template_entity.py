@@ -5,7 +5,7 @@ from collections.abc import Callable, Mapping
 import contextlib
 import itertools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -55,6 +55,11 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -294,7 +299,7 @@ class TemplateEntity(Entity):
                 super().__init__("unknown.unknown", STATE_UNKNOWN)
                 self.entity_id = None  # type: ignore[assignment]
 
-            @property
+            @cached_property
             def name(self) -> str:
                 """Name of this state."""
                 return "<None>"

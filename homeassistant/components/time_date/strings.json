@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "deprecated_beat": {
+      "title": "The `{config_key}` Time & Date sensor is being removed",
+      "description": "Please remove the `{config_key}` key from the `{display_options}` for the {integration} entry in your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

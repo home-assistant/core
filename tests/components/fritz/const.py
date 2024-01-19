@@ -132,6 +132,21 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         },
         "GetPortMappingNumberOfEntries": {},
     },
+    "WLANConfiguration1": {
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewSSID": "MyWifi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+        },
+        "GetSSID": {
+            "NewSSID": "MyWifi",
+        },
+        "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
+    },
     "X_AVM-DE_Homeauto1": {
         "GetGenericDeviceInfos": [
             {

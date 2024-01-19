@@ -10,6 +10,7 @@ from yalexs_ble import (
     LockState,
     PushLock,
     YaleXSBLEError,
+    close_stale_connections_by_address,
     local_name_is_unique,
 )
 
@@ -46,6 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     id_ = local_name if has_unique_local_name else address
     push_lock.set_name(f"{entry.title} ({id_})")
+
+    # Ensure any lingering connections are closed since the device may not be
+    # advertising when its connected to another client which will prevent us
+    # from setting the device and setup will fail.
+    await close_stale_connections_by_address(address)
 
     @callback
     def _async_update_ble(

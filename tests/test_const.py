@@ -9,6 +9,7 @@ from homeassistant import const
 from homeassistant.components import sensor
 
 from tests.common import (
+    help_test_all,
     import_and_test_deprecated_constant,
     import_and_test_deprecated_constant_enum,
 )
@@ -21,6 +22,11 @@ def _create_tuples(
     for enum in value:
         result.append((enum, constant_prefix))
     return result
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(const)
 
 
 @pytest.mark.parametrize(
