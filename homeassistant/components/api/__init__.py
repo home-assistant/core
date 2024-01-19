@@ -429,7 +429,7 @@ class APIComponentsView(HomeAssistantView):
     def get(self, request: web.Request) -> web.Response:
         """Get current loaded components."""
         hass: HomeAssistant = request.app["hass"]
-        return self.json(hass.config.components)
+        return self.json(list(hass.config.components))
 
 
 @lru_cache
