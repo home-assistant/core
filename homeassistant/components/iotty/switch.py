@@ -21,7 +21,6 @@ class IottyLightSwitch(SwitchEntity):
     """Haas entity class for iotty LightSwitch."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
@@ -55,6 +54,11 @@ class IottyLightSwitch(SwitchEntity):
             self._iotty_device.is_on,
         )
         return self._iotty_device.is_on
+
+    @property
+    def name(self) -> str:
+        """Get the name of this iotty Device."""
+        return self._iotty_device.name
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the LightSwitch on."""

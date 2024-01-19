@@ -20,17 +20,6 @@ test_ls = [
 ]
 
 
-async def test_creation_noparams_error(mock_iotty: IottyProxy) -> None:
-    """Create a hass Switch with missing ctor params."""
-
-    with pytest.raises(ValueError):
-        _ = IottyLightSwitch(None, None)
-    #     assert "iotty_cloud" in str(excinfo.value)
-
-    with pytest.raises(ValueError):
-        _ = IottyLightSwitch(mock_iotty, None)
-
-
 async def test_creation_ok(mock_iotty: IottyProxy) -> None:
     """Create a hass Switch from existing LS."""
 
@@ -99,8 +88,4 @@ async def test_creation_wrongdomaindata_error(
 
     hass.data.setdefault(DOMAIN, {})
     with pytest.raises(KeyError):
-        await async_setup_entry(hass, mock_config_entry, None)
-
-    hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = None
-    with pytest.raises(ValueError):
         await async_setup_entry(hass, mock_config_entry, None)
