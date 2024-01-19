@@ -158,12 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.async_create_task(self._async_reload_requires_auth_entries())
                 return await self.async_step_discovery_confirm()
 
-        placeholders = {
-            "name": self._discovered_device.alias
-            or mac_alias(self._discovered_device.mac),
-            "model": self._discovered_device.model,
-            "host": self._discovered_device.host,
-        }
+        placeholders = self._async_make_placeholders_from_discovery()
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_auth_confirm",
@@ -171,6 +166,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=placeholders,
         )
+
+    def _async_make_placeholders_from_discovery(self) -> dict[str, str]:
+        """Make placeholders for the discovery steps."""
+        discovered_device = self._discovered_device
+        assert discovered_device is not None
+        return {
+            "name": discovered_device.alias or mac_alias(discovered_device.mac),
+            "model": discovered_device.model,
+            "host": discovered_device.host,
+        }
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -181,11 +186,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self._async_create_entry_from_device(self._discovered_device)
 
         self._set_confirm_only()
-        placeholders = {
-            "name": self._discovered_device.alias,
-            "model": self._discovered_device.model,
-            "host": self._discovered_device.host,
-        }
+        placeholders = self._async_make_placeholders_from_discovery()
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders
