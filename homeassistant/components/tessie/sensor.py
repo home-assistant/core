@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import TessieStateUpdateCoordinator
@@ -37,7 +39,7 @@ from .entity import TessieEntity
 class TessieSensorEntityDescription(SensorEntityDescription):
     """Describes Tessie Sensor entity."""
 
-    value_fn: Callable[[StateType], StateType] = lambda x: x
+    value_fn: Callable[[StateType], StateType | datetime] = lambda x: x
 
 
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
@@ -82,6 +84,14 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
+        key="charge_state_time_to_full_charge",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda x: (dt_util.now() + timedelta(hours=x))
+        if isinstance(x, (int, float)) and x > 0
+        else None,
+    ),
+    TessieSensorEntityDescription(
         key="charge_state_battery_range",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.MILES,
@@ -106,7 +116,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         icon="mdi:car-shift-pattern",
         options=["p", "d", "r", "n"],
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: x.lower() if isinstance(x, str) else x,
+        value_fn=lambda x: x.lower() if isinstance(x, str) else None,
     ),
     TessieSensorEntityDescription(
         key="vehicle_state_odometer",
@@ -243,6 +253,6 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.get())
