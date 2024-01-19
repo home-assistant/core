@@ -34,7 +34,7 @@ class EcovacsController:
 
     def __init__(self, hass: HomeAssistant, config: Mapping[str, Any]) -> None:
         """Initialize controller."""
-        self._hass: HomeAssistant = hass
+        self._hass = hass
         self._devices: list[Device] = []
         self._legacy_devices: list[VacBot] = []
         verify_ssl = config.get(CONF_VERIFY_SSL, True)
@@ -55,7 +55,7 @@ class EcovacsController:
         self._api_client = ApiClient(self._authenticator)
 
         mqtt_config = MqttConfiguration(config=self._config)
-        self._mqtt: MqttClient = MqttClient(mqtt_config, self._authenticator)
+        self._mqtt = MqttClient(mqtt_config, self._authenticator)
 
     @property
     def devices(self) -> list[Device]:
