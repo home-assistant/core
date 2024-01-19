@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 import datetime as dt
 from datetime import date, datetime, timedelta
 import logging
@@ -12,7 +13,11 @@ from zoneinfo import ZoneInfo
 from pyomie.model import OMIEResults
 from pyomie.util import localize_hourly_data
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
@@ -27,6 +32,22 @@ from .model import OMIESources
 _DataT = TypeVar("_DataT")
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class OMIEPriceEntityDescription(SensorEntityDescription):
+    """Describes OMIE price entities."""
+
+    def __init__(self, key: str) -> None:
+        """Construct an OMIEPriceEntityDescription."""
+        super().__init__(
+            key=key,
+            has_entity_name=True,
+            translation_key=key,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.MEGA_WATT_HOUR}",
+            icon="mdi:currency-eur",
+        )
 
 
 async def async_setup_entry(
@@ -44,7 +65,7 @@ async def async_setup_entry(
         model="MIBEL market results",
     )
 
-    class PriceEntity(SensorEntity):
+    class OMIEPriceEntity(SensorEntity):
         _entity_component_unrecorded_attributes = frozenset(
             {
                 f"{day}_{attr}"
@@ -53,21 +74,12 @@ async def async_setup_entry(
             }
         )
 
-        def __init__(self, sources: OMIESources, key: str) -> None:
+        def __init__(self, description: OMIEPriceEntityDescription) -> None:
             """Initialize the sensor."""
+            self.entity_description = description
             self._attr_device_info = device_info
-            self._attr_native_unit_of_measurement = (
-                f"{CURRENCY_EURO}/{UnitOfEnergy.MEGA_WATT_HOUR}"
-            )
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-            self._attr_unique_id = slugify(f"omie_{key}")
-            self._attr_icon = "mdi:currency-eur"
+            self._attr_unique_id = slugify(description.key)
             self._attr_should_poll = False
-            self._attr_translation_key = key
-            self._attr_has_entity_name = True
-            self._key = key
-            self._sources = sources
-            self.entity_id = f"sensor.{self._attr_unique_id}"
 
         async def async_added_to_hass(self) -> None:
             """Register callbacks."""
@@ -75,11 +87,13 @@ async def async_setup_entry(
             @callback
             def update() -> None:
                 """Update this sensor's state."""
+                pyomie_key = self.entity_description.key
+
                 cet_hourly_data = (
                     {}
-                    | _pick_series_cet(self._sources.today.data, self._key)
-                    | _pick_series_cet(self._sources.tomorrow.data, self._key)
-                    | _pick_series_cet(self._sources.yesterday.data, self._key)
+                    | _pick_series_cet(coordinators.today.data, pyomie_key)
+                    | _pick_series_cet(coordinators.tomorrow.data, pyomie_key)
+                    | _pick_series_cet(coordinators.yesterday.data, pyomie_key)
                 )
 
                 # times are formatted in the HA configured time zone and day boundaries are also
@@ -120,13 +134,13 @@ async def async_setup_entry(
 
                 self.async_schedule_update_ha_state()
 
-            self.async_on_remove(self._sources.today.async_add_listener(update))
-            self.async_on_remove(self._sources.tomorrow.async_add_listener(update))
-            self.async_on_remove(self._sources.yesterday.async_add_listener(update))
+            self.async_on_remove(coordinators.today.async_add_listener(update))
+            self.async_on_remove(coordinators.tomorrow.async_add_listener(update))
+            self.async_on_remove(coordinators.yesterday.async_add_listener(update))
 
     sensors = [
-        PriceEntity(sources=coordinators, key="spot_price_pt"),
-        PriceEntity(sources=coordinators, key="spot_price_es"),
+        OMIEPriceEntity(OMIEPriceEntityDescription("spot_price_pt")),
+        OMIEPriceEntity(OMIEPriceEntityDescription("spot_price_es")),
     ]
 
     async_add_entities(sensors, update_before_add=True)
