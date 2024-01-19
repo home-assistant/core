@@ -31,14 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 
 _ATTRIBUTION = "Data provided by OMIE.es"
 
-_UNRECORDED_ATTRIBUTES = frozenset(
-    {
-        f"{day}_{attr}"
-        for day in ("today", "tomorrow")
-        for attr in ("hours", "provisional")
-    }
-)
-
 
 @dataclass(frozen=True)
 class OMIEPriceEntityDescription(SensorEntityDescription):
@@ -75,13 +67,19 @@ async def async_setup_entry(
         return ZoneInfo(hass.config.time_zone)
 
     class OMIEPriceEntity(SensorEntity):
-        _entity_component_unrecorded_attributes = _UNRECORDED_ATTRIBUTES
+        _entity_component_unrecorded_attributes = frozenset(
+            {
+                f"{day}_{attr}"
+                for day in ("today", "tomorrow")
+                for attr in ("hours", "provisional")
+            }
+        )
 
-        def __init__(self, description: OMIEPriceEntityDescription) -> None:
+        def __init__(self, key: str) -> None:
             """Initialize the sensor."""
-            self.entity_description = description
+            self.entity_description = OMIEPriceEntityDescription(key)
             self._attr_device_info = device_info
-            self._attr_unique_id = slugify(description.key)
+            self._attr_unique_id = slugify(key)
             self._attr_should_poll = False
             self._attr_attribution = _ATTRIBUTION
 
@@ -140,8 +138,8 @@ async def async_setup_entry(
             return [first] + rest
 
     sensors = [
-        OMIEPriceEntity(OMIEPriceEntityDescription("spot_price_pt")),
-        OMIEPriceEntity(OMIEPriceEntityDescription("spot_price_es")),
+        OMIEPriceEntity("spot_price_pt"),
+        OMIEPriceEntity("spot_price_es"),
     ]
 
     async_add_entities(sensors, update_before_add=True)
