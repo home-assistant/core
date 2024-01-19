@@ -97,9 +97,9 @@ async def test_sensors_created(hass: HomeAssistant) -> None:
     entity_registry = er.async_get(hass)
 
     sensors = er.async_entries_for_config_entry(entity_registry, "uuid")
-    assert len(charge_point_status.keys()) + len(
-        charge_point_status_timestamps.keys()
-    ) + len(grid.keys()) == len(sensors)
+    assert len(charge_point_status) + len(charge_point_status_timestamps) + len(
+        grid
+    ) == len(sensors)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

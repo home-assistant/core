@@ -45,7 +45,6 @@ class BlueCurrentEntity(Entity):
     @abstractmethod
     def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
-        raise NotImplementedError
 
 
 class ChargepointEntity(BlueCurrentEntity):
