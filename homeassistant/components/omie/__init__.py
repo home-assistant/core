@@ -25,26 +25,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cet_tomorrow = lambda: cet_today() + timedelta(days=1)
     cet_yesterday = lambda: cet_today() - timedelta(days=1)
 
-    spot_today = OMIEDailyCoordinator(
-        hass, "spot", market_updater=spot_price, market_date=cet_today
-    )
-
-    spot_tomorrow = OMIEDailyCoordinator(
-        hass,
-        "spot_next",
-        market_updater=spot_price,
-        market_date=cet_tomorrow,
-        none_before="13:30",
-    )
-
-    spot_yesterday = OMIEDailyCoordinator(
-        hass, "spot_previous", market_updater=spot_price, market_date=cet_yesterday
-    )
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = OMIESources(
-        today=spot_today,
-        tomorrow=spot_tomorrow,
-        yesterday=spot_yesterday,
+        today=OMIEDailyCoordinator(
+            hass,
+            "omie_spot_today",
+            market_updater=spot_price,
+            market_date=cet_today,
+        ),
+        tomorrow=OMIEDailyCoordinator(
+            hass,
+            "omie_spot_tomorrow",
+            market_updater=spot_price,
+            market_date=cet_tomorrow,
+            none_before="13:30",
+        ),
+        yesterday=OMIEDailyCoordinator(
+            hass,
+            "omie_spot_yesterday",
+            market_updater=spot_price,
+            market_date=cet_yesterday,
+        ),
     )
 
     hass.async_create_task(
