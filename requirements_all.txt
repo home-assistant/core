@@ -33,17 +33,6 @@ HATasmota==0.8.0
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
 
-# homeassistant.components.doods
-# homeassistant.components.generic
-# homeassistant.components.image_upload
-# homeassistant.components.matrix
-# homeassistant.components.proxy
-# homeassistant.components.qrcode
-# homeassistant.components.seven_segments
-# homeassistant.components.sighthound
-# homeassistant.components.tensorflow
-Pillow==10.1.0
-
 # homeassistant.components.plex
 PlexAPI==4.15.7
 
@@ -1503,6 +1492,17 @@ pigpio==1.78
 
 # homeassistant.components.pilight
 pilight==0.1.1
+
+# homeassistant.components.doods
+# homeassistant.components.generic
+# homeassistant.components.image_upload
+# homeassistant.components.matrix
+# homeassistant.components.proxy
+# homeassistant.components.qrcode
+# homeassistant.components.seven_segments
+# homeassistant.components.sighthound
+# homeassistant.components.tensorflow
+pillow==10.2.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
