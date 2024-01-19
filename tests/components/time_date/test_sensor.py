@@ -5,9 +5,10 @@ from unittest.mock import ANY, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.time_date.const import DOMAIN
+from homeassistant.components.time_date.const import DOMAIN, OPTION_TYPES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import event, issue_registry as ir
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import load_int
@@ -53,7 +54,7 @@ async def test_intervals(
     hass.config.set_time_zone("UTC")
     freezer.move_to(start_time)
 
-    await load_int(hass, [display_option])
+    await load_int(hass, display_option)
 
     mock_track_interval.assert_called_once_with(hass, ANY, tracked_time)
 
@@ -64,7 +65,8 @@ async def test_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> No
     now = dt_util.utc_from_timestamp(1495068856)
     freezer.move_to(now)
 
-    await load_int(hass)
+    for option in OPTION_TYPES:
+        await load_int(hass, option)
 
     state = hass.states.get("sensor.time")
     assert state.state == "00:54"
@@ -123,7 +125,8 @@ async def test_states_non_default_timezone(
     now = dt_util.utc_from_timestamp(1495068856)
     freezer.move_to(now)
 
-    await load_int(hass)
+    for option in OPTION_TYPES:
+        await load_int(hass, option)
 
     state = hass.states.get("sensor.time")
     assert state.state == "20:54"
@@ -254,7 +257,7 @@ async def test_timezone_intervals(
     hass.config.set_time_zone(time_zone)
     freezer.move_to(start_time)
 
-    await load_int(hass, ["date"])
+    await load_int(hass, "date")
 
     mock_track_interval.assert_called_once()
     next_time = mock_track_interval.mock_calls[0][1][2]
@@ -264,7 +267,8 @@ async def test_timezone_intervals(
 
 async def test_icons(hass: HomeAssistant) -> None:
     """Test attributes of sensors."""
-    await load_int(hass)
+    for option in OPTION_TYPES:
+        await load_int(hass, option)
 
     state = hass.states.get("sensor.time")
     assert state.attributes["icon"] == "mdi:clock"
@@ -302,7 +306,15 @@ async def test_deprecation_warning(
     expected_issues: list[str],
 ) -> None:
     """Test deprecation warning for swatch beat."""
-    await load_int(hass, display_options)
+    config = {
+        "sensor": {
+            "platform": "time_date",
+            "display_options": display_options,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
 
     warnings = [record for record in caplog.records if record.levelname == "WARNING"]
     assert len(warnings) == len(expected_warnings)
