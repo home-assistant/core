@@ -84,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entry_data = entry.data
         entry_config_dict = entry_data.get(CONF_DEVICE_CONFIG)
         if entry_config_dict == config and entry_data[CONF_HOST] == host:
-            return
+            return  # pragma: no cover
         self.hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_DEVICE_CONFIG: config, CONF_HOST: host}
         )
@@ -306,7 +306,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if (
                 reauth_entry := self.reauth_entry
             ) and entry_id == reauth_entry.entry_id:
-                continue
+                continue  # pragma: no cover
             if entry := _config_entries.async_get_entry(entry_id):
                 await _config_entries.async_reload(entry.entry_id)
                 if entry.state is ConfigEntryState.LOADED:
