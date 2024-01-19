@@ -20,7 +20,6 @@ async def async_setup_entry(
     entity = AuroraSensor(
         coordinator=coordinator,
         translation_key="visibility",
-        icon="mdi:gauge",
     )
 
     async_add_entries([entity])
