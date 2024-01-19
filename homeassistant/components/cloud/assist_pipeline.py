@@ -100,6 +100,5 @@ async def async_migrate_cloud_pipeline_engine(
 
     pipelines = async_get_pipelines(hass)
     for pipeline in pipelines:
-        if pipeline.stt_engine != DOMAIN or pipeline.tts_engine != DOMAIN:
-            continue
-        await async_update_pipeline(hass, pipeline, **kwargs)
+        if DOMAIN in (pipeline.stt_engine, pipeline.tts_engine):
+            await async_update_pipeline(hass, pipeline, **kwargs)
