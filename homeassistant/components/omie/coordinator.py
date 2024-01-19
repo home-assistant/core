@@ -20,12 +20,9 @@ from homeassistant.util.dt import utcnow
 from .const import CET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_HOURS = list(range(25))
-"""Max number of hours in a day (on the day that DST ends)."""
 
 _SCHEDULE_MAX_DELAY = timedelta(seconds=3)
 """The maximum delay after the scheduled time that we will fetch from OMIE to avoid thundering herd."""
-
 
 DateFactory = Callable[[], date]
 """Used by the coordinator to work out the market date to fetch."""
