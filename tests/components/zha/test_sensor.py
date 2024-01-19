@@ -164,7 +164,7 @@ async def async_test_smart_energy_summation(hass, cluster, entity_id):
     await send_attributes_report(
         hass, cluster, {1025: 1, "current_summ_delivered": 12321, 1026: 100}
     )
-    assert_state(hass, entity_id, "12.32", UnitOfVolume.CUBIC_METERS)
+    assert_state(hass, entity_id, "12.321", UnitOfEnergy.KILO_WATT_HOUR)
     assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
     assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
     assert (
@@ -346,7 +346,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
                 "multiplier": 1,
                 "status": 0x00,
                 "summation_formatting": 0b1_0111_010,
-                "unit_of_measure": 0x01,
+                "unit_of_measure": 0x00,
             },
             {"instaneneous_demand"},
         ),
@@ -779,26 +779,26 @@ async def test_unsupported_attributes_sensor(
         (
             1,
             1232000,
-            "123.20",
+            "123.2",
             UnitOfVolume.CUBIC_METERS,
         ),
         (
             3,
             2340,
-            "0.23",
-            f"100 {UnitOfVolume.CUBIC_FEET}",
+            "0.65",
+            UnitOfVolume.CUBIC_METERS,
         ),
         (
             3,
             2360,
-            "0.24",
-            f"100 {UnitOfVolume.CUBIC_FEET}",
+            "0.68",
+            UnitOfVolume.CUBIC_METERS,
         ),
         (
             8,
             23660,
             "2.37",
-            "kPa",
+            UnitOfPressure.KPA,
         ),
         (
             0,
@@ -841,6 +841,18 @@ async def test_unsupported_attributes_sensor(
             102456,
             "10.246",
             UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+        (
+            5,
+            102456,
+            "10.25",
+            "IMP gal",
+        ),
+        (
+            7,
+            50124,
+            "5.01",
+            UnitOfVolume.LITERS,
         ),
     ),
 )
