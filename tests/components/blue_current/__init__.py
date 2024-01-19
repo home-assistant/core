@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from asyncio import Event
 from collections.abc import Callable
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+from bluecurrent_api import Client
 
 from homeassistant.components.blue_current import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -11,13 +13,15 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-class MockClient:
+class MockClient(MagicMock):
     """A mocked version of the blue current api Client class."""
 
     receiver: Callable
 
     def __init__(self, charge_point, charge_point_status, grid) -> None:
         """Initialize the mock client and sets the default responses."""
+        super().__init__(spec=Client)
+
         self.charge_point = charge_point
         self.charge_point_status = charge_point_status
         self.grid = grid
@@ -50,15 +54,6 @@ class MockClient:
     async def get_grid_status(self, evse_id: str):
         """Send the grid status to the callback."""
         await self.receiver({"object": "GRID_STATUS", "data": self.grid})
-
-    async def wait_for_response(self):
-        """Fake wait for response."""
-
-    async def connect(self, token: str):
-        """Fake connect."""
-
-    async def disconnect(self):
-        """Fake disconnect."""
 
 
 async def init_integration(
