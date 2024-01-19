@@ -1,7 +1,7 @@
 """Component providing HA switch support for Ring Door Bell/Chimes."""
 from datetime import timedelta
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import requests
 from ring_doorbell.generic import RingGeneric
@@ -68,7 +68,7 @@ class RingLight(RingEntity, LightEntity):
         """Call update method."""
         if self._no_updates_until > dt_util.utcnow():
             return
-        device: Optional[RingGeneric]
+        # device: Optional[RingGeneric]
         if (device := self._get_coordinator_device()) and hasattr(device, "lights"):
             self._attr_is_on = device.lights == ON_STATE
         super()._handle_coordinator_update()

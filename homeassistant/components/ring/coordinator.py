@@ -1,4 +1,5 @@
 """Data coordinators for the ring integration."""
+from asyncio import TaskGroup
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -66,24 +67,36 @@ class RingDataCoordinator(DataUpdateCoordinator[dict[int, RingDeviceData]]):
         self.first_call = False
         data: dict[str, RingDeviceData] = {}
         devices: dict[str : list[RingGeneric]] = self.ring_api.devices()
+        subscribed_device_ids = set(self.async_contexts())
         for device_type in devices:
             for device in devices[device_type]:
                 # Don't update all devices in the ring api, only those that set
                 # their device id as context when they subscribed.
-                if device.id in set(self.async_contexts()):
+                if device.id in subscribed_device_ids:
                     data[device.id] = RingDeviceData(device=device)
-                    if hasattr(device, "history"):
-                        data[device.id].history = await _call_api(
-                            self.hass,
-                            lambda device: device.history(limit=10),
-                            device,
-                            msg_suffix=f" for device {device.name}",  # device_id is the mac
-                        )
-                    await _call_api(
-                        self.hass,
-                        device.update_health_data,
-                        msg_suffix=f" for device {device.name}",
-                    )
+                    try:
+                        async with TaskGroup() as tg:
+                            if hasattr(device, "history"):
+                                history_task = tg.create_task(
+                                    _call_api(
+                                        self.hass,
+                                        lambda device: device.history(limit=10),
+                                        device,
+                                        msg_suffix=f" for device {device.name}",  # device_id is the mac
+                                    )
+                                )
+                            tg.create_task(
+                                _call_api(
+                                    self.hass,
+                                    device.update_health_data,
+                                    msg_suffix=f" for device {device.name}",
+                                )
+                            )
+                        if history_task:
+                            data[device.id].history = history_task.result()
+                    except ExceptionGroup as eg:
+                        raise eg.exceptions[0]
+
         return data
 
 

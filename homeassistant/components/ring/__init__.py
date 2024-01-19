@@ -8,7 +8,7 @@ import ring_doorbell
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import APPLICATION_NAME, CONF_TOKEN, __version__
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -53,18 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    if hass.services.has_service(DOMAIN, "update"):
-        return True
-
-    async def async_refresh_all(_: ServiceCall) -> None:
-        """Refresh all ring data."""
-        for info in hass.data[DOMAIN].values():
-            await info[RING_DEVICES_COORDINATOR].async_refresh()
-            await info[RING_NOTIFICATIONS_COORDINATOR].async_refresh()
-
-    # register service
-    hass.services.async_register(DOMAIN, "update", async_refresh_all)
 
     return True
 

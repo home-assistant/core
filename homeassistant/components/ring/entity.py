@@ -1,5 +1,5 @@
 """Base class for Ring entity."""
-from typing import Optional, TypeVar
+from typing import TypeVar
 
 from ring_doorbell.generic import RingGeneric
 
@@ -8,7 +8,11 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
-from .coordinator import RingDataCoordinator, RingNotificationsCoordinator
+from .coordinator import (
+    RingDataCoordinator,
+    RingDeviceData,
+    RingNotificationsCoordinator,
+)
 
 _RingCoordinatorT = TypeVar(
     "_RingCoordinatorT",
@@ -39,22 +43,25 @@ class RingEntity(CoordinatorEntity[_RingCoordinatorT]):
             name=device.name,
         )
 
-    def _get_coordinator_device(self) -> Optional[RingGeneric]:
-        if (
-            self.coordinator.data
-            and self._device.id in self.coordinator.data
-            and self.coordinator.data[self._device.id].device
+    def _get_coordinator_device_data(self) -> RingDeviceData | None:
+        if (data := self.coordinator.data) and (
+            device_data := data.get(self._device.id)
         ):
-            return self.coordinator.data[self._device.id].device
+            return device_data
         return None
 
-    def _get_coordinator_history(self) -> Optional[list]:
-        if (
-            self.coordinator.data
-            and self._device.id in self.coordinator.data
-            and self.coordinator.data[self._device.id].history
+    def _get_coordinator_device(self) -> RingGeneric | None:
+        if (device_data := self._get_coordinator_device_data()) and (
+            device := device_data.device
         ):
-            return self.coordinator.data[self._device.id].history
+            return device
+        return None
+
+    def _get_coordinator_history(self) -> list | None:
+        if (device_data := self._get_coordinator_device_data()) and (
+            history := device_data.history
+        ):
+            return history
         return None
 
     @callback

@@ -1,9 +1,10 @@
 """The tests for the Ring light platform."""
 import requests_mock
 
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 
@@ -82,8 +83,13 @@ async def test_updates_work(
         "https://api.ring.com/clients_api/ring_devices",
         text=load_fixture("devices_updated.json", "ring"),
     )
-
-    await hass.services.async_call("ring", "update", {}, blocking=True)
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["light.front_light"]},
+        blocking=True,
+    )
 
     await hass.async_block_till_done()
 
