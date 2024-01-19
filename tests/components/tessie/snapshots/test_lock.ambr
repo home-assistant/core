@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_locks[all]
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Test Lock',
+        'supported_features': <LockEntityFeature: 0>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.test_lock',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'locked',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Test Charge cable lock',
+        'supported_features': <LockEntityFeature: 0>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.test_charge_cable_lock',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'locked',
+    }),
+  ])
+# ---

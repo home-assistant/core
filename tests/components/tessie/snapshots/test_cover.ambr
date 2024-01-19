@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_covers[cover.test_charge_port_door-open_unlock_charge_port-close_charge_port][cover.test_charge_port_door]
+# name: test_covers[cover.test_charge_port_door-open_unlock_charge_port-close_charge_port][initial]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
@@ -13,7 +13,7 @@
     'state': 'open',
   })
 # ---
-# name: test_covers[cover.test_frunk-open_front_trunk-False][cover.test_frunk]
+# name: test_covers[cover.test_frunk-open_front_trunk-False][initial]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
@@ -27,7 +27,7 @@
     'state': 'closed',
   })
 # ---
-# name: test_covers[cover.test_trunk-open_close_rear_trunk-open_close_rear_trunk][cover.test_trunk]
+# name: test_covers[cover.test_trunk-open_close_rear_trunk-open_close_rear_trunk][initial]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
@@ -41,7 +41,7 @@
     'state': 'closed',
   })
 # ---
-# name: test_covers[cover.test_vent_windows-vent_windows-close_windows][cover.test_vent_windows]
+# name: test_covers[cover.test_vent_windows-vent_windows-close_windows][initial]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'window',

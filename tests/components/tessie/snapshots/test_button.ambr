@@ -1,0 +1,79 @@
+# serializer version: 1
+# name: test_buttons[button.test_flash_lights-flash_lights][initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Flash lights',
+      'icon': 'mdi:flashlight',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_flash_lights',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.test_homelink-trigger_homelink][initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Homelink',
+      'icon': 'mdi:garage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_homelink',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.test_honk_horn-honk][initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Honk horn',
+      'icon': 'mdi:bullhorn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_honk_horn',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.test_keyless_driving-enable_keyless_driving][initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Keyless driving',
+      'icon': 'mdi:car-key',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_keyless_driving',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.test_play_fart-boombox][initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Play fart',
+      'icon': 'mdi:volume-high',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_play_fart',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.test_wake-wake][initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Wake',
+      'icon': 'mdi:sleep-off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_wake',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

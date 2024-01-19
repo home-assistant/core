@@ -1,6 +1,8 @@
 """Test the Tessie update platform."""
 from unittest.mock import patch
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     DOMAIN as UPDATE_DOMAIN,
@@ -12,14 +14,14 @@ from homeassistant.core import HomeAssistant
 from .common import setup_platform
 
 
-async def test_updates(hass: HomeAssistant) -> None:
+async def test_updates(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Tests that update entity is correct."""
 
     assert len(hass.states.async_all("update")) == 0
 
     await setup_platform(hass)
 
-    assert len(hass.states.async_all("update")) == 1
+    assert hass.states.async_all("update") == snapshot(name="all")
 
     entity_id = "update.test_update"
     state = hass.states.get(entity_id)

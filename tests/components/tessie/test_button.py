@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
@@ -21,10 +22,14 @@ from .common import setup_platform
         ("button.test_play_fart", "boombox"),
     ],
 )
-async def test_buttons(hass: HomeAssistant, entity_id, func) -> None:
+async def test_buttons(
+    hass: HomeAssistant, entity_id, func, snapshot: SnapshotAssertion
+) -> None:
     """Tests that the button entities are correct."""
 
     await setup_platform(hass)
+
+    assert hass.states.get(entity_id) == snapshot(name="initial")
 
     # Test wake button
     with patch(
