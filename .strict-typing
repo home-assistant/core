@@ -274,6 +274,7 @@ homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
+homeassistant.components.map.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
