@@ -12,6 +12,7 @@ from homeassistant.components.homekit_controller.const import (
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
 )
 from homeassistant.components.thread import async_add_dataset
+from homeassistant.components.thread.dataset_store import async_get_store
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -225,7 +226,8 @@ async def test_thread_provision(hass: HomeAssistant) -> None:
         "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
         "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8",
     )
-
+    store = await async_get_store(hass)
+    store.preferred_dataset = list(store.datasets.keys())[0]
     accessories = await setup_accessories_from_file(hass, "nanoleaf_strip_nl55.json")
 
     fake_controller = await setup_platform(hass)
