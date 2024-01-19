@@ -48,5 +48,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Homeassistant Analytics",
         data={},
-        options={CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify"]},
+        options={CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify", "myq"]},
     )

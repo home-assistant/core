@@ -31,7 +31,7 @@ class HomeassistantAnalyticsDataUpdateCoordinator(
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(hours=1),
+            update_interval=timedelta(hours=12),
         )
         self._client = client
         self._tracked_integrations = self.config_entry.options[
@@ -48,6 +48,6 @@ class HomeassistantAnalyticsDataUpdateCoordinator(
         except HomeassistantAnalyticsNotModifiedError:
             return self.data
         return {
-            integration: data.integrations[integration]
+            integration: data.integrations.get(integration, 0)
             for integration in self._tracked_integrations
         }
