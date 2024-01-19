@@ -529,13 +529,15 @@ class OtaClientClusterHandler(ClientClusterHandler):
     """OTA cluster handler."""
 
     ZCL_INIT_ATTRS = {
-        "current_file_version": True,
+        general.Ota.AttributeDefs.current_file_version.name: True,
     }
 
     @property
     def current_file_version(self) -> str:
         """Return cached value of current_file_version attribute."""
-        current_file_version = self.cluster.get("current_file_version")
+        current_file_version = self.cluster.get(
+            general.Ota.AttributeDefs.current_file_version.name
+        )
         if current_file_version is not None:
             return f"0x{int(current_file_version):08x}"
         return ZHA_UNKNOWN
@@ -553,7 +555,7 @@ class OtaClientClusterHandler(ClientClusterHandler):
             cmd_name = command_id
 
         signal_id = self._endpoint.unique_id.split("-")[0]
-        if cmd_name == "query_next_image":
+        if cmd_name == general.Ota.ServerCommandDefs.query_next_image.name:
             assert args
             self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
 
