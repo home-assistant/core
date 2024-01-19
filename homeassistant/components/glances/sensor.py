@@ -238,7 +238,7 @@ SENSOR_TYPES = {
     ("gpu", "mem"): GlancesSensorEntityDescription(
         key="mem",
         type="gpu",
-        name_suffix="memory use",
+        translation_key="memory_usage",
         icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -246,7 +246,7 @@ SENSOR_TYPES = {
     ("gpu", "proc"): GlancesSensorEntityDescription(
         key="proc",
         type="gpu",
-        name_suffix="processor use",
+        translation_key="processor_load",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:expansion-card",
         state_class=SensorStateClass.MEASUREMENT,
@@ -254,7 +254,7 @@ SENSOR_TYPES = {
     ("gpu", "temperature"): GlancesSensorEntityDescription(
         key="temperature",
         type="gpu",
-        name_suffix="temperature",
+        translation_key="temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -263,7 +263,7 @@ SENSOR_TYPES = {
     ("gpu", "fan_speed"): GlancesSensorEntityDescription(
         key="fan_speed",
         type="gpu",
-        name_suffix="fan speed",
+        translation_key="fan_speed",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
