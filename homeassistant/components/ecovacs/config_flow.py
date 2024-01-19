@@ -144,11 +144,15 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        # We need to validate the imported country and contient as the yaml config allows any string for it.
-        # The config flow allows only valid alpha-2 country codes through the CountrySelector.
-        # The continent will be get with the function get_continent from the country code and there is no need to specify it anymore
-        # As the yaml configuration include the continent, we check if the both continents match.
-        # If not we will inform the user about the mismatch
+        # We need to validate the imported country and continent
+        # as the YAML configuration allows any string for them.
+        # The config flow allows only valid alpha-2 country codes
+        # through the CountrySelector.
+        # The continent will be calculated with the function get_continent
+        # from the country code and there is no need to specify the continent anymore.
+        # As the YAML configuration includes the continent,
+        # we check if both the entered continent and the calculated continent match.
+        # If not we will inform the user about the mismatch.
         error = None
         placeholders = None
         if len(user_input[CONF_COUNTRY]) != 2:
