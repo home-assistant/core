@@ -1,6 +1,7 @@
 """Typing Helpers for Home Assistant."""
 from collections.abc import Mapping
 from datetime import date, datetime
+from decimal import Decimal
 from enum import Enum
 from typing import Any, Generic, TypeVar
 
@@ -13,7 +14,7 @@ ConfigType = dict[str, Any]
 ContextType = homeassistant.core.Context
 DiscoveryInfoType = dict[str, Any]
 ServiceDataType = dict[str, Any]
-StateType = str | int | float | date | datetime | None
+StateType = str | int | float | date | datetime | Decimal | None
 TemplateVarsType = Mapping[str, Any] | None
 
 # Custom type for recorder Queries

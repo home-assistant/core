@@ -205,7 +205,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_device_class: SensorDeviceClass | None
     _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
-    _attr_native_value: StateType | date | datetime | Decimal = None
+    _attr_native_value: StateType = None
     _attr_options: list[str] | None
     _attr_state_class: SensorStateClass | str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
@@ -439,7 +439,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     @cached_property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self._attr_native_value
 
@@ -841,14 +841,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 class SensorExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
 
-    native_value: StateType | date | datetime | Decimal
+    native_value: StateType
     native_unit_of_measurement: str | None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
-        native_value: StateType | date | datetime | Decimal | dict[
-            str, str
-        ] = self.native_value
+        native_value: StateType | dict[str, str] = self.native_value
         if isinstance(native_value, (date, datetime)):
             native_value = {
                 "__type": str(type(native_value)),
