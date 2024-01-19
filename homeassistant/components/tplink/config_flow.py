@@ -338,16 +338,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._discovered_device = await Discover.discover_single(
                 host, credentials=credentials
             )
-            if self._discovered_device.config.uses_http:
-                self._discovered_device.config.http_client = (
-                    create_async_tplink_clientsession(self.hass)
-                )
         except TimeoutException:
             # Try connect() to legacy devices if discovery fails
             self._discovered_device = await SmartDevice.connect(
                 config=DeviceConfig(host)
             )
         else:
+            if self._discovered_device.config.uses_http:
+                self._discovered_device.config.http_client = (
+                    create_async_tplink_clientsession(self.hass)
+                )
             await self._discovered_device.update()
         await self.async_set_unique_id(
             dr.format_mac(self._discovered_device.mac),
