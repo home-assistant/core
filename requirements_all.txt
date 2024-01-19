@@ -212,7 +212,7 @@ aioazuredevops==1.3.5
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.6.0
+aiobotocore==2.9.1
 
 # homeassistant.components.comelit
 aiocomelit==0.7.3
@@ -585,7 +585,7 @@ boschshcpy==0.2.75
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
-boto3==1.28.17
+boto3==1.33.13
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
@@ -676,6 +676,9 @@ debugpy==1.8.0
 
 # homeassistant.components.decora
 # decora==0.6
+
+# homeassistant.components.ecovacs
+deebot-client==4.3.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns

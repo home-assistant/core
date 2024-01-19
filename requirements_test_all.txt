@@ -191,7 +191,7 @@ aioazuredevops==1.3.5
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.6.0
+aiobotocore==2.9.1
 
 # homeassistant.components.comelit
 aiocomelit==0.7.3
@@ -551,6 +551,9 @@ dbus-fast==2.21.1
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
+
+# homeassistant.components.ecovacs
+deebot-client==4.3.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
