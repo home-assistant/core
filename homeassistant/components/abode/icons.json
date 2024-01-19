@@ -1,0 +1,12 @@
+{
+  "alarm_control_panel": {
+    "alarm_control_panel": {
+      "default": "mdi:security"
+    }
+  },
+  "switch": {
+    "automation": {
+      "default": "mdi:robot"
+    }
+  }
+}
