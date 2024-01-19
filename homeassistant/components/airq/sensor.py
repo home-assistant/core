@@ -397,7 +397,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         translation_key="virus_index",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:virus-off",
         value=lambda data: data.get("virus", 0.0),
     ),
 ]
