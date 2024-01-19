@@ -29,20 +29,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = OMIESources(
         today=OMIEDailyCoordinator(
             hass,
-            "omie_spot_today",
+            "spot_today",
             market_updater=spot_price,
             market_date=cet_today,
         ),
         tomorrow=OMIEDailyCoordinator(
             hass,
-            "omie_spot_tomorrow",
+            "spot_tomorrow",
             market_updater=spot_price,
             market_date=cet_tomorrow,
             none_before="13:30",
         ),
         yesterday=OMIEDailyCoordinator(
             hass,
-            "omie_spot_yesterday",
+            "spot_yesterday",
             market_updater=spot_price,
             market_date=cet_yesterday,
         ),
