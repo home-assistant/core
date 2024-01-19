@@ -3,14 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-import datetime as dt
 from datetime import date, datetime, timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 from zoneinfo import ZoneInfo
-
-from pyomie.model import OMIEResults
-from pyomie.util import localize_hourly_data
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -18,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
+from homeassistant.const import CURRENCY_EURO, STATE_UNKNOWN, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,6 +23,7 @@ from homeassistant.util.dt import utcnow
 
 from .const import CET, DOMAIN
 from .model import OMIESources
+from .util import _pick_series_cet, enumerate_hours_of_day
 
 _DataT = TypeVar("_DataT")
 
@@ -34,13 +31,21 @@ _LOGGER = logging.getLogger(__name__)
 
 _ATTRIBUTION = "Data provided by OMIE.es"
 
+_UNRECORDED_ATTRIBUTES = frozenset(
+    {
+        f"{day}_{attr}"
+        for day in ("today", "tomorrow")
+        for attr in ("hours", "provisional")
+    }
+)
+
 
 @dataclass(frozen=True)
 class OMIEPriceEntityDescription(SensorEntityDescription):
     """Describes OMIE price entities."""
 
     def __init__(self, key: str) -> None:
-        """Construct an OMIEPriceEntityDescription."""
+        """Construct an OMIEPriceEntityDescription that reports prices in €/MWh."""
         super().__init__(
             key=key,
             has_entity_name=True,
@@ -66,14 +71,11 @@ async def async_setup_entry(
         model="MIBEL market results",
     )
 
+    def hass_tzinfo() -> ZoneInfo:
+        return ZoneInfo(hass.config.time_zone)
+
     class OMIEPriceEntity(SensorEntity):
-        _entity_component_unrecorded_attributes = frozenset(
-            {
-                f"{day}_{attr}"
-                for day in ("today", "tomorrow")
-                for attr in ("hours", "provisional")
-            }
-        )
+        _entity_component_unrecorded_attributes = _UNRECORDED_ATTRIBUTES
 
         def __init__(self, description: OMIEPriceEntityDescription) -> None:
             """Initialize the sensor."""
@@ -88,50 +90,26 @@ async def async_setup_entry(
 
             @callback
             def update() -> None:
-                """Update this sensor's state."""
-                pyomie_key = self.entity_description.key
+                """Update this sensor's state from the coordinator results."""
 
-                cet_hourly_data = (
-                    {}
-                    | _pick_series_cet(coordinators.today.data, pyomie_key)
-                    | _pick_series_cet(coordinators.tomorrow.data, pyomie_key)
-                    | _pick_series_cet(coordinators.yesterday.data, pyomie_key)
-                )
+                # times are formatted in the HA configured time zone
+                hass_now = utcnow().astimezone(hass_tzinfo())
 
-                # times are formatted in the HA configured time zone and day boundaries are also
-                # relative to the HA configured time zone.
-                hass_tz = ZoneInfo(self.hass.config.time_zone)
-                sensor_now = utcnow().astimezone(hass_tz)
-                today_date = sensor_now.date()
-
-                def day_hourly_data(day: date) -> Mapping[datetime, float | None]:
-                    """Return a list of every hour in the given date in the HA timezone."""
-                    day_hour0 = datetime(
-                        day.year, day.month, day.day, tzinfo=hass_tz
-                    ).astimezone(dt.UTC)
-
-                    return {
-                        hour: cet_hourly_data.get(hour.astimezone(CET))
-                        for hour in [
-                            (day_hour0 + timedelta(hours=i)).astimezone(hass_tz)
-                            for i in range(25)
-                        ]
-                        if hour.date() == day  # 25th hour occurs on DST changeover only
-                    }
-
-                today_hourly_data = day_hourly_data(today_date)
-                tomorrow_hourly_data = day_hourly_data(today_date + timedelta(days=1))
+                # day boundaries are also relative to the HA configured time zone.
+                today: date = hass_now.date()
+                tomorrow: date = today + timedelta(days=1)
+                _, today_hours, tomorrow_hours = self._omie_hourly_data(today, tomorrow)
 
                 # to work out the start of the current hour we truncate from minutes downwards
                 # rather than create a new datetime to ensure correctness across DST boundaries
-                sensor_hour = sensor_now.replace(minute=0, second=0, microsecond=0)
+                hour_start = hass_now.replace(minute=0, second=0, microsecond=0)
 
-                self._attr_available = sensor_hour in today_hourly_data
-                self._attr_native_value = today_hourly_data.get(sensor_hour)
+                self._attr_available = hour_start in today_hours
+                self._attr_native_value = today_hours.get(hour_start, STATE_UNKNOWN)
                 self._attr_extra_state_attributes = (
                     {}
-                    | _day_attributes("today", today_hourly_data)
-                    | _day_attributes("tomorrow", tomorrow_hourly_data)
+                    | _format_day_attributes("today", today_hours)
+                    | _format_day_attributes("tomorrow", tomorrow_hours)
                 )
 
                 self.async_schedule_update_ha_state()
@@ -139,6 +117,27 @@ async def async_setup_entry(
             self.async_on_remove(coordinators.today.async_add_listener(update))
             self.async_on_remove(coordinators.tomorrow.async_add_listener(update))
             self.async_on_remove(coordinators.yesterday.async_add_listener(update))
+
+        def _omie_hourly_data(self, *dates: date) -> list[dict[datetime, float | None]]:
+            """Return a non-empty list containing all known OMIE hourly data in the first element and optionally more elements, one per date.
+
+            @param dates: a list of `datetime.date`
+            @return: a non-empty list
+            """
+            pyomie_series_key = self.entity_description.key
+            all_hours_cet: dict[datetime, float] = (
+                {}
+                | _pick_series_cet(coordinators.today.data, pyomie_series_key)
+                | _pick_series_cet(coordinators.tomorrow.data, pyomie_series_key)
+                | _pick_series_cet(coordinators.yesterday.data, pyomie_series_key)
+            )
+
+            hass_tz = hass_tzinfo()
+
+            first = cast(dict[datetime, float | None], all_hours_cet)
+            rest = [_hours_of_day(all_hours_cet, hass_tz, day) for day in dates]
+
+            return [first] + rest
 
     sensors = [
         OMIEPriceEntity(OMIEPriceEntityDescription("spot_price_pt")),
@@ -150,47 +149,20 @@ async def async_setup_entry(
         await c.async_config_entry_first_refresh()
 
 
-def _localize_hours(
-    results: OMIEResults[_DataT], attr_name: str
-) -> dict[dt.datetime, float]:
-    """Localize incoming hourly data to the CET timezone."""
-    localized = localize_hourly_data(
-        results.market_date,
-        getattr(results.contents, attr_name, []),
-    )
-
+def _hours_of_day(
+    hours: Mapping[datetime, _DataT], time_zone: ZoneInfo, day: date
+) -> dict[datetime, _DataT | None]:
     return {
-        dt.datetime.fromisoformat(time).astimezone(CET): value
-        for time, value in localized.items()
+        hour: hours.get(hour.astimezone(CET))
+        for hour in enumerate_hours_of_day(time_zone, day)
     }
 
 
-def _day_attributes(
-    day_name: str, hourly_data: Mapping[datetime, float | None]
+def _format_day_attributes(
+    day_name: str, hourly_data: Mapping[datetime, _DataT | None]
 ) -> dict[str, Any]:
     return {
-        f"{day_name}_hours": hourly_data or None,
-        f"{day_name}_provisional": _is_provisional(hourly_data),
-    }
-
-
-def _is_provisional(hourly_data: Mapping[dt.datetime, float | None]) -> bool:
-    """Return whether hourly data is incomplete."""
-    return len(hourly_data or {}) == 0 or None in hourly_data.values()
-
-
-def _pick_series_cet(
-    res: OMIEResults[_DataT] | None,
-    series_name: str,
-) -> dict[dt.datetime, float]:
-    """Pick the values for this series from the market data, keyed by a datetime in CET."""
-    if res is None:
-        return {}
-
-    market_date = res.market_date
-    series_data = getattr(res.contents, series_name, [])
-
-    return {
-        dt.datetime.fromisoformat(dt_str).astimezone(CET): v
-        for dt_str, v in localize_hourly_data(market_date, series_data).items()
+        f"{day_name}_hours": hourly_data,
+        f"{day_name}_provisional": len(hourly_data or {}) == 0
+        or None in hourly_data.values(),
     }

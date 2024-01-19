@@ -13,7 +13,7 @@ _T = TypeVar("_T")
 
 
 class OMIESources(NamedTuple, Generic[_T]):
-    """Pair of coordinators that source OMIE market results for today and tomorrow."""
+    """Tuple of coordinators that source OMIE market results for today, tomorrow, and yesterday."""
 
     today: DataUpdateCoordinator[OMIEResults[_T] | None]
     """Today's market results (CET)."""
