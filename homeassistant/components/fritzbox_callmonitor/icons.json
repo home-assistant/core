@@ -7,7 +7,6 @@
           "ringing": "mdi:phone-incoming",
           "dialing": "mdi:phone-outgoing",
           "talking": "mdi:phone-in-talk",
-          "idle": "mdi:phone"
         }
       }
     }
