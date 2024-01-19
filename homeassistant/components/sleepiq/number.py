@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from asyncsleepiq import (
+    CoreTemps,
+    FootWarmingTemps,
     SleepIQActuator,
     SleepIQBed,
     SleepIQCoreClimate,
@@ -86,7 +88,9 @@ def _get_sleeper_unique_id(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
 async def _async_set_foot_warmer_time(
     foot_warmer: SleepIQFootWarmer, time: int
 ) -> None:
-    foot_warmer.timer = time
+    temperature = FootWarmingTemps(foot_warmer.temperature)
+    if temperature != FootWarmingTemps.OFF:
+        await foot_warmer.turn_on(temperature, time)
 
 
 def _get_foot_warming_name(bed: SleepIQBed, foot_warmer: SleepIQFootWarmer) -> str:
@@ -101,7 +105,9 @@ def _get_foot_warming_unique_id(bed: SleepIQBed, foot_warmer: SleepIQFootWarmer)
 async def _async_set_core_climate_time(
     core_climate: SleepIQCoreClimate, time: int
 ) -> None:
-    core_climate.timer = time
+    temperature = CoreTemps(core_climate.temperature)
+    if temperature != CoreTemps.OFF:
+        await core_climate.turn_on(temperature, time)
 
 
 def _get_core_climate_name(bed: SleepIQBed, core_climate: SleepIQCoreClimate) -> str:
