@@ -7,6 +7,7 @@ from python_homeassistant_analytics import (
     HomeassistantAnalyticsClient,
     HomeassistantAnalyticsConnectionError,
 )
+from python_homeassistant_analytics.models import IntegrationType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -19,6 +20,12 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN, LOGGER
+
+INTEGRATION_TYPES_WITHOUT_ANALYTICS = (
+    IntegrationType.BRAND,
+    IntegrationType.ENTITY,
+    IntegrationType.VIRTUAL,
+)
 
 
 class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -38,24 +45,18 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass)
         )
         try:
-            analytics = await client.get_current_analytics()
             integrations = await client.get_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
             return self.async_abort(reason="cannot_connect")
 
-        def get_integration_name(integration: str) -> str:
-            """Return the name of an integration or the domain if not found."""
-            if integration in integrations:
-                return integrations[integration].title
-            return integration
-
         options = [
             SelectOptionDict(
-                value=integration,
-                label=get_integration_name(integration),
+                value=domain,
+                label=integration.title,
             )
-            for integration in analytics.integrations
+            for domain, integration in integrations.items()
+            if integration.integration_type not in INTEGRATION_TYPES_WITHOUT_ANALYTICS
         ]
         return self.async_show_form(
             step_id="user",

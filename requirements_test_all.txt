@@ -1662,7 +1662,7 @@ python-ecobee-api==0.2.17
 python-fullykiosk==0.0.12
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.4.0
+python-homeassistant-analytics==0.5.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==4.1.0
