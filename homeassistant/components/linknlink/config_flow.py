@@ -160,7 +160,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(device.mac.hex())
             if device.is_locked:
                 return await self.async_step_unlock()
-            return await self.async_step_finish()
+            return await self.async_finish()
 
         await self.async_set_unique_id(device.mac.hex())
         _LOGGER.error(
@@ -224,14 +224,14 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     err_msg = str(err)
 
             else:
-                return await self.async_step_finish()
+                return await self.async_finish()
 
             _LOGGER.error(
                 "Failed to unlock the device at %s: %s", device.host[0], err_msg
             )
 
         else:
-            return await self.async_step_finish()
+            return await self.async_finish()
 
         data_schema = {vol.Required("unlock", default=False): bool}
         return self.async_show_form(
@@ -245,8 +245,8 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_finish(self, user_input=None) -> FlowResult:
-        """Choose a name for the device and create config entry."""
+    async def async_finish(self) -> FlowResult:
+        """Create config entry."""
         device = self.device
 
         # Abort reauthentication flow.

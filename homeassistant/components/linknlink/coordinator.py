@@ -17,16 +17,16 @@ from linknlink.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE, Platform
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
+from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class LinknLinkCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
+class LinknLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """In charge of get the data for a site."""
 
     api: llk.Device
@@ -47,10 +47,6 @@ class LinknLinkCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     def available(self) -> bool | None:
         """Return True if the device is available."""
         return self.authorized
-
-    async def async_update(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Handle options update."""
-        await hass.config_entries.async_reload(entry.entry_id)
 
     def _get_firmware_version(self) -> int | None:
         """Get firmware version."""
@@ -91,8 +87,6 @@ class LinknLinkCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
             return False
 
         self.authorized = True
-        unlisten = config.add_update_listener(self.async_update)
-        config.async_on_unload(unlisten)
 
         return True
 
@@ -139,10 +133,9 @@ class LinknLinkCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
-        if (
-            self.api.type in DOMAINS_AND_TYPES[Platform.SENSOR]
-            or self.api.type in DOMAINS_AND_TYPES[Platform.BINARY_SENSOR]
-        ) and hasattr(self.api, "check_sensors"):
+        try:
             data = await self.async_request(self.api.check_sensors)
             return data
-        return {}
+        except AttributeError as e:
+            _LOGGER.error("Failed to execute function: %s", e)
+            return {}

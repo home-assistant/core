@@ -1,6 +1,8 @@
 """Support for linknlink sensors."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -15,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import LinknLinkCoordinator
 from .entity import LinknLinkEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 HUMITURE_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -69,6 +73,11 @@ class LinknLinkSensor(LinknLinkEntity, SensorEntity):
     @callback
     def _update_attr(self) -> None:
         """Update attributes for sensor."""
-        self._attr_native_value = float(
-            self.coordinator.data[self.entity_description.key]
-        )
+        try:
+            self._attr_native_value = float(
+                self.coordinator.data[self.entity_description.key]
+            )
+        except KeyError:
+            _LOGGER.error(
+                "Failed get the value of key: %s", self.entity_description.key
+            )
