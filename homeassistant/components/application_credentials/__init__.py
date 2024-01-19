@@ -88,7 +88,7 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
         domain = result[CONF_DOMAIN]
         if not await _get_platform(self.hass, domain):
             raise ValueError(f"No application_credentials platform for {domain}")
-        return result
+        return result  # type: ignore[no-any-return]
 
     @callback
     def _get_suggested_id(self, info: dict[str, str]) -> str:
@@ -252,7 +252,7 @@ async def _async_config_entry_app_credentials(
             item[CONF_DOMAIN] == config_entry.domain
             and item.get(CONF_AUTH_DOMAIN, item_id) == auth_domain
         ):
-            return item_id
+            return item_id  # type: ignore[no-any-return]
     return None
 
 
