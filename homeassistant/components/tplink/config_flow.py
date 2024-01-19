@@ -75,11 +75,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _update_config_if_entry_in_setup_retry(
+    def _update_config_if_entry_in_setup_error(
         self, entry: ConfigEntry, host: str, config: dict
     ) -> None:
-        """If discovery encounters a device that is in SETUP_RETRY update the device config."""
-        if entry.state != ConfigEntryState.SETUP_RETRY:
+        """If discovery encounters a device that is in SETUP_ERROR update the device config."""
+        if entry.state != ConfigEntryState.SETUP_ERROR:
             return
         entry_data = entry.data
         entry_config_dict = entry_data.get(CONF_DEVICE_CONFIG)
@@ -102,7 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             formatted_mac, raise_on_progress=False
         )
         if config and current_entry:
-            self._update_config_if_entry_in_setup_retry(current_entry, host, config)
+            self._update_config_if_entry_in_setup_error(current_entry, host, config)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host

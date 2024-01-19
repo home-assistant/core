@@ -32,9 +32,11 @@ from tests.common import MockConfigEntry
 MODULE = "homeassistant.components.tplink"
 MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"
 IP_ADDRESS = "127.0.0.1"
+IP_ADDRESS2 = "127.0.0.2"
 ALIAS = "My Bulb"
 MODEL = "HS100"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
+MAC_ADDRESS2 = "11:22:33:44:55:66"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
 CREDENTIALS_HASH_LEGACY = ""
 DEVICE_CONFIG_LEGACY = DeviceConfig(IP_ADDRESS)
@@ -51,7 +53,18 @@ DEVICE_CONFIG_AUTH = DeviceConfig(
     ),
     uses_http=True,
 )
+DEVICE_CONFIG_AUTH2 = DeviceConfig(
+    IP_ADDRESS2,
+    credentials=CREDENTIALS,
+    connection_type=ConnectionType(
+        DeviceFamilyType.IotSmartPlugSwitch, EncryptType.Klap
+    ),
+    uses_http=True,
+)
 DEVICE_CONFIG_DICT_AUTH = DEVICE_CONFIG_AUTH.to_dict(
+    credentials_hash=CREDENTIALS_HASH_AUTH, exclude_credentials=True
+)
+DEVICE_CONFIG_DICT_AUTH2 = DEVICE_CONFIG_AUTH2.to_dict(
     credentials_hash=CREDENTIALS_HASH_AUTH, exclude_credentials=True
 )
 
@@ -68,6 +81,12 @@ CREATE_ENTRY_DATA_AUTH = {
     CONF_MODEL: MODEL,
     CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
 }
+CREATE_ENTRY_DATA_AUTH2 = {
+    CONF_HOST: IP_ADDRESS2,
+    CONF_ALIAS: ALIAS,
+    CONF_MODEL: MODEL,
+    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH2,
+}
 
 
 def _mock_protocol() -> TPLinkSmartHomeProtocol:
@@ -79,12 +98,13 @@ def _mock_protocol() -> TPLinkSmartHomeProtocol:
 def _mocked_bulb(
     device_config=DEVICE_CONFIG_LEGACY,
     credentials_hash=CREDENTIALS_HASH_LEGACY,
+    mac=MAC_ADDRESS,
     alias=ALIAS,
 ) -> SmartBulb:
     bulb = MagicMock(auto_spec=SmartBulb, name="Mocked bulb")
     bulb.update = AsyncMock()
-    bulb.mac = MAC_ADDRESS
-    bulb.alias = ALIAS
+    bulb.mac = mac
+    bulb.alias = alias
     bulb.model = MODEL
     bulb.host = IP_ADDRESS
     bulb.brightness = 50
@@ -98,7 +118,7 @@ def _mocked_bulb(
     bulb.effect = None
     bulb.effect_list = None
     bulb.hsv = (10, 30, 5)
-    bulb.device_id = MAC_ADDRESS
+    bulb.device_id = mac
     bulb.valid_temperature_range.min = 4000
     bulb.valid_temperature_range.max = 9000
     bulb.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}

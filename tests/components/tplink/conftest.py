@@ -13,7 +13,10 @@ from . import (
     CREATE_ENTRY_DATA_LEGACY,
     CREDENTIALS_HASH_AUTH,
     DEVICE_CONFIG_AUTH,
+    IP_ADDRESS,
+    IP_ADDRESS2,
     MAC_ADDRESS,
+    MAC_ADDRESS2,
     _mocked_bulb,
 )
 
@@ -50,11 +53,23 @@ def mock_discovery():
 def mock_connect():
     """Mock python-kasa connect."""
     with patch("homeassistant.components.tplink.SmartDevice.connect") as mock_connect:
-        device = _mocked_bulb(
-            device_config=DEVICE_CONFIG_AUTH, credentials_hash=CREDENTIALS_HASH_AUTH
-        )
-        mock_connect.return_value = device
-        yield {"connect": mock_connect, "mock_device": device}
+        devices = {
+            IP_ADDRESS: _mocked_bulb(
+                device_config=DEVICE_CONFIG_AUTH, credentials_hash=CREDENTIALS_HASH_AUTH
+            ),
+            IP_ADDRESS2: _mocked_bulb(
+                device_config=DEVICE_CONFIG_AUTH,
+                credentials_hash=CREDENTIALS_HASH_AUTH,
+                mac=MAC_ADDRESS2,
+            ),
+        }
+
+        def get_device(config):
+            nonlocal devices
+            return devices[config.host]
+
+        mock_connect.side_effect = get_device
+        yield {"connect": mock_connect, "mock_devices": devices}
 
 
 @pytest.fixture(name="device_reg")
