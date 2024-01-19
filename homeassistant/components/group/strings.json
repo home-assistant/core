@@ -252,8 +252,8 @@
   },
   "issues": {
     "uoms_not_matching_device_class": {
-      "title": "Unit of measurements is not correct",
-      "description": "Source entities: {source_entities} with device class: {device_class} and unit of measurements: {uoms} is not correct for this device class.\n\nPlease correct the unit of measurements on the source entities and reload the group sensor to fix this issue."
+      "title": "Unit of measurements are not correct",
+      "description": "Unit of measurements `{uoms}` are not compatible and can't be converted with device class `{device_class}`.\n\nPlease correct the unit of measurements on the source entities `{source_entities}` and reload the group sensor to fix this issue."
     },
     "uoms_not_matching_no_device_class": {
       "title": "Unit of measurements is not correct",
