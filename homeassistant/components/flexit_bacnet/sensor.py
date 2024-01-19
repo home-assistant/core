@@ -161,8 +161,7 @@ async def async_setup_entry(
     coordinator: FlexitCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        FlexitSensor(coordinator, description, config_entry.entry_id)
-        for description in SENSOR_TYPES
+        FlexitSensor(coordinator, description) for description in SENSOR_TYPES
     )
 
 
@@ -175,7 +174,6 @@ class FlexitSensor(FlexitEntity, SensorEntity):
         self,
         coordinator: FlexitCoordinator,
         entity_description: FlexitSensorEntityDescription,
-        entry_id: str,
     ) -> None:
         """Initialize Flexit (bacnet) sensor."""
         super().__init__(coordinator)
