@@ -281,7 +281,7 @@ async def test_if_fires_on_mqtt_message(
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
         '  "payload": "short_press",'
-        '  "topic": "foobar/triggers/button",'
+        '  "topic": "foobar/triggers/button1",'
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
@@ -289,7 +289,7 @@ async def test_if_fires_on_mqtt_message(
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
         '  "payload": "long_press",'
-        '  "topic": "foobar/triggers/button",'
+        '  "topic": "foobar/triggers/button1",'
         '  "type": "button_long_press",'
         '  "subtype": "button_2" }'
     )
@@ -308,9 +308,7 @@ async def test_if_fires_on_mqtt_message(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        # CONF_DISCOVERY is not used any longer and was removed with
-                        # HA Core 2024.2.0.
-                        "discovery_id": "I am ignored",
+                        "discovery_id": "bla1",
                         "type": "button_short_press",
                         "subtype": "button_1",
                     },
@@ -324,11 +322,9 @@ async def test_if_fires_on_mqtt_message(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        # CONF_DISCOVERY is not used any longer and was removed with
-                        # HA Core 2024.2.0.
-                        "discovery_id": "I am ignored too",
-                        "type": "button_long_press",
-                        "subtype": "button_2",
+                        "discovery_id": "bla2",
+                        "type": "button_1",
+                        "subtype": "button_long_press",
                     },
                     "action": {
                         "service": "test.automation",
@@ -340,13 +336,13 @@ async def test_if_fires_on_mqtt_message(
     )
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "foobar/triggers/button", "short_press")
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "short_press"
 
     # Fake long press.
-    async_fire_mqtt_message(hass, "foobar/triggers/button", "long_press")
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "long_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "long_press"
@@ -489,6 +485,7 @@ async def test_if_fires_on_mqtt_message_template(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
+                        "discovery_id": "bla1",
                         "type": "button_short_press",
                         "subtype": "button_1",
                     },
@@ -502,8 +499,9 @@ async def test_if_fires_on_mqtt_message_template(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        "type": "button_long_press",
-                        "subtype": "button_2",
+                        "discovery_id": "bla2",
+                        "type": "button_1",
+                        "subtype": "button_long_press",
                     },
                     "action": {
                         "service": "test.automation",
@@ -544,7 +542,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
         '  "payload": "short_press",'
-        '  "topic": "foobar/triggers/button",'
+        '  "topic": "foobar/triggers/button1",'
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
@@ -552,7 +550,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
         '  "payload": "long_press",'
-        '  "topic": "foobar/triggers/button",'
+        '  "topic": "foobar/triggers/button1",'
         '  "type": "button_long_press",'
         '  "subtype": "button_2" }'
     )
@@ -570,6 +568,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
+                        "discovery_id": "bla1",
                         "type": "button_short_press",
                         "subtype": "button_1",
                     },
@@ -583,8 +582,9 @@ async def test_if_fires_on_mqtt_message_late_discover(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        "type": "button_long_press",
-                        "subtype": "button_2",
+                        "discovery_id": "bla2",
+                        "type": "button_1",
+                        "subtype": "button_long_press",
                     },
                     "action": {
                         "service": "test.automation",
@@ -600,13 +600,13 @@ async def test_if_fires_on_mqtt_message_late_discover(
     await hass.async_block_till_done()
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "foobar/triggers/button", "short_press")
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "short_press"
 
     # Fake long press.
-    async_fire_mqtt_message(hass, "foobar/triggers/button", "long_press")
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "long_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "long_press"

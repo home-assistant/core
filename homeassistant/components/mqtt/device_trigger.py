@@ -62,9 +62,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_PLATFORM): DEVICE,
         vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_DEVICE_ID): str,
-        # CONF_DISCOVERY is not used any longer and was removed with
-        # HA Core 2024.2.0.
-        vol.Remove(CONF_DISCOVERY_ID): str,
+        vol.Optional(CONF_DISCOVERY_ID): str,
         vol.Required(CONF_TYPE): cv.string,
         vol.Required(CONF_SUBTYPE): cv.string,
     },
@@ -125,6 +123,7 @@ class Trigger:
 
     device_id: str = attr.ib()
     discovery_data: DiscoveryInfoType | None = attr.ib()
+    discovery_id: str | None = attr.ib()
     hass: HomeAssistant = attr.ib()
     payload: str | None = attr.ib()
     qos: int | None = attr.ib()
@@ -218,11 +217,18 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
     async def async_setup(self) -> None:
         """Initialize the device trigger."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
+        discovery_id = discovery_hash[1]
+        # Get the trigger_id based on the discovery_id if it is known
+        for trigger_id, trigger in self._mqtt_data.device_triggers.items():
+            if trigger.discovery_id == discovery_id:
+                self.trigger_id = trigger_id
+                break
         if self.trigger_id not in self._mqtt_data.device_triggers:
             self._mqtt_data.device_triggers[self.trigger_id] = Trigger(
                 hass=self.hass,
                 device_id=self.device_id,
                 discovery_data=self.discovery_data,
+                discovery_id=discovery_id,
                 type=self._config[CONF_TYPE],
                 subtype=self._config[CONF_SUBTYPE],
                 topic=self._config[CONF_TOPIC],
@@ -326,18 +332,28 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
+    trigger_id: str | None = None
     mqtt_data = get_mqtt_data(hass)
     device_id = config[CONF_DEVICE_ID]
-    # discovery_id: str | None = config.get(CONF_DISCOVERY_ID)
-    trigger_type = config[CONF_TYPE]
-    trigger_subtype = config[CONF_SUBTYPE]
-    trigger_id = f"{device_id}_{trigger_type}_{trigger_subtype}"
+    discovery_id: str | None = config.get(CONF_DISCOVERY_ID)
+    if discovery_id is not None:
+        for trig_id, trig in mqtt_data.device_triggers.items():
+            if (discovery_data := trig.discovery_data) is not None:
+                discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+                if discovery_id == discovery_hash[1]:
+                    trigger_id = trig_id
+                    break
+    if trigger_id is None:
+        trigger_type = config[CONF_TYPE]
+        trigger_subtype = config[CONF_SUBTYPE]
+        trigger_id = f"{device_id}_{trigger_type}_{trigger_subtype}"
 
     if trigger_id not in mqtt_data.device_triggers:
         mqtt_data.device_triggers[trigger_id] = Trigger(
             hass=hass,
             device_id=device_id,
             discovery_data=None,
+            discovery_id=discovery_id,
             type=config[CONF_TYPE],
             subtype=config[CONF_SUBTYPE],
             topic=None,
