@@ -18,6 +18,7 @@ from homeassistant.auth.providers.legacy_api_password import (
 from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 
 from tests.common import CLIENT_ID, MockUser, async_mock_service
@@ -301,13 +302,13 @@ async def test_api_get_services(
     """Test if we can get a dict describing current services."""
     resp = await mock_api_client.get(const.URL_API_SERVICES)
     data = await resp.json()
-    local_services = hass.services.async_services()
 
-    for serv_domain in data:
-        local = local_services.pop(serv_domain["domain"])
+    descriptions = await async_get_all_descriptions(hass)
+    local_services = [
+        {"domain": key, "services": value} for key, value in descriptions.items()
+    ]
 
-        for service_name in serv_domain["services"]:
-            assert service_name in local
+    assert data == local_services
 
 
 async def test_api_call_service_no_data(
