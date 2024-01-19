@@ -355,10 +355,7 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDi
         filename = os.path.splitext(os.path.basename(fname))[0]
         if os.path.basename(fname) == SECRET_YAML:
             continue
-        loaded_yaml = load_yaml(fname, loader.secrets)
-        if loaded_yaml is None:
-            continue
-        mapping[filename] = loaded_yaml
+        mapping[filename] = load_yaml(fname, loader.secrets)
     return _add_reference(mapping, loader, node)
 
 

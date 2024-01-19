@@ -233,7 +233,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.1.2
+aiohomekit==3.1.3
 
 # homeassistant.components.http
 aiohttp-fast-url-dispatcher==0.3.0
@@ -317,7 +317,7 @@ aioqsw==0.3.5
 aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
-aioridwell==2023.07.0
+aioridwell==2024.01.0
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.34
@@ -350,7 +350,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==68
+aiounifi==69
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -675,7 +675,7 @@ fjaraskupan==2.2.0
 flexit_bacnet==2.1.0
 
 # homeassistant.components.flipr
-flipr-api==1.5.0
+flipr-api==1.5.1
 
 # homeassistant.components.flux_led
 flux-led==1.0.4
@@ -1328,7 +1328,7 @@ pyeconet==0.1.22
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.15.2
+pyenphase==1.17.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1696,7 +1696,7 @@ python-smarttub==0.0.36
 python-songpal==0.16
 
 # homeassistant.components.tado
-python-tado==0.17.3
+python-tado==0.17.4
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -1798,7 +1798,7 @@ renault-api==0.2.1
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.6
+reolink-aio==0.8.7
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -2186,7 +2186,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.60.4
+zigpy==0.60.6
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.3
