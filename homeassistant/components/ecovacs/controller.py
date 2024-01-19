@@ -35,8 +35,8 @@ class EcovacsController:
     def __init__(self, hass: HomeAssistant, config: Mapping[str, Any]) -> None:
         """Initialize controller."""
         self._hass = hass
-        self._devices: list[Device] = []
-        self._legacy_devices: list[VacBot] = []
+        self.devices: list[Device] = []
+        self.legacy_devices: list[VacBot] = []
         verify_ssl = config.get(CONF_VERIFY_SSL, True)
         device_id = get_client_device_id()
 
@@ -57,16 +57,6 @@ class EcovacsController:
         mqtt_config = MqttConfiguration(config=self._config)
         self._mqtt = MqttClient(mqtt_config, self._authenticator)
 
-    @property
-    def devices(self) -> list[Device]:
-        """Return devices."""
-        return self._devices
-
-    @property
-    def legacy_devices(self) -> list[VacBot]:
-        """Return legacy devices."""
-        return self._legacy_devices
-
     async def initialize(self) -> None:
         """Init controller."""
         try:
@@ -76,7 +66,7 @@ class EcovacsController:
                 if isinstance(device_config, DeviceInfo):
                     device = Device(device_config, self._authenticator)
                     await device.initialize(self._mqtt)
-                    self._devices.append(device)
+                    self.devices.append(device)
                 else:
                     # Legacy device
                     bot = VacBot(
@@ -88,7 +78,7 @@ class EcovacsController:
                         self._config.continent,
                         monitor=True,
                     )
-                    self._legacy_devices.append(bot)
+                    self.legacy_devices.append(bot)
         except InvalidAuthenticationError as ex:
             raise ConfigEntryError("Invalid credentials") from ex
         except DeebotError as ex:
@@ -98,9 +88,9 @@ class EcovacsController:
 
     async def teardown(self) -> None:
         """Disconnect controller."""
-        for device in self._devices:
+        for device in self.devices:
             await device.teardown()
-        for legacy_device in self._legacy_devices:
+        for legacy_device in self.legacy_devices:
             await self._hass.async_add_executor_job(legacy_device.disconnect)
         await self._mqtt.disconnect()
         await self._authenticator.teardown()

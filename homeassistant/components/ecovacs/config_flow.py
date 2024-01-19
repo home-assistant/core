@@ -83,7 +83,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                data_schema=vol.Schema(
                     {
                         vol.Required(CONF_USERNAME): selector.TextSelector(
                             selector.TextSelectorConfig(
@@ -98,7 +98,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                         vol.Required(CONF_COUNTRY): selector.CountrySelector(),
                     }
                 ),
-                user_input
+                suggested_values=user_input
                 or {
                     CONF_COUNTRY: self.hass.config.country,
                 },
