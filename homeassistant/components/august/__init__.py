@@ -9,6 +9,7 @@ import logging
 from typing import Any, ParamSpec, TypeVar
 
 from aiohttp import ClientError, ClientResponseError
+from yalexs.activity import ActivityTypes
 from yalexs.const import DEFAULT_BRAND
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.exceptions import AugustApiAIOHTTPError
@@ -274,7 +275,7 @@ class AugustData(AugustSubscriberMixin):
         """Return the py-august LockDetail or DoorbellDetail object for a device."""
         return self._device_detail_by_id[device_id]
 
-    async def _async_refresh(self, time):
+    async def _async_refresh(self, time: datetime) -> None:
         await self._async_refresh_device_detail_by_ids(self._subscriptions.keys())
 
     async def _async_refresh_device_detail_by_ids(
@@ -329,7 +330,13 @@ class AugustData(AugustSubscriberMixin):
         )
         self.async_signal_device_id_update(device_id)
 
-    async def _async_update_device_detail(self, device, api_call):
+    async def _async_update_device_detail(
+        self,
+        device: Doorbell | Lock,
+        api_call: Callable[
+            [str, str], Coroutine[Any, Any, DoorbellDetail | LockDetail]
+        ],
+    ) -> None:
         _LOGGER.debug(
             "Started retrieving detail for %s (%s)",
             device.device_name,
@@ -363,7 +370,7 @@ class AugustData(AugustSubscriberMixin):
             return device.device_name
         return None
 
-    async def async_lock(self, device_id: str):
+    async def async_lock(self, device_id: str) -> list[ActivityTypes]:
         """Lock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -372,9 +379,7 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
-    async def async_status_async(
-        self, device_id: str, hyper_bridge: bool
-    ) -> str | None:
+    async def async_status_async(self, device_id: str, hyper_bridge: bool) -> str:
         """Request status of the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -384,7 +389,7 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
-    async def async_lock_async(self, device_id: str, hyper_bridge: bool) -> str | None:
+    async def async_lock_async(self, device_id: str, hyper_bridge: bool) -> str:
         """Lock the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -394,7 +399,7 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
-    async def async_unlock(self, device_id: str):
+    async def async_unlock(self, device_id: str) -> list[ActivityTypes]:
         """Unlock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -403,9 +408,7 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
-    async def async_unlock_async(
-        self, device_id: str, hyper_bridge: bool
-    ) -> str | None:
+    async def async_unlock_async(self, device_id: str, hyper_bridge: bool) -> str:
         """Unlock the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -421,9 +424,8 @@ class AugustData(AugustSubscriberMixin):
         func: Callable[_P, Coroutine[Any, Any, _R]],
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> _R | None:
+    ) -> _R:
         """Call an API that requires the bridge to be online and will change the device state."""
-        ret = None
         try:
             ret = await func(*args, **kwargs)
         except AugustApiAIOHTTPError as err:
@@ -479,7 +481,7 @@ class AugustData(AugustSubscriberMixin):
             del self._locks_by_id[device_id]
 
 
-def _save_live_attrs(lock_detail):
+def _save_live_attrs(lock_detail: DoorbellDetail | LockDetail) -> dict[str, Any]:
     """Store the attributes that the lock detail api may have an invalid cache for.
 
     Since we are connected to pubnub we may have more current data
@@ -489,7 +491,9 @@ def _save_live_attrs(lock_detail):
     return {attr: getattr(lock_detail, attr) for attr in API_CACHED_ATTRS}
 
 
-def _restore_live_attrs(lock_detail, attrs):
+def _restore_live_attrs(
+    lock_detail: DoorbellDetail | LockDetail, attrs: dict[str, Any]
+) -> None:
     """Restore the non-cache attributes after a cached update."""
     for attr, value in attrs.items():
         setattr(lock_detail, attr, value)

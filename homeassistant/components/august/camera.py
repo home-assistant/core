@@ -58,7 +58,7 @@ class AugustCamera(AugustEntityMixin, Camera):
         return self._device.has_subscription
 
     @property
-    def model(self):
+    def model(self) -> str | None:
         """Return the camera model."""
         return self._detail.model
 

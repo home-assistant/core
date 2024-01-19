@@ -1,7 +1,7 @@
 """Base class for August entity."""
 from abc import abstractmethod
 
-from yalexs.doorbell import Doorbell
+from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.lock import Lock, LockDetail
 from yalexs.util import get_configuration_url
 
@@ -46,7 +46,7 @@ class AugustEntityMixin(Entity):
         return self._device.device_id
 
     @property
-    def _detail(self):
+    def _detail(self) -> DoorbellDetail | LockDetail:
         return self._data.get_device_detail(self._device.device_id)
 
     @property
