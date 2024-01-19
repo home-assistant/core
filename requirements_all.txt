@@ -1511,7 +1511,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.36.2
+plugwise==0.36.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1611,7 +1611,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.1.1
+pyDuotecno==2024.1.2
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
