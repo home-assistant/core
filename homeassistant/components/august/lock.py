@@ -1,9 +1,12 @@
 """Support for August lock."""
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from yalexs.activity import SOURCE_PUBNUB, ActivityType
+from yalexs.activity import SOURCE_PUBNUB, ActivityType, ActivityTypes
 from yalexs.lock import Lock, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
@@ -62,7 +65,9 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             return
         await self._call_lock_operation(self._data.async_unlock)
 
-    async def _call_lock_operation(self, lock_operation):
+    async def _call_lock_operation(
+        self, lock_operation: Callable[[str], Coroutine[Any, Any, list[ActivityTypes]]]
+    ) -> None:
         try:
             activities = await lock_operation(self._device_id)
         except ClientResponseError as err:
