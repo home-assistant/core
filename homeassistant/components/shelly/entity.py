@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_registry import (
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SLEEP_PERIOD, LOGGER
+from .const import CONF_SLEEP_PERIOD, LOGGER, DeviceEndpoint
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .utils import (
     async_remove_shelly_entity,
@@ -179,15 +179,18 @@ def async_setup_rpc_attribute_entities(
     entities = []
     for sensor_id in sensors:
         description = sensors[sensor_id]
-        key_instances = get_rpc_key_instances(
-            coordinator.device.status, description.key
+        data_source = (
+            coordinator.device.status
+            if description.endpoint == DeviceEndpoint.STATUS
+            else coordinator.device.config
         )
+        key_instances = get_rpc_key_instances(data_source, description.key)
 
         for key in key_instances:
             # Filter non-existing sensors
-            if description.sub_key not in coordinator.device.status[
+            if description.sub_key not in data_source[
                 key
-            ] and not description.supported(coordinator.device.status[key]):
+            ] and not description.supported(data_source[key]):
                 continue
 
             # Filter and remove entities that according to settings/status
@@ -302,6 +305,7 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
+    endpoint: DeviceEndpoint = DeviceEndpoint.STATUS
 
 
 @dataclass(frozen=True)
@@ -371,6 +375,11 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
     def status(self) -> dict:
         """Device status by entity key."""
         return cast(dict, self.coordinator.device.status[self.key])
+
+    @property
+    def config(self) -> dict:
+        """Device config by entity key."""
+        return cast(dict, self.coordinator.device.config[self.key])
 
     # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
@@ -520,18 +529,26 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
     @property
     def sub_status(self) -> Any:
         """Device status by entity key."""
-        return self.status[self.entity_description.sub_key]
+        return self.status.get(self.entity_description.sub_key)
+
+    @property
+    def sub_config(self) -> Any:
+        """Device config by entity key."""
+        return self.config.get(self.entity_description.sub_key)
 
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
+        if self.entity_description.endpoint == DeviceEndpoint.STATUS:
+            data = self.sub_status
+        else:
+            data = self.sub_config
+
         if callable(self.entity_description.value):
             # using "get" here since subkey might not exist (e.g. "errors" sub_key)
-            self._last_value = self.entity_description.value(
-                self.status.get(self.entity_description.sub_key), self._last_value
-            )
+            self._last_value = self.entity_description.value(data, self._last_value)
         else:
-            self._last_value = self.sub_status
+            self._last_value = data
 
         return self._last_value
 

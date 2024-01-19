@@ -229,3 +229,10 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 )
 
 CONF_GEN = "gen"
+
+
+class DeviceEndpoint(StrEnum):
+    """Device endpoint."""
+
+    STATUS = "status"
+    SETTINGS = "settings"
