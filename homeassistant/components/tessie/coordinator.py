@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from tessie_api import get_state
+from tessie_api import get_state, get_status
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -45,11 +45,21 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
         try:
+            status = await get_status(
+                session=self.session,
+                api_key=self.api_key,
+                vin=self.vin,
+            )
+            if status["status"] == TessieStatus.ASLEEP:
+                # Vehicle is asleep, no need to poll for data
+                self.data["state"] = status["status"]
+                return self.data
+
             vehicle = await get_state(
                 session=self.session,
                 api_key=self.api_key,
                 vin=self.vin,
-                use_cache=False,
+                use_cache=True,
             )
         except ClientResponseError as e:
             if e.status == HTTPStatus.UNAUTHORIZED:
@@ -57,13 +67,7 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise ConfigEntryAuthFailed from e
             raise e
 
-        if vehicle["state"] == TessieStatus.ONLINE:
-            # Vehicle is online, all data is fresh
-            return self._flatten(vehicle)
-
-        # Vehicle is asleep, only update state
-        self.data["state"] = vehicle["state"]
-        return self.data
+        return self._flatten(vehicle)
 
     def _flatten(
         self, data: dict[str, Any], parent: str | None = None
