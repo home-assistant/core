@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "alarm_control_panel": {
+      "alarm_control_panel": {
+        "default": "mdi:security"
+      }
+    }
+  }
+}

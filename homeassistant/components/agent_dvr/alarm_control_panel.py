@@ -18,8 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONNECTION, DOMAIN as AGENT_DOMAIN
 
-ICON = "mdi:security"
-
 CONF_HOME_MODE_NAME = "home"
 CONF_AWAY_MODE_NAME = "away"
 CONF_NIGHT_MODE_NAME = "night"
@@ -41,13 +39,13 @@ async def async_setup_entry(
 class AgentBaseStation(AlarmControlPanelEntity):
     """Representation of an Agent DVR Alarm Control Panel."""
 
-    _attr_icon = ICON
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
     _attr_has_entity_name = True
+    _attr_translation_key = "alarm_control_panel"
     _attr_name = None
 
     def __init__(self, client):
