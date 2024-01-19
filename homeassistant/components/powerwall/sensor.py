@@ -27,7 +27,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, POWERWALL_COORDINATOR
-from .entity import PowerWallEntity
+from .entity import BatteryEntity, PowerWallEntity
 from .models import PowerwallRuntimeData
 
 _METER_DIRECTION_EXPORT = "export"
@@ -136,6 +136,9 @@ async def async_setup_entry(
             PowerWallEnergySensor(powerwall_data, meter, description)
             for description in POWERWALL_INSTANT_SENSORS
         )
+
+    for battery in data.batteries:
+        entities.append(BatteryCapacitySensor(powerwall_data, battery.serial_number))
 
     async_add_entities(entities)
 
@@ -281,3 +284,22 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
         if TYPE_CHECKING:
             assert meter is not None
         return meter.get_energy_imported()
+
+
+class BatteryCapacitySensor(BatteryEntity, SensorEntity):
+    """Representation of the Battery capacity sensor."""
+
+    _attr_translation_key = "battery_capacity"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_device_class = SensorDeviceClass.BATTERY
+
+    @property
+    def unique_id(self) -> str:
+        """Device Uniqueid."""
+        return f"{self.base_unique_id}_battery_capacity"
+
+    @property
+    def native_value(self) -> int | None:
+        """Get the current value in kWh."""
+        return round(self.battery_data.capacity / 1000)

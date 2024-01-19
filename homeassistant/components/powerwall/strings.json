@@ -146,6 +146,9 @@
       "battery_export": {
         "name": "Battery export"
       },
+      "battery_capacity": {
+        "name": "Battery capacity"
+      },
       "load_import": {
         "name": "Load import"
       },
