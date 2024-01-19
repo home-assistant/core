@@ -51,7 +51,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from .json import JSON_DUMP, find_paths_unserializable_data
+from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -133,7 +133,7 @@ EventEntityRegistryUpdatedData = (
 EntityOptionsType = Mapping[str, Mapping[str, Any]]
 ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
 
-DISLAY_DICT_OPTIONAL = (
+DISPLAY_DICT_OPTIONAL = (
     ("ai", "area_id"),
     ("di", "device_id"),
     ("tk", "translation_key"),
@@ -208,7 +208,7 @@ class RegistryEntry:
         Returns None if there's no data needed for display.
         """
         display_dict: dict[str, Any] = {"ei": self.entity_id, "pl": self.platform}
-        for key, attr_name in DISLAY_DICT_OPTIONAL:
+        for key, attr_name in DISPLAY_DICT_OPTIONAL:
             if (attr_val := getattr(self, attr_name)) is not None:
                 display_dict[key] = attr_val
         if (category := self.entity_category) is not None:
@@ -227,14 +227,14 @@ class RegistryEntry:
         return display_dict
 
     @cached_property
-    def display_json_repr(self) -> str | None:
+    def display_json_repr(self) -> bytes | None:
         """Return a cached partial JSON representation of the entry.
 
         This version only includes what's needed for display.
         """
         try:
             dict_repr = self._as_display_dict
-            json_repr: str | None = JSON_DUMP(dict_repr) if dict_repr else None
+            json_repr: bytes | None = json_bytes(dict_repr) if dict_repr else None
             return json_repr
         except (ValueError, TypeError):
             _LOGGER.error(
@@ -282,11 +282,11 @@ class RegistryEntry:
         }
 
     @cached_property
-    def partial_json_repr(self) -> str | None:
+    def partial_json_repr(self) -> bytes | None:
         """Return a cached partial JSON representation of the entry."""
         try:
             dict_repr = self.as_partial_dict
-            return JSON_DUMP(dict_repr)
+            return json_bytes(dict_repr)
         except (ValueError, TypeError):
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",

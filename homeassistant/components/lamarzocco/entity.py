@@ -1,8 +1,9 @@
 """Base class for the La Marzocco entities."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud.const import LaMarzoccoModel
+from lmcloud import LMCloud as LaMarzoccoClient
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -16,12 +17,8 @@ from .coordinator import LaMarzoccoUpdateCoordinator
 class LaMarzoccoEntityDescription(EntityDescription):
     """Description for all LM entities."""
 
-    supported_models: tuple[LaMarzoccoModel, ...] = (
-        LaMarzoccoModel.GS3_AV,
-        LaMarzoccoModel.GS3_MP,
-        LaMarzoccoModel.LINEA_MICRA,
-        LaMarzoccoModel.LINEA_MINI,
-    )
+    available_fn: Callable[[LaMarzoccoClient], bool] = lambda _: True
+    supported_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
 
 
 class LaMarzoccoEntity(CoordinatorEntity[LaMarzoccoUpdateCoordinator]):
@@ -29,6 +26,13 @@ class LaMarzoccoEntity(CoordinatorEntity[LaMarzoccoUpdateCoordinator]):
 
     entity_description: LaMarzoccoEntityDescription
     _attr_has_entity_name = True
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.lm
+        )
 
     def __init__(
         self,

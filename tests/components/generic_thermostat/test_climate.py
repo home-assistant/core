@@ -1317,7 +1317,7 @@ async def test_restore_state(hass: HomeAssistant, hvac_mode) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1355,7 +1355,7 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1432,7 +1432,7 @@ async def test_restore_will_turn_off_(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(
         hass, input_boolean.DOMAIN, {"input_boolean": {"test": None}}
@@ -1480,7 +1480,7 @@ async def test_restore_will_turn_off_when_loaded_second(hass: HomeAssistant) -> 
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await hass.async_block_till_done()
     assert hass.states.get(heater_switch) is None

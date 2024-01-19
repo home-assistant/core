@@ -9,7 +9,7 @@
   })
 # ---
 # name: test_sensor[System Monitor Disk free / - state]
-  '0.2'
+  '200.0'
 # ---
 # name: test_sensor[System Monitor Disk free /media/share - attributes]
   ReadOnlyDict({
@@ -21,39 +21,39 @@
   })
 # ---
 # name: test_sensor[System Monitor Disk free /media/share - state]
-  '0.2'
+  '200.0'
 # ---
-# name: test_sensor[System Monitor Disk use (percent) / - attributes]
+# name: test_sensor[System Monitor Disk usage / - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor Disk use (percent) /',
+    'friendly_name': 'System Monitor Disk usage /',
     'icon': 'mdi:harddisk',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Disk use (percent) / - state]
+# name: test_sensor[System Monitor Disk usage / - state]
   '60.0'
 # ---
-# name: test_sensor[System Monitor Disk use (percent) /home/notexist/ - attributes]
+# name: test_sensor[System Monitor Disk usage /home/notexist/ - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor Disk use (percent) /home/notexist/',
+    'friendly_name': 'System Monitor Disk usage /home/notexist/',
     'icon': 'mdi:harddisk',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Disk use (percent) /home/notexist/ - state]
+# name: test_sensor[System Monitor Disk usage /home/notexist/ - state]
   '60.0'
 # ---
-# name: test_sensor[System Monitor Disk use (percent) /media/share - attributes]
+# name: test_sensor[System Monitor Disk usage /media/share - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor Disk use (percent) /media/share',
+    'friendly_name': 'System Monitor Disk usage /media/share',
     'icon': 'mdi:harddisk',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Disk use (percent) /media/share - state]
+# name: test_sensor[System Monitor Disk usage /media/share - state]
   '60.0'
 # ---
 # name: test_sensor[System Monitor Disk use / - attributes]
@@ -66,7 +66,7 @@
   })
 # ---
 # name: test_sensor[System Monitor Disk use / - state]
-  '0.3'
+  '300.0'
 # ---
 # name: test_sensor[System Monitor Disk use /media/share - attributes]
   ReadOnlyDict({
@@ -78,7 +78,7 @@
   })
 # ---
 # name: test_sensor[System Monitor Disk use /media/share - state]
-  '0.3'
+  '300.0'
 # ---
 # name: test_sensor[System Monitor IPv4 address eth0 - attributes]
   ReadOnlyDict({
@@ -167,15 +167,15 @@
 # name: test_sensor[System Monitor Memory free - state]
   '40.0'
 # ---
-# name: test_sensor[System Monitor Memory use (percent) - attributes]
+# name: test_sensor[System Monitor Memory usage - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor Memory use (percent)',
+    'friendly_name': 'System Monitor Memory usage',
     'icon': 'mdi:memory',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Memory use (percent) - state]
+# name: test_sensor[System Monitor Memory usage - state]
   '40.0'
 # ---
 # name: test_sensor[System Monitor Memory use - attributes]
@@ -374,15 +374,15 @@
 # name: test_sensor[System Monitor Swap free - state]
   '40.0'
 # ---
-# name: test_sensor[System Monitor Swap use (percent) - attributes]
+# name: test_sensor[System Monitor Swap usage - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor Swap use (percent)',
+    'friendly_name': 'System Monitor Swap usage',
     'icon': 'mdi:harddisk',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Swap use (percent) - state]
+# name: test_sensor[System Monitor Swap usage - state]
   '60.0'
 # ---
 # name: test_sensor[System Monitor Swap use - attributes]

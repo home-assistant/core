@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import asyncio
 import re
+from typing import Generic, TypeVar
 
+from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
 import voluptuous as vol
 
@@ -13,9 +15,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
+    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -23,15 +26,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+_HAFFmpegT = TypeVar("_HAFFmpegT", bound=HAFFmpeg)
+
 DOMAIN = "ffmpeg"
 
 SERVICE_START = "start"
 SERVICE_STOP = "stop"
 SERVICE_RESTART = "restart"
 
-SIGNAL_FFMPEG_START = "ffmpeg.start"
-SIGNAL_FFMPEG_STOP = "ffmpeg.stop"
-SIGNAL_FFMPEG_RESTART = "ffmpeg.restart"
+SIGNAL_FFMPEG_START = SignalType[list[str] | None]("ffmpeg.start")
+SIGNAL_FFMPEG_STOP = SignalType[list[str] | None]("ffmpeg.stop")
+SIGNAL_FFMPEG_RESTART = SignalType[list[str] | None]("ffmpeg.restart")
 
 DATA_FFMPEG = "ffmpeg"
 
@@ -66,7 +71,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Register service
     async def async_service_handle(service: ServiceCall) -> None:
         """Handle service ffmpeg process."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        entity_ids: list[str] | None = service.data.get(ATTR_ENTITY_ID)
 
         if service.service == SERVICE_START:
             async_dispatcher_send(hass, SIGNAL_FFMPEG_START, entity_ids)
@@ -128,20 +133,20 @@ async def async_get_image(
 class FFmpegManager:
     """Helper for ha-ffmpeg."""
 
-    def __init__(self, hass, ffmpeg_bin):
+    def __init__(self, hass: HomeAssistant, ffmpeg_bin: str) -> None:
         """Initialize helper."""
         self.hass = hass
-        self._cache = {}
+        self._cache = {}  # type: ignore[var-annotated]
         self._bin = ffmpeg_bin
-        self._version = None
-        self._major_version = None
+        self._version: str | None = None
+        self._major_version: int | None = None
 
     @property
-    def binary(self):
+    def binary(self) -> str:
         """Return ffmpeg binary from config."""
         return self._bin
 
-    async def async_get_version(self):
+    async def async_get_version(self) -> tuple[str | None, int | None]:
         """Return ffmpeg version."""
 
         ffversion = FFVersion(self._bin)
@@ -156,7 +161,7 @@ class FFmpegManager:
         return self._version, self._major_version
 
     @property
-    def ffmpeg_stream_content_type(self):
+    def ffmpeg_stream_content_type(self) -> str:
         """Return HTTP content type for ffmpeg stream."""
         if self._major_version is not None and self._major_version > 3:
             return CONTENT_TYPE_MULTIPART.format("ffmpeg")
@@ -164,17 +169,17 @@ class FFmpegManager:
         return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
-class FFmpegBase(Entity):
+class FFmpegBase(Entity, Generic[_HAFFmpegT]):
     """Interface object for FFmpeg."""
 
     _attr_should_poll = False
 
-    def __init__(self, initial_state=True):
+    def __init__(self, ffmpeg: _HAFFmpegT, initial_state: bool = True) -> None:
         """Initialize ffmpeg base object."""
-        self.ffmpeg = None
+        self.ffmpeg = ffmpeg
         self.initial_state = initial_state
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register dispatcher & events.
 
         This method is a coroutine.
@@ -199,18 +204,18 @@ class FFmpegBase(Entity):
         self._async_register_events()
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self.ffmpeg.is_running
 
-    async def _async_start_ffmpeg(self, entity_ids):
+    async def _async_start_ffmpeg(self, entity_ids: list[str] | None) -> None:
         """Start a FFmpeg process.
 
         This method is a coroutine.
         """
         raise NotImplementedError()
 
-    async def _async_stop_ffmpeg(self, entity_ids):
+    async def _async_stop_ffmpeg(self, entity_ids: list[str] | None) -> None:
         """Stop a FFmpeg process.
 
         This method is a coroutine.
@@ -218,7 +223,7 @@ class FFmpegBase(Entity):
         if entity_ids is None or self.entity_id in entity_ids:
             await self.ffmpeg.close()
 
-    async def _async_restart_ffmpeg(self, entity_ids):
+    async def _async_restart_ffmpeg(self, entity_ids: list[str] | None) -> None:
         """Stop a FFmpeg process.
 
         This method is a coroutine.
@@ -228,10 +233,10 @@ class FFmpegBase(Entity):
             await self._async_start_ffmpeg(None)
 
     @callback
-    def _async_register_events(self):
+    def _async_register_events(self) -> None:
         """Register a FFmpeg process/device."""
 
-        async def async_shutdown_handle(event):
+        async def async_shutdown_handle(event: Event) -> None:
             """Stop FFmpeg process."""
             await self._async_stop_ffmpeg(None)
 
@@ -241,7 +246,7 @@ class FFmpegBase(Entity):
         if not self.initial_state:
             return
 
-        async def async_start_handle(event):
+        async def async_start_handle(event: Event) -> None:
             """Start FFmpeg process."""
             await self._async_start_ffmpeg(None)
             self.async_write_ha_state()

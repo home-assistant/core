@@ -1408,7 +1408,7 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(
 
 async def test_cleanup_startup(hass: HomeAssistant) -> None:
     """Test we run a cleanup on startup."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     with patch(
         "homeassistant.helpers.device_registry.Debouncer.async_call"

@@ -937,7 +937,7 @@ async def test_reset_cancels_retry_setup(hass: HomeAssistant) -> None:
 
 async def test_reset_cancels_retry_setup_when_not_started(hass: HomeAssistant) -> None:
     """Test that resetting a platform will cancel scheduled a setup retry when not yet started."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     async_setup_entry = Mock(side_effect=PlatformNotReady)
     initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
 

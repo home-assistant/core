@@ -1,10 +1,13 @@
 """Support for August lock."""
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from yalexs.activity import SOURCE_PUBNUB, ActivityType
-from yalexs.lock import LockStatus
+from yalexs.activity import SOURCE_PUBNUB, ActivityType, ActivityTypes
+from yalexs.lock import Lock, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
@@ -39,7 +42,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
 
     _attr_name = None
 
-    def __init__(self, data, device):
+    def __init__(self, data: AugustData, device: Lock) -> None:
         """Initialize the lock."""
         super().__init__(data, device)
         self._lock_status = None
@@ -62,7 +65,9 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             return
         await self._call_lock_operation(self._data.async_unlock)
 
-    async def _call_lock_operation(self, lock_operation):
+    async def _call_lock_operation(
+        self, lock_operation: Callable[[str], Coroutine[Any, Any, list[ActivityTypes]]]
+    ) -> None:
         try:
             activities = await lock_operation(self._device_id)
         except ClientResponseError as err:
@@ -82,7 +87,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             )
             self._data.async_signal_device_id_update(self._device_id)
 
-    def _update_lock_status_from_detail(self):
+    def _update_lock_status_from_detail(self) -> bool:
         self._attr_available = self._detail.bridge_is_online
 
         if self._lock_status != self._detail.lock_status:
@@ -91,7 +96,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         return False
 
     @callback
-    def _update_from_data(self):
+    def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
         activity_stream = self._data.activity_stream
         device_id = self._device_id

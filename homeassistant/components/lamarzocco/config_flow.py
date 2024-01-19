@@ -56,7 +56,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Server rejected login credentials")
                 errors["base"] = "invalid_auth"
             except RequestNotSuccessful as exc:
-                _LOGGER.exception("Error connecting to server: %s", str(exc))
+                _LOGGER.error("Error connecting to server: %s", exc)
                 errors["base"] = "cannot_connect"
             else:
                 if not self._machines:
@@ -65,7 +65,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 if self.reauth_entry:
                     self.hass.config_entries.async_update_entry(
-                        self.reauth_entry, data=user_input
+                        self.reauth_entry, data=data
                     )
                     await self.hass.config_entries.async_reload(
                         self.reauth_entry.entry_id
@@ -146,11 +146,20 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
-        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_PASSWORD): str,
+                    }
+                ),
+            )
+
+        return await self.async_step_user(user_input)

@@ -328,7 +328,7 @@
         },
         "manufacturer": {
           "name": "Manufacturer",
-          "description": "Manufacturer code."
+          "description": "Manufacturer code. Use a value of \"-1\" to force no code to be set."
         }
       }
     },

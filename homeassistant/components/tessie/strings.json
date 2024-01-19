@@ -130,16 +130,16 @@
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
       },
-      "active_route_traffic_minutes_delay": {
+      "drive_state_active_route_traffic_minutes_delay": {
         "name": "Traffic delay"
       },
-      "active_route_energy_at_arrival": {
+      "drive_state_active_route_energy_at_arrival": {
         "name": "State of charge at arrival"
       },
-      "active_route_miles_to_arrival": {
+      "drive_state_active_route_miles_to_arrival": {
         "name": "Distance to arrival"
       },
-      "active_route_time_to_arrival": {
+      "drive_state_active_route_time_to_arrival": {
         "name": "Time to arrival"
       },
       "drive_state_active_route_destination": {

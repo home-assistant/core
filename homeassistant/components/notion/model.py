@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from aionotion.sensor.models import ListenerKind
 
 
-@dataclass(frozen=True)
-class NotionEntityDescriptionMixin:
-    """Define an description mixin Notion entities."""
+@dataclass(frozen=True, kw_only=True)
+class NotionEntityDescription:
+    """Define an description for Notion entities."""
 
     listener_kind: ListenerKind

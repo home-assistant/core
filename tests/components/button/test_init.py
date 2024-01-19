@@ -1,7 +1,9 @@
 """The tests for the Button component."""
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from datetime import timedelta
+from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.button import (
@@ -51,6 +53,7 @@ async def test_custom_integration(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we integration."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -62,16 +65,30 @@ async def test_custom_integration(
     assert hass.states.get("button.button_1").state == STATE_UNKNOWN
 
     now = dt_util.utcnow()
-    with patch("homeassistant.core.dt_util.utcnow", return_value=now):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.button_1"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.button_1"},
+        blocking=True,
+    )
 
     assert hass.states.get("button.button_1").state == now.isoformat()
     assert "The button has been pressed" in caplog.text
+
+    now_isoformat = dt_util.utcnow().isoformat()
+    assert hass.states.get("button.button_1").state == now_isoformat
+
+    new_time = dt_util.utcnow() + timedelta(weeks=1)
+    freezer.move_to(new_time)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.button_1"},
+        blocking=True,
+    )
+
+    new_time_isoformat = new_time.isoformat()
+    assert hass.states.get("button.button_1").state == new_time_isoformat
 
 
 async def test_restore_state(

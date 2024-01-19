@@ -592,12 +592,17 @@ class ZHADevice(LogMixin):
         self.debug("started initialization")
         await self._zdo_handler.async_initialize(from_cache)
         self._zdo_handler.debug("'async_initialize' stage succeeded")
-        await asyncio.gather(
-            *(
-                endpoint.async_initialize(from_cache)
-                for endpoint in self._endpoints.values()
-            )
-        )
+
+        # We intentionally do not use `gather` here! This is so that if, for example,
+        # three `device.async_initialize()`s are spawned, only three concurrent requests
+        # will ever be in flight at once. Startup concurrency is managed at the device
+        # level.
+        for endpoint in self._endpoints.values():
+            try:
+                await endpoint.async_initialize(from_cache)
+            except Exception:  # pylint: disable=broad-exception-caught
+                self.debug("Failed to initialize endpoint", exc_info=True)
+
         self.debug("power source: %s", self.power_source)
         self.status = DeviceStatus.INITIALIZED
         self.debug("completed initialization")
