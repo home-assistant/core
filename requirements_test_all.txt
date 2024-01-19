@@ -958,7 +958,7 @@ libsoundtouch==0.8
 linear-garage-door==0.2.7
 
 # homeassistant.components.lamarzocco
-lmcloud==0.4.34
+lmcloud==0.4.35
 
 # homeassistant.components.logi_circle
 logi-circle==0.2.3
@@ -1173,7 +1173,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.36.2
+plugwise==0.36.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1252,7 +1252,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.1.1
+pyDuotecno==2024.1.2
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
@@ -1421,7 +1421,7 @@ pyiss==1.0.1
 pyisy==3.1.14
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.6
+pyjvcprojector==1.0.9
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
