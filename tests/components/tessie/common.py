@@ -7,7 +7,7 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from aiohttp.client import RequestInfo
 
 from homeassistant.components.tessie.const import DOMAIN, TessieStatus
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -44,7 +44,9 @@ ERROR_VIRTUAL_KEY = ClientResponseError(
 ERROR_CONNECTION = ClientConnectionError()
 
 
-async def setup_platform(hass: HomeAssistant, side_effect=None):
+async def setup_platform(
+    hass: HomeAssistant, platforms: list[Platform], side_effect=None
+):
     """Set up the Tessie platform."""
 
     mock_entry = MockConfigEntry(
@@ -57,7 +59,7 @@ async def setup_platform(hass: HomeAssistant, side_effect=None):
         "homeassistant.components.tessie.get_state_of_all_vehicles",
         return_value=TEST_STATE_OF_ALL_VEHICLES,
         side_effect=side_effect,
-    ):
+    ), patch("homeassistant.components.tessie.PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
