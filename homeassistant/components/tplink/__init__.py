@@ -241,11 +241,10 @@ async def get_credentials(hass: HomeAssistant) -> Optional[Credentials]:
 
 async def set_credentials(hass: HomeAssistant, username: str, password: str) -> None:
     """Save the credentials to HASS data."""
-    auth = {
+    hass.data.setdefault(DOMAIN, {})[CONF_AUTHENTICATION] = {
         CONF_USERNAME: username,
         CONF_PASSWORD: password,
     }
-    hass.data.setdefault(DOMAIN, {})[CONF_AUTHENTICATION] = auth
 
 
 def mac_alias(mac: str) -> str:
