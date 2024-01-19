@@ -293,6 +293,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_reload_requires_auth_entries(self) -> None:
+        """Reload any in progress config flow that now have credentials."""
         _config_entries = self.hass.config_entries
         for flow in _config_entries.flow.async_progress_by_handler(
             DOMAIN, include_uninitialized=True
@@ -389,10 +390,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         errors = {}
-        assert self.reauth_entry is not None
+        reauth_entry = self.reauth_entry
+        assert reauth_entry is not None
 
         if user_input:
-            host = self.reauth_entry.data[CONF_HOST]
+            host = reauth_entry.data[CONF_HOST]
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             credentials = Credentials(username, password)
@@ -408,18 +410,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await set_credentials(self.hass, username, password)
-                await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
                 self.hass.async_create_task(self._async_reload_requires_auth_entries())
                 return self.async_abort(reason="reauth_successful")
 
         # Old config entries will not have these values.
-        alias = self.reauth_entry.data.get(CONF_ALIAS) or "unknown"
-        model = self.reauth_entry.data.get(CONF_MODEL) or "unknown"
+        entry_data = reauth_entry.data
+        alias = entry_data.get(CONF_ALIAS) or "unknown"
+        model = entry_data.get(CONF_MODEL) or "unknown"
 
         placeholders = {
             "name": alias,
             "model": model,
-            "host": self.reauth_entry.data.get(CONF_HOST),
+            "host": entry_data.get(CONF_HOST),
         }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
