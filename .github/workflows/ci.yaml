@@ -800,7 +800,7 @@ jobs:
         uses: actions/upload-artifact@v4.2.0
         with:
           name: pytest-${{ github.run_number }}
-          path: pytest-*.txt
+          path: pytest-${{ github.run_number }}.txt
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v4.2.0
