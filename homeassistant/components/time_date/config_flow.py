@@ -113,17 +113,12 @@ async def ws_start_preview(
     )
     await entity_platform.async_load_translations()
 
-    preview_states: dict[str, dict[str, str | Mapping[str, Any]]] = {}
-
     @callback
-    def async_preview_updated(
-        key: str, state: str, attributes: Mapping[str, Any]
-    ) -> None:
+    def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
         """Forward config entry state events to websocket."""
-        preview_states[key] = {"attributes": attributes, "state": state}
         connection.send_message(
             websocket_api.event_message(
-                msg["id"], {"items": list(preview_states.values())}
+                msg["id"], {"attributes": attributes, "state": state}
             )
         )
 
@@ -134,14 +129,9 @@ async def ws_start_preview(
         while subscriptions:
             subscriptions.pop()()
 
-    preview_entities = {
-        option_type: TimeDateSensor(option_type)
-        for option_type in validated[CONF_DISPLAY_OPTIONS]
-    }
-
-    for preview_entity in preview_entities.values():
-        preview_entity.hass = hass
-        preview_entity.platform = entity_platform
+    preview_entity = TimeDateSensor(validated[CONF_DISPLAY_OPTIONS])
+    preview_entity.hass = hass
+    preview_entity.platform = entity_platform
 
     if msg["flow_type"] == "options_flow":
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
@@ -151,15 +141,11 @@ async def ws_start_preview(
             raise HomeAssistantError
         entity_registry = er.async_get(hass)
         entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
-        for option_type, preview_entity in preview_entities.items():
-            expected_unique_id = option_type
-            for entry in entries:
-                if entry.unique_id == expected_unique_id:
-                    preview_entity.registry_entry = entry
-                    break
+        preview_entity.registry_entry = entries[0]
 
     connection.send_result(msg["id"])
-    for preview_entity in preview_entities.values():
-        subscriptions.append(preview_entity.async_start_preview(async_preview_updated))
+    connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
+        async_preview_updated
+    )
 
     connection.subscriptions[msg["id"]] = async_unsubscripe_subscriptions

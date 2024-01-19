@@ -92,7 +92,7 @@ class TimeDateSensor(SensorEntity):
 
     def __init__(self, option_type: str, entry_id: str | None = None) -> None:
         """Initialize the sensor."""
-        self._attr_translation_a_key = option_type
+        self._attr_translation_key = option_type
         self.type = option_type
         object_id = "internet_time" if option_type == "beat" else option_type
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
@@ -117,7 +117,7 @@ class TimeDateSensor(SensorEntity):
     @callback
     def async_start_preview(
         self,
-        preview_callback: Callable[[str, str, Mapping[str, Any]], None],
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 
@@ -131,9 +131,7 @@ class TimeDateSensor(SensorEntity):
                 self.hass, point_in_time_listener, self.get_next_interval(now)
             )
             calculated_state = self._async_calculate_state()
-            preview_callback(
-                self.type, calculated_state.state, calculated_state.attributes
-            )
+            preview_callback(calculated_state.state, calculated_state.attributes)
 
         @callback
         def async_stop_preview() -> None:
