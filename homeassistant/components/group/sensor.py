@@ -314,6 +314,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._attr_native_unit_of_measurement = self._calculate_unit_of_measurement(
             unit_of_measurement
         )
+        self._valid_units: set[str | None] = self._get_valid_units()
         self._attr_name = name
         if name == DEFAULT_NAME:
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
@@ -339,12 +340,9 @@ class SensorGroup(GroupEntity, SensorEntity):
                 try:
                     numeric_state = float(state.state)
                     if (
-                        (device_class := self.device_class) in UNIT_CONVERTERS
-                        and self.native_unit_of_measurement
-                        and (uom := state.attributes["unit_of_measurement"])
-                        in UNIT_CONVERTERS[device_class].VALID_UNITS
-                    ):
-                        numeric_state = UNIT_CONVERTERS[device_class].convert(
+                        uom := state.attributes["unit_of_measurement"]
+                    ) in self._valid_units:
+                        numeric_state = UNIT_CONVERTERS[self.device_class].convert(
                             numeric_state, uom, self.native_unit_of_measurement
                         )
                     sensor_values.append((entity_id, numeric_state, state))
@@ -562,3 +560,14 @@ class SensorGroup(GroupEntity, SensorEntity):
                 },
             )
         return None
+
+    def _get_valid_units(self) -> set[str | None]:
+        """Return valid units.
+
+        If device class is set and compatible unit of measurements.
+        """
+        if (
+            device_class := self.device_class
+        ) in UNIT_CONVERTERS and self.native_unit_of_measurement:
+            return UNIT_CONVERTERS[device_class].VALID_UNITS
+        return set()
