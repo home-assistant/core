@@ -6,7 +6,7 @@
         "state": {
           "ringing": "mdi:phone-incoming",
           "dialing": "mdi:phone-outgoing",
-          "talking": "mdi:phone-in-talk",
+          "talking": "mdi:phone-in-talk"
         }
       }
     }
