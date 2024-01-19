@@ -238,7 +238,7 @@ SENSOR_TYPES = {
     ("gpu", "mem"): GlancesSensorEntityDescription(
         key="mem",
         type="gpu",
-        translation_key="memory_usage",
+        translation_key="gpu_memory_usage",
         icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -246,7 +246,7 @@ SENSOR_TYPES = {
     ("gpu", "proc"): GlancesSensorEntityDescription(
         key="proc",
         type="gpu",
-        translation_key="processor_load",
+        translation_key="gpu_processor_usage",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:expansion-card",
         state_class=SensorStateClass.MEASUREMENT,
