@@ -429,11 +429,11 @@ class APIComponentsView(HomeAssistantView):
     def get(self, request: web.Request) -> web.Response:
         """Get current loaded components."""
         hass: HomeAssistant = request.app["hass"]
-        return self.json(hass.config.components)
+        return self.json(list(hass.config.components))
 
 
 @lru_cache
-def _cached_template(template_str: str, hass: ha.HomeAssistant) -> template.Template:
+def _cached_template(template_str: str, hass: HomeAssistant) -> template.Template:
     """Return a cached template."""
     return template.Template(template_str, hass)
 
@@ -450,7 +450,7 @@ class APITemplateView(HomeAssistantView):
         try:
             data = await request.json()
             tpl = _cached_template(data["template"], request.app["hass"])
-            return tpl.async_render(variables=data.get("variables"), parse_result=False)
+            return tpl.async_render(variables=data.get("variables"), parse_result=False)  # type: ignore[no-any-return]
         except (ValueError, TemplateError) as ex:
             return self.json_message(
                 f"Error rendering template: {ex}", HTTPStatus.BAD_REQUEST
