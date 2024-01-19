@@ -24,7 +24,7 @@ STORAGE_DATA_SCHEMA = vol.Schema(
     }
 )
 
-DISCOVERY_TIMEOUT = 10
+DISCOVERY_TIMEOUT = 8  # Home Assistant will complain if startup takes > 10s
 CONNECT_TIMEOUT = 5
 
 ATTR_CURRENT_A: Final = "current_a"
