@@ -117,7 +117,7 @@ async def test_create_network(
 
     create_dataset_mock.assert_called_once_with(
         python_otbr_api.models.ActiveDataSet(
-            channel=15, network_name="home-assistant-1234", pan_id=0x1234
+            channel=15, network_name="homeassistant-12", pan_id=0x1234
         )
     )
     factory_reset_mock.assert_called_once_with()

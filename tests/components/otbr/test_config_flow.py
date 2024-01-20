@@ -124,7 +124,7 @@ async def test_user_flow_router_not_setup(
     pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
     assert aioclient_mock.mock_calls[-2][2] == {
         "Channel": 15,
-        "NetworkName": f"home-assistant-{pan_id:04x}",
+        "NetworkName": f"homeassistant-{pan_id>>8:02x}",
         "PanId": pan_id,
     }
 
@@ -430,7 +430,7 @@ async def test_hassio_discovery_flow_router_not_setup(
     pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
     assert aioclient_mock.mock_calls[-2][2] == {
         "Channel": 15,
-        "NetworkName": f"home-assistant-{pan_id:04x}",
+        "NetworkName": f"homeassistant-{pan_id>>8:02x}",
         "PanId": pan_id,
     }
 
@@ -539,7 +539,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
     assert aioclient_mock.mock_calls[-2][2] == {
         "Channel": 15,
-        "NetworkName": f"home-assistant-{pan_id:04x}",
+        "NetworkName": f"homeassistant-{pan_id>>8:02x}",
         "PanId": pan_id,
     }
 
