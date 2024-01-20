@@ -1100,9 +1100,7 @@ class SonoffIlluminationStates(types.enum8):
     Light = 0x01
 
 
-@MULTI_MATCH(
-    cluster_handler_names="sonoff_manufacturer_specific_FC11", models={"SNZB-06P"}
-)
+@MULTI_MATCH(cluster_handler_names="sonoff_manufacturer", models={"SNZB-06P"})
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SonoffPresenceSenorIlluminationStatus(Sensor):
     """Sensor that displays the illumination status the last time peresence was detected."""
