@@ -1358,6 +1358,7 @@ omit =
     homeassistant/components/teslemetry/climate.py
     homeassistant/components/teslemetry/coordinator.py
     homeassistant/components/teslemetry/entity.py
+    homeassistant/components/teslemetry/context.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
     homeassistant/components/thethingsnetwork/*
