@@ -47,19 +47,19 @@
         "name": "Memory usage"
       },
       "network_link_status": {
-        "name": "Network link ({monitor_device})"
+        "name": "{monitor_device} link"
       },
       "network_tx": {
         "name": "{monitor_device} upload"
       },
       "network_rx": {
-        "name": "Network down ({monitor_device})"
+        "name": "{monitor_device} download"
       },
       "drive_smart_status": {
-        "name": "SMART status (drive {monitor_device})"
+        "name": "Drive {monitor_device} status"
       },
       "drive_temp": {
-        "name": "Temperature (drive {monitor_device})"
+        "name": "Drive {monitor_device} temperature"
       },
       "volume_size_used": {
         "name": "Used space ({monitor_device})"
