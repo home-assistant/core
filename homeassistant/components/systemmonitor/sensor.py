@@ -737,12 +737,12 @@ class SystemMonitorSensor(CoordinatorEntity[MonitorCoordinator[dataT]], SensorEn
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    entity_description: SysMonitorSensorEntityDescription
+    entity_description: SysMonitorSensorEntityDescription[dataT]
 
     def __init__(
         self,
-        coordinator: MonitorCoordinator,
-        sensor_description: SysMonitorSensorEntityDescription,
+        coordinator: MonitorCoordinator[dataT],
+        sensor_description: SysMonitorSensorEntityDescription[dataT],
         entry_id: str,
         argument: str,
         legacy_enabled: bool = False,

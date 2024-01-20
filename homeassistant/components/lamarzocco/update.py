@@ -102,4 +102,4 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         if not success:
             raise HomeAssistantError("Update failed")
         self._attr_in_progress = False
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
