@@ -161,8 +161,10 @@ class AuthManager:
         self.login_flow = AuthManagerFlowManager(hass, self)
         self._revoke_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
         self._expire_callbacks: dict[str, CALLBACK_TYPE] = {}
+        self._expire_callback: CALLBACK_TYPE | None = None
 
-        hass.add_job(self.async_init_token_expiration_schedule)
+        hass.async_run_job(self.async_track_next_refresh_token_expiration)
+        hass.async_add_shutdown_job(HassJob(self.async_cancel_expiration_schedule))
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
@@ -457,7 +459,7 @@ class AuthManager:
                     # long_lived_access_token type of refresh token
                     raise ValueError(f"{client_name} already exists")
 
-        refresh_token = await self._store.async_create_refresh_token(
+        return await self._store.async_create_refresh_token(
             user,
             client_id,
             client_name,
@@ -467,10 +469,6 @@ class AuthManager:
             expire_at,
             credential,
         )
-
-        self.async_schedule_token_expiration(refresh_token)
-
-        return refresh_token
 
     async def async_get_refresh_token(
         self, token_id: str
@@ -494,38 +492,33 @@ class AuthManager:
         for revoke_callback in callbacks:
             revoke_callback()
 
-    async def async_init_token_expiration_schedule(self) -> None:
+    async def async_track_next_refresh_token_expiration(self) -> None:
         """Initialise all token expiration scheduled tasks."""
+        next_expiration = dt_util.utcnow() + REFRESH_TOKEN_EXPIRATION
         for token in await self._store.async_get_refresh_tokens():
-            if token.expire_at is None:
-                continue
-            self.async_schedule_token_expiration(token)
+            if (
+                expire_at := token.expire_at
+            ) is not None and expire_at < next_expiration:
+                next_expiration = expire_at
 
-        async def _cancel_callbacks() -> None:
-            for cancel in self._expire_callbacks.values():
-                cancel()
+        async def _remove_expired_refresh_tokens(_: datetime | None = None) -> None:
+            expired_tokens: list[models.RefreshToken] = []
+            now = dt_util.utcnow()
+            for token in await self._store.async_get_refresh_tokens():
+                if (expire_at := token.expire_at) is not None and expire_at <= now:
+                    expired_tokens.append(token)
+            for expired_token in expired_tokens:
+                await self.async_remove_refresh_token(expired_token)
+            await self.async_track_next_refresh_token_expiration()
 
-        self.hass.async_add_shutdown_job(HassJob(_cancel_callbacks))
-
-    @callback
-    def async_schedule_token_expiration(
-        self, refresh_token: models.RefreshToken
-    ) -> None:
-        """Schedule the expiration of a refresh token."""
-        if refresh_token.expire_at is None:
-            return
-
-        if cancel := self._expire_callbacks.get(refresh_token.id):
-            cancel()
-
-        @callback
-        def _remove_expired_refresh_tokens(_: datetime | None = None) -> None:
-            """Check for and delete expired refresh tokens."""
-            self.hass.async_add_job(self.async_remove_refresh_token, refresh_token)
-
-        self._expire_callbacks[refresh_token.id] = async_track_point_in_utc_time(
-            self.hass, _remove_expired_refresh_tokens, refresh_token.expire_at
+        self._expire_callback = async_track_point_in_utc_time(
+            self.hass, _remove_expired_refresh_tokens, next_expiration
         )
+
+    async def async_cancel_expiration_schedule(self) -> None:
+        """Cancel tracking of expired refresh tokens."""
+        if self._expire_callback:
+            self._expire_callback()
 
     @callback
     def async_register_revoke_token_callback(
@@ -553,7 +546,6 @@ class AuthManager:
         self.async_validate_refresh_token(refresh_token, remote_ip)
 
         self._store.async_log_refresh_token_usage(refresh_token, remote_ip)
-        self.async_schedule_token_expiration(refresh_token)
 
         now = int(time.time())
         expire_seconds = int(refresh_token.access_token_expiration.total_seconds())
