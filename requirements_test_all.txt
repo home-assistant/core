@@ -424,7 +424,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.0
+async-upnp-client==0.38.1
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.4.2
@@ -1198,7 +1198,7 @@ prometheus-client==0.17.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.7
+psutil==5.9.8
 
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0
@@ -2021,7 +2021,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.5.0
+thermopro-ble==0.8.0
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3

@@ -472,7 +472,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.0
+async-upnp-client==0.38.1
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
@@ -1548,7 +1548,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.7
+psutil==5.9.8
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -2665,7 +2665,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.5.0
+thermopro-ble==0.8.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks-smoke==0.1.8
