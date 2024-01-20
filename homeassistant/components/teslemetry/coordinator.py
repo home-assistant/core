@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import TeslemetryState
 
-SYNC_INTERVAL = 60
+SCAN_INTERVAL = 60
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name="Teslemetry Vehicle",
-            update_interval=timedelta(seconds=SYNC_INTERVAL),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.api = api
 
@@ -34,12 +34,10 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Perform first refresh."""
         try:
             response = await self.api.wake_up()
-            _LOGGER.info(response)
             if response["response"]["state"] != TeslemetryState.ONLINE:
                 raise ConfigEntryNotReady("Vehicle is not online")
         except TeslaFleetError as e:
             raise ConfigEntryNotReady from e
-        _LOGGER.info("AWAKE")
         await super().async_config_entry_first_refresh()
 
     async def _async_update_data(self) -> dict[str, Any]:

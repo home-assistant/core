@@ -94,7 +94,6 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
             driver_temp=temp,
             passenger_temp=temp,
         )
-
         self.set((f"climate_state_{self.key}_setting", temp))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
