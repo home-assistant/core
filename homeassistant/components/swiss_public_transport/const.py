@@ -6,6 +6,7 @@ CONF_DESTINATION = "to"
 CONF_START = "from"
 
 DEFAULT_NAME = "Next Destination"
+DEFAULT_POLLING_RATE = 180
 
 
 PLACEHOLDERS = {

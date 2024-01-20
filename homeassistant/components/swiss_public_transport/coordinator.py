@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DEFAULT_POLLING_RATE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class SwissPublicTransportDataUpdateCoordinator(DataUpdateCoordinator[DataConnec
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=90),
+            update_interval=timedelta(seconds=DEFAULT_POLLING_RATE),
         )
         self._opendata = opendata
 
