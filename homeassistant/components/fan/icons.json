@@ -2,7 +2,7 @@
   "entity_component": {
     "_": {
       "default": "mdi:fan",
-      "states": {
+      "state": {
         "off": "mdi:fan-off"
       }
     }
