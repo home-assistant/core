@@ -6,9 +6,9 @@ from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG, WAKE_UP_SUCCESS
+from .const import CONFIG, PRODUCTS, VEHICLE_DATA, WAKE_UP_SUCCESS
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry
 
 
 async def setup_platform(
@@ -25,14 +25,18 @@ async def setup_platform(
     with patch("homeassistant.components.teslemetry.PLATFORMS", platforms), patch(
         "homeassistant.components.teslemetry.Teslemetry",
     ) as teslemetry_mock:
-        teslemetry_mock.return_value.products = AsyncMock(
-            load_json_object_fixture("products.json", DOMAIN)
-        )
+        teslemetry_mock.return_value.products = AsyncMock(return_value=PRODUCTS)
         teslemetry_mock.return_value.products.side_effect = side_effect
 
         teslemetry_mock.return_value.vehicle.specific.return_value.wake_up = AsyncMock(
-            WAKE_UP_SUCCESS
+            return_value=WAKE_UP_SUCCESS
         )
+        teslemetry_mock.return_value.vehicle.specific.return_value.vehicle_data = (
+            AsyncMock(return_value=VEHICLE_DATA)
+        )
+        teslemetry_mock.return_value.vehicle.specific.return_value.vin = VEHICLE_DATA[
+            "response"
+        ]["vin"]
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
