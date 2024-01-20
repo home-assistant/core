@@ -2,7 +2,7 @@
   "entity_component": {
     "_": {
       "default": "mdi:window-open",
-      "states": {
+      "state": {
         "closed": "mdi:window-closed",
         "closing": "mdi:arrow-down-box",
         "opening": "mdi:arrow-up-box"
@@ -10,7 +10,7 @@
     },
     "blind": {
       "default": "mdi:blinds-horizontal",
-      "states": {
+      "state": {
         "closed": "mdi:blinds-horizontal-closed",
         "closing": "mdi:arrow-down-box",
         "opening": "mdi:arrow-up-box"
@@ -18,7 +18,7 @@
     },
     "curtain": {
       "default": "mdi:curtains",
-      "states": {
+      "state": {
         "closed": "mdi:curtains-closed",
         "closing": "mdi:arrow-collapse-horizontal",
         "opening": "mdi:arrow-split-vertical"
@@ -26,7 +26,7 @@
     },
     "damper": {
       "default": "mdi:circle",
-      "states": {
+      "state": {
         "closed": "mdi:circle-slice-8",
         "closing": "mdi:circle",
         "opening": "mdi:circle"
@@ -34,7 +34,7 @@
     },
     "door": {
       "default": "mdi:door-open",
-      "states": {
+      "state": {
         "closed": "mdi:door-closed",
         "closing": "mdi:door-open",
         "opening": "mdi:door-open"
@@ -42,7 +42,7 @@
     },
     "garage": {
       "default": "mdi:garage-open",
-      "states": {
+      "state": {
         "closed": "mdi:garage",
         "closing": "mdi:arrow-down-box",
         "opening": "mdi:arrow-up-box"
@@ -50,7 +50,7 @@
     },
     "gate": {
       "default": "mdi:gate-open",
-      "states": {
+      "state": {
         "closed": "mdi:gate",
         "closing": "mdi:arrow-right",
         "opening": "mdi:arrow-right"
@@ -58,7 +58,7 @@
     },
     "shade": {
       "default": "mdi:roller-shade",
-      "states": {
+      "state": {
         "closed": "mdi:roller-shade-closed",
         "closing": "mdi:arrow-down-box",
         "opening": "mdi:arrow-up-box"
@@ -66,7 +66,7 @@
     },
     "shutter": {
       "default": "mdi:window-shutter-open",
-      "states": {
+      "state": {
         "closed": "mdi:window-shutter",
         "closing": "mdi:arrow-down-box",
         "opening": "mdi:arrow-up-box"
@@ -74,7 +74,7 @@
     },
     "window": {
       "default": "mdi:window-open",
-      "states": {
+      "state": {
         "closed": "mdi:window-closed",
         "closing": "mdi:arrow-down-box",
         "opening": "mdi:arrow-up-box"
