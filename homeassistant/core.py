@@ -2429,7 +2429,7 @@ class Config:
             # legacy, backwards compat
             "whitelist_external_dirs": allowlist_external_dirs,
             "allowlist_external_dirs": allowlist_external_dirs,
-            "allowlist_external_urls": allowlist_external_dirs,
+            "allowlist_external_urls": list(self.allowlist_external_urls),
             "version": __version__,
             "config_source": self.config_source,
             "recovery_mode": self.recovery_mode,
