@@ -5,3 +5,4 @@ MOCK_PORT = 20554
 MOCK_PASSWORD = "jvcpasswd"
 MOCK_MAC = "jvcmac"
 MOCK_MODEL = "jvcmodel"
+MOCK_READONLY = False

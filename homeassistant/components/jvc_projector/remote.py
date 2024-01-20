@@ -46,13 +46,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([JvcProjectorRemote(coordinator)], True)
+
+    async_add_entities([JvcProjectorRemote(coordinator)])
 
 
 class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
     """Representation of a JVC Projector device."""
 
-    _attr_name = None
+    _attr_name = "Remote"
 
     @property
     def is_on(self) -> bool:

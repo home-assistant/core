@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_HOST, MOCK_PASSWORD, MOCK_PORT
+from . import MOCK_HOST, MOCK_PASSWORD, MOCK_PORT, MOCK_READONLY
 
 from tests.common import MockConfigEntry
 
@@ -35,6 +35,7 @@ async def test_user_config_flow_success(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: MOCK_PORT,
             CONF_PASSWORD: MOCK_PASSWORD,
+            "readonly": MOCK_READONLY,
         },
     )
     await hass.async_block_till_done()
@@ -44,6 +45,7 @@ async def test_user_config_flow_success(
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
+    assert result["data"]["readonly"] == MOCK_READONLY
 
 
 @pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
@@ -78,6 +80,7 @@ async def test_user_config_flow_bad_connect_errors(
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
+    assert result["data"]["readonly"] == MOCK_READONLY
 
 
 @pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
@@ -88,7 +91,12 @@ async def test_user_config_flow_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            "readonly": MOCK_READONLY,
+        },
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -102,7 +110,12 @@ async def test_user_config_flow_bad_host_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "", CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
+        data={
+            CONF_HOST: "",
+            CONF_PORT: MOCK_PORT,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            "readonly": MOCK_READONLY,
+        },
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -114,7 +127,12 @@ async def test_user_config_flow_bad_host_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            "readonly": MOCK_READONLY,
+        },
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -122,6 +140,7 @@ async def test_user_config_flow_bad_host_errors(
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
+    assert result["data"]["readonly"] == MOCK_READONLY
 
 
 @pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
@@ -134,7 +153,12 @@ async def test_user_config_flow_bad_auth_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            "readonly": MOCK_READONLY,
+        },
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -148,7 +172,12 @@ async def test_user_config_flow_bad_auth_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            "readonly": MOCK_READONLY,
+        },
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -156,6 +185,7 @@ async def test_user_config_flow_bad_auth_errors(
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
+    assert result["data"]["readonly"] == MOCK_READONLY
 
 
 @pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
@@ -185,6 +215,7 @@ async def test_reauth_config_flow_success(
     assert mock_integration.data[CONF_HOST] == MOCK_HOST
     assert mock_integration.data[CONF_PORT] == MOCK_PORT
     assert mock_integration.data[CONF_PASSWORD] == MOCK_PASSWORD
+    assert mock_integration.data["readonly"] == MOCK_READONLY
 
 
 @pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
@@ -240,6 +271,7 @@ async def test_reauth_config_flow_auth_error(
     assert mock_integration.data[CONF_HOST] == MOCK_HOST
     assert mock_integration.data[CONF_PORT] == MOCK_PORT
     assert mock_integration.data[CONF_PASSWORD] == MOCK_PASSWORD
+    assert mock_integration.data["readonly"] == MOCK_READONLY
 
 
 @pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
@@ -295,3 +327,4 @@ async def test_reauth_config_flow_connect_error(
     assert mock_integration.data[CONF_HOST] == MOCK_HOST
     assert mock_integration.data[CONF_PORT] == MOCK_PORT
     assert mock_integration.data[CONF_PASSWORD] == MOCK_PASSWORD
+    assert mock_integration.data["readonly"] == MOCK_READONLY

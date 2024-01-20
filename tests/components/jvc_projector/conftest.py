@@ -9,7 +9,7 @@ from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_HOST, MOCK_MAC, MOCK_MODEL, MOCK_PASSWORD, MOCK_PORT
+from . import MOCK_HOST, MOCK_MAC, MOCK_MODEL, MOCK_PASSWORD, MOCK_PORT, MOCK_READONLY
 
 from tests.common import MockConfigEntry
 
@@ -42,6 +42,7 @@ def fixture_mock_config_entry() -> MockConfigEntry:
             CONF_HOST: MOCK_HOST,
             CONF_PORT: MOCK_PORT,
             CONF_PASSWORD: MOCK_PASSWORD,
+            "readonly": MOCK_READONLY,
         },
     )
 
