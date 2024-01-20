@@ -64,13 +64,13 @@ async def test_weather(hass: HomeAssistant, mock_weather) -> None:
     """Test weather entity."""
     await setup_config_entry(hass)
     assert len(hass.states.async_entity_ids("weather")) == 1
-    assert len(mock_weather.mock_calls) == 4
+    assert len(mock_weather.mock_calls) == 2
 
     # Test we do not track config
     await hass.config.async_update(latitude=10, longitude=20)
     await hass.async_block_till_done()
 
-    assert len(mock_weather.mock_calls) == 4
+    assert len(mock_weather.mock_calls) == 2
 
     entry = hass.config_entries.async_entries()[0]
     await hass.config_entries.async_remove(entry.entry_id)

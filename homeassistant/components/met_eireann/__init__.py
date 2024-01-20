@@ -84,8 +84,12 @@ class MetEireannWeatherData:
     async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
         await self._weather_data.fetching_data()
-        self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
+
+        # Workaround for https://github.com/home-assistant/core/issues/101653:
+        # Use get_forecast()[0] instead of get_current_weather()
+        self.current_weather_data = self._weather_data.get_forecast(time_zone, True)[0]
+
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
         return self
