@@ -3,7 +3,7 @@
     "_": {
       "default": "mdi:package-up",
       "state": {
-        "default": "mdi:package"
+        "off": "mdi:package"
       }
     }
   },
