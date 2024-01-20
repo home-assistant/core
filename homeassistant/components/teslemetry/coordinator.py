@@ -39,6 +39,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise ConfigEntryNotReady("Vehicle is not online")
         except TeslaFleetError as e:
             raise ConfigEntryNotReady from e
+        _LOGGER.info("AWAKE")
         await super().async_config_entry_first_refresh()
 
     async def _async_update_data(self) -> dict[str, Any]:

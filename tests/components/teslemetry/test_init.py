@@ -18,22 +18,25 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_auth_failure(hass: HomeAssistant) -> None:
+async def test_auth_failure(hass: HomeAssistant, mock_teslemetry) -> None:
     """Test init with an authentication error."""
 
-    entry = await setup_platform(hass, side_effect=InvalidToken)
+    mock_teslemetry.return_value.products.side_effect = InvalidToken
+    entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_subscription_failure(hass: HomeAssistant) -> None:
+async def test_subscription_failure(hass: HomeAssistant, mock_teslemetry) -> None:
     """Test init with an client response error."""
 
-    entry = await setup_platform(hass, side_effect=PaymentRequired)
+    mock_teslemetry.return_value.products.side_effect = PaymentRequired
+    entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_other_failure(hass: HomeAssistant) -> None:
+async def test_other_failure(hass: HomeAssistant, mock_teslemetry) -> None:
     """Test init with an client response error."""
 
-    entry = await setup_platform(hass, side_effect=TeslaFleetError)
+    mock_teslemetry.return_value.products.side_effect = TeslaFleetError
+    entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY

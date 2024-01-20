@@ -1,12 +1,12 @@
 """Tests for the Teslemetry integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG, PRODUCTS, VEHICLE_DATA, WAKE_UP_SUCCESS
+from .const import CONFIG
 
 from tests.common import MockConfigEntry
 
@@ -22,21 +22,7 @@ async def setup_platform(
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.teslemetry.PLATFORMS", platforms), patch(
-        "homeassistant.components.teslemetry.Teslemetry",
-    ) as teslemetry_mock:
-        teslemetry_mock.return_value.products = AsyncMock(return_value=PRODUCTS)
-        teslemetry_mock.return_value.products.side_effect = side_effect
-
-        teslemetry_mock.return_value.vehicle.specific.return_value.wake_up = AsyncMock(
-            return_value=WAKE_UP_SUCCESS
-        )
-        teslemetry_mock.return_value.vehicle.specific.return_value.vehicle_data = (
-            AsyncMock(return_value=VEHICLE_DATA)
-        )
-        teslemetry_mock.return_value.vehicle.specific.return_value.vin = VEHICLE_DATA[
-            "response"
-        ]["vin"]
+    with patch("homeassistant.components.teslemetry.PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
