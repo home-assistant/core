@@ -137,8 +137,16 @@ async def test_sensors(
         == 14.715
     )
     assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_voltage").state)
+        == 245.7
+    )
+    assert (
         float(hass.states.get("sensor.mysite_tg9876543210ba_battery_capacity").state)
         == 15.137
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_voltage").state)
+        == 245.6
     )
 
 

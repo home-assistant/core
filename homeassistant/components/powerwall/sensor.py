@@ -139,6 +139,7 @@ async def async_setup_entry(
 
     for battery in data.batteries:
         entities.append(BatteryCapacitySensor(powerwall_data, battery.serial_number))
+        entities.append(BatteryVoltageSensor(powerwall_data, battery.serial_number))
 
     async_add_entities(entities)
 
@@ -290,7 +291,7 @@ class BatteryCapacitySensor(BatteryEntity, SensorEntity):
     """Representation of the Battery capacity sensor."""
 
     _attr_translation_key = "battery_capacity"
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
 
@@ -303,3 +304,22 @@ class BatteryCapacitySensor(BatteryEntity, SensorEntity):
     def native_value(self) -> float | None:
         """Get the current value in kWh."""
         return float(self.battery_data.capacity) / 1000
+
+
+class BatteryVoltageSensor(BatteryEntity, SensorEntity):
+    """Representation of the Battery voltage sensor."""
+
+    _attr_translation_key = "battery_instant_voltage"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
+    _attr_device_class = SensorDeviceClass.VOLTAGE
+
+    @property
+    def unique_id(self) -> str:
+        """Device Uniqueid."""
+        return f"{self.base_unique_id}_battery_instant_voltage"
+
+    @property
+    def native_value(self) -> float | None:
+        """Get the current value."""
+        return round(self.battery_data.v_out, 1)
