@@ -2,7 +2,7 @@
   "entity_component": {
     "_": {
       "default": "mdi:lock",
-      "states": {
+      "state": {
         "jammed": "mdi:lock-alert",
         "locking": "mdi:lock-clock",
         "unlocked": "mdi:lock-open",
