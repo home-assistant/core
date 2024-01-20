@@ -13,11 +13,19 @@ MODELS = {
 }
 
 
-class TessieStatus(StrEnum):
+class TessieState(StrEnum):
     """Tessie status."""
 
     ASLEEP = "asleep"
     ONLINE = "online"
+
+
+class TessieStatus(StrEnum):
+    """Tessie status."""
+
+    ASLEEP = "asleep"
+    AWAKE = "awake"
+    WAITING = "waiting_for_sleep"
 
 
 class TessieSeatHeaterOptions(StrEnum):
@@ -53,3 +61,10 @@ class TessieCoverStates(IntEnum):
 
     CLOSED = 0
     OPEN = 1
+
+
+class TessieChargeCableLockStates(StrEnum):
+    """Tessie Charge Cable Lock states."""
+
+    ENGAGED = "Engaged"
+    DISENGAGED = "Disengaged"

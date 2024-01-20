@@ -4340,7 +4340,7 @@ async def test_shutdown_after(
     script_obj = script.Script(hass, sequence, "test script", "test_domain")
     delay_started_flag = async_watch_for_action(script_obj, delay_alias)
 
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     hass.bus.async_fire("homeassistant_stop")
     await hass.async_block_till_done()
 
@@ -4379,7 +4379,7 @@ async def test_start_script_after_shutdown(
     script_obj = script.Script(hass, sequence, "test script", "test_domain")
 
     # Trigger 1st stage script shutdown
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     hass.bus.async_fire("homeassistant_stop")
     await hass.async_block_till_done()
     # Trigger 2nd stage script shutdown

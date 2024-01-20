@@ -54,6 +54,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -122,10 +123,6 @@ _DEPRECATED_SUPPORT_ON_OFF: Final = DeprecatedConstantEnum(
 _DEPRECATED_SUPPORT_STREAM: Final = DeprecatedConstantEnum(
     CameraEntityFeature.STREAM, "2025.1"
 )
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
@@ -729,17 +726,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the camera state attributes."""
         attrs = {"access_token": self.access_tokens[-1]}
 
-        if self.model:
-            attrs["model_name"] = self.model
+        if model := self.model:
+            attrs["model_name"] = model
 
-        if self.brand:
-            attrs["brand"] = self.brand
+        if brand := self.brand:
+            attrs["brand"] = brand
 
-        if self.motion_detection_enabled:
-            attrs["motion_detection"] = self.motion_detection_enabled
+        if motion_detection_enabled := self.motion_detection_enabled:
+            attrs["motion_detection"] = motion_detection_enabled
 
-        if self.frontend_stream_type:
-            attrs["frontend_stream_type"] = self.frontend_stream_type
+        if frontend_stream_type := self.frontend_stream_type:
+            attrs["frontend_stream_type"] = frontend_stream_type
 
         return attrs
 
@@ -1082,3 +1079,11 @@ async def async_handle_record_service(
         duration=service_call.data[CONF_DURATION],
         lookback=service_call.data[CONF_LOOKBACK],
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

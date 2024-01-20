@@ -57,7 +57,7 @@ class WyomingSatellitePipelineSelect(WyomingSatelliteEntity, AssistPipelineSelec
         self.device = device
 
         WyomingSatelliteEntity.__init__(self, device)
-        AssistPipelineSelect.__init__(self, hass, device.satellite_id)
+        AssistPipelineSelect.__init__(self, hass, DOMAIN, device.satellite_id)
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""

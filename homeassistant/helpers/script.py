@@ -78,7 +78,7 @@ from homeassistant.util.dt import utcnow
 
 from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
-from .dispatcher import async_dispatcher_connect, async_dispatcher_send
+from .dispatcher import SignalType, async_dispatcher_connect, async_dispatcher_send
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptVariables
 from .trace import (
@@ -142,7 +142,7 @@ _SHUTDOWN_MAX_WAIT = 60
 
 ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated actions
 
-SCRIPT_BREAKPOINT_HIT = "script_breakpoint_hit"
+SCRIPT_BREAKPOINT_HIT = SignalType[str, str, str]("script_breakpoint_hit")
 SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
@@ -1793,7 +1793,9 @@ class Script:
 
 
 @callback
-def breakpoint_clear(hass, key, run_id, node):
+def breakpoint_clear(
+    hass: HomeAssistant, key: str, run_id: str | None, node: str
+) -> None:
     """Clear a breakpoint."""
     run_id = run_id or RUN_ID_ANY
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
@@ -1809,7 +1811,9 @@ def breakpoint_clear_all(hass: HomeAssistant) -> None:
 
 
 @callback
-def breakpoint_set(hass, key, run_id, node):
+def breakpoint_set(
+    hass: HomeAssistant, key: str, run_id: str | None, node: str
+) -> None:
     """Set a breakpoint."""
     run_id = run_id or RUN_ID_ANY
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
@@ -1834,7 +1838,7 @@ def breakpoint_list(hass: HomeAssistant) -> list[dict[str, Any]]:
 
 
 @callback
-def debug_continue(hass, key, run_id):
+def debug_continue(hass: HomeAssistant, key: str, run_id: str) -> None:
     """Continue execution of a halted script."""
     # Clear any wildcard breakpoint
     breakpoint_clear(hass, key, run_id, NODE_ANY)
@@ -1844,7 +1848,7 @@ def debug_continue(hass, key, run_id):
 
 
 @callback
-def debug_step(hass, key, run_id):
+def debug_step(hass: HomeAssistant, key: str, run_id: str) -> None:
     """Single step a halted script."""
     # Set a wildcard breakpoint
     breakpoint_set(hass, key, run_id, NODE_ANY)
@@ -1854,7 +1858,7 @@ def debug_step(hass, key, run_id):
 
 
 @callback
-def debug_stop(hass, key, run_id):
+def debug_stop(hass: HomeAssistant, key: str, run_id: str) -> None:
     """Stop execution of a running or halted script."""
     signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
     async_dispatcher_send(hass, signal, "stop")
