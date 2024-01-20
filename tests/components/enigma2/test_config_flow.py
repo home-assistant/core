@@ -69,7 +69,7 @@ async def test_form_user_errors(
 ) -> None:
     """Test we handle errors."""
     with patch(
-        "openwebif.api.OpenWebIfDevice.__new__",
+        "homeassistant.components.enigma2.config_flow.OpenWebIfDevice.__new__",
         side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(user_flow, TEST_FULL)
@@ -93,7 +93,7 @@ async def test_form_import(
 ) -> None:
     """Test we get the form with import source."""
     with patch(
-        "openwebif.api.OpenWebIfDevice.__new__",
+        "homeassistant.components.enigma2.config_flow.OpenWebIfDevice.__new__",
         return_value=MockDevice(),
     ), patch(
         "homeassistant.components.enigma2.async_setup_entry",
@@ -126,7 +126,7 @@ async def test_form_import_errors(
 ) -> None:
     """Test we handle errors on import."""
     with patch(
-        "openwebif.api.OpenWebIfDevice.__new__",
+        "homeassistant.components.enigma2.config_flow.OpenWebIfDevice.__new__",
         side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_init(

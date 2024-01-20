@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     with patch(
-        "openwebif.api.OpenWebIfDevice.__new__",
+        "homeassistant.components.enigma2.OpenWebIfDevice.__new__",
         return_value=MockDevice(),
     ), patch(
         "homeassistant.components.enigma2.media_player.async_setup_entry",
