@@ -50,7 +50,7 @@
         "name": "Network link ({monitor_device})"
       },
       "network_tx": {
-        "name": "Network up ({monitor_device})"
+        "name": "{monitor_device} upload"
       },
       "network_rx": {
         "name": "Network down ({monitor_device})"
