@@ -47,7 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): selector.TextSelector(),
-        vol.Required(CONF_PORT, default=80): vol.All(
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=1, max=65535, mode=selector.NumberSelectorMode.BOX
@@ -70,7 +70,7 @@ IMPORT_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_HOST): selector.TextSelector(),
-        vol.Optional(CONF_PORT, default=80): vol.All(
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=1, max=65535, mode=selector.NumberSelectorMode.BOX
@@ -116,14 +116,21 @@ async def validate_user_input(
     )
 
     try:
-        await OpenWebIfDevice(session).get_about()
-        return user_input
+        about = await OpenWebIfDevice(session).get_about()
     except InvalidAuthError as error:
         raise SchemaFlowError("invalid_auth") from error
     except ClientError as error:
         raise SchemaFlowError("cannot_connect") from error
     except Exception as error:
         raise SchemaFlowError("unknown") from error
+
+    if isinstance(handler.parent_handler, SchemaConfigFlowHandler):
+        await handler.parent_handler.async_set_unique_id(
+            about["info"]["ifaces"][0]["mac"]
+        )
+        # pylint: disable-next=protected-access
+        handler.parent_handler._abort_if_unique_id_configured()
+    return user_input
 
 
 async def validate_import(

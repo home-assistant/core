@@ -10,7 +10,8 @@
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "name": "[%key:common::config_flow::data::name%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },

@@ -4,7 +4,6 @@ from __future__ import annotations
 from openwebif.api import OpenWebIfDevice
 from openwebif.enums import RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.media_player import (
@@ -23,8 +22,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -92,7 +89,7 @@ async def async_setup_platform(
             return
 
     entry_data = {
-        CONF_NAME: config.get(CONF_NAME, host),
+        CONF_NAME: config.get(CONF_NAME),
         CONF_HOST: host,
         CONF_PORT: config.get(CONF_PORT),
         CONF_USERNAME: config.get(CONF_USERNAME),
@@ -149,10 +146,6 @@ class Enigma2Device(MediaPlayerEntity):
         """Initialize the Enigma2 device."""
         self._device: OpenWebIfDevice = device
         self._entry = entry
-        if CONF_NAME in entry.options and entry.options[CONF_NAME] is not None:
-            name = entry.options[CONF_NAME]
-        else:
-            name = entry.options[CONF_HOST]
 
         self._attr_translation_key = "player"
         self._attr_unique_id = device.mac_address
@@ -162,7 +155,7 @@ class Enigma2Device(MediaPlayerEntity):
             manufacturer=about["info"]["brand"],
             model=about["info"]["model"],
             configuration_url=device.base,
-            name=name,
+            name=entry.options[CONF_HOST],
         )
 
     async def async_turn_off(self) -> None:
