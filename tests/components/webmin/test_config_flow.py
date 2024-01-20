@@ -70,7 +70,10 @@ async def test_form_user(
         ),
         (ClientConnectionError, "cannot_connect"),
         (Exception, "unknown"),
-        (Fault, "unknown"),
+        (
+            Fault("5", "Webmin module net does not exist"),
+            "Fault 5: Webmin module net does not exist",
+        ),
     ],
 )
 async def test_form_user_errors(
