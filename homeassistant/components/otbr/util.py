@@ -51,13 +51,13 @@ INSECURE_PASSPHRASES = (
 
 def compose_default_network_name(pan_id: int) -> str:
     """Generate a default network name."""
-    return f"home-assistant-{pan_id:04x}"
+    return f"homeassistant-{pan_id >> 8:02x}"
 
 
 def generate_random_pan_id() -> int:
     """Generate a random PAN ID."""
-    # PAN ID is 2 bytes, 65535 is reserved for broadcast
-    return random.randint(0, 65534)
+    # PAN ID is 2 bytes, 0xffff is reserved for broadcast
+    return random.randint(0, 0xfffe)
 
 
 def _handle_otbr_error(
