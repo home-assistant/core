@@ -67,6 +67,7 @@ async def test_loading_no_group_data_format(
     }
 
     store = auth_store.AuthStore(hass)
+    await store.async_load()
     groups = await store.async_get_groups()
     assert len(groups) == 3
     admin_group = groups[0]
@@ -165,6 +166,7 @@ async def test_loading_all_access_group_data_format(
     }
 
     store = auth_store.AuthStore(hass)
+    await store.async_load()
     groups = await store.async_get_groups()
     assert len(groups) == 3
     admin_group = groups[0]
@@ -205,6 +207,7 @@ async def test_loading_empty_data(
 ) -> None:
     """Test we correctly load with no existing data."""
     store = auth_store.AuthStore(hass)
+    await store.async_load()
     groups = await store.async_get_groups()
     assert len(groups) == 3
     admin_group = groups[0]
@@ -232,7 +235,7 @@ async def test_system_groups_store_id_and_name(
     Name is stored so that we remain backwards compat with < 0.82.
     """
     store = auth_store.AuthStore(hass)
-    await store._async_load()
+    await store.async_load()
     data = store._data_to_save()
     assert len(data["users"]) == 0
     assert data["groups"] == [
@@ -252,6 +255,8 @@ async def test_loading_race_condition(hass: HomeAssistant) -> None:
     ) as mock_dev_registry, patch(
         "homeassistant.helpers.storage.Store.async_load", return_value=None
     ) as mock_load:
+        await store.async_load()
+
         results = await asyncio.gather(store.async_get_users(), store.async_get_users())
 
         mock_ent_registry.assert_called_once_with(hass)

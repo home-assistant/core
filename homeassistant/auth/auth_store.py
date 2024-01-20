@@ -252,15 +252,15 @@ class AuthStore:
 
     async def async_load(self) -> None:
         """Load the users."""
-        dev_reg = dr.async_get(self.hass)
-        ent_reg = er.async_get(self.hass)
-        data = await self._store.async_load()
-
         # Make sure that we're not overriding data if 2 loads happened at the
         # same time
         if self._loaded:
             return
         self._loaded = True
+
+        dev_reg = dr.async_get(self.hass)
+        ent_reg = er.async_get(self.hass)
+        data = await self._store.async_load()
 
         perm_lookup = PermissionLookup(ent_reg, dev_reg)
         self._perm_lookup = perm_lookup
