@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any, cast
+from xmlrpc.client import Fault
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 import voluptuous as vol
@@ -64,6 +65,10 @@ async def validate_user_input(
         if err.status == HTTPStatus.UNAUTHORIZED:
             raise SchemaFlowError("invalid_auth") from err
         raise SchemaFlowError("cannot_connect") from err
+    except Fault as fault:
+        raise SchemaFlowError(
+            f"Fault {fault.faultCode}: {fault.faultString}"
+        ) from fault
     except ClientConnectionError as err:
         raise SchemaFlowError("cannot_connect") from err
     except Exception as err:
