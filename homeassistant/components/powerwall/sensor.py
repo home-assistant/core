@@ -407,7 +407,7 @@ class BatteryDischargedSensor(BatteryEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Device Uniqueid."""
-        return f"{self.base_unique_id}_battery_export_{_METER_DIRECTION_EXPORT}"
+        return f"{self.base_unique_id}_battery_export"
 
     @property
     def native_value(self) -> float | None:
@@ -426,7 +426,7 @@ class BatteryChargedSensor(BatteryEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Device Uniqueid."""
-        return f"{self.base_unique_id}_battery_import_{_METER_DIRECTION_IMPORT}"
+        return f"{self.base_unique_id}_battery_import"
 
     @property
     def native_value(self) -> int | None:
@@ -476,7 +476,7 @@ class BatteryStateOfChargeSensor(BatteryEntity, SensorEntity):
 
 
 class BatteryGridStateSensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery state of charge sensor."""
+    """Representation of the Battery grid state sensor."""
 
     _attr_translation_key = "grid_state"
     _attr_device_class = SensorDeviceClass.ENUM
