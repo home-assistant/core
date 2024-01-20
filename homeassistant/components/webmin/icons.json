@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "load_1m": {
+        "default": "mdi:chip"
+      },
+      "load_5m": {
+        "default": "mdi:chip"
+      },
+      "load_15m": {
+        "default": "mdi:chip"
+      },
+      "mem_total": {
+        "default": "mdi:memory"
+      },
+      "mem_free": {
+        "default": "mdi:memory"
+      },
+      "swap_total": {
+        "default": "mdi:memory"
+      },
+      "swap_free": {
+        "default": "mdi:memory"
+      }
+    }
+  }
+}

@@ -20,28 +20,24 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="load_1m",
         translation_key="load_1m",
-        icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="load_5m",
         translation_key="load_5m",
-        icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="load_15m",
         translation_key="load_15m",
-        icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="mem_total",
         translation_key="mem_total",
-        icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -52,7 +48,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="mem_free",
         translation_key="mem_free",
-        icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -63,7 +58,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="swap_total",
         translation_key="swap_total",
-        icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -74,7 +68,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="swap_free",
         translation_key="swap_free",
-        icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
