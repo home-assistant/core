@@ -12,7 +12,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SIGNAL_KNX_TELEGRAM_DICT
-from .schema import ga_list_validator
+from .schema import ga_validator
 from .telegrams import TelegramDict
 
 TRIGGER_TELEGRAM: Final = "telegram"
@@ -27,7 +27,12 @@ CONF_KNX_INCOMING = "incoming"
 CONF_KNX_OUTGOING = "outgoing"
 
 TELEGRAM_TRIGGER_SCHEMA = {
-    vol.Optional(CONF_KNX_DESTINATION): ga_list_validator,
+    vol.Optional(CONF_KNX_DESTINATION): vol.Maybe(
+        vol.All(
+            cv.ensure_list,
+            [ga_validator],
+        )
+    ),
     vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
     vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
     vol.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
@@ -49,13 +54,17 @@ async def async_attach_trigger(
     action: TriggerActionType,
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
-    """Listen for events based on configuration."""
-    trigger_data = trigger_info["trigger_data"]
+    """Listen for telegrams based on configuration."""
+    _addresses: list[str] | None = config.get(CONF_KNX_DESTINATION, [])
+    if _addresses is None:
+        # no-op if CONF_KNX_DESTINATION is explicitly set to `None`
+        return lambda: None
+
     dst_addresses: list[DeviceGroupAddress] = [
-        parse_device_group_address(address)
-        for address in config.get(CONF_KNX_DESTINATION, [])
+        parse_device_group_address(address) for address in _addresses
     ]
-    job = HassJob(action, f"KNX device trigger {trigger_info}")
+    job = HassJob(action, f"KNX trigger {trigger_info}")
+    trigger_data = trigger_info["trigger_data"]
 
     @callback
     def async_call_trigger_action(telegram: TelegramDict) -> None:

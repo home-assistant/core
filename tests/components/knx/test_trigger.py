@@ -66,6 +66,16 @@ async def test_telegram_trigger(
                         },
                     },
                 },
+                # "no_op" trigger (to provide optional trigger for blueprints)
+                {
+                    "trigger": {
+                        "platform": "knx.telegram",
+                        "destination": None,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                    },
+                },
             ]
         },
     )
