@@ -1600,9 +1600,7 @@ async def test_entity_last_reset_parsing(
         "homeassistant.components.template.sensor._LOGGER.warning"
     ) as mocked_warning, patch(
         "homeassistant.components.template.template_entity._LOGGER.error"
-    ) as mocked_error, patch(
-        "homeassistant.util.dt.now", return_value=now
-    ):
+    ) as mocked_error, patch("homeassistant.util.dt.now", return_value=now):
         assert await async_setup_component(
             hass,
             "template",
