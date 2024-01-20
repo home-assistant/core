@@ -1,6 +1,7 @@
 """Sensors on Zigbee Home Automation networks."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import enum
 import functools
@@ -14,6 +15,7 @@ from homeassistant.components.climate import HVACAction
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -216,9 +218,9 @@ class PollableSensor(Sensor):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
-        assert self._cancel_refresh_handle
-        self._cancel_refresh_handle()
-        self._cancel_refresh_handle = None
+        if self._cancel_refresh_handle is not None:
+            self._cancel_refresh_handle()
+            self._cancel_refresh_handle = None
         self.debug("stopped polling during device removal")
         await super().async_will_remove_from_hass()
 
@@ -486,6 +488,15 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)))
 
 
+@dataclass(frozen=True, kw_only=True)
+class SmartEnergyMeteringEntityDescription(SensorEntityDescription):
+    """Dataclass that describes a Zigbee smart energy metering entity."""
+
+    key: str = "instantaneous_demand"
+    state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT
+    scale: int = 1
+
+
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
     stop_on_match_group=CLUSTER_HANDLER_SMARTENERGY_METERING,
@@ -494,36 +505,87 @@ class Illuminance(Sensor):
 class SmartEnergyMetering(PollableSensor):
     """Metering sensor."""
 
+    entity_description: SmartEnergyMeteringEntityDescription
     _use_custom_polling: bool = False
     _attribute_name = "instantaneous_demand"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key: str = "instantaneous_demand"
 
-    unit_of_measure_map = {
-        0x00: UnitOfPower.WATT,
-        0x01: UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        0x02: UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-        0x03: f"100 {UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR}",
-        0x04: f"US {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
-        0x05: f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
-        0x06: UnitOfPower.BTU_PER_HOUR,
-        0x07: f"l/{UnitOfTime.HOURS}",
-        0x08: UnitOfPressure.KPA,  # gauge
-        0x09: UnitOfPressure.KPA,  # absolute
-        0x0A: f"1000 {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
-        0x0B: "unitless",
-        0x0C: f"MJ/{UnitOfTime.SECONDS}",
+    _ENTITY_DESCRIPTION_MAP = {
+        0x00: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPower.WATT,
+            device_class=SensorDeviceClass.POWER,
+        ),
+        0x01: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            device_class=None,  # volume flow rate is not supported yet
+        ),
+        0x02: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            device_class=None,  # volume flow rate is not supported yet
+        ),
+        0x03: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            device_class=None,  # volume flow rate is not supported yet
+            scale=100,
+        ),
+        0x04: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",  # US gallons per hour
+            device_class=None,  # volume flow rate is not supported yet
+        ),
+        0x05: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",  # IMP gallons per hour
+            device_class=None,  # needs to be None as imperial gallons are not supported
+        ),
+        0x06: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPower.BTU_PER_HOUR,
+            device_class=None,
+            state_class=None,
+        ),
+        0x07: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"l/{UnitOfTime.HOURS}",
+            device_class=None,  # volume flow rate is not supported yet
+        ),
+        0x08: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            device_class=SensorDeviceClass.PRESSURE,
+        ),  # gauge
+        0x09: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            device_class=SensorDeviceClass.PRESSURE,
+        ),  # absolute
+        0x0A: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"{UnitOfVolume.CUBIC_FEET}/{UnitOfTime.HOURS}",  # cubic feet per hour
+            device_class=None,  # volume flow rate is not supported yet
+            scale=1000,
+        ),
+        0x0B: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement="unitless", device_class=None, state_class=None
+        ),
+        0x0C: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"{UnitOfEnergy.MEGA_JOULE}/{UnitOfTime.SECONDS}",
+            device_class=None,  # needs to be None as MJ/s is not supported
+        ),
     }
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> None:
+        """Init."""
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+        entity_description = self._ENTITY_DESCRIPTION_MAP.get(
+            self._cluster_handler.unit_of_measurement
+        )
+        if entity_description is not None:
+            self.entity_description = entity_description
 
     def formatter(self, value: int) -> int | float:
         """Pass through cluster handler formatter."""
         return self._cluster_handler.demand_formatter(value)
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return Unit of measurement."""
-        return self.unit_of_measure_map.get(self._cluster_handler.unit_of_measurement)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -540,6 +602,23 @@ class SmartEnergyMetering(PollableSensor):
                 attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
 
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        state = super().native_value
+        if hasattr(self, "entity_description") and state is not None:
+            return float(state) * self.entity_description.scale
+
+        return state
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmartEnergySummationEntityDescription(SmartEnergyMeteringEntityDescription):
+    """Dataclass that describes a Zigbee smart energy summation entity."""
+
+    key: str = "summation_delivered"
+    state_class: SensorStateClass | None = SensorStateClass.TOTAL_INCREASING
+
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
@@ -549,26 +628,66 @@ class SmartEnergyMetering(PollableSensor):
 class SmartEnergySummation(SmartEnergyMetering):
     """Smart Energy Metering summation sensor."""
 
+    entity_description: SmartEnergySummationEntityDescription
     _attribute_name = "current_summ_delivered"
     _unique_id_suffix = "summation_delivered"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENERGY
-    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_translation_key: str = "summation_delivered"
 
-    unit_of_measure_map = {
-        0x00: UnitOfEnergy.KILO_WATT_HOUR,
-        0x01: UnitOfVolume.CUBIC_METERS,
-        0x02: UnitOfVolume.CUBIC_FEET,
-        0x03: f"100 {UnitOfVolume.CUBIC_FEET}",
-        0x04: f"US {UnitOfVolume.GALLONS}",
-        0x05: f"IMP {UnitOfVolume.GALLONS}",
-        0x06: "BTU",
-        0x07: UnitOfVolume.LITERS,
-        0x08: UnitOfPressure.KPA,  # gauge
-        0x09: UnitOfPressure.KPA,  # absolute
-        0x0A: f"1000 {UnitOfVolume.CUBIC_FEET}",
-        0x0B: "unitless",
-        0x0C: "MJ",
+    _ENTITY_DESCRIPTION_MAP = {
+        0x00: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+        ),
+        0x01: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+            device_class=SensorDeviceClass.VOLUME,
+        ),
+        0x02: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_FEET,
+            device_class=SensorDeviceClass.VOLUME,
+        ),
+        0x03: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_FEET,
+            device_class=SensorDeviceClass.VOLUME,
+            scale=100,
+        ),
+        0x04: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.GALLONS,  # US gallons
+            device_class=SensorDeviceClass.VOLUME,
+        ),
+        0x05: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=f"IMP {UnitOfVolume.GALLONS}",
+            device_class=None,  # needs to be None as imperial gallons are not supported
+        ),
+        0x06: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement="BTU", device_class=None, state_class=None
+        ),
+        0x07: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.LITERS,
+            device_class=SensorDeviceClass.VOLUME,
+        ),
+        0x08: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            device_class=SensorDeviceClass.PRESSURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),  # gauge
+        0x09: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            device_class=SensorDeviceClass.PRESSURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),  # absolute
+        0x0A: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_FEET,
+            device_class=SensorDeviceClass.VOLUME,
+            scale=1000,
+        ),
+        0x0B: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement="unitless", device_class=None, state_class=None
+        ),
+        0x0C: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfEnergy.MEGA_JOULE,
+            device_class=SensorDeviceClass.ENERGY,
+        ),
     }
 
     def formatter(self, value: int) -> int | float:
@@ -585,7 +704,7 @@ class SmartEnergySummation(SmartEnergyMetering):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"TS011F", "ZLinky_TIC"},
+    models={"TS011F", "ZLinky_TIC", "TICMeter"},
     stop_on_match_group=CLUSTER_HANDLER_SMARTENERGY_METERING,
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -597,7 +716,7 @@ class PolledSmartEnergySummation(SmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier1SmartEnergySummation(PolledSmartEnergySummation):
@@ -611,7 +730,7 @@ class Tier1SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier2SmartEnergySummation(PolledSmartEnergySummation):
@@ -625,7 +744,7 @@ class Tier2SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier3SmartEnergySummation(PolledSmartEnergySummation):
@@ -639,7 +758,7 @@ class Tier3SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier4SmartEnergySummation(PolledSmartEnergySummation):
@@ -653,7 +772,7 @@ class Tier4SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier5SmartEnergySummation(PolledSmartEnergySummation):
@@ -667,7 +786,7 @@ class Tier5SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier6SmartEnergySummation(PolledSmartEnergySummation):

@@ -43,6 +43,18 @@ async def async_setup_entry(
                 )
                 language = lang
                 break
+    if (
+        obj_holidays.supported_languages
+        and language not in obj_holidays.supported_languages
+        and (default_language := obj_holidays.default_language)
+    ):
+        obj_holidays = country_holidays(
+            country,
+            subdiv=province,
+            years={dt_util.now().year, dt_util.now().year + 1},
+            language=default_language,
+        )
+        language = default_language
 
     async_add_entities(
         [
