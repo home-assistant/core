@@ -1,18 +1,19 @@
 """Test the BTHome sensors."""
-import logging
 
 import pytest
 
 from homeassistant.components.bthome.const import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNKNOWN
+from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 
 from . import make_bthome_v2_adv
 
 from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
-
-_LOGGER = logging.getLogger(__name__)
+from tests.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    inject_bluetooth_service_info,
+)
 
 
 @pytest.mark.parametrize(
@@ -27,14 +28,14 @@ _LOGGER = logging.getLogger(__name__)
             None,
             [
                 {
-                    "event_entity": "event.test_device_18b2_button_3",
-                    "friendly_name": "Test Device 18B2 Button 3",
-                    "expected_state": STATE_UNKNOWN,
+                    "entity": "event.test_device_18b2_button_3",
+                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Button 3",
+                    ATTR_EVENT_TYPE: "press",
                 },
                 {
-                    "event_entity": "event.test_device_18b2_button_4",
-                    "friendly_name": "Test Device 18B2 Button 4",
-                    "expected_state": STATE_UNKNOWN,
+                    "entity": "event.test_device_18b2_button_4",
+                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Button 4",
+                    ATTR_EVENT_TYPE: "triple_press",
                 },
             ],
         ),
@@ -47,9 +48,9 @@ _LOGGER = logging.getLogger(__name__)
             None,
             [
                 {
-                    "event_entity": "event.test_device_18b2_button",
-                    "friendly_name": "Test Device 18B2 Button",
-                    "expected_state": STATE_UNKNOWN,
+                    "entity": "event.test_device_18b2_button",
+                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Button",
+                    ATTR_EVENT_TYPE: "long_press",
                 }
             ],
         ),
@@ -57,10 +58,10 @@ _LOGGER = logging.getLogger(__name__)
 )
 async def test_v2_events(
     hass: HomeAssistant,
-    mac_address,
-    advertisement,
-    bind_key,
-    result,
+    mac_address: str,
+    advertisement: BluetoothServiceInfoBleak,
+    bind_key: str | None,
+    result: list[dict[str, str]],
 ) -> None:
     """Test the different BTHome V2 events."""
     entry = MockConfigEntry(
@@ -83,9 +84,9 @@ async def test_v2_events(
     assert len(hass.states.async_all()) == len(result)
 
     for meas in result:
-        sensor = hass.states.get(meas["event_entity"])
-        sensor_attr = sensor.attributes
-        assert sensor.state == meas["expected_state"]
-        assert sensor_attr[ATTR_FRIENDLY_NAME] == meas["friendly_name"]
+        state = hass.states.get(meas["entity"])
+        attributes = state.attributes
+        assert attributes[ATTR_FRIENDLY_NAME] == meas[ATTR_FRIENDLY_NAME]
+        assert attributes[ATTR_EVENT_TYPE] == meas[ATTR_EVENT_TYPE]
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

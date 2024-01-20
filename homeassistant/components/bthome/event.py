@@ -58,7 +58,13 @@ class BTHomeEventEntity(EventEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, address: str, event_class: str, device_id: str | None) -> None:
+    def __init__(
+        self,
+        address: str,
+        event_class: str,
+        device_id: str | None,
+        event: BTHomeBleEvent | None,
+    ) -> None:
         """Initialise a BTHome event entity."""
         self._update_signal = format_event_dispatcher_name(address, event_class)
         # event_class is something like "button" or "dimmer"
@@ -84,6 +90,11 @@ class BTHomeEventEntity(EventEntity):
                 connections={(dr.CONNECTION_BLUETOOTH, address)},
             )
             self._attr_unique_id = f"{address}-{event_class}"
+        # If the event is provided then we can set the initial state
+        # since the event itself is likely what triggered the creation
+        # of this entity
+        if event:
+            self._trigger_event(event[EVENT_TYPE], event[EVENT_PROPERTIES])
 
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
@@ -128,18 +139,20 @@ async def async_setup_entry(
             device_id = None
         discovery_key = DeviceKey(event_class, device_id)
         discovered_device_keys.add(discovery_key)
-        to_add.append(BTHomeEventEntity(address, event_class, device_id))
+        to_add.append(BTHomeEventEntity(address, event_class, device_id, None))
 
     async_add_entities(to_add)
 
     @callback
-    def _async_discovered_device_key(device_key: DeviceKey) -> None:
+    def _async_discovered_device_key(
+        device_key: DeviceKey, event: BTHomeBleEvent
+    ) -> None:
         """Handle a discovered device key."""
         if device_key in discovered_device_keys:
             return
         discovered_device_keys.add(device_key)
         async_add_entities(
-            [BTHomeEventEntity(address, device_key.key, device_key.device_id)]
+            [BTHomeEventEntity(address, device_key.key, device_key.device_id, event)]
         )
 
     entry.async_on_unload(

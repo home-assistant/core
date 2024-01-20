@@ -97,7 +97,7 @@ def process_service_info(
                 ble_event,
             )
             async_dispatcher_send(
-                hass, format_discovered_device_key(address), device_key
+                hass, format_discovered_device_key(address), device_key, ble_event
             )
 
     # If payload is encrypted and the bindkey is not verified then we need to reauth
