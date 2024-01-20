@@ -39,13 +39,19 @@ class SwissPublicTransportDataUpdateCoordinator(DataUpdateCoordinator[DataConnec
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, opendata: OpendataTransport) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        opendata: OpendataTransport,
+        polling_rate: int,
+    ) -> None:
         """Initialize the SwissPublicTransport data coordinator."""
+
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=90),
+            update_interval=timedelta(seconds=polling_rate),
         )
         self._opendata = opendata
 

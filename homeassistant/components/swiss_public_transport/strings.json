@@ -22,6 +22,17 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Connection polling rate",
+        "description": "Take note that the Swiss Public Transport API endpoint has a rate limit of `1000` request per day. Therefore, if you want multiple config entries, you need to reduce the polling rate. Each config entry uses `960` requests per day on a polling rate of `90s`.",
+        "data": {
+          "rate": "Polling rate [s]"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "departure": {

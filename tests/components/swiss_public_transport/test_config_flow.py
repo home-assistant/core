@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components.swiss_public_transport import config_flow
 from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
+    CONF_RATE,
     CONF_START,
 )
 from homeassistant.const import CONF_NAME
@@ -25,6 +26,9 @@ MOCK_DATA_STEP = {
     CONF_START: "test_start",
     CONF_DESTINATION: "test_destination",
 }
+
+MOCK_OPTIONS_STEP_1 = {CONF_RATE: 180}
+MOCK_OPTIONS_STEP_2 = {CONF_RATE: 120}
 
 
 async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
@@ -125,6 +129,61 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
 
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_form_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test the form options."""
+
+    with patch(
+        "homeassistant.components.swiss_public_transport.config_flow.OpendataTransport.async_get_data",
+        autospec=True,
+        return_value=True,
+    ):
+        entry = MockConfigEntry(
+            domain=config_flow.DOMAIN,
+            unique_id=f"{MOCK_DATA_STEP[CONF_START]} {MOCK_DATA_STEP[CONF_DESTINATION]}",
+            data=MOCK_DATA_STEP,
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=MOCK_OPTIONS_STEP_1
+        )
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert entry.options == MOCK_OPTIONS_STEP_1
+
+        await hass.async_block_till_done()
+
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=MOCK_OPTIONS_STEP_2
+        )
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert entry.options == MOCK_OPTIONS_STEP_2
+
+        await hass.async_block_till_done()
+
+        assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
 MOCK_DATA_IMPORT = {

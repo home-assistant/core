@@ -11,11 +11,28 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
-from .const import CONF_DESTINATION, CONF_START, DOMAIN, PLACEHOLDERS
+from .const import (
+    CONF_DESTINATION,
+    CONF_RATE,
+    CONF_START,
+    DEFAULT_RATE,
+    DOMAIN,
+    PLACEHOLDERS,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -23,6 +40,18 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_DESTINATION): cv.string,
     }
 )
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_RATE, default=DEFAULT_RATE): NumberSelector(
+            NumberSelectorConfig(min=0, mode=NumberSelectorMode.BOX)
+        )
+    },
+)
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,3 +128,11 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=import_input[CONF_NAME],
             data=import_input,
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
