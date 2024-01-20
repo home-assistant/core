@@ -42,20 +42,13 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
             serial_number=vehicle.vin,
         )
 
-    @property
-    def online(self) -> bool:
-        """Return true if vehicle is asleep."""
-        return self.coordinator.data["state"] == TeslemetryState.ONLINE
-
     async def wake_up(self) -> None:
         """Wake up the vehicle if required."""
-        if self.online:
-            return
         await self._wakelock.acquire()
-        while not self.online:
+        while self.coordinator.data["state"] != TeslemetryState.ONLINE:
             state = (await self.api.wake_up())["response"]["state"]
             self.coordinator.data["state"] = state
-            if not self.online:
+            if state != TeslemetryState.ONLINE:
                 await asyncio.sleep(5)
         self._wakelock.release()
 

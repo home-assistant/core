@@ -35,14 +35,16 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             response = await self.api.wake_up()
             if response["response"]["state"] != TeslemetryState.ONLINE:
+                # The first refresh will fail, so retry later
                 raise ConfigEntryNotReady("Vehicle is not online")
         except TeslaFleetError as e:
+            # The first refresh will also fail, so retry later
             raise ConfigEntryNotReady from e
         await super().async_config_entry_first_refresh()
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
-        # The first update cannot fail, so ensure the vehicle is awake
+
         try:
             data = await self.api.vehicle_data()
         except VehicleOffline:

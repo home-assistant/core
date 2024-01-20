@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, TeslemetryClimateSide
+from .context import handle_command
 from .entity import TeslemetryVehicleEntity
 
 
@@ -76,14 +77,16 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
-        await self.wake_up()
-        await self.api.auto_conditioning_start()
+        with handle_command():
+            await self.wake_up()
+            await self.api.auto_conditioning_start()
         self.set(("climate_state_is_climate_on", True))
 
     async def async_turn_off(self) -> None:
         """Set the climate state to off."""
-        await self.wake_up()
-        await self.api.auto_conditioning_stop()
+        with handle_command():
+            await self.wake_up()
+            await self.api.auto_conditioning_stop()
         self.set(
             ("climate_state_is_climate_on", False),
             ("climate_state_climate_keeper_mode", "off"),
@@ -92,11 +95,12 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
         temp = kwargs[ATTR_TEMPERATURE]
-        await self.wake_up()
-        await self.api.set_temps(
-            driver_temp=temp,
-            passenger_temp=temp,
-        )
+        with handle_command():
+            await self.wake_up()
+            await self.api.set_temps(
+                driver_temp=temp,
+                passenger_temp=temp,
+            )
 
         self.set((f"climate_state_{self.key}_setting", temp))
 
@@ -109,10 +113,11 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the climate preset mode."""
-        await self.wake_up()
-        await self.api.set_climate_keeper_mode(
-            climate_keeper_mode=self._attr_preset_modes.index(preset_mode)
-        )
+        with handle_command():
+            await self.wake_up()
+            await self.api.set_climate_keeper_mode(
+                climate_keeper_mode=self._attr_preset_modes.index(preset_mode)
+            )
         self.set(
             (
                 "climate_state_climate_keeper_mode",
