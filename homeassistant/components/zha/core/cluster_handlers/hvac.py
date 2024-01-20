@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any
 
 from zigpy.zcl.clusters import hvac
+from zigpy.zcl.clusters.hvac import Fan, Thermostat
 
 from homeassistant.core import callback
 
@@ -30,37 +31,35 @@ class Dehumidification(ClusterHandler):
     """Dehumidification cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.Fan.cluster_id)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Fan.cluster_id)
 class FanClusterHandler(ClusterHandler):
     """Fan cluster handler."""
 
     _value_attribute = 0
 
     REPORT_CONFIG = (
-        AttrReportConfig(
-            attr=hvac.Fan.AttributeDefs.fan_mode.name, config=REPORT_CONFIG_OP
-        ),
+        AttrReportConfig(attr=Fan.AttributeDefs.fan_mode.name, config=REPORT_CONFIG_OP),
     )
-    ZCL_INIT_ATTRS = {hvac.Fan.AttributeDefs.fan_mode_sequence.name: True}
+    ZCL_INIT_ATTRS = {Fan.AttributeDefs.fan_mode_sequence.name: True}
 
     @property
     def fan_mode(self) -> int | None:
         """Return current fan mode."""
-        return self.cluster.get(hvac.Fan.AttributeDefs.fan_mode.name)
+        return self.cluster.get(Fan.AttributeDefs.fan_mode.name)
 
     @property
     def fan_mode_sequence(self) -> int | None:
         """Return possible fan mode speeds."""
-        return self.cluster.get(hvac.Fan.AttributeDefs.fan_mode_sequence.name)
+        return self.cluster.get(Fan.AttributeDefs.fan_mode_sequence.name)
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""
-        await self.write_attributes_safe({hvac.Fan.AttributeDefs.fan_mode.name: value})
+        await self.write_attributes_safe({Fan.AttributeDefs.fan_mode.name: value})
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
         await self.get_attribute_value(
-            hvac.Fan.AttributeDefs.fan_mode.name, from_cache=False
+            Fan.AttributeDefs.fan_mode.name, from_cache=False
         )
 
     @callback
@@ -81,109 +80,109 @@ class Pump(ClusterHandler):
     """Pump cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.Thermostat.cluster_id)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Thermostat.cluster_id)
 class ThermostatClusterHandler(ClusterHandler):
     """Thermostat cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.local_temperature.name,
+            attr=Thermostat.AttributeDefs.local_temperature.name,
             config=REPORT_CONFIG_CLIMATE,
         ),
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.occupied_cooling_setpoint.name,
+            attr=Thermostat.AttributeDefs.occupied_cooling_setpoint.name,
             config=REPORT_CONFIG_CLIMATE,
         ),
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.occupied_heating_setpoint.name,
+            attr=Thermostat.AttributeDefs.occupied_heating_setpoint.name,
             config=REPORT_CONFIG_CLIMATE,
         ),
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.unoccupied_cooling_setpoint.name,
+            attr=Thermostat.AttributeDefs.unoccupied_cooling_setpoint.name,
             config=REPORT_CONFIG_CLIMATE,
         ),
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.unoccupied_heating_setpoint.name,
+            attr=Thermostat.AttributeDefs.unoccupied_heating_setpoint.name,
             config=REPORT_CONFIG_CLIMATE,
         ),
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.running_mode.name,
+            attr=Thermostat.AttributeDefs.running_mode.name,
             config=REPORT_CONFIG_CLIMATE,
         ),
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.running_state.name,
+            attr=Thermostat.AttributeDefs.running_state.name,
             config=REPORT_CONFIG_CLIMATE_DEMAND,
         ),
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.system_mode.name,
+            attr=Thermostat.AttributeDefs.system_mode.name,
             config=REPORT_CONFIG_CLIMATE,
         ),
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.occupancy.name,
+            attr=Thermostat.AttributeDefs.occupancy.name,
             config=REPORT_CONFIG_CLIMATE_DISCRETE,
         ),
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.pi_cooling_demand.name,
+            attr=Thermostat.AttributeDefs.pi_cooling_demand.name,
             config=REPORT_CONFIG_CLIMATE_DEMAND,
         ),
         AttrReportConfig(
-            attr=hvac.Thermostat.AttributeDefs.pi_heating_demand.name,
+            attr=Thermostat.AttributeDefs.pi_heating_demand.name,
             config=REPORT_CONFIG_CLIMATE_DEMAND,
         ),
     )
     ZCL_INIT_ATTRS: dict[str, bool] = {
-        hvac.Thermostat.AttributeDefs.abs_min_heat_setpoint_limit.name: True,
-        hvac.Thermostat.AttributeDefs.abs_max_heat_setpoint_limit.name: True,
-        hvac.Thermostat.AttributeDefs.abs_min_cool_setpoint_limit.name: True,
-        hvac.Thermostat.AttributeDefs.abs_max_cool_setpoint_limit.name: True,
-        hvac.Thermostat.AttributeDefs.ctrl_sequence_of_oper.name: False,
-        hvac.Thermostat.AttributeDefs.max_cool_setpoint_limit.name: True,
-        hvac.Thermostat.AttributeDefs.max_heat_setpoint_limit.name: True,
-        hvac.Thermostat.AttributeDefs.min_cool_setpoint_limit.name: True,
-        hvac.Thermostat.AttributeDefs.min_heat_setpoint_limit.name: True,
-        hvac.Thermostat.AttributeDefs.local_temperature_calibration.name: True,
+        Thermostat.AttributeDefs.abs_min_heat_setpoint_limit.name: True,
+        Thermostat.AttributeDefs.abs_max_heat_setpoint_limit.name: True,
+        Thermostat.AttributeDefs.abs_min_cool_setpoint_limit.name: True,
+        Thermostat.AttributeDefs.abs_max_cool_setpoint_limit.name: True,
+        Thermostat.AttributeDefs.ctrl_sequence_of_oper.name: False,
+        Thermostat.AttributeDefs.max_cool_setpoint_limit.name: True,
+        Thermostat.AttributeDefs.max_heat_setpoint_limit.name: True,
+        Thermostat.AttributeDefs.min_cool_setpoint_limit.name: True,
+        Thermostat.AttributeDefs.min_heat_setpoint_limit.name: True,
+        Thermostat.AttributeDefs.local_temperature_calibration.name: True,
     }
 
     @property
     def abs_max_cool_setpoint_limit(self) -> int:
         """Absolute maximum cooling setpoint."""
         return self.cluster.get(
-            hvac.Thermostat.AttributeDefs.abs_max_cool_setpoint_limit.name, 3200
+            Thermostat.AttributeDefs.abs_max_cool_setpoint_limit.name, 3200
         )
 
     @property
     def abs_min_cool_setpoint_limit(self) -> int:
         """Absolute minimum cooling setpoint."""
         return self.cluster.get(
-            hvac.Thermostat.AttributeDefs.abs_min_cool_setpoint_limit.name, 1600
+            Thermostat.AttributeDefs.abs_min_cool_setpoint_limit.name, 1600
         )
 
     @property
     def abs_max_heat_setpoint_limit(self) -> int:
         """Absolute maximum heating setpoint."""
         return self.cluster.get(
-            hvac.Thermostat.AttributeDefs.abs_max_heat_setpoint_limit.name, 3000
+            Thermostat.AttributeDefs.abs_max_heat_setpoint_limit.name, 3000
         )
 
     @property
     def abs_min_heat_setpoint_limit(self) -> int:
         """Absolute minimum heating setpoint."""
         return self.cluster.get(
-            hvac.Thermostat.AttributeDefs.abs_min_heat_setpoint_limit.name, 700
+            Thermostat.AttributeDefs.abs_min_heat_setpoint_limit.name, 700
         )
 
     @property
     def ctrl_sequence_of_oper(self) -> int:
         """Control Sequence of operations attribute."""
         return self.cluster.get(
-            hvac.Thermostat.AttributeDefs.ctrl_sequence_of_oper.name, 0xFF
+            Thermostat.AttributeDefs.ctrl_sequence_of_oper.name, 0xFF
         )
 
     @property
     def max_cool_setpoint_limit(self) -> int:
         """Maximum cooling setpoint."""
         sp_limit = self.cluster.get(
-            hvac.Thermostat.AttributeDefs.max_cool_setpoint_limit.name
+            Thermostat.AttributeDefs.max_cool_setpoint_limit.name
         )
         if sp_limit is None:
             return self.abs_max_cool_setpoint_limit
@@ -193,7 +192,7 @@ class ThermostatClusterHandler(ClusterHandler):
     def min_cool_setpoint_limit(self) -> int:
         """Minimum cooling setpoint."""
         sp_limit = self.cluster.get(
-            hvac.Thermostat.AttributeDefs.min_cool_setpoint_limit.name
+            Thermostat.AttributeDefs.min_cool_setpoint_limit.name
         )
         if sp_limit is None:
             return self.abs_min_cool_setpoint_limit
@@ -203,7 +202,7 @@ class ThermostatClusterHandler(ClusterHandler):
     def max_heat_setpoint_limit(self) -> int:
         """Maximum heating setpoint."""
         sp_limit = self.cluster.get(
-            hvac.Thermostat.AttributeDefs.max_heat_setpoint_limit.name
+            Thermostat.AttributeDefs.max_heat_setpoint_limit.name
         )
         if sp_limit is None:
             return self.abs_max_heat_setpoint_limit
@@ -213,7 +212,7 @@ class ThermostatClusterHandler(ClusterHandler):
     def min_heat_setpoint_limit(self) -> int:
         """Minimum heating setpoint."""
         sp_limit = self.cluster.get(
-            hvac.Thermostat.AttributeDefs.min_heat_setpoint_limit.name
+            Thermostat.AttributeDefs.min_heat_setpoint_limit.name
         )
         if sp_limit is None:
             return self.abs_min_heat_setpoint_limit
@@ -222,64 +221,60 @@ class ThermostatClusterHandler(ClusterHandler):
     @property
     def local_temperature(self) -> int | None:
         """Thermostat temperature."""
-        return self.cluster.get(hvac.Thermostat.AttributeDefs.local_temperature.name)
+        return self.cluster.get(Thermostat.AttributeDefs.local_temperature.name)
 
     @property
     def occupancy(self) -> int | None:
         """Is occupancy detected."""
-        return self.cluster.get(hvac.Thermostat.AttributeDefs.occupancy.name)
+        return self.cluster.get(Thermostat.AttributeDefs.occupancy.name)
 
     @property
     def occupied_cooling_setpoint(self) -> int | None:
         """Temperature when room is occupied."""
-        return self.cluster.get(
-            hvac.Thermostat.AttributeDefs.occupied_cooling_setpoint.name
-        )
+        return self.cluster.get(Thermostat.AttributeDefs.occupied_cooling_setpoint.name)
 
     @property
     def occupied_heating_setpoint(self) -> int | None:
         """Temperature when room is occupied."""
-        return self.cluster.get(
-            hvac.Thermostat.AttributeDefs.occupied_heating_setpoint.name
-        )
+        return self.cluster.get(Thermostat.AttributeDefs.occupied_heating_setpoint.name)
 
     @property
     def pi_cooling_demand(self) -> int:
         """Cooling demand."""
-        return self.cluster.get(hvac.Thermostat.AttributeDefs.pi_cooling_demand.name)
+        return self.cluster.get(Thermostat.AttributeDefs.pi_cooling_demand.name)
 
     @property
     def pi_heating_demand(self) -> int:
         """Heating demand."""
-        return self.cluster.get(hvac.Thermostat.AttributeDefs.pi_heating_demand.name)
+        return self.cluster.get(Thermostat.AttributeDefs.pi_heating_demand.name)
 
     @property
     def running_mode(self) -> int | None:
         """Thermostat running mode."""
-        return self.cluster.get(hvac.Thermostat.AttributeDefs.running_mode.name)
+        return self.cluster.get(Thermostat.AttributeDefs.running_mode.name)
 
     @property
     def running_state(self) -> int | None:
         """Thermostat running state, state of heat, cool, fan relays."""
-        return self.cluster.get(hvac.Thermostat.AttributeDefs.running_state.name)
+        return self.cluster.get(Thermostat.AttributeDefs.running_state.name)
 
     @property
     def system_mode(self) -> int | None:
         """System mode."""
-        return self.cluster.get(hvac.Thermostat.AttributeDefs.system_mode.name)
+        return self.cluster.get(Thermostat.AttributeDefs.system_mode.name)
 
     @property
     def unoccupied_cooling_setpoint(self) -> int | None:
         """Temperature when room is not occupied."""
         return self.cluster.get(
-            hvac.Thermostat.AttributeDefs.unoccupied_cooling_setpoint.name
+            Thermostat.AttributeDefs.unoccupied_cooling_setpoint.name
         )
 
     @property
     def unoccupied_heating_setpoint(self) -> int | None:
         """Temperature when room is not occupied."""
         return self.cluster.get(
-            hvac.Thermostat.AttributeDefs.unoccupied_heating_setpoint.name
+            Thermostat.AttributeDefs.unoccupied_heating_setpoint.name
         )
 
     @callback
@@ -299,7 +294,7 @@ class ThermostatClusterHandler(ClusterHandler):
     async def async_set_operation_mode(self, mode) -> bool:
         """Set Operation mode."""
         await self.write_attributes_safe(
-            {hvac.Thermostat.AttributeDefs.system_mode.name: mode}
+            {Thermostat.AttributeDefs.system_mode.name: mode}
         )
         return True
 
@@ -308,9 +303,9 @@ class ThermostatClusterHandler(ClusterHandler):
     ) -> bool:
         """Set heating setpoint."""
         attr = (
-            hvac.Thermostat.AttributeDefs.unoccupied_heating_setpoint.name
+            Thermostat.AttributeDefs.unoccupied_heating_setpoint.name
             if is_away
-            else hvac.Thermostat.AttributeDefs.occupied_heating_setpoint.name
+            else Thermostat.AttributeDefs.occupied_heating_setpoint.name
         )
         await self.write_attributes_safe({attr: temperature})
         return True
@@ -320,9 +315,9 @@ class ThermostatClusterHandler(ClusterHandler):
     ) -> bool:
         """Set cooling setpoint."""
         attr = (
-            hvac.Thermostat.AttributeDefs.unoccupied_cooling_setpoint.name
+            Thermostat.AttributeDefs.unoccupied_cooling_setpoint.name
             if is_away
-            else hvac.Thermostat.AttributeDefs.occupied_cooling_setpoint.name
+            else Thermostat.AttributeDefs.occupied_cooling_setpoint.name
         )
         await self.write_attributes_safe({attr: temperature})
         return True
@@ -330,10 +325,10 @@ class ThermostatClusterHandler(ClusterHandler):
     async def get_occupancy(self) -> bool | None:
         """Get unreportable occupancy attribute."""
         res, fail = await self.read_attributes(
-            [hvac.Thermostat.AttributeDefs.occupancy.name]
+            [Thermostat.AttributeDefs.occupancy.name]
         )
         self.debug("read 'occupancy' attr, success: %s, fail: %s", res, fail)
-        if hvac.Thermostat.AttributeDefs.occupancy.name not in res:
+        if Thermostat.AttributeDefs.occupancy.name not in res:
             return None
         return bool(self.occupancy)
 
