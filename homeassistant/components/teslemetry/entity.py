@@ -1,11 +1,12 @@
 """Teslemetry parent entity class."""
 
+import asyncio
 from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MODELS
+from .const import DOMAIN, MODELS, TeslemetryState
 from .coordinator import TeslemetryVehicleDataCoordinator
 from .models import TeslemetryVehicleData
 
@@ -14,6 +15,7 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
     """Parent class for Teslemetry Entities."""
 
     _attr_has_entity_name = True
+    _wakelock = asyncio.Lock()
 
     def __init__(
         self,
@@ -39,6 +41,23 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
             hw_version=self.coordinator.data["vehicle_config_driver_assist"],
             serial_number=vehicle.vin,
         )
+
+    @property
+    def online(self) -> bool:
+        """Return true if vehicle is asleep."""
+        return self.coordinator.data["state"] == TeslemetryState.ONLINE
+
+    async def wake_up(self) -> None:
+        """Wake up the vehicle if required."""
+        if self.online:
+            return
+        await self._wakelock.acquire()
+        while not self.online:
+            state = (await self.api.wake_up())["response"]["state"]
+            self.coordinator.data["state"] = state
+            if not self.online:
+                await asyncio.sleep(5)
+        self._wakelock.release()
 
     def get(self, key: str | None = None, default: Any | None = None) -> Any:
         """Return a specific value from coordinator data."""
