@@ -22,3 +22,4 @@ def mock_teslemetry():
         mock_teslemetry._request.return_value = AsyncMock(
             {"response": True, "error": None}
         )
+        yield mock_teslemetry

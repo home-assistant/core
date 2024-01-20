@@ -2,10 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.teslemetry.const import DOMAIN, TeslemetryState
+from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG
+from .const import CONFIG, WAKE_UP_SUCCESS
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -28,7 +28,7 @@ async def setup_platform(hass: HomeAssistant, side_effect=None):
         teslemetry_mock.return_value.products.side_effect = side_effect
 
         teslemetry_mock.return_value.vehicle.specific.return_value.wake_up = AsyncMock(
-            {"response": {"state": TeslemetryState.ONLINE}, "error": None}
+            WAKE_UP_SUCCESS
         )
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
