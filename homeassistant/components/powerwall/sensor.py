@@ -292,7 +292,7 @@ class BatteryCapacitySensor(BatteryEntity, SensorEntity):
     _attr_translation_key = "battery_capacity"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_device_class = SensorDeviceClass.ENERGY
 
     @property
     def unique_id(self) -> str:
@@ -300,6 +300,6 @@ class BatteryCapacitySensor(BatteryEntity, SensorEntity):
         return f"{self.base_unique_id}_battery_capacity"
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> float | None:
         """Get the current value in kWh."""
-        return round(self.battery_data.capacity / 1000)
+        return float(self.battery_data.capacity) / 1000

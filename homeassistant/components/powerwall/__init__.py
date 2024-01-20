@@ -272,7 +272,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
             meters = tg.create_task(power_wall.get_meters())
             grid_services_active = tg.create_task(power_wall.is_grid_services_active())
             grid_status = tg.create_task(power_wall.get_grid_status())
-            # batteries = tg.create_task(power_wall.get_batteries())
+            batteries = tg.create_task(power_wall.get_batteries())
 
     # Mimic the behavior of asyncio.gather by reraising the first caught exception since
     # this is what is expected by the caller of this method
@@ -290,8 +290,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         grid_services_active=grid_services_active.result(),
         grid_status=grid_status.result(),
         backup_reserve=backup_reserve.result(),
-        # batteries=batteries.result(),
-        # Don't know why mypy is angry with me.
+        batteries=batteries.result(),
     )
 
 

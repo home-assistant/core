@@ -132,6 +132,15 @@ async def test_sensors(
     assert hass.states.get("sensor.mysite_load_frequency").state == STATE_UNKNOWN
     assert hass.states.get("sensor.mysite_backup_reserve").state == STATE_UNKNOWN
 
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_capacity").state)
+        == 14.715
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_capacity").state)
+        == 15.137
+    )
+
 
 async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
     """Confirm that backup reserve sensor is not added if data is unavailable from the device."""

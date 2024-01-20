@@ -49,6 +49,8 @@ class PowerWallEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
 class BatteryEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
     """Base class for battery entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, powerwall_data: PowerwallRuntimeData, serial_number: str
     ) -> None:
