@@ -15,11 +15,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TYPE
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
+from .const import DEVICE_TYPES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,10 +84,9 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             host = user_input[CONF_HOST]
-            timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
             try:
-                hello = partial(llk.hello, host, timeout=timeout)
+                hello = partial(llk.hello, host)
                 linknlink = await self.hass.async_add_executor_job(hello)
 
             except NetworkTimeoutError:
@@ -107,20 +105,15 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     err_msg = str(err)
 
             else:
-                linknlink.timeout = timeout
-
                 await self.async_set_device(linknlink)
                 self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: linknlink.host[0], CONF_TIMEOUT: timeout}
+                    updates={CONF_HOST: linknlink.host[0]}
                 )
                 return await self.async_step_auth()
 
             _LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
 
-        data_schema = {
-            vol.Required(CONF_HOST): str,
-            vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        }
+        data_schema = {vol.Required(CONF_HOST): str}
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(data_schema),
@@ -187,9 +180,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        return await self.async_step_user(
-            {CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
-        )
+        return await self.async_step_user({CONF_HOST: device.host[0]})
 
     async def async_step_unlock(self, user_input=None) -> FlowResult:
         """Unlock the device.
@@ -250,9 +241,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         device = self.device
 
         # Abort reauthentication flow.
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
-        )
+        self._abort_if_unique_id_configured(updates={CONF_HOST: device.host[0]})
 
         return self.async_create_entry(
             title=f"{DOMAIN}-{device.mac.hex()}",
@@ -260,6 +249,5 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: device.host[0],
                 CONF_MAC: device.mac.hex(),
                 CONF_TYPE: device.devtype,
-                CONF_TIMEOUT: device.timeout,
             },
         )

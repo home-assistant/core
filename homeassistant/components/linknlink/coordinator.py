@@ -17,7 +17,7 @@ from linknlink.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -65,7 +65,6 @@ class LinknLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             bytes.fromhex(config.data[CONF_MAC]),
             name=config.title,
         )
-        api.timeout = config.data[CONF_TIMEOUT]
         self.api = api
         try:
             self.fw_version = await self.hass.async_add_executor_job(

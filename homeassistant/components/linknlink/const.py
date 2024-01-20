@@ -9,7 +9,6 @@ DOMAINS_AND_TYPES = {
 DEVICE_TYPES = set.union(*DOMAINS_AND_TYPES.values())
 
 DEFAULT_PORT = 80
-DEFAULT_TIMEOUT = 5
 
 
 def get_domains(device_type: str) -> set[Platform]:
