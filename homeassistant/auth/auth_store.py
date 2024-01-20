@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from datetime import timedelta
+from datetime import datetime, timedelta
 import hmac
 from logging import getLogger
 from typing import Any
@@ -19,6 +19,7 @@ from .const import (
     GROUP_ID_ADMIN,
     GROUP_ID_READ_ONLY,
     GROUP_ID_USER,
+    REFRESH_TOKEN_EXPIRATION,
 )
 from .permissions import system_policies
 from .permissions.models import PermissionLookup
@@ -220,6 +221,7 @@ class AuthStore:
         client_icon: str | None = None,
         token_type: str = models.TOKEN_TYPE_NORMAL,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
+        expire_at: datetime | None = None,
         credential: models.Credentials | None = None,
     ) -> models.RefreshToken:
         """Create a new token for a user."""
@@ -228,6 +230,7 @@ class AuthStore:
             "client_id": client_id,
             "token_type": token_type,
             "access_token_expiration": access_token_expiration,
+            "expire_at": expire_at,
             "credential": credential,
         }
         if client_name:
@@ -286,6 +289,18 @@ class AuthStore:
 
         return found
 
+    async def async_get_refresh_tokens(self) -> list[models.RefreshToken]:
+        """Get all refresh tokens."""
+        tokens: list[models.RefreshToken] = []
+        if self._users is None:
+            await self._async_load()
+            assert self._users is not None
+
+        for user in self._users.values():
+            tokens += list(user.refresh_tokens.values())
+
+        return tokens
+
     @callback
     def async_log_refresh_token_usage(
         self, refresh_token: models.RefreshToken, remote_ip: str | None = None
@@ -293,6 +308,10 @@ class AuthStore:
         """Update refresh token last used information."""
         refresh_token.last_used_at = dt_util.utcnow()
         refresh_token.last_used_ip = remote_ip
+        if refresh_token.expire_at:
+            refresh_token.expire_at = (
+                refresh_token.last_used_at + REFRESH_TOKEN_EXPIRATION
+            )
         self._async_schedule_save()
 
     async def _async_load(self) -> None:
@@ -468,6 +487,12 @@ class AuthStore:
             else:
                 last_used_at = None
 
+            # old refresh_token don't have expire_at (pre-2024.2)
+            if expire_at_str := rt_dict.get("expire_at"):
+                expire_at = dt_util.parse_datetime(expire_at_str)
+            else:
+                expire_at = None
+
             token = models.RefreshToken(
                 id=rt_dict["id"],
                 user=users[rt_dict["user_id"]],
@@ -484,6 +509,7 @@ class AuthStore:
                 jwt_key=rt_dict["jwt_key"],
                 last_used_at=last_used_at,
                 last_used_ip=rt_dict.get("last_used_ip"),
+                expire_at=expire_at,
                 version=rt_dict.get("version"),
             )
             if "credential_id" in rt_dict:
@@ -563,6 +589,9 @@ class AuthStore:
                 if refresh_token.last_used_at
                 else None,
                 "last_used_ip": refresh_token.last_used_ip,
+                "expire_at": refresh_token.expire_at.isoformat()
+                if refresh_token.expire_at
+                else None,
                 "credential_id": refresh_token.credential.id
                 if refresh_token.credential
                 else None,

@@ -26,6 +26,7 @@ from tests.common import (
     CLIENT_ID,
     MockUser,
     async_capture_events,
+    async_fire_time_changed,
     ensure_auth_manager_loaded,
     flush_store,
 )
@@ -405,6 +406,7 @@ async def test_generating_system_user(hass: HomeAssistant) -> None:
     assert not user.local_only
     assert token is not None
     assert token.client_id is None
+    assert token.expire_at is None
 
     await hass.async_block_till_done()
     assert len(events) == 1
@@ -420,6 +422,7 @@ async def test_generating_system_user(hass: HomeAssistant) -> None:
     assert user.local_only
     assert token is not None
     assert token.client_id is None
+    assert token.expire_at is None
 
     await hass.async_block_till_done()
     assert len(events) == 2
@@ -473,6 +476,7 @@ async def test_refresh_token_with_specific_access_token_expiration(
     assert token is not None
     assert token.client_id == CLIENT_ID
     assert token.access_token_expiration == timedelta(days=100)
+    assert token.expire_at is not None
 
 
 async def test_refresh_token_type(hass: HomeAssistant) -> None:
@@ -514,6 +518,7 @@ async def test_refresh_token_type_long_lived_access_token(hass: HomeAssistant) -
     assert token.client_name == "GPS LOGGER"
     assert token.client_icon == "mdi:home"
     assert token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+    assert token.expire_at is None
 
 
 async def test_refresh_token_provider_validation(mock_hass) -> None:
@@ -564,9 +569,9 @@ async def test_cannot_deactive_owner(mock_hass) -> None:
         await manager.async_deactivate_user(owner)
 
 
-async def test_remove_refresh_token(mock_hass) -> None:
+async def test_remove_refresh_token(hass: HomeAssistant) -> None:
     """Test that we can remove a refresh token."""
-    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    manager = await auth.auth_manager_from_config(hass, [], [])
     user = MockUser().add_to_auth_manager(manager)
     refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
     access_token = manager.async_create_access_token(refresh_token)
@@ -575,6 +580,43 @@ async def test_remove_refresh_token(mock_hass) -> None:
 
     assert await manager.async_get_refresh_token(refresh_token.id) is None
     assert await manager.async_validate_access_token(access_token) is None
+
+
+async def test_remove_expired_refresh_token(hass: HomeAssistant) -> None:
+    """Test that expired refresh tokens are deleted."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    now = dt_util.utcnow()
+    with freeze_time(now):
+        refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+        assert refresh_token.expire_at == now + timedelta(days=90)
+
+    with freeze_time(now + timedelta(days=89, hours=23)):
+        async_fire_time_changed(hass, now + timedelta(days=89, hours=23))
+        await hass.async_block_till_done()
+        assert await manager.async_get_refresh_token(refresh_token.id)
+
+    with freeze_time(now + timedelta(days=90, seconds=5)):
+        async_fire_time_changed(hass, now + timedelta(days=90, seconds=5))
+        await hass.async_block_till_done()
+        assert await manager.async_get_refresh_token(refresh_token.id) is None
+
+
+async def test_update_expire_at_refresh_token(hass: HomeAssistant) -> None:
+    """Test that expire at is updated when refresh token is used."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    now = dt_util.utcnow()
+    with freeze_time(now):
+        refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+        assert refresh_token.expire_at == now + timedelta(days=90)
+
+    with freeze_time(now + timedelta(days=30)):
+        async_fire_time_changed(hass, now + timedelta(days=30))
+        await hass.async_block_till_done()
+        assert manager.async_create_access_token(refresh_token)
+        await hass.async_block_till_done()
+        assert refresh_token.expire_at == now + timedelta(days=30) + timedelta(days=90)
 
 
 async def test_register_revoke_token_callback(mock_hass) -> None:
