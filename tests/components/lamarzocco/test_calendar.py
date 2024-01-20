@@ -123,6 +123,7 @@ async def test_service_auto_on_off_enable(
         DOMAIN,
         SERVICE_AUTO_ON_OFF_ENABLE,
         {
+            ATTR_ENTITY_ID: f"calendar.{mock_lamarzocco.serial_number}_auto_on_off_schedule",
             ATTR_DAY_OF_WEEK: "mon",
             ATTR_ENABLE: True,
         },
@@ -147,13 +148,24 @@ async def test_service_set_auto_on_off_times(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_AUTO_ON_OFF_TIMES,
-        {ATTR_DAY_OF_WEEK: "tue", ATTR_TIME_ON: "08:30:00", ATTR_TIME_OFF: "17:00:00"},
+        {
+            ATTR_ENTITY_ID: f"calendar.{mock_lamarzocco.serial_number}_auto_on_off_schedule",
+            ATTR_ENABLE: True,
+            ATTR_DAY_OF_WEEK: "tue",
+            ATTR_TIME_ON: "08:30:00",
+            ATTR_TIME_OFF: "17:00:00",
+        },
         blocking=True,
     )
 
     assert len(mock_lamarzocco.set_auto_on_off.mock_calls) == 1
     mock_lamarzocco.set_auto_on_off.assert_called_once_with(
-        day_of_week="tue", hour_on=8, minute_on=30, hour_off=17, minute_off=0
+        day_of_week="tue",
+        hour_on=8,
+        minute_on=30,
+        hour_off=17,
+        minute_off=0,
+        enable=True,
     )
 
 
@@ -177,6 +189,7 @@ async def test_service_call_error(
             DOMAIN,
             SERVICE_AUTO_ON_OFF_ENABLE,
             {
+                ATTR_ENTITY_ID: f"calendar.{mock_lamarzocco.serial_number}_auto_on_off_schedule",
                 ATTR_DAY_OF_WEEK: "mon",
                 ATTR_ENABLE: True,
             },

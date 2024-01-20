@@ -1,10 +1,9 @@
 set_auto_on_off_enable:
+  target:
+    entity:
+      integration: lamarzocco
+      domain: calendar
   fields:
-    config_entry:
-      required: true
-      selector:
-        config_entry:
-          integration: lamarzocco
     day_of_week:
       required: true
       example: mon
@@ -21,20 +20,19 @@ set_auto_on_off_enable:
           translation_key: day_of_week
     enable:
       required: true
-      example: "on"
       selector:
-        select:
-          options:
-            - "on"
-            - "off"
+        boolean:
 
 set_auto_on_off_times:
+  target:
+    entity:
+      integration: lamarzocco
+      domain: calendar
   fields:
-    config_entry:
-      required: true
+    enable:
+      required: false
       selector:
-        config_entry:
-          integration: lamarzocco
+        boolean:
     day_of_week:
       required: true
       example: mon

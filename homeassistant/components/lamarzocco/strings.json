@@ -134,10 +134,6 @@
       "name": "Enable/Disable auto on/off",
       "description": "Enable or disable auto on/off for a specific day of the week",
       "fields": {
-        "config_entry": {
-          "name": "Config Entry",
-          "description": "The config entry to use for this service."
-        },
         "day_of_week": {
           "name": "Day of week",
           "description": "Enable or disable auto on/off for a specific day of the week"
@@ -152,9 +148,9 @@
       "name": "Set Auto on/off times",
       "description": "Set the auto on and off times for each day of the week",
       "fields": {
-        "config_entry": {
-          "name": "Config Entry",
-          "description": "The config entry to use for this service."
+        "enable": {
+          "name": "Enable",
+          "description": "Boolean value indicating whether to enable or disable auto on/off"
         },
         "day_of_week": {
           "name": "Day of week",

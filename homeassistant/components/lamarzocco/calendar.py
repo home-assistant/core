@@ -31,7 +31,7 @@ ATTR_TIME_ON: Final = "time_on"
 ATTR_TIME_OFF: Final = "time_off"
 
 
-SET_DAY_OF_WEEK_SCHEMA = vol.Schema(
+SCHEMA_ENABLE_SCHEDULE = vol.Schema(
     {
         vol.Required(ATTR_DAY_OF_WEEK): vol.In(
             [
@@ -44,6 +44,7 @@ SET_DAY_OF_WEEK_SCHEMA = vol.Schema(
                 "sun",
             ]
         ),
+        vol.Required(ATTR_ENABLE): cv.boolean,
     }
 )
 
@@ -56,22 +57,19 @@ async def async_setup_entry(
     """Set up switch entities and services."""
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    platform = entity_platform.async_get_current_platform()
     async_add_entities([LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY)])
+
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_AUTO_ON_OFF_ENABLE,
-        SET_DAY_OF_WEEK_SCHEMA.extend(
-            {
-                vol.Required(ATTR_ENABLE): cv.boolean,
-            }
-        ),
+        SCHEMA_ENABLE_SCHEDULE,
         "set_auto_on_off_enable",
     )
 
     platform.async_register_entity_service(
         SERVICE_AUTO_ON_OFF_TIMES,
-        SET_DAY_OF_WEEK_SCHEMA.extend(
+        SCHEMA_ENABLE_SCHEDULE.extend(
             {
                 vol.Required(ATTR_TIME_ON): cv.time,
                 vol.Required(ATTR_TIME_OFF): cv.time,
@@ -180,9 +178,16 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         )
 
     async def set_auto_on_off_times(
-        self, day_of_week: str, time_on: time, time_off: time
+        self,
+        day_of_week: str,
+        time_on: time,
+        time_off: time,
+        enable: bool | None = None,
     ) -> None:
         """Service call to configure auto on/off hours for a day."""
+
+        if enable is not None:
+            await self.set_auto_on_off_enable(day_of_week, enable)
 
         _LOGGER.debug(
             "Setting auto on/off hours for %s from %s to %s",
