@@ -73,7 +73,7 @@ def icon_schema(integration_type: str) -> vol.Schema:
         )
     return base_schema.extend(
         {
-            vol.Required("entity"): cv.schema_with_slug_keys(
+            vol.Optional("entity"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(
                     icon_schema_slug(vol.Optional),
                     slug_validator=translation_key_validator,

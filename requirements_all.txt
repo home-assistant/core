@@ -472,7 +472,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.0
+async-upnp-client==0.38.1
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
@@ -603,7 +603,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.4.1
+bthome-ble==3.5.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1162,7 +1162,7 @@ kegtron-ble==0.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.knx
-knx-frontend==2023.6.23.191712
+knx-frontend==2024.1.20.105944
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1351,7 +1351,7 @@ nextcord==2.0.0a8
 nextdns==2.1.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.5.2
+nibe==2.7.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1545,7 +1545,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.7
+psutil==5.9.8
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -2662,7 +2662,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.5.0
+thermopro-ble==0.8.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks-smoke==0.1.8
