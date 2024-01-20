@@ -13,7 +13,7 @@
     "play_stream": "mdi:play",
     "record": "mdi:record-rec",
     "snapshot": "mdi:camera",
-    "turn_off": "mdi:video",
-    "turn_on": "mdi:video-off"
+    "turn_off": "mdi:video-off",
+    "turn_on": "mdi:video"
   }
 }
