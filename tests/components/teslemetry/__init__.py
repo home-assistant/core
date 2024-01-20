@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.teslemetry.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONFIG, WAKE_UP_SUCCESS
@@ -10,8 +11,10 @@ from .const import CONFIG, WAKE_UP_SUCCESS
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 
-async def setup_platform(hass: HomeAssistant, side_effect=None):
-    """Set up the Tessie platform."""
+async def setup_platform(
+    hass: HomeAssistant, platforms: list[Platform] = [], side_effect=None
+):
+    """Set up the Teslemetry platform."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -19,7 +22,7 @@ async def setup_platform(hass: HomeAssistant, side_effect=None):
     )
     mock_entry.add_to_hass(hass)
 
-    with patch(
+    with patch("homeassistant.components.teslemetry.PLATFORMS", platforms), patch(
         "homeassistant.components.teslemetry.Teslemetry",
     ) as teslemetry_mock:
         teslemetry_mock.return_value.products = AsyncMock(

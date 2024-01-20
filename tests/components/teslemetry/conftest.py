@@ -19,7 +19,7 @@ def mock_teslemetry():
         mock_teslemetry.vehicle.specific.return_value.vehicle_data = AsyncMock(
             load_json_object_fixture("vehicle_data.json", DOMAIN)
         )
-        mock_teslemetry._request.return_value = AsyncMock(
-            {"response": True, "error": None}
-        )
+        # mock_teslemetry._request.return_value = AsyncMock(
+        #    {"response": None, "error": None}
+        # )
         yield mock_teslemetry
