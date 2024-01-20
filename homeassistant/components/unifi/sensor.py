@@ -7,7 +7,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 from typing import Generic
 
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -111,10 +112,20 @@ def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
 def async_device_uptime_value_fn(
     controller: UniFiController, device: Device
 ) -> datetime:
-    """Calculate the uptime of the device."""
+    """Calculate the approximate time the device started (based on uptime returned from API, in seconds)."""
     return (dt_util.now() - timedelta(seconds=device.uptime)).replace(
         second=0, microsecond=0
     )
+
+
+@callback
+def async_device_uptime_value_changed_fn(
+    old: str | int | float | date | Decimal | None, new: datetime | float | str | None
+) -> bool:
+    """Reject the new uptime value if it's too similar to the old one. Avoids unwanted fluctuation."""
+    if isinstance(old, datetime) and isinstance(new, datetime):
+        return new != old and abs((new - old).total_seconds()) > 60
+    return old is None or (new != old)
 
 
 @callback
@@ -169,6 +180,11 @@ class UnifiSensorEntityDescription(
     """Class describing UniFi sensor entity."""
 
     is_connected_fn: Callable[[UniFiController, str], bool] | None = None
+    # Custom function to determine whether a state change should be recorded
+    value_changed_fn: Callable[
+        [str | int | float | date | Decimal | None, datetime | float | str | None],
+        bool,
+    ] = lambda old, new: old != new
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
@@ -349,6 +365,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"device_uptime-{obj_id}",
         value_fn=async_device_uptime_value_fn,
+        value_changed_fn=async_device_uptime_value_changed_fn,
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device temperature",
@@ -425,7 +442,10 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         """
         description = self.entity_description
         obj = description.object_fn(self.controller.api, self._obj_id)
-        if (value := description.value_fn(self.controller, obj)) != self.native_value:
+        # Update the value only if value is considered to have changed relative to its previous state
+        if description.value_changed_fn(
+            self.native_value, (value := description.value_fn(self.controller, obj))
+        ):
             self._attr_native_value = value
 
         if description.is_connected_fn is not None:
