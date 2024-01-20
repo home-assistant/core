@@ -113,9 +113,7 @@ def async_device_uptime_value_fn(
     controller: UniFiController, device: Device
 ) -> datetime:
     """Calculate the approximate time the device started (based on uptime returned from API, in seconds)."""
-    return (dt_util.now() - timedelta(seconds=device.uptime)).replace(
-        second=0, microsecond=0
-    )
+    return (dt_util.now() - timedelta(seconds=device.uptime)).replace(microsecond=0)
 
 
 @callback
@@ -124,7 +122,7 @@ def async_device_uptime_value_changed_fn(
 ) -> bool:
     """Reject the new uptime value if it's too similar to the old one. Avoids unwanted fluctuation."""
     if isinstance(old, datetime) and isinstance(new, datetime):
-        return new != old and abs((new - old).total_seconds()) > 60
+        return new != old and abs((new - old).total_seconds()) > 120
     return old is None or (new != old)
 
 
