@@ -137,7 +137,7 @@ from .validators import (
     duplicate_entity_validator,
     duplicate_fan_mode_validator,
     duplicate_modbus_validator,
-    fixedRegList_validator,
+    hvac_fixedsize_reglist_validator,
     nan_validator,
     number_validator,
     scan_interval_validator,
@@ -243,7 +243,7 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 CLIMATE_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
-            vol.Required(CONF_TARGET_TEMP): fixedRegList_validator,
+            vol.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_MAX_TEMP, default=35): number_validator,
             vol.Optional(CONF_MIN_TEMP, default=5): number_validator,
@@ -421,11 +421,11 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.All(
             cv.ensure_list,
             scan_interval_validator,
-            duplicate_entity_validator,
-            duplicate_modbus_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
+            duplicate_entity_validator,
+            duplicate_modbus_validator,
         ),
     },
     extra=vol.ALLOW_EXTRA,

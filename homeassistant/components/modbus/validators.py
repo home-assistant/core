@@ -191,15 +191,15 @@ def number_validator(value: Any) -> int | float:
         raise vol.Invalid(f"invalid number {value}") from err
 
 
-def fixedRegList_validator(value: Any) -> list:
-    """Check if the number of registers for target temp. inserted is correct."""
+def hvac_fixedsize_reglist_validator(value: Any) -> list:
+    """Check the number of registers for target temp. and coerce it to a list, if valid."""
     if isinstance(value, int):
-        value = [value] * 7
+        value = [value] * len(HVACMode)
         return list(value)
 
-    if len(list(value)) == len(HVACMode):
+    if len(value) == len(HVACMode):
         _rv = True
-        for svalue in list(value):
+        for svalue in value:
             if isinstance(svalue, int) is False:
                 _rv = False
                 break
@@ -288,15 +288,7 @@ def duplicate_entity_validator(config: dict) -> dict:
                 addr += "_" + str(inx)
                 entry_addrs: set[str] = set()
                 entry_addrs.add(addr)
-                if CONF_TARGET_TEMP in entry and isinstance(
-                    entry[CONF_TARGET_TEMP], int
-                ):
-                    a = str(entry[CONF_TARGET_TEMP])
-                    a += "_" + str(inx)
-                    entry_addrs.add(a)
-                elif CONF_TARGET_TEMP in entry and isinstance(
-                    entry[CONF_TARGET_TEMP], list
-                ):
+                if CONF_TARGET_TEMP in entry:
                     _uniqueTTReg = set(entry[CONF_TARGET_TEMP])
                     for regs in _uniqueTTReg:
                         a = str(regs)
@@ -391,25 +383,23 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
     if CONF_TARGET_TEMP not in config:
         return config
 
-    _uniqueTTReg = set(config[CONF_TARGET_TEMP])
-
     if (
         CONF_HVAC_MODE_REGISTER in config
-        and config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS] in _uniqueTTReg
+        and config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
     ):
         wrn = f"In {CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). It is is not loaded!"
         _LOGGER.warning(wrn)
         del config[CONF_HVAC_MODE_REGISTER]
     if (
         CONF_HVAC_ONOFF_REGISTER in config
-        and config[CONF_HVAC_ONOFF_REGISTER] in _uniqueTTReg
+        and config[CONF_HVAC_ONOFF_REGISTER] in config[CONF_TARGET_TEMP]
     ):
         wrn = f"In {CONF_HVAC_ONOFF_REGISTER} Register overlaps CONF_TARGET_TEMP register(s). It is is not loaded!"
         _LOGGER.warning(wrn)
         del config[CONF_HVAC_ONOFF_REGISTER]
     if (
         CONF_FAN_MODE_REGISTER in config
-        and config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS] in _uniqueTTReg
+        and config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
     ):
         wrn = f"In {CONF_FAN_MODE_REGISTER} Register overlaps CONF_TARGET_TEMP register(s). It is is not loaded!"
         _LOGGER.warning(wrn)

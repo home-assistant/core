@@ -86,7 +86,7 @@ from homeassistant.components.modbus.validators import (
     duplicate_entity_validator,
     duplicate_fan_mode_validator,
     duplicate_modbus_validator,
-    fixedRegList_validator,
+    hvac_fixedsize_reglist_validator,
     nan_validator,
     number_validator,
     struct_validator,
@@ -152,15 +152,15 @@ async def test_fixedRegList_validator() -> None:
         15,
         registers,
     ):
-        assert isinstance(fixedRegList_validator(value), list)
+        assert isinstance(hvac_fixedsize_reglist_validator(value), list)
 
     with contextlib.suppress(vol.Invalid):
-        fixedRegList_validator([15, "ab", 17, 18, 19, 20, 21])
+        hvac_fixedsize_reglist_validator([15, "ab", 17, 18, 19, 20, 21])
     try:
-        fixedRegList_validator([15, 17])
+        hvac_fixedsize_reglist_validator([15, 17])
     except vol.Invalid:
         return
-    pytest.fail("fixedRegList_validator not throwing exception")
+    pytest.fail("hvac_fixedsize_reglist_validator not throwing exception")
 
 
 async def test_number_validator() -> None:
@@ -572,7 +572,7 @@ async def test_duplicate_entity_validator(do_config) -> None:
                         CONF_NAME: TEST_ENTITY_NAME + " 2",
                         CONF_ADDRESS: 118,
                         CONF_SLAVE: 0,
-                        CONF_TARGET_TEMP: 99,
+                        CONF_TARGET_TEMP: [99],
                         CONF_FAN_MODE_REGISTER: {
                             CONF_ADDRESS: 120,
                             CONF_FAN_MODE_VALUES: {
@@ -607,7 +607,7 @@ async def test_duplicate_entity_validator(do_config) -> None:
                         CONF_NAME: TEST_ENTITY_NAME + " 2",
                         CONF_ADDRESS: 118,
                         CONF_SLAVE: 0,
-                        CONF_TARGET_TEMP: 117,
+                        CONF_TARGET_TEMP: [117],
                         CONF_FAN_MODE_REGISTER: {
                             CONF_ADDRESS: 121,
                             CONF_FAN_MODE_VALUES: {

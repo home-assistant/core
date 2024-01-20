@@ -296,8 +296,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         ]
         registers = self._swap_registers(raw_regs, 0)
 
-        _target_temp_reg = self._GetMeTargetTempRegister()
-
         if self._data_type in (
             DataType.INT16,
             DataType.UINT16,
@@ -305,21 +303,27 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             if self._target_temperature_write_registers:
                 result = await self._hub.async_pb_call(
                     self._slave,
-                    _target_temp_reg,
+                    self._target_temperature_register[
+                        HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+                    ],
                     [int(float(registers[0]))],
                     CALL_TYPE_WRITE_REGISTERS,
                 )
             else:
                 result = await self._hub.async_pb_call(
                     self._slave,
-                    _target_temp_reg,
+                    self._target_temperature_register[
+                        HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+                    ],
                     int(float(registers[0])),
                     CALL_TYPE_WRITE_REGISTER,
                 )
         else:
             result = await self._hub.async_pb_call(
                 self._slave,
-                _target_temp_reg,
+                self._target_temperature_register[
+                    HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+                ],
                 [int(float(i)) for i in registers],
                 CALL_TYPE_WRITE_REGISTERS,
             )
@@ -331,9 +335,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
 
-        _target_temp_reg = self._GetMeTargetTempRegister()
         self._attr_target_temperature = await self._async_read_register(
-            CALL_TYPE_REGISTER_HOLDING, _target_temp_reg
+            CALL_TYPE_REGISTER_HOLDING,
+            self._target_temperature_register[
+                HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+            ],
         )
 
         self._attr_current_temperature = await self._async_read_register(
@@ -399,11 +405,3 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return None
         self._attr_available = True
         return float(self._value)
-
-    def _GetMeTargetTempRegister(self) -> int:
-        """Get the target temp register for a specific HVAC mode."""
-        return int(
-            self._target_temperature_register[
-                HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
-            ]
-        )
