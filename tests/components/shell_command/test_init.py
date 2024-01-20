@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 from homeassistant.components import shell_command
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_setup_component
@@ -62,6 +63,31 @@ async def test_config_not_valid_service_names(hass: HomeAssistant) -> None:
         shell_command.DOMAIN,
         {shell_command.DOMAIN: {"this is invalid because space": "touch bla.txt"}},
     )
+
+
+async def test_reload(hass: HomeAssistant) -> None:
+    """Verify we can reload shell_command integration."""
+
+    assert await async_setup_component(
+        hass,
+        shell_command.DOMAIN,
+        {shell_command.DOMAIN: {"test_service": "ls /bin"}},
+    )
+    await hass.async_block_till_done()
+    assert hass.services.has_service(shell_command.DOMAIN, "test_service")
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={shell_command.DOMAIN: {"after_reload": "echo shell"}},
+    ):
+        await hass.services.async_call(
+            shell_command.DOMAIN, SERVICE_RELOAD, blocking=True
+        )
+        await hass.async_block_till_done()
+
+    assert hass.services.has_service(shell_command.DOMAIN, "after_reload")
+    assert not hass.services.has_service(shell_command.DOMAIN, "test_service")
 
 
 @patch("homeassistant.components.shell_command.asyncio.create_subprocess_shell")
