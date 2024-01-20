@@ -42,33 +42,32 @@ ATTR_VOLUME_SIZE = "Volume Size"
 _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="status",
+        translation_key="status",
         name="Status",
-        icon="mdi:checkbox-marked-circle-outline",
     ),
     SensorEntityDescription(
         key="system_temp",
         name="System Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        icon="mdi:thermometer",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="cpu_temp",
+        translation_key="cpu_temp",
         name="CPU Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="cpu_usage",
+        translation_key="cpu_usage",
         name="CPU Usage",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:chip",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
@@ -76,10 +75,10 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
 _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="memory_free",
+        translation_key="memory_free",
         name="Memory Available",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
@@ -87,10 +86,10 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="memory_used",
+        translation_key="memory_used",
         name="Memory Used",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
@@ -98,9 +97,9 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="memory_percent_used",
+        translation_key="memory_percent_used",
         name="Memory Usage",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
@@ -108,15 +107,15 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
 _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_link_status",
+        translation_key="network_link_status",
         name="Network Link",
-        icon="mdi:checkbox-marked-circle-outline",
     ),
     SensorEntityDescription(
         key="network_tx",
+        translation_key="network_tx",
         name="Network Up",
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:upload",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
@@ -124,10 +123,10 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="network_rx",
+        translation_key="network_rx",
         name="Network Down",
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:download",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
@@ -137,8 +136,8 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
 _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="drive_smart_status",
+        translation_key="drive_smart_status",
         name="SMART Status",
-        icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -146,7 +145,6 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        icon="mdi:thermometer",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -154,10 +152,10 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
 _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="volume_size_used",
+        translation_key="volume_size_used",
         name="Used Space",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
@@ -165,10 +163,10 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="volume_size_free",
+        translation_key="volume_size_free",
         name="Free Space",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
@@ -176,9 +174,9 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="volume_percentage_used",
+        translation_key="volume_percentage_used",
         name="Volume Used",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:chart-pie",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
