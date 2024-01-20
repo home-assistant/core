@@ -256,6 +256,7 @@ async def test_loading_race_condition(hass: HomeAssistant) -> None:
         "homeassistant.helpers.storage.Store.async_load", return_value=None
     ) as mock_load:
         await store.async_load()
+        await store.async_load()
 
         results = await asyncio.gather(store.async_get_users(), store.async_get_users())
 
