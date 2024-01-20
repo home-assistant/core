@@ -206,7 +206,7 @@ async def test_polling_stops_at_the_stop_event(hass: HomeAssistant) -> None:
     assert hass.states.get("fan.name_1").state == STATE_UNAVAILABLE
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await hass.async_block_till_done()
 
     with patch_bond_device_state(return_value={"power": 1, "speed": 1}):

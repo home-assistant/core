@@ -673,7 +673,7 @@ class EvoChild(EvoDevice):
             dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) - utc_offset
             return dt_util.as_local(dt_aware)
 
-        if not self._schedule or not self._schedule.get("DailySchedules"):
+        if not (schedule := self._schedule.get("DailySchedules")):
             return {}  # no scheduled setpoints when {'DailySchedules': []}
 
         day_time = dt_util.now()
@@ -682,7 +682,7 @@ class EvoChild(EvoDevice):
 
         try:
             # Iterate today's switchpoints until past the current time of day...
-            day = self._schedule["DailySchedules"][day_of_week]
+            day = schedule[day_of_week]
             sp_idx = -1  # last switchpoint of the day before
             for i, tmp in enumerate(day["Switchpoints"]):
                 if time_of_day > tmp["TimeOfDay"]:
@@ -699,7 +699,7 @@ class EvoChild(EvoDevice):
                 ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
             ):
                 sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
-                day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
+                day = schedule[(day_of_week + offset) % 7]
                 switchpoint = day["Switchpoints"][idx]
 
                 switchpoint_time_of_day = dt_util.parse_datetime(
@@ -730,9 +730,17 @@ class EvoChild(EvoDevice):
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
-        self._schedule = await self._evo_broker.call_client_api(  # type: ignore[assignment]
-            self._evo_device.get_schedule(), update_state=False
-        )
+        try:
+            self._schedule = await self._evo_broker.call_client_api(  # type: ignore[assignment]
+                self._evo_device.get_schedule(), update_state=False
+            )
+        except evo.InvalidSchedule as err:
+            _LOGGER.warning(
+                "%s: Unable to retrieve the schedule: %s",
+                self._evo_device,
+                err,
+            )
+            self._schedule = {}
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
 
