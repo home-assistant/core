@@ -38,9 +38,32 @@
     "light": {
       "main": {
         "name": "Main"
+      },
+      "segment": {
+        "name": "Segment {segment}"
+      }
+    },
+    "number": {
+      "intensity": {
+        "name": "Intensity"
+      },
+      "segment_intensity": {
+        "name": "Segment {segment} intensity"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "segment_speed": {
+        "name": "Segment {segment} speed"
       }
     },
     "select": {
+      "color_palette": {
+        "name": "Color palette"
+      },
+      "segment_color_palette": {
+        "name": "Segment {segment} color palette"
+      },
       "live_override": {
         "name": "Live override",
         "state": {
@@ -97,6 +120,17 @@
       },
       "sync_receive": {
         "name": "Sync receive"
+      },
+      "reverse": {
+        "name": "Reverse"
+      },
+      "segment_reverse": {
+        "name": "Segment {segment} reverse"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
       }
     }
   },
