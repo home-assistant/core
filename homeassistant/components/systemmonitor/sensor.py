@@ -39,6 +39,10 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
@@ -702,6 +706,7 @@ async def async_setup_entry(  # noqa: C901
                 _type = resource[:split_index]
                 argument = resource[split_index + 1 :]
                 _LOGGER.debug("Loading legacy %s with argument %s", _type, argument)
+                loaded_resources.add(f"{_type}_{argument}")
                 if not disk_coordinators.get(argument):
                     disk_coordinators[argument] = SystemMonitorDiskCoordinator(
                         hass, f"Disk {argument} coordinator", argument
@@ -715,6 +720,40 @@ async def async_setup_entry(  # noqa: C901
                         True,
                     )
                 )
+
+    # Always load enabled disk entities as disks can be mounted at runtime
+    entity_reg = async_get(hass)
+    registry_entities = async_entries_for_config_entry(entity_reg, entry.entry_id)
+    for registered_entity in registry_entities:
+        resource = registered_entity.unique_id
+        _LOGGER.debug(
+            "Check resource %s already loaded in %s",
+            check_resource,
+            loaded_resources,
+        )
+        if (
+            resource.startswith("disk_")
+            and not registered_entity.disabled
+            and resource not in loaded_resources
+        ):
+            split_index = resource.rfind("_")
+            _type = resource[:split_index]
+            argument = resource[split_index + 1 :]
+            _LOGGER.debug("Loading enabled entity %s with argument %s", _type, argument)
+            loaded_resources.add(f"{_type}_{argument}")
+            if not disk_coordinators.get(argument):
+                disk_coordinators[argument] = SystemMonitorDiskCoordinator(
+                    hass, f"Disk {argument} coordinator", argument
+                )
+            entities.append(
+                SystemMonitorSensor(
+                    disk_coordinators[argument],
+                    SENSOR_TYPES[_type],
+                    entry.entry_id,
+                    argument,
+                    True,
+                )
+            )
 
     # No gathering to avoid swamping the executor
     for coordinator in disk_coordinators.values():
