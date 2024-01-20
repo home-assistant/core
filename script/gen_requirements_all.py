@@ -178,6 +178,9 @@ charset-normalizer==3.2.0
 # dacite: Ensure we have a version that is able to handle type unions for
 # Roborock, NAM, Brother, and GIOS.
 dacite>=1.7.0
+
+# Musle wheels for pandas 2.2.0 cannot be build for any architecture.
+pandas==2.1.4
 """
 
 GENERATED_MESSAGE = (
