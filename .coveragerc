@@ -272,7 +272,8 @@ omit =
     homeassistant/components/econet/climate.py
     homeassistant/components/econet/sensor.py
     homeassistant/components/econet/water_heater.py
-    homeassistant/components/ecovacs/__init__.py
+    homeassistant/components/ecovacs/controller.py
+    homeassistant/components/ecovacs/entity.py
     homeassistant/components/ecovacs/util.py
     homeassistant/components/ecovacs/vacuum.py
     homeassistant/components/ecowitt/__init__.py
@@ -406,8 +407,6 @@ omit =
     homeassistant/components/fjaraskupan/sensor.py
     homeassistant/components/fleetgo/device_tracker.py
     homeassistant/components/flexit/climate.py
-    homeassistant/components/flexit_bacnet/__init__.py
-    homeassistant/components/flexit_bacnet/const.py
     homeassistant/components/flexit_bacnet/climate.py
     homeassistant/components/flic/binary_sensor.py
     homeassistant/components/flick_electric/__init__.py
@@ -766,6 +765,7 @@ omit =
     homeassistant/components/motion_blinds/entity.py
     homeassistant/components/motion_blinds/sensor.py
     homeassistant/components/motionmount/__init__.py
+    homeassistant/components/motionmount/binary_sensor.py
     homeassistant/components/motionmount/entity.py
     homeassistant/components/motionmount/number.py
     homeassistant/components/motionmount/select.py
