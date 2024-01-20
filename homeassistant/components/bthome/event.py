@@ -137,6 +137,7 @@ async def async_setup_entry(
         """Handle a discovered device key."""
         if device_key in discovered_device_keys:
             return
+        discovery_key = DeviceKey(event_class, device_id)
         discovered_device_keys.add(discovery_key)
         async_add_entities(
             [BTHomeEventEntity(address, device_key.key, device_key.device_id)]
