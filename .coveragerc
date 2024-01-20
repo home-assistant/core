@@ -272,6 +272,7 @@ omit =
     homeassistant/components/econet/climate.py
     homeassistant/components/econet/sensor.py
     homeassistant/components/econet/water_heater.py
+    homeassistant/components/ecovacs/binary_sensor.py
     homeassistant/components/ecovacs/controller.py
     homeassistant/components/ecovacs/entity.py
     homeassistant/components/ecovacs/util.py
