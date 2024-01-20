@@ -6,8 +6,10 @@ from datetime import datetime, timedelta
 import logging
 from typing import Final
 
-import bluetooth
-from bt_proximity import BluetoothRSSI
+from bleak.backends.device import BLEDevice
+from homeassistant.components import bluetooth
+from habluetooth.wrappers import HaBleakScannerWrapper
+
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -56,22 +58,19 @@ def is_bluetooth_device(device: Device) -> bool:
     return device.mac is not None and device.mac[:3].upper() == BT_PREFIX
 
 
-def discover_devices(device_id: int) -> list[tuple[str, str]]:
+async def discover_devices(hass: HomeAssistant) -> list[tuple[str, str]]:
     """Discover Bluetooth devices."""
-    try:
-        result = bluetooth.discover_devices(
-            duration=8,
-            lookup_names=True,
-            flush_cache=True,
-            lookup_class=False,
-            device_id=device_id,
-        )
-    except OSError as ex:
-        # OSError is generally thrown if a bluetooth device isn't found
-        _LOGGER.error("Couldn't discover bluetooth devices: %s", ex)
-        return []
-    _LOGGER.debug("Bluetooth devices discovered = %d", len(result))
-    return result  # type: ignore[no-any-return]
+    devices = await bluetooth.async_get_scanner(hass).discover()
+    if not devices:
+        _LOGGER.error("Couldn't discover bluetooth devices.")
+    _LOGGER.debug("Bluetooth devices discovered = %d", len(devices))
+    result = []
+    for device in devices:
+        name = device.name
+        if name is None:
+            name = device.address
+        result.append((device.address, name))
+    return result
 
 
 async def see_device(
@@ -118,10 +117,14 @@ async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]
     return devices_to_track, devices_to_not_track
 
 
-def lookup_name(mac: str) -> str | None:
+async def lookup_device(scanner: HaBleakScannerWrapper, mac: str) -> BLEDevice | None:
     """Lookup a Bluetooth device name."""
     _LOGGER.debug("Scanning %s", mac)
-    return bluetooth.lookup_name(mac, timeout=5)  # type: ignore[no-any-return]
+    for device in scanner.discovered_devices:
+        if device.address == mac:
+            _LOGGER.debug("Found %s", device.name)
+            return device
+    _LOGGER.debug("Not found %s", mac)
 
 
 async def async_setup_scanner(
@@ -153,36 +156,33 @@ async def async_setup_scanner(
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
         tasks: list[asyncio.Task[None]] = []
 
-        try:
-            if track_new:
-                devices = await hass.async_add_executor_job(discover_devices, device_id)
-                for mac, _device_name in devices:
-                    if mac not in devices_to_track and mac not in devices_to_not_track:
-                        devices_to_track.add(mac)
+        if track_new:
+            devices = await asyncio.create_task(discover_devices(hass))
+            for mac, _device_name in devices:
+                if mac not in devices_to_track and mac not in devices_to_not_track:
+                    devices_to_track.add(mac)
 
-            for mac in devices_to_track:
-                friendly_name = await hass.async_add_executor_job(lookup_name, mac)
-                if friendly_name is None:
-                    # Could not lookup device name
-                    continue
+        scanner = bluetooth.async_get_scanner(hass)
+        await scanner.discover()
+        for mac in devices_to_track:
+            device = await lookup_device(scanner, mac)
+            if device is None:
+                # Could not lookup device name
+                continue
 
-                rssi = None
-                if request_rssi:
-                    client = BluetoothRSSI(mac)
-                    rssi = await hass.async_add_executor_job(client.request_rssi)
-                    client.close()
+            friendly_name = device.name or mac
+            rssi = None
+            if request_rssi:
+                rssi = (device.rssi,)
 
-                tasks.append(
-                    asyncio.create_task(
-                        see_device(hass, async_see, mac, friendly_name, rssi)
-                    )
+            tasks.append(
+                asyncio.create_task(
+                    see_device(hass, async_see, mac, friendly_name, rssi)
                 )
+            )
 
             if tasks:
                 await asyncio.wait(tasks)
-
-        except bluetooth.BluetoothError:
-            _LOGGER.exception("Error looking up Bluetooth device")
 
     async def update_bluetooth(now: datetime | None = None) -> None:
         """Lookup Bluetooth devices and update status."""
