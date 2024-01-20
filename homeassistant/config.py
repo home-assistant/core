@@ -14,7 +14,7 @@ from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from awesomeversion import AwesomeVersion
@@ -145,9 +145,6 @@ class ConfigExceptionInfo:
     platform_path: str
     config: ConfigType
     integration_link: str | None
-
-
-_T = TypeVar("_T")
 
 
 @dataclass
