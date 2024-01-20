@@ -53,7 +53,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         api = teslemetry.vehicle.specific(vin)
         coordinator = TeslemetryVehicleDataCoordinator(hass, api)
-        data.append(TeslemetryVehicleData(api=api, coordinator=coordinator))
+        data.append(
+            TeslemetryVehicleData(
+                api=api,
+                coordinator=coordinator,
+                vin=vin,
+            )
+        )
 
     # Do all coordinator first refresh simultaneously
     await asyncio.gather(

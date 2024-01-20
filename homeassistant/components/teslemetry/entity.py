@@ -28,16 +28,16 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
         car_type = self.coordinator.data["vehicle_config_car_type"]
 
         self._attr_translation_key = self.key
-        self._attr_unique_id = f"{self.api.vin}-{key}"
+        self._attr_unique_id = f"{vehicle.vin}-{key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.api.vin)},
+            identifiers={(DOMAIN, vehicle.vin)},
             manufacturer="Tesla",
             configuration_url="https://teslemetry.com/console",
             name=self.coordinator.data["vehicle_state_vehicle_name"],
             model=MODELS.get(car_type, car_type),
             sw_version=self.coordinator.data["vehicle_state_car_version"].split(" ")[0],
             hw_version=self.coordinator.data["vehicle_config_driver_assist"],
-            serial_number=self.api.vin,
+            serial_number=vehicle.vin,
         )
 
     def get(self, key: str | None = None, default: Any | None = None) -> Any:

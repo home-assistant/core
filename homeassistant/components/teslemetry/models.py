@@ -14,3 +14,4 @@ class TeslemetryVehicleData:
 
     api: VehicleSpecific
     coordinator: TeslemetryVehicleDataCoordinator
+    vin: str
