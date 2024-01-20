@@ -1,0 +1,96 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:window-open",
+      "states": {
+        "closed": "mdi:window-closed",
+        "closing": "mdi:arrow-down-box",
+        "opening": "mdi:arrow-up-box"
+      }
+    },
+    "blind": {
+      "default": "mdi:blinds-horizontal",
+      "states": {
+        "closed": "mdi:blinds-horizontal-closed",
+        "closing": "mdi:arrow-down-box",
+        "opening": "mdi:arrow-up-box"
+      }
+    },
+    "curtain": {
+      "default": "mdi:curtains",
+      "states": {
+        "closed": "mdi:curtains-closed",
+        "closing": "mdi:arrow-collapse-horizontal",
+        "opening": "mdi:arrow-split-vertical"
+      }
+    },
+    "damper": {
+      "default": "mdi:circle",
+      "states": {
+        "closed": "mdi:circle-slice-8",
+        "closing": "mdi:circle",
+        "opening": "mdi:circle"
+      }
+    },
+    "door": {
+      "default": "mdi:door-open",
+      "states": {
+        "closed": "mdi:door-closed",
+        "closing": "mdi:door-open",
+        "opening": "mdi:door-open"
+      }
+    },
+    "garage": {
+      "default": "mdi:garage-open",
+      "states": {
+        "closed": "mdi:garage",
+        "closing": "mdi:arrow-down-box",
+        "opening": "mdi:arrow-up-box"
+      }
+    },
+    "gate": {
+      "default": "mdi:gate-open",
+      "states": {
+        "closed": "mdi:gate",
+        "closing": "mdi:arrow-right",
+        "opening": "mdi:arrow-right"
+      }
+    },
+    "shade": {
+      "default": "mdi:roller-shade",
+      "states": {
+        "closed": "mdi:roller-shade-closed",
+        "closing": "mdi:arrow-down-box",
+        "opening": "mdi:arrow-up-box"
+      }
+    },
+    "shutter": {
+      "default": "mdi:window-shutter-open",
+      "states": {
+        "closed": "mdi:window-shutter",
+        "closing": "mdi:arrow-down-box",
+        "opening": "mdi:arrow-up-box"
+      }
+    },
+    "window": {
+      "default": "mdi:window-open",
+      "states": {
+        "closed": "mdi:window-closed",
+        "closing": "mdi:arrow-down-box",
+        "opening": "mdi:arrow-up-box"
+      }
+    }
+  },
+  "services": {
+    "close_cover": "mdi:arrow-down-box",
+    "close_cover_tilt": "mdi:arrow-bottom-left",
+    "open_cover": "mdi:arrow-up-box",
+    "open_cover_tilt": "mdi:arrow-top-right",
+    "set_cover_position": "mdi:arrow-down-box",
+    "set_cover_tilt_position": "mdi:arrow-top-right",
+    "stop_cover": "mdi:stop",
+    "stop_cover_tilt": "mdi:stop",
+    "toggle": "mdi:arrow-up-down",
+    "toggle_cover_tilt": "mdi:arrow-top-right-bottom-left"
+  }
+}
