@@ -158,6 +158,11 @@ async def test_service_set_auto_on_off_times(
         blocking=True,
     )
 
+    assert len(mock_lamarzocco.set_auto_on_off_enable.mock_calls) == 1
+    mock_lamarzocco.set_auto_on_off_enable.assert_called_once_with(
+        day_of_week="tue", enable=True
+    )
+
     assert len(mock_lamarzocco.set_auto_on_off.mock_calls) == 1
     mock_lamarzocco.set_auto_on_off.assert_called_once_with(
         day_of_week="tue",
@@ -165,7 +170,6 @@ async def test_service_set_auto_on_off_times(
         minute_on=30,
         hour_off=17,
         minute_off=0,
-        enable=True,
     )
 
 

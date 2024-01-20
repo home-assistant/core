@@ -30,22 +30,14 @@ ATTR_ENABLE: Final = "enable"
 ATTR_TIME_ON: Final = "time_on"
 ATTR_TIME_OFF: Final = "time_off"
 
-
-SCHEMA_ENABLE_SCHEDULE = vol.Schema(
-    {
-        vol.Required(ATTR_DAY_OF_WEEK): vol.In(
-            [
-                "mon",
-                "tue",
-                "wed",
-                "thu",
-                "fri",
-                "sat",
-                "sun",
-            ]
-        ),
-        vol.Required(ATTR_ENABLE): cv.boolean,
-    }
+OPTIONS_DAY_OF_WEEK: Final = (
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri",
+    "sat",
+    "sun",
 )
 
 
@@ -63,18 +55,21 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_AUTO_ON_OFF_ENABLE,
-        SCHEMA_ENABLE_SCHEDULE,
+        {
+            vol.Required(ATTR_DAY_OF_WEEK): vol.In(OPTIONS_DAY_OF_WEEK),
+            vol.Required(ATTR_ENABLE): cv.boolean,
+        },
         "set_auto_on_off_enable",
     )
 
     platform.async_register_entity_service(
         SERVICE_AUTO_ON_OFF_TIMES,
-        SCHEMA_ENABLE_SCHEDULE.extend(
-            {
-                vol.Required(ATTR_TIME_ON): cv.time,
-                vol.Required(ATTR_TIME_OFF): cv.time,
-            }
-        ),
+        {
+            vol.Required(ATTR_DAY_OF_WEEK): vol.In(OPTIONS_DAY_OF_WEEK),
+            vol.Required(ATTR_TIME_ON): cv.time,
+            vol.Required(ATTR_TIME_OFF): cv.time,
+            vol.Optional(ATTR_ENABLE): cv.boolean,
+        },
         "set_auto_on_off_times",
     )
 
@@ -200,6 +195,6 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
             day_of_week=day_of_week,
             hour_on=time_on.hour,
             minute_on=time_on.minute,
-            hour_off=time_on.hour,
-            minute_off=time_on.minute,
+            hour_off=time_off.hour,
+            minute_off=time_off.minute,
         )
