@@ -45,7 +45,7 @@ ERROR_CONNECTION = ClientConnectionError()
 
 
 async def setup_platform(
-    hass: HomeAssistant, platforms: list[Platform], side_effect=None
+    hass: HomeAssistant, platforms: list[Platform] = [], side_effect=None
 ):
     """Set up the Tessie platform."""
 
