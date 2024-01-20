@@ -60,6 +60,9 @@
     "irradiance": {
       "default": "mdi:sun-wireless"
     },
+    "moisture": {
+      "default": "mdi:water-percent"
+    },
     "monetary": {
       "default": "mdi:cash"
     },
