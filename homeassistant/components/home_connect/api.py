@@ -33,6 +33,8 @@ from .const import (
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_STANDBY,
+    REFRIGERATION_SUPERMODEFREEZER,
+    REFRIGERATION_SUPERMODEREFRIGERATOR,
     SIGNAL_UPDATE_ENTITIES,
 )
 
@@ -261,6 +263,24 @@ class DeviceWithRemoteStart(HomeConnectDevice):
         }
 
 
+class DeviceWithSuperModeFreezer(HomeConnectDevice):
+    """Device that has a Super Freeze Mode setting."""
+
+    def get_super_mode_freezer_switch(self):
+        """Get a dictionary with info about the super mode switch."""
+
+        return [{ATTR_DEVICE: self, "super_mode": REFRIGERATION_SUPERMODEFREEZER}]
+
+
+class DeviceWithSuperModeRefrigerator(HomeConnectDevice):
+    """Device that has a Super Cooling Mode setting."""
+
+    def get_super_mode_refrigerator_switch(self):
+        """Get a dictionary with info about the super mode switch."""
+
+        return [{ATTR_DEVICE: self, "super_mode": REFRIGERATION_SUPERMODEREFRIGERATOR}]
+
+
 class Dryer(
     DeviceWithDoor,
     DeviceWithOpState,
@@ -429,31 +449,45 @@ class Hood(
         }
 
 
-class FridgeFreezer(DeviceWithDoor):
+class FridgeFreezer(
+    DeviceWithDoor,
+    DeviceWithSuperModeFreezer,
+    DeviceWithSuperModeRefrigerator,
+):
     """Fridge/Freezer class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
+        super_mode_switches = self.get_super_mode_freezer_switch()
+        super_mode_switches += self.get_super_mode_refrigerator_switch()
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        return {"binary_sensor": [door_entity], "switch": super_mode_switches}
 
 
-class Refrigerator(DeviceWithDoor):
+class Refrigerator(
+    DeviceWithDoor,
+    DeviceWithSuperModeRefrigerator,
+):
     """Refrigerator class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
+        super_mode_switch = self.get_super_mode_refrigerator_switch()
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        return {"binary_sensor": [door_entity], "switch": super_mode_switch}
 
 
-class Freezer(DeviceWithDoor):
+class Freezer(
+    DeviceWithDoor,
+    DeviceWithSuperModeFreezer,
+):
     """Freezer class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
+        super_mode_switch = self.get_super_mode_freezer_switch()
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        return {"binary_sensor": [door_entity], "switch": super_mode_switch}
 
 
 class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
