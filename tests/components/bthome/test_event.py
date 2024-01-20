@@ -98,5 +98,19 @@ async def test_v2_events(
     for meas in result:
         state = hass.states.get(meas["entity"])
         assert state != STATE_UNAVAILABLE
+
+    # Now inject again
+    inject_bluetooth_service_info(
+        hass,
+        advertisement,
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == len(result)
+
+    for meas in result:
+        state = hass.states.get(meas["entity"])
+        attributes = state.attributes
+        assert attributes[ATTR_FRIENDLY_NAME] == meas[ATTR_FRIENDLY_NAME]
+        assert attributes[ATTR_EVENT_TYPE] == meas[ATTR_EVENT_TYPE]
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
