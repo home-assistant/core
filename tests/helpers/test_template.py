@@ -37,6 +37,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity,
     entity_registry as er,
+    floor_registry as fr,
     template,
 )
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -4953,3 +4954,144 @@ async def test_lru_increases_with_many_entities(hass: HomeAssistant) -> None:
     assert template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
         round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
     )
+
+
+async def test_floors(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test floors function."""
+
+    # Test no floors
+    info = render_to_info(hass, "{{ floors() }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test one floor
+    floor1 = floor_registry.async_get_or_create("First floor")
+    info = render_to_info(hass, "{{ floors() }}")
+    assert_result_info(info, [floor1.floor_id])
+    assert info.rate_limit is None
+
+    # Test multiple floors
+    floor2 = floor_registry.async_get_or_create("Second floor")
+    info = render_to_info(hass, "{{ floors() }}")
+    assert_result_info(info, [floor1.floor_id, floor2.floor_id])
+    assert info.rate_limit is None
+
+
+async def test_floor_id(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test floor_id function."""
+
+    # Test non existing floor name
+    info = render_to_info(hass, "{{ floor_id('Third floor') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 'Third floor' | floor_id }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ floor_id(42) }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 42 | floor_id }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test with an actual floor
+    floor = floor_registry.async_get_or_create("First floor")
+    info = render_to_info(hass, "{{ floor_id('First floor') }}")
+    assert_result_info(info, floor.floor_id)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 'First floor' | floor_id }}")
+    assert_result_info(info, floor.floor_id)
+    assert info.rate_limit is None
+
+
+async def test_floor_name(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test floor_name function."""
+    # Test non existing floor ID
+    info = render_to_info(hass, "{{ floor_name('third_floor') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 'third_floor' | floor_name }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ floor_name(42) }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 42 | floor_name }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test existing floor ID
+    floor = floor_registry.async_get_or_create("First floor")
+    info = render_to_info(hass, f"{{{{ floor_name('{floor.floor_id}') }}}}")
+    assert_result_info(info, floor.name)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{floor.floor_id}' | floor_name }}}}")
+    assert_result_info(info, floor.name)
+    assert info.rate_limit is None
+
+
+async def test_floor_areas(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test floor_areas function."""
+
+    # Test non existing floor ID
+    info = render_to_info(hass, "{{ floor_areas('skyring') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 'skyring' | floor_areas }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ floor_areas(42) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 42 | floor_areas }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    floor = floor_registry.async_get_or_create("First floor")
+    area = area_registry.async_create("Living room")
+    area_registry.async_update(area.id, floor_id=floor.floor_id)
+
+    # Get areas by floor ID
+    info = render_to_info(hass, f"{{{{ floor_areas('{floor.floor_id}') }}}}")
+    assert_result_info(info, [area.id])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{floor.floor_id}' | floor_areas }}}}")
+    assert_result_info(info, [area.id])
+    assert info.rate_limit is None
+
+    # Get entities by floor name
+    info = render_to_info(hass, f"{{{{ floor_areas('{floor.name}') }}}}")
+    assert_result_info(info, [area.id])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{floor.name}' | floor_areas }}}}")
+    assert_result_info(info, [area.id])
+    assert info.rate_limit is None

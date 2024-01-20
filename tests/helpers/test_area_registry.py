@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers import area_registry as ar, floor_registry as fr
 
 from tests.common import ANY, flush_store
 
@@ -41,6 +41,7 @@ async def test_create_area(
 
     assert area == ar.AreaEntry(
         aliases=set(),
+        floor_id=None,
         icon=None,
         id=ANY,
         name="mock",
@@ -62,6 +63,7 @@ async def test_create_area(
 
     assert area == ar.AreaEntry(
         aliases={"alias_1", "alias_2"},
+        floor_id=None,
         icon=None,
         id=ANY,
         name="mock 2",
@@ -137,9 +139,13 @@ async def test_delete_non_existing_area(area_registry: ar.AreaRegistry) -> None:
 
 
 async def test_update_area(
-    hass: HomeAssistant, area_registry: ar.AreaRegistry, update_events
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+    update_events,
 ) -> None:
     """Make sure that we can read areas."""
+    floor_registry.async_create("first")
     area = area_registry.async_create("mock")
 
     updated_area = area_registry.async_update(
@@ -148,6 +154,7 @@ async def test_update_area(
         icon="mdi:garage",
         name="mock1",
         picture="/image/example.png",
+        floor_id="first",
     )
 
     assert updated_area != area
@@ -158,6 +165,7 @@ async def test_update_area(
         name="mock1",
         normalized_name=ANY,
         picture="/image/example.png",
+        floor_id="first",
     )
     assert len(area_registry.areas) == 1
 
@@ -261,6 +269,7 @@ async def test_loading_area_from_storage(
                     "icon": "mdi:garage",
                     "name": "mock",
                     "picture": "blah",
+                    "floor_id": "first_floor",
                 }
             ]
         },
@@ -299,6 +308,7 @@ async def test_migration_from_1_1(
             "areas": [
                 {
                     "aliases": [],
+                    "floor_id": None,
                     "icon": None,
                     "id": "12345A",
                     "name": "mock",
@@ -345,3 +355,56 @@ async def test_async_get_area(area_registry: ar.AreaRegistry) -> None:
     assert len(area_registry.areas) == 1
 
     assert area_registry.async_get_area(area.id).normalized_name == "mock1"
+
+
+async def test_removing_floors(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Make sure we can clear floors."""
+    first_floor = floor_registry.async_get_or_create("First floor")
+    second_floor = floor_registry.async_get_or_create("Second floor")
+
+    kitchen = area_registry.async_create("Kitchen")
+    kitchen = area_registry.async_update(kitchen.id, floor_id=first_floor.floor_id)
+    bedroom = area_registry.async_create("Bedroom")
+    bedroom = area_registry.async_update(bedroom.id, floor_id=second_floor.floor_id)
+
+    area_registry.async_clear_floor_id(first_floor.floor_id)
+    assert area_registry.async_get_area(kitchen.id).floor_id is None
+    assert area_registry.async_get_area(bedroom.id).floor_id == second_floor.floor_id
+
+    area_registry.async_clear_floor_id(second_floor.floor_id)
+    assert area_registry.async_get_area(kitchen.id).floor_id is None
+    assert area_registry.async_get_area(bedroom.id).floor_id is None
+
+
+async def test_entries_for_floor(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test getting area entries by floor."""
+    first_floor = floor_registry.async_get_or_create("First floor")
+    second_floor = floor_registry.async_get_or_create("Second floor")
+
+    kitchen = area_registry.async_create("Kitchen")
+    kitchen = area_registry.async_update(kitchen.id, floor_id=first_floor.floor_id)
+    living_room = area_registry.async_create("Living room")
+    living_room = area_registry.async_update(
+        living_room.id, floor_id=first_floor.floor_id
+    )
+    bedroom = area_registry.async_create("Bedroom")
+    bedroom = area_registry.async_update(bedroom.id, floor_id=second_floor.floor_id)
+
+    entries = ar.async_entries_for_floor(area_registry, first_floor.floor_id)
+    assert len(entries) == 2
+    assert entries == [kitchen, living_room]
+
+    entries = ar.async_entries_for_floor(area_registry, second_floor.floor_id)
+    assert len(entries) == 1
+    assert entries == [bedroom]
+
+    assert not ar.async_entries_for_floor(area_registry, "unknown")
+    assert not ar.async_entries_for_floor(area_registry, "")

@@ -28,6 +28,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     issue_registry as ir,
 )
 
@@ -58,6 +59,10 @@ class DeviceRegistryEntrySnapshot(dict):
 
 class EntityRegistryEntrySnapshot(dict):
     """Tiny wrapper to represent an entity registry entry in snapshots."""
+
+
+class FloorRegistryEntrySnapshot(dict):
+    """Tiny wrapper to represent an floor registry entry in snapshots."""
 
 
 class FlowResultSnapshot(dict):
@@ -96,6 +101,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         """
         if isinstance(data, State):
             serializable_data = cls._serializable_state(data)
+        elif isinstance(data, fr.FloorEntry):
+            serializable_data = cls._serializable_floor_registry_entry(data)
         elif isinstance(data, ar.AreaEntry):
             serializable_data = cls._serializable_area_registry_entry(data)
         elif isinstance(data, dr.DeviceEntry):
@@ -174,6 +181,15 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
                 "options": {k: dict(v) for k, v in data.options.items()},
             }
         )
+
+    @classmethod
+    def _serializable_floor_registry_entry(
+        cls, data: fr.FloorEntry
+    ) -> SerializableData:
+        """Prepare a Home Assistant floor registry entry for serialization."""
+        serialized = FloorRegistryEntrySnapshot(attrs.asdict(data) | {"id": ANY})
+        serialized.pop("_json_repr")
+        return serialized
 
     @classmethod
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:

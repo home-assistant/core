@@ -509,6 +509,9 @@ ATTR_AREA_ID: Final = "area_id"
 # Contains one string, the device ID
 ATTR_DEVICE_ID: Final = "device_id"
 
+# Contains one string or a list of strings, each being an area id
+ATTR_FLOOR_ID: Final = "floor_id"
+
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME: Final = "friendly_name"
 

@@ -63,6 +63,7 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
     event,
+    floor_registry as fr,
     intent,
     issue_registry as ir,
     recorder as recorder_helper,
@@ -280,6 +281,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
                 ar.async_load(hass),
                 dr.async_load(hass),
                 er.async_load(hass),
+                fr.async_load(hass),
                 ir.async_load(hass),
                 rs.async_load(hass),
             )

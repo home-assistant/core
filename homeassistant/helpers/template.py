@@ -78,7 +78,13 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
-from . import area_registry, device_registry, entity_registry, location as loc_helper
+from . import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    floor_registry,
+    location as loc_helper,
+)
 from .singleton import singleton
 from .typing import TemplateVarsType
 
@@ -1324,6 +1330,45 @@ def is_device_attr(
 ) -> bool:
     """Test if a device's attribute is a specific value."""
     return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
+
+
+def floors(hass: HomeAssistant) -> Iterable[str | None]:
+    """Return all floors."""
+    floor_reg = floor_registry.async_get(hass)
+    return [floor.floor_id for floor in floor_reg.async_list_floors()]
+
+
+def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
+    """Get the floor ID from an floor name."""
+    floor_reg = floor_registry.async_get(hass)
+    if floor := floor_reg.async_get_floor_by_name(str(lookup_value)):
+        return floor.floor_id
+    return None
+
+
+def floor_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the floor name from an floor id."""
+    floor_reg = floor_registry.async_get(hass)
+    if floor := floor_reg.async_get_floor(lookup_value):
+        return floor.name
+    return None
+
+
+def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
+    """Return area IDs for a given floor ID or name."""
+    _floor_id: str | None
+    # if floor_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early
+    if floor_name(hass, floor_id_or_name) is not None:
+        _floor_id = floor_id_or_name
+    else:
+        _floor_id = floor_id(hass, floor_id_or_name)
+    if _floor_id is None:
+        return []
+
+    area_reg = area_registry.async_get(hass)
+    entries = area_registry.async_entries_for_floor(area_reg, _floor_id)
+    return [entry.id for entry in entries if entry.id]
 
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
@@ -2603,6 +2648,18 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = self.globals["area_devices"]
 
+        self.globals["floors"] = hassfunction(floors)
+        self.filters["floors"] = self.globals["floors"]
+
+        self.globals["floor_id"] = hassfunction(floor_id)
+        self.filters["floor_id"] = self.globals["floor_id"]
+
+        self.globals["floor_name"] = hassfunction(floor_name)
+        self.filters["floor_name"] = self.globals["floor_name"]
+
+        self.globals["floor_areas"] = hassfunction(floor_areas)
+        self.filters["floor_areas"] = self.globals["floor_areas"]
+
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = self.globals["integration_entities"]
 
@@ -2634,6 +2691,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_id",
                 "area_id",
                 "area_name",
+                "floor_id",
+                "floor_name",
                 "relative_time",
                 "today_at",
             ]
@@ -2643,6 +2702,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_id",
                 "area_id",
                 "area_name",
+                "floor_id",
+                "floor_name",
                 "has_value",
             ]
             hass_tests = [
