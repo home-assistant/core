@@ -362,7 +362,7 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDi
         loaded_yaml = load_yaml(fname, loader.secrets)
         if loaded_yaml is None:
             # Special case, an empty file included by !include_dir_named is treated
-            # an an empty dictionary
+            # as an empty dictionary
             loaded_yaml = NodeDictClass()
         mapping[filename] = loaded_yaml
     return _add_reference(mapping, loader, node)
