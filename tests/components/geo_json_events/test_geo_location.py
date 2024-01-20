@@ -4,10 +4,7 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 
-from homeassistant.components.geo_json_events.const import (
-    ATTR_EXTERNAL_ID,
-    DEFAULT_UPDATE_INTERVAL,
-)
+from homeassistant.components.geo_json_events.const import DEFAULT_UPDATE_INTERVAL
 from homeassistant.components.geo_location import (
     ATTR_SOURCE,
     DOMAIN as GEO_LOCATION_DOMAIN,
@@ -73,7 +70,6 @@ async def test_entity_lifecycle(
         assert state is not None
         assert state.name == "Title 1"
         assert state.attributes == {
-            ATTR_EXTERNAL_ID: "1234",
             ATTR_LATITUDE: -31.0,
             ATTR_LONGITUDE: 150.0,
             ATTR_FRIENDLY_NAME: "Title 1",
@@ -86,7 +82,6 @@ async def test_entity_lifecycle(
         assert state is not None
         assert state.name == "Title 2"
         assert state.attributes == {
-            ATTR_EXTERNAL_ID: "2345",
             ATTR_LATITUDE: -31.1,
             ATTR_LONGITUDE: 150.1,
             ATTR_FRIENDLY_NAME: "Title 2",
@@ -99,7 +94,6 @@ async def test_entity_lifecycle(
         assert state is not None
         assert state.name == "Title 3"
         assert state.attributes == {
-            ATTR_EXTERNAL_ID: "3456",
             ATTR_LATITUDE: -31.2,
             ATTR_LONGITUDE: 150.2,
             ATTR_FRIENDLY_NAME: "Title 3",
