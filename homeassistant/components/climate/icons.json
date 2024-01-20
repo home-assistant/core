@@ -26,6 +26,7 @@
           }
         },
         "hvac_action": {
+          "default": "mdi:circle-medium",
           "state": {
             "cooling": "mdi:snowflake",
             "drying": "mdi:water-percent",
