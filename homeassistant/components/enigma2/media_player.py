@@ -4,6 +4,7 @@ from __future__ import annotations
 from openwebif.api import OpenWebIfDevice
 from openwebif.enums import RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.media_player import (
@@ -22,6 +23,8 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.device_registry import DeviceInfo
