@@ -1084,7 +1084,7 @@ async def test_setup_retrying_during_unload(hass: HomeAssistant) -> None:
 async def test_setup_retrying_during_unload_before_started(hass: HomeAssistant) -> None:
     """Test if we unload an entry that is in retry mode before started."""
     entry = MockConfigEntry(domain="test")
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
 
     mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
@@ -1121,7 +1121,7 @@ async def test_setup_does_not_retry_during_shutdown(hass: HomeAssistant) -> None
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
     assert len(mock_setup_entry.mock_calls) == 1
 
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
