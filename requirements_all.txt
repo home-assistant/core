@@ -469,7 +469,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.0
+async-upnp-client==0.38.1
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
