@@ -316,7 +316,7 @@ class FlowManager(abc.ABC):
         result: FlowResult | None = None
         while not result or result["type"] == FlowResultType.SHOW_PROGRESS_DONE:
             result = await self._async_configure(flow_id, user_input)
-            flow = self._progress[flow_id]
+            flow = self._progress.get(flow_id)
             if flow and flow.deprecated_show_progress:
                 break
         return result
