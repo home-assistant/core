@@ -37,6 +37,7 @@ async def test_migrate_process_sensor(
         domain=DOMAIN,
         data={},
         options={
+            "binary_sensor": {"process": ["python3", "pip"]},
             "sensor": {"process": ["python3", "pip"]},
             "resources": [
                 "disk_use_percent_/",

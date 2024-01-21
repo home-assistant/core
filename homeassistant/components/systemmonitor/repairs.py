@@ -36,15 +36,9 @@ class ProcessFixFlow(RepairsFlow):
             )
         options = dict(self.entry.options)
         resources: list[str] | None = options.get("resources")
-        existing_processes: dict[str, list[str]] | None = options.get(
-            BINARY_SENSOR_DOMAIN
-        )
         processes: dict[str, list[str]] | None = options.get(SENSOR_DOMAIN)
         new_options: dict[str, Any] = {}
-        if processes and existing_processes:
-            existing_processes["process"].extend(processes["process"])
-            new_options[BINARY_SENSOR_DOMAIN] = existing_processes
-        elif processes:
+        if processes:
             new_options[BINARY_SENSOR_DOMAIN] = processes
         if resources:
             new_options["resources"] = resources

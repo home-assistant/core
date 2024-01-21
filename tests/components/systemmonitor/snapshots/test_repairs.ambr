@@ -7,7 +7,7 @@
       'disabled_by': None,
       'domain': 'systemmonitor',
       'entry_id': <ANY>,
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
         'binary_sensor': dict({
           'process': list([
@@ -40,8 +40,14 @@
       'disabled_by': None,
       'domain': 'systemmonitor',
       'entry_id': <ANY>,
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
+        'binary_sensor': dict({
+          'process': list([
+            'python3',
+            'pip',
+          ]),
+        }),
         'resources': list([
           'disk_use_percent_/',
           'disk_use_percent_/home/notexist/',
