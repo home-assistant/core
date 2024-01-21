@@ -296,6 +296,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_reload_requires_auth_entries(self) -> None:
         """Reload any in progress config flow that now have credentials."""
         _config_entries = self.hass.config_entries
+
+        if reauth_entry := self.reauth_entry:
+            await _config_entries.async_reload(reauth_entry.entry_id)
+
         for flow in _config_entries.flow.async_progress_by_handler(
             DOMAIN, include_uninitialized=True
         ):
@@ -303,10 +307,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if context.get("source") != SOURCE_REAUTH:
                 continue
             entry_id: str = context["entry_id"]
-            if (
-                reauth_entry := self.reauth_entry
-            ) and entry_id == reauth_entry.entry_id:
-                continue  # pragma: no cover
             if entry := _config_entries.async_get_entry(entry_id):
                 await _config_entries.async_reload(entry.entry_id)
                 if entry.state is ConfigEntryState.LOADED:
@@ -415,7 +415,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await set_credentials(self.hass, username, password)
-                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
                 self.hass.async_create_task(self._async_reload_requires_auth_entries())
                 return self.async_abort(reason="reauth_successful")
 
