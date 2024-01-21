@@ -35,6 +35,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    },
     "light": {
       "main": {
         "name": "Main"
@@ -126,11 +131,6 @@
       },
       "segment_reverse": {
         "name": "Segment {segment} reverse"
-      }
-    },
-    "update": {
-      "firmware": {
-        "name": "Firmware"
       }
     }
   },
