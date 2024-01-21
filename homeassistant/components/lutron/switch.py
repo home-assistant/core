@@ -113,14 +113,14 @@ class LutronLed(LutronBaseEntity, SwitchEntity):
         """Turn the LED off."""
         self._lutron_device.state = 0
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes."""
-        return {
-            "keypad": self._keypad_name,
-            "scene": self._attr_name,
-            "led": self._lutron_device.name,
-        }
+    # @property
+    # def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    #     """Return the state attributes."""
+    #     return {
+    #         "keypad": self._keypad_name,
+    #         "scene": self._attr_name,
+    #         "led": self._lutron_device.name,
+    #     }
 
     @property
     def is_on(self) -> bool:
