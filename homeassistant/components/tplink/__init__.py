@@ -56,7 +56,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_STORE: Final = "store"
 
 
 def create_async_tplink_clientsession(hass: HomeAssistant) -> ClientSession:
