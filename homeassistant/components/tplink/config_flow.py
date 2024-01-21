@@ -79,7 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, entry: ConfigEntry, host: str, config: dict
     ) -> None:
         """If discovery encounters a device that is in SETUP_ERROR update the device config."""
-        if entry.state != ConfigEntryState.SETUP_ERROR:
+        if entry.state is not ConfigEntryState.SETUP_ERROR:
             return
         entry_data = entry.data
         entry_config_dict = entry_data.get(CONF_DEVICE_CONFIG)
