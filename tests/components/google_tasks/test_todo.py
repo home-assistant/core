@@ -48,6 +48,7 @@ LIST_TASKS_RESPONSE_WATER = {
             "id": "some-task-id",
             "title": "Water",
             "status": "needsAction",
+            "description": "Any size is ok",
             "position": "00000000000000000001",
         },
     ],
@@ -71,6 +72,29 @@ LIST_TASKS_RESPONSE_MULTIPLE = {
             "title": "Cheese",
             "status": "needsAction",
             "position": "00000000000000000003",
+        },
+    ],
+}
+LIST_TASKS_RESPONSE_REORDER = {
+    "items": [
+        {
+            "id": "some-task-id-2",
+            "title": "Milk",
+            "status": "needsAction",
+            "position": "00000000000000000002",
+        },
+        {
+            "id": "some-task-id-1",
+            "title": "Water",
+            "status": "needsAction",
+            "position": "00000000000000000001",
+        },
+        # Task 3 moved after task 1
+        {
+            "id": "some-task-id-3",
+            "title": "Cheese",
+            "status": "needsAction",
+            "position": "000000000000000000011",
         },
     ],
 }
@@ -493,9 +517,19 @@ async def test_update_todo_list_item_error(
     [
         (UPDATE_API_RESPONSES, {"rename": "Soda"}),
         (UPDATE_API_RESPONSES, {"due_date": "2023-11-18"}),
-        (UPDATE_API_RESPONSES, {"description": "6-pack"}),
+        (UPDATE_API_RESPONSES, {"due_date": None}),
+        (UPDATE_API_RESPONSES, {"description": "At least one gallon"}),
+        (UPDATE_API_RESPONSES, {"description": ""}),
+        (UPDATE_API_RESPONSES, {"description": None}),
     ],
-    ids=("rename", "due_date", "description"),
+    ids=(
+        "rename",
+        "due_date",
+        "clear_due_date",
+        "description",
+        "empty_description",
+        "clear_description",
+    ),
 )
 async def test_partial_update(
     hass: HomeAssistant,
@@ -788,6 +822,64 @@ async def test_parent_child_ordering(
     state = hass.states.get("todo.my_tasks")
     assert state
     assert state.state == "4"
+
+    items = await ws_get_items()
+    assert items == snapshot
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
+            LIST_TASKS_RESPONSE_MULTIPLE,
+            EMPTY_RESPONSE,  # move
+            LIST_TASKS_RESPONSE_REORDER,  # refresh after move
+        ]
+    ],
+)
+async def test_move_todo_item(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    hass_ws_client: WebSocketGenerator,
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for re-ordering a To-do Item."""
+
+    assert await integration_setup()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == "3"
+
+    items = await ws_get_items()
+    assert items == snapshot
+
+    # Move to second in the list
+    client = await hass_ws_client()
+    data = {
+        "id": id,
+        "type": "todo/item/move",
+        "entity_id": ENTITY_ID,
+        "uid": "some-task-id-3",
+        "previous_uid": "some-task-id-1",
+    }
+    await client.send_json_auto_id(data)
+    resp = await client.receive_json()
+    assert resp.get("success")
+
+    assert len(mock_http_response.call_args_list) == 4
+    call = mock_http_response.call_args_list[2]
+    assert call
+    assert call.args == snapshot
+    assert call.kwargs.get("body") == snapshot
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == "3"
 
     items = await ws_get_items()
     assert items == snapshot

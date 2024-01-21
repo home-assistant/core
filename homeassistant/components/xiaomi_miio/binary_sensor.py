@@ -44,7 +44,7 @@ ATTR_WATER_BOX_ATTACHED = "is_water_box_attached"
 ATTR_WATER_SHORTAGE = "is_water_shortage"
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioBinarySensorDescription(BinarySensorEntityDescription):
     """A class that describes binary sensor entities."""
 

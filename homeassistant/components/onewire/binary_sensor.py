@@ -25,7 +25,7 @@ from .onewire_entities import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class OneWireBinarySensorEntityDescription(
     OneWireEntityDescription, BinarySensorEntityDescription
 ):

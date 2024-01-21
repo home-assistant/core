@@ -35,7 +35,7 @@ from .utils import get_burners, get_circuits, get_compressors, is_supported
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ViCareBinarySensorEntityDescription(
     BinarySensorEntityDescription, ViCareRequiredKeysMixin
 ):

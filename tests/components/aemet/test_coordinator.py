@@ -4,9 +4,7 @@ from unittest.mock import patch
 from aemet_opendata.exceptions import AemetError
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.aemet.weather_update_coordinator import (
-    WEATHER_UPDATE_INTERVAL,
-)
+from homeassistant.components.aemet.coordinator import WEATHER_UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 

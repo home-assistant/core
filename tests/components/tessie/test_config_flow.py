@@ -58,7 +58,7 @@ async def test_form(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> None
 async def test_form_errors(
     hass: HomeAssistant, side_effect, error, mock_get_state_of_all_vehicles
 ) -> None:
-    """Test invalid auth is handled."""
+    """Test errors are handled."""
 
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

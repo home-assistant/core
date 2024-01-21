@@ -18,6 +18,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 
 TESSIE_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
+DESCRIPTION_PLACEHOLDERS = {
+    "url": "[my.tessie.com/settings/api](https://my.tessie.com/settings/api)"
+}
 
 
 class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -57,6 +60,7 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=TESSIE_SCHEMA,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
             errors=errors,
         )
 
@@ -98,5 +102,6 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=TESSIE_SCHEMA,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
             errors=errors,
         )

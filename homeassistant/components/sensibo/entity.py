@@ -19,7 +19,7 @@ _P = ParamSpec("_P")
 
 
 def async_handle_api_call(
-    function: Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]
+    function: Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]:
     """Decorate api calls."""
 

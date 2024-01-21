@@ -27,7 +27,7 @@ from .entity import ShadeEntity
 from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSelectDescriptionMixin:
     """Mixin to describe a select entity."""
 
@@ -35,7 +35,7 @@ class PowerviewSelectDescriptionMixin:
     select_fn: Callable[[BaseShade, str], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSelectDescription(
     SelectEntityDescription, PowerviewSelectDescriptionMixin
 ):

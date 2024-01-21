@@ -3,7 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from pydiscovergy.models import Meter, Reading
+from pydiscovergy.models import Reading
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,8 +24,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DiscovergyData, DiscovergyUpdateCoordinator
 from .const import DOMAIN, MANUFACTURER
+from .coordinator import DiscovergyUpdateCoordinator
 
 
 def _get_and_scale(reading: Reading, key: str, scale: int) -> datetime | float | None:
@@ -35,7 +35,7 @@ def _get_and_scale(reading: Reading, key: str, scale: int) -> datetime | float |
     return None
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DiscovergySensorEntityDescription(SensorEntityDescription):
     """Class to describe a Discovergy sensor entity."""
 
@@ -165,21 +165,20 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Discovergy sensors."""
-    data: DiscovergyData = hass.data[DOMAIN][entry.entry_id]
+    coordinators: list[DiscovergyUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[DiscovergySensor] = []
-    for meter in data.meters:
+    for coordinator in coordinators:
         sensors: tuple[DiscovergySensorEntityDescription, ...] = ()
-        coordinator: DiscovergyUpdateCoordinator = data.coordinators[meter.meter_id]
 
         # select sensor descriptions based on meter type and combine with additional sensors
-        if meter.measurement_type == "ELECTRICITY":
+        if coordinator.meter.measurement_type == "ELECTRICITY":
             sensors = ELECTRICITY_SENSORS + ADDITIONAL_SENSORS
-        elif meter.measurement_type == "GAS":
+        elif coordinator.meter.measurement_type == "GAS":
             sensors = GAS_SENSORS + ADDITIONAL_SENSORS
 
         entities.extend(
-            DiscovergySensor(value_key, description, meter, coordinator)
+            DiscovergySensor(value_key, description, coordinator)
             for description in sensors
             for value_key in {description.key, *description.alternative_keys}
             if description.value_fn(coordinator.data, value_key, description.scale)
@@ -200,15 +199,15 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
         self,
         data_key: str,
         description: DiscovergySensorEntityDescription,
-        meter: Meter,
         coordinator: DiscovergyUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self.data_key = data_key
-
         self.entity_description = description
+
+        meter = coordinator.meter
         self._attr_unique_id = f"{meter.full_serial_number}-{data_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, meter.meter_id)},

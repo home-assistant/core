@@ -1,11 +1,10 @@
 """Component to pressing a button as platforms."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import final
+from typing import TYPE_CHECKING, final
 
 import voluptuous as vol
 
@@ -22,6 +21,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SERVICE_PRESS
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -73,21 +77,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class ButtonEntityDescription(EntityDescription):
+class ButtonEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes button entities."""
 
     device_class: ButtonDeviceClass | None = None
 
 
-class ButtonEntity(RestoreEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+}
+
+
+class ButtonEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Button entity."""
 
     entity_description: ButtonEntityDescription
     _attr_should_poll = False
     _attr_device_class: ButtonDeviceClass | None
     _attr_state: None = None
-    __last_pressed: datetime | None = None
+    __last_pressed_isoformat: str | None = None
 
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
@@ -96,7 +104,7 @@ class ButtonEntity(RestoreEntity):
         """
         return self.device_class is not None
 
-    @property
+    @cached_property
     def device_class(self) -> ButtonDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -105,13 +113,19 @@ class ButtonEntity(RestoreEntity):
             return self.entity_description.device_class
         return None
 
-    @property
+    @cached_property
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if self.__last_pressed is None:
-            return None
-        return self.__last_pressed.isoformat()
+        return self.__last_pressed_isoformat
+
+    def __set_state(self, state: str | None) -> None:
+        """Set the entity state."""
+        try:  # noqa: SIM105  suppress is much slower
+            del self.state
+        except AttributeError:
+            pass
+        self.__last_pressed_isoformat = state
 
     @final
     async def _async_press_action(self) -> None:
@@ -119,7 +133,7 @@ class ButtonEntity(RestoreEntity):
 
         Should not be overridden, handle setting last press timestamp.
         """
-        self.__last_pressed = dt_util.utcnow()
+        self.__set_state(dt_util.utcnow().isoformat())
         self.async_write_ha_state()
         await self.async_press()
 
@@ -128,7 +142,7 @@ class ButtonEntity(RestoreEntity):
         await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
         if state is not None and state.state is not None:
-            self.__last_pressed = dt_util.parse_datetime(state.state)
+            self.__set_state(state.state)
 
     def press(self) -> None:
         """Press the button."""

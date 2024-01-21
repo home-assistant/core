@@ -19,14 +19,14 @@ from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
 from .entity import JuiceNetDevice
 
 
-@dataclass
+@dataclass(frozen=True)
 class JuiceNetNumberEntityDescriptionMixin:
     """Mixin for required keys."""
 
     setter_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class JuiceNetNumberEntityDescription(
     NumberEntityDescription, JuiceNetNumberEntityDescriptionMixin
 ):

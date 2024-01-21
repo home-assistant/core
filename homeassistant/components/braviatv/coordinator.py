@@ -42,7 +42,7 @@ SCAN_INTERVAL: Final = timedelta(seconds=10)
 
 
 def catch_braviatv_errors(
-    func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]]
+    func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_BraviaTVCoordinatorT, _P], Coroutine[Any, Any, None]]:
     """Catch Bravia errors."""
 

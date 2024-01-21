@@ -67,6 +67,7 @@ from .requirements import RequirementsNotFound, async_get_integration_with_requi
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
+from .util.yaml.objects import NodeStrClass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,7 +156,7 @@ class IntegrationConfigInfo:
 
 
 def _no_duplicate_auth_provider(
-    configs: Sequence[dict[str, Any]]
+    configs: Sequence[dict[str, Any]],
 ) -> Sequence[dict[str, Any]]:
     """No duplicate auth provider config allowed in a list.
 
@@ -176,7 +177,7 @@ def _no_duplicate_auth_provider(
 
 
 def _no_duplicate_auth_mfa_module(
-    configs: Sequence[dict[str, Any]]
+    configs: Sequence[dict[str, Any]],
 ) -> Sequence[dict[str, Any]]:
     """No duplicate auth mfa module item allowed in a list.
 
@@ -270,6 +271,41 @@ def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None
         severity=ir.IssueSeverity.WARNING,
         translation_key="country_not_configured",
     )
+
+
+def _raise_issue_if_legacy_templates(
+    hass: HomeAssistant, legacy_templates: bool | None
+) -> None:
+    # legacy_templates can have the following values:
+    # - None: Using default value (False) -> Delete repair issues
+    # - True: Create repair to adopt templates to new syntax
+    # - False: Create repair to tell user to remove config key
+    if legacy_templates:
+        ir.async_create_issue(
+            hass,
+            "homeassistant",
+            "legacy_templates_true",
+            is_fixable=False,
+            breaks_in_ha_version="2024.7.0",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="legacy_templates_true",
+        )
+        return
+
+    ir.async_delete_issue(hass, "homeassistant", "legacy_templates_true")
+
+    if legacy_templates is False:
+        ir.async_create_issue(
+            hass,
+            "homeassistant",
+            "legacy_templates_false",
+            is_fixable=False,
+            breaks_in_ha_version="2024.7.0",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="legacy_templates_false",
+        )
+    else:
+        ir.async_delete_issue(hass, "homeassistant", "legacy_templates_false")
 
 
 def _validate_currency(data: Any) -> Any:
@@ -840,6 +876,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         if key in config:
             setattr(hac, attr, config[key])
 
+    _raise_issue_if_legacy_templates(hass, config.get(CONF_LEGACY_TEMPLATES))
     _raise_issue_if_historic_currency(hass, hass.config.currency)
     _raise_issue_if_no_country(hass, hass.config.country)
 
@@ -1185,9 +1222,45 @@ async def async_process_component_and_handle_errors(
     integration_config_info = await async_process_component_config(
         hass, config, integration
     )
-    return async_handle_component_errors(
+    async_handle_component_errors(
         hass, integration_config_info, integration, raise_on_failure
     )
+    return async_drop_config_annotations(integration_config_info, integration)
+
+
+@callback
+def async_drop_config_annotations(
+    integration_config_info: IntegrationConfigInfo,
+    integration: Integration,
+) -> ConfigType | None:
+    """Remove file and line annotations from str items in component configuration."""
+    if (config := integration_config_info.config) is None:
+        return None
+
+    def drop_config_annotations_rec(node: Any) -> Any:
+        if isinstance(node, dict):
+            # Some integrations store metadata in custom dict classes, preserve those
+            tmp = dict(node)
+            node.clear()
+            node.update(
+                (drop_config_annotations_rec(k), drop_config_annotations_rec(v))
+                for k, v in tmp.items()
+            )
+            return node
+
+        if isinstance(node, list):
+            return [drop_config_annotations_rec(v) for v in node]
+
+        if isinstance(node, NodeStrClass):
+            return str(node)
+
+        return node
+
+    # Don't drop annotations from the homeassistant integration because it may
+    # have configuration for other integrations as packages.
+    if integration.domain in config and integration.domain != CONF_CORE:
+        drop_config_annotations_rec(config[integration.domain])
+    return config
 
 
 @callback
@@ -1196,18 +1269,16 @@ def async_handle_component_errors(
     integration_config_info: IntegrationConfigInfo,
     integration: Integration,
     raise_on_failure: bool = False,
-) -> ConfigType | None:
+) -> None:
     """Handle component configuration errors from async_process_component_config.
 
     In case of errors:
     - Print the error messages to the log.
     - Raise a ConfigValidationError if raise_on_failure is set.
-
-    Returns the integration config or `None`.
     """
 
     if not (config_exception_info := integration_config_info.exception_info_list):
-        return integration_config_info.config
+        return
 
     platform_exception: ConfigExceptionInfo
     domain = integration.domain
@@ -1225,7 +1296,7 @@ def async_handle_component_errors(
         )
 
     if not raise_on_failure:
-        return integration_config_info.config
+        return
 
     if len(config_exception_info) == 1:
         translation_key = platform_exception.translation_key

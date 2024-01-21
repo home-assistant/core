@@ -1,0 +1,3 @@
+"""Lutron constants."""
+
+DOMAIN = "lutron"

@@ -12,6 +12,7 @@ from homeassistant.auth.models import RefreshToken, User
 from homeassistant.components.http.ban import process_success_login, process_wrong_login
 from homeassistant.const import __version__
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.json import json_bytes
 from homeassistant.util.json import JsonValueType
 
 from .connection import ActiveConnection
@@ -34,15 +35,10 @@ AUTH_MESSAGE_SCHEMA: Final = vol.Schema(
     }
 )
 
-
-def auth_ok_message() -> dict[str, str]:
-    """Return an auth_ok message."""
-    return {"type": TYPE_AUTH_OK, "ha_version": __version__}
-
-
-def auth_required_message() -> dict[str, str]:
-    """Return an auth_required message."""
-    return {"type": TYPE_AUTH_REQUIRED, "ha_version": __version__}
+AUTH_OK_MESSAGE = json_bytes({"type": TYPE_AUTH_OK, "ha_version": __version__})
+AUTH_REQUIRED_MESSAGE = json_bytes(
+    {"type": TYPE_AUTH_REQUIRED, "ha_version": __version__}
+)
 
 
 def auth_invalid_message(message: str) -> dict[str, str]:
@@ -57,7 +53,7 @@ class AuthPhase:
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[str | dict[str, Any]], None],
+        send_message: Callable[[bytes | str | dict[str, Any]], None],
         cancel_ws: CALLBACK_TYPE,
         request: Request,
     ) -> None:
@@ -104,7 +100,7 @@ class AuthPhase:
         """Create an active connection."""
         self._logger.debug("Auth OK")
         process_success_login(self._request)
-        self._send_message(auth_ok_message())
+        self._send_message(AUTH_OK_MESSAGE)
         return ActiveConnection(
             self._logger, self._hass, self._send_message, user, refresh_token
         )
