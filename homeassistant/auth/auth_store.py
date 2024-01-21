@@ -1,7 +1,6 @@
 """Storage for auth models."""
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 import hmac
 from logging import getLogger
@@ -43,44 +42,28 @@ class AuthStore:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the auth store."""
         self.hass = hass
-        self._users: dict[str, models.User] | None = None
-        self._groups: dict[str, models.Group] | None = None
-        self._perm_lookup: PermissionLookup | None = None
+        self._loaded = False
+        self._users: dict[str, models.User] = None  # type: ignore[assignment]
+        self._groups: dict[str, models.Group] = None  # type: ignore[assignment]
+        self._perm_lookup: PermissionLookup = None  # type: ignore[assignment]
         self._store = Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
-        self._lock = asyncio.Lock()
 
     async def async_get_groups(self) -> list[models.Group]:
         """Retrieve all users."""
-        if self._groups is None:
-            await self._async_load()
-            assert self._groups is not None
-
         return list(self._groups.values())
 
     async def async_get_group(self, group_id: str) -> models.Group | None:
         """Retrieve all users."""
-        if self._groups is None:
-            await self._async_load()
-            assert self._groups is not None
-
         return self._groups.get(group_id)
 
     async def async_get_users(self) -> list[models.User]:
         """Retrieve all users."""
-        if self._users is None:
-            await self._async_load()
-            assert self._users is not None
-
         return list(self._users.values())
 
     async def async_get_user(self, user_id: str) -> models.User | None:
         """Retrieve a user by id."""
-        if self._users is None:
-            await self._async_load()
-            assert self._users is not None
-
         return self._users.get(user_id)
 
     async def async_create_user(
@@ -94,12 +77,6 @@ class AuthStore:
         local_only: bool | None = None,
     ) -> models.User:
         """Create a new user."""
-        if self._users is None:
-            await self._async_load()
-
-        assert self._users is not None
-        assert self._groups is not None
-
         groups = []
         for group_id in group_ids or []:
             if (group := self._groups.get(group_id)) is None:
@@ -145,10 +122,6 @@ class AuthStore:
 
     async def async_remove_user(self, user: models.User) -> None:
         """Remove a user."""
-        if self._users is None:
-            await self._async_load()
-            assert self._users is not None
-
         self._users.pop(user.id)
         self._async_schedule_save()
 
@@ -161,8 +134,6 @@ class AuthStore:
         local_only: bool | None = None,
     ) -> None:
         """Update a user."""
-        assert self._groups is not None
-
         if group_ids is not None:
             groups = []
             for grid in group_ids:
@@ -194,10 +165,6 @@ class AuthStore:
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:
         """Remove credentials."""
-        if self._users is None:
-            await self._async_load()
-            assert self._users is not None
-
         for user in self._users.values():
             found = None
 
@@ -247,10 +214,6 @@ class AuthStore:
         self, refresh_token: models.RefreshToken
     ) -> None:
         """Remove a refresh token."""
-        if self._users is None:
-            await self._async_load()
-            assert self._users is not None
-
         for user in self._users.values():
             if user.refresh_tokens.pop(refresh_token.id, None):
                 self._async_schedule_save()
@@ -260,10 +223,6 @@ class AuthStore:
         self, token_id: str
     ) -> models.RefreshToken | None:
         """Get refresh token by id."""
-        if self._users is None:
-            await self._async_load()
-            assert self._users is not None
-
         for user in self._users.values():
             refresh_token = user.refresh_tokens.get(token_id)
             if refresh_token is not None:
@@ -275,10 +234,6 @@ class AuthStore:
         self, token: str
     ) -> models.RefreshToken | None:
         """Get refresh token by token."""
-        if self._users is None:
-            await self._async_load()
-            assert self._users is not None
-
         found = None
 
         for user in self._users.values():
@@ -290,15 +245,10 @@ class AuthStore:
 
     async def async_get_refresh_tokens(self) -> list[models.RefreshToken]:
         """Get all refresh tokens."""
-        tokens: list[models.RefreshToken] = []
-        if self._users is None:
-            await self._async_load()
-            assert self._users is not None
-
-        for user in self._users.values():
-            tokens += list(user.refresh_tokens.values())
-
-        return tokens
+        return list(itertools.chain.from_iterable(
+          user.refresh_tokens.values())
+          for user in self._users.values()
+        ))
 
     @callback
     def async_log_refresh_token_usage(
@@ -313,25 +263,18 @@ class AuthStore:
             )
         self._async_schedule_save()
 
-    async def _async_load(self) -> None:
+    async def async_load(self) -> None:
         """Load the users."""
-        async with self._lock:
-            if self._users is not None:
-                return
-            await self._async_load_task()
+        if self._loaded:
+            raise RuntimeError("Auth storage is already loaded")
+        self._loaded = True
 
-    async def _async_load_task(self) -> None:
-        """Load the users."""
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
         data = await self._store.async_load()
 
-        # Make sure that we're not overriding data if 2 loads happened at the
-        # same time
-        if self._users is not None:
-            return
-
-        self._perm_lookup = perm_lookup = PermissionLookup(ent_reg, dev_reg)
+        perm_lookup = PermissionLookup(ent_reg, dev_reg)
+        self._perm_lookup = perm_lookup
 
         if data is None or not isinstance(data, dict):
             self._set_defaults()
@@ -521,17 +464,11 @@ class AuthStore:
     @callback
     def _async_schedule_save(self) -> None:
         """Save users."""
-        if self._users is None:
-            return
-
         self._store.async_delay_save(self._data_to_save, 1)
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return the data to store."""
-        assert self._users is not None
-        assert self._groups is not None
-
         users = [
             {
                 "id": user.id,

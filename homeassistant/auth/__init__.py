@@ -49,6 +49,7 @@ async def auth_manager_from_config(
     mfa modules exist in configs.
     """
     store = auth_store.AuthStore(hass)
+    await store.async_load()
     if provider_configs:
         providers = await asyncio.gather(
             *(
@@ -75,8 +76,7 @@ async def auth_manager_from_config(
     for module in modules:
         module_hash[module.id] = module
 
-    manager = AuthManager(hass, store, provider_hash, module_hash)
-    return manager
+    return AuthManager(hass, store, provider_hash, module_hash)
 
 
 class AuthManagerFlowManager(data_entry_flow.FlowManager):
