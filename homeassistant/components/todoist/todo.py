@@ -48,6 +48,8 @@ def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, An
             item_data["due_date"] = due.isoformat()
         # In order to not lose any recurrence metadata for the task, we need to
         # ensure that we send the `due_string` param if the task has it set.
+        # NOTE: It's ok to send stale data for non-recurring tasks. Any provided
+        # date/datetime will override this string.
         if api_data and api_data.due:
             item_data["due_string"] = api_data.due.string
     else:
