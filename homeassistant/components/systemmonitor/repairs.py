@@ -33,7 +33,6 @@ class ProcessFixFlow(RepairsFlow):
         if user_input is None:
             return self.async_show_form(
                 step_id="migrate_process_sensor",
-                data_schema={},
             )
         options = dict(self.entry.options)
         resources = options.get("resources")
