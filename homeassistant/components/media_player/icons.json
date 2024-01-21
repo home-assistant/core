@@ -3,7 +3,7 @@
     "_": {
       "default": "mdi:cast",
       "state": {
-        "off": "mdi:cast",
+        "off": "mdi:cast-off",
         "paused": "mdi:cast-connected",
         "playing": "mdi:cast-connected"
       }
