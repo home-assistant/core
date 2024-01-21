@@ -39,6 +39,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
@@ -637,6 +638,17 @@ async def async_setup_entry(  # noqa: C901
                         argument,
                         True,
                     )
+                )
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "process_sensor",
+                    breaks_in_ha_version="2024.8.0",
+                    is_fixable=True,
+                    is_persistent=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="process_sensor",
+                    data={"entry_id": entry.entry_id},
                 )
             continue
 
