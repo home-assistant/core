@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import hmac
+import itertools
 from logging import getLogger
 from typing import Any
 
@@ -245,10 +246,11 @@ class AuthStore:
 
     async def async_get_refresh_tokens(self) -> list[models.RefreshToken]:
         """Get all refresh tokens."""
-        return list(itertools.chain.from_iterable(
-          user.refresh_tokens.values())
-          for user in self._users.values()
-        ))
+        return list(
+            itertools.chain.from_iterable(
+                user.refresh_tokens.values() for user in self._users.values()
+            )
+        )
 
     @callback
     def async_log_refresh_token_usage(
