@@ -1,4 +1,4 @@
-"""Tests for the Flexit Nordic (BACnet) sensor entities."""
+"""Tests for the Flexit Nordic (BACnet) binary sensor entities."""
 from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
@@ -18,7 +18,7 @@ async def test_binary_sensors(
     mock_flexit_bacnet: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test sensor states are correctly collected from library."""
+    """Test binary sensor states are correctly collected from library."""
 
     await setup_with_selected_platforms(
         hass, mock_config_entry, [Platform.BINARY_SENSOR]

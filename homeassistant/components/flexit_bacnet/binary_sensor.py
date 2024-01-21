@@ -34,7 +34,7 @@ SENSOR_TYPES: tuple[FlexitBinarySensorEntityDescription, ...] = (
     ),
     FlexitBinarySensorEntityDescription(
         key="air_filter_polluted",
-        device_class=BinarySensorDeviceClass.PROBLEM,  # What should be used for this sensor?
+        device_class=BinarySensorDeviceClass.PROBLEM,
         translation_key="air_filter_polluted",
         value_fn=lambda data: data.air_filter_polluted,
     ),
