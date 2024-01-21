@@ -92,9 +92,12 @@ def tplink_mock_get_source_ip(mock_get_source_ip):
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
-    with patch("homeassistant.components.tplink.async_setup", return_value=True), patch(
-        "homeassistant.components.tplink.async_setup_entry", return_value=True
+    with patch.multiple(
+        async_setup=DEFAULT,
+        async_setup_entry=DEFAULT,
     ) as mock_setup_entry:
+        mock_setup_entry["async_setup"].return_value = True
+        mock_setup_entry["async_setup_entry"].return_value = True
         yield mock_setup_entry
 
 

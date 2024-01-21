@@ -111,7 +111,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
 async def test_discovery_auth(
     hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
 ) -> None:
-    """Test setting up discovery."""
+    """Test authenticated discovery."""
 
     mock_discovery["mock_device"].update.side_effect = AuthenticationException
 
@@ -170,7 +170,7 @@ async def test_discovery_auth_errors(
     errors_msg,
     error_placement,
 ) -> None:
-    """Test setting up discovery."""
+    """Test handling of discovery authentication errors."""
     mock_discovery["mock_device"].update.side_effect = AuthenticationException
     default_connect_side_effect = mock_connect["connect"].side_effect
     mock_connect["connect"].side_effect = error_type
@@ -278,7 +278,7 @@ async def test_discovery_new_credentials_invalid(
     mock_connect: AsyncMock,
     mock_init,
 ) -> None:
-    """Test setting up discovery with new credentials."""
+    """Test setting up discovery with new invalid credentials."""
     mock_discovery["mock_device"].update.side_effect = AuthenticationException
     default_connect_side_effect = mock_connect["connect"].side_effect
 
