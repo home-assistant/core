@@ -129,7 +129,7 @@ def _merge_resources(
     return resources
 
 
-def _build_resources(
+def build_resources(
     translation_strings: dict[str, dict[str, Any]],
     components: set[str],
     category: str,
@@ -304,7 +304,7 @@ class _TranslationCache:
                     translation_strings, components, category
                 )
             else:
-                new_resources = _build_resources(
+                new_resources = build_resources(
                     translation_strings, components, category
                 )
 
