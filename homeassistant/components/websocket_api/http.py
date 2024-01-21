@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import datetime as dt
 from functools import partial
 import logging
@@ -116,16 +116,14 @@ class WebSocketHandler:
             return describe_request(request)
         return "finished connection"
 
-    async def _writer(self) -> None:
+    async def _writer(
+        self, send_bytes_text: Callable[[bytes], Coroutine[Any, Any, None]]
+    ) -> None:
         """Write outgoing messages."""
         # Variables are set locally to avoid lookups in the loop
         message_queue = self._message_queue
         logger = self._logger
         wsock = self._wsock
-        writer = wsock._writer  # pylint: disable=protected-access
-        if TYPE_CHECKING:
-            assert writer is not None
-        send_str = partial(writer.send, binary=False)
         loop = self._hass.loop
         debug = logger.debug
         is_enabled_for = logger.isEnabledFor
@@ -152,7 +150,7 @@ class WebSocketHandler:
                 ):
                     if debug_enabled:
                         debug("%s: Sending %s", self.description, message)
-                    await send_str(message)
+                    await send_bytes_text(message)
                     continue
 
                 messages: list[bytes] = [message]
@@ -166,7 +164,7 @@ class WebSocketHandler:
                 coalesced_messages = b"".join((b"[", b",".join(messages), b"]"))
                 if debug_enabled:
                     debug("%s: Sending %s", self.description, coalesced_messages)
-                await send_str(coalesced_messages)
+                await send_bytes_text(coalesced_messages)
         except asyncio.CancelledError:
             debug("%s: Writer cancelled", self.description)
             raise
@@ -186,7 +184,7 @@ class WebSocketHandler:
 
     @callback
     def _send_message(self, message: str | bytes | dict[str, Any]) -> None:
-        """Send a message to the client.
+        """Queue sending a message to the client.
 
         Closes connection if the client is not reading the messages.
 
@@ -295,21 +293,27 @@ class WebSocketHandler:
             EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop
         )
 
+        writer = wsock._writer  # pylint: disable=protected-access
+        if TYPE_CHECKING:
+            assert writer is not None
+
+        send_bytes_text = partial(writer.send, binary=False)
         # As the webserver is now started before the start
         # event we do not want to block for websocket responses
-        self._writer_task = asyncio.create_task(self._writer())
+        self._writer_task = asyncio.create_task(self._writer(send_bytes_text))
 
-        auth = AuthPhase(logger, hass, self._send_message, self._cancel, request)
+        auth = AuthPhase(
+            logger, hass, self._send_message, self._cancel, request, send_bytes_text
+        )
         connection = None
         disconnect_warn = None
 
         try:
-            self._send_message(AUTH_REQUIRED_MESSAGE)
+            await send_bytes_text(AUTH_REQUIRED_MESSAGE)
 
             # Auth Phase
             try:
-                async with asyncio.timeout(10):
-                    msg = await wsock.receive()
+                msg = await wsock.receive(10)
             except asyncio.TimeoutError as err:
                 disconnect_warn = "Did not receive auth message within 10 seconds"
                 raise Disconnect from err
@@ -370,7 +374,7 @@ class WebSocketHandler:
             # added a way to set the limit, but there is no way to actually
             # reach the code to set the limit, so we have to set it directly.
             #
-            wsock._writer._limit = 2**20  # type: ignore[union-attr] # pylint: disable=protected-access
+            writer._limit = 2**20  # pylint: disable=protected-access
             async_handle_str = connection.async_handle
             async_handle_binary = connection.async_handle_binary
 
