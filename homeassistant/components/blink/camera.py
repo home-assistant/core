@@ -8,17 +8,26 @@ import logging
 from typing import Any
 
 from requests.exceptions import ChunkedEncodingError
+import voluptuous as vol
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_FILE_PATH, CONF_FILENAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
+from .const import (
+    DEFAULT_BRAND,
+    DOMAIN,
+    SERVICE_SAVE_RECENT_CLIPS,
+    SERVICE_SAVE_VIDEO,
+    SERVICE_TRIGGER,
+)
 from .coordinator import BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +52,16 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
+    platform.async_register_entity_service(
+        SERVICE_SAVE_RECENT_CLIPS,
+        {vol.Required(CONF_FILE_PATH): cv.string},
+        "save_recent_clips",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SAVE_VIDEO,
+        {vol.Required(CONF_FILENAME): cv.string},
+        "save_video",
+    )
 
 
 class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
@@ -60,11 +79,12 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, camera.serial)},
             serial_number=camera.serial,
+            sw_version=camera.attributes.get("version"),
             name=name,
             manufacturer=DEFAULT_BRAND,
             model=camera.camera_type,
         )
-        _LOGGER.debug("Initialized blink camera %s", self.name)
+        _LOGGER.debug("Initialized blink camera %s", self._camera.name)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -121,3 +141,39 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         except TypeError:
             _LOGGER.debug("No cached image for %s", self._camera.name)
             return None
+
+    async def save_recent_clips(self, file_path) -> None:
+        """Save multiple recent clips to output directory."""
+        if not self.hass.config.is_allowed_path(file_path):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_path",
+                translation_placeholders={"target": file_path},
+            )
+
+        try:
+            await self._camera.save_recent_clips(output_dir=file_path)
+        except OSError as err:
+            raise ServiceValidationError(
+                str(err),
+                translation_domain=DOMAIN,
+                translation_key="cant_write",
+            ) from err
+
+    async def save_video(self, filename) -> None:
+        """Handle save video service calls."""
+        if not self.hass.config.is_allowed_path(filename):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_path",
+                translation_placeholders={"target": filename},
+            )
+
+        try:
+            await self._camera.video_to_file(filename)
+        except OSError as err:
+            raise ServiceValidationError(
+                str(err),
+                translation_domain=DOMAIN,
+                translation_key="cant_write",
+            ) from err

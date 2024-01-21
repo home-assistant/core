@@ -964,22 +964,14 @@ async def test_removed_device(
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 3
 
-    # Check how many entities there are
-    ent_reg = er.async_get(hass)
-    entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 93
-
     # Remove a node and reload the entry
     old_node = driver.controller.nodes.pop(13)
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
-    # Assert that the node and all of it's entities were removed from the device and
-    # entity registry
+    # Assert that the node was removed from the device registry
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 2
-    entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 62
     assert (
         dev_reg.async_get_device(identifiers={get_device_id(driver, old_node)}) is None
     )

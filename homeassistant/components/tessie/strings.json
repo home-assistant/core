@@ -24,6 +24,7 @@
   "entity": {
     "device_tracker": {
       "location": {
+        "name": "Location",
         "state_attributes": {
           "heading": {
             "name": "Heading"
@@ -50,6 +51,19 @@
             }
           }
         }
+      }
+    },
+    "lock": {
+      "vehicle_state_locked": {
+        "name": "[%key:component::lock::title%]"
+      },
+      "charge_state_charge_port_latch": {
+        "name": "Charge cable lock"
+      }
+    },
+    "media_player": {
+      "media": {
+        "name": "[%key:component::media_player::title%]"
       }
     },
     "sensor": {
@@ -115,6 +129,21 @@
       },
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
+      },
+      "drive_state_active_route_traffic_minutes_delay": {
+        "name": "Traffic delay"
+      },
+      "drive_state_active_route_energy_at_arrival": {
+        "name": "State of charge at arrival"
+      },
+      "drive_state_active_route_miles_to_arrival": {
+        "name": "Distance to arrival"
+      },
+      "drive_state_active_route_time_to_arrival": {
+        "name": "Time to arrival"
+      },
+      "drive_state_active_route_destination": {
+        "name": "Destination"
       }
     },
     "cover": {
@@ -123,7 +152,9 @@
       },
       "charge_state_charge_port_door_open": {
         "name": "Charge port door"
-      }
+      },
+      "vehicle_state_ft": { "name": "Frunk" },
+      "vehicle_state_rt": { "name": "Trunk" }
     },
     "select": {
       "climate_state_seat_heater_left": {
@@ -247,6 +278,18 @@
       },
       "vehicle_state_tpms_soft_warning_rr": {
         "name": "Tire pressure warning rear right"
+      },
+      "vehicle_state_fd_window": {
+        "name": "Front driver window"
+      },
+      "vehicle_state_fp_window": {
+        "name": "Front passenger window"
+      },
+      "vehicle_state_rd_window": {
+        "name": "Rear driver window"
+      },
+      "vehicle_state_rp_window": {
+        "name": "Rear passenger window"
       }
     },
     "button": {
@@ -284,6 +327,16 @@
       "vehicle_state_speed_limit_mode_current_limit_mph": {
         "name": "Speed limit"
       }
+    },
+    "update": {
+      "update": {
+        "name": "[%key:component::update::title%]"
+      }
+    }
+  },
+  "exceptions": {
+    "no_cable": {
+      "message": "Insert cable to lock"
     }
   }
 }

@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from py_aosmith.models import OperationMode as AOSmithOperationMode
+
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_ELECTRIC,
@@ -16,31 +18,25 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AOSmithData
-from .const import (
-    AOSMITH_MODE_ELECTRIC,
-    AOSMITH_MODE_HEAT_PUMP,
-    AOSMITH_MODE_HYBRID,
-    AOSMITH_MODE_VACATION,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import AOSmithStatusCoordinator
 from .entity import AOSmithStatusEntity
 
 MODE_HA_TO_AOSMITH = {
-    STATE_OFF: AOSMITH_MODE_VACATION,
-    STATE_ECO: AOSMITH_MODE_HYBRID,
-    STATE_ELECTRIC: AOSMITH_MODE_ELECTRIC,
-    STATE_HEAT_PUMP: AOSMITH_MODE_HEAT_PUMP,
+    STATE_ECO: AOSmithOperationMode.HYBRID,
+    STATE_ELECTRIC: AOSmithOperationMode.ELECTRIC,
+    STATE_HEAT_PUMP: AOSmithOperationMode.HEAT_PUMP,
+    STATE_OFF: AOSmithOperationMode.VACATION,
 }
 MODE_AOSMITH_TO_HA = {
-    AOSMITH_MODE_ELECTRIC: STATE_ELECTRIC,
-    AOSMITH_MODE_HEAT_PUMP: STATE_HEAT_PUMP,
-    AOSMITH_MODE_HYBRID: STATE_ECO,
-    AOSMITH_MODE_VACATION: STATE_OFF,
+    AOSmithOperationMode.ELECTRIC: STATE_ELECTRIC,
+    AOSmithOperationMode.HEAT_PUMP: STATE_HEAT_PUMP,
+    AOSmithOperationMode.HYBRID: STATE_ECO,
+    AOSmithOperationMode.VACATION: STATE_OFF,
 }
 
 # Operation mode to use when exiting away mode
-DEFAULT_OPERATION_MODE = AOSMITH_MODE_HYBRID
+DEFAULT_OPERATION_MODE = AOSmithOperationMode.HYBRID
 
 DEFAULT_SUPPORT_FLAGS = (
     WaterHeaterEntityFeature.TARGET_TEMPERATURE
@@ -79,23 +75,22 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
     @property
     def operation_list(self) -> list[str]:
         """Return the list of supported operation modes."""
-        op_modes = []
-        for mode_dict in self.device_data.get("modes", []):
-            mode_name = mode_dict.get("mode")
-            ha_mode = MODE_AOSMITH_TO_HA.get(mode_name)
+        ha_modes = []
+        for supported_mode in self.device.supported_modes:
+            ha_mode = MODE_AOSMITH_TO_HA.get(supported_mode.mode)
 
             # Filtering out STATE_OFF since it is handled by away mode
             if ha_mode is not None and ha_mode != STATE_OFF:
-                op_modes.append(ha_mode)
+                ha_modes.append(ha_mode)
 
-        return op_modes
+        return ha_modes
 
     @property
     def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         supports_vacation_mode = any(
-            mode_dict.get("mode") == AOSMITH_MODE_VACATION
-            for mode_dict in self.device_data.get("modes", [])
+            supported_mode.mode == AOSmithOperationMode.VACATION
+            for supported_mode in self.device.supported_modes
         )
 
         if supports_vacation_mode:
@@ -106,22 +101,22 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.device_data.get("temperatureSetpoint")
+        return self.device.status.temperature_setpoint
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self.device_data.get("temperatureSetpointMaximum")
+        return self.device.status.temperature_setpoint_maximum
 
     @property
     def current_operation(self) -> str:
         """Return the current operation mode."""
-        return MODE_AOSMITH_TO_HA.get(self.device_data.get("mode"), STATE_OFF)
+        return MODE_AOSMITH_TO_HA.get(self.device.status.current_mode, STATE_OFF)
 
     @property
     def is_away_mode_on(self):
         """Return True if away mode is on."""
-        return self.device_data.get("mode") == AOSMITH_MODE_VACATION
+        return self.device.status.current_mode == AOSmithOperationMode.VACATION
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
@@ -129,18 +124,19 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
         if aosmith_mode is not None:
             await self.client.update_mode(self.junction_id, aosmith_mode)
 
-        await self.coordinator.async_request_refresh()
+            await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get("temperature")
-        await self.client.update_setpoint(self.junction_id, temperature)
+        if temperature is not None:
+            await self.client.update_setpoint(self.junction_id, temperature)
 
-        await self.coordinator.async_request_refresh()
+            await self.coordinator.async_request_refresh()
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
-        await self.client.update_mode(self.junction_id, AOSMITH_MODE_VACATION)
+        await self.client.update_mode(self.junction_id, AOSmithOperationMode.VACATION)
 
         await self.coordinator.async_request_refresh()
 

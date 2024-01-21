@@ -14,7 +14,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TessieStatus
+from .const import DOMAIN, TessieState
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
@@ -30,7 +30,7 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     TessieBinarySensorEntityDescription(
         key="state",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        is_on=lambda x: x == TessieStatus.ONLINE,
+        is_on=lambda x: x == TessieState.ONLINE,
     ),
     TessieBinarySensorEntityDescription(
         key="charge_state_battery_heater_on",
@@ -108,6 +108,26 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     TessieBinarySensorEntityDescription(
         key="vehicle_state_tpms_soft_warning_rr",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_fd_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_fp_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_rd_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_rp_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

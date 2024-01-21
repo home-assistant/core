@@ -19,7 +19,7 @@ async def test_device_tracker(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all(DEVICE_TRACKER_DOMAIN)) == 2
 
-    entity_id = "device_tracker.test"
+    entity_id = "device_tracker.test_location"
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_LATITUDE) == STATES["drive_state"]["latitude"]
     assert state.attributes.get(ATTR_LONGITUDE) == STATES["drive_state"]["longitude"]

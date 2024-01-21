@@ -2,7 +2,8 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+
+from py_aosmith.models import Device as AOSmithDevice, HotWaterStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AOSmithData
-from .const import DOMAIN, HOT_WATER_STATUS_MAP
+from .const import DOMAIN
 from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
 from .entity import AOSmithEnergyEntity, AOSmithStatusEntity
 
@@ -25,7 +26,7 @@ from .entity import AOSmithEnergyEntity, AOSmithStatusEntity
 class AOSmithStatusSensorEntityDescription(SensorEntityDescription):
     """Entity description class for sensors using data from the status coordinator."""
 
-    value_fn: Callable[[dict[str, Any]], str | int | None]
+    value_fn: Callable[[AOSmithDevice], str | int | None]
 
 
 STATUS_ENTITY_DESCRIPTIONS: tuple[AOSmithStatusSensorEntityDescription, ...] = (
@@ -36,10 +37,16 @@ STATUS_ENTITY_DESCRIPTIONS: tuple[AOSmithStatusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["low", "medium", "high"],
         value_fn=lambda device: HOT_WATER_STATUS_MAP.get(
-            device.get("data", {}).get("hotWaterStatus")
+            device.status.hot_water_status
         ),
     ),
 )
+
+HOT_WATER_STATUS_MAP: dict[HotWaterStatus, str] = {
+    HotWaterStatus.LOW: "low",
+    HotWaterStatus.MEDIUM: "medium",
+    HotWaterStatus.HIGH: "high",
+}
 
 
 async def async_setup_entry(
