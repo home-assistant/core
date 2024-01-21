@@ -1,6 +1,6 @@
 """Test the Motionblinds BLE config flow."""
 import socket
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, AsyncMock
 
 import pytest
 
@@ -12,20 +12,10 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-TEST_MAC = "ab:cd:ef:gh"
-
-
-@pytest.fixture(name="motionblinds_ble_connect", autouse=True)
-def motion_blinds_connect_fixture(mock_get_source_ip):
-    """Mock motion blinds ble connection and entry setup."""
-    with patch(
-        "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_scanner_count",
-        return_value=1,
-    ), patch(
-        "homeassistant.components.motion_blinds_ble.async_setup_entry", return_value=True
-    ):
-        yield
-
+TEST_MAC = "abcd"
+TEST_NAME = f"MOTION_{TEST_MAC.upper()}"
+TEST_BLIND_TYPE = const.MotionBlindType.ROLLER
+TEST_ADDRESS = "test_adress"
 
 async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user."""
@@ -39,14 +29,23 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_MAC_CODE: TEST_MAC},
+        {const.CONF_MAC_CODE: TEST_MAC},
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "connect"
-    assert result["errors"] == {}
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_MAC_CODE: TEST_MAC},
+        {const.CONF_BLIND_TYPE: const.MotionBlindType.ROLLER},
     )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
+    assert result["data"] == {
+        const.CONF_ADDRESS: TEST_ADDRESS,
+        const.CONF_LOCAL_NAME: TEST_NAME,
+        const.CONF_MAC_CODE: TEST_MAC.upper(),
+        const.CONF_BLIND_TYPE: TEST_BLIND_TYPE,
+    }
+    assert result["options"] == {}
