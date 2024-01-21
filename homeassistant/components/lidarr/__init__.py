@@ -25,7 +25,7 @@ from .coordinator import (
     T,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR,Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

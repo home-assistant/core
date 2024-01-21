@@ -7,9 +7,9 @@ from typing import Generic, TypeVar, cast
 
 from aiopyarr import (
     Health,
-    LidarrAlbum, 
-    LidarrQueue, 
-    LidarrRootFolder, 
+    LidarrAlbum,
+    LidarrQueue,
+    LidarrRootFolder,
     SystemStatus,
     exceptions,
 )
@@ -23,7 +23,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
-T = TypeVar("T", bound=SystemStatus | list[LidarrRootFolder] | LidarrQueue | list[Health] | str | LidarrAlbum)
+T = TypeVar(
+    "T",
+    bound=SystemStatus
+    | list[LidarrRootFolder]
+    | LidarrQueue
+    | list[Health]
+    | str
+    | LidarrAlbum,
+)
 
 
 class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
@@ -65,13 +73,15 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
         """Fetch the actual data."""
         raise NotImplementedError
 
+
 class StatusDataUpdateCoordinator(LidarrDataUpdateCoordinator[SystemStatus]):
     """Status update coordinator for Lidarr."""
 
     async def _fetch_data(self) -> SystemStatus:
         """Fetch the data."""
         return await self.api_client.async_get_system_status()
-        
+
+
 class DiskSpaceDataUpdateCoordinator(
     LidarrDataUpdateCoordinator[list[LidarrRootFolder]]
 ):
@@ -83,12 +93,14 @@ class DiskSpaceDataUpdateCoordinator(
             list[LidarrRootFolder], await self.api_client.async_get_root_folders()
         )
 
+
 class HealthDataUpdateCoordinator(LidarrDataUpdateCoordinator[list[Health]]):
     """Health update coordinator."""
 
     async def _fetch_data(self) -> list[Health]:
         """Fetch the health data."""
         return await self.api_client.async_get_failed_health_checks()
+
 
 class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrQueue]):
     """Queue update coordinator."""
