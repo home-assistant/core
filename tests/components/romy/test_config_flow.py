@@ -1,6 +1,8 @@
 """Test the ROMY config flow."""
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import Mock, PropertyMock, patch
+
+from romy import RomyRobot
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
@@ -18,7 +20,7 @@ def _create_mocked_romy(
     model="005:000:000:000:005",
     port=8080,
 ):
-    mocked_romy = AsyncMock(MagicMock)
+    mocked_romy = Mock(spec_set=RomyRobot)
     type(mocked_romy).is_initialized = PropertyMock(return_value=is_initialized)
     type(mocked_romy).is_unlocked = PropertyMock(return_value=is_unlocked)
     type(mocked_romy).name = PropertyMock(return_value=name)
@@ -26,17 +28,6 @@ def _create_mocked_romy(
     type(mocked_romy).unique_id = PropertyMock(return_value=unique_id)
     type(mocked_romy).port = PropertyMock(return_value=port)
     type(mocked_romy).model = PropertyMock(return_value=model)
-
-    # Mock async methods
-    async def mock_set_name(new_name):
-        mocked_romy.name = PropertyMock(return_value=new_name)
-        return True, '{"success": true}'
-
-    async def async_update():
-        return
-
-    type(mocked_romy).set_name = AsyncMock(side_effect=mock_set_name)
-    type(mocked_romy).async_update = AsyncMock(side_effect=async_update)
 
     return mocked_romy
 
