@@ -172,9 +172,15 @@ async def async_setup_entry(
     entities: list[OpowerSensor] = []
     forecasts = coordinator.data.values()
 
-    # Utility account id is not necessarily unique.  For backwards compatibility, when it is unique, use that in the id and name generation, but when it is not, use the uuid.
-    utility_account_ids = [forecast.account.utility_account_id for forecast in forecasts]
-    duplicate_utility_account_ids = [i for i in set(utility_account_ids) if utility_account_ids.count(i) > 1]
+    # Utility account id is not necessarily unique.  For backwards
+    # compatibility, when it is unique, use that in the id and name generation,
+    # but when it is not, use the uuid.
+    utility_account_ids = [
+        forecast.account.utility_account_id for forecast in forecasts
+    ]
+    duplicate_utility_account_ids = [
+        i for i in set(utility_account_ids) if utility_account_ids.count(i) > 1
+    ]
 
     for forecast in forecasts:
         device_id = f"{coordinator.api.utility.subdomain()}_{forecast.account.uuid if forecast.account.utility_account_id in duplicate_utility_account_ids else forecast.account.utility_account_id}"
@@ -234,7 +240,5 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
     def native_value(self) -> StateType:
         """Return the state."""
         if self.coordinator.data is not None:
-            return self.entity_description.value_fn(
-                self.coordinator.data[self.uuid]
-            )
+            return self.entity_description.value_fn(self.coordinator.data[self.uuid])
         return None

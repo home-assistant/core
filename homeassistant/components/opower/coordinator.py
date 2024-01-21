@@ -91,9 +91,13 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         """Insert Opower statistics."""
         accounts = await self.api.async_get_accounts()
 
-        # Utility account id is not necessarily unique.  For backwards compatibility, when it is unique, use that in the id and name generation, but when it is not, use the uuid.
+        # Utility account id is not necessarily unique.  For backwards
+        # compatibility, when it is unique, use that in the id and name
+        # generation, but when it is not, use the uuid.
         utility_account_ids = [account.utility_account_id for account in accounts]
-        duplicate_utility_account_ids = [i for i in set(utility_account_ids) if utility_account_ids.count(i) > 1]
+        duplicate_utility_account_ids = [
+            i for i in set(utility_account_ids) if utility_account_ids.count(i) > 1
+        ]
 
         id_prefixes = {
             account.uuid: "_".join(
@@ -102,7 +106,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     account.meter_type.name.lower(),
                     # Some utilities like AEP have "-" in their uuid/utility_account_id.
                     # Replace it with "_" to avoid "Invalid statistic_id"
-                    account.uuid.replace("-", "_") if account.utility_account_id in duplicate_utility_account_ids else account.utility_account_id.replace("-", "_"),
+                    account.uuid.replace("-", "_")
+                    if account.utility_account_id in duplicate_utility_account_ids
+                    else account.utility_account_id.replace("-", "_"),
                 )
             )
             for account in accounts
@@ -113,7 +119,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     "Opower",
                     self.api.utility.subdomain(),
                     account.meter_type.name.lower(),
-                    account.uuid if account.utility_account_id in duplicate_utility_account_ids else account.utility_account_id,
+                    account.uuid
+                    if account.utility_account_id in duplicate_utility_account_ids
+                    else account.utility_account_id,
                 )
             )
             for account in accounts
