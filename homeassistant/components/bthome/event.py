@@ -114,7 +114,7 @@ async def async_setup_entry(
     ent_reg = er.async_get(hass)
     async_add_entities(
         [
-            # Matches logic in PassiveBluetoothProcessorEntity\
+            # Matches logic in PassiveBluetoothProcessorEntity
             BTHomeEventEntity(address_event_class[0], address_event_class[2], None)
             for ent_reg_entry in er.async_entries_for_config_entry(
                 ent_reg, entry.entry_id
