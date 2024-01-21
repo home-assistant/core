@@ -20,6 +20,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -70,7 +71,9 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_CLEAN_ROOM,
         {
-            vol.Required(ATTR_ROOMS): list,
+            vol.Required(ATTR_ROOMS): vol.All(
+                cv.ensure_list, vol.Length(min=1), [cv.string]
+            ),
         },
         "async_clean_room",
     )
@@ -107,9 +110,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
             name=sharkiq.name,
             sw_version=sharkiq.get_property_value(Properties.ROBOT_FIRMWARE_VERSION),
         )
-
-    class InvalidRoomSelection(exceptions.HomeAssistantError):
-        """Error to indicate an invalid room was included in the selection."""
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Clean a spot. Not yet implemented."""
@@ -199,23 +199,22 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
 
     async def async_clean_room(self, rooms: list[str], **kwargs: Any) -> None:
         """Clean specific rooms."""
-        if len(rooms) == 0:
-            raise exceptions.HomeAssistantError("No rooms to clean were provided.")
         rooms_to_clean = []
         valid_rooms = []
         if self.available_rooms is not None:
-            valid_rooms = self.available_rooms
+            valid_rooms = self.available_rooms or []
         for room in rooms:
             if room in valid_rooms:
                 rooms_to_clean.append(room)
             else:
-                LOGGER.error("Invalid room %s", room)
                 raise exceptions.HomeAssistantError(
-                    "One or more of the rooms listed are unavailable to your vacuum. "
+                    "One or more of the rooms listed ("
+                    + room
+                    + ") are unavailable to your vacuum. "
                     "Make sure all rooms match the Shark App, including capitalization."
                 )
 
-        LOGGER.info("Cleaning room(s): %s", rooms_to_clean)
+        LOGGER.debug("Cleaning room(s): %s", rooms_to_clean)
         await self.sharkiq.async_clean_rooms(rooms_to_clean)
         await self.coordinator.async_refresh()
 
