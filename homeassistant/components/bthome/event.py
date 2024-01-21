@@ -62,15 +62,11 @@ class BTHomeEventEntity(EventEntity):
         """Initialise a BTHome event entity."""
         self._update_signal = format_event_dispatcher_name(address, event_class)
         # event_class is something like "button" or "dimmer"
-        # and it maybe postfixed with "_1", "_2", etc
+        # and it maybe postfixed with "_2", "_3", etc
         base_event_class, _, postfix = event_class.partition("_")
         base_description = DESCRIPTIONS_BY_EVENT_CLASS[base_event_class]
         self.entity_description = replace(base_description, key=event_class)
-        postfix_one_indexed = int(postfix) + 1 if postfix else None
-        postfix_name = f" {postfix_one_indexed}" if postfix else ""
-        # We report button button 1 as button 2, etc to the user since
-        # the first button has no postfix, and it would be confusing
-        # to report the second button as button 1
+        postfix_name = f" {postfix}" if postfix else ""
         self._attr_name = f"{base_event_class.title()}{postfix_name}"
         # Matches logic in PassiveBluetoothProcessorEntity
         self._attr_device_info = dr.DeviceInfo(

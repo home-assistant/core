@@ -28,13 +28,13 @@ from tests.components.bluetooth import (
             None,
             [
                 {
-                    "entity": "event.test_device_18b2_button_3",
-                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Button 3",
+                    "entity": "event.test_device_18b2_button_2",
+                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Button 2",
                     ATTR_EVENT_TYPE: "press",
                 },
                 {
-                    "entity": "event.test_device_18b2_button_4",
-                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Button 4",
+                    "entity": "event.test_device_18b2_button_3",
+                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Button 3",
                     ATTR_EVENT_TYPE: "triple_press",
                 },
             ],
