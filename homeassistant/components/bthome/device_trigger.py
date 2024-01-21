@@ -102,7 +102,11 @@ async def async_get_triggers(
         }
         for event_class in event_classes
         for event_type in TRIGGERS_BY_EVENT_CLASS.get(
-            event_class.split("_")[0],  # button, button_2, etc
+            event_class.split("_")[0],
+            # If the device has multiple buttons they will have
+            # event classes like button_1 button_2, button_3, etc
+            # but if there is only one button then it will be
+            # button without a number postfix.
             (),
         )
     ]

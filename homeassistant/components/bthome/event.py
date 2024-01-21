@@ -62,7 +62,8 @@ class BTHomeEventEntity(EventEntity):
         """Initialise a BTHome event entity."""
         self._update_signal = format_event_dispatcher_name(address, event_class)
         # event_class is something like "button" or "dimmer"
-        # and it maybe postfixed with "_2", "_3", etc
+        # and it maybe postfixed with "_1", "_2", "_3", etc
+        # If there is only one button then it will be "button"
         base_event_class, _, postfix = event_class.partition("_")
         base_description = DESCRIPTIONS_BY_EVENT_CLASS[base_event_class]
         self.entity_description = replace(base_description, key=event_class)
