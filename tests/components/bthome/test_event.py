@@ -1,4 +1,4 @@
-"""Test the BTHome sensors."""
+"""Test the BTHome events."""
 
 import pytest
 
