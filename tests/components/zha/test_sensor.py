@@ -136,6 +136,12 @@ async def async_test_illuminance(hass, cluster, entity_id):
     await send_attributes_report(hass, cluster, {1: 1, 0: 10, 2: 20})
     assert_state(hass, entity_id, "1", LIGHT_LUX)
 
+    await send_attributes_report(hass, cluster, {1: 0, 0: 0, 2: 20})
+    assert_state(hass, entity_id, "0", LIGHT_LUX)
+
+    await send_attributes_report(hass, cluster, {1: 0, 0: 0xFFFF, 2: 20})
+    assert_state(hass, entity_id, "unknown", LIGHT_LUX)
+
 
 async def async_test_metering(hass, cluster, entity_id):
     """Test Smart Energy metering sensor."""
