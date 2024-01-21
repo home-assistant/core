@@ -17,14 +17,15 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import (
     DiskSpaceDataUpdateCoordinator,
+    HealthDataUpdateCoordinator,
     LidarrDataUpdateCoordinator,
     QueueDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
-    T,
     WantedDataUpdateCoordinator,
+    T,
 )
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR,Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -42,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinators: dict[str, LidarrDataUpdateCoordinator[Any]] = {
         "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, lidarr),
         "queue": QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
+        "health": HealthDataUpdateCoordinator(hass, host_configuration, lidarr),
         "status": StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
         "wanted": WantedDataUpdateCoordinator(hass, host_configuration, lidarr),
     }

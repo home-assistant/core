@@ -23,4 +23,11 @@ DEFAULT_MAX_RECORDS = 20
 
 DOMAIN: Final = "lidarr"
 
+HEALTH_ISSUES = (
+    "DownloadClientCheck",
+    "DownloadClientStatusCheck",
+    "IndexerRssCheck",
+    "IndexerSearchCheck",
+)
+
 LOGGER = logging.getLogger(__package__)
