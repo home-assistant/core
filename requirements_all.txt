@@ -386,7 +386,7 @@ aiounifi==69
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.4.3
+aiovodafone==0.5.4
 
 # homeassistant.components.waqi
 aiowaqi==3.0.1
