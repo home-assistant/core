@@ -191,7 +191,7 @@ aioazuredevops==1.3.5
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.6.0
+aiobotocore==2.9.1
 
 # homeassistant.components.comelit
 aiocomelit==0.7.3
@@ -424,7 +424,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.0
+async-upnp-client==0.38.1
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.4.2
@@ -508,7 +508,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.4.1
+bthome-ble==3.5.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -552,6 +552,9 @@ dbus-fast==2.21.1
 # homeassistant.components.debugpy
 debugpy==1.8.0
 
+# homeassistant.components.ecovacs
+deebot-client==4.3.0
+
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
@@ -591,7 +594,7 @@ dropmqttapi==1.0.2
 dsmr-parser==1.3.1
 
 # homeassistant.components.dwd_weather_warnings
-dwdwfsapi==1.0.6
+dwdwfsapi==1.0.7
 
 # homeassistant.components.dynalite
 dynalite-devices==0.1.47
@@ -922,7 +925,7 @@ justnimbus==0.6.0
 kegtron-ble==0.4.0
 
 # homeassistant.components.knx
-knx-frontend==2023.6.23.191712
+knx-frontend==2024.1.20.105944
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1069,7 +1072,7 @@ nextcord==2.0.0a8
 nextdns==2.1.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.5.2
+nibe==2.7.0
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1170,7 +1173,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.36.2
+plugwise==0.36.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1192,7 +1195,7 @@ prometheus-client==0.17.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.7
+psutil==5.9.8
 
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0
@@ -1249,7 +1252,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.1.1
+pyDuotecno==2024.1.2
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
@@ -2015,7 +2018,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.5.0
+thermopro-ble==0.8.0
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
