@@ -1,0 +1,99 @@
+{
+  "config": {
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "could_not_find_motor": "Could not find a motor with that MAC code",
+      "invalid_mac_code": "Invalid MAC code",
+      "no_bluetooth_adapter": "No bluetooth adapter found",
+      "no_devices_found": "Could not find any bluetooth devices"
+    },
+    "step": {
+      "user": {
+        "description": "Fill in the 4-character MAC code of your motor, for example F3ED or E3A6",
+        "data": {
+          "mac_code": "MAC code"
+        }
+      },
+      "confirm": {
+        "description": "What kind of blind is {display_name}?"
+      }
+    }
+  },
+  "selector": {
+    "blind_type": {
+      "options": {
+        "roller": "Roller blind",
+        "honeycomb": "Honeycomb blind",
+        "roman": "Roman blind",
+        "venetian": "Venetian blind",
+        "venetian_tilt_only": "Venetian blind (tilt-only)",
+        "double_roller": "Double Roller blind",
+        "curtain": "Curtain blind",
+        "vertical": "Vertical blind"
+      }
+    }
+  },
+  "entity": {
+    "cover": {
+      "blind": {
+        "state_attributes": {
+          "connection_type": {
+            "name": "Connected",
+            "state": {
+              "connected": "Yes",
+              "connecting": "Connecting...",
+              "disconnected": "No",
+              "disconnecting": "Disconnecting..."
+            }
+          }
+        }
+      }
+    },
+    "button": {
+      "connect": {
+        "name": "Connect"
+      },
+      "disconnect": {
+        "name": "Disconnect"
+      },
+      "favorite": {
+        "name": "Favorite"
+      }
+    },
+    "select": {
+      "speed": {
+        "name": "Motor speed",
+        "state": {
+          "1": "Low",
+          "2": "Medium",
+          "3": "High"
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "connection_type": {
+        "name": "Connected",
+        "state": {
+          "connected": "Yes",
+          "disconnected": "No",
+          "connecting": "Connecting...",
+          "disconnecting": "Disconnecting..."
+        }
+      },
+      "calibration": {
+        "name": "Calibrated",
+        "state": {
+          "calibrated": "Yes",
+          "uncalibrated": "No",
+          "calibrating": "Calibrating..."
+        }
+      },
+      "signal_strength": {
+        "name": "Signal strength"
+      }
+    }
+  }
+}
