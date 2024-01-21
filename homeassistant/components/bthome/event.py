@@ -93,12 +93,12 @@ class BTHomeEventEntity(EventEntity):
             async_dispatcher_connect(
                 self.hass,
                 self._update_signal,
-                self._handle_event,
+                self._async_handle_event,
             )
         )
 
     @callback
-    def _handle_event(self, event: BTHomeBleEvent) -> None:
+    def _async_handle_event(self, event: BTHomeBleEvent) -> None:
         self._trigger_event(event[EVENT_TYPE], event[EVENT_PROPERTIES])
         self.async_write_ha_state()
 
