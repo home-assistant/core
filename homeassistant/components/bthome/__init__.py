@@ -74,14 +74,6 @@ def process_service_info(
             event_class = event.device_key.key
             event_type = event.event_type
 
-            if event_class not in discovered_event_classes:
-                discovered_event_classes.add(event_class)
-                hass.config_entries.async_update_entry(
-                    entry,
-                    data=entry.data
-                    | {CONF_DISCOVERED_EVENT_CLASSES: list(discovered_event_classes)},
-                )
-
             ble_event = BTHomeBleEvent(
                 device_id=device.id,
                 address=address,
@@ -90,14 +82,22 @@ def process_service_info(
                 event_properties=event.event_properties,
             )
 
+            if event_class not in discovered_event_classes:
+                discovered_event_classes.add(event_class)
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data=entry.data
+                    | {CONF_DISCOVERED_EVENT_CLASSES: list(discovered_event_classes)},
+                )
+                async_dispatcher_send(
+                    hass, format_discovered_event_class(address), event_class, ble_event
+                )
+
             hass.bus.async_fire(BTHOME_BLE_EVENT, cast(dict, ble_event))
             async_dispatcher_send(
                 hass,
                 format_event_dispatcher_name(address, event_class),
                 ble_event,
-            )
-            async_dispatcher_send(
-                hass, format_discovered_device_key(address), device_key, ble_event
             )
 
     # If payload is encrypted and the bindkey is not verified then we need to reauth
@@ -112,9 +112,9 @@ def format_event_dispatcher_name(address: str, event_class: str) -> str:
     return f"{DOMAIN}_event_{address}_{event_class}"
 
 
-def format_discovered_device_key(address: str) -> str:
-    """Format a discovered device key."""
-    return f"{DOMAIN}_discovered_device_key_{address}"
+def format_discovered_event_class(address: str) -> str:
+    """Format a discovered event class."""
+    return f"{DOMAIN}_discovered_event_class_{address}"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
