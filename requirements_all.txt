@@ -1278,7 +1278,7 @@ openai==0.26.2
 # opencv-python-headless==4.6.0.66
 
 # homeassistant.components.openerz
-openerz-api==0.2.0
+openerz-api==0.3.0
 
 # homeassistant.components.openevse
 openevsewifi==1.1.2
