@@ -112,8 +112,11 @@ def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
 @callback
 def async_device_uptime_value_fn(
     controller: UniFiController, device: Device
-) -> datetime:
+) -> datetime | None:
     """Calculate the approximate time the device started (based on uptime returned from API, in seconds)."""
+    if device.uptime <= 0:
+        # Library defaults to 0 if uptime is not provided, e.g. when offline
+        return None
     return (dt_util.now() - timedelta(seconds=device.uptime)).replace(microsecond=0)
 
 
