@@ -8,6 +8,7 @@ from psutil._common import sdiskusage, shwtemp, snetio, snicaddr
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.systemmonitor.sensor import get_cpu_icon
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -46,9 +47,10 @@ async def test_sensor(
     for entity in er.async_entries_for_config_entry(
         entity_registry, mock_added_config_entry.entry_id
     ):
-        state = hass.states.get(entity.entity_id)
-        assert state.state == snapshot(name=f"{state.name} - state")
-        assert state.attributes == snapshot(name=f"{state.name} - attributes")
+        if entity.domain == SENSOR_DOMAIN:
+            state = hass.states.get(entity.entity_id)
+            assert state.state == snapshot(name=f"{state.name} - state")
+            assert state.attributes == snapshot(name=f"{state.name} - attributes")
 
 
 async def test_sensor_not_loading_veth_networks(
