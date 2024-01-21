@@ -1,7 +1,7 @@
 {
   "domain": "tplink",
   "name": "TP-Link Smart Home",
-  "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco"],
+  "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco", "@sdb9696"],
   "config_flow": true,
   "dependencies": ["network"],
   "dhcp": [
