@@ -3065,7 +3065,7 @@
       "iot_class": "local_push"
     },
     "leaone": {
-      "name": "Leaone",
+      "name": "LeaOne",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
