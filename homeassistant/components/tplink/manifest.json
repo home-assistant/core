@@ -1,6 +1,6 @@
 {
   "domain": "tplink",
-  "name": "TP-Link Kasa Smart",
+  "name": "TP-Link Smart Home",
   "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco"],
   "config_flow": true,
   "dependencies": ["network"],

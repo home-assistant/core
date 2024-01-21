@@ -224,33 +224,14 @@ async def test_discovery_auth_errors(
     assert result4["data"] == CREATE_ENTRY_DATA_AUTH
 
 
-@pytest.mark.parametrize(
-    ("connect_error", "expected_step"),
-    [
-        (
-            None,
-            "discovery_confirm",
-        ),
-        (
-            AuthenticationException,
-            "discovery_auth_confirm",
-        ),
-    ],
-    ids=["valid", "invalid"],
-)
 async def test_discovery_new_credentials(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
     mock_init,
-    connect_error,
-    expected_step,
 ) -> None:
     """Test setting up discovery with new credentials."""
     mock_discovery["mock_device"].update.side_effect = AuthenticationException
-    default_connect_side_effect = mock_connect["connect"].side_effect
-    if connect_error:
-        mock_connect["connect"].side_effect = connect_error
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -279,21 +260,9 @@ async def test_discovery_new_credentials(
 
     assert mock_connect["connect"].call_count == 1
     assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == expected_step
+    assert result2["step_id"] == "discovery_confirm"
 
     await hass.async_block_till_done()
-
-    if expected_step != "discovery_confirm":  # invalid so provide new
-        mock_connect["connect"].side_effect = default_connect_side_effect
-        result2 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                CONF_USERNAME: "fake_username",
-                CONF_PASSWORD: "fake_password",
-            },
-        )
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "discovery_confirm"
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -301,6 +270,68 @@ async def test_discovery_new_credentials(
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == CREATE_ENTRY_DATA_AUTH
+
+
+async def test_discovery_new_credentials_invalid(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+    mock_init,
+) -> None:
+    """Test setting up discovery with new credentials."""
+    mock_discovery["mock_device"].update.side_effect = AuthenticationException
+    default_connect_side_effect = mock_connect["connect"].side_effect
+
+    mock_connect["connect"].side_effect = AuthenticationException
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_HOST: IP_ADDRESS,
+            CONF_MAC: MAC_ADDRESS,
+            CONF_ALIAS: ALIAS,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "form"
+    assert result["step_id"] == "discovery_auth_confirm"
+    assert not result["errors"]
+
+    assert mock_connect["connect"].call_count == 0
+
+    with patch(
+        "homeassistant.components.tplink.config_flow.get_credentials",
+        return_value=Credentials("fake_user", "fake_pass"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+        )
+
+    assert mock_connect["connect"].call_count == 1
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "discovery_auth_confirm"
+
+    await hass.async_block_till_done()
+
+    mock_connect["connect"].side_effect = default_connect_side_effect
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "discovery_confirm"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        {},
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["data"] == CREATE_ENTRY_DATA_AUTH
 
 
 async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> None:
