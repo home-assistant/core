@@ -124,7 +124,7 @@ async def async_setup_entry(
 
     @callback
     def _async_discovered_event_class(event_class: str, event: BTHomeBleEvent) -> None:
-        """Handle a discovered device key."""
+        """Handle a newly discovered event class with or without a postfix."""
         async_add_entities([BTHomeEventEntity(address, event_class, event)])
 
     entry.async_on_unload(
