@@ -298,10 +298,6 @@ class WebSocketHandler:
             assert writer is not None
 
         send_bytes_text = partial(writer.send, binary=False)
-        # As the webserver is now started before the start
-        # event we do not want to block for websocket responses
-        self._writer_task = asyncio.create_task(self._writer(send_bytes_text))
-
         auth = AuthPhase(
             logger, hass, self._send_message, self._cancel, request, send_bytes_text
         )
@@ -334,7 +330,13 @@ class WebSocketHandler:
             if is_enabled_for(logging_debug):
                 debug("%s: Received %s", self.description, auth_msg_data)
             connection = await auth.async_handle(auth_msg_data)
+            # As the webserver is now started before the start
+            # event we do not want to block for websocket responses
+            #
+            # We only start the writer queue after the auth phase is completed
+            # since there is no need to queue messages before the auth phase
             self._connection = connection
+            self._writer_task = asyncio.create_task(self._writer(send_bytes_text))
             hass.data[DATA_CONNECTIONS] = hass.data.get(DATA_CONNECTIONS, 0) + 1
             async_dispatcher_send(hass, SIGNAL_WEBSOCKET_CONNECTED)
 
@@ -445,7 +447,8 @@ class WebSocketHandler:
             # so we have another finally block to make sure we close the websocket
             # if the writer gets canceled.
             try:
-                await self._writer_task
+                if self._writer_task:
+                    await self._writer_task
             finally:
                 try:
                     # Make sure all error messages are written before closing
