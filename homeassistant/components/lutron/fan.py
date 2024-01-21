@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pylutron import Lutron, LutronEntity, Output
+
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -43,12 +45,10 @@ class LutronFan(LutronDevice, FanEntity):
     _attr_should_poll = False
     _attr_speed_count = 3
     _attr_supported_features = FanEntityFeature.SET_SPEED
+    _lutron_device: Output
 
     def __init__(
-        self,
-        area_name,
-        lutron_device,
-        controller,
+        self, area_name: str, lutron_device: LutronEntity, controller: Lutron
     ) -> None:
         """Initialize the fan."""
 
