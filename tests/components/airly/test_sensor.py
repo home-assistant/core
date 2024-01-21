@@ -14,7 +14,6 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
@@ -46,7 +45,6 @@ async def test_sensor(
     assert state.state == "7.29"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
-    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
     entry = entity_registry.async_get("sensor.home_common_air_quality_index")
     assert entry
