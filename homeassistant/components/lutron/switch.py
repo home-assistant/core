@@ -81,7 +81,6 @@ class LutronLed(LutronBaseEntity, SwitchEntity):
     """Representation of a Lutron Keypad LED."""
 
     _lutron_device: Led
-    _attr_name = "LED"
 
     def __init__(
         self,
