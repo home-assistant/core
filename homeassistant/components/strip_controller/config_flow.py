@@ -95,6 +95,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+        # TOD hacer que desde acá se creen todas las secciones, cada step crea 1 seccion
+
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
