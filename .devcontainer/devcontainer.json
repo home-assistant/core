@@ -10,7 +10,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-python.black-formatter",
+        "charliermarsh.ruff",
         "ms-python.pylint",
         "ms-python.vscode-pylance",
         "visualstudioexptteam.vscodeintellicode",
@@ -39,7 +39,10 @@
           "!include_dir_list scalar",
           "!include_dir_merge_list scalar",
           "!include_dir_merge_named scalar"
-        ]
+        ],
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
       }
     }
   }

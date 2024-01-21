@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+import dataclasses
 from typing import Any
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
@@ -23,7 +23,7 @@ from . import MelCloudDevice
 from .const import DOMAIN
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class MelcloudRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -31,7 +31,7 @@ class MelcloudRequiredKeysMixin:
     enabled: Callable[[Any], bool]
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class MelcloudSensorEntityDescription(
     SensorEntityDescription, MelcloudRequiredKeysMixin
 ):
@@ -203,7 +203,10 @@ class AtwZoneSensor(MelDeviceSensor):
     ) -> None:
         """Initialize the sensor."""
         if zone.zone_index != 1:
-            description.key = f"{description.key}-zone-{zone.zone_index}"
+            description = dataclasses.replace(
+                description,
+                key=f"{description.key}-zone-{zone.zone_index}",
+            )
         super().__init__(api, description)
 
         self._attr_device_info = api.zone_device_info(zone)

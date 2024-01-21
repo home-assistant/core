@@ -58,6 +58,7 @@ async def test_http_processing_intent(
     hass_admin_user: MockUser,
     agent_id,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API."""
     # Add an alias
@@ -78,27 +79,7 @@ async def test_http_processing_intent(
     assert len(calls) == 1
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
 
 
 async def test_http_processing_intent_target_ha_agent(
@@ -108,6 +89,7 @@ async def test_http_processing_intent_target_ha_agent(
     hass_admin_user: MockUser,
     mock_agent,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent can be processed via HTTP API with picking agent."""
     # Add an alias
@@ -127,28 +109,8 @@ async def test_http_processing_intent_target_ha_agent(
     assert resp.status == HTTPStatus.OK
     assert len(calls) == 1
     data = await resp.json()
-
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
 
 async def test_http_processing_intent_entity_added_removed(
@@ -157,6 +119,7 @@ async def test_http_processing_intent_entity_added_removed(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API with entities added later.
 
@@ -179,27 +142,8 @@ async def test_http_processing_intent_entity_added_removed(
     assert len(calls) == 1
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     # Add an entity
     entity_registry.async_get_or_create(
@@ -215,27 +159,8 @@ async def test_http_processing_intent_entity_added_removed(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.late", "name": "friendly light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     # Now add an alias
     entity_registry.async_update_entity("light.late", aliases={"late added light"})
@@ -248,27 +173,8 @@ async def test_http_processing_intent_entity_added_removed(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.late", "name": "friendly light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     # Now delete the entity
     hass.states.async_remove("light.late")
@@ -280,21 +186,8 @@ async def test_http_processing_intent_entity_added_removed(
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-    assert data == {
-        "conversation_id": None,
-        "response": {
-            "card": {},
-            "data": {"code": "no_intent_match"},
-            "language": hass.config.language,
-            "response_type": "error",
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Sorry, I couldn't understand that",
-                }
-            },
-        },
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
 
 
 async def test_http_processing_intent_alias_added_removed(
@@ -303,6 +196,7 @@ async def test_http_processing_intent_alias_added_removed(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API with aliases added later.
 
@@ -324,27 +218,8 @@ async def test_http_processing_intent_alias_added_removed(
     assert len(calls) == 1
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     # Add an alias
     entity_registry.async_update_entity("light.kitchen", aliases={"late added alias"})
@@ -357,27 +232,8 @@ async def test_http_processing_intent_alias_added_removed(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     # Now remove the alieas
     entity_registry.async_update_entity("light.kitchen", aliases={})
@@ -389,21 +245,8 @@ async def test_http_processing_intent_alias_added_removed(
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-    assert data == {
-        "conversation_id": None,
-        "response": {
-            "card": {},
-            "data": {"code": "no_intent_match"},
-            "language": hass.config.language,
-            "response_type": "error",
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Sorry, I couldn't understand that",
-                }
-            },
-        },
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
 
 
 async def test_http_processing_intent_entity_renamed(
@@ -413,6 +256,7 @@ async def test_http_processing_intent_entity_renamed(
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
     enable_custom_integrations: None,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API with entities renamed later.
 
@@ -442,27 +286,8 @@ async def test_http_processing_intent_entity_renamed(
     assert len(calls) == 1
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     # Rename the entity
     entity_registry.async_update_entity("light.kitchen", name="renamed light")
@@ -476,27 +301,8 @@ async def test_http_processing_intent_entity_renamed(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "renamed light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     client = await hass_client()
     resp = await client.post(
@@ -505,21 +311,8 @@ async def test_http_processing_intent_entity_renamed(
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-    assert data == {
-        "conversation_id": None,
-        "response": {
-            "card": {},
-            "data": {"code": "no_intent_match"},
-            "language": hass.config.language,
-            "response_type": "error",
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Sorry, I couldn't understand that",
-                }
-            },
-        },
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
 
     # Now clear the custom name
     entity_registry.async_update_entity("light.kitchen", name=None)
@@ -533,27 +326,8 @@ async def test_http_processing_intent_entity_renamed(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     client = await hass_client()
     resp = await client.post(
@@ -562,21 +336,8 @@ async def test_http_processing_intent_entity_renamed(
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-    assert data == {
-        "conversation_id": None,
-        "response": {
-            "card": {},
-            "data": {"code": "no_intent_match"},
-            "language": hass.config.language,
-            "response_type": "error",
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Sorry, I couldn't understand that",
-                }
-            },
-        },
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
 
 
 async def test_http_processing_intent_entity_exposed(
@@ -586,6 +347,7 @@ async def test_http_processing_intent_entity_exposed(
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
     enable_custom_integrations: None,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API with manual expose.
 
@@ -617,27 +379,8 @@ async def test_http_processing_intent_entity_exposed(
     assert len(calls) == 1
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
@@ -649,27 +392,8 @@ async def test_http_processing_intent_entity_exposed(
     assert len(calls) == 1
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     # Unexpose the entity
     expose_entity(hass, "light.kitchen", False)
@@ -682,21 +406,8 @@ async def test_http_processing_intent_entity_exposed(
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-    assert data == {
-        "conversation_id": None,
-        "response": {
-            "card": {},
-            "data": {"code": "no_intent_match"},
-            "language": hass.config.language,
-            "response_type": "error",
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Sorry, I couldn't understand that",
-                }
-            },
-        },
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
 
     client = await hass_client()
     resp = await client.post(
@@ -705,21 +416,8 @@ async def test_http_processing_intent_entity_exposed(
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-    assert data == {
-        "conversation_id": None,
-        "response": {
-            "card": {},
-            "data": {"code": "no_intent_match"},
-            "language": hass.config.language,
-            "response_type": "error",
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Sorry, I couldn't understand that",
-                }
-            },
-        },
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
 
     # Now expose the entity
     expose_entity(hass, "light.kitchen", True)
@@ -733,27 +431,8 @@ async def test_http_processing_intent_entity_exposed(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
     client = await hass_client()
     resp = await client.post(
@@ -762,27 +441,8 @@ async def test_http_processing_intent_entity_exposed(
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
 
 async def test_http_processing_intent_conversion_not_expose_new(
@@ -792,6 +452,7 @@ async def test_http_processing_intent_conversion_not_expose_new(
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
     enable_custom_integrations: None,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API when not exposing new entities."""
     # Disable exposing new entities to the default agent
@@ -820,21 +481,8 @@ async def test_http_processing_intent_conversion_not_expose_new(
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-    assert data == {
-        "conversation_id": None,
-        "response": {
-            "card": {},
-            "data": {"code": "no_intent_match"},
-            "language": hass.config.language,
-            "response_type": "error",
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Sorry, I couldn't understand that",
-                }
-            },
-        },
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
 
     # Expose the entity
     expose_entity(hass, "light.kitchen", True)
@@ -848,33 +496,15 @@ async def test_http_processing_intent_conversion_not_expose_new(
     assert len(calls) == 1
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Turned on light",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "targets": [],
-                "success": [
-                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
-                ],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
+@pytest.mark.parametrize("conversation_id", ("my_new_conversation", None))
 async def test_turn_on_intent(
-    hass: HomeAssistant, init_components, sentence, agent_id, snapshot
+    hass: HomeAssistant, init_components, conversation_id, sentence, agent_id, snapshot
 ) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "off")
@@ -883,6 +513,8 @@ async def test_turn_on_intent(
     data = {conversation.ATTR_TEXT: sentence}
     if agent_id is not None:
         data[conversation.ATTR_AGENT_ID] = agent_id
+    if conversation_id is not None:
+        data[conversation.ATTR_CONVERSATION_ID] = conversation_id
     result = await hass.services.async_call(
         "conversation",
         "process",
@@ -933,7 +565,10 @@ async def test_turn_off_intent(hass: HomeAssistant, init_components, sentence) -
 
 
 async def test_http_api_no_match(
-    hass: HomeAssistant, init_components, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the HTTP conversation API with an intent match failure."""
     client = await hass_client()
@@ -944,25 +579,15 @@ async def test_http_api_no_match(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "error",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "speech": "Sorry, I couldn't understand that",
-                    "extra_data": None,
-                },
-            },
-            "language": hass.config.language,
-            "data": {"code": "no_intent_match"},
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
 
 
 async def test_http_api_handle_failure(
-    hass: HomeAssistant, init_components, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the HTTP conversation API with an error during handling."""
     client = await hass_client()
@@ -981,29 +606,16 @@ async def test_http_api_handle_failure(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "error",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "An unexpected error occurred while handling the intent",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "code": "failed_to_handle",
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
+    assert data["response"]["data"]["code"] == "failed_to_handle"
 
 
 async def test_http_api_unexpected_failure(
     hass: HomeAssistant,
     init_components,
     hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the HTTP conversation API with an unexpected error during handling."""
     client = await hass_client()
@@ -1022,23 +634,9 @@ async def test_http_api_unexpected_failure(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "response": {
-            "response_type": "error",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "An unexpected error occurred while handling the intent",
-                }
-            },
-            "language": hass.config.language,
-            "data": {
-                "code": "unknown",
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "error"
+    assert data["response"]["data"]["code"] == "unknown"
 
 
 async def test_http_api_wrong_data(
@@ -1059,6 +657,7 @@ async def test_custom_agent(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     mock_agent,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test a custom conversation agent."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1076,21 +675,11 @@ async def test_custom_agent(
 
     resp = await client.post("/api/conversation/process", json=data)
     assert resp.status == HTTPStatus.OK
-    assert await resp.json() == {
-        "response": {
-            "response_type": "action_done",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Test response",
-                }
-            },
-            "language": "test-language",
-            "data": {"targets": [], "success": [], "failed": []},
-        },
-        "conversation_id": "test-conv-id",
-    }
+    data = await resp.json()
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+    assert data["response"]["speech"]["plain"]["speech"] == "Test response"
+    assert data["conversation_id"] == "test-conv-id"
 
     assert len(mock_agent.calls) == 1
     assert mock_agent.calls[0].text == "Test Text"
@@ -1133,7 +722,10 @@ async def test_custom_agent(
     ],
 )
 async def test_ws_api(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, payload
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    payload,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Websocket conversation API."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1145,21 +737,7 @@ async def test_ws_api(
     msg = await client.receive_json()
 
     assert msg["success"]
-    assert msg["result"] == {
-        "response": {
-            "response_type": "error",
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Sorry, I couldn't understand that",
-                }
-            },
-            "language": payload.get("language", hass.config.language),
-            "data": {"code": "no_intent_match"},
-        },
-        "conversation_id": None,
-    }
+    assert msg["result"] == snapshot
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
@@ -1195,7 +773,10 @@ async def test_ws_prepare(
 
 
 async def test_custom_sentences(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test custom sentences with a custom intent."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1220,30 +801,19 @@ async def test_custom_sentences(
         )
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
-
-        assert data == {
-            "response": {
-                "card": {},
-                "speech": {
-                    "plain": {
-                        "extra_data": None,
-                        "speech": f"You ordered a {beer_style}",
-                    }
-                },
-                "language": language,
-                "response_type": "action_done",
-                "data": {
-                    "targets": [],
-                    "success": [],
-                    "failed": [],
-                },
-            },
-            "conversation_id": None,
-        }
+        assert data == snapshot
+        assert data["response"]["response_type"] == "action_done"
+        assert (
+            data["response"]["speech"]["plain"]["speech"]
+            == f"You ordered a {beer_style}"
+        )
 
 
 async def test_custom_sentences_config(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test custom sentences with a custom intent in config."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1271,26 +841,9 @@ async def test_custom_sentences_config(
     )
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-
-    assert data == {
-        "response": {
-            "card": {},
-            "speech": {
-                "plain": {
-                    "extra_data": None,
-                    "speech": "Stealth mode engaged",
-                }
-            },
-            "language": hass.config.language,
-            "response_type": "action_done",
-            "data": {
-                "targets": [],
-                "success": [],
-                "failed": [],
-            },
-        },
-        "conversation_id": None,
-    }
+    assert data == snapshot
+    assert data["response"]["response_type"] == "action_done"
+    assert data["response"]["speech"]["plain"]["speech"] == "Stealth mode engaged"
 
 
 async def test_prepare_reload(hass: HomeAssistant) -> None:

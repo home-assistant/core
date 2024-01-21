@@ -19,6 +19,7 @@ async def test_entry_diagnostics(
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 2,
+            "minor_version": 1,
             "domain": "recollect_waste",
             "title": REDACTED,
             "data": {"place_id": REDACTED, "service_id": TEST_SERVICE_ID},

@@ -1,7 +1,8 @@
 """The tests for Efergy sensor platform."""
 from datetime import timedelta
 
-from homeassistant.components.efergy.sensor import SENSOR_TYPES
+import pytest
+
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -25,15 +26,18 @@ from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.fixture(autouse=True)
+def enable_all_entities(entity_registry_enabled_by_default):
+    """Make sure all entities are enabled."""
+
+
 async def test_sensor_readings(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test for successfully setting up the Efergy platform."""
-    for description in SENSOR_TYPES:
-        description.entity_registry_enabled_default = True
-    entry = await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
+    await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
 
     state = hass.states.get("sensor.efergy_power_usage")
     assert state.state == "1580"
@@ -85,11 +89,6 @@ async def test_sensor_readings(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "EUR"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
-    entity = entity_registry.async_get("sensor.efergy_power_usage_728386")
-    assert entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    entity_registry.async_update_entity(entity.entity_id, **{"disabled_by": None})
-    await hass.config_entries.async_reload(entry.entry_id)
-    await hass.async_block_till_done()
     state = hass.states.get("sensor.efergy_power_usage_728386")
     assert state.state == "1628"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
@@ -101,8 +100,6 @@ async def test_multi_sensor_readings(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test for multiple sensors in one household."""
-    for description in SENSOR_TYPES:
-        description.entity_registry_enabled_default = True
     await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN, MULTI_SENSOR_TOKEN)
     state = hass.states.get("sensor.efergy_power_usage_728386")
     assert state.state == "218"

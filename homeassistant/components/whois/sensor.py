@@ -27,7 +27,7 @@ from homeassistant.util import dt as dt_util
 from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WhoisSensorEntityDescription(SensorEntityDescription):
     """Describes a Whois sensor entity."""
 

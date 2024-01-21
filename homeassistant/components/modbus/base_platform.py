@@ -24,10 +24,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -55,13 +56,13 @@ from .const import (
     CONF_STATE_ON,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
+    MODBUS_DOMAIN,
     SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
@@ -75,8 +76,34 @@ _LOGGER = logging.getLogger(__name__)
 class BasePlatform(Entity):
     """Base for readonly platforms."""
 
-    def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
+    def __init__(
+        self, hass: HomeAssistant, hub: ModbusHub, entry: dict[str, Any]
+    ) -> None:
         """Initialize the Modbus binary sensor."""
+
+        if CONF_LAZY_ERROR in entry:
+            async_create_issue(
+                hass,
+                MODBUS_DOMAIN,
+                "removed_lazy_error_count",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="removed_lazy_error_count",
+                translation_placeholders={
+                    "config_key": "lazy_error_count",
+                    "integration": MODBUS_DOMAIN,
+                    "url": "https://www.home-assistant.io/integrations/modbus",
+                },
+            )
+            _LOGGER.warning(
+                "`close_comm_on_error`: is deprecated and will be removed in version 2024.4"
+            )
+
+            _LOGGER.warning(
+                "`lazy_error_count`: is deprecated and will be removed in version 2024.7"
+            )
+
         self._hub = hub
         self._slave = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
         self._address = int(entry[CONF_ADDRESS])
@@ -93,8 +120,6 @@ class BasePlatform(Entity):
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = True
         self._attr_unit_of_measurement = None
-        self._lazy_error_count = entry[CONF_LAZY_ERROR]
-        self._lazy_errors = self._lazy_error_count
 
         def get_optional_numeric_config(config_name: str) -> int | float | None:
             if (val := entry.get(config_name)) is None:
@@ -154,18 +179,14 @@ class BasePlatform(Entity):
 class BaseStructPlatform(BasePlatform, RestoreEntity):
     """Base class representing a sensor/climate."""
 
-    def __init__(self, hub: ModbusHub, config: dict) -> None:
+    def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
-        super().__init__(hub, config)
+        super().__init__(hass, hub, config)
         self._swap = config[CONF_SWAP]
-        if self._swap == CONF_SWAP_NONE:
-            self._swap = None
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
-        self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
-        if self._scale < 1 and not self._precision:
-            self._precision = 2
+        self._precision = config.get(CONF_PRECISION, 2 if self._scale < 1 else 0)
         self._offset = config[CONF_OFFSET]
         self._slave_count = config.get(CONF_SLAVE_COUNT, None) or config.get(
             CONF_VIRTUAL_COUNT, 0
@@ -250,10 +271,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
     """Base class representing a Modbus switch."""
 
-    def __init__(self, hub: ModbusHub, config: dict) -> None:
+    def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
         config[CONF_INPUT_TYPE] = ""
-        super().__init__(hub, config)
+        super().__init__(hass, hub, config)
         self._attr_is_on = False
         convert = {
             CALL_TYPE_REGISTER_HOLDING: (
@@ -346,15 +367,10 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         )
         self._call_active = False
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
             return
 
-        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if self._verify_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
             self._attr_is_on = bool(result.bits[0] & 1)

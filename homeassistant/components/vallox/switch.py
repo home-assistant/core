@@ -63,14 +63,14 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxMetricKeyMixin:
     """Dataclass to allow defining metric_key without a default value."""
 
     metric_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxSwitchEntityDescription(SwitchEntityDescription, ValloxMetricKeyMixin):
     """Describes Vallox switch entity."""
 

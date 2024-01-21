@@ -12,6 +12,7 @@ from homeassistant.components.asuswrt.const import (
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
     SENSORS_TEMPERATURES,
+    SENSORS_TEMPERATURES_LEGACY,
 )
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.config_entries import ConfigEntryState
@@ -39,7 +40,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 SENSORS_DEFAULT = [*SENSORS_BYTES, *SENSORS_RATES]
 
-SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES]
+SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES_LEGACY]
 SENSORS_ALL_HTTP = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES]
 
 
@@ -242,11 +243,13 @@ async def test_temperature_sensors_http_fail(
     assert not hass.states.get(f"{sensor_prefix}_2_4ghz")
     assert not hass.states.get(f"{sensor_prefix}_5_0ghz")
     assert not hass.states.get(f"{sensor_prefix}_cpu")
+    assert not hass.states.get(f"{sensor_prefix}_5_0ghz_2")
+    assert not hass.states.get(f"{sensor_prefix}_6_0ghz")
 
 
-async def _test_temperature_sensors(hass: HomeAssistant, config) -> None:
+async def _test_temperature_sensors(hass: HomeAssistant, config, sensors) -> str:
     """Test creating a AsusWRT temperature sensors."""
-    config_entry, sensor_prefix = _setup_entry(hass, config, SENSORS_TEMPERATURES)
+    config_entry, sensor_prefix = _setup_entry(hass, config, sensors)
     config_entry.add_to_hass(hass)
 
     # initial devices setup
@@ -255,20 +258,31 @@ async def _test_temperature_sensors(hass: HomeAssistant, config) -> None:
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
-    # assert temperature sensor available
-    assert hass.states.get(f"{sensor_prefix}_2_4ghz").state == "40.2"
-    assert not hass.states.get(f"{sensor_prefix}_5_0ghz")
-    assert hass.states.get(f"{sensor_prefix}_cpu").state == "71.2"
+    return sensor_prefix
 
 
 async def test_temperature_sensors_legacy(hass: HomeAssistant, connect_legacy) -> None:
     """Test creating a AsusWRT temperature sensors."""
-    await _test_temperature_sensors(hass, CONFIG_DATA_TELNET)
+    sensor_prefix = await _test_temperature_sensors(
+        hass, CONFIG_DATA_TELNET, SENSORS_TEMPERATURES_LEGACY
+    )
+    # assert temperature sensor available
+    assert hass.states.get(f"{sensor_prefix}_2_4ghz").state == "40.2"
+    assert hass.states.get(f"{sensor_prefix}_cpu").state == "71.2"
+    assert not hass.states.get(f"{sensor_prefix}_5_0ghz")
 
 
 async def test_temperature_sensors_http(hass: HomeAssistant, connect_http) -> None:
     """Test creating a AsusWRT temperature sensors."""
-    await _test_temperature_sensors(hass, CONFIG_DATA_HTTP)
+    sensor_prefix = await _test_temperature_sensors(
+        hass, CONFIG_DATA_HTTP, SENSORS_TEMPERATURES
+    )
+    # assert temperature sensor available
+    assert hass.states.get(f"{sensor_prefix}_2_4ghz").state == "40.2"
+    assert hass.states.get(f"{sensor_prefix}_cpu").state == "71.2"
+    assert hass.states.get(f"{sensor_prefix}_5_0ghz_2").state == "40.3"
+    assert hass.states.get(f"{sensor_prefix}_6_0ghz").state == "40.4"
+    assert not hass.states.get(f"{sensor_prefix}_5_0ghz")
 
 
 @pytest.mark.parametrize(
@@ -416,7 +430,7 @@ async def test_decorator_errors(
     hass: HomeAssistant, connect_legacy, mock_available_temps
 ) -> None:
     """Test AsusWRT sensors are unavailable on decorator type check error."""
-    sensors = [*SENSORS_BYTES, *SENSORS_TEMPERATURES]
+    sensors = [*SENSORS_BYTES, *SENSORS_TEMPERATURES_LEGACY]
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_TELNET, sensors)
     config_entry.add_to_hass(hass)
 

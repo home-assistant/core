@@ -4,8 +4,8 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+import socket
 
-from aiohttp import ClientSession
 import pycfdns
 
 from homeassistant.config_entries import ConfigEntry
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Set up recurring update."""
         try:
             await _async_update_cloudflare(
-                session, client, dns_zone, entry.data[CONF_RECORDS]
+                hass, client, dns_zone, entry.data[CONF_RECORDS]
             )
         except (
             pycfdns.AuthenticationException,
@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Set up service for manual trigger."""
         try:
             await _async_update_cloudflare(
-                session, client, dns_zone, entry.data[CONF_RECORDS]
+                hass, client, dns_zone, entry.data[CONF_RECORDS]
             )
         except (
             pycfdns.AuthenticationException,
@@ -92,7 +92,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _async_update_cloudflare(
-    session: ClientSession,
+    hass: HomeAssistant,
     client: pycfdns.Client,
     dns_zone: pycfdns.ZoneModel,
     target_records: list[str],
@@ -102,6 +102,7 @@ async def _async_update_cloudflare(
     records = await client.list_dns_records(zone_id=dns_zone["id"], type="A")
     _LOGGER.debug("Records: %s", records)
 
+    session = async_get_clientsession(hass, family=socket.AF_INET)
     location_info = await async_detect_location_info(session)
 
     if not location_info or not is_ipv4_address(location_info.ip):

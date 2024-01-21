@@ -7,12 +7,17 @@ from typing import Any
 from aiopurpleair.models.sensors import SensorModel
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, Platform
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_SHOW_ON_MAP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SHOW_ON_MAP, DOMAIN
+from .const import DOMAIN
 from .coordinator import PurpleAirDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]

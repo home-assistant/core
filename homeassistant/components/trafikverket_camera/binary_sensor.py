@@ -19,14 +19,14 @@ from .entity import TrafikverketCameraNonCameraEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Trafikverket Camera base description keys."""
 
     value_fn: Callable[[CameraData], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TVCameraSensorEntityDescription(
     BinarySensorEntityDescription, DeviceBaseEntityDescriptionMixin
 ):

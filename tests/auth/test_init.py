@@ -343,6 +343,7 @@ async def test_saving_loading(
     await flush_store(manager._store._store)
 
     store2 = auth_store.AuthStore(hass)
+    await store2.async_load()
     users = await store2.async_get_users()
     assert len(users) == 1
     assert users[0].permissions == user.permissions
@@ -894,10 +895,7 @@ async def test_auth_module_expired_session(mock_hass) -> None:
     assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow() + MFA_SESSION_EXPIRATION,
-    ):
+    with freeze_time(dt_util.utcnow() + MFA_SESSION_EXPIRATION):
         step = await manager.login_flow.async_configure(
             step["flow_id"], {"pin": "test-pin"}
         )

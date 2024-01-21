@@ -1,6 +1,5 @@
 """The tests for the utility_meter sensor platform."""
 from datetime import timedelta
-from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
@@ -132,7 +131,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             3,
@@ -166,7 +165,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=20)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             6,
@@ -535,7 +534,7 @@ async def test_restore_state(
 ) -> None:
     """Test utility sensor restore state."""
     # Home assistant is not runnit yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     last_reset = "2020-12-21T00:00:00.013073+00:00"
 
@@ -729,7 +728,7 @@ async def test_net_consumption(
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             1,
@@ -803,7 +802,7 @@ async def test_non_net_consumption(
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             1,
@@ -813,7 +812,7 @@ async def test_non_net_consumption(
         await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             None,
@@ -866,7 +865,7 @@ async def test_delta_values(
 ) -> None:
     """Test utility meter "delta_values" mode."""
     # Home assistant is not runnit yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     now = dt_util.utcnow()
     with freeze_time(now):
@@ -975,7 +974,7 @@ async def test_non_periodically_resetting(
 ) -> None:
     """Test utility meter "non periodically resetting" mode."""
     # Home assistant is not runnit yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     now = dt_util.utcnow()
     with freeze_time(now):
@@ -1148,7 +1147,7 @@ async def test_non_periodically_resetting_meter_with_tariffs(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             3,
@@ -1186,7 +1185,7 @@ async def test_non_periodically_resetting_meter_with_tariffs(
     assert state.attributes.get("status") == COLLECTING
 
     now = dt_util.utcnow() + timedelta(seconds=20)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             6,

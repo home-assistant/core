@@ -97,6 +97,9 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         try:
             try:
                 await self.api.login()
+                raw_data_devices = await self.api.get_devices_data()
+                data_sensors = await self.api.get_sensor_data()
+                await self.api.logout()
             except exceptions.CannotAuthenticate as err:
                 raise ConfigEntryAuthFailed from err
             except (
@@ -117,10 +120,8 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     dev_info, utc_point_in_time
                 ),
             )
-            for dev_info in (await self.api.get_devices_data()).values()
+            for dev_info in (raw_data_devices).values()
         }
-        data_sensors = await self.api.get_sensor_data()
-        await self.api.logout()
         return UpdateCoordinatorDataType(data_devices, data_sensors)
 
     @property

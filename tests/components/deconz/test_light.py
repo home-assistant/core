@@ -186,7 +186,6 @@ async def test_no_lights_or_groups(
                 "state": STATE_ON,
                 "attributes": {
                     ATTR_EFFECT_LIST: [
-                        EFFECT_COLORLOOP,
                         "carnival",
                         "collide",
                         "fading",

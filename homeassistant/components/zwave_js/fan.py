@@ -18,7 +18,6 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     FanEntity,
     FanEntityFeature,
-    NotValidPresetModeError,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -180,11 +179,6 @@ class ValueMappingZwaveFan(ZwaveFan):
             if preset_mode == mapped_preset_mode:
                 await self._async_set_value(self._target_value, zwave_value)
                 return
-
-        raise NotValidPresetModeError(
-            f"The preset_mode {preset_mode} is not a valid preset_mode:"
-            f" {self.preset_modes}"
-        )
 
     @property
     def available(self) -> bool:

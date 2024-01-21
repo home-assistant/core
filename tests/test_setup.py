@@ -373,7 +373,9 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
         MockPlatform(platform_schema=platform_schema, setup_platform=mock_setup),
     )
 
-    with assert_setup_component(0, "switch"):
+    with assert_setup_component(0, "switch"), patch(
+        "homeassistant.setup.async_notify_setup_error"
+    ) as mock_notify:
         assert await setup.async_setup_component(
             hass,
             "switch",
@@ -381,11 +383,14 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert mock_setup.call_count == 0
+        assert len(mock_notify.mock_calls) == 1
 
     hass.data.pop(setup.DATA_SETUP)
     hass.config.components.remove("switch")
 
-    with assert_setup_component(0):
+    with assert_setup_component(0), patch(
+        "homeassistant.setup.async_notify_setup_error"
+    ) as mock_notify:
         assert await setup.async_setup_component(
             hass,
             "switch",
@@ -399,11 +404,14 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert mock_setup.call_count == 0
+        assert len(mock_notify.mock_calls) == 1
 
     hass.data.pop(setup.DATA_SETUP)
     hass.config.components.remove("switch")
 
-    with assert_setup_component(1, "switch"):
+    with assert_setup_component(1, "switch"), patch(
+        "homeassistant.setup.async_notify_setup_error"
+    ) as mock_notify:
         assert await setup.async_setup_component(
             hass,
             "switch",
@@ -411,6 +419,7 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert mock_setup.call_count == 1
+        assert len(mock_notify.mock_calls) == 0
 
 
 async def test_disable_component_if_invalid_return(hass: HomeAssistant) -> None:
@@ -663,7 +672,7 @@ async def test_async_get_loaded_integrations(hass: HomeAssistant) -> None:
     hass.config.components.add("notbase.switch")
     hass.config.components.add("myintegration")
     hass.config.components.add("device_tracker")
-    hass.config.components.add("device_tracker.other")
+    hass.config.components.add("other.device_tracker")
     hass.config.components.add("myintegration.light")
     assert setup.async_get_loaded_integrations(hass) == {
         "other",
@@ -720,9 +729,9 @@ async def test_async_start_setup(hass: HomeAssistant) -> None:
 
 async def test_async_start_setup_platforms(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times for platforms."""
-    with setup.async_start_setup(hass, ["sensor.august"]):
+    with setup.async_start_setup(hass, ["august.sensor"]):
         assert isinstance(
-            hass.data[setup.DATA_SETUP_STARTED]["sensor.august"], datetime.datetime
+            hass.data[setup.DATA_SETUP_STARTED]["august.sensor"], datetime.datetime
         )
 
     assert "august" not in hass.data[setup.DATA_SETUP_STARTED]

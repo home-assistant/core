@@ -47,6 +47,7 @@ async def auth_manager_from_config(
     mfa modules exist in configs.
     """
     store = auth_store.AuthStore(hass)
+    await store.async_load()
     if provider_configs:
         providers = await asyncio.gather(
             *(
@@ -73,8 +74,7 @@ async def auth_manager_from_config(
     for module in modules:
         module_hash[module.id] = module
 
-    manager = AuthManager(hass, store, provider_hash, module_hash)
-    return manager
+    return AuthManager(hass, store, provider_hash, module_hash)
 
 
 class AuthManagerFlowManager(data_entry_flow.FlowManager):
@@ -280,7 +280,8 @@ class AuthManager:
             credentials=credentials,
             name=info.name,
             is_active=info.is_active,
-            group_ids=[GROUP_ID_ADMIN],
+            group_ids=[GROUP_ID_ADMIN if info.group is None else info.group],
+            local_only=info.local_only,
         )
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {"user_id": user.id})

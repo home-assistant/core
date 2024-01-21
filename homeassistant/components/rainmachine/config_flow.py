@@ -17,6 +17,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import (
+    CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_USE_APP_RUN_TIMES,
     DEFAULT_PORT,
@@ -187,6 +188,12 @@ class RainMachineOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_USE_APP_RUN_TIMES,
                         default=self.config_entry.options.get(CONF_USE_APP_RUN_TIMES),
+                    ): bool,
+                    vol.Optional(
+                        CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
+                        default=self.config_entry.options.get(
+                            CONF_ALLOW_INACTIVE_ZONES_TO_RUN
+                        ),
                     ): bool,
                 }
             ),

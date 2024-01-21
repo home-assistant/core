@@ -60,16 +60,13 @@ async def test_get_node_from_device_entry(
 
     assert node_from_device_entry is node
 
-    with pytest.raises(ValueError) as value_error:
-        await get_node_from_device_entry(hass, other_device_entry)
-
-    assert f"Device {other_device_entry.id} is not a Matter device" in str(
-        value_error.value
-    )
+    # test non-Matter device returns None
+    assert get_node_from_device_entry(hass, other_device_entry) is None
 
     matter_client.server_info = None
 
+    # test non-initialized server raises RuntimeError
     with pytest.raises(RuntimeError) as runtime_error:
-        node_from_device_entry = await get_node_from_device_entry(hass, device_entry)
+        node_from_device_entry = get_node_from_device_entry(hass, device_entry)
 
     assert "Matter server information is not available" in str(runtime_error.value)

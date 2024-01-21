@@ -26,15 +26,13 @@ async def test_entry_diagnostics(
     mock_plenticore.client.get_settings.return_value = {
         "devices:local": [
             SettingsData(
-                {
-                    "id": "Battery:MinSoc",
-                    "unit": "%",
-                    "default": "None",
-                    "min": 5,
-                    "max": 100,
-                    "type": "byte",
-                    "access": "readwrite",
-                }
+                min="5",
+                max="100",
+                default=None,
+                access="readwrite",
+                unit="%",
+                id="Battery:MinSoc",
+                type="byte",
             )
         ]
     }
@@ -45,6 +43,7 @@ async def test_entry_diagnostics(
         "config_entry": {
             "entry_id": "2ab8dd92a62787ddfe213a67e09406bd",
             "version": 1,
+            "minor_version": 1,
             "domain": "kostal_plenticore",
             "title": "scb",
             "data": {"host": "192.168.1.2", "password": REDACTED},
@@ -56,12 +55,12 @@ async def test_entry_diagnostics(
             "disabled_by": None,
         },
         "client": {
-            "version": "Version(api_version=0.2.0, hostname=scb, name=PUCK RESTful API, sw_version=01.16.05025)",
-            "me": "Me(locked=False, active=True, authenticated=True, permissions=[], anonymous=False, role=USER)",
+            "version": "api_version='0.2.0' hostname='scb' name='PUCK RESTful API' sw_version='01.16.05025'",
+            "me": "is_locked=False is_active=True is_authenticated=True permissions=[] is_anonymous=False role='USER'",
             "available_process_data": {"devices:local": ["HomeGrid_P", "HomePv_P"]},
             "available_settings_data": {
                 "devices:local": [
-                    "SettingsData(id=Battery:MinSoc, unit=%, default=None, min=5, max=100,type=byte, access=readwrite)"
+                    "min='5' max='100' default=None access='readwrite' unit='%' id='Battery:MinSoc' type='byte'"
                 ]
             },
         },

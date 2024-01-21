@@ -95,7 +95,7 @@ async def test_ecobee_clear_hold_press_button(hass: HomeAssistant) -> None:
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test a we can migrate a button unique id."""
     aid = get_next_aid()

@@ -131,6 +131,31 @@ class MockNumberEntityDescr(NumberEntity):
         return None
 
 
+class MockNumberEntityAttrWithDescription(NumberEntity):
+    """Mock NumberEntity device to use in tests.
+
+    This class sets an entity description and overrides
+    all the values with _attr members to ensure the _attr
+    members take precedence over the entity description.
+    """
+
+    def __init__(self):
+        """Initialize the clas instance."""
+        self.entity_description = NumberEntityDescription(
+            "test",
+            native_max_value=10.0,
+            native_min_value=-10.0,
+            native_step=2.0,
+            native_unit_of_measurement="native_rabbits",
+        )
+
+    _attr_native_max_value = 1000.0
+    _attr_native_min_value = -1000.0
+    _attr_native_step = 100.0
+    _attr_native_unit_of_measurement = "native_dogs"
+    _attr_native_value = 500.0
+
+
 class MockDefaultNumberEntityDeprecated(NumberEntity):
     """Mock NumberEntity device to use in tests.
 
@@ -275,6 +300,21 @@ async def test_attributes(hass: HomeAssistant) -> None:
         ATTR_MIN: -10.0,
         ATTR_MODE: NumberMode.AUTO,
         ATTR_STEP: 2.0,
+    }
+
+    number_5 = MockNumberEntityAttrWithDescription()
+    number_5.hass = hass
+    assert number_5.max_value == 1000.0
+    assert number_5.min_value == -1000.0
+    assert number_5.step == 100.0
+    assert number_5.native_step == 100.0
+    assert number_5.unit_of_measurement == "native_dogs"
+    assert number_5.value == 500.0
+    assert number_5.capability_attributes == {
+        ATTR_MAX: 1000.0,
+        ATTR_MIN: -1000.0,
+        ATTR_MODE: NumberMode.AUTO,
+        ATTR_STEP: 100.0,
     }
 
 
