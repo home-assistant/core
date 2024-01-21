@@ -76,7 +76,9 @@ async def auth_manager_from_config(
     for module in modules:
         module_hash[module.id] = module
 
-    return AuthManager(hass, store, provider_hash, module_hash)
+    manager = AuthManager(hass, store, provider_hash, module_hash)
+    manager.async_setup()
+    return manager
 
 
 class AuthManagerFlowManager(data_entry_flow.FlowManager):
@@ -160,11 +162,15 @@ class AuthManager:
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
         self._revoke_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
-        self._expire_callbacks: dict[str, CALLBACK_TYPE] = {}
         self._expire_callback: CALLBACK_TYPE | None = None
+        self._remove_expired_job = HassJob(self._async_remove_expired_refresh_tokens)
 
-        hass.async_add_job(self.async_track_next_refresh_token_expiration)
+    @callback
+    def async_setup(self) -> None:
+        """Set up the auth manager."""
+        hass = self.hass
         hass.async_add_shutdown_job(HassJob(self.async_cancel_expiration_schedule))
+        self.async_track_next_refresh_token_expiration()
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
@@ -513,7 +519,7 @@ class AuthManager:
                 next_expiration = expire_at
 
         self._expire_callback = async_track_point_in_utc_time(
-            self.hass, self._async_remove_expired_refresh_tokens, next_expiration
+            self.hass, self._remove_expired_job, next_expiration
         )
 
     async def async_cancel_expiration_schedule(self) -> None:
