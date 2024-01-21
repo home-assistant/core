@@ -303,7 +303,7 @@ class HoneywellUSThermostat(ClimateEntity):
         if self._is_permanent_hold():
             return PRESET_HOLD
 
-        return None
+        return PRESET_NONE
 
     @property
     def is_aux_heat(self) -> bool | None:
