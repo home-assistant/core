@@ -17,6 +17,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "air_filter_polluted": {
+        "name": "Air filter polluted"
+      }
+    },
     "sensor": {
       "outside_air_temperature": {
         "name": "Outside air temperature"
