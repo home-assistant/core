@@ -197,7 +197,7 @@ async def test_config_entry_device_config_invalid(
     mock_connect: AsyncMock,
     caplog,
 ) -> None:
-    """Test that an invalid device config logs an error."""
+    """Test that an invalid device config logs an error and loads the config entry."""
     entry_data = copy.deepcopy(CREATE_ENTRY_DATA_AUTH)
     entry_data[CONF_DEVICE_CONFIG] = {"foo": "bar"}
     mock_config_entry = MockConfigEntry(
