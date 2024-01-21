@@ -252,10 +252,8 @@ class AuthStore:
 
     async def async_load(self) -> None:
         """Load the users."""
-        # Make sure that we're not overriding data if 2 loads happened at the
-        # same time
         if self._loaded:
-            return
+            raise RuntimeError("Auth storage is already loaded")
         self._loaded = True
 
         dev_reg = dr.async_get(self.hass)

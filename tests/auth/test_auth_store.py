@@ -3,6 +3,8 @@ import asyncio
 from typing import Any
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.auth import auth_store
 from homeassistant.core import HomeAssistant
 
@@ -245,8 +247,8 @@ async def test_system_groups_store_id_and_name(
     ]
 
 
-async def test_loading_race_condition(hass: HomeAssistant) -> None:
-    """Test only one storage load called when concurrent loading occurred ."""
+async def test_loading_only_once(hass: HomeAssistant) -> None:
+    """Test only one storage load is allowed."""
     store = auth_store.AuthStore(hass)
     with patch(
         "homeassistant.helpers.entity_registry.async_get"
@@ -256,7 +258,8 @@ async def test_loading_race_condition(hass: HomeAssistant) -> None:
         "homeassistant.helpers.storage.Store.async_load", return_value=None
     ) as mock_load:
         await store.async_load()
-        await store.async_load()
+        with pytest.raises(RuntimeError, match="Auth storage is already loaded"):
+            await store.async_load()
 
         results = await asyncio.gather(store.async_get_users(), store.async_get_users())
 
