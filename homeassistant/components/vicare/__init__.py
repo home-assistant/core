@@ -124,5 +124,5 @@ def get_supported_devices(
     return [
         device_config
         for device_config in devices
-        if device_config.getModel() != "Heatbox1"
+        if device_config.getModel() not in ["Heatbox1", "Heatbox2_SRC"]
     ]
