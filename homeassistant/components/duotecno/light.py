@@ -1,6 +1,7 @@
 """Support for Duotecno lights."""
 from typing import Any
 
+from duotecno.controller import PyDuotecno
 from duotecno.unit import DimUnit
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
@@ -18,7 +19,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Duotecno light based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]
+    cntrl: PyDuotecno = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(DuotecnoLight(channel) for channel in cntrl.get_units("DimUnit"))
 
 

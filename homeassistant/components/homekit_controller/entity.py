@@ -109,7 +109,7 @@ class HomeKitEntity(Entity):
         self._accessory.async_entity_key_removed(self._entity_key)
 
     @callback
-    def _async_unsubscribe_chars(self):
+    def _async_unsubscribe_chars(self) -> None:
         """Handle unsubscribing from characteristics."""
         if self._char_subscription:
             self._char_subscription()
@@ -118,7 +118,7 @@ class HomeKitEntity(Entity):
         self._accessory.remove_watchable_characteristics(self.watchable_characteristics)
 
     @callback
-    def _async_subscribe_chars(self):
+    def _async_subscribe_chars(self) -> None:
         """Handle registering characteristics to watch and subscribe."""
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
         self._accessory.add_watchable_characteristics(self.watchable_characteristics)

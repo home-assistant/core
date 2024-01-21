@@ -26,6 +26,7 @@ from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
+    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -69,7 +70,9 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT]
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
-SIGNAL_CLOUD_CONNECTION_STATE = "CLOUD_CONNECTION_STATE"
+SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
+    "CLOUD_CONNECTION_STATE"
+)
 
 STARTUP_REPAIR_DELAY = 1  # 1 hour
 
@@ -291,7 +294,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     }
 
     async def _on_start() -> None:
-        """Discover platforms."""
+        """Handle cloud started after login."""
         nonlocal loaded
 
         # Prevent multiple discovery
@@ -299,14 +302,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         loaded = True
 
-        tts_info = {"platform_loaded": tts_platform_loaded}
-
-        await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
-        await tts_platform_loaded.wait()
-
-        # The config entry should be loaded after the legacy tts platform is loaded
-        # to make sure that the tts integration is setup before we try to migrate
-        # old assist pipelines in the cloud stt entity.
         await hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
 
     async def _on_connect() -> None:
@@ -334,6 +329,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     http_api.async_setup(hass)
 
     account_link.async_setup(hass)
+
+    hass.async_create_task(
+        async_load_platform(
+            hass,
+            Platform.TTS,
+            DOMAIN,
+            {"platform_loaded": tts_platform_loaded},
+            config,
+        )
+    )
 
     async_call_later(
         hass=hass,

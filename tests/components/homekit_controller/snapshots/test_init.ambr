@@ -2477,7 +2477,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2505,7 +2505,7 @@
             'attributes': dict({
               'device_class': 'energy',
               'friendly_name': 'InWall Outlet-0394DE Energy kWh',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
               'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
             }),
             'entity_id': 'sensor.inwall_outlet_0394de_energy_kwh',
@@ -2518,7 +2518,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2546,7 +2546,7 @@
             'attributes': dict({
               'device_class': 'energy',
               'friendly_name': 'InWall Outlet-0394DE Energy kWh',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
               'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
             }),
             'entity_id': 'sensor.inwall_outlet_0394de_energy_kwh_2',
