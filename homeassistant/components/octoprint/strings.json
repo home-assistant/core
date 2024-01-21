@@ -43,11 +43,11 @@
           "description": "The server that should connect."
         },
         "profile_name": {
-          "name": "Profile Name",
+          "name": "Profile name",
           "description": "Printer profile to connect with."
         },
         "port": {
-          "name": "Serial Port",
+          "name": "Serial port",
           "description": "Port name to connect on."
         },
         "baudrate": {
