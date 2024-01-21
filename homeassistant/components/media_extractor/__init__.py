@@ -1,6 +1,7 @@
 """Decorator service for the media_player.play_media service."""
 from collections.abc import Callable
 import logging
+from pathlib import Path
 from typing import Any, cast
 
 import voluptuous as vol
@@ -106,7 +107,20 @@ class MediaExtractor:
 
     def get_stream_selector(self) -> Callable[[str], str]:
         """Return format selector for the media URL."""
-        ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
+        cookies_file = Path(
+            self.hass.config.config_dir, "media_extractor", "cookies.txt"
+        )
+        ydl_params = {"quiet": True, "logger": _LOGGER}
+        if cookies_file.exists():
+            ydl_params["cookiefile"] = str(cookies_file)
+            _LOGGER.debug(
+                "Media extractor loaded cookies file from: %s", str(cookies_file)
+            )
+        else:
+            _LOGGER.debug(
+                "Media extractor didn't find cookies file at: %s", str(cookies_file)
+            )
+        ydl = YoutubeDL(ydl_params)
 
         try:
             all_media = ydl.extract_info(self.get_media_url(), process=False)

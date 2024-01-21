@@ -1,0 +1,14 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:format-list-bulleted"
+    }
+  },
+  "services": {
+    "select_first": "mdi:format-list-bulleted",
+    "select_last": "mdi:format-list-bulleted",
+    "select_next": "mdi:format-list-bulleted",
+    "select_option": "mdi:format-list-bulleted",
+    "select_previous": "mdi:format-list-bulleted"
+  }
+}

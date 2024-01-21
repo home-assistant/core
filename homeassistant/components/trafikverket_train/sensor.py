@@ -105,6 +105,20 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         icon="mdi:alert",
         value_fn=lambda data: data.deviation,
     ),
+    TrafikverketSensorEntityDescription(
+        key="departure_time_next",
+        translation_key="departure_time_next",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.departure_time_next,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="departure_time_next_next",
+        translation_key="departure_time_next_next",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.departure_time_next_next,
+    ),
 )
 
 

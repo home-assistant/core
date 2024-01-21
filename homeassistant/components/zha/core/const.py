@@ -139,6 +139,7 @@ CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_ENABLE_QUIRKS = "enable_quirks"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
+CONF_USE_THREAD = "use_thread"
 CONF_ZIGPY = "zigpy_config"
 
 CONF_CONSIDER_UNAVAILABLE_MAINS = "consider_unavailable_mains"

@@ -29,18 +29,20 @@ TODO_STATUS_MAP = {
 TODO_STATUS_MAP_INV = {v: k for k, v in TODO_STATUS_MAP.items()}
 
 
-def _convert_todo_item(item: TodoItem) -> dict[str, str]:
+def _convert_todo_item(item: TodoItem) -> dict[str, str | None]:
     """Convert TodoItem dataclass items to dictionary of attributes the tasks API."""
-    result: dict[str, str] = {}
-    if item.summary is not None:
-        result["title"] = item.summary
+    result: dict[str, str | None] = {}
+    result["title"] = item.summary
     if item.status is not None:
         result["status"] = TODO_STATUS_MAP_INV[item.status]
+    else:
+        result["status"] = TodoItemStatus.NEEDS_ACTION
     if (due := item.due) is not None:
         # due API field is a timestamp string, but with only date resolution
         result["due"] = dt_util.start_of_local_day(due).isoformat()
-    if (description := item.description) is not None:
-        result["notes"] = description
+    else:
+        result["due"] = None
+    result["notes"] = item.description
     return result
 
 
@@ -91,6 +93,7 @@ class GoogleTaskTodoListEntity(
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
+        | TodoListEntityFeature.MOVE_TODO_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
@@ -136,6 +139,13 @@ class GoogleTaskTodoListEntity(
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete To-do items."""
         await self.coordinator.api.delete(self._task_list_id, uids)
+        await self.coordinator.async_refresh()
+
+    async def async_move_todo_item(
+        self, uid: str, previous_uid: str | None = None
+    ) -> None:
+        """Re-order a To-do item."""
+        await self.coordinator.api.move(self._task_list_id, uid, previous=previous_uid)
         await self.coordinator.async_refresh()
 
 

@@ -117,7 +117,7 @@
     'platform': 'wled',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'reverse',
     'unique_id': 'aabbccddeeff_reverse_0',
     'unit_of_measurement': None,
   })

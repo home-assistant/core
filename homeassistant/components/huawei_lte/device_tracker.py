@@ -1,7 +1,6 @@
 """Support for device tracking of Huawei LTE routers."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import logging
 import re
 from typing import Any, cast
@@ -173,16 +172,18 @@ def _better_snakecase(text: str) -> str:
     return cast(str, snakecase(text))
 
 
-@dataclass
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     """Huawei LTE router scanner entity."""
 
-    _mac_address: str
+    _ip_address: str | None = None
+    _is_connected: bool = False
+    _hostname: str | None = None
 
-    _ip_address: str | None = field(default=None, init=False)
-    _is_connected: bool = field(default=False, init=False)
-    _hostname: str | None = field(default=None, init=False)
-    _extra_state_attributes: dict[str, Any] = field(default_factory=dict, init=False)
+    def __init__(self, router: Router, mac_address: str) -> None:
+        """Initialize."""
+        super().__init__(router)
+        self._extra_state_attributes: dict[str, Any] = {}
+        self._mac_address = mac_address
 
     @property
     def name(self) -> str:

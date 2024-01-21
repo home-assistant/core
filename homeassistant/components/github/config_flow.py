@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiogithubapi import (
     GitHubAPI,
@@ -118,19 +118,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle device steps."""
 
         async def _wait_for_login() -> None:
-            # mypy is not aware that we can't get here without having these set already
-            assert self._device is not None
-            assert self._login_device is not None
+            if TYPE_CHECKING:
+                # mypy is not aware that we can't get here without having these set already
+                assert self._device is not None
+                assert self._login_device is not None
 
-            try:
-                response = await self._device.activation(
-                    device_code=self._login_device.device_code
-                )
-                self._login = response.data
-            finally:
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
-                )
+            response = await self._device.activation(
+                device_code=self._login_device.device_code
+            )
+            self._login = response.data
 
         if not self._device:
             self._device = GitHubDeviceAPI(
@@ -139,31 +135,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 **{"client_name": SERVER_SOFTWARE},
             )
 
-        try:
-            response = await self._device.register()
-            self._login_device = response.data
-        except GitHubException as exception:
-            LOGGER.exception(exception)
-            return self.async_abort(reason="could_not_register")
+            try:
+                response = await self._device.register()
+                self._login_device = response.data
+            except GitHubException as exception:
+                LOGGER.exception(exception)
+                return self.async_abort(reason="could_not_register")
 
-        if not self.login_task:
+        if self.login_task is None:
             self.login_task = self.hass.async_create_task(_wait_for_login())
-            return self.async_show_progress(
-                step_id="device",
-                progress_action="wait_for_device",
-                description_placeholders={
-                    "url": OAUTH_USER_LOGIN,
-                    "code": self._login_device.user_code,
-                },
-            )
 
-        try:
-            await self.login_task
-        except GitHubException as exception:
-            LOGGER.exception(exception)
-            return self.async_show_progress_done(next_step_id="could_not_register")
+        if self.login_task.done():
+            if self.login_task.exception():
+                return self.async_show_progress_done(next_step_id="could_not_register")
+            return self.async_show_progress_done(next_step_id="repositories")
 
-        return self.async_show_progress_done(next_step_id="repositories")
+        if TYPE_CHECKING:
+            # mypy is not aware that we can't get here without having this set already
+            assert self._login_device is not None
+
+        return self.async_show_progress(
+            step_id="device",
+            progress_action="wait_for_device",
+            description_placeholders={
+                "url": OAUTH_USER_LOGIN,
+                "code": self._login_device.user_code,
+            },
+            progress_task=self.login_task,
+        )
 
     async def async_step_repositories(
         self,
@@ -171,8 +170,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle repositories step."""
 
-        # mypy is not aware that we can't get here without having this set already
-        assert self._login is not None
+        if TYPE_CHECKING:
+            # mypy is not aware that we can't get here without having this set already
+            assert self._login is not None
 
         if not user_input:
             repositories = await get_repositories(self.hass, self._login.access_token)

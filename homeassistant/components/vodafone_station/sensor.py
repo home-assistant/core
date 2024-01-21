@@ -34,7 +34,7 @@ class VodafoneStationBaseEntityDescription:
     is_suitable: Callable[[dict], bool] = lambda val: True
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class VodafoneStationEntityDescription(
     VodafoneStationBaseEntityDescription, SensorEntityDescription
 ):

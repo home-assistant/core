@@ -10,17 +10,17 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODELS
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 
 
-class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
+class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
     """Parent class for Tessie Entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
@@ -38,8 +38,9 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
             configuration_url="https://my.tessie.com/",
             name=coordinator.data["display_name"],
             model=MODELS.get(car_type, car_type),
-            sw_version=coordinator.data["vehicle_state_car_version"],
+            sw_version=coordinator.data["vehicle_state_car_version"].split(" ")[0],
             hw_version=coordinator.data["vehicle_config_driver_assist"],
+            serial_number=self.vin,
         )
 
     @property
@@ -52,11 +53,11 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         return self.coordinator.data.get(key or self.key, default)
 
     async def run(
-        self, func: Callable[..., Awaitable[dict[str, bool]]], **kargs: Any
+        self, func: Callable[..., Awaitable[dict[str, bool | str]]], **kargs: Any
     ) -> None:
         """Run a tessie_api function and handle exceptions."""
         try:
-            await func(
+            response = await func(
                 session=self.coordinator.session,
                 vin=self.vin,
                 api_key=self.coordinator.api_key,
@@ -64,6 +65,10 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
             )
         except ClientResponseError as e:
             raise HomeAssistantError from e
+        if response["result"] is False:
+            raise HomeAssistantError(
+                response.get("reason", "An unknown issue occurred")
+            )
 
     def set(self, *args: Any) -> None:
         """Set a value in coordinator data."""

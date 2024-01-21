@@ -22,13 +22,14 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -181,6 +182,36 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_traffic_minutes_delay",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_energy_at_arrival",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_miles_to_arrival",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+    ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_minutes_to_arrival",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_destination",
+        icon="mdi:map-marker",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 
@@ -188,13 +219,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TessieSensorEntity(coordinator, description)
-        for coordinator in coordinators
+        TessieSensorEntity(vehicle.state_coordinator, description)
+        for vehicle in data
         for description in DESCRIPTIONS
-        if description.key in coordinator.data
     )
 
 
@@ -205,7 +235,7 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
         description: TessieSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -215,4 +245,4 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._value)
+        return self.entity_description.value_fn(self.get())

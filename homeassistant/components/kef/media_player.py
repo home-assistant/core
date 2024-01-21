@@ -118,7 +118,7 @@ async def async_setup_platform(
 
     mode = get_ip_mode(host)
     mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
-    if mac is None:
+    if mac is None or mac == "00:00:00:00:00:00":
         raise PlatformNotReady("Cannot get the ip address of kef speaker.")
 
     unique_id = f"kef-{mac}"
