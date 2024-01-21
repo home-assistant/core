@@ -503,7 +503,7 @@ class AuthManager:
 
         async def _remove_expired_refresh_tokens(_: datetime | None = None) -> None:
             now = dt_util.utcnow()
-            for token in list(await self._store.async_get_refresh_tokens()):
+            for token in (await self._store.async_get_refresh_tokens())[:]:
                 if (expire_at := token.expire_at) is not None and expire_at <= now:
                     await self.async_remove_refresh_token(token)
             await self.async_track_next_refresh_token_expiration()
