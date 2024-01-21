@@ -35,6 +35,12 @@ from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
+def hours_to_datetime(value: StateType):
+    """Convert relative hours into absolute datetime."""
+    if isinstance(value, (int, float)) and value > 0:
+        return dt_util.now() + timedelta(hours=value)
+
+
 @dataclass(frozen=True, kw_only=True)
 class TessieSensorEntityDescription(SensorEntityDescription):
     """Describes Tessie Sensor entity."""
@@ -87,9 +93,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="charge_state_time_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda x: (dt_util.now() + timedelta(hours=x))
-        if isinstance(x, (int, float)) and x > 0
-        else None,
+        value_fn=hours_to_datetime,
     ),
     TessieSensorEntityDescription(
         key="charge_state_battery_range",
