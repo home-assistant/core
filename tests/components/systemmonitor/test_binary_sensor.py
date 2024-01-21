@@ -62,41 +62,6 @@ async def test_binary_sensor(
             assert state.attributes == snapshot(name=f"{state.name} - attributes")
 
 
-async def test_process_binary_sensor_not_loaded(
-    hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
-    mock_psutil: Mock,
-    mock_os: Mock,
-    mock_util: Mock,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the process binary sensor is not loaded until migrated."""
-    mock_config_entry = MockConfigEntry(
-        title="System Monitor",
-        domain=DOMAIN,
-        data={},
-        options={
-            "sensor": {"process": ["python3", "pip"]},
-            "resources": [
-                "disk_use_percent_/",
-                "disk_use_percent_/home/notexist/",
-                "memory_free_",
-                "network_out_eth0",
-                "process_python3",
-            ],
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    process_binary_sensor = hass.states.get(
-        "binary_sensor.system_monitor_process_python3"
-    )
-    assert process_binary_sensor is None
-
-
 async def test_binary_sensor_icon(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
