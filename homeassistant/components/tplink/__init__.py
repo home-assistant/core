@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Final, Optional
+from typing import Any, Final
 
 from aiohttp import ClientSession
 from kasa import (
@@ -228,7 +228,7 @@ def legacy_device_id(device: SmartDevice) -> str:
     return device_id.split("_")[1]
 
 
-async def get_credentials(hass: HomeAssistant) -> Optional[Credentials]:
+async def get_credentials(hass: HomeAssistant) -> Credentials | None:
     """Retrieve the credentials from hass data."""
     if DOMAIN in hass.data and CONF_AUTHENTICATION in hass.data[DOMAIN]:
         auth = hass.data[DOMAIN][CONF_AUTHENTICATION]

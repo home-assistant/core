@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Optional
+from typing import Any
 
 from kasa import (
     AuthenticationException,
@@ -95,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         raise AbortFlow("already_configured")
 
     async def _async_handle_discovery(
-        self, host: str, formatted_mac: str, config: Optional[dict] = None
+        self, host: str, formatted_mac: str, config: dict | None = None
     ) -> FlowResult:
         """Handle any discovery."""
         current_entry = await self.async_set_unique_id(
@@ -332,7 +332,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_discover_and_update(
         self,
         host: str,
-        credentials: Optional[Credentials],
+        credentials: Credentials | None,
         raise_on_progress: bool,
     ) -> SmartDevice:
         """Try to discover the device and call update.
@@ -363,7 +363,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_connect(
         self,
         discovered_device: SmartDevice,
-        credentials: Optional[Credentials],
+        credentials: Credentials | None,
     ) -> SmartDevice:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: discovered_device.host})
