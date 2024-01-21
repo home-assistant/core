@@ -84,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entry_data = entry.data
         entry_config_dict = entry_data.get(CONF_DEVICE_CONFIG)
         if entry_config_dict == config and entry_data[CONF_HOST] == host:
-            return  # pragma: no cover
+            return
         self.hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_DEVICE_CONFIG: config, CONF_HOST: host}
         )
