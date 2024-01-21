@@ -23,6 +23,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "process": {
+        "name": "Process {process}"
+      }
+    },
     "sensor": {
       "disk_free": {
         "name": "Disk free {mount_point}"
