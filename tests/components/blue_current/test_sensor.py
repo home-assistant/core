@@ -131,7 +131,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
 async def test_timestamp_sensors(hass: HomeAssistant) -> None:
     """Test the underlying sensors."""
-    await init_integration(hass, "sensor", charge_point, charge_point_status_timestamps)
+    await init_integration(hass, "sensor", status=charge_point_status_timestamps)
 
     entity_registry = er.async_get(hass)
     for entity_id, key in charge_point_timestamp_entity_ids.items():
@@ -151,9 +151,8 @@ async def test_sensor_update(hass: HomeAssistant) -> None:
     client = await init_integration(
         hass,
         "sensor",
-        charge_point,
-        charge_point_status | charge_point_status_timestamps,
-        grid,
+        status=charge_point_status | charge_point_status_timestamps,
+        grid=grid,
     )
 
     await client.receiver(
