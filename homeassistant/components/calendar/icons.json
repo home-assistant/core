@@ -1,7 +1,11 @@
 {
   "entity_component": {
     "_": {
-      "default": "mdi:calendar"
+      "default": "mdi:calendar",
+      "state": {
+        "on": "mdi:calendar-check",
+        "off": "mdi:calendar-blank"
+      }
     }
   },
   "services": {
