@@ -41,7 +41,6 @@ class LutronScene(LutronBaseEntity, Scene):
     """Representation of a Lutron Scene."""
 
     _lutron_device: Button
-    _attr_name = None
 
     def __init__(
         self,
@@ -57,6 +56,7 @@ class LutronScene(LutronBaseEntity, Scene):
             manufacturer="Lutron",
             name=keypad.name,
         )
+        self._attr_name = lutron_device.name
         if keypad.type == "MAIN_REPEATER":
             self._attr_device_info[ATTR_IDENTIFIERS].add((DOMAIN, controller.guid))
         else:
