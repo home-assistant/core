@@ -244,7 +244,8 @@ class AuthStore:
 
         return found
 
-    async def async_get_refresh_tokens(self) -> list[models.RefreshToken]:
+    @callback
+    def async_get_refresh_tokens(self) -> list[models.RefreshToken]:
         """Get all refresh tokens."""
         return list(
             itertools.chain.from_iterable(

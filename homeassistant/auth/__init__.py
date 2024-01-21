@@ -163,7 +163,7 @@ class AuthManager:
         self._expire_callbacks: dict[str, CALLBACK_TYPE] = {}
         self._expire_callback: CALLBACK_TYPE | None = None
 
-        hass.async_run_job(self.async_track_next_refresh_token_expiration)
+        hass.async_add_job(self.async_track_next_refresh_token_expiration)
         hass.async_add_shutdown_job(HassJob(self.async_cancel_expiration_schedule))
 
     @property
@@ -492,24 +492,28 @@ class AuthManager:
         for revoke_callback in callbacks:
             revoke_callback()
 
-    async def async_track_next_refresh_token_expiration(self) -> None:
+    async def _async_remove_expired_refresh_tokens(
+        self, _: datetime | None = None
+    ) -> None:
+        """Remove expired refresh tokens."""
+        now = dt_util.utcnow()
+        for token in self._store.async_get_refresh_tokens()[:]:
+            if (expire_at := token.expire_at) is not None and expire_at <= now:
+                await self.async_remove_refresh_token(token)
+        self.async_track_next_refresh_token_expiration()
+
+    @callback
+    def async_track_next_refresh_token_expiration(self) -> None:
         """Initialise all token expiration scheduled tasks."""
         next_expiration = dt_util.utcnow() + REFRESH_TOKEN_EXPIRATION
-        for token in await self._store.async_get_refresh_tokens():
+        for token in self._store.async_get_refresh_tokens():
             if (
                 expire_at := token.expire_at
             ) is not None and expire_at < next_expiration:
                 next_expiration = expire_at
 
-        async def _remove_expired_refresh_tokens(_: datetime | None = None) -> None:
-            now = dt_util.utcnow()
-            for token in (await self._store.async_get_refresh_tokens())[:]:
-                if (expire_at := token.expire_at) is not None and expire_at <= now:
-                    await self.async_remove_refresh_token(token)
-            await self.async_track_next_refresh_token_expiration()
-
         self._expire_callback = async_track_point_in_utc_time(
-            self.hass, _remove_expired_refresh_tokens, next_expiration
+            self.hass, self._async_remove_expired_refresh_tokens, next_expiration
         )
 
     async def async_cancel_expiration_schedule(self) -> None:
