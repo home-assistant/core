@@ -86,7 +86,8 @@
           "round_digits": "Round value to number of decimals",
           "device_class": "Device class",
           "state_class": "State class",
-          "unit_of_measurement": "Unit of Measurement"
+          "unit_of_measurement": "Unit of Measurement",
+          "value_template": "Value template"
         }
       },
       "switch": {
@@ -97,6 +98,9 @@
           "name": "[%key:common::config_flow::data::name%]"
         }
       }
+    },
+    "error": {
+      "missing_value_template": "Value template is missing"
     }
   },
   "options": {
@@ -196,6 +200,7 @@
         "last": "Most recently updated",
         "range": "Statistical range",
         "sum": "Sum",
+        "template": "Value template",
         "product": "Product"
       }
     }
