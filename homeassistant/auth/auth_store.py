@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from datetime import datetime, timedelta
 import hmac
 from logging import getLogger
@@ -338,9 +337,9 @@ class AuthStore:
             self._set_defaults()
             return
 
-        users: dict[str, models.User] = OrderedDict()
-        groups: dict[str, models.Group] = OrderedDict()
-        credentials: dict[str, models.Credentials] = OrderedDict()
+        users: dict[str, models.User] = {}
+        groups: dict[str, models.Group] = {}
+        credentials: dict[str, models.Credentials] = {}
 
         # Soft-migrating data as we load. We are going to make sure we have a
         # read only group and an admin group. There are two states that we can
@@ -610,9 +609,9 @@ class AuthStore:
 
     def _set_defaults(self) -> None:
         """Set default values for auth store."""
-        self._users = OrderedDict()
+        self._users = {}
 
-        groups: dict[str, models.Group] = OrderedDict()
+        groups: dict[str, models.Group] = {}
         admin_group = _system_admin_group()
         groups[admin_group.id] = admin_group
         user_group = _system_user_group()
