@@ -165,7 +165,7 @@ async def test_config_entry_device_config(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_config_entry_with_stored_credentials(
@@ -188,7 +188,7 @@ async def test_config_entry_with_stored_credentials(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_config_entry_device_config_invalid(
@@ -209,7 +209,7 @@ async def test_config_entry_device_config_invalid(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     assert (
         f"Invalid connection type dict for {IP_ADDRESS}: {entry_data.get(CONF_DEVICE_CONFIG)}"
@@ -245,7 +245,7 @@ async def test_config_entry_errors(
     # with pytest.raises(raises):
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state == entry_state
+    assert mock_config_entry.state is entry_state
     assert (
         any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
         == reauth_flows

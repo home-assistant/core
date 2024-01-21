@@ -148,7 +148,7 @@ async def test_discovery_auth(
     )
 
     await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEFAULT_ENTRY_TITLE
     assert result3["data"] == CREATE_ENTRY_DATA_AUTH
 
@@ -198,7 +198,7 @@ async def test_discovery_auth_errors(
         },
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {error_placement: errors_msg}
 
     await hass.async_block_till_done()
@@ -211,7 +211,7 @@ async def test_discovery_auth_errors(
             CONF_PASSWORD: "fake_password",
         },
     )
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "discovery_confirm"
 
     await hass.async_block_till_done()
@@ -220,7 +220,7 @@ async def test_discovery_auth_errors(
         result3["flow_id"],
         {},
     )
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["data"] == CREATE_ENTRY_DATA_AUTH
 
 
@@ -278,7 +278,7 @@ async def test_discovery_new_credentials(
         )
 
     assert mock_connect["connect"].call_count == 1
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == expected_step
 
     await hass.async_block_till_done()
@@ -292,14 +292,14 @@ async def test_discovery_new_credentials(
                 CONF_PASSWORD: "fake_password",
             },
         )
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "discovery_confirm"
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         {},
     )
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == CREATE_ENTRY_DATA_AUTH
 
 
@@ -319,7 +319,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -327,7 +327,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
@@ -336,7 +336,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -344,7 +344,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
@@ -354,7 +354,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: MAC_ADDRESS}
         )
-        assert result3["type"] == "create_entry"
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
         assert result3["title"] == DEFAULT_ENTRY_TITLE
         assert result3["data"] == CREATE_ENTRY_DATA_LEGACY
         await hass.async_block_till_done()
@@ -365,7 +365,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -373,7 +373,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
 
 
@@ -387,7 +387,7 @@ async def test_discovery_no_device(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
 
 
@@ -396,7 +396,7 @@ async def test_manual(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -409,7 +409,7 @@ async def test_manual(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -421,7 +421,7 @@ async def test_manual(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
         await hass.async_block_till_done()
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == DEFAULT_ENTRY_TITLE
     assert result4["data"] == CREATE_ENTRY_DATA_LEGACY
 
@@ -437,7 +437,7 @@ async def test_manual(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -446,7 +446,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -460,7 +460,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CREATE_ENTRY_DATA_LEGACY
 
 
@@ -474,7 +474,7 @@ async def test_manual_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -485,7 +485,7 @@ async def test_manual_auth(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user_auth_confirm"
     assert not result2["errors"]
 
@@ -499,7 +499,7 @@ async def test_manual_auth(
         },
     )
     await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEFAULT_ENTRY_TITLE
     assert result3["data"] == CREATE_ENTRY_DATA_AUTH
 
@@ -525,7 +525,7 @@ async def test_manual_auth_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -536,7 +536,7 @@ async def test_manual_auth_errors(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: IP_ADDRESS}
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user_auth_confirm"
     assert not result2["errors"]
 
@@ -550,7 +550,7 @@ async def test_manual_auth_errors(
         },
     )
     await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "user_auth_confirm"
     assert result3["errors"] == {error_placement: errors_msg}
 
@@ -562,7 +562,7 @@ async def test_manual_auth_errors(
             CONF_PASSWORD: "fake_password",
         },
     )
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["data"] == CREATE_ENTRY_DATA_AUTH
 
     await hass.async_block_till_done()
@@ -583,7 +583,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
@@ -595,7 +595,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             ),
         )
         await hass.async_block_till_done()
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
@@ -607,7 +607,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"
 
     with _patch_discovery(no_device=True), _patch_single_discovery(
@@ -654,7 +654,7 @@ async def test_discovered_by_dhcp_or_discovery(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_single_discovery(), _patch_connect(), patch(
@@ -665,7 +665,7 @@ async def test_discovered_by_dhcp_or_discovery(
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == CREATE_ENTRY_DATA_LEGACY
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
@@ -701,7 +701,7 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
             DOMAIN, context={"source": source}, data=data
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -733,7 +733,7 @@ async def test_reauth(
         "127.0.0.1", credentials=credentials
     )
     mock_discovery["mock_device"].update.assert_called_once_with()
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
     await hass.async_block_till_done()
@@ -770,7 +770,7 @@ async def test_reauth_update_from_discovery(
         },
     )
     await hass.async_block_till_done()
-    assert discovery_result["type"] == FlowResultType.ABORT
+    assert discovery_result["type"] is FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
 
@@ -805,7 +805,7 @@ async def test_reauth_update_from_discovery_with_ip_change(
         },
     )
     await hass.async_block_till_done()
-    assert discovery_result["type"] == FlowResultType.ABORT
+    assert discovery_result["type"] is FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
@@ -826,7 +826,7 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -845,7 +845,7 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
         },
     )
     await hass.async_block_till_done()
-    assert discovery_result["type"] == FlowResultType.ABORT
+    assert discovery_result["type"] is FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
     assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS
@@ -872,7 +872,7 @@ async def test_reauth_errors(
     mock_added_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
-    assert mock_added_config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert mock_added_config_entry.state is config_entries.ConfigEntryState.LOADED
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     [result] = flows
@@ -892,7 +892,7 @@ async def test_reauth_errors(
         "127.0.0.1", credentials=credentials
     )
     mock_discovery["mock_device"].update.assert_called_once_with()
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {error_placement: errors_msg}
 
     mock_discovery["discover_single"].reset_mock()
@@ -910,7 +910,7 @@ async def test_reauth_errors(
     )
     mock_discovery["mock_device"].update.assert_called_once_with()
 
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
 
 
@@ -934,13 +934,13 @@ async def test_pick_device_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
@@ -977,7 +977,7 @@ async def test_discovery_timeout_connect(
     )
     mock_discovery["discover_single"].side_effect = TimeoutException
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
     assert mock_connect["connect"].call_count == 0
@@ -986,7 +986,7 @@ async def test_discovery_timeout_connect(
         result["flow_id"], {CONF_HOST: IP_ADDRESS}
     )
     await hass.async_block_till_done()
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert mock_connect["connect"].call_count == 1
 
 
@@ -1035,7 +1035,7 @@ async def test_reauth_update_other_flows(
         "127.0.0.1", credentials=credentials
     )
     mock_discovery["mock_device"].update.assert_called_once_with()
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
     await hass.async_block_till_done()
