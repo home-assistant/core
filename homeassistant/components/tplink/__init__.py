@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Any
 
 from aiohttp import ClientSession
 from kasa import (
@@ -55,7 +55,6 @@ DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
-
 
 
 def create_async_tplink_clientsession(hass: HomeAssistant) -> ClientSession:
