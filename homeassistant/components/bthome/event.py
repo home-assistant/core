@@ -80,7 +80,9 @@ class BTHomeEventEntity(EventEntity):
         self._attr_unique_id = f"{address}-{event_class}"
         # If the event is provided then we can set the initial state
         # since the event itself is likely what triggered the creation
-        # of this entity
+        # of this entity. We have to do this at creation time since
+        # entities are created dynamically and would otherwise miss
+        # the initial state.
         if event:
             self._trigger_event(event[EVENT_TYPE], event[EVENT_PROPERTIES])
 
