@@ -429,8 +429,11 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
 
 
-def issue_for_unsupported_firmware(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Create a repair issue if the device runs an unsupporte firmware."""
+@callback
+def async_create_issue_unsupported_firmware(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Create a repair issue if the device runs an unsupported firmware."""
     ir.async_create_issue(
         hass,
         DOMAIN,

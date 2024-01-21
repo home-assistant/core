@@ -1,4 +1,4 @@
-"""Repairs platform for the demo integration."""
+"""Repairs platform for Shelly integration."""
 
 from __future__ import annotations
 

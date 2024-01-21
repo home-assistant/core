@@ -51,12 +51,12 @@ from .coordinator import (
     get_entry_data,
 )
 from .utils import (
+    async_create_issue_unsupported_firmware,
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
     get_rpc_device_wakeup_period,
     get_ws_context,
-    issue_for_unsupported_firmware,
 )
 
 BLOCK_PLATFORMS: Final = [
@@ -220,7 +220,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             raise ConfigEntryAuthFailed(repr(err)) from err
         except FirmwareUnsupported as err:
             error = repr(err)
-            issue_for_unsupported_firmware(hass, entry)
+            async_create_issue_unsupported_firmware(hass, entry)
             raise ConfigEntryNotReady(error) from err
 
         await _async_block_device_setup()
@@ -304,7 +304,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             await device.initialize()
         except FirmwareUnsupported as err:
             error = repr(err)
-            issue_for_unsupported_firmware(hass, entry)
+            async_create_issue_unsupported_firmware(hass, entry)
             raise ConfigEntryNotReady(error) from err
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
