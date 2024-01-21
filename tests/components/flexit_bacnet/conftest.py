@@ -59,6 +59,7 @@ def mock_flexit_bacnet() -> Generator[AsyncMock, None, None]:
         flexit_bacnet.air_filter_operating_time = 8820.0
         flexit_bacnet.heat_exchanger_efficiency = 81
         flexit_bacnet.heat_exchanger_speed = 100
+        flexit_bacnet.air_filter_polluted = False
 
         yield flexit_bacnet
 
