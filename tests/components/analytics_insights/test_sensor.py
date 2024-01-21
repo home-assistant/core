@@ -52,7 +52,7 @@ async def test_connection_error(
     """Test connection error."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_analytics_client.return_value.get_current_analytics.side_effect = (
+    mock_analytics_client.get_current_analytics.side_effect = (
         HomeassistantAnalyticsConnectionError()
     )
     freezer.tick(delta=timedelta(hours=12))
