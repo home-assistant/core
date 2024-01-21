@@ -809,6 +809,10 @@ omit =
     homeassistant/components/motionblinds_ble/cover.py
     homeassistant/components/motionblinds_ble/select.py
     homeassistant/components/motionblinds_ble/sensor.py
+    homeassistant/components/motionblinds_ble/motionblinds_ble/__init__.py
+    homeassistant/components/motionblinds_ble/motionblinds_ble/const.py
+    homeassistant/components/motionblinds_ble/motionblinds_ble/crypt.py
+    homeassistant/components/motionblinds_ble/motionblinds_ble/device.py
     homeassistant/components/motionmount/__init__.py
     homeassistant/components/motionmount/binary_sensor.py
     homeassistant/components/motionmount/entity.py
