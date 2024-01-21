@@ -725,20 +725,20 @@ async def async_setup_entry(  # noqa: C901
     entity_reg = async_get(hass)
     registry_entities = async_entries_for_config_entry(entity_reg, entry.entry_id)
     for registered_entity in registry_entities:
-        resource = registered_entity.unique_id
+        resource = registered_entity.options.get(DOMAIN)
         _LOGGER.debug(
             "Check resource %s already loaded in %s",
             check_resource,
             loaded_resources,
         )
         if (
-            resource.startswith("disk_")
+            resource
             and not registered_entity.disabled
             and resource not in loaded_resources
         ):
             split_index = resource.rfind("_")
-            _type = resource[:split_index]
-            argument = resource[split_index + 1 :]
+            _type = resource[CONF_TYPE]
+            argument = resource[CONF_ARG]
             _LOGGER.debug("Loading enabled entity %s with argument %s", _type, argument)
             loaded_resources.add(f"{_type}_{argument}")
             if not disk_coordinators.get(argument):
@@ -809,3 +809,40 @@ class SystemMonitorSensor(CoordinatorEntity[MonitorCoordinator[dataT]], SensorEn
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self)
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        update_entity_options(
+            self.hass, self.entity_id, self.entity_description.key, self.argument
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        update_entity_options(self.hass, self.entity_id)
+
+
+def update_entity_options(
+    hass: HomeAssistant,
+    entity_id: str,
+    _type: str | None = None,
+    argument: str | None = None,
+) -> None:
+    """Update entity options."""
+    entity_reg = async_get(hass)
+    if _type:
+        entity_reg.async_update_entity_options(
+            entity_id,
+            DOMAIN,
+            {
+                "type": _type,
+                "argument": argument,
+            },
+        )
+        return
+    entity_reg.async_update_entity_options(
+        entity_id,
+        DOMAIN,
+        None,
+    )
