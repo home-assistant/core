@@ -29,14 +29,12 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
         key="main",
         name=None,
-        icon="mdi:power",
         control_fn=lambda coordinator, state: coordinator.lm.set_power(state),
         is_on_fn=lambda coordinator: coordinator.lm.current_status["power"],
     ),
     LaMarzoccoSwitchEntityDescription(
         key="auto_on_off",
         translation_key="auto_on_off",
-        icon="mdi:alarm",
         control_fn=lambda coordinator, state: coordinator.lm.set_auto_on_off_global(
             state
         ),
@@ -47,7 +45,6 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
         translation_key="steam_boiler",
-        icon="mdi:water-boiler",
         control_fn=lambda coordinator, state: coordinator.lm.set_steam(state),
         is_on_fn=lambda coordinator: coordinator.lm.current_status[
             "steam_boiler_enable"
