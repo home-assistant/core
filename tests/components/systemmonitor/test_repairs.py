@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+from unittest.mock import Mock
+
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.repairs.websocket_api import (
     RepairsFlowIndexView,
@@ -14,18 +17,43 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.issue_registry import async_create_issue
 from homeassistant.setup import async_setup_component
 
-from tests.common import ANY
+from tests.common import ANY, MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_migrate_process_sensor(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
-    mock_added_config_entry: ConfigEntry,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    mock_util: Mock,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test migrating process sensor to binary sensor."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={
+            "sensor": {"process": ["python3", "pip"]},
+            "resources": [
+                "disk_use_percent_/",
+                "disk_use_percent_/home/notexist/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_python3",
+            ],
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entries(DOMAIN) == snapshot(
+        name="before_migration"
+    )
+
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
 
@@ -76,6 +104,8 @@ async def test_migrate_process_sensor(
         if i["issue_id"] == "migrate_process_sensor":
             issue = i
     assert not issue
+
+    assert hass.config_entries.async_entries(DOMAIN) == snapshot(name="after_migration")
 
 
 async def test_other_fixable_issues(

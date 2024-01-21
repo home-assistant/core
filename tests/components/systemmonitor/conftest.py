@@ -75,7 +75,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={},
         options={
-            "sensor": {"process": ["python3", "pip"]},
+            "binary_sensor": {"process": ["python3", "pip"]},
             "resources": [
                 "disk_use_percent_/",
                 "disk_use_percent_/home/notexist/",

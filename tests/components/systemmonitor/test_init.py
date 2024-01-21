@@ -43,7 +43,7 @@ async def test_adding_processor_to_options(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": {
+        "binary_sensor": {
             CONF_PROCESS: ["python3", "pip", "systemd"],
         },
         "resources": [
@@ -55,6 +55,6 @@ async def test_adding_processor_to_options(
         ],
     }
 
-    process_sensor = hass.states.get("sensor.system_monitor_process_systemd")
+    process_sensor = hass.states.get("binary_sensor.system_monitor_process_systemd")
     assert process_sensor is not None
     assert process_sensor.state == STATE_OFF

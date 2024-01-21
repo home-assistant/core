@@ -59,7 +59,7 @@ async def test_import(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["options"] == {
-        "sensor": {"process": ["systemd", "octave-cli"]},
+        "binary_sensor": {"process": ["systemd", "octave-cli"]},
         "resources": [
             "disk_use_percent_/",
             "memory_free_",
@@ -116,7 +116,7 @@ async def test_import_already_configured(
         domain=DOMAIN,
         source=config_entries.SOURCE_USER,
         options={
-            "sensor": [{CONF_PROCESS: "systemd"}],
+            "binary_sensor": [{CONF_PROCESS: "systemd"}],
             "resources": [
                 "disk_use_percent_/",
                 "memory_free_",
@@ -184,7 +184,7 @@ async def test_add_and_remove_processes(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": {
+        "binary_sensor": {
             CONF_PROCESS: ["systemd"],
         }
     }
@@ -205,26 +205,31 @@ async def test_add_and_remove_processes(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": {
+        "binary_sensor": {
             CONF_PROCESS: ["systemd", "octave-cli"],
         },
     }
 
     entity_reg = er.async_get(hass)
     entity_reg.async_get_or_create(
-        domain=Platform.SENSOR,
+        domain=Platform.BINARY_SENSOR,
         platform=DOMAIN,
         unique_id=slugify("process_systemd"),
         config_entry=config_entry,
     )
     entity_reg.async_get_or_create(
-        domain=Platform.SENSOR,
+        domain=Platform.BINARY_SENSOR,
         platform=DOMAIN,
         unique_id=slugify("process_octave-cli"),
         config_entry=config_entry,
     )
-    assert entity_reg.async_get("sensor.systemmonitor_process_systemd") is not None
-    assert entity_reg.async_get("sensor.systemmonitor_process_octave_cli") is not None
+    assert (
+        entity_reg.async_get("binary_sensor.systemmonitor_process_systemd") is not None
+    )
+    assert (
+        entity_reg.async_get("binary_sensor.systemmonitor_process_octave_cli")
+        is not None
+    )
 
     # Remove one
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -242,7 +247,7 @@ async def test_add_and_remove_processes(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": {
+        "binary_sensor": {
             CONF_PROCESS: ["systemd"],
         },
     }
@@ -263,7 +268,7 @@ async def test_add_and_remove_processes(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": {CONF_PROCESS: []},
+        "binary_sensor": {CONF_PROCESS: []},
     }
 
     assert entity_reg.async_get("sensor.systemmonitor_process_systemd") is None
