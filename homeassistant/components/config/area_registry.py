@@ -131,7 +131,7 @@ def websocket_update_area(
 def _entry_dict(entry: AreaEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     return {
-        "aliases": entry.aliases,
+        "aliases": list(entry.aliases),
         "area_id": entry.id,
         "name": entry.name,
         "picture": entry.picture,

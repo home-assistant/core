@@ -506,7 +506,7 @@ async def test_stop_refresh_on_ha_stop(
 
     # Fire Home Assistant stop event
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await hass.async_block_till_done()
 
     # Make sure no update with subscriber after stop event
