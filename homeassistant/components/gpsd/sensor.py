@@ -98,6 +98,7 @@ class GpsdSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self,
@@ -120,9 +121,9 @@ class GpsdSensor(SensorEntity):
     def native_value(self) -> str | None:
         """Return the state of GPSD."""
         if self.agps_thread.data_stream.mode == 3:
-            return "3D Fix"
+            return "3d_fix"
         if self.agps_thread.data_stream.mode == 2:
-            return "2D Fix"
+            return "2d_fix"
         return None
 
     @property
