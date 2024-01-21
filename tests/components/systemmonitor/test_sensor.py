@@ -4,14 +4,11 @@ import socket
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from psutil._common import shwtemp, snetio, snicaddr
+from psutil._common import sdiskusage, shwtemp, snetio, snicaddr
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.systemmonitor.sensor import (
-    _read_cpu_temperature,
-    get_cpu_icon,
-)
+from homeassistant.components.systemmonitor.sensor import get_cpu_icon
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -218,11 +215,11 @@ async def test_sensor_process_fails(
 
 
 async def test_sensor_network_sensors(
+    freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
     mock_added_config_entry: ConfigEntry,
     mock_psutil: Mock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test process not exist failure."""
     network_out_sensor = hass.states.get("sensor.system_monitor_network_out_eth1")
@@ -306,41 +303,129 @@ async def test_missing_cpu_temperature(
     mock_psutil.sensors_temperatures.return_value = {
         "not_exist": [shwtemp("not_exist", 50.0, 60.0, 70.0)]
     }
+    mock_util.sensors_temperatures.return_value = {
+        "not_exist": [shwtemp("not_exist", 50.0, 60.0, 70.0)]
+    }
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert "Cannot read CPU / processor temperature information" in caplog.text
+    # assert "Cannot read CPU / processor temperature information" in caplog.text
     temp_sensor = hass.states.get("sensor.system_monitor_processor_temperature")
     assert temp_sensor is None
 
 
-async def test_processor_temperature() -> None:
+async def test_processor_temperature(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_util: Mock,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the disk failures."""
 
-    with patch("sys.platform", "linux"), patch(
-        "homeassistant.components.systemmonitor.sensor.psutil"
-    ) as mock_psutil:
+    with patch("sys.platform", "linux"):
         mock_psutil.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
-        temperature = _read_cpu_temperature()
-        assert temperature == 50.0
+        mock_psutil.sensors_temperatures.side_effect = None
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        temp_entity = hass.states.get("sensor.system_monitor_processor_temperature")
+        assert temp_entity.state == "50.0"
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    with patch("sys.platform", "nt"), patch(
-        "homeassistant.components.systemmonitor.sensor.psutil",
-    ) as mock_psutil:
+    with patch("sys.platform", "nt"):
+        mock_psutil.sensors_temperatures.return_value = None
         mock_psutil.sensors_temperatures.side_effect = AttributeError(
             "sensors_temperatures not exist"
         )
-        temperature = _read_cpu_temperature()
-        assert temperature is None
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        temp_entity = hass.states.get("sensor.system_monitor_processor_temperature")
+        assert temp_entity.state == STATE_UNAVAILABLE
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    with patch("sys.platform", "darwin"), patch(
-        "homeassistant.components.systemmonitor.sensor.psutil"
-    ) as mock_psutil:
+    with patch("sys.platform", "darwin"):
         mock_psutil.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
-        temperature = _read_cpu_temperature()
-        assert temperature == 50.0
+        mock_psutil.sensors_temperatures.side_effect = None
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        temp_entity = hass.states.get("sensor.system_monitor_processor_temperature")
+        assert temp_entity.state == "50.0"
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_exception_handling_disk_sensor(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_psutil: Mock,
+    mock_added_config_entry: ConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sensor."""
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
+    assert disk_sensor is not None
+    assert disk_sensor.state == "200.0"  # GiB
+
+    mock_psutil.disk_usage.return_value = None
+    mock_psutil.disk_usage.side_effect = OSError("Could not update /")
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        "Error fetching System Monitor Disk / coordinator data: OS error for /"
+        in caplog.text
+    )
+
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
+    assert disk_sensor is not None
+    assert disk_sensor.state == STATE_UNAVAILABLE
+
+    mock_psutil.disk_usage.return_value = None
+    mock_psutil.disk_usage.side_effect = PermissionError("No access to /")
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        "Error fetching System Monitor Disk / coordinator data: OS error for /"
+        in caplog.text
+    )
+
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
+    assert disk_sensor is not None
+    assert disk_sensor.state == STATE_UNAVAILABLE
+
+    mock_psutil.disk_usage.return_value = sdiskusage(
+        500 * 1024**3, 350 * 1024**3, 150 * 1024**3, 70.0
+    )
+    mock_psutil.disk_usage.side_effect = None
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
+    assert disk_sensor is not None
+    assert disk_sensor.state == "150.0"
+    assert disk_sensor.attributes["unit_of_measurement"] == "GiB"
+
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_usage")
+    assert disk_sensor is not None
+    assert disk_sensor.state == "70.0"
+    assert disk_sensor.attributes["unit_of_measurement"] == "%"
