@@ -1,7 +1,7 @@
 """Storage for auth models."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import hmac
 import itertools
 from logging import getLogger
@@ -188,7 +188,7 @@ class AuthStore:
         client_icon: str | None = None,
         token_type: str = models.TOKEN_TYPE_NORMAL,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
-        expire_at: datetime | None = None,
+        expire_at: float | None = None,
         credential: models.Credentials | None = None,
     ) -> models.RefreshToken:
         """Create a new token for a user."""
@@ -262,7 +262,7 @@ class AuthStore:
         refresh_token.last_used_ip = remote_ip
         if refresh_token.expire_at:
             refresh_token.expire_at = (
-                refresh_token.last_used_at + REFRESH_TOKEN_EXPIRATION
+                refresh_token.last_used_at.timestamp() + REFRESH_TOKEN_EXPIRATION
             )
         self._async_schedule_save()
 
@@ -432,12 +432,6 @@ class AuthStore:
             else:
                 last_used_at = None
 
-            # old refresh_token don't have expire_at (pre-2024.2)
-            if expire_at_str := rt_dict.get("expire_at"):
-                expire_at = dt_util.parse_datetime(expire_at_str)
-            else:
-                expire_at = None
-
             token = models.RefreshToken(
                 id=rt_dict["id"],
                 user=users[rt_dict["user_id"]],
@@ -454,7 +448,7 @@ class AuthStore:
                 jwt_key=rt_dict["jwt_key"],
                 last_used_at=last_used_at,
                 last_used_ip=rt_dict.get("last_used_ip"),
-                expire_at=expire_at,
+                expire_at=rt_dict.get("expire_at"),
                 version=rt_dict.get("version"),
             )
             if "credential_id" in rt_dict:
@@ -528,9 +522,7 @@ class AuthStore:
                 if refresh_token.last_used_at
                 else None,
                 "last_used_ip": refresh_token.last_used_ip,
-                "expire_at": refresh_token.expire_at.isoformat()
-                if refresh_token.expire_at
-                else None,
+                "expire_at": refresh_token.expire_at,
                 "credential_id": refresh_token.credential.id
                 if refresh_token.credential
                 else None,

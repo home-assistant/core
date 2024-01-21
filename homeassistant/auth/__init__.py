@@ -437,7 +437,7 @@ class AuthManager:
                 token_type = models.TOKEN_TYPE_NORMAL
 
         if token_type == models.TOKEN_TYPE_NORMAL:
-            expire_at = dt_util.utcnow() + REFRESH_TOKEN_EXPIRATION
+            expire_at = time.time() + REFRESH_TOKEN_EXPIRATION
         else:
             expire_at = None
 
@@ -502,7 +502,7 @@ class AuthManager:
         self, _: datetime | None = None
     ) -> None:
         """Remove expired refresh tokens."""
-        now = dt_util.utcnow()
+        now = time.time()
         for token in self._store.async_get_refresh_tokens()[:]:
             if (expire_at := token.expire_at) is not None and expire_at <= now:
                 await self.async_remove_refresh_token(token)
@@ -511,7 +511,7 @@ class AuthManager:
     @callback
     def async_track_next_refresh_token_expiration(self) -> None:
         """Initialise all token expiration scheduled tasks."""
-        next_expiration = dt_util.utcnow() + REFRESH_TOKEN_EXPIRATION
+        next_expiration = time.time() + REFRESH_TOKEN_EXPIRATION
         for token in self._store.async_get_refresh_tokens():
             if (
                 expire_at := token.expire_at
@@ -519,7 +519,9 @@ class AuthManager:
                 next_expiration = expire_at
 
         self._expire_callback = async_track_point_in_utc_time(
-            self.hass, self._remove_expired_job, next_expiration
+            self.hass,
+            self._remove_expired_job,
+            dt_util.utc_from_timestamp(next_expiration),
         )
 
     async def async_cancel_expiration_schedule(self) -> None:

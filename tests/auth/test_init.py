@@ -590,7 +590,10 @@ async def test_remove_expired_refresh_token(hass: HomeAssistant) -> None:
     now = dt_util.utcnow()
     with freeze_time(now):
         refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
-        assert refresh_token.expire_at == now + timedelta(days=90)
+        assert (
+            refresh_token.expire_at
+            == now.timestamp() + timedelta(days=90).total_seconds()
+        )
 
     with freeze_time(now + timedelta(days=89, hours=23)):
         async_fire_time_changed(hass, now + timedelta(days=89, hours=23))
@@ -610,14 +613,22 @@ async def test_update_expire_at_refresh_token(hass: HomeAssistant) -> None:
     now = dt_util.utcnow()
     with freeze_time(now):
         refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
-        assert refresh_token.expire_at == now + timedelta(days=90)
+        assert (
+            refresh_token.expire_at
+            == now.timestamp() + timedelta(days=90).total_seconds()
+        )
 
     with freeze_time(now + timedelta(days=30)):
         async_fire_time_changed(hass, now + timedelta(days=30))
         await hass.async_block_till_done()
         assert manager.async_create_access_token(refresh_token)
         await hass.async_block_till_done()
-        assert refresh_token.expire_at == now + timedelta(days=30) + timedelta(days=90)
+        assert (
+            refresh_token.expire_at
+            == now.timestamp()
+            + timedelta(days=30).total_seconds()
+            + timedelta(days=90).total_seconds()
+        )
 
 
 async def test_register_revoke_token_callback(mock_hass) -> None:
