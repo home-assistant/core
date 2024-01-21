@@ -27,12 +27,6 @@ class FlexitBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 SENSOR_TYPES: tuple[FlexitBinarySensorEntityDescription, ...] = (
     FlexitBinarySensorEntityDescription(
-        key="electric_heater",
-        device_class=BinarySensorDeviceClass.HEAT,
-        translation_key="electric_heater",
-        value_fn=lambda data: data.electric_heater,
-    ),
-    FlexitBinarySensorEntityDescription(
         key="air_filter_polluted",
         device_class=BinarySensorDeviceClass.PROBLEM,
         translation_key="air_filter_polluted",

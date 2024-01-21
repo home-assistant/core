@@ -18,9 +18,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "electric_heater": {
-        "name": "Electric heater"
-      },
       "air_filter_polluted": {
         "name": "Air filter polluted"
       }
