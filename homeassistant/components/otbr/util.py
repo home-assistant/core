@@ -57,7 +57,7 @@ def compose_default_network_name(pan_id: int) -> str:
 def generate_random_pan_id() -> int:
     """Generate a random PAN ID."""
     # PAN ID is 2 bytes, 0xffff is reserved for broadcast
-    return random.randint(0, 0xfffe)
+    return random.randint(0, 0xFFFE)
 
 
 def _handle_otbr_error(
