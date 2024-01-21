@@ -276,7 +276,11 @@ def duplicate_entity_validator(config: dict) -> dict:
                     a += "_" + str(inx)
                     entry_addrs.add(a)
                 if CONF_FAN_MODE_REGISTER in entry:
-                    a = str(entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS])
+                    a = str(
+                        entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]
+                        if isinstance(entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS], int)
+                        else entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS][0]
+                    )
                     a += "_" + str(inx)
                     entry_addrs.add(a)
 

@@ -225,7 +225,6 @@ async def test_config_hvac_mode_register(hass: HomeAssistant, mock_modbus) -> No
                     CONF_SLAVE: 10,
                     CONF_FAN_MODE_REGISTER: {
                         CONF_ADDRESS: 11,
-                        CONF_WRITE_REGISTERS: True,
                         CONF_FAN_MODE_VALUES: {
                             CONF_FAN_MODE_ON: 0,
                             CONF_FAN_MODE_OFF: 1,
@@ -414,8 +413,7 @@ async def test_service_climate_update(
                         CONF_SCAN_INTERVAL: 0,
                         CONF_DATA_TYPE: DataType.INT32,
                         CONF_FAN_MODE_REGISTER: {
-                            CONF_ADDRESS: 118,
-                            CONF_WRITE_REGISTERS: True,
+                            CONF_ADDRESS: [118],
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_LOW: 0,
                                 CONF_FAN_MODE_MEDIUM: 1,
@@ -440,7 +438,6 @@ async def test_service_climate_update(
                         CONF_DATA_TYPE: DataType.INT32,
                         CONF_FAN_MODE_REGISTER: {
                             CONF_ADDRESS: 118,
-                            CONF_WRITE_REGISTERS: False,
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_LOW: 0,
                                 CONF_FAN_MODE_MEDIUM: 1,
@@ -464,8 +461,7 @@ async def test_service_climate_update(
                         CONF_SCAN_INTERVAL: 0,
                         CONF_DATA_TYPE: DataType.INT32,
                         CONF_FAN_MODE_REGISTER: {
-                            CONF_WRITE_REGISTERS: True,
-                            CONF_ADDRESS: 118,
+                            CONF_ADDRESS: [118],
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_LOW: 0,
                                 CONF_FAN_MODE_MEDIUM: 1,
@@ -714,8 +710,7 @@ async def test_service_set_hvac_mode(
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_FAN_MODE_REGISTER: {
-                            CONF_ADDRESS: 118,
-                            CONF_WRITE_REGISTERS: False,
+                            CONF_ADDRESS: [118],
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_ON: 1,
                                 CONF_FAN_MODE_OFF: 2,
@@ -737,7 +732,6 @@ async def test_service_set_hvac_mode(
                         CONF_SLAVE: 10,
                         CONF_FAN_MODE_REGISTER: {
                             CONF_ADDRESS: 118,
-                            CONF_WRITE_REGISTERS: True,
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_ON: 1,
                                 CONF_FAN_MODE_OFF: 2,

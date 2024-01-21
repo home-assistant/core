@@ -583,7 +583,7 @@ async def test_duplicate_entity_validator(do_config) -> None:
                         CONF_SLAVE: 0,
                         CONF_TARGET_TEMP: 117,
                         CONF_FAN_MODE_REGISTER: {
-                            CONF_ADDRESS: 121,
+                            CONF_ADDRESS: [121],
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_ON: 0,
                                 CONF_FAN_MODE_HIGH: 1,

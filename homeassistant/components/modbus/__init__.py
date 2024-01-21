@@ -281,8 +281,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
                 vol.All(
                     {
-                        CONF_ADDRESS: cv.positive_int,
-                        vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                        CONF_ADDRESS: vol.Any(cv.positive_int, [cv.positive_int]),
                         CONF_FAN_MODE_VALUES: {
                             vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
                             vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
