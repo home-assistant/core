@@ -41,7 +41,9 @@ async def async_setup_entry(
     elif device.is_plug:
         entities.append(SmartPlugSwitch(device, parent_coordinator))
 
-    entities.append(SmartPlugLedSwitch(device, parent_coordinator))
+    # this will be removed on the led is implemented
+    if hasattr(device, "led"):
+        entities.append(SmartPlugLedSwitch(device, parent_coordinator))
 
     async_add_entities(entities)
 
@@ -86,7 +88,7 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
-    _attr_name = None
+    _attr_name: str | None = None
 
     def __init__(
         self,
