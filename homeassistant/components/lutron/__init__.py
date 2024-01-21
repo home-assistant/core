@@ -168,7 +168,7 @@ class LutronData:
     buttons: list[LutronButton]
     covers: list[tuple[str, Output]]
     lights: list[tuple[str, Output]]
-    scenes: list[tuple[str, str, Button, Led]]
+    scenes: list[tuple[str, Keypad, Button, Led]]
     switches: list[tuple[str, Output]]
 
 
@@ -219,7 +219,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                         (led for led in keypad.leds if led.number == button.number),
                         None,
                     )
-                    entry_data.scenes.append((area.name, keypad.name, button, led))
+                    entry_data.scenes.append((area.name, keypad, button, led))
 
                 entry_data.buttons.append(LutronButton(hass, area.name, keypad, button))
         if area.occupancy_group is not None:

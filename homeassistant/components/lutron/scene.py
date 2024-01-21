@@ -3,15 +3,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from pylutron import Button, Lutron
+from pylutron import Button, Keypad, Lutron
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, LutronData
-from .entity import LutronDevice
+from .entity import LutronBaseEntity
 
 
 async def async_setup_entry(
@@ -28,14 +30,14 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            LutronScene(area_name, keypad_name, device, entry_data.client)
-            for area_name, keypad_name, device, led in entry_data.scenes
+            LutronScene(area_name, keypad, device, entry_data.client)
+            for area_name, keypad, device, led in entry_data.scenes
         ],
         True,
     )
 
 
-class LutronScene(LutronDevice, Scene):
+class LutronScene(LutronBaseEntity, Scene):
     """Representation of a Lutron Scene."""
 
     _lutron_device: Button
@@ -44,13 +46,21 @@ class LutronScene(LutronDevice, Scene):
     def __init__(
         self,
         area_name: str,
-        keypad_name: str,
+        keypad: Keypad,
         lutron_device: Button,
         controller: Lutron,
     ) -> None:
         """Initialize the scene/button."""
         super().__init__(area_name, lutron_device, controller)
-        self._keypad_name = keypad_name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, keypad.id)},
+            manufacturer="Lutron",
+            name=keypad.name,
+        )
+        if keypad.type == "MAIN_REPEATER":
+            self._attr_device_info[ATTR_IDENTIFIERS].add((DOMAIN, controller.guid))
+        else:
+            self._attr_device_info[ATTR_VIA_DEVICE] = (DOMAIN, controller.guid)
 
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""

@@ -7,8 +7,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 
-class LutronDevice(Entity):
-    """Representation of a Lutron device entity."""
+class LutronBaseEntity(Entity):
+    """Base class for Lutron entities."""
 
     _attr_should_poll = False
     _attr_has_entity_name = True
@@ -45,3 +45,20 @@ class LutronDevice(Entity):
         if self._lutron_device.uuid is None:
             return None
         return f"{self._controller.guid}_{self._lutron_device.uuid}"
+
+
+class LutronDevice(LutronBaseEntity):
+    """Representation of a Lutron device entity."""
+
+    def __init__(
+        self, area_name: str, lutron_device: LutronEntity, controller: Lutron
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(area_name, lutron_device, controller)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, lutron_device.uuid)},
+            manufacturer="Lutron",
+            name=lutron_device.name,
+            suggested_area=area_name,
+            via_device=(DOMAIN, controller.guid),
+        )
