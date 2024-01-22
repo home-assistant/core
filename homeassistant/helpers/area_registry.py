@@ -40,7 +40,7 @@ class AreaEntry:
 
 
 class AreaRegistryItems(UserDict[str, AreaEntry]):
-    """Container for device registry items, maps device id -> entry.
+    """Container for area registry items, maps area id -> entry.
 
     Maintains an additional index:
     - normalized name -> entry
@@ -115,10 +115,12 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
 class AreaRegistry:
     """Class to hold a registry of areas."""
 
+    areas: AreaRegistryItems
+    _area_data: dict[str, AreaEntry]
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the area registry."""
         self.hass = hass
-        self.areas = AreaRegistryItems()
         self._store = AreaRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -129,8 +131,12 @@ class AreaRegistry:
 
     @callback
     def async_get_area(self, area_id: str) -> AreaEntry | None:
-        """Get area by id."""
-        return self.areas.get(area_id)
+        """Get area by id.
+
+        We retrieve the DeviceEntry from the underlying dict to avoid
+        the overhead of the UserDict __getitem__.
+        """
+        return self._area_data.get(area_id)
 
     @callback
     def async_get_area_by_name(self, name: str) -> AreaEntry | None:
@@ -265,6 +271,7 @@ class AreaRegistry:
                 )
 
         self.areas = areas
+        self._area_data = areas.data
 
     @callback
     def async_schedule_save(self) -> None:
