@@ -648,7 +648,10 @@ async def async_setup_entry(  # noqa: C901
                     is_persistent=False,
                     severity=IssueSeverity.WARNING,
                     translation_key="process_sensor",
-                    data={"entry_id": entry.entry_id},
+                    data={
+                        "entry_id": entry.entry_id,
+                        "processes": _entry[CONF_PROCESS],
+                    },
                 )
             continue
 

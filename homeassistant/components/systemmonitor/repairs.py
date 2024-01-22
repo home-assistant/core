@@ -15,9 +15,10 @@ from homeassistant.core import HomeAssistant
 class ProcessFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, processes: list[str]) -> None:
         """Create flow."""
         self.entry = entry
+        self._processes = processes
         super().__init__()
 
     async def async_step_init(
@@ -33,6 +34,7 @@ class ProcessFixFlow(RepairsFlow):
         if user_input is None:
             return self.async_show_form(
                 step_id="migrate_process_sensor",
+                description_placeholders={"processes": ", ".join(self._processes)},
             )
         options = dict(self.entry.options)
         resources: list[str] | None = options.get("resources")
@@ -57,8 +59,9 @@ async def async_create_fix_flow(
     entry = None
     if data and (entry_id := data.get("entry_id")):
         entry_id = cast(str, entry_id)
+        processes: list[str] = data["processes"]
         entry = hass.config_entries.async_get_entry(entry_id)
         assert entry
-        return ProcessFixFlow(entry)
+        return ProcessFixFlow(entry, processes)
 
     return ConfirmRepairFlow()
