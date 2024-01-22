@@ -147,6 +147,8 @@ def async_active_zone(
         ):
             continue
 
+        # We got here which means it closer than the previous known closest
+        # or equal distance but this one is smaller.
         min_dist = zone_dist
         closest = zone
 
