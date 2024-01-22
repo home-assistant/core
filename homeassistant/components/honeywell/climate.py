@@ -51,7 +51,7 @@ ATTR_FAN_ACTION = "fan_action"
 
 ATTR_PERMANENT_HOLD = "permanent_hold"
 
-PRESET_HOLD = "Hold"
+PRESET_HOLD = "hold"
 
 HEATING_MODES = {"heat", "emheat", "auto"}
 COOLING_MODES = {"cool", "auto"}
