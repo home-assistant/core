@@ -24,6 +24,50 @@
         "name": "Mop attached"
       }
     },
+    "sensor": {
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "last_error": {
+        "name": "Last error"
+      },
+      "life_span_brush": {
+        "name": "Brush"
+      },
+      "life_span_filter": {
+        "name": "Filter"
+      },
+      "life_span_side_brush": {
+        "name": "Side brush"
+      },
+      "stats_area": {
+        "name": "Stats area"
+      },
+      "stats_time": {
+        "name": "Stats time"
+      },
+      "stats_total_area": {
+        "name": "Stats total area"
+      },
+      "stats_total_cleanings": {
+        "name": "Stats total cleanings"
+      },
+      "stats_total_time": {
+        "name": "Stats total time"
+      },
+      "stats_type": {
+        "name": "Stats type"
+      },
+      "wifi_ip": {
+        "name": "Ip"
+      },
+      "wifi_rssi": {
+        "name": "Wifi rssi"
+      },
+      "wifi_ssid": {
+        "name": "Wifi ssid"
+      }
+    },
     "vacuum": {
       "vacuum": {
         "state_attributes": {

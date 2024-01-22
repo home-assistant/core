@@ -23,9 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import EcovacsDescriptionEntity, EcovacsEntityDescription
 from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,23 +85,6 @@ class EcovacsController:
             raise ConfigEntryNotReady("Error during setup") from ex
 
         _LOGGER.debug("Controller initialize complete")
-
-    def register_platform_add_entities(
-        self,
-        entity_class: type[EcovacsDescriptionEntity],
-        descriptions: tuple[EcovacsEntityDescription, ...],
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Create entities from descriptions and add them."""
-        new_entites: list[EcovacsDescriptionEntity] = []
-
-        for device in self.devices:
-            for description in descriptions:
-                if capability := description.capability_fn(device.capabilities):
-                    new_entites.append(entity_class(device, capability, description))
-
-        if new_entites:
-            async_add_entities(new_entites)
 
     async def teardown(self) -> None:
         """Disconnect controller."""
