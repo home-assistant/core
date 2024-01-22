@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -28,13 +28,15 @@ from . import debug_info, trigger as mqtt_trigger
 from .config import MQTT_BASE_SCHEMA
 from .const import (
     ATTR_DISCOVERY_HASH,
+    CONF_CONNECTIONS,
     CONF_ENCODING,
+    CONF_IDENTIFIERS,
     CONF_PAYLOAD,
     CONF_QOS,
     CONF_TOPIC,
     DOMAIN,
 )
-from .discovery import MQTTDiscoveryPayload
+from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
@@ -62,6 +64,9 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_PLATFORM): DEVICE,
         vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_DEVICE_ID): str,
+        # The use of CONF_DISCOVERY_ID was deprecated in HA Core 2024.2.
+        # By default, a MQTT device trigger now will be referenced by
+        # device_id, type and subtype instead.
         vol.Optional(CONF_DISCOVERY_ID): str,
         vol.Required(CONF_TYPE): cv.string,
         vol.Required(CONF_SUBTYPE): cv.string,
@@ -218,7 +223,9 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         """Initialize the device trigger."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]
-        # Get the trigger_id based on the discovery_id if it is known
+        # The use of CONF_DISCOVERY_ID was deprecated in HA Core 2024.2.
+        # To make sure old automation keep working we determine the trigger_id
+        # based on the discovery_id if it is set.
         for trigger_id, trigger in self._mqtt_data.device_triggers.items():
             if trigger.discovery_id == discovery_id:
                 self.trigger_id = trigger_id
@@ -251,6 +258,12 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
             self.hass, discovery_hash, discovery_data
         )
         config = TRIGGER_DISCOVERY_SCHEMA(discovery_data)
+        if (
+            f"{self.device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
+            != self.trigger_id
+        ):
+            _LOGGER.error("Cannot update the type or subtype for a MQTT device trigger")
+            return
         update_device(self.hass, self._config_entry, config)
         device_trigger: Trigger = self._mqtt_data.device_triggers[self.trigger_id]
         await device_trigger.update_trigger(config)
@@ -261,6 +274,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         if self.trigger_id in self._mqtt_data.device_triggers:
             _LOGGER.info("Removing trigger: %s", discovery_hash)
             trigger: Trigger = self._mqtt_data.device_triggers[self.trigger_id]
+            trigger.discovery_data = None
             trigger.detach_trigger()
             debug_info.remove_trigger_discovery_data(self.hass, discovery_hash)
 
@@ -273,12 +287,44 @@ async def async_setup_trigger(
 ) -> None:
     """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
-    device_id = update_device(hass, config_entry, config)
+
+    # Check if there is an existing conflicting trigger first
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, id_) for id_ in config[CONF_DEVICE][CONF_IDENTIFIERS]},
+        connections={
+            (conn_[0], conn_[1]) for conn_ in config[CONF_DEVICE][CONF_CONNECTIONS]
+        },
+    )
+    if device_entry is not None:
+        device_id = device_entry.id
+        discovery_id = discovery_data[ATTR_DISCOVERY_HASH][1]
+        trigger_type = config[CONF_TYPE]
+        trigger_subtype = config[CONF_SUBTYPE]
+        mqtt_data = get_mqtt_data(hass)
+        for _, trig in mqtt_data.device_triggers.items():
+            if (
+                trig.discovery_data is not None
+                and trig.device_id == device_id
+                and trig.type == trigger_type
+                and trig.subtype == trigger_subtype
+            ):
+                _LOGGER.error(
+                    "Config for device trigger %s conflicts with existing "
+                    "device trigger, cannot set up trigger, got: %s",
+                    discovery_id,
+                    config,
+                )
+                send_discovery_done(hass, discovery_data)
+                clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
+                return None
+
+    new_device_id = update_device(hass, config_entry, config)
 
     if TYPE_CHECKING:
-        assert isinstance(device_id, str)
+        assert isinstance(new_device_id, str)
     mqtt_device_trigger = MqttDeviceTrigger(
-        hass, config, device_id, discovery_data, config_entry
+        hass, config, new_device_id, discovery_data, config_entry
     )
     await mqtt_device_trigger.async_setup()
     send_discovery_done(hass, discovery_data)
@@ -335,6 +381,11 @@ async def async_attach_trigger(
     trigger_id: str | None = None
     mqtt_data = get_mqtt_data(hass)
     device_id = config[CONF_DEVICE_ID]
+
+    # The use of CONF_DISCOVERY_ID was deprecated in HA Core 2024.2.
+    # In case CONF_DISCOVERY_ID is still used in an automation,
+    # we reference the device trigger by discovery_id instead of
+    # referencing it by device_id, type and subtype, which is the default.
     discovery_id: str | None = config.get(CONF_DISCOVERY_ID)
     if discovery_id is not None:
         for trig_id, trig in mqtt_data.device_triggers.items():
@@ -343,6 +394,8 @@ async def async_attach_trigger(
             ) is not None and discovery_id == discovery_data[ATTR_DISCOVERY_HASH][1]:
                 trigger_id = trig_id
                 break
+
+    # Reference the device trigger by device_id, type and subtype.
     if trigger_id is None:
         trigger_type = config[CONF_TYPE]
         trigger_subtype = config[CONF_SUBTYPE]

@@ -205,12 +205,13 @@ async def test_update_remove_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test triggers can be updated and removed."""
     await mqtt_mock_entry()
     config1 = {
         "automation_type": "trigger",
-        "device": {"identifiers": ["0AFFD2"]},
+        "device": {"identifiers": ["0AFFD2"], "name": "milk"},
         "payload": "short_press",
         "topic": "foobar/triggers/button1",
         "type": "button_short_press",
@@ -221,20 +222,32 @@ async def test_update_remove_triggers(
 
     config2 = {
         "automation_type": "trigger",
-        "device": {"identifiers": ["0AFFD2"]},
+        "device": {"identifiers": ["0AFFD2"], "name": "beer"},
+        "payload": "short_press",
+        "topic": "foobar/triggers/button1",
+        "type": "button_short_press",
+        "subtype": "button_1",
+    }
+    config2["topic"] = "foobar/tag_scanned2"
+    data2 = json.dumps(config2)
+
+    config3 = {
+        "automation_type": "trigger",
+        "device": {"identifiers": ["0AFFD2"], "name": "beer"},
         "payload": "short_press",
         "topic": "foobar/triggers/button1",
         "type": "button_short_press",
         "subtype": "button_2",
     }
-    config2["topic"] = "foobar/tag_scanned2"
-    data2 = json.dumps(config2)
+    config3["topic"] = "foobar/tag_scanned2"
+    data3 = json.dumps(config3)
 
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data1)
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
-    expected_triggers1 = [
+    assert device_entry.name == "milk"
+    expected_triggers = [
         {
             "platform": "device",
             "domain": DOMAIN,
@@ -244,13 +257,12 @@ async def test_update_remove_triggers(
             "metadata": {},
         },
     ]
-    expected_triggers2 = [dict(expected_triggers1[0])]
-    expected_triggers2[0]["subtype"] = "button_2"
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert triggers == unordered(expected_triggers1)
+    assert triggers == unordered(expected_triggers)
+    assert device_entry.name == "milk"
 
     # Update trigger
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data2)
@@ -259,7 +271,14 @@ async def test_update_remove_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert triggers == unordered(expected_triggers2)
+    assert triggers == unordered(expected_triggers)
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry.name == "beer"
+
+    # Update trigger cannot change type or subtype
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data3)
+    await hass.async_block_till_done()
+    assert "Cannot update the type or subtype for a MQTT device trigger" in caplog.text
 
     # Remove trigger
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", "")
@@ -272,7 +291,7 @@ async def test_update_remove_triggers(
 async def test_if_fires_on_mqtt_message(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing."""
@@ -348,6 +367,87 @@ async def test_if_fires_on_mqtt_message(
     assert calls[1].data["some"] == "long_press"
 
 
+async def test_if_discovery_id_is_prefered(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    calls: list[ServiceCall],
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test if discovery is preferred over referencing by type/subtype."""
+    await mqtt_mock_entry()
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "short_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    # type and subtype of data 2 do not match with the type and subtype
+    # in the automation, because discovery_id matches, the trigger will fire
+    data2 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "long_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_long_press",'
+        '  "subtype": "button_2" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla2",
+                        "type": "completely_different_type",
+                        "subtype": "completely_different_sub_type",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("long_press")},
+                    },
+                },
+            ]
+        },
+    )
+
+    # Fake short press, matching on type and subtype
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "short_press"
+
+    # Fake long press, matching on discovery_id
+    calls.clear()
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "long_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "long_press"
+
+
 async def test_non_unique_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -355,11 +455,7 @@ async def test_non_unique_triggers(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test non unique triggers.
-
-    The last received config for a non unique trigger is updating.
-    Both triggers are fired.
-    """
+    """Test non unique triggers."""
     await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
@@ -418,11 +514,14 @@ async def test_non_unique_triggers(
     )
 
     # Try to trigger first config.
+    # and triggers both attached instances.
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(calls) == 2
+    assert calls[0].data["some"] == "press1"
+    assert calls[1].data["some"] == "press2"
 
-    # Trigger second config that overrode the first
+    # Trigger second config references to same trigger
     # and triggers both attached instances.
     async_fire_mqtt_message(hass, "foobar/triggers/button2", "long_press")
     await hass.async_block_till_done()
@@ -430,24 +529,22 @@ async def test_non_unique_triggers(
     assert calls[0].data["some"] == "press1"
     assert calls[1].data["some"] == "press2"
 
-    # Test removing first trigger does not effect second trigger
+    # Removing the first trigger will clean up
     calls.clear()
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
-    async_fire_mqtt_message(hass, "foobar/triggers/button2", "long_press")
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert (
         "Device trigger ('device_automation', 'bla1') has been removed" in caplog.text
     )
-    assert len(calls) == 2
-    assert calls[0].data["some"] == "press1"
-    assert calls[1].data["some"] == "press2"
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_mqtt_message_template(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing."""
@@ -528,7 +625,7 @@ async def test_if_fires_on_mqtt_message_template(
 async def test_if_fires_on_mqtt_message_late_discover(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing of MQTT device triggers discovered after setup."""
@@ -615,10 +712,18 @@ async def test_if_fires_on_mqtt_message_late_discover(
 async def test_if_fires_on_mqtt_message_after_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test triggers firing after update."""
+    """Test triggers firing after update.
+
+    The use of CONF_DISCOVERY_ID was deprecated in HA Core 2024.2.
+    By default, a MQTT device trigger now will be referenced by
+    device_id, type and subtype instead.
+    If discovery_id is found an an automation it will have a higher
+    priority and than type and subtype.
+    """
     await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
@@ -630,9 +735,16 @@ async def test_if_fires_on_mqtt_message_after_update(
     data2 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
-        '  "topic": "foobar/triggers/buttonOne",'
-        '  "type": "button_long_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
         '  "subtype": "button_2" }'
+    )
+    data3 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "topic": "foobar/triggers/buttonOne",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
     )
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
@@ -667,29 +779,38 @@ async def test_if_fires_on_mqtt_message_after_update(
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    # Update the trigger with different topic
+    # Update the trigger with invalid type/subtype change
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data2)
     await hass.async_block_till_done()
+    assert "Cannot update the type or subtype for a MQTT device trigger" in caplog.text
 
+    # Update the trigger with different topic
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data3)
+    await hass.async_block_till_done()
+
+    calls.clear()
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    calls.clear()
+    async_fire_mqtt_message(hass, "foobar/triggers/buttonOne", "")
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    async_fire_mqtt_message(hass, "foobar/triggers/buttonOne", "")
-    await hass.async_block_till_done()
-    assert len(calls) == 2
-
     # Update the trigger with same topic
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data2)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data3)
     await hass.async_block_till_done()
 
+    calls.clear()
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "")
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(calls) == 0
 
+    calls.clear()
     async_fire_mqtt_message(hass, "foobar/triggers/buttonOne", "")
     await hass.async_block_till_done()
-    assert len(calls) == 3
+    assert len(calls) == 1
 
 
 async def test_no_resubscribe_same_topic(
@@ -742,7 +863,7 @@ async def test_no_resubscribe_same_topic(
 async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers not firing after removal."""
@@ -808,7 +929,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers not firing after removal."""
@@ -1570,7 +1691,7 @@ async def test_trigger_debug_info(
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    calls,
+    calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
 ) -> None:
