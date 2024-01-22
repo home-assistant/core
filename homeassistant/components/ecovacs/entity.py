@@ -104,3 +104,18 @@ class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
         """
         for event_type in self._subscribed_events:
             self._device.events.request_refresh(event_type)
+
+
+class EcovacsDescriptionEntity(EcovacsEntity[CapabilityT, _EntityDescriptionT]):
+    """Ecovacs entity."""
+
+    def __init__(
+        self,
+        device: Device,
+        capability: CapabilityT,
+        entity_description: _EntityDescriptionT,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize entity."""
+        self.entity_description = entity_description
+        super().__init__(device, capability, **kwargs)
