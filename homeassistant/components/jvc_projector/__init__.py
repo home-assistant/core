@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+
 from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -15,10 +18,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import CONF_READONLY, DOMAIN
 from .coordinator import JvcProjectorDataUpdateCoordinator
 
-PLATFORMS = [Platform.REMOTE]
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -40,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await device.disconnect()
         raise ConfigEntryAuthFailed("Password authentication failed") from err
 
-    coordinator = JvcProjectorDataUpdateCoordinator(hass, device)
+    coordinator = JvcProjectorDataUpdateCoordinator(hass, device, entry.data[CONF_NAME])
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -52,14 +55,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect)
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [Platform.BINARY_SENSOR]
+    )
+    # We remove the remote if is ReadOnly
+    if entry.data[CONF_READONLY] is False:
+        await hass.config_entries.async_forward_entry_setups(entry, [Platform.REMOTE])
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    unload_binarysensor = await hass.config_entries.async_unload_platforms(
+        entry, Platform.BINARY_SENSOR
+    )
+
+    if entry.data[CONF_READONLY] is False:
+        unload_remote = await hass.config_entries.async_unload_platforms(
+            entry, Platform.REMOTE
+        )
+        unload_ok = unload_binarysensor and unload_remote
+    else:
+        unload_ok = unload_binarysensor
+
+    if unload_ok:
         await hass.data[DOMAIN][entry.entry_id].device.disconnect()
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
