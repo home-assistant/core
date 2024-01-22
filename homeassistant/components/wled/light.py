@@ -121,7 +121,8 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if segment == 0:
             self._attr_name = None
         else:
-            self._attr_name = f"Segment {segment}"
+            self._attr_translation_key = "segment"
+            self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = (
             f"{self.coordinator.data.info.mac_address}_{self._segment}"

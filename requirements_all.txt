@@ -407,7 +407,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.5.6-2
+airthings-ble==0.6.0
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -2213,7 +2213,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.5.4
+python-kasa[speedups]==0.6.0.1
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3

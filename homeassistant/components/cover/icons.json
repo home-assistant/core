@@ -27,17 +27,13 @@
     "damper": {
       "default": "mdi:circle",
       "state": {
-        "closed": "mdi:circle-slice-8",
-        "closing": "mdi:circle",
-        "opening": "mdi:circle"
+        "closed": "mdi:circle-slice-8"
       }
     },
     "door": {
       "default": "mdi:door-open",
       "state": {
-        "closed": "mdi:door-closed",
-        "closing": "mdi:door-open",
-        "opening": "mdi:door-open"
+        "closed": "mdi:door-closed"
       }
     },
     "garage": {
