@@ -55,7 +55,6 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         except ValueError:
             total_consumption = None
 
-
         attrs = {
             ATTR_TOTAL_CONSUMPTION: total_consumption,
             ATTR_CURRENT_CONSUMPTION: current_consumption,
