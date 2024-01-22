@@ -6,7 +6,6 @@ from unittest.mock import patch
 from airly.exceptions import AirlyError
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.airly import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -28,7 +27,6 @@ async def test_sensor(
     """Test states of the sensor."""
     with patch("homeassistant.components.airly.PLATFORMS", [Platform.SENSOR]):
         entry = await init_integration(hass, aioclient_mock)
-
 
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
