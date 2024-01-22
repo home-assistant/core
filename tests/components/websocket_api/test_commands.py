@@ -716,22 +716,21 @@ async def test_get_config(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    if "components" in msg["result"]:
-        msg["result"]["components"] = set(msg["result"]["components"])
-    if "whitelist_external_dirs" in msg["result"]:
-        msg["result"]["whitelist_external_dirs"] = set(
-            msg["result"]["whitelist_external_dirs"]
-        )
-    if "allowlist_external_dirs" in msg["result"]:
-        msg["result"]["allowlist_external_dirs"] = set(
-            msg["result"]["allowlist_external_dirs"]
-        )
-    if "allowlist_external_urls" in msg["result"]:
-        msg["result"]["allowlist_external_urls"] = set(
-            msg["result"]["allowlist_external_urls"]
-        )
+    result = msg["result"]
+    ignore_order_keys = (
+        "components",
+        "allowlist_external_dirs",
+        "whitelist_external_dirs",
+        "allowlist_external_urls",
+    )
+    config = hass.config.as_dict()
 
-    assert msg["result"] == hass.config.as_dict()
+    for key in ignore_order_keys:
+        if key in result:
+            result[key] = set(result[key])
+            config[key] = set(config[key])
+
+    assert result == config
 
 
 async def test_ping(websocket_client: MockHAClientWebSocket) -> None:

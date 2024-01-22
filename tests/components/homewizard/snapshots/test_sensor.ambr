@@ -788,7 +788,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:calendar-clock',
+    'original_icon': None,
     'original_name': 'Active tariff',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -803,7 +803,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Device Active tariff',
-      'icon': 'mdi:calendar-clock',
       'options': list([
         '1',
         '2',
@@ -1113,7 +1112,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Active water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1127,7 +1126,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Active water usage',
-      'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'l/min',
     }),
@@ -1191,7 +1189,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:counter',
+    'original_icon': None,
     'original_name': 'DSMR version',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1205,7 +1203,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device DSMR version',
-      'icon': 'mdi:counter',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_dsmr_version',
@@ -1267,7 +1264,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alphabetical-variant',
+    'original_icon': None,
     'original_name': 'Gas meter identifier',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1281,7 +1278,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Gas meter identifier',
-      'icon': 'mdi:alphabetical-variant',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_gas_meter_identifier',
@@ -1343,7 +1339,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Long power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1357,7 +1353,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Long power failures detected',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_long_power_failures_detected',
@@ -1496,7 +1491,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1510,7 +1505,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Power failures detected',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_failures_detected',
@@ -1572,7 +1566,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alphabetical-variant',
+    'original_icon': None,
     'original_name': 'Smart meter identifier',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1586,7 +1580,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Smart meter identifier',
-      'icon': 'mdi:alphabetical-variant',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_identifier',
@@ -1648,7 +1641,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:gauge',
+    'original_icon': None,
     'original_name': 'Smart meter model',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1662,7 +1655,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Smart meter model',
-      'icon': 'mdi:gauge',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_model',
@@ -2606,7 +2598,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
-    'original_icon': 'mdi:gauge',
+    'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -2621,7 +2613,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Device Total water usage',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
@@ -2685,7 +2676,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -2699,7 +2690,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 1',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_1',
@@ -2761,7 +2751,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -2775,7 +2765,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 2',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_2',
@@ -2837,7 +2826,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -2851,7 +2840,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 3',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_3',
@@ -2913,7 +2901,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -2927,7 +2915,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 1',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_1',
@@ -2989,7 +2976,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -3003,7 +2990,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 2',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_2',
@@ -3065,7 +3051,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -3079,7 +3065,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 3',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_3',
@@ -3141,7 +3126,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -3155,7 +3140,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -3219,7 +3203,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -3233,7 +3217,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -4268,7 +4251,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Active water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -4282,7 +4265,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Active water usage',
-      'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'l/min',
     }),
@@ -4346,7 +4328,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Long power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -4360,7 +4342,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Long power failures detected',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_long_power_failures_detected',
@@ -4499,7 +4480,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -4513,7 +4494,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Power failures detected',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_failures_detected',
@@ -5457,7 +5437,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
-    'original_icon': 'mdi:gauge',
+    'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -5472,7 +5452,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Device Total water usage',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
@@ -5536,7 +5515,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -5550,7 +5529,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 1',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_1',
@@ -5612,7 +5590,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -5626,7 +5604,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 2',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_2',
@@ -5688,7 +5665,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -5702,7 +5679,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 3',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_3',
@@ -5764,7 +5740,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -5778,7 +5754,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 1',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_1',
@@ -5840,7 +5815,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -5854,7 +5829,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 2',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_2',
@@ -5916,7 +5890,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -5930,7 +5904,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 3',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_3',
@@ -6318,7 +6291,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6332,7 +6305,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -6396,7 +6368,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6410,7 +6382,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -6476,7 +6447,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Active water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6490,7 +6461,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Active water usage',
-      'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'l/min',
     }),
@@ -6556,7 +6526,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
-    'original_icon': 'mdi:gauge',
+    'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6571,7 +6541,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Device Total water usage',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
@@ -6635,7 +6604,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6649,7 +6618,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -6713,7 +6681,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6727,7 +6695,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -7117,7 +7084,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -7131,7 +7098,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -7195,7 +7161,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -7209,7 +7175,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -7765,7 +7730,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -7779,7 +7744,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -7843,7 +7807,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -7857,7 +7821,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
