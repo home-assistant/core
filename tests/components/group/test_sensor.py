@@ -32,6 +32,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -382,7 +383,9 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
     assert state.state == str(float(sum(VALUES)))
 
 
-async def test_sensor_calculated_properties_not_same(hass: HomeAssistant) -> None:
+async def test_sensor_calculated_properties_not_same(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test the sensor calculating device_class, state_class and unit of measurement not same."""
     config = {
         SENSOR_DOMAIN: {
@@ -433,6 +436,16 @@ async def test_sensor_calculated_properties_not_same(hass: HomeAssistant) -> Non
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("state_class") is None
     assert state.attributes.get("unit_of_measurement") is None
+
+    assert issue_registry.async_get_issue(
+        GROUP_DOMAIN, "sensor.test_sum_uoms_not_matching_no_device_class"
+    )
+    assert issue_registry.async_get_issue(
+        GROUP_DOMAIN, "sensor.test_sum_device_classes_not_matching"
+    )
+    assert issue_registry.async_get_issue(
+        GROUP_DOMAIN, "sensor.test_sum_state_classes_not_matching"
+    )
 
 
 async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> None:

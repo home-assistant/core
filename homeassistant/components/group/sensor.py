@@ -50,7 +50,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import GroupEntity
+from . import DOMAIN as GROUP_DOMAIN, GroupEntity
 from .const import CONF_IGNORE_NON_NUMERIC
 
 DEFAULT_NAME = "Sensor Group"
@@ -309,12 +309,10 @@ class SensorGroup(GroupEntity, SensorEntity):
         self.hass = hass
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
-        self._attr_state_class = self._calculate_state_class(state_class)
-        self._attr_device_class = self._calculate_device_class(device_class)
-        self._attr_native_unit_of_measurement = self._calculate_unit_of_measurement(
-            unit_of_measurement
-        )
-        self._valid_units: set[str | None] = self._get_valid_units()
+        self._state_class = state_class
+        self._device_class = device_class
+        self._native_unit_of_measurement = unit_of_measurement
+        self._valid_units: set[str | None] = set()
         self._attr_name = name
         if name == DEFAULT_NAME:
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
@@ -327,6 +325,16 @@ class SensorGroup(GroupEntity, SensorEntity):
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
+
+    async def async_added_to_hass(self) -> None:
+        """When added to hass."""
+        self._attr_state_class = self._calculate_state_class(self._state_class)
+        self._attr_device_class = self._calculate_device_class(self._device_class)
+        self._attr_native_unit_of_measurement = self._calculate_unit_of_measurement(
+            self._native_unit_of_measurement
+        )
+        self._valid_units = self._get_valid_units()
+        await super().async_added_to_hass()
 
     @callback
     def async_update_group_state(self) -> None:
@@ -444,7 +452,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             return state_classes[0]
         async_create_issue(
             self.hass,
-            DOMAIN,
+            GROUP_DOMAIN,
             f"{self.entity_id}_state_classes_not_matching",
             is_fixable=False,
             is_persistent=False,
@@ -487,7 +495,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             return device_classes[0]
         async_create_issue(
             self.hass,
-            DOMAIN,
+            GROUP_DOMAIN,
             f"{self.entity_id}_device_classes_not_matching",
             is_fixable=False,
             is_persistent=False,
@@ -537,7 +545,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         if device_class:
             async_create_issue(
                 self.hass,
-                DOMAIN,
+                GROUP_DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_device_class",
                 is_fixable=False,
                 is_persistent=False,
@@ -553,7 +561,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         else:
             async_create_issue(
                 self.hass,
-                DOMAIN,
+                GROUP_DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_no_device_class",
                 is_fixable=False,
                 is_persistent=False,
