@@ -80,3 +80,24 @@ def super_call_checker_fixture(hass_enforce_super_call, linter) -> BaseChecker:
     super_call_checker = hass_enforce_super_call.HassEnforceSuperCallChecker(linter)
     super_call_checker.module = "homeassistant.components.pylint_test"
     return super_call_checker
+
+
+@pytest.fixture(name="hass_enforce_sorted_platforms", scope="session")
+def hass_enforce_sorted_platforms_fixture() -> ModuleType:
+    """Fixture to the content for the hass_enforce_sorted_platforms check."""
+    return _load_plugin_from_file(
+        "hass_enforce_sorted_platforms",
+        "pylint/plugins/hass_enforce_sorted_platforms.py",
+    )
+
+
+@pytest.fixture(name="enforce_sorted_platforms_checker")
+def enforce_sorted_platforms_checker_fixture(
+    hass_enforce_sorted_platforms, linter
+) -> BaseChecker:
+    """Fixture to provide a hass_enforce_sorted_platforms checker."""
+    enforce_sorted_platforms_checker = (
+        hass_enforce_sorted_platforms.HassEnforceSortedPlatformsChecker(linter)
+    )
+    enforce_sorted_platforms_checker.module = "homeassistant.components.pylint_test"
+    return enforce_sorted_platforms_checker

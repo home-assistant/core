@@ -571,6 +571,7 @@ async def test_restart_takes_longer_than_watchdog_time(
     assert "already restarting" in caplog.text
 
 
+@pytest.mark.skipif("platform.system() != 'Darwin'")
 async def test_setup_and_stop_macos(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
 ) -> None:
