@@ -5,7 +5,11 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_TRV_ZONNSMART, XIAOMI_AQARA_VIBRATION_AQ1
+from zhaquirks.quirk_ids import (
+    TUYA_PLUG_MANUFACTURER,
+    TUYA_TRV_ZONNSMART,
+    XIAOMI_AQARA_VIBRATION_AQ1,
+)
 import zigpy.zcl
 from zigpy.zcl.clusters.closures import DoorLock
 
