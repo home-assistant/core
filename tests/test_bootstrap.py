@@ -784,6 +784,7 @@ async def test_setup_recovery_mode_if_no_frontend(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
 async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     hass: HomeAssistant,
 ) -> None:
@@ -836,7 +837,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
 
     assert integrations[0] != {}
     assert "an_after_dep" in integrations[0]
-    assert integrations[-3] != {}
+    assert integrations[-2] != {}
     assert integrations[-1] == {}
 
     assert "normal_integration" in hass.config.components
