@@ -27,7 +27,7 @@ def mock_analytics_client() -> Generator[AsyncMock, None, None]:
     """Mock a Homeassistant Analytics client."""
     with patch(
         "homeassistant.components.analytics_insights.HomeassistantAnalyticsClient",
-        autospec=True
+        autospec=True,
     ) as mock_client, patch(
         "homeassistant.components.analytics_insights.config_flow.HomeassistantAnalyticsClient",
         new=mock_client,
