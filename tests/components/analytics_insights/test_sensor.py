@@ -75,8 +75,8 @@ async def test_data_not_modified(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.homeassistant_analytics_spotify").state == "24388"
-    mock_analytics_client.return_value.get_current_analytics.side_effect = (
-        HomeassistantAnalyticsNotModifiedError()
+    mock_analytics_client.get_current_analytics.side_effect = (
+        HomeassistantAnalyticsNotModifiedError
     )
     freezer.tick(delta=timedelta(hours=12))
     async_fire_time_changed(hass)
