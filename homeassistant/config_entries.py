@@ -1941,11 +1941,12 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def async_update_reload_and_abort(
         self,
         entry: ConfigEntry,
+        *,
+        unique_id: str | None | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         reason: str = "reauth_successful",
-        unique_id: str | None | UndefinedType = UNDEFINED,
     ) -> data_entry_flow.FlowResult:
         """Update config entry, reload config entry and finish config flow."""
         result = self.hass.config_entries.async_update_entry(
