@@ -35,7 +35,7 @@ def mock_config_entry(load_jwt_fixture) -> MockConfigEntry:
         domain=DOMAIN,
         title="Husqvarna Automower of Erika Mustermann",
         data={
-            "auth_implementation": DOMAIN,
+            "auth_implementation": "husqvarna_automower_433e5fdf_5129_452c_ba7f_fadce3213042",
             "token": {
                 "access_token": load_jwt_fixture,
                 "scope": "iam:read amc:api",
@@ -44,7 +44,7 @@ def mock_config_entry(load_jwt_fixture) -> MockConfigEntry:
                 "provider": "husqvarna",
                 "user_id": USER_ID,
                 "token_type": "Bearer",
-                "expires_at": time.time() + 60 * 60 * 24,
+                "expires_at": 1697753347,
             },
         },
         unique_id=USER_ID,
@@ -59,7 +59,7 @@ def load_mower_fixture():
 
 
 @pytest.fixture(scope="session")
-def mower_list_fixture(load_mower_fixture) -> MowerList:
+def mower_list_fixture(load_mower_fixture):
     """Generate a mower fixture object."""
     mower = load_mower_fixture
     mowers_list = MowerList(**mower)
@@ -70,13 +70,13 @@ def mower_list_fixture(load_mower_fixture) -> MowerList:
 
 
 @pytest.fixture
-def activity() -> str:
+def activity():
     """Defaults value for activity."""
     return "PARKED_IN_CS"
 
 
 @pytest.fixture
-def state() -> str:
+def state():
     """Defaults value for state."""
     return "RESTRICTED"
 
@@ -84,39 +84,58 @@ def state() -> str:
 @pytest.fixture
 async def setup_entity(
     hass: HomeAssistant,
-    mower_list_fixture: MowerList,
-    mock_config_entry: MockConfigEntry,
+    mower_list_fixture,
+    mock_config_entry,
+    load_token_decoded_fixture,
     activity,
     state,
 ):
     """Set up entity and config entry."""
 
-    mower_data: MowerAttributes = mower_list_fixture[TEST_MOWER_ID]
-    mower_data.mower.activity = activity
-    mower_data.mower.state = state
-    config_entry: MockConfigEntry = mock_config_entry
-    config_entry.add_to_hass(hass)
-    with patch(
-        "aioautomower.session.AutomowerSession",
-        return_value=AsyncMock(
-            name="AutomowerMockSession",
-            model=AutomowerSession,
-            data=mower_list_fixture,
-            register_data_callback=MagicMock(),
-            unregister_data_callback=MagicMock(),
-            connect=AsyncMock(),
-            resume_schedule=AsyncMock(),
+    config_entry_oauth2_flow.async_register_implementation(
+        hass,
+        DOMAIN,
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass,
+            DOMAIN,
+            "awfwf",
+            "afwfe",
+            "http://example/authorize",
+            "http://example/token",
         ),
-    ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session",
-        return_value=AsyncMock(),
-    ), patch("jwt.decode", return_value=load_token_decoded_fixture), patch(
+    )
+
+    mower_data: MowerList = mower_list_fixture
+    test_mower: MowerAttributes = mower_data[TEST_MOWER_ID]
+    test_mower.mower.activity = activity
+    test_mower.mower.state = state
+
+    mock_entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="Husqvarna Automower of Erika Mustermann",
+        data={
+            "auth_implementation": "husqvarna_automower",
+            "token": {
+                "access_token": load_jwt_fixture,
+                "scope": "iam:read amc:api",
+                "expires_in": 86399,
+                "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
+                "provider": "husqvarna",
+                "user_id": USER_ID,
+                "token_type": "Bearer",
+                "expires_at": 10000000000000000,
+            },
+        },
+        unique_id=USER_ID,
+        entry_id="automower_test",
+    )
+    mock_entry.add_to_hass(hass)
+    with patch(
         "homeassistant.components.husqvarna_automower.coordinator.AutomowerDataUpdateCoordinator._async_update_data",
         return_value=mower_data,
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    return mock_config_entry
+    return mock_entry
