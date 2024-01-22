@@ -4,10 +4,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
+from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .const import IMPORT_DATA
@@ -92,3 +95,18 @@ async def test_async_setup_import(
     assert len(hass.config_entries.async_entries(DOMAIN)) == config_entries_expected
     assert mock_setup_entry.call_count == config_entries_expected
     assert mock_authenticator_authenticate.call_count == config_entries_expected
+
+
+async def test_devices_in_dr(
+    device_registry: dr.DeviceRegistry,
+    controller: EcovacsController,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test all devices are in the device registry."""
+    for device in controller.devices:
+        assert (
+            device_entry := device_registry.async_get_device(
+                identifiers={(DOMAIN, device.device_info.did)}
+            )
+        )
+        assert device_entry == snapshot(name=device.device_info.did)
