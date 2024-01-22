@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Container, Iterable, MutableMapping
+from collections.abc import Iterable, MutableMapping
+import dataclasses
 from typing import Any, Literal, TypedDict, cast
-
-import attr
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
@@ -29,26 +28,15 @@ class EventAreaRegistryUpdatedData(TypedDict):
     area_id: str
 
 
-@attr.s(slots=True, frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
 class AreaEntry:
     """Area Registry Entry."""
 
-    name: str = attr.ib()
-    normalized_name: str = attr.ib()
-    aliases: set[str] = attr.ib(
-        converter=attr.converters.default_if_none(factory=set)  # type: ignore[misc]
-    )
-    id: str | None = attr.ib(default=None)
-    picture: str | None = attr.ib(default=None)
-
-    def generate_id(self, existing_ids: Container[str]) -> None:
-        """Initialize ID."""
-        suggestion = suggestion_base = slugify(self.name)
-        tries = 1
-        while suggestion in existing_ids:
-            tries += 1
-            suggestion = f"{suggestion_base}_{tries}"
-        object.__setattr__(self, "id", suggestion)
+    aliases: set[str]
+    id: str
+    name: str
+    normalized_name: str
+    picture: str | None
 
 
 class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
@@ -133,10 +121,14 @@ class AreaRegistry:
         if self.async_get_area_by_name(name):
             raise ValueError(f"The name {name} ({normalized_name}) is already in use")
 
+        area_id = self._generate_area_id(name)
         area = AreaEntry(
-            aliases=aliases, name=name, normalized_name=normalized_name, picture=picture
+            aliases=aliases or set(),
+            id=area_id,
+            name=name,
+            normalized_name=normalized_name,
+            picture=picture,
         )
-        area.generate_id(self.areas)
         assert area.id is not None
         self.areas[area.id] = area
         self._normalized_name_area_idx[normalized_name] = area.id
@@ -221,7 +213,7 @@ class AreaRegistry:
         if not new_values:
             return old
 
-        new = self.areas[area_id] = attr.evolve(old, **new_values)  # type: ignore[arg-type]
+        new = self.areas[area_id] = dataclasses.replace(old, **new_values)  # type: ignore[arg-type]
         if normalized_name is not None:
             self._normalized_name_area_idx[
                 normalized_name
@@ -272,6 +264,15 @@ class AreaRegistry:
         ]
 
         return data
+
+    def _generate_area_id(self, name: str) -> str:
+        """Generate area ID."""
+        suggestion = suggestion_base = slugify(name)
+        tries = 1
+        while suggestion in self.areas:
+            tries += 1
+            suggestion = f"{suggestion_base}_{tries}"
+        return suggestion
 
 
 @callback

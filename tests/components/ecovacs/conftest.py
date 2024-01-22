@@ -1,17 +1,21 @@
 """Common fixtures for the Ecovacs tests."""
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from deebot_client.api_client import ApiClient
-from deebot_client.authentication import Authenticator
+from deebot_client.const import PATH_API_APPSVR_APP
+from deebot_client.device import Device
+from deebot_client.exceptions import ApiError
 from deebot_client.models import Credentials
 import pytest
 
 from homeassistant.components.ecovacs.const import DOMAIN
+from homeassistant.components.ecovacs.controller import EcovacsController
+from homeassistant.core import HomeAssistant
 
 from .const import VALID_ENTRY_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -34,18 +38,43 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_authenticator() -> Generator[Mock, None, None]:
+def device_classes() -> list[str]:
+    """Device classes, which should be returned by the get_devices api call."""
+    return ["yna5x1"]
+
+
+@pytest.fixture
+def mock_authenticator(device_classes: list[str]) -> Generator[Mock, None, None]:
     """Mock the authenticator."""
-    mock_authenticator = Mock(spec_set=Authenticator)
-    mock_authenticator.authenticate.return_value = Credentials("token", "user_id", 0)
     with patch(
         "homeassistant.components.ecovacs.controller.Authenticator",
-        return_value=mock_authenticator,
-    ), patch(
+        autospec=True,
+    ) as mock, patch(
         "homeassistant.components.ecovacs.config_flow.Authenticator",
-        return_value=mock_authenticator,
+        new=mock,
     ):
-        yield mock_authenticator
+        authenticator = mock.return_value
+        authenticator.authenticate.return_value = Credentials("token", "user_id", 0)
+
+        devices = []
+        for device_class in device_classes:
+            devices.append(
+                load_json_object_fixture(f"devices/{device_class}/device.json", DOMAIN)
+            )
+
+        def post_authenticated(
+            path: str,
+            json: dict[str, Any],
+            *,
+            query_params: dict[str, Any] | None = None,
+            headers: dict[str, Any] | None = None,
+        ) -> dict[str, Any]:
+            if path == PATH_API_APPSVR_APP:
+                return {"code": 0, "devices": devices, "errno": "0"}
+            raise ApiError("Path not mocked: {path}")
+
+        authenticator.post_authenticated.side_effect = post_authenticated
+        yield authenticator
 
 
 @pytest.fixture
@@ -55,10 +84,46 @@ def mock_authenticator_authenticate(mock_authenticator: Mock) -> AsyncMock:
 
 
 @pytest.fixture
-def mock_api_client(mock_authenticator: Mock) -> Mock:
-    """Mock the API client."""
+def mock_mqtt_client(mock_authenticator: Mock) -> Mock:
+    """Mock the MQTT client."""
     with patch(
-        "homeassistant.components.ecovacs.controller.ApiClient",
-        return_value=Mock(spec_set=ApiClient),
-    ) as mock_api_client:
-        yield mock_api_client.return_value
+        "homeassistant.components.ecovacs.controller.MqttClient",
+        autospec=True,
+    ) as mock_mqtt_client:
+        client = mock_mqtt_client.return_value
+        client._authenticator = mock_authenticator
+        client.subscribe.return_value = lambda: None
+        yield client
+
+
+@pytest.fixture
+def mock_device_execute() -> AsyncMock:
+    """Mock the device execute function."""
+    with patch.object(
+        Device, "_execute_command", return_value=True
+    ) as mock_device_execute:
+        yield mock_device_execute
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_authenticator: Mock,
+    mock_mqtt_client: Mock,
+    mock_device_execute: AsyncMock,
+) -> MockConfigEntry:
+    """Set up the Ecovacs integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_config_entry
+
+
+@pytest.fixture
+def controller(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> EcovacsController:
+    """Get the controller for the config entry."""
+    return hass.data[DOMAIN][init_integration.entry_id]

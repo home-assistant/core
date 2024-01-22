@@ -36,7 +36,7 @@ HATasmota==0.8.0
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.1.0
+Pillow==10.2.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.7
@@ -359,7 +359,7 @@ aiounifi==69
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.4.3
+aiovodafone==0.5.4
 
 # homeassistant.components.waqi
 aiowaqi==3.0.1
@@ -427,7 +427,7 @@ arcam-fmj==1.4.0
 async-upnp-client==0.38.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.4.2
+asyncsleepiq==1.5.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
