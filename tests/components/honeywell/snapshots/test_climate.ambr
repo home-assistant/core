@@ -28,7 +28,7 @@
     'preset_modes': list([
       'none',
       'away',
-      'Hold',
+      'hold',
     ]),
     'supported_features': <ClimateEntityFeature: 95>,
     'target_temp_high': None,
