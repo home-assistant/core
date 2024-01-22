@@ -257,6 +257,16 @@ async def test_update_remove_triggers(
             "metadata": {},
         },
     ]
+    expected_triggers2 = [
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "type": "button_short_press",
+            "subtype": "button_2",
+            "metadata": {},
+        },
+    ]
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -264,10 +274,9 @@ async def test_update_remove_triggers(
     assert triggers == unordered(expected_triggers)
     assert device_entry.name == "milk"
 
-    # Update trigger
+    # Update trigger topic
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data2)
     await hass.async_block_till_done()
-
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
@@ -275,10 +284,13 @@ async def test_update_remove_triggers(
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry.name == "beer"
 
-    # Update trigger cannot change type or subtype
+    # Update trigger type / subtype
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data3)
     await hass.async_block_till_done()
-    assert "Cannot update the type or subtype for a MQTT device trigger" in caplog.text
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert triggers == unordered(expected_triggers2)
 
     # Remove trigger
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", "")
@@ -747,6 +759,7 @@ async def test_if_fires_on_mqtt_message_after_update(
         '  "subtype": "button_1" }'
     )
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
 
@@ -779,10 +792,12 @@ async def test_if_fires_on_mqtt_message_after_update(
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    # Update the trigger with invalid type/subtype change
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data2)
+    # Update the trigger with existing type/subtype change
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data1)
     await hass.async_block_till_done()
-    assert "Cannot update the type or subtype for a MQTT device trigger" in caplog.text
+    assert (
+        "Cannot update the type or subtype for this MQTT device trigger" in caplog.text
+    )
 
     # Update the trigger with different topic
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data3)
