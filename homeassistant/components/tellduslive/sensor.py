@@ -43,81 +43,75 @@ SENSOR_TYPE_BAROMETRIC_PRESSURE = "barpress"
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     SENSOR_TYPE_TEMPERATURE: SensorEntityDescription(
         key=SENSOR_TYPE_TEMPERATURE,
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_HUMIDITY: SensorEntityDescription(
         key=SENSOR_TYPE_HUMIDITY,
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_RAINRATE: SensorEntityDescription(
         key=SENSOR_TYPE_RAINRATE,
-        name="Rain rate",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SENSOR_TYPE_RAINTOTAL: SensorEntityDescription(
         key=SENSOR_TYPE_RAINTOTAL,
-        name="Rain total",
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SENSOR_TYPE_WINDDIRECTION: SensorEntityDescription(
         key=SENSOR_TYPE_WINDDIRECTION,
-        name="Wind direction",
+        translation_key="wind_direction",
     ),
     SENSOR_TYPE_WINDAVERAGE: SensorEntityDescription(
         key=SENSOR_TYPE_WINDAVERAGE,
-        name="Wind average",
+        translation_key="wind_average",
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_WINDGUST: SensorEntityDescription(
         key=SENSOR_TYPE_WINDGUST,
-        name="Wind gust",
+        translation_key="wind_gust",
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_UV: SensorEntityDescription(
         key=SENSOR_TYPE_UV,
-        name="UV",
+        translation_key="uv",
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_WATT: SensorEntityDescription(
         key=SENSOR_TYPE_WATT,
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_LUMINANCE: SensorEntityDescription(
         key=SENSOR_TYPE_LUMINANCE,
-        name="Luminance",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_DEW_POINT: SensorEntityDescription(
         key=SENSOR_TYPE_DEW_POINT,
-        name="Dew Point",
+        translation_key="dew_point",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_BAROMETRIC_PRESSURE: SensorEntityDescription(
         key=SENSOR_TYPE_BAROMETRIC_PRESSURE,
-        name="Barometric Pressure",
         native_unit_of_measurement=UnitOfPressure.KPA,
+        device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -150,6 +144,8 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
         super().__init__(client, device_id)
         if desc := SENSOR_TYPES.get(self._type):
             self.entity_description = desc
+        else:
+            self._attr_name = None
 
     @property
     def device_id(self):
@@ -180,14 +176,6 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     def _value_as_humidity(self):
         """Return the value as humidity."""
         return int(round(float(self._value)))
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        quantity_name = (
-            self.entity_description.name if hasattr(self, "entity_description") else ""
-        )
-        return "{} {}".format(super().name, quantity_name or "").strip()
 
     @property
     def native_value(self):

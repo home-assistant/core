@@ -53,20 +53,13 @@ async def async_setup_entry(
 class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
 
+    _attr_name = None
+
     def __init__(self, coordinator, unit_id, info, supported_modes):
         """Initialize the climate device."""
         super().__init__(coordinator, unit_id, info)
-        self._hvac_modes = supported_modes
-
-    @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return self._unit_id
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self.unique_id
+        self._attr_hvac_modes = supported_modes
+        self._attr_unique_id = unit_id
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
@@ -104,11 +97,6 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
             return HVACMode.OFF
 
         return CM_TO_HA_STATE[mode]
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return self._hvac_modes
 
     @property
     def fan_mode(self):

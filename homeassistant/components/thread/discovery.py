@@ -6,6 +6,7 @@ import dataclasses
 import logging
 from typing import cast
 
+from python_otbr_api.mdns import StateBitmap
 from zeroconf import BadTypeInNameException, DNSPointer, ServiceListener, Zeroconf
 from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 
@@ -16,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 KNOWN_BRANDS: dict[str | None, str] = {
     "Apple Inc.": "apple",
+    "eero": "eero",
     "Google Inc.": "google",
     "HomeAssistant": "homeassistant",
     "Home Assistant": "homeassistant",
@@ -29,18 +31,23 @@ TYPE_PTR = 12
 class ThreadRouterDiscoveryData:
     """Thread router discovery data."""
 
+    addresses: list[str]
+    border_agent_id: str | None
     brand: str | None
-    extended_pan_id: str | None
+    extended_address: str
+    extended_pan_id: str
     model_name: str | None
     network_name: str | None
     server: str | None
-    vendor_name: str | None
-    addresses: list[str] | None
     thread_version: str | None
+    unconfigured: bool | None
+    vendor_name: str | None
 
 
 def async_discovery_data_from_service(
     service: AsyncServiceInfo,
+    ext_addr: bytes,
+    ext_pan_id: bytes,
 ) -> ThreadRouterDiscoveryData:
     """Get a ThreadRouterDiscoveryData from an AsyncServiceInfo."""
 
@@ -53,21 +60,40 @@ def async_discovery_data_from_service(
         except UnicodeDecodeError:
             return None
 
-    ext_pan_id = service.properties.get(b"xp")
-    network_name = try_decode(service.properties.get(b"nn"))
-    model_name = try_decode(service.properties.get(b"mn"))
+    service_properties = service.properties
+    border_agent_id = service_properties.get(b"id")
+    model_name = try_decode(service_properties.get(b"mn"))
+    network_name = try_decode(service_properties.get(b"nn"))
     server = service.server
-    vendor_name = try_decode(service.properties.get(b"vn"))
-    thread_version = try_decode(service.properties.get(b"tv"))
+    thread_version = try_decode(service_properties.get(b"tv"))
+    vendor_name = try_decode(service_properties.get(b"vn"))
+
+    unconfigured = None
+    brand = KNOWN_BRANDS.get(vendor_name)
+    if brand == "homeassistant":
+        # Attempt to detect incomplete configuration
+        if (state_bitmap_b := service_properties.get(b"sb")) is not None:
+            try:
+                state_bitmap = StateBitmap.from_bytes(state_bitmap_b)
+                if not state_bitmap.is_active:
+                    unconfigured = True
+            except ValueError:
+                _LOGGER.debug("Failed to decode state bitmap in service %s", service)
+        if service_properties.get(b"at") is None:
+            unconfigured = True
+
     return ThreadRouterDiscoveryData(
-        brand=KNOWN_BRANDS.get(vendor_name),
-        extended_pan_id=ext_pan_id.hex() if ext_pan_id is not None else None,
+        addresses=service.parsed_addresses(),
+        border_agent_id=border_agent_id.hex() if border_agent_id is not None else None,
+        brand=brand,
+        extended_address=ext_addr.hex(),
+        extended_pan_id=ext_pan_id.hex(),
         model_name=model_name,
         network_name=network_name,
         server=server,
-        vendor_name=vendor_name,
-        addresses=service.parsed_addresses(),
         thread_version=thread_version,
+        unconfigured=unconfigured,
+        vendor_name=vendor_name,
     )
 
 
@@ -91,7 +117,16 @@ def async_read_zeroconf_cache(aiozc: AsyncZeroconf) -> list[ThreadRouterDiscover
             # data is not fully in the cache, so ignore for now
             continue
 
-        results.append(async_discovery_data_from_service(info))
+        service_properties = info.properties
+
+        if not (xa := service_properties.get(b"xa")):
+            _LOGGER.debug("Ignoring record without xa %s", info)
+            continue
+        if not (xp := service_properties.get(b"xp")):
+            _LOGGER.debug("Ignoring record without xp %s", info)
+            continue
+
+        results.append(async_discovery_data_from_service(info, xa, xp))
 
     return results
 
@@ -147,14 +182,24 @@ class ThreadRouterDiscovery:
                 return
 
             _LOGGER.debug("_add_update_service %s %s", name, service)
-            # We use the extended mac address as key, bail out if it's missing
-            try:
-                extended_mac_address = service.properties[b"xa"].hex()
-            except (KeyError, UnicodeDecodeError) as err:
-                _LOGGER.debug("_add_update_service failed to parse service %s", err)
+            service_properties = service.properties
+
+            # We need xa and xp, bail out if either is missing
+            if not (xa := service_properties.get(b"xa")):
+                _LOGGER.info(
+                    "Discovered unsupported Thread router without extended address: %s",
+                    service,
+                )
+                return
+            if not (xp := service_properties.get(b"xp")):
+                _LOGGER.info(
+                    "Discovered unsupported Thread router without extended pan ID: %s",
+                    service,
+                )
                 return
 
-            data = async_discovery_data_from_service(service)
+            data = async_discovery_data_from_service(service, xa, xp)
+            extended_mac_address = xa.hex()
             if name in self._known_routers and self._known_routers[name] == (
                 extended_mac_address,
                 data,

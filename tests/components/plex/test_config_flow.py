@@ -143,7 +143,7 @@ async def test_no_servers_found(
     current_request_with_host: None,
 ) -> None:
     """Test when no servers are on an account."""
-    requests_mock.get("https://plex.tv/api/resources", text=empty_payload)
+    requests_mock.get("https://plex.tv/api/v2/resources", text=empty_payload)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -168,10 +168,11 @@ async def test_no_servers_found(
         assert result["errors"]["base"] == "no_servers"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_single_available_server(
-    hass: HomeAssistant, mock_plex_calls, current_request_with_host: None
+    hass: HomeAssistant,
+    mock_plex_calls,
+    current_request_with_host: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test creating an entry with one server available."""
     result = await hass.config_entries.flow.async_init(
@@ -205,17 +206,16 @@ async def test_single_available_server(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
+    mock_setup_entry.assert_called_once()
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_multiple_servers_with_selection(
     hass: HomeAssistant,
     mock_plex_calls,
     requests_mock: requests_mock.Mocker,
     plextv_resources_two_servers,
     current_request_with_host: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test creating an entry with multiple servers available."""
     result = await hass.config_entries.flow.async_init(
@@ -225,7 +225,7 @@ async def test_multiple_servers_with_selection(
     assert result["step_id"] == "user"
 
     requests_mock.get(
-        "https://plex.tv/api/resources",
+        "https://plex.tv/api/v2/resources",
         text=plextv_resources_two_servers,
     )
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
@@ -262,17 +262,16 @@ async def test_multiple_servers_with_selection(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
+    mock_setup_entry.assert_called_once()
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_adding_last_unconfigured_server(
     hass: HomeAssistant,
     mock_plex_calls,
     requests_mock: requests_mock.Mocker,
     plextv_resources_two_servers,
     current_request_with_host: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test automatically adding last unconfigured server when multiple servers on account."""
     MockConfigEntry(
@@ -290,7 +289,7 @@ async def test_adding_last_unconfigured_server(
     assert result["step_id"] == "user"
 
     requests_mock.get(
-        "https://plex.tv/api/resources",
+        "https://plex.tv/api/v2/resources",
         text=plextv_resources_two_servers,
     )
 
@@ -319,7 +318,7 @@ async def test_adding_last_unconfigured_server(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
+    assert mock_setup_entry.call_count == 2
 
 
 async def test_all_available_servers_configured(
@@ -347,9 +346,9 @@ async def test_all_available_servers_configured(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
+    requests_mock.get("https://plex.tv/api/v2/user", text=plextv_account)
     requests_mock.get(
-        "https://plex.tv/api/resources",
+        "https://plex.tv/api/v2/resources",
         text=plextv_resources_two_servers,
     )
 
@@ -777,7 +776,7 @@ async def test_reauth_multiple_servers_available(
 ) -> None:
     """Test setup and reauthorization of a Plex token when multiple servers are available."""
     requests_mock.get(
-        "https://plex.tv/api/resources",
+        "https://plex.tv/api/v2/resources",
         text=plextv_resources_two_servers,
     )
 
@@ -852,7 +851,7 @@ async def test_client_header_issues(
     ), patch(
         "homeassistant.components.http.current_request.get", return_value=MockRequest()
     ), pytest.raises(
-        RuntimeError
+        RuntimeError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}

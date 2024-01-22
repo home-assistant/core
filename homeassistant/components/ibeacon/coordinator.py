@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 import time
 
 from ibeacon_ble import (
@@ -21,6 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    CONF_ALLOW_NAMELESS_UUIDS,
     CONF_IGNORE_ADDRESSES,
     CONF_IGNORE_UUIDS,
     DOMAIN,
@@ -33,6 +35,8 @@ from .const import (
     UNAVAILABLE_TIMEOUT,
     UPDATE_INTERVAL,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 MONOTONIC_TIME = time.monotonic
 
@@ -141,6 +145,16 @@ class IBeaconCoordinator:
         # iBeacons with random MAC addresses, fixed UUID, random major/minor
         self._major_minor_by_uuid: dict[str, set[tuple[int, int]]] = {}
 
+        # iBeacons from devices with no name
+        self._allow_nameless_uuids = set(
+            entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, [])
+        )
+        self._ignored_nameless_by_uuid: dict[str, set[str]] = {}
+
+        self._entry.async_on_unload(
+            self._entry.add_update_listener(self.async_config_entry_updated)
+        )
+
     @callback
     def async_device_id_seen(self, device_id: str) -> bool:
         """Return True if the device_id has been seen since boot."""
@@ -200,7 +214,9 @@ class IBeaconCoordinator:
     def _async_purge_untrackable_entities(self, unique_ids: set[str]) -> None:
         """Remove entities that are no longer trackable."""
         for unique_id in unique_ids:
-            if device := self._dev_reg.async_get_device({(DOMAIN, unique_id)}):
+            if device := self._dev_reg.async_get_device(
+                identifiers={(DOMAIN, unique_id)}
+            ):
                 self._dev_reg.async_remove_device(device.id)
             self._last_ibeacon_advertisement_by_unique_id.pop(unique_id, None)
 
@@ -245,6 +261,8 @@ class IBeaconCoordinator:
         uuid_str = str(ibeacon_advertisement.uuid)
         if uuid_str in self._ignore_uuids:
             return
+
+        _LOGGER.debug("update beacon %s", uuid_str)
 
         major = ibeacon_advertisement.major
         minor = ibeacon_advertisement.minor
@@ -294,12 +312,24 @@ class IBeaconCoordinator:
         address = service_info.address
         unique_id = f"{group_id}_{address}"
         new = unique_id not in self._last_ibeacon_advertisement_by_unique_id
-        # Reject creating new trackers if the name is not set
-        if new and (
-            service_info.device.name is None
-            or service_info.device.name.replace("-", ":") == service_info.device.address
+        uuid = str(ibeacon_advertisement.uuid)
+
+        # Reject creating new trackers if the name is not set (unless the uuid is allowlisted).
+        if (
+            new
+            and uuid not in self._allow_nameless_uuids
+            and (
+                service_info.device.name is None
+                or service_info.device.name.replace("-", ":")
+                == service_info.device.address
+            )
         ):
+            # Store the ignored addresses, cause the uuid might be allowlisted later
+            self._ignored_nameless_by_uuid.setdefault(uuid, set()).add(address)
+
+            _LOGGER.debug("ignoring new beacon %s due to empty device name", unique_id)
             return
+
         previously_tracked = address in self._unique_ids_by_address
         self._last_ibeacon_advertisement_by_unique_id[unique_id] = ibeacon_advertisement
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
@@ -424,6 +454,33 @@ class IBeaconCoordinator:
                     self.hass,
                     signal_seen(unique_id),
                     ibeacon_advertisement,
+                )
+
+    async def async_config_entry_updated(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        """Restore ignored nameless beacons when the allowlist is updated."""
+
+        self._allow_nameless_uuids = set(
+            self._entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, [])
+        )
+
+        for uuid in self._allow_nameless_uuids:
+            for address in self._ignored_nameless_by_uuid.pop(uuid, set()):
+                _LOGGER.debug(
+                    "restoring nameless iBeacon %s from address %s", uuid, address
+                )
+
+                if not (
+                    service_info := bluetooth.async_last_service_info(
+                        self.hass, address, connectable=False
+                    )
+                ):
+                    continue  # no longer available
+
+                # the beacon was ignored, we need to re-process it from scratch
+                self._async_update_ibeacon(
+                    service_info, bluetooth.BluetoothChange.ADVERTISEMENT
                 )
 
     @callback

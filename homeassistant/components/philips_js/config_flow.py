@@ -1,6 +1,7 @@
 """Config flow for Philips TV integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import platform
 from typing import Any
 
@@ -16,9 +17,35 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import selector
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from . import LOGGER
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
+
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_HOST,
+        ): str,
+        vol.Required(
+            CONF_API_VERSION,
+            default=1,
+        ): vol.In([1, 5, 6]),
+    }
+)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ALLOW_NOTIFY, default=False): selector.BooleanSelector(),
+    }
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 async def _validate_input(
@@ -47,9 +74,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._current: dict[str, Any] = {}
         self._hub: PhilipsTV | None = None
         self._pair_state: Any = None
+        self._entry: config_entries.ConfigEntry | None = None
 
     async def _async_create_current(self) -> FlowResult:
         system = self._current[CONF_SYSTEM]
+        if self._entry:
+            self.hass.config_entries.async_update_entry(
+                self._entry, data=self._entry.data | self._current
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self._entry.entry_id)
+            )
+            return self.async_abort(reason="reauth_successful")
+
         return self.async_create_entry(
             title=f"{system['name']} ({system['serialnumber']})",
             data=self._current,
@@ -108,6 +145,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._current[CONF_PASSWORD] = password
         return await self._async_create_current()
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self._current[CONF_HOST] = entry_data[CONF_HOST]
+        self._current[CONF_API_VERSION] = entry_data[CONF_API_VERSION]
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -128,7 +172,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 if serialnumber := hub.system.get("serialnumber"):
                     await self.async_set_unique_id(serialnumber)
-                    self._abort_if_unique_id_configured()
+                    if self._entry is None:
+                        self._abort_if_unique_id_configured()
 
                 self._current[CONF_SYSTEM] = hub.system
                 self._current[CONF_API_VERSION] = hub.api_version
@@ -138,45 +183,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_pair()
                 return await self._async_create_current()
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=self._current.get(CONF_HOST)): str,
-                vol.Required(
-                    CONF_API_VERSION, default=self._current.get(CONF_API_VERSION, 1)
-                ): vol.In([1, 5, 6]),
-            }
-        )
+        schema = self.add_suggested_values_to_schema(USER_SCHEMA, self._current)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     @staticmethod
     @core.callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> OptionsFlowHandler:
+    ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for AEMET."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_ALLOW_NOTIFY,
-                    default=self.config_entry.options.get(CONF_ALLOW_NOTIFY),
-                ): bool,
-            }
-        )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

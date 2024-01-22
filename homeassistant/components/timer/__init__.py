@@ -4,8 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import Any, Self, TypeVar
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -17,6 +17,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -27,6 +28,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
+_T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "timer"
@@ -50,6 +52,7 @@ STATUS_PAUSED = "paused"
 
 EVENT_TIMER_FINISHED = "timer.finished"
 EVENT_TIMER_CANCELLED = "timer.cancelled"
+EVENT_TIMER_CHANGED = "timer.changed"
 EVENT_TIMER_STARTED = "timer.started"
 EVENT_TIMER_RESTARTED = "timer.restarted"
 EVENT_TIMER_PAUSED = "timer.paused"
@@ -57,6 +60,7 @@ EVENT_TIMER_PAUSED = "timer.paused"
 SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_CANCEL = "cancel"
+SERVICE_CHANGE = "change"
 SERVICE_FINISH = "finish"
 
 STORAGE_KEY = DOMAIN
@@ -70,14 +74,14 @@ STORAGE_FIELDS = {
 }
 
 
-def _format_timedelta(delta: timedelta):
+def _format_timedelta(delta: timedelta) -> str:
     total_seconds = delta.total_seconds()
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     return f"{int(hours)}:{int(minutes):02}:{int(seconds):02}"
 
 
-def _none_to_empty_dict(value):
+def _none_to_empty_dict(value: _T | None) -> _T | dict[Any, Any]:
     if value is None:
         return {}
     return value
@@ -119,7 +123,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage_collection = TimerStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -131,7 +134,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
@@ -159,11 +162,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
     component.async_register_entity_service(SERVICE_CANCEL, {}, "async_cancel")
     component.async_register_entity_service(SERVICE_FINISH, {}, "async_finish")
+    component.async_register_entity_service(
+        SERVICE_CHANGE,
+        {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
+        "async_change",
+    )
 
     return True
 
 
-class TimerStorageCollection(collection.StorageCollection):
+class TimerStorageCollection(collection.DictStorageCollection):
     """Timer storage based collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
@@ -178,15 +186,15 @@ class TimerStorageCollection(collection.StorageCollection):
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_NAME]
+        return info[CONF_NAME]  # type: ignore[no-any-return]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        data = {CONF_ID: data[CONF_ID]} | self.CREATE_UPDATE_SCHEMA(update_data)
+        data = {CONF_ID: item[CONF_ID]} | self.CREATE_UPDATE_SCHEMA(update_data)
         # make duration JSON serializeable
         if CONF_DURATION in update_data:
             data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
-        return data
+        return data  # type: ignore[no-any-return]
 
 
 class Timer(collection.CollectionEntity, RestoreEntity):
@@ -198,7 +206,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         """Initialize a timer."""
         self._config: dict = config
         self._state: str = STATUS_IDLE
-        self._duration = cv.time_period_str(config[CONF_DURATION])
+        self._configured_duration = cv.time_period_str(config[CONF_DURATION])
+        self._running_duration: timedelta = self._configured_duration
         self._remaining: timedelta | None = None
         self._end: datetime | None = None
         self._listener: Callable[[], None] | None = None
@@ -223,25 +232,25 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         return timer
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return name of the timer."""
         return self._config.get(CONF_NAME)
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the current value of the timer."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {
-            ATTR_DURATION: _format_timedelta(self._duration),
+        attrs: dict[str, Any] = {
+            ATTR_DURATION: _format_timedelta(self._running_duration),
             ATTR_EDITABLE: self.editable,
         }
         if self._end is not None:
@@ -256,9 +265,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @property
     def unique_id(self) -> str | None:
         """Return unique id for the entity."""
-        return self._config[CONF_ID]
+        return self._config[CONF_ID]  # type: ignore[no-any-return]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is about to be added to Home Assistant."""
         # If we don't need to restore a previous state or no previous state exists,
         # start at idle
@@ -268,12 +277,12 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         # Begin restoring state
         self._state = state.state
-        self._duration = cv.time_period(state.attributes[ATTR_DURATION])
 
         # Nothing more to do if the timer is idle
         if self._state == STATUS_IDLE:
             return
 
+        self._running_duration = cv.time_period(state.attributes[ATTR_DURATION])
         # If the timer was paused, we restore the remaining time
         if self._state == STATUS_PAUSED:
             self._remaining = cv.time_period(state.attributes[ATTR_REMAINING])
@@ -294,7 +303,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             self.async_finish()
 
     @callback
-    def async_start(self, duration: timedelta | None = None):
+    def async_start(self, duration: timedelta | None = None) -> None:
         """Start a timer."""
         if self._listener:
             self._listener()
@@ -307,11 +316,11 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._state = STATUS_ACTIVE
         start = dt_util.utcnow().replace(microsecond=0)
 
-        # Set remaining to new value if needed
+        # Set remaining and running duration unless resuming or restarting
         if duration:
-            self._remaining = self._duration = duration
+            self._remaining = self._running_duration = duration
         elif not self._remaining:
-            self._remaining = self._duration
+            self._remaining = self._running_duration
 
         self._end = start + self._remaining
 
@@ -323,9 +332,34 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_pause(self):
+    def async_change(self, duration: timedelta) -> None:
+        """Change duration of a running timer."""
+        if self._listener is None or self._end is None:
+            raise HomeAssistantError(
+                f"Timer {self.entity_id} is not running, only active timers can be changed"
+            )
+        if self._remaining and (self._remaining + duration) > self._running_duration:
+            raise HomeAssistantError(
+                f"Not possible to change timer {self.entity_id} beyond duration"
+            )
+        if self._remaining and (self._remaining + duration) < timedelta():
+            raise HomeAssistantError(
+                f"Not possible to change timer {self.entity_id} to negative time remaining"
+            )
+
+        self._listener()
+        self._end += duration
+        self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
+        self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
+        self._listener = async_track_point_in_utc_time(
+            self.hass, self._async_finished, self._end
+        )
+        self.async_write_ha_state()
+
+    @callback
+    def async_pause(self) -> None:
         """Pause a timer."""
-        if self._listener is None:
+        if self._listener is None or self._end is None:
             return
 
         self._listener()
@@ -337,7 +371,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_cancel(self):
+    def async_cancel(self) -> None:
         """Cancel a timer."""
         if self._listener:
             self._listener()
@@ -345,15 +379,16 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None
+        self._running_duration = self._configured_duration
         self.hass.bus.async_fire(
             EVENT_TIMER_CANCELLED, {ATTR_ENTITY_ID: self.entity_id}
         )
         self.async_write_ha_state()
 
     @callback
-    def async_finish(self):
+    def async_finish(self) -> None:
         """Reset and updates the states, fire finished event."""
-        if self._state != STATUS_ACTIVE:
+        if self._state != STATUS_ACTIVE or self._end is None:
             return
 
         if self._listener:
@@ -363,6 +398,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None
+        self._running_duration = self._configured_duration
         self.hass.bus.async_fire(
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
@@ -370,9 +406,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def _async_finished(self, time):
+    def _async_finished(self, time: datetime) -> None:
         """Reset and updates the states, fire finished event."""
-        if self._state != STATUS_ACTIVE:
+        if self._state != STATUS_ACTIVE or self._end is None:
             return
 
         self._listener = None
@@ -380,6 +416,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         end = self._end
         self._end = None
         self._remaining = None
+        self._running_duration = self._configured_duration
         self.hass.bus.async_fire(
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
@@ -389,6 +426,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
-        self._duration = cv.time_period_str(config[CONF_DURATION])
+        self._configured_duration = cv.time_period_str(config[CONF_DURATION])
+        if self._state == STATUS_IDLE:
+            self._running_duration = self._configured_duration
         self._restore = config.get(CONF_RESTORE, DEFAULT_RESTORE)
         self.async_write_ha_state()

@@ -109,7 +109,16 @@ async def test_entity_and_device_attributes(
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
-    device = device_factory("Light 1", [Capability.switch, Capability.switch_level])
+    device = device_factory(
+        "Light 1",
+        [Capability.switch, Capability.switch_level],
+        {
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
+    )
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
     # Act
@@ -119,13 +128,15 @@ async def test_entity_and_device_attributes(
     assert entry
     assert entry.unique_id == device.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
 async def test_turn_off(hass: HomeAssistant, light_devices) -> None:

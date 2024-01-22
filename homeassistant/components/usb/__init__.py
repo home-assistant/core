@@ -24,7 +24,7 @@ from homeassistant.core import (
     callback as hass_callback,
 )
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow, system_info
+from homeassistant.helpers import config_validation as cv, discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
@@ -46,6 +46,8 @@ __all__ = [
     "USBCallbackMatcher",
     "UsbServiceInfo",
 ]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 class USBCallbackMatcher(USBMatcher):
@@ -101,7 +103,7 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
     )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class UsbServiceInfo(BaseServiceInfo):
     """Prepared info from usb entries."""
 
@@ -205,10 +207,16 @@ class USBDiscovery:
         """Set up USB Discovery."""
         await self._async_start_monitor()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
         await self._async_scan_serial()
+
+    async def async_stop(self, event: Event) -> None:
+        """Stop USB Discovery."""
+        if self._request_debouncer:
+            await self._request_debouncer.async_shutdown()
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""
@@ -292,8 +300,7 @@ class USBDiscovery:
 
         return _async_remove_callback
 
-    @hass_callback
-    def _async_process_discovered_usb_device(self, device: USBDevice) -> None:
+    async def _async_process_discovered_usb_device(self, device: USBDevice) -> None:
         """Process a USB discovery."""
         _LOGGER.debug("Discovered USB Device: %s", device)
         device_tuple = dataclasses.astuple(device)
@@ -305,14 +312,7 @@ class USBDiscovery:
         if not matched:
             return
 
-        service_info = UsbServiceInfo(
-            device=device.device,
-            vid=device.vid,
-            pid=device.pid,
-            serial_number=device.serial_number,
-            manufacturer=device.manufacturer,
-            description=device.description,
-        )
+        service_info: UsbServiceInfo | None = None
 
         sorted_by_most_targeted = sorted(matched, key=lambda item: -len(item))
         most_matched_fields = len(sorted_by_most_targeted[0])
@@ -323,6 +323,18 @@ class USBDiscovery:
             if len(matcher) < most_matched_fields:
                 break
 
+            if service_info is None:
+                service_info = UsbServiceInfo(
+                    device=await self.hass.async_add_executor_job(
+                        get_serial_by_id, device.device
+                    ),
+                    vid=device.vid,
+                    pid=device.pid,
+                    serial_number=device.serial_number,
+                    manufacturer=device.manufacturer,
+                    description=device.description,
+                )
+
             discovery_flow.async_create_flow(
                 self.hass,
                 matcher["domain"],
@@ -330,17 +342,18 @@ class USBDiscovery:
                 service_info,
             )
 
-    @hass_callback
-    def _async_process_ports(self, ports: list[ListPortInfo]) -> None:
+    async def _async_process_ports(self, ports: list[ListPortInfo]) -> None:
         """Process each discovered port."""
         for port in ports:
             if port.vid is None and port.pid is None:
                 continue
-            self._async_process_discovered_usb_device(usb_device_from_port(port))
+            await self._async_process_discovered_usb_device(usb_device_from_port(port))
 
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
-        self._async_process_ports(await self.hass.async_add_executor_job(comports))
+        await self._async_process_ports(
+            await self.hass.async_add_executor_job(comports)
+        )
         if self.initial_scan_done:
             return
 

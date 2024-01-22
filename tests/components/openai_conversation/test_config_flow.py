@@ -1,32 +1,31 @@
 """Test the OpenAI Conversation config flow."""
 from unittest.mock import patch
 
-from openai.error import APIConnectionError, AuthenticationError, InvalidRequestError
+from httpx import Response
+from openai import APIConnectionError, AuthenticationError, BadRequestError
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.openai_conversation.const import (
-    CONF_MODEL,
-    DEFAULT_MODEL,
+    CONF_CHAT_MODEL,
+    DEFAULT_CHAT_MODEL,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-
-async def test_single_instance_allowed(
-    hass: HomeAssistant, mock_config_entry: config_entries.ConfigEntry
-) -> None:
-    """Test that config flow only allows a single instance."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
+    # Pretend we already set up a config entry.
+    hass.config.components.add("openai_conversation")
+    MockConfigEntry(
+        domain=DOMAIN,
+        state=config_entries.ConfigEntryState.LOADED,
+    ).add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -34,7 +33,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.openai_conversation.config_flow.openai.Engine.list",
+        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
     ), patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
         return_value=True,
@@ -72,15 +71,25 @@ async def test_options(
     assert options["type"] == FlowResultType.CREATE_ENTRY
     assert options["data"]["prompt"] == "Speak like a pirate"
     assert options["data"]["max_tokens"] == 200
-    assert options["data"][CONF_MODEL] == DEFAULT_MODEL
+    assert options["data"][CONF_CHAT_MODEL] == DEFAULT_CHAT_MODEL
 
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (APIConnectionError(""), "cannot_connect"),
-        (AuthenticationError, "invalid_auth"),
-        (InvalidRequestError, "unknown"),
+        (APIConnectionError(request=None), "cannot_connect"),
+        (
+            AuthenticationError(
+                response=Response(status_code=None, request=""), body=None, message=None
+            ),
+            "invalid_auth",
+        ),
+        (
+            BadRequestError(
+                response=Response(status_code=None, request=""), body=None, message=None
+            ),
+            "unknown",
+        ),
     ],
 )
 async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> None:
@@ -90,7 +99,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
     )
 
     with patch(
-        "homeassistant.components.openai_conversation.config_flow.openai.Engine.list",
+        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
         side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(

@@ -5,21 +5,16 @@ import logging
 from typing import Any
 
 from pushover_complete import BadAPIRequestError, PushoverAPI
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -40,11 +35,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USER_KEY): cv.string, vol.Required(CONF_API_KEY): cv.string}
-)
-
-
 async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
@@ -52,17 +42,7 @@ async def async_get_service(
 ) -> PushoverNotificationService | None:
     """Get the Pushover notification service."""
     if discovery_info is None:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "removed_yaml",
-            breaks_in_ha_version="2022.11.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="removed_yaml",
-        )
         return None
-
     pushover_api: PushoverAPI = hass.data[DOMAIN][discovery_info["entry_id"]]
     return PushoverNotificationService(
         hass, pushover_api, discovery_info[CONF_USER_KEY]

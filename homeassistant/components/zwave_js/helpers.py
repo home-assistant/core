@@ -8,8 +8,15 @@ from typing import Any, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const import (
+    LOG_LEVEL_MAP,
+    CommandClass,
+    ConfigurationValueType,
+    LogLevel,
+)
+from zwave_js_server.model.controller import Controller
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
@@ -18,7 +25,6 @@ from zwave_js_server.model.value import (
     get_value_id_str,
 )
 
-from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
@@ -31,7 +37,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -39,9 +46,10 @@ from .const import (
     ATTR_ENDPOINT,
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
-    CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
+    DATA_OLD_SERVER_LOG_LEVEL,
     DOMAIN,
+    LIB_LOGGER,
     LOGGER,
 )
 
@@ -92,7 +100,6 @@ def value_matches_matcher(
     )
 
 
-@callback
 def get_value_id_from_unique_id(unique_id: str) -> str | None:
     """Get the value ID and optional state key from a unique ID.
 
@@ -106,7 +113,6 @@ def get_value_id_from_unique_id(unique_id: str) -> str | None:
     return None
 
 
-@callback
 def get_state_key_from_unique_id(unique_id: str) -> int | None:
     """Get the state key from a unique ID."""
     # If the unique ID has more than two parts, it's a special unique ID. If the last
@@ -119,7 +125,6 @@ def get_state_key_from_unique_id(unique_id: str) -> int | None:
     return None
 
 
-@callback
 def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
     """Return the value of a ZwaveValue."""
     return value.value if value else None
@@ -128,20 +133,72 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
 async def async_enable_statistics(driver: Driver) -> None:
     """Enable statistics on the driver."""
     await driver.async_enable_statistics("Home Assistant", HA_VERSION)
-    await driver.async_enable_error_reporting()
 
 
-@callback
-def update_data_collection_preference(
-    hass: HomeAssistant, entry: ConfigEntry, preference: bool
+async def async_enable_server_logging_if_needed(
+    hass: HomeAssistant, entry: ConfigEntry, driver: Driver
 ) -> None:
-    """Update data collection preference on config entry."""
-    new_data = entry.data.copy()
-    new_data[CONF_DATA_COLLECTION_OPTED_IN] = preference
-    hass.config_entries.async_update_entry(entry, data=new_data)
+    """Enable logging of zwave-js-server in the lib."""
+    # If lib log level is set to debug, we want to enable server logging. First we
+    # check if server log level is less verbose than library logging, and if so, set it
+    # to debug to match library logging. We will store the old server log level in
+    # hass.data so we can reset it later
+    if (
+        not driver
+        or not driver.client.connected
+        or driver.client.server_logging_enabled
+    ):
+        return
+
+    LOGGER.info("Enabling zwave-js-server logging")
+    if (curr_server_log_level := driver.log_config.level) and (
+        LOG_LEVEL_MAP[curr_server_log_level]
+    ) > (lib_log_level := LIB_LOGGER.getEffectiveLevel()):
+        entry_data = hass.data[DOMAIN][entry.entry_id]
+        LOGGER.warning(
+            (
+                "Server logging is set to %s and is currently less verbose "
+                "than library logging, setting server log level to %s to match"
+            ),
+            curr_server_log_level,
+            logging.getLevelName(lib_log_level),
+        )
+        entry_data[DATA_OLD_SERVER_LOG_LEVEL] = curr_server_log_level
+        await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
+    await driver.client.enable_server_logging()
+    LOGGER.info("Zwave-js-server logging is enabled")
 
 
-@callback
+async def async_disable_server_logging_if_needed(
+    hass: HomeAssistant, entry: ConfigEntry, driver: Driver
+) -> None:
+    """Disable logging of zwave-js-server in the lib if still connected to server."""
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    if (
+        not driver
+        or not driver.client.connected
+        or not driver.client.server_logging_enabled
+    ):
+        return
+    LOGGER.info("Disabling zwave_js server logging")
+    if (
+        DATA_OLD_SERVER_LOG_LEVEL in entry_data
+        and (old_server_log_level := entry_data.pop(DATA_OLD_SERVER_LOG_LEVEL))
+        != driver.log_config.level
+    ):
+        LOGGER.info(
+            (
+                "Server logging is currently set to %s as a result of server logging "
+                "being enabled. It is now being reset to %s"
+            ),
+            driver.log_config.level,
+            old_server_log_level,
+        )
+        await driver.async_update_log_config(LogConfig(level=old_server_log_level))
+    await driver.client.disable_server_logging()
+    LOGGER.info("Zwave-js-server logging is enabled")
+
+
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:
     """Return the base unique ID for an entity that is not based on a value."""
     return f"{driver.controller.home_id}.{node.node_id}"
@@ -152,13 +209,11 @@ def get_unique_id(driver: Driver, value_id: str) -> str:
     return f"{driver.controller.home_id}.{value_id}"
 
 
-@callback
 def get_device_id(driver: Driver, node: ZwaveNode) -> tuple[str, str]:
     """Get device registry identifier for Z-Wave node."""
     return (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
 
 
-@callback
 def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:
     """Get extended device registry identifier for Z-Wave node."""
     if None in (node.manufacturer_id, node.product_type, node.product_id):
@@ -171,7 +226,6 @@ def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None
     )
 
 
-@callback
 def get_home_and_node_id_from_device_entry(
     device_entry: dr.DeviceEntry,
 ) -> tuple[str, int] | None:
@@ -259,7 +313,7 @@ def async_get_node_from_entity_id(
     entity_entry = ent_reg.async_get(entity_id)
 
     if entity_entry is None or entity_entry.platform != DOMAIN:
-        raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity.")
+        raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity")
 
     # Assert for mypy, safe because we know that zwave_js entities are always
     # tied to a device
@@ -402,7 +456,9 @@ def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
     return {key: value for key, value in config.items() if value not in ("", None)}
 
 
-def check_type_schema_map(schema_map: dict[str, vol.Schema]) -> Callable:
+def check_type_schema_map(
+    schema_map: dict[str, vol.Schema],
+) -> Callable[[ConfigType], ConfigType]:
     """Check type specific schema against config."""
 
     def _check_type_schema(config: ConfigType) -> ConfigType:
@@ -421,9 +477,7 @@ def copy_available_params(
     )
 
 
-def get_value_state_schema(
-    value: ZwaveValue,
-) -> vol.Schema | None:
+def get_value_state_schema(value: ZwaveValue) -> vol.Schema | None:
     """Return device automation schema for a config entry."""
     if isinstance(value, ConfigurationValue):
         min_ = value.metadata.min
@@ -433,6 +487,9 @@ def get_value_state_schema(
             ConfigurationValueType.MANUAL_ENTRY,
         ):
             return vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
+
+        if value.configuration_value_type == ConfigurationValueType.BOOLEAN:
+            return vol.Coerce(bool)
 
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
             return vol.In({int(k): v for k, v in value.metadata.states.items()})
@@ -458,3 +515,15 @@ def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
         manufacturer=node.device_config.manufacturer,
         suggested_area=node.location if node.location else None,
     )
+
+
+def get_network_identifier_for_notification(
+    hass: HomeAssistant, config_entry: ConfigEntry, controller: Controller
+) -> str:
+    """Return the network identifier string for persistent notifications."""
+    home_id = str(controller.home_id)
+    if len(hass.config_entries.async_entries(DOMAIN)) > 1:
+        if str(home_id) != config_entry.title:
+            return f"`{config_entry.title}`, with the home ID `{home_id}`,"
+        return f"with the home ID `{home_id}`"
+    return ""

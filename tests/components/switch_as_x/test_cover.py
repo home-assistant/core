@@ -45,6 +45,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
 async def test_service_calls(hass: HomeAssistant) -> None:
     """Test service calls to cover."""
     await async_setup_component(hass, "switch", {"switch": [{"platform": "demo"}]})
+    await hass.async_block_till_done()
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -52,43 +53,43 @@ async def test_service_calls(hass: HomeAssistant) -> None:
             CONF_ENTITY_ID: "switch.decorative_lights",
             CONF_TARGET_DOMAIN: Platform.COVER,
         },
-        title="garage_door",
+        title="Title is ignored",
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("cover.garage_door").state == STATE_OPEN
+    assert hass.states.get("cover.decorative_lights").state == STATE_OPEN
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_TOGGLE,
-        {CONF_ENTITY_ID: "cover.garage_door"},
+        {CONF_ENTITY_ID: "cover.decorative_lights"},
         blocking=True,
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("cover.garage_door").state == STATE_CLOSED
+    assert hass.states.get("cover.decorative_lights").state == STATE_CLOSED
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {CONF_ENTITY_ID: "cover.garage_door"},
+        {CONF_ENTITY_ID: "cover.decorative_lights"},
         blocking=True,
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("cover.garage_door").state == STATE_OPEN
+    assert hass.states.get("cover.decorative_lights").state == STATE_OPEN
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
-        {CONF_ENTITY_ID: "cover.garage_door"},
+        {CONF_ENTITY_ID: "cover.decorative_lights"},
         blocking=True,
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("cover.garage_door").state == STATE_CLOSED
+    assert hass.states.get("cover.decorative_lights").state == STATE_CLOSED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -98,7 +99,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("cover.garage_door").state == STATE_OPEN
+    assert hass.states.get("cover.decorative_lights").state == STATE_OPEN
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -108,7 +109,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("cover.garage_door").state == STATE_CLOSED
+    assert hass.states.get("cover.decorative_lights").state == STATE_CLOSED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -118,4 +119,4 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("cover.garage_door").state == STATE_OPEN
+    assert hass.states.get("cover.decorative_lights").state == STATE_OPEN

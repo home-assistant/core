@@ -6,8 +6,7 @@ from broadlink.exceptions import BroadlinkException
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
@@ -45,6 +44,9 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
     """Representation of a Broadlink light."""
 
     _attr_has_entity_name = True
+    _attr_name = None
+    _attr_min_color_temp_kelvin = 2700
+    _attr_max_color_temp_kelvin = 6500
 
     def __init__(self, device):
         """Initialize the light."""
@@ -79,7 +81,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
             self._attr_hs_color = [data["hue"], data["saturation"]]
 
         if "colortemp" in data:
-            self._attr_color_temp = round((data["colortemp"] - 2700) / 100 + 153)
+            self._attr_color_temp_kelvin = data["colortemp"]
 
         if "bulb_colormode" in data:
             if data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
@@ -107,20 +109,10 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
             state["saturation"] = int(hs_color[1])
             state["bulb_colormode"] = BROADLINK_COLOR_MODE_RGB
 
-        elif ATTR_COLOR_TEMP in kwargs:
-            color_temp = kwargs[ATTR_COLOR_TEMP]
-            state["colortemp"] = (color_temp - 153) * 100 + 2700
+        elif ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            state["colortemp"] = color_temp
             state["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
-
-        elif ATTR_COLOR_MODE in kwargs:
-            color_mode = kwargs[ATTR_COLOR_MODE]
-            if color_mode == ColorMode.HS:
-                state["bulb_colormode"] = BROADLINK_COLOR_MODE_RGB
-            elif color_mode == ColorMode.COLOR_TEMP:
-                state["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
-            else:
-                # Scenes are not yet supported.
-                state["bulb_colormode"] = BROADLINK_COLOR_MODE_SCENES
 
         await self._async_set_state(state)
 

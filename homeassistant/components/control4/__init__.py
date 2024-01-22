@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -35,7 +35,6 @@ from .const import (
     CONF_DIRECTOR_ALL_ITEMS,
     CONF_DIRECTOR_MODEL,
     CONF_DIRECTOR_SW_VERSION,
-    CONF_DIRECTOR_TOKEN_EXPIRATION,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -79,7 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
     )
     entry_data[CONF_DIRECTOR] = director
-    entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["token_expiration"]
 
     # Add Control4 controller to device registry
     controller_href = (await account.getAccountControllers())["href"]

@@ -1,4 +1,5 @@
 """Support for EcoNet products."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -13,35 +14,27 @@ from pyeconet.errors import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform, UnitOfTemperature
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
 from .const import API_CLIENT, DOMAIN, EQUIPMENT
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.CLIMATE,
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 PUSH_UPDATE = "econet.push_update"
 
 INTERVAL = timedelta(minutes=60)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the EcoNet component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API_CLIENT] = {}
-    hass.data[DOMAIN][EQUIPMENT] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -65,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
+    hass.data.setdefault(DOMAIN, {API_CLIENT: {}, EQUIPMENT: {}})
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
     hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
 
@@ -87,14 +81,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await hass.async_add_executor_job(api.unsubscribe)
         api.subscribe()
 
-    async def fetch_update(now):
-        """Fetch the latest changes from the API."""
+        # Refresh values
+        await asyncio.sleep(60)
         await api.refresh_equipment()
 
     config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
-    config_entry.async_on_unload(
-        async_track_time_interval(hass, fetch_update, INTERVAL + timedelta(minutes=1))
-    )
 
     return True
 
@@ -144,8 +135,3 @@ class EcoNetEntity(Entity):
             manufacturer="Rheem",
             name=self._econet.device_name,
         )
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return UnitOfTemperature.FAHRENHEIT

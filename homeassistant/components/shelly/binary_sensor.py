@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, cast
 
+from aioshelly.const import RPC_GENERATIONS
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -13,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD
 from .entity import (
@@ -36,19 +38,19 @@ from .utils import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class BlockBinarySensorDescription(
     BlockEntityDescription, BinarySensorEntityDescription
 ):
     """Class to describe a BLOCK binary sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RpcBinarySensorDescription(RpcEntityDescription, BinarySensorEntityDescription):
     """Class to describe a RPC binary sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescription):
     """Class to describe a REST binary sensor."""
 
@@ -91,6 +93,7 @@ SENSORS: Final = {
         key="sensor|gas",
         name="Gas",
         device_class=BinarySensorDeviceClass.GAS,
+        translation_key="gas",
         value=lambda value: value in ["mild", "heavy"],
         extra_state_attributes=lambda block: {"detected": block.gas},
     ),
@@ -162,6 +165,14 @@ RPC_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "external_power": RpcBinarySensorDescription(
+        key="devicepower:0",
+        sub_key="external",
+        name="External power",
+        value=lambda status, _: status["present"],
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "overtemp": RpcBinarySensorDescription(
         key="switch",
         sub_key="errors",
@@ -198,23 +209,13 @@ RPC_SENSORS: Final = {
 }
 
 
-def _build_block_description(entry: RegistryEntry) -> BlockBinarySensorDescription:
-    """Build description when restoring block attribute entities."""
-    return BlockBinarySensorDescription(
-        key="",
-        name="",
-        icon=entry.original_icon,
-        device_class=entry.original_device_class,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         if config_entry.data[CONF_SLEEP_PERIOD]:
             async_setup_entry_rpc(
                 hass,
@@ -236,7 +237,6 @@ async def async_setup_entry(
             async_add_entities,
             SENSORS,
             BlockSleepingBinarySensor,
-            _build_block_description,
         )
     else:
         async_setup_entry_attribute_entities(
@@ -245,7 +245,6 @@ async def async_setup_entry(
             async_add_entities,
             SENSORS,
             BlockBinarySensor,
-            _build_block_description,
         )
         async_setup_entry_rest(
             hass,
@@ -289,10 +288,17 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         return bool(self.attribute_value)
 
 
-class BlockSleepingBinarySensor(ShellySleepingBlockAttributeEntity, BinarySensorEntity):
+class BlockSleepingBinarySensor(
+    ShellySleepingBlockAttributeEntity, BinarySensorEntity, RestoreEntity
+):
     """Represent a block sleeping binary sensor."""
 
     entity_description: BlockBinarySensorDescription
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.last_state = await self.async_get_last_state()
 
     @property
     def is_on(self) -> bool | None:
@@ -306,10 +312,17 @@ class BlockSleepingBinarySensor(ShellySleepingBlockAttributeEntity, BinarySensor
         return self.last_state.state == STATE_ON
 
 
-class RpcSleepingBinarySensor(ShellySleepingRpcAttributeEntity, BinarySensorEntity):
+class RpcSleepingBinarySensor(
+    ShellySleepingRpcAttributeEntity, BinarySensorEntity, RestoreEntity
+):
     """Represent a RPC sleeping binary sensor entity."""
 
     entity_description: RpcBinarySensorDescription
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.last_state = await self.async_get_last_state()
 
     @property
     def is_on(self) -> bool | None:

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -20,9 +20,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -64,20 +61,20 @@ STORAGE_FIELDS = {
 }
 
 
-def _cv_input_text(cfg):
+def _cv_input_text(config: dict[str, Any]) -> dict[str, Any]:
     """Configure validation helper for input box (voluptuous)."""
-    minimum = cfg.get(CONF_MIN)
-    maximum = cfg.get(CONF_MAX)
+    minimum: int = config[CONF_MIN]
+    maximum: int = config[CONF_MAX]
     if minimum > maximum:
         raise vol.Invalid(
             f"Max len ({minimum}) is not greater than min len ({maximum})"
         )
-    state = cfg.get(CONF_INITIAL)
+    state: str | None = config.get(CONF_INITIAL)
     if state is not None and (len(state) < minimum or len(state) > maximum):
         raise vol.Invalid(
             f"Initial value {state} length not in range {minimum}-{maximum}"
         )
-    return cfg
+    return config
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -89,7 +86,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
                     vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
-                    vol.Optional(CONF_INITIAL, ""): cv.string,
+                    vol.Optional(CONF_INITIAL): cv.string,
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
                     vol.Optional(CONF_PATTERN): cv.string,
@@ -110,10 +107,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input text."""
     component = EntityComponent[InputText](_LOGGER, DOMAIN, hass)
 
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
-
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
@@ -125,7 +118,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage_collection = InputTextStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -137,7 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
@@ -165,30 +157,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class InputTextStorageCollection(collection.StorageCollection):
+class InputTextStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_text))
 
-    async def _process_create_data(self, data: dict) -> dict:
+    async def _process_create_data(self, data: dict[str, Any]) -> vol.Schema:
         """Validate the config is valid."""
         return self.CREATE_UPDATE_SCHEMA(data)
 
     @callback
-    def _get_suggested_id(self, info: dict) -> str:
+    def _get_suggested_id(self, info: dict[str, Any]) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_NAME]
+        return info[CONF_NAME]  # type: ignore[no-any-return]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(
+        self, item: dict[str, Any], update_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
-        return {CONF_ID: data[CONF_ID]} | update_data
+        return {CONF_ID: item[CONF_ID]} | update_data
 
 
 class InputText(collection.CollectionEntity, RestoreEntity):
     """Represent a text box."""
 
+    _unrecorded_attributes = frozenset(
+        {ATTR_EDITABLE, ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_PATTERN}
+    )
+
     _attr_should_poll = False
+    _current_value: str | None
     editable: bool
 
     def __init__(self, config: ConfigType) -> None:
@@ -199,55 +198,55 @@ class InputText(collection.CollectionEntity, RestoreEntity):
     @classmethod
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
-        input_text = cls(config)
+        input_text: Self = cls(config)
         input_text.editable = True
         return input_text
 
     @classmethod
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
-        input_text = cls(config)
+        input_text: Self = cls(config)
         input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_text.editable = False
         return input_text
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the text input entity."""
         return self._config.get(CONF_NAME)
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
     def _maximum(self) -> int:
         """Return max len of the text."""
-        return self._config[CONF_MAX]
+        return self._config[CONF_MAX]  # type: ignore[no-any-return]
 
     @property
     def _minimum(self) -> int:
         """Return min len of the text."""
-        return self._config[CONF_MIN]
+        return self._config[CONF_MIN]  # type: ignore[no-any-return]
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the component."""
         return self._current_value
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Return unique id for the entity."""
-        return self._config[CONF_ID]
+        return self._config[CONF_ID]  # type: ignore[no-any-return]
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_EDITABLE: self.editable,
@@ -257,20 +256,20 @@ class InputText(collection.CollectionEntity, RestoreEntity):
             ATTR_MODE: self._config[CONF_MODE],
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         if self._current_value is not None:
             return
 
         state = await self.async_get_last_state()
-        value = state and state.state
+        value: str | None = state and state.state  # type: ignore[assignment]
 
         # Check against None because value can be 0
         if value is not None and self._minimum <= len(value) <= self._maximum:
             self._current_value = value
 
-    async def async_set_value(self, value):
+    async def async_set_value(self, value: str) -> None:
         """Select new value."""
         if len(value) < self._minimum or len(value) > self._maximum:
             _LOGGER.warning(

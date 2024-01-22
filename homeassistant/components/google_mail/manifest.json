@@ -4,7 +4,7 @@
   "codeowners": ["@tkdrob"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
-  "documentation": "https://www.home-assistant.io/integrations/google_mail/",
+  "documentation": "https://www.home-assistant.io/integrations/google_mail",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "requirements": ["google-api-python-client==2.71.0"]

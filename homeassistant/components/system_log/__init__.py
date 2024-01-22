@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict, deque
 import logging
 import re
+import sys
 import traceback
 from typing import Any, cast
 
@@ -12,9 +13,11 @@ import voluptuous as vol
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+
+KeyType = tuple[str, tuple[str, int], str | None]
 
 CONF_MAX_ENTRIES = "max_entries"
 CONF_FIRE_EVENT = "fire_event"
@@ -59,31 +62,65 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 
 
 def _figure_out_source(
-    record: logging.LogRecord, call_stack: list[tuple[str, int]], paths_re: re.Pattern
+    record: logging.LogRecord, paths_re: re.Pattern[str]
 ) -> tuple[str, int]:
+    """Figure out where a log message came from."""
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
     if record.exc_info:
         stack = [(x[0], x[1]) for x in traceback.extract_tb(record.exc_info[2])]
-    else:
-        index = -1
-        for i, frame in enumerate(call_stack):
-            if frame[0] == record.pathname:
-                index = i
+        for i, (filename, _) in enumerate(stack):
+            # Slice the stack to the first frame that matches
+            # the record pathname.
+            if filename == record.pathname:
+                stack = stack[0 : i + 1]
                 break
-        if index == -1:
-            # For some reason we couldn't find pathname in the stack.
-            stack = [(record.pathname, record.lineno)]
-        else:
-            stack = call_stack[0 : index + 1]
+        # Iterate through the stack call (in reverse) and find the last call from
+        # a file in Home Assistant. Try to figure out where error happened.
+        for path, line_number in reversed(stack):
+            # Try to match with a file within Home Assistant
+            if match := paths_re.match(path):
+                return (cast(str, match.group(1)), line_number)
+    else:
+        #
+        # We need to figure out where the log call came from if we
+        # don't have an exception.
+        #
+        # We do this by walking up the stack until we find the first
+        # frame match the record pathname so the code below
+        # can be used to reverse the remaining stack frames
+        # and find the first one that is from a file within Home Assistant.
+        #
+        # We do not call traceback.extract_stack() because it is
+        # it makes many stat() syscalls calls which do blocking I/O,
+        # and since this code is running in the event loop, we need to avoid
+        # blocking I/O.
 
-    # Iterate through the stack call (in reverse) and find the last call from
-    # a file in Home Assistant. Try to figure out where error happened.
-    for pathname in reversed(stack):
-        # Try to match with a file within Home Assistant
-        if match := paths_re.match(pathname[0]):
-            return (cast(str, match.group(1)), pathname[1])
+        frame = sys._getframe(4)  # pylint: disable=protected-access
+        #
+        # We use _getframe with 4 to skip the following frames:
+        #
+        # Jump 2 frames up to get to the actual caller
+        # since we are in a function, and always called from another function
+        # that are never the original source of the log message.
+        #
+        # Next try to skip any frames that are from the logging module
+        # We know that the logger module typically has 5 frames itself
+        # but it may change in the future so we are conservative and
+        # only skip 2.
+        #
+        # _getframe is cpython only but we are already using cpython specific
+        # code everywhere in HA so it's fine as its unlikely we will ever
+        # support other python implementations.
+        #
+        # Iterate through the stack call (in reverse) and find the last call from
+        # a file in Home Assistant. Try to figure out where error happened.
+        while back := frame.f_back:
+            if match := paths_re.match(frame.f_code.co_filename):
+                return (cast(str, match.group(1)), frame.f_lineno)
+            frame = back
+
     # Ok, we don't know what this is
     return (record.pathname, record.lineno)
 
@@ -106,12 +143,28 @@ def _safe_get_message(record: logging.LogRecord) -> str:
     """
     try:
         return record.getMessage()
-    except Exception:  # pylint: disable=broad-except
-        return f"Bad logger message: {record.msg} ({record.args})"
+    except Exception as ex:  # pylint: disable=broad-except
+        try:
+            return f"Bad logger message: {record.msg} ({record.args})"
+        except Exception:  # pylint: disable=broad-except
+            return f"Bad logger message: {ex}"
 
 
 class LogEntry:
     """Store HA log entries."""
+
+    __slots__ = (
+        "first_occurred",
+        "timestamp",
+        "name",
+        "level",
+        "message",
+        "exception",
+        "root_cause",
+        "source",
+        "count",
+        "key",
+    )
 
     def __init__(self, record: logging.LogRecord, source: tuple[str, int]) -> None:
         """Initialize a log entry."""
@@ -125,15 +178,15 @@ class LogEntry:
         self.root_cause = None
         if record.exc_info:
             self.exception = "".join(traceback.format_exception(*record.exc_info))
-            _, _, tb = record.exc_info  # pylint: disable=invalid-name
+            _, _, tb = record.exc_info
             # Last line of traceback contains the root cause of the exception
             if traceback.extract_tb(tb):
                 self.root_cause = str(traceback.extract_tb(tb)[-1])
         self.source = source
         self.count = 1
-        self.hash = str([self.name, *self.source, self.root_cause])
+        self.key = (self.name, source, self.root_cause)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         """Convert object into dict to maintain backward compatibility."""
         return {
             "name": self.name,
@@ -147,17 +200,17 @@ class LogEntry:
         }
 
 
-class DedupStore(OrderedDict):
+class DedupStore(OrderedDict[KeyType, LogEntry]):
     """Data store to hold max amount of deduped entries."""
 
-    def __init__(self, maxlen=50):
+    def __init__(self, maxlen: int = 50) -> None:
         """Initialize a new DedupStore."""
         super().__init__()
         self.maxlen = maxlen
 
     def add_entry(self, entry: LogEntry) -> None:
         """Add a new entry."""
-        key = entry.hash
+        key = entry.key
 
         if key in self:
             # Update stored entry
@@ -176,7 +229,7 @@ class DedupStore(OrderedDict):
             # Removes the first record which should also be the oldest
             self.popitem(last=False)
 
-    def to_list(self):
+    def to_list(self) -> list[dict[str, Any]]:
         """Return reversed list of log entries - LIFO."""
         return [value.to_dict() for value in reversed(self.values())]
 
@@ -185,7 +238,11 @@ class LogErrorHandler(logging.Handler):
     """Log handler for error messages."""
 
     def __init__(
-        self, hass: HomeAssistant, maxlen: int, fire_event: bool, paths_re: re.Pattern
+        self,
+        hass: HomeAssistant,
+        maxlen: int,
+        fire_event: bool,
+        paths_re: re.Pattern[str],
     ) -> None:
         """Initialize a new LogErrorHandler."""
         super().__init__()
@@ -201,11 +258,7 @@ class LogErrorHandler(logging.Handler):
         default upper limit is set to 50 (older entries are discarded) but can
         be changed if needed.
         """
-        stack = []
-        if not record.exc_info:
-            stack = [(f[0], f[1]) for f in traceback.extract_stack()]
-
-        entry = LogEntry(record, _figure_out_source(record, stack, self.paths_re))
+        entry = LogEntry(record, _figure_out_source(record, self.paths_re))
         self.records.add_entry(entry)
         if self.fire_event:
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
@@ -218,7 +271,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass_path: str = HOMEASSISTANT_PATH[0]
     config_dir = hass.config.config_dir
-    assert config_dir is not None
     paths_re = re.compile(
         r"(?:{})/(.*)".format("|".join([re.escape(x) for x in (hass_path, config_dir)]))
     )
@@ -230,7 +282,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = handler
 
     @callback
-    def _async_stop_handler(_) -> None:
+    def _async_stop_handler(_: Event) -> None:
         """Cleanup handler."""
         logging.root.removeHandler(handler)
         del hass.data[DOMAIN]

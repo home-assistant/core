@@ -19,7 +19,7 @@ from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 from .models import SynologyDSMData
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMUpdateEntityEntityDescription(
     UpdateEntityDescription, SynologyDSMEntityDescription
 ):
@@ -30,7 +30,7 @@ UPDATE_ENTITIES: Final = [
     SynologyDSMUpdateEntityEntityDescription(
         api_key=SynoCoreUpgrade.API_KEY,
         key="update",
-        name="DSM Update",
+        translation_key="update",
         entity_category=EntityCategory.DIAGNOSTIC,
     )
 ]

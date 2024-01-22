@@ -19,7 +19,7 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     ) as mock_setup, patch(
         "pychromecast.discovery.discover_chromecasts", return_value=(True, None)
     ), patch(
-        "pychromecast.discovery.stop_discovery"
+        "pychromecast.discovery.stop_discovery",
     ):
         result = await hass.config_entries.flow.async_init(
             cast.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -39,7 +39,6 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "source",
     [
-        config_entries.SOURCE_IMPORT,
         config_entries.SOURCE_USER,
         config_entries.SOURCE_ZEROCONF,
     ],

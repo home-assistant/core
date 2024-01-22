@@ -1,17 +1,17 @@
 """Support for the definition of zones."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 import logging
-from typing import Any, cast
+from operator import attrgetter
+import sys
+from typing import Any, Self, cast
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_PERSONS,
@@ -37,7 +37,7 @@ from homeassistant.helpers import (
     service,
     storage,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import bind_hass
 from homeassistant.util.location import distance
 
@@ -96,6 +96,10 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
+ENTITY_ID_SORTER = attrgetter("entity_id")
+
+ZONE_ENTITY_IDS = "zone_entity_ids"
+
 
 @bind_hass
 def async_active_zone(
@@ -106,41 +110,76 @@ def async_active_zone(
     This method must be run in the event loop.
     """
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
-    zones = (
-        cast(State, hass.states.get(entity_id))
-        for entity_id in sorted(hass.states.async_entity_ids(DOMAIN))
-    )
+    min_dist: float = sys.maxsize
+    closest: State | None = None
 
-    min_dist = None
-    closest = None
+    # This can be called before async_setup by device tracker
+    zone_entity_ids: Iterable[str] = hass.data.get(ZONE_ENTITY_IDS, ())
 
-    for zone in zones:
-        if zone.state == STATE_UNAVAILABLE or zone.attributes.get(ATTR_PASSIVE):
+    for entity_id in zone_entity_ids:
+        if (
+            not (zone := hass.states.get(entity_id))
+            # Skip unavailable zones
+            or zone.state == STATE_UNAVAILABLE
+            # Skip passive zones
+            or (zone_attrs := zone.attributes).get(ATTR_PASSIVE)
+            # Skip zones where we cannot calculate distance
+            or (
+                zone_dist := distance(
+                    latitude,
+                    longitude,
+                    zone_attrs[ATTR_LATITUDE],
+                    zone_attrs[ATTR_LONGITUDE],
+                )
+            )
+            is None
+            # Skip zone that are outside the radius aka the
+            # lat/long is outside the zone
+            or not (zone_dist - (radius := zone_attrs[ATTR_RADIUS]) < radius)
+        ):
             continue
 
-        zone_dist = distance(
-            latitude,
-            longitude,
-            zone.attributes[ATTR_LATITUDE],
-            zone.attributes[ATTR_LONGITUDE],
-        )
-
-        if zone_dist is None:
+        # If have a closest and its not closer than the closest skip it
+        if closest and not (
+            zone_dist < min_dist
+            or (
+                # If same distance, prefer smaller zone
+                zone_dist == min_dist and radius < closest.attributes[ATTR_RADIUS]
+            )
+        ):
             continue
 
-        within_zone = zone_dist - radius < zone.attributes[ATTR_RADIUS]
-        closer_zone = closest is None or zone_dist < min_dist  # type: ignore[unreachable]
-        smaller_zone = (
-            zone_dist == min_dist
-            and zone.attributes[ATTR_RADIUS]
-            < cast(State, closest).attributes[ATTR_RADIUS]
-        )
-
-        if within_zone and (closer_zone or smaller_zone):
-            min_dist = zone_dist
-            closest = zone
+        # We got here which means it closer than the previous known closest
+        # or equal distance but this one is smaller.
+        min_dist = zone_dist
+        closest = zone
 
     return closest
+
+
+@callback
+def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
+    """Set up track of entity IDs for zones."""
+    zone_entity_ids: list[str] = hass.states.async_entity_ids(DOMAIN)
+    hass.data[ZONE_ENTITY_IDS] = zone_entity_ids
+
+    @callback
+    def _async_add_zone_entity_id(
+        event_: EventType[event.EventStateChangedData],
+    ) -> None:
+        """Add zone entity ID."""
+        zone_entity_ids.append(event_.data["entity_id"])
+        zone_entity_ids.sort()
+
+    @callback
+    def _async_remove_zone_entity_id(
+        event_: EventType[event.EventStateChangedData],
+    ) -> None:
+        """Remove zone entity ID."""
+        zone_entity_ids.remove(event_.data["entity_id"])
+
+    event.async_track_state_added_domain(hass, DOMAIN, _async_add_zone_entity_id)
+    event.async_track_state_removed_domain(hass, DOMAIN, _async_remove_zone_entity_id)
 
 
 def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -> bool:
@@ -163,7 +202,7 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
     return zone_dist - radius < cast(float, zone.attributes[ATTR_RADIUS])
 
 
-class ZoneStorageCollection(collection.StorageCollection):
+class ZoneStorageCollection(collection.DictStorageCollection):
     """Zone collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -178,14 +217,16 @@ class ZoneStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return cast(str, info[CONF_NAME])
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
-        return {**data, **update_data}
+        return {**item, **update_data}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
+    async_setup_track_zone_entity_ids(hass)
+
     component = entity_component.EntityComponent[Zone](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
@@ -198,7 +239,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage_collection = ZoneStorageCollection(
         storage.Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -210,7 +250,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
@@ -347,10 +387,12 @@ class Zone(collection.CollectionEntity):
         self.async_write_ha_state()
 
     @callback
-    def _person_state_change_listener(self, evt: Event) -> None:
-        person_entity_id = evt.data[ATTR_ENTITY_ID]
+    def _person_state_change_listener(
+        self, evt: EventType[event.EventStateChangedData]
+    ) -> None:
+        person_entity_id = evt.data["entity_id"]
         cur_count = len(self._persons_in_zone)
-        if self._state_is_in_zone(evt.data.get("new_state")):
+        if self._state_is_in_zone(evt.data["new_state"]):
             self._persons_in_zone.add(person_entity_id)
         elif person_entity_id in self._persons_in_zone:
             self._persons_in_zone.remove(person_entity_id)

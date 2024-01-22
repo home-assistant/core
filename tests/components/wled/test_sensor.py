@@ -61,7 +61,7 @@ async def test_sensors(
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (state := hass.states.get("sensor.wled_rgb_light_free_memory"))
-    assert state.attributes.get(ATTR_ICON) == "mdi:memory"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.BYTES
     assert state.state == "14600"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
@@ -71,7 +71,7 @@ async def test_sensors(
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_signal"))
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "76"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
@@ -93,7 +93,7 @@ async def test_sensors(
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_channel"))
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "11"
 
@@ -102,12 +102,21 @@ async def test_sensors(
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_bssid"))
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "AA:AA:AA:AA:AA:BB"
 
     assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_bssid"))
     assert entry.unique_id == "aabbccddeeff_wifi_bssid"
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
+    assert state.attributes.get(ATTR_ICON) is None
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.state == "127.0.0.1"
+
+    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_ip"))
+    assert entry.unique_id == "aabbccddeeff_ip"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 

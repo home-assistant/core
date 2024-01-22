@@ -1,0 +1,52 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "download_speed": {
+        "name": "Download speed"
+      },
+      "upload_speed": {
+        "name": "Upload speed"
+      },
+      "transmission_status": {
+        "name": "Status",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "up_down": "Up/Down",
+          "seeding": "Seeding",
+          "downloading": "Downloading"
+        }
+      },
+      "active_torrents": {
+        "name": "Active torrents"
+      },
+      "inactive_torrents": {
+        "name": "Inactive torrents"
+      },
+      "paused_torrents": {
+        "name": "Paused torrents"
+      },
+      "all_torrents": {
+        "name": "All torrents"
+      }
+    }
+  }
+}

@@ -1,4 +1,6 @@
 """Test different accessory types: Sensors."""
+from unittest.mock import patch
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homekit import get_accessory
 from homeassistant.components.homekit.const import (
@@ -71,11 +73,13 @@ async def test_temperature(hass: HomeAssistant, hk_driver) -> None:
     await hass.async_block_till_done()
     assert acc.char_temp.value == 0
 
-    hass.states.async_set(
-        entity_id, "75.2", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT}
-    )
-    await hass.async_block_till_done()
-    assert acc.char_temp.value == 24
+    # The UOM changes, the accessory should reload itself
+    with patch.object(acc, "async_reload") as mock_reload:
+        hass.states.async_set(
+            entity_id, "75.2", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT}
+        )
+        await hass.async_block_till_done()
+        assert mock_reload.called
 
 
 async def test_humidity(hass: HomeAssistant, hk_driver) -> None:
@@ -537,20 +541,20 @@ async def test_binary_device_classes(hass: HomeAssistant, hk_driver) -> None:
         assert acc.char_detected.display_name == char
 
 
-async def test_sensor_restore(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_sensor_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         "generic",
         "1234",
         suggested_object_id="temperature",
         original_device_class="temperature",
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         "generic",
         "12345",

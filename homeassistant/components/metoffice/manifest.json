@@ -3,8 +3,9 @@
   "name": "Met Office",
   "codeowners": ["@MrHarcombe", "@avee87"],
   "config_flow": true,
+  "disabled": "Integration library not compatible with Python 3.12",
   "documentation": "https://www.home-assistant.io/integrations/metoffice",
   "iot_class": "cloud_polling",
   "loggers": ["datapoint"],
-  "requirements": ["datapoint==0.9.8"]
+  "requirements": ["datapoint==0.9.8;python_version<'3.12'"]
 }

@@ -36,8 +36,10 @@ TADO_HVAC_ACTION_TO_HA_HVAC_ACTION = {
 
 # Configuration
 CONF_FALLBACK = "fallback"
+CONF_HOME_ID = "home_id"
 DATA = "data"
 UPDATE_TRACK = "update_track"
+UPDATE_MOBILE_DEVICE_TRACK = "update_mobile_device_track"
 
 # Weather
 CONDITIONS_MAP = {
@@ -119,7 +121,7 @@ TADO_MODES_TO_HA_CURRENT_HVAC_ACTION = {
 }
 
 # These modes will not allow a temp to be set
-TADO_MODES_WITH_NO_TEMP_SETTING = [CONST_MODE_AUTO, CONST_MODE_DRY, CONST_MODE_FAN]
+TADO_MODES_WITH_NO_TEMP_SETTING = [CONST_MODE_AUTO, CONST_MODE_FAN]
 #
 # HVAC_MODE_HEAT_COOL is mapped to CONST_MODE_AUTO
 #    This lets tado decide on a temp
@@ -153,8 +155,14 @@ TADO_TO_HA_FAN_MODE_MAP = {value: key for key, value in HA_TO_TADO_FAN_MODE_MAP.
 
 DEFAULT_TADO_PRECISION = 0.1
 
-SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
+# Constant for Auto Geolocation mode
+PRESET_AUTO = "auto"
 
+SUPPORT_PRESET_AUTO = [PRESET_AWAY, PRESET_HOME, PRESET_AUTO]
+SUPPORT_PRESET_MANUAL = [PRESET_AWAY, PRESET_HOME]
+
+SENSOR_DATA_CATEGORY_WEATHER = "weather"
+SENSOR_DATA_CATEGORY_GEOFENCE = "geofence"
 
 TADO_SWING_OFF = "OFF"
 TADO_SWING_ON = "ON"
@@ -171,6 +179,7 @@ TADO_TO_HA_SWING_MODE_MAP = {
 DOMAIN = "tado"
 
 SIGNAL_TADO_UPDATE_RECEIVED = "tado_update_received_{}_{}_{}"
+SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED = "tado_mobile_device_update_received_{}"
 UNIQUE_ID = "unique_id"
 
 DEFAULT_NAME = "Tado"

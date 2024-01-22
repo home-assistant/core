@@ -36,8 +36,9 @@
     'original_icon': None,
     'original_name': 'Firmware',
     'platform': 'wled',
+    'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'firmware',
     'unique_id': 'aabbccddeeff_update',
     'unit_of_measurement': None,
   })
@@ -68,6 +69,7 @@
     'model': 'DIY light',
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '0.8.5',
     'via_device_id': None,

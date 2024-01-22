@@ -75,12 +75,12 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            bindkey = user_input["bindkey"]
+            bindkey: str = user_input["bindkey"]
 
             if len(bindkey) != 32:
                 errors["bindkey"] = "expected_32_characters"
             else:
-                self._discovered_device.bindkey = bytes.fromhex(bindkey)
+                self._discovered_device.set_bindkey(bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -173,8 +173,8 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         # Otherwise there wasn't actually encryption so abort
         return self.async_abort(reason="reauth_successful")
 
-    def _async_get_or_create_entry(self, bindkey=None):
-        data = {}
+    def _async_get_or_create_entry(self, bindkey: str | None = None) -> FlowResult:
+        data: dict[str, Any] = {}
         if bindkey:
             data["bindkey"] = bindkey
 

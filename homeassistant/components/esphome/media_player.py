@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aioesphomeapi import (
+    EntityInfo,
     MediaPlayerCommand,
     MediaPlayerEntityState,
     MediaPlayerInfo,
@@ -21,15 +22,11 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    EsphomeEntity,
-    EsphomeEnumMapper,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .enum_mapper import EsphomeEnumMapper
 
 
 async def async_setup_entry(
@@ -42,7 +39,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="media_player",
         info_type=MediaPlayerInfo,
         entity_type=EsphomeMediaPlayer,
         state_type=MediaPlayerEntityState,
@@ -65,6 +61,21 @@ class EsphomeMediaPlayer(
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        flags = (
+            MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.BROWSE_MEDIA
+            | MediaPlayerEntityFeature.STOP
+            | MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+        )
+        if self._static_info.supports_pause:
+            flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
+        self._attr_supported_features = flags
+
     @property
     @esphome_state_property
     def state(self) -> MediaPlayerState | None:
@@ -83,20 +94,6 @@ class EsphomeMediaPlayer(
         """Volume level of the media player (0..1)."""
         return self._state.volume
 
-    @property
-    def supported_features(self) -> MediaPlayerEntityFeature:
-        """Flag supported features."""
-        flags = (
-            MediaPlayerEntityFeature.PLAY_MEDIA
-            | MediaPlayerEntityFeature.BROWSE_MEDIA
-            | MediaPlayerEntityFeature.STOP
-            | MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_MUTE
-        )
-        if self._static_info.supports_pause:
-            flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
-        return flags
-
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -110,12 +107,14 @@ class EsphomeMediaPlayer(
         media_id = async_process_play_media_url(self.hass, media_id)
 
         await self._client.media_player_command(
-            self._static_info.key,
+            self._key,
             media_url=media_id,
         )
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(
@@ -126,35 +125,29 @@ class EsphomeMediaPlayer(
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        await self._client.media_player_command(
-            self._static_info.key,
-            volume=volume,
-        )
+        await self._client.media_player_command(self._key, volume=volume)
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._client.media_player_command(
-            self._static_info.key,
-            command=MediaPlayerCommand.PAUSE,
+            self._key, command=MediaPlayerCommand.PAUSE
         )
 
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._client.media_player_command(
-            self._static_info.key,
-            command=MediaPlayerCommand.PLAY,
+            self._key, command=MediaPlayerCommand.PLAY
         )
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._client.media_player_command(
-            self._static_info.key,
-            command=MediaPlayerCommand.STOP,
+            self._key, command=MediaPlayerCommand.STOP
         )
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self._client.media_player_command(
-            self._static_info.key,
+            self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
         )

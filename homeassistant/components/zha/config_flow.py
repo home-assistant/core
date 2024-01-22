@@ -23,21 +23,27 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowHandler, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .core.const import (
     CONF_BAUDRATE,
-    CONF_FLOWCONTROL,
+    CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     DOMAIN,
     RadioType,
 )
-from .radio_manager import HARDWARE_DISCOVERY_SCHEMA, ZhaRadioManager
+from .radio_manager import (
+    DEVICE_SCHEMA,
+    HARDWARE_DISCOVERY_SCHEMA,
+    RECOMMENDED_RADIOS,
+    ProbeResult,
+    ZhaRadioManager,
+)
 
 CONF_MANUAL_PATH = "Enter Manually"
 SUPPORTED_PORT_SETTINGS = (
     CONF_BAUDRATE,
-    CONF_FLOWCONTROL,
+    CONF_FLOW_CONTROL,
 )
 DECONZ_DOMAIN = "deconz"
 
@@ -56,6 +62,8 @@ OPTIONS_INTENT_RECONFIGURE = "intent_reconfigure"
 
 UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
+REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
+
 DEFAULT_ZHA_ZEROCONF_PORT = 6638
 ESPHOME_API_PORT = 6053
 
@@ -65,7 +73,7 @@ def _format_backup_choice(
 ) -> str:
     """Format network backup info into a short piece of text."""
     if not pan_ids:
-        return dt.as_local(backup.backup_time).strftime("%c")
+        return dt_util.as_local(backup.backup_time).strftime("%c")
 
     identifier = (
         # PAN ID
@@ -74,7 +82,7 @@ def _format_backup_choice(
         f":{str(backup.network_info.extended_pan_id).replace(':', '')}"
     ).lower()
 
-    return f"{dt.as_local(backup.backup_time).strftime('%c')} ({identifier})"
+    return f"{dt_util.as_local(backup.backup_time).strftime('%c')} ({identifier})"
 
 
 async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
@@ -92,16 +100,18 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
         yellow_radio.manufacturer = "Nabu Casa"
 
     # Present the multi-PAN addon as a setup option, if it's available
-    addon_manager = silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
 
     try:
-        addon_info = await addon_manager.async_get_addon_info()
+        addon_info = await multipan_manager.async_get_addon_info()
     except (AddonError, KeyError):
         addon_info = None
 
     if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
         addon_port = ListPortInfo(
-            device=silabs_multiprotocol_addon.get_zigbee_socket(hass, addon_info),
+            device=silabs_multiprotocol_addon.get_zigbee_socket(),
             skip_link_detection=True,
         )
 
@@ -151,7 +161,7 @@ class BaseZhaFlow(FlowHandler):
         return self.async_create_entry(
             title=self._title,
             data={
-                CONF_DEVICE: device_settings,
+                CONF_DEVICE: DEVICE_SCHEMA(device_settings),
                 CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
             },
         )
@@ -181,7 +191,13 @@ class BaseZhaFlow(FlowHandler):
             port = ports[list_of_ports.index(user_selection)]
             self._radio_mgr.device_path = port.device
 
-            if not await self._radio_mgr.detect_radio_type():
+            probe_result = await self._radio_mgr.detect_radio_type()
+            if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
+                return self.async_abort(
+                    reason="wrong_firmware_installed",
+                    description_placeholders={"repair_url": REPAIR_MY_URL},
+                )
+            if probe_result == ProbeResult.PROBING_FAILED:
                 # Did not autodetect anything, proceed to manual selection
                 return await self.async_step_manual_pick_radio_type()
 
@@ -192,7 +208,7 @@ class BaseZhaFlow(FlowHandler):
                 else ""
             )
 
-            return await self.async_step_choose_formation_strategy()
+            return await self.async_step_verify_radio()
 
         # Pre-select the currently configured port
         default_port = vol.UNDEFINED
@@ -252,7 +268,7 @@ class BaseZhaFlow(FlowHandler):
             self._radio_mgr.device_settings = user_input.copy()
 
             if await self._radio_mgr.radio_type.controller.probe(user_input):
-                return await self.async_step_choose_formation_strategy()
+                return await self.async_step_verify_radio()
 
             errors["base"] = "cannot_connect"
 
@@ -266,7 +282,7 @@ class BaseZhaFlow(FlowHandler):
         for (
             param,
             value,
-        ) in self._radio_mgr.radio_type.controller.SCHEMA_DEVICE.schema.items():
+        ) in DEVICE_SCHEMA.schema.items():
             if param not in SUPPORTED_PORT_SETTINGS:
                 continue
 
@@ -287,6 +303,26 @@ class BaseZhaFlow(FlowHandler):
             step_id="manual_port_config",
             data_schema=vol.Schema(schema),
             errors=errors,
+        )
+
+    async def async_step_verify_radio(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Add a warning step to dissuade the use of deprecated radios."""
+        assert self._radio_mgr.radio_type is not None
+
+        # Skip this step if we are using a recommended radio
+        if user_input is not None or self._radio_mgr.radio_type in RECOMMENDED_RADIOS:
+            return await self.async_step_choose_formation_strategy()
+
+        return self.async_show_form(
+            step_id="verify_radio",
+            description_placeholders={
+                CONF_NAME: self._radio_mgr.radio_type.description,
+                "docs_recommended_adapters_url": (
+                    "https://www.home-assistant.io/integrations/zha/#recommended-zigbee-radio-adapters-and-modules"
+                ),
+            },
         )
 
     async def async_step_choose_formation_strategy(
@@ -453,7 +489,7 @@ class BaseZhaFlow(FlowHandler):
 class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 3
+    VERSION = 4
 
     async def _set_unique_id_or_update_path(
         self, unique_id: str, device_path: str
@@ -504,10 +540,17 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         # config flow logic that interacts with hardware.
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             # Probe the radio type if we don't have one yet
-            if (
-                self._radio_mgr.radio_type is None
-                and not await self._radio_mgr.detect_radio_type()
-            ):
+            if self._radio_mgr.radio_type is None:
+                probe_result = await self._radio_mgr.detect_radio_type()
+            else:
+                probe_result = ProbeResult.RADIO_TYPE_DETECTED
+
+            if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
+                return self.async_abort(
+                    reason="wrong_firmware_installed",
+                    description_placeholders={"repair_url": REPAIR_MY_URL},
+                )
+            if probe_result == ProbeResult.PROBING_FAILED:
                 # This path probably will not happen now that we have
                 # more precise USB matching unless there is a problem
                 # with the device
@@ -516,7 +559,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
             if self._radio_mgr.device_settings is None:
                 return await self.async_step_manual_port_config()
 
-            return await self.async_step_choose_formation_strategy()
+            return await self.async_step_verify_radio()
 
         return self.async_show_form(
             step_id="confirm",
@@ -528,10 +571,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         vid = discovery_info.vid
         pid = discovery_info.pid
         serial_number = discovery_info.serial_number
-        device = discovery_info.device
         manufacturer = discovery_info.manufacturer
         description = discovery_info.description
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        dev_path = discovery_info.device
 
         await self._set_unique_id_or_update_path(
             unique_id=f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}",
@@ -605,22 +647,17 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
 
         name = discovery_data["name"]
         radio_type = self._radio_mgr.parse_radio_type(discovery_data["radio_type"])
-
-        try:
-            device_settings = radio_type.controller.SCHEMA_DEVICE(
-                discovery_data["port"]
-            )
-        except vol.Invalid:
-            return self.async_abort(reason="invalid_hardware_data")
+        device_settings = discovery_data["port"]
+        device_path = device_settings[CONF_DEVICE_PATH]
 
         await self._set_unique_id_or_update_path(
-            unique_id=f"{name}_{radio_type.name}_{device_settings[CONF_DEVICE_PATH]}",
-            device_path=device_settings[CONF_DEVICE_PATH],
+            unique_id=f"{name}_{radio_type.name}_{device_path}",
+            device_path=device_path,
         )
 
         self._title = name
         self._radio_mgr.radio_type = radio_type
-        self._radio_mgr.device_path = device_settings[CONF_DEVICE_PATH]
+        self._radio_mgr.device_path = device_path
         self._radio_mgr.device_settings = device_settings
         self.context["title_placeholders"] = {CONF_NAME: name}
 

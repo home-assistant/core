@@ -130,7 +130,6 @@ EVENT_GROUP_OFF = "insteon.button_off"
 EVENT_GROUP_ON_FAST = "insteon.button_on_fast"
 EVENT_GROUP_OFF_FAST = "insteon.button_off_fast"
 EVENT_CONF_BUTTON = "button"
-ON_OFF_EVENTS = "on_off_events"
 
 STATE_NAME_LABEL_MAP = {
     DIMMABLE_LIGHT_MAIN: "Main",

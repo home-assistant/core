@@ -10,13 +10,14 @@ from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
+from json import JSONDecodeError
 import logging
 import secrets
 import time
 from typing import Any, cast
 
-from aiohttp import client, web
-import async_timeout
+from aiohttp import ClientError, ClientResponseError, client, web
 import jwt
 import voluptuous as vol
 from yarl import URL
@@ -73,7 +74,8 @@ class AbstractOAuth2Implementation(ABC):
         Pass external data in with:
 
         await hass.config_entries.flow.async_configure(
-            flow_id=flow_id, user_input={'code': 'abcd', 'state': { … }
+            flow_id=flow_id, user_input={'code': 'abcd', 'state': … }
+
         )
 
         """
@@ -199,12 +201,15 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
         _LOGGER.debug("Sending token request to %s", self.token_url)
         resp = await session.post(self.token_url, data=data)
-        if resp.status >= 400 and _LOGGER.isEnabledFor(logging.DEBUG):
-            body = await resp.text()
-            _LOGGER.debug(
-                "Token request failed with status=%s, body=%s",
-                resp.status,
-                body,
+        if resp.status >= 400:
+            try:
+                error_response = await resp.json()
+            except (ClientError, JSONDecodeError):
+                error_response = {}
+            error_code = error_response.get("error", "unknown")
+            error_description = error_response.get("error_description", "unknown error")
+            _LOGGER.error(
+                "Token request failed (%s): %s", error_code, error_description
             )
         resp.raise_for_status()
         return cast(dict, await resp.json())
@@ -287,7 +292,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_external_step_done(next_step_id=next_step)
 
         try:
-            async with async_timeout.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
+            async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
                 url = await self.async_generate_authorize_url()
         except asyncio.TimeoutError as err:
             _LOGGER.error("Timeout generating authorize url: %s", err)
@@ -311,13 +316,24 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         _LOGGER.debug("Creating config entry from external data")
 
         try:
-            async with async_timeout.timeout(OAUTH_TOKEN_TIMEOUT_SEC):
+            async with asyncio.timeout(OAUTH_TOKEN_TIMEOUT_SEC):
                 token = await self.flow_impl.async_resolve_external_data(
                     self.external_data
                 )
         except asyncio.TimeoutError as err:
             _LOGGER.error("Timeout resolving OAuth token: %s", err)
-            return self.async_abort(reason="oauth2_timeout")
+            return self.async_abort(reason="oauth_timeout")
+        except (ClientResponseError, ClientError) as err:
+            if (
+                isinstance(err, ClientResponseError)
+                and err.status == HTTPStatus.UNAUTHORIZED
+            ):
+                return self.async_abort(reason="oauth_unauthorized")
+            return self.async_abort(reason="oauth_failed")
+
+        if "expires_in" not in token:
+            _LOGGER.warning("Invalid token: %s", token)
+            return self.async_abort(reason="oauth_error")
 
         # Force int for non-compliant oauth2 providers
         try:
@@ -542,7 +558,7 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
 
 
 @callback
-def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
+def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict[str, Any] | None:
     """JWT encode data."""
     secret: str | None = hass.data.get(DATA_JWT_SECRET)
 
@@ -550,6 +566,6 @@ def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
         return None
 
     try:
-        return jwt.decode(encoded, secret, algorithms=["HS256"])
+        return jwt.decode(encoded, secret, algorithms=["HS256"])  # type: ignore[no-any-return]
     except jwt.InvalidTokenError:
         return None

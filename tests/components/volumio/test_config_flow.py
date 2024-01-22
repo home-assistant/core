@@ -1,4 +1,5 @@
 """Test the Volumio config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -19,8 +20,8 @@ TEST_CONNECTION = {
 
 
 TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
-    host="1.1.1.1",
-    addresses=["1.1.1.1"],
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
     hostname="mock_hostname",
     name="mock_name",
     port=3000,

@@ -1,9 +1,10 @@
 """Support for the CO2signal platform."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
-from typing import cast
+
+from aioelectricitymaps.models import CarbonIntensityResponse
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -13,36 +14,39 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CO2SignalCoordinator
 from .const import ATTRIBUTION, DOMAIN
+from .coordinator import CO2SignalCoordinator
 
-SCAN_INTERVAL = timedelta(minutes=3)
 
-
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class CO2SensorEntityDescription(SensorEntityDescription):
     """Provide a description of a CO2 sensor."""
 
     # For backwards compat, allow description to override unique ID key to use
     unique_id: str | None = None
+    unit_of_measurement_fn: Callable[
+        [CarbonIntensityResponse], str | None
+    ] | None = None
+    value_fn: Callable[[CarbonIntensityResponse], float | None]
 
 
 SENSORS = (
     CO2SensorEntityDescription(
         key="carbonIntensity",
-        name="CO2 intensity",
+        translation_key="carbon_intensity",
         unique_id="co2intensity",
-        # No unit, it's extracted from response.
+        value_fn=lambda response: response.data.carbon_intensity,
+        unit_of_measurement_fn=lambda response: response.units.carbon_intensity,
     ),
     CO2SensorEntityDescription(
         key="fossilFuelPercentage",
-        name="Grid fossil fuel percentage",
+        translation_key="fossil_fuel_percentage",
         native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda response: response.data.fossil_fuel_percentage,
     ),
 )
 
@@ -52,7 +56,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the CO2signal sensor."""
     coordinator: CO2SignalCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(CO2Sensor(coordinator, description) for description in SENSORS)
+    async_add_entities(
+        [CO2Sensor(coordinator, description) for description in SENSORS], False
+    )
 
 
 class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
@@ -61,7 +67,6 @@ class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
     entity_description: CO2SensorEntityDescription
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    _attr_icon = "mdi:molecule-co2"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
@@ -72,39 +77,28 @@ class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
         self.entity_description = description
 
         self._attr_extra_state_attributes = {
-            "country_code": coordinator.data["countryCode"],
+            "country_code": coordinator.data.country_code,
         }
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://www.electricitymap.org/",
+            configuration_url="https://www.electricitymaps.com/",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.entry_id)},
-            manufacturer="Tmrow.com",
-            name="CO2 signal",
+            manufacturer="Electricity Maps",
+            name="Electricity Maps",
         )
         self._attr_unique_id = (
             f"{coordinator.entry_id}_{description.unique_id or description.key}"
         )
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            super().available
-            and self.entity_description.key in self.coordinator.data["data"]
-        )
-
-    @property
     def native_value(self) -> float | None:
         """Return sensor state."""
-        if (value := self.coordinator.data["data"][self.entity_description.key]) is None:  # type: ignore[literal-required]
-            return None
-        return round(value, 2)
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if self.entity_description.native_unit_of_measurement:
-            return self.entity_description.native_unit_of_measurement
-        return cast(
-            str, self.coordinator.data["units"].get(self.entity_description.key)
-        )
+        if self.entity_description.unit_of_measurement_fn:
+            return self.entity_description.unit_of_measurement_fn(self.coordinator.data)
+
+        return self.entity_description.native_unit_of_measurement

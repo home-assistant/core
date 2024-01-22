@@ -28,11 +28,10 @@ async def async_setup_entry(
 class CoolmasterResetFilter(CoolmasterEntity, ButtonEntity):
     """Reset the clean filter timer (once filter was cleaned)."""
 
-    _attr_has_entity_name = True
     entity_description = ButtonEntityDescription(
         key="reset_filter",
+        translation_key="reset_filter",
         entity_category=EntityCategory.CONFIG,
-        name="Reset filter",
         icon="mdi:air-filter",
     )
 

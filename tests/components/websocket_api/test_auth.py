@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import aiohttp
+from aiohttp import WSMsgType
 import pytest
 
 from homeassistant.auth.providers.legacy_api_password import (
@@ -22,7 +23,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
 from tests.typing import ClientSessionGenerator
 
 
@@ -71,7 +71,6 @@ async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client) -> None:
     """Test authenticating."""
     with patch(
         "homeassistant.components.websocket_api.auth.process_wrong_login",
-        return_value=mock_coro(),
     ) as mock_process_wrong_login:
         await no_auth_websocket_client.send_json(
             {"type": TYPE_AUTH, "api_password": "wrong"}
@@ -223,3 +222,78 @@ async def test_auth_close_after_revoke(
     msg = await websocket_client.receive()
     assert msg.type == aiohttp.WSMsgType.CLOSE
     assert websocket_client.closed
+
+
+async def test_auth_sending_invalid_json_disconnects(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test sending invalid json during auth."""
+    assert await async_setup_component(hass, "websocket_api", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    async with client.ws_connect(URL) as ws:
+        auth_msg = await ws.receive_json()
+        assert auth_msg["type"] == TYPE_AUTH_REQUIRED
+
+        await ws.send_str("[--INVALID--JSON--]")
+
+        auth_msg = await ws.receive()
+        assert auth_msg.type == WSMsgType.close
+
+
+async def test_auth_sending_binary_disconnects(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test sending bytes during auth."""
+    assert await async_setup_component(hass, "websocket_api", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    async with client.ws_connect(URL) as ws:
+        auth_msg = await ws.receive_json()
+        assert auth_msg["type"] == TYPE_AUTH_REQUIRED
+
+        await ws.send_bytes(b"[INVALID]")
+
+        auth_msg = await ws.receive()
+        assert auth_msg.type == WSMsgType.close
+
+
+async def test_auth_close_disconnects(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test closing during auth."""
+    assert await async_setup_component(hass, "websocket_api", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    async with client.ws_connect(URL) as ws:
+        auth_msg = await ws.receive_json()
+        assert auth_msg["type"] == TYPE_AUTH_REQUIRED
+
+        await ws.close()
+
+        auth_msg = await ws.receive()
+        assert auth_msg.type == WSMsgType.CLOSED
+
+
+async def test_auth_sending_unknown_type_disconnects(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test sending unknown type during auth."""
+    assert await async_setup_component(hass, "websocket_api", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    async with client.ws_connect(URL) as ws:
+        auth_msg = await ws.receive_json()
+        assert auth_msg["type"] == TYPE_AUTH_REQUIRED
+
+        await ws._writer._send_frame(b"1" * 130, 0x30)
+        auth_msg = await ws.receive()
+        assert auth_msg.type == WSMsgType.close

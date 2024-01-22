@@ -1,15 +1,15 @@
 """The ATAG Integration."""
+from asyncio import timeout
 from datetime import timedelta
 import logging
 
-import async_timeout
 from pyatag import AtagException, AtagOne
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "atag"
-PLATFORMS = [Platform.CLIMATE, Platform.WATER_HEATER, Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_update_data():
         """Update data via library."""
-        async with async_timeout.timeout(20):
+        async with timeout(20):
             try:
                 await atag.update()
             except AtagException as err:

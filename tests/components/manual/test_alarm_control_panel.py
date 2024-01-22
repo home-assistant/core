@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -39,7 +40,7 @@ async def test_setup_demo_platform(hass: HomeAssistant) -> None:
     """Test setup."""
     mock = MagicMock()
     add_entities = mock.MagicMock()
-    await demo.async_setup_platform(hass, {}, add_entities)
+    await demo.async_setup_entry(hass, {}, add_entities)
     assert add_entities.call_count == 1
 
 
@@ -224,12 +225,16 @@ async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    await hass.services.async_call(
-        alarm_control_panel.DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE + "2"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await hass.services.async_call(
+            alarm_control_panel.DOMAIN,
+            service,
+            {
+                ATTR_ENTITY_ID: "alarm_control_panel.test",
+                ATTR_CODE: f"{CODE}2",
+            },
+            blocking=True,
+        )
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
@@ -1082,7 +1087,8 @@ async def test_disarm_during_trigger_with_invalid_code(hass: HomeAssistant) -> N
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
-    await common.async_alarm_disarm(hass, entity_id=entity_id)
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await common.async_alarm_disarm(hass, entity_id=entity_id)
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
@@ -1125,7 +1131,8 @@ async def test_disarm_with_template_code(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME
 
-    await common.async_alarm_disarm(hass, "def")
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await common.async_alarm_disarm(hass, "def")
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME
@@ -1214,7 +1221,7 @@ async def test_restore_state(hass: HomeAssistant, expected_state) -> None:
     """Ensure state is restored on startup."""
     mock_restore_cache(hass, (State("alarm_control_panel.test", expected_state),))
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1259,7 +1266,7 @@ async def test_restore_state_arming(hass: HomeAssistant, expected_state) -> None
         hass, (State(entity_id, expected_state, attributes, last_updated=time),)
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1316,7 +1323,7 @@ async def test_restore_state_pending(hass: HomeAssistant, previous_state) -> Non
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1381,7 +1388,7 @@ async def test_restore_state_triggered(hass: HomeAssistant, previous_state) -> N
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1427,7 +1434,7 @@ async def test_restore_state_triggered_long_ago(hass: HomeAssistant) -> None:
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(

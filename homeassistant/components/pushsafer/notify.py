@@ -40,7 +40,10 @@ ATTR_TIME2LIVE = "time2live"
 ATTR_PRIORITY = "priority"
 ATTR_RETRY = "retry"
 ATTR_EXPIRE = "expire"
+ATTR_CONFIRM = "confirm"
 ATTR_ANSWER = "answer"
+ATTR_ANSWEROPTIONS = "answeroptions"
+ATTR_ANSWERFORCE = "answerforce"
 ATTR_PICTURE1 = "picture1"
 
 # Attributes contained in picture1
@@ -120,7 +123,10 @@ class PushsaferNotificationService(BaseNotificationService):
             "pr": data.get(ATTR_PRIORITY, ""),
             "re": data.get(ATTR_RETRY, ""),
             "ex": data.get(ATTR_EXPIRE, ""),
+            "cr": data.get(ATTR_CONFIRM, ""),
             "a": data.get(ATTR_ANSWER, ""),
+            "ao": data.get(ATTR_ANSWEROPTIONS, ""),
+            "af": data.get(ATTR_ANSWERFORCE, ""),
             "p": picture1_encoded,
         }
 

@@ -286,7 +286,7 @@ async def _set_active_climate_profile(
 async def _async_dump_hap_config(hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to dump the configuration of a Homematic IP Access Point."""
     config_path: str = (
-        service.data.get(ATTR_CONFIG_OUTPUT_PATH) or hass.config.config_dir or "."
+        service.data.get(ATTR_CONFIG_OUTPUT_PATH) or hass.config.config_dir
     )
     config_file_prefix = service.data[ATTR_CONFIG_OUTPUT_FILE_PREFIX]
     anonymize = service.data[ATTR_ANONYMIZE]

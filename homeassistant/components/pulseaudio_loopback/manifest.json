@@ -4,5 +4,5 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/pulseaudio_loopback",
   "iot_class": "local_polling",
-  "requirements": ["pulsectl==20.2.4"]
+  "requirements": ["pulsectl==23.5.2"]
 }

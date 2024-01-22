@@ -43,7 +43,7 @@ async def test_component_translation_path(
         "switch",
         {"switch": [{"platform": "test"}, {"platform": "test_embedded"}]},
     )
-    assert await async_setup_component(hass, "test_package", {"test_package"})
+    assert await async_setup_component(hass, "test_package", {"test_package": None})
 
     (
         int_test,
@@ -56,14 +56,14 @@ async def test_component_translation_path(
     )
 
     assert path.normpath(
-        translation.component_translation_path("switch.test", "en", int_test)
+        translation.component_translation_path("test.switch", "en", int_test)
     ) == path.normpath(
         hass.config.path("custom_components", "test", "translations", "switch.en.json")
     )
 
     assert path.normpath(
         translation.component_translation_path(
-            "switch.test_embedded", "en", int_test_embedded
+            "test_embedded.switch", "en", int_test_embedded
         )
     ) == path.normpath(
         hass.config.path(
@@ -96,6 +96,77 @@ def test_load_translations_files(hass: HomeAssistant) -> None:
         },
         "invalid": {},
     }
+
+
+@pytest.mark.parametrize(
+    ("language", "expected_translation", "expected_errors"),
+    (
+        (
+            "en",
+            {
+                "component.test.entity.switch.other1.name": "Other 1",
+                "component.test.entity.switch.other2.name": "Other 2",
+                "component.test.entity.switch.other3.name": "Other 3",
+                "component.test.entity.switch.other4.name": "Other 4",
+                "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
+            },
+            [],
+        ),
+        (
+            "es",
+            {
+                "component.test.entity.switch.other1.name": "Otra 1",
+                "component.test.entity.switch.other2.name": "Otra 2",
+                "component.test.entity.switch.other3.name": "Otra 3",
+                "component.test.entity.switch.other4.name": "Otra 4",
+                "component.test.entity.switch.outlet.name": "Enchufe {placeholder}",
+            },
+            [],
+        ),
+        (
+            "de",
+            {
+                # Correct
+                "component.test.entity.switch.other1.name": "Anderes 1",
+                # Translation has placeholder missing in English
+                "component.test.entity.switch.other2.name": "Other 2",
+                # Correct (empty translation)
+                "component.test.entity.switch.other3.name": "",
+                # Translation missing
+                "component.test.entity.switch.other4.name": "Other 4",
+                # Mismatch in placeholders
+                "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
+            },
+            [
+                "component.test.entity.switch.other2.name",
+                "component.test.entity.switch.outlet.name",
+            ],
+        ),
+    ),
+)
+async def test_load_translations_files_invalid_localized_placeholders(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+    language: str,
+    expected_translation: dict,
+    expected_errors: bool,
+) -> None:
+    """Test the load translation files with invalid localized placeholders."""
+    caplog.clear()
+    translations = await translation.async_get_translations(
+        hass, language, "entity", ["test"]
+    )
+    assert translations == expected_translation
+
+    assert ("Validation of translation placeholders" in caplog.text) == (
+        len(expected_errors) > 0
+    )
+    for expected_error in expected_errors:
+        assert (
+            f"Validation of translation placeholders for localized ({language}) string {expected_error} failed"
+            in caplog.text
+        )
 
 
 async def test_get_translations(
@@ -255,7 +326,7 @@ async def test_translation_merging(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we merge translations of two integrations."""
-    hass.config.components.add("sensor.moon")
+    hass.config.components.add("moon.sensor")
     hass.config.components.add("sensor")
 
     orig_load_translations = translation.load_translations_files
@@ -263,7 +334,7 @@ async def test_translation_merging(
     def mock_load_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["sensor.moon"] = {
+        result["moon.sensor"] = {
             "state": {"moon__phase": {"first_quarter": "First Quarter"}}
         }
         return result
@@ -276,13 +347,13 @@ async def test_translation_merging(
 
     assert "component.sensor.state.moon__phase.first_quarter" in translations
 
-    hass.config.components.add("sensor.season")
+    hass.config.components.add("season.sensor")
 
     # Patch in some bad translation data
     def mock_load_bad_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["sensor.season"] = {"state": "bad data"}
+        result["season.sensor"] = {"state": "bad data"}
         return result
 
     with patch(
@@ -308,7 +379,7 @@ async def test_translation_merging_loaded_apart(
     def mock_load_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["sensor.moon"] = {
+        result["moon.sensor"] = {
             "state": {"moon__phase": {"first_quarter": "First Quarter"}}
         }
         return result
@@ -323,7 +394,7 @@ async def test_translation_merging_loaded_apart(
 
     assert "component.sensor.state.moon__phase.first_quarter" not in translations
 
-    hass.config.components.add("sensor.moon")
+    hass.config.components.add("moon.sensor")
 
     with patch(
         "homeassistant.helpers.translation.load_translations_files",
@@ -373,39 +444,42 @@ async def test_caching(hass: HomeAssistant) -> None:
         "homeassistant.helpers.translation._merge_resources",
         side_effect=translation._merge_resources,
     ) as mock_merge:
-        load1 = await translation.async_get_translations(hass, "en", "state")
+        load1 = await translation.async_get_translations(hass, "en", "entity_component")
         assert len(mock_merge.mock_calls) == 1
 
-        load2 = await translation.async_get_translations(hass, "en", "state")
+        load2 = await translation.async_get_translations(hass, "en", "entity_component")
         assert len(mock_merge.mock_calls) == 1
 
         assert load1 == load2
 
         for key in load1:
-            assert key.startswith("component.sensor.state.") or key.startswith(
-                "component.light.state."
+            assert key.startswith(
+                (
+                    "component.sensor.entity_component.",
+                    "component.light.entity_component.",
+                )
             )
 
     load_sensor_only = await translation.async_get_translations(
-        hass, "en", "state", integrations={"sensor"}
+        hass, "en", "entity_component", integrations={"sensor"}
     )
     assert load_sensor_only
     for key in load_sensor_only:
-        assert key.startswith("component.sensor.state.")
+        assert key.startswith("component.sensor.entity_component.")
 
     load_light_only = await translation.async_get_translations(
-        hass, "en", "state", integrations={"light"}
+        hass, "en", "entity_component", integrations={"light"}
     )
     assert load_light_only
     for key in load_light_only:
-        assert key.startswith("component.light.state.")
+        assert key.startswith("component.light.entity_component.")
 
     hass.config.components.add("media_player")
 
     # Patch with same method so we can count invocations
     with patch(
-        "homeassistant.helpers.translation._build_resources",
-        side_effect=translation._build_resources,
+        "homeassistant.helpers.translation.build_resources",
+        side_effect=translation.build_resources,
     ) as mock_build:
         load_sensor_only = await translation.async_get_translations(
             hass, "en", "title", integrations={"sensor"}

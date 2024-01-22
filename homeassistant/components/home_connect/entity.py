@@ -3,8 +3,9 @@
 import logging
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .api import HomeConnectDevice
 from .const import DOMAIN, SIGNAL_UPDATE_ENTITIES
@@ -20,8 +21,14 @@ class HomeConnectEntity(Entity):
     def __init__(self, device: HomeConnectDevice, desc: str) -> None:
         """Initialize the entity."""
         self.device = device
-        self.desc = desc
-        self._name = f"{self.device.appliance.name} {desc}"
+        self._attr_name = f"{device.appliance.name} {desc}"
+        self._attr_unique_id = f"{device.appliance.haId}-{desc}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.appliance.haId)},
+            manufacturer=device.appliance.brand,
+            model=device.appliance.vib,
+            name=device.appliance.name,
+        )
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -36,26 +43,6 @@ class HomeConnectEntity(Entity):
         """Update data."""
         if ha_id == self.device.appliance.haId:
             self.async_entity_update()
-
-    @property
-    def name(self):
-        """Return the name of the node (used for Entity_ID)."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id base on the id returned by Home Connect and the entity name."""
-        return f"{self.device.appliance.haId}-{self.desc}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return info about the device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device.appliance.haId)},
-            manufacturer=self.device.appliance.brand,
-            model=self.device.appliance.vib,
-            name=self.device.appliance.name,
-        )
 
     @callback
     def async_entity_update(self):

@@ -12,7 +12,7 @@ from homeassistant.components.websocket_api import messages
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.json import JSON_DUMP
+from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DataRateConverter,
@@ -30,13 +30,13 @@ from homeassistant.util.unit_conversion import (
     VolumeConverter,
 )
 
-from .const import MAX_QUEUE_BACKLOG
 from .models import StatisticPeriod
 from .statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     async_add_external_statistics,
     async_change_statistics_unit,
     async_import_statistics,
+    async_list_statistic_ids,
     list_statistic_ids,
     statistic_during_period,
     statistics_during_period,
@@ -97,9 +97,9 @@ def _ws_get_statistic_during_period(
     statistic_id: str,
     types: set[Literal["max", "mean", "min", "change"]] | None,
     units: dict[str, str],
-) -> str:
+) -> bytes:
     """Fetch statistics and convert them to json in the executor."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.result_message(
             msg_id,
             statistic_during_period(
@@ -151,11 +151,11 @@ def _ws_get_statistics_during_period(
     msg_id: int,
     start_time: dt,
     end_time: dt | None,
-    statistic_ids: list[str] | None,
+    statistic_ids: set[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str],
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> str:
+    types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+) -> bytes:
     """Fetch statistics and convert them to json in the executor."""
     result = statistics_during_period(
         hass,
@@ -174,7 +174,7 @@ def _ws_get_statistics_during_period(
                 item["end"] = int(end * 1000)
             if (last_reset := item.get("last_reset")) is not None:
                 item["last_reset"] = int(last_reset * 1000)
-    return JSON_DUMP(messages.result_message(msg_id, result))
+    return json_bytes(messages.result_message(msg_id, result))
 
 
 async def ws_handle_get_statistics_during_period(
@@ -200,7 +200,7 @@ async def ws_handle_get_statistics_during_period(
         end_time = None
 
     if (types := msg.get("types")) is None:
-        types = {"last_reset", "max", "mean", "min", "state", "sum"}
+        types = {"change", "last_reset", "max", "mean", "min", "state", "sum"}
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
             _ws_get_statistics_during_period,
@@ -208,7 +208,7 @@ async def ws_handle_get_statistics_during_period(
             msg["id"],
             start_time,
             end_time,
-            msg["statistic_ids"],
+            set(msg["statistic_ids"]),
             msg.get("period"),
             msg.get("units"),
             types,
@@ -225,7 +225,7 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
         vol.Optional("units"): UNIT_SCHEMA,
         vol.Optional("types"): vol.All(
-            [vol.Any("last_reset", "max", "mean", "min", "state", "sum")],
+            [vol.Any("change", "last_reset", "max", "mean", "min", "state", "sum")],
             vol.Coerce(set),
         ),
     }
@@ -242,12 +242,12 @@ def _ws_get_list_statistic_ids(
     hass: HomeAssistant,
     msg_id: int,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-) -> str:
+) -> bytes:
     """Fetch a list of available statistic_id and convert them to JSON.
 
     Runs in the executor.
     """
-    return JSON_DUMP(
+    return json_bytes(
         messages.result_message(msg_id, list_statistic_ids(hass, None, statistic_type))
     )
 
@@ -329,11 +329,10 @@ async def ws_get_statistics_metadata(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get metadata for a list of statistic_ids."""
-    instance = get_instance(hass)
-    statistic_ids = await instance.async_add_executor_job(
-        list_statistic_ids, hass, msg.get("statistic_ids")
-    )
-    connection.send_result(msg["id"], statistic_ids)
+    statistic_ids = msg.get("statistic_ids")
+    statistic_ids_set_or_none = set(statistic_ids) if statistic_ids else None
+    metadata = await async_list_statistic_ids(hass, statistic_ids_set_or_none)
+    connection.send_result(msg["id"], metadata)
 
 
 @websocket_api.require_admin
@@ -413,7 +412,7 @@ async def ws_adjust_sum_statistics(
 
     instance = get_instance(hass)
     metadatas = await instance.async_add_executor_job(
-        list_statistic_ids, hass, (msg["statistic_id"],)
+        list_statistic_ids, hass, {msg["statistic_id"]}
     )
     if not metadatas:
         connection.send_error(msg["id"], "unknown_statistic_id", "Unknown statistic ID")
@@ -504,7 +503,7 @@ def ws_info(
 
     recorder_info = {
         "backlog": backlog,
-        "max_backlog": MAX_QUEUE_BACKLOG,
+        "max_backlog": instance.max_backlog,
         "migration_in_progress": migration_in_progress,
         "migration_is_live": migration_is_live,
         "recording": recording,

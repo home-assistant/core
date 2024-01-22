@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from unittest.mock import patch
 
+import pytest
 import serial
 import serial.tools.list_ports
 
@@ -13,6 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 API_HEAT_METER_SERVICE = "homeassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 def mock_serial_port():
@@ -57,13 +60,9 @@ async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.landisgyr_heat_meter.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device": "/dev/ttyUSB0"}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device": "/dev/ttyUSB0"}
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
@@ -105,7 +104,7 @@ async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> No
 async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     """Test manual entry fails."""
 
-    mock_heat_meter().read.side_effect = serial.serialutil.SerialException
+    mock_heat_meter().read.side_effect = serial.SerialException
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -122,13 +121,9 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.landisgyr_heat_meter.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device": "/dev/ttyUSB0"}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device": "/dev/ttyUSB0"}
+    )
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
@@ -140,7 +135,7 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
 async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) -> None:
     """Test select from list entry fails."""
 
-    mock_heat_meter().read.side_effect = serial.serialutil.SerialException
+    mock_heat_meter().read.side_effect = serial.SerialException
     port = mock_serial_port()
 
     result = await hass.config_entries.flow.async_init(

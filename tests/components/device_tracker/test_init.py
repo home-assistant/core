@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import json
 import logging
 import os
+from types import ModuleType
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -33,6 +34,8 @@ from . import common
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
     mock_registry,
     mock_restore_cache,
     patch_yaml_files,
@@ -123,7 +126,7 @@ async def test_reading_yaml_config(
     assert device.config_picture == config.config_picture
     assert device.consider_home == config.consider_home
     assert device.icon == config.icon
-    assert f"{device_tracker.DOMAIN}.test" in hass.config.components
+    assert f"test.{device_tracker.DOMAIN}" in hass.config.components
 
 
 @patch("homeassistant.components.device_tracker.const.LOGGER.warning")
@@ -218,6 +221,7 @@ async def test_discover_platform(
     mock_demo_setup_scanner, mock_see, hass: HomeAssistant
 ) -> None:
     """Test discovery of device_tracker demo platform."""
+    await async_setup_component(hass, "homeassistant", {})
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
         await discovery.async_load_platform(
             hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
@@ -602,7 +606,7 @@ async def test_bad_platform(hass: HomeAssistant) -> None:
     with assert_setup_component(0, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, config)
 
-    assert f"{device_tracker.DOMAIN}.bad_platform" not in hass.config.components
+    assert f"bad_platform.{device_tracker.DOMAIN}" not in hass.config.components
 
 
 async def test_adding_unknown_device_to_config(
@@ -679,4 +683,29 @@ def test_see_schema_allowing_ios_calls() -> None:
             "gps_accuracy": 300,
             "hostname": "beer",
         }
+    )
+
+
+@pytest.mark.parametrize(
+    "module",
+    [device_tracker, device_tracker.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(("enum"), list(SourceType))
+@pytest.mark.parametrize(
+    "module",
+    [device_tracker, device_tracker.const],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: SourceType,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, "SOURCE_TYPE_", "2025.1"
     )

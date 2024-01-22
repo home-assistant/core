@@ -1,0 +1,109 @@
+# serializer version: 1
+# name: test_default_prompt
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 0.9,
+          'top_k': 1,
+          'top_p': 1.0,
+        }),
+        'model_name': 'models/gemini-pro',
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
+          dict({
+            'parts': '''
+              This smart home is controlled by Home Assistant.
+              
+              An overview of the areas and the devices in this smart home:
+              
+              Test Area:
+              - Test Device (Test Model)
+              
+              Test Area 2:
+              - Test Device 2
+              - Test Device 3 (Test Model 3A)
+              - Test Device 4
+              - 1 (3)
+              
+              Answer the user's questions about the world truthfully.
+              
+              If the user wants to control a device, reject the request and suggest using the Home Assistant app.
+            ''',
+            'role': 'user',
+          }),
+          dict({
+            'parts': 'Ok',
+            'role': 'model',
+          }),
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        'hello',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_generate_content_service_with_image
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'model_name': 'gemini-pro-vision',
+      }),
+    ),
+    tuple(
+      '().generate_content_async',
+      tuple(
+        list([
+          'Describe this image from my doorbell camera',
+          dict({
+            'data': b'image bytes',
+            'mime_type': 'image/jpeg',
+          }),
+        ]),
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_generate_content_service_without_images
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'model_name': 'gemini-pro',
+      }),
+    ),
+    tuple(
+      '().generate_content_async',
+      tuple(
+        list([
+          'Write an opening speech for a Home Assistant release party',
+        ]),
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---

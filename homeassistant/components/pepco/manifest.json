@@ -1,0 +1,6 @@
+{
+  "domain": "pepco",
+  "name": "Potomac Electric Power Company (Pepco)",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

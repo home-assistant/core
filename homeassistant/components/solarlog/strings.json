@@ -6,6 +6,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "The prefix to be used for your Solar-Log sensors"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Solar-Log device."
         }
       }
     },
@@ -15,6 +18,76 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_update": {
+        "name": "Last update"
+      },
+      "power_ac": {
+        "name": "Power AC"
+      },
+      "power_dc": {
+        "name": "Power DC"
+      },
+      "voltage_ac": {
+        "name": "Voltage AC"
+      },
+      "voltage_dc": {
+        "name": "Voltage DC"
+      },
+      "yield_day": {
+        "name": "Yield day"
+      },
+      "yield_yesterday": {
+        "name": "Yield yesterday"
+      },
+      "yield_month": {
+        "name": "Yield month"
+      },
+      "yield_year": {
+        "name": "Yield year"
+      },
+      "yield_total": {
+        "name": "Yield total"
+      },
+      "consumption_ac": {
+        "name": "Consumption AC"
+      },
+      "consumption_day": {
+        "name": "Consumption day"
+      },
+      "consumption_yesterday": {
+        "name": "Consumption yesterday"
+      },
+      "consumption_month": {
+        "name": "Consumption month"
+      },
+      "consumption_year": {
+        "name": "Consumption year"
+      },
+      "consumption_total": {
+        "name": "Consumption total"
+      },
+      "total_power": {
+        "name": "Installed peak power"
+      },
+      "alternator_loss": {
+        "name": "Alternator loss"
+      },
+      "capacity": {
+        "name": "Capacity"
+      },
+      "efficiency": {
+        "name": "Efficiency"
+      },
+      "power_available": {
+        "name": "Power available"
+      },
+      "usage": {
+        "name": "Usage"
+      }
     }
   }
 }

@@ -1,0 +1,27 @@
+{
+  "title": "Input button",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::input_button::title%]",
+      "state_attributes": {
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "press": {
+      "name": "Press",
+      "description": "Mimics the physical button press on the device."
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads helpers from the YAML-configuration."
+    }
+  }
+}

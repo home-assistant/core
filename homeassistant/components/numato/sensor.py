@@ -23,8 +23,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:gauge"
-
 
 def setup_platform(
     hass: HomeAssistant,
@@ -71,6 +69,8 @@ def setup_platform(
 class NumatoGpioAdc(SensorEntity):
     """Represents an ADC port of a Numato USB GPIO expander."""
 
+    _attr_icon = "mdi:gauge"
+
     def __init__(self, name, device_id, port, src_range, dst_range, dst_unit, api):
         """Initialize the sensor."""
         self._name = name
@@ -96,11 +96,6 @@ class NumatoGpioAdc(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     def update(self) -> None:
         """Get the latest data and updates the state."""

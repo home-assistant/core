@@ -2,7 +2,6 @@
 import pytest
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.rituals_perfume_genie.select import ROOM_SIZE_SUFFIX
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -16,6 +15,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -38,7 +38,7 @@ async def test_select_entity(
 
     entry = entity_registry.async_get("select.genie_room_size")
     assert entry
-    assert entry.unique_id == f"{diffuser.hublot}{ROOM_SIZE_SUFFIX}"
+    assert entry.unique_id == f"{diffuser.hublot}-room_size_square_meter"
     assert entry.unit_of_measurement == AREA_SQUARE_METERS
     assert entry.entity_category == EntityCategory.CONFIG
 
@@ -85,7 +85,7 @@ async def test_select_invalid_option(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "60"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,

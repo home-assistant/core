@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_setup_entry
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://192.0.2.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'devolo_home_network',
+        '1234567890',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'devolo',
+    'model': 'dLAN pro 1200+ WiFi ac',
+    'name': 'Mock Title',
+    'name_by_user': None,
+    'serial_number': '1234567890',
+    'suggested_area': None,
+    'sw_version': '5.6.1',
+    'via_device_id': None,
+  })
+# ---

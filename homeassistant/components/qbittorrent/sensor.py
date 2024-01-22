@@ -1,155 +1,181 @@
 """Support for monitoring the qBittorrent API."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
-from qbittorrent.client import Client, LoginRequired
-from requests.exceptions import RequestException
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_USERNAME,
-    STATE_IDLE,
-    UnitOfDataRate,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN, STATE_DOWNLOADING, STATE_SEEDING, STATE_UP_DOWN
+from .coordinator import QBittorrentDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPE_CURRENT_STATUS = "current_status"
 SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
 SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
+SENSOR_TYPE_ALL_TORRENTS = "all_torrents"
+SENSOR_TYPE_PAUSED_TORRENTS = "paused_torrents"
+SENSOR_TYPE_ACTIVE_TORRENTS = "active_torrents"
+SENSOR_TYPE_INACTIVE_TORRENTS = "inactive_torrents"
 
-DEFAULT_NAME = "qBittorrent"
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+def get_state(coordinator: QBittorrentDataCoordinator) -> str:
+    """Get current download/upload state."""
+    upload = coordinator.data["server_state"]["up_info_speed"]
+    download = coordinator.data["server_state"]["dl_info_speed"]
+
+    if upload > 0 and download > 0:
+        return STATE_UP_DOWN
+    if upload > 0 and download == 0:
+        return STATE_SEEDING
+    if upload == 0 and download > 0:
+        return STATE_DOWNLOADING
+    return STATE_IDLE
+
+
+@dataclass(frozen=True, kw_only=True)
+class QBittorrentSensorEntityDescription(SensorEntityDescription):
+    """Entity description class for qBittorent sensors."""
+
+    value_fn: Callable[[QBittorrentDataCoordinator], StateType]
+
+
+SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
+    QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_CURRENT_STATUS,
-        name="Status",
+        translation_key="current_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING],
+        value_fn=get_state,
     ),
-    SensorEntityDescription(
+    QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
-        name="Down Speed",
+        translation_key="download_speed",
+        icon="mdi:cloud-download",
         device_class=SensorDeviceClass.DATA_RATE,
-        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        value_fn=lambda coordinator: float(
+            coordinator.data["server_state"]["dl_info_speed"]
+        ),
     ),
-    SensorEntityDescription(
+    QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
-        name="Up Speed",
+        translation_key="upload_speed",
+        icon="mdi:cloud-upload",
         device_class=SensorDeviceClass.DATA_RATE,
-        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        value_fn=lambda coordinator: float(
+            coordinator.data["server_state"]["up_info_speed"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_ALL_TORRENTS,
+        translation_key="all_torrents",
+        native_unit_of_measurement="torrents",
+        value_fn=lambda coordinator: count_torrents_in_states(coordinator, []),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_ACTIVE_TORRENTS,
+        translation_key="active_torrents",
+        native_unit_of_measurement="torrents",
+        value_fn=lambda coordinator: count_torrents_in_states(
+            coordinator, ["downloading", "uploading"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_INACTIVE_TORRENTS,
+        translation_key="inactive_torrents",
+        native_unit_of_measurement="torrents",
+        value_fn=lambda coordinator: count_torrents_in_states(
+            coordinator, ["stalledDL", "stalledUP"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_PAUSED_TORRENTS,
+        translation_key="paused_torrents",
+        native_unit_of_measurement="torrents",
+        value_fn=lambda coordinator: count_torrents_in_states(
+            coordinator, ["pausedDL", "pausedUP"]
+        ),
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_URL): cv.url,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the qBittorrent sensors."""
+    """Set up qBittorrent sensor entries."""
 
-    try:
-        client = Client(config[CONF_URL])
-        client.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    except LoginRequired:
-        _LOGGER.error("Invalid authentication")
-        return
-    except RequestException as err:
-        _LOGGER.error("Connection failed")
-        raise PlatformNotReady from err
+    coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    name = config.get(CONF_NAME)
-
-    entities = [
-        QBittorrentSensor(description, client, name, LoginRequired)
+    async_add_entities(
+        QBittorrentSensor(coordinator, config_entry, description)
         for description in SENSOR_TYPES
-    ]
-
-    add_entities(entities, True)
+    )
 
 
-def format_speed(speed):
-    """Return a bytes/s measurement as a human readable string."""
-    kb_spd = float(speed) / 1024
-    return round(kb_spd, 2 if kb_spd < 0.1 else 1)
+class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEntity):
+    """Representation of a qBittorrent sensor."""
 
-
-class QBittorrentSensor(SensorEntity):
-    """Representation of an qBittorrent sensor."""
+    _attr_has_entity_name = True
+    entity_description: QBittorrentSensorEntityDescription
 
     def __init__(
         self,
-        description: SensorEntityDescription,
-        qbittorrent_client,
-        client_name,
-        exception,
+        coordinator: QBittorrentDataCoordinator,
+        config_entry: ConfigEntry,
+        entity_description: QBittorrentSensorEntityDescription,
     ) -> None:
         """Initialize the qBittorrent sensor."""
-        self.entity_description = description
-        self.client = qbittorrent_client
-        self._exception = exception
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{config_entry.entry_id}-{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="QBittorrent",
+        )
 
-        self._attr_name = f"{client_name} {description.name}"
-        self._attr_available = False
+    @property
+    def native_value(self) -> StateType:
+        """Return the value of the sensor."""
+        return self.entity_description.value_fn(self.coordinator)
 
-    def update(self) -> None:
-        """Get the latest data from qBittorrent and updates the state."""
-        try:
-            data = self.client.sync_main_data()
-            self._attr_available = True
-        except RequestException:
-            _LOGGER.error("Connection lost")
-            self._attr_available = False
-            return
-        except self._exception:
-            _LOGGER.error("Invalid authentication")
-            return
 
-        if data is None:
-            return
+def count_torrents_in_states(
+    coordinator: QBittorrentDataCoordinator, states: list[str]
+) -> int:
+    """Count the number of torrents in specified states."""
+    # When torrents are not in the returned data, there are none, return 0.
+    if "torrents" not in coordinator.data:
+        return 0
 
-        download = data["server_state"]["dl_info_speed"]
-        upload = data["server_state"]["up_info_speed"]
+    if not states:
+        return len(coordinator.data["torrents"])
 
-        sensor_type = self.entity_description.key
-        if sensor_type == SENSOR_TYPE_CURRENT_STATUS:
-            if upload > 0 and download > 0:
-                self._attr_native_value = "up_down"
-            elif upload > 0 and download == 0:
-                self._attr_native_value = "seeding"
-            elif upload == 0 and download > 0:
-                self._attr_native_value = "downloading"
-            else:
-                self._attr_native_value = STATE_IDLE
-
-        elif sensor_type == SENSOR_TYPE_DOWNLOAD_SPEED:
-            self._attr_native_value = format_speed(download)
-        elif sensor_type == SENSOR_TYPE_UPLOAD_SPEED:
-            self._attr_native_value = format_speed(upload)
+    return len(
+        [
+            torrent
+            for torrent in coordinator.data["torrents"].values()
+            if torrent["state"] in states
+        ]
+    )

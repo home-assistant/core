@@ -7,72 +7,27 @@ from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakePairing
 import pytest
 
-from homeassistant.const import EntityCategory
+from homeassistant.components.homekit_controller.connection import (
+    MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from ..common import (
-    HUB_TEST_ACCESSORY_ID,
-    DeviceTestInfo,
-    EntityTestInfo,
-    Helper,
-    assert_devices_and_entities_created,
-    setup_accessories_from_file,
-    setup_test_accessories,
-)
+from ..common import Helper, setup_accessories_from_file, setup_test_accessories
 
 from tests.common import async_fire_time_changed
 
 LIGHT_ON = ("lightbulb", "on")
 
 
-async def test_koogeek_ls1_setup(hass: HomeAssistant) -> None:
-    """Test that a Koogeek LS1 can be correctly setup in HA."""
-    accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
-    await setup_test_accessories(hass, accessories)
-
-    await assert_devices_and_entities_created(
-        hass,
-        DeviceTestInfo(
-            unique_id=HUB_TEST_ACCESSORY_ID,
-            name="Koogeek-LS1-20833F",
-            model="LS1",
-            manufacturer="Koogeek",
-            sw_version="2.2.15",
-            hw_version="",
-            serial_number="AAAA011111111111",
-            devices=[],
-            entities=[
-                EntityTestInfo(
-                    entity_id="light.koogeek_ls1_20833f_light_strip",
-                    friendly_name="Koogeek-LS1-20833F Light Strip",
-                    unique_id="00:00:00:00:00:00_1_7",
-                    supported_features=0,
-                    capabilities={"supported_color_modes": ["hs"]},
-                    state="off",
-                ),
-                EntityTestInfo(
-                    entity_id="button.koogeek_ls1_20833f_identify",
-                    friendly_name="Koogeek-LS1-20833F Identify",
-                    unique_id="00:00:00:00:00:00_1_1_6",
-                    entity_category=EntityCategory.DIAGNOSTIC,
-                    state="unknown",
-                ),
-            ],
-        ),
-    )
-
-
 @pytest.mark.parametrize("failure_cls", [AccessoryDisconnectedError, EncryptionError])
-async def test_recover_from_failure(hass: HomeAssistant, utcnow, failure_cls) -> None:
+async def test_recover_from_failure(hass: HomeAssistant, failure_cls) -> None:
     """Test that entity actually recovers from a network connection drop.
 
     See https://github.com/home-assistant/core/issues/18949
     """
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
-
-    pairing.testing.events_enabled = False
 
     helper = Helper(
         hass,
@@ -95,11 +50,10 @@ async def test_recover_from_failure(hass: HomeAssistant, utcnow, failure_cls) ->
     with mock.patch.object(FakePairing, "get_characteristics") as get_char:
         get_char.side_effect = failure_cls("Disconnected")
 
-        # Set light state on fake device to on
-        state = await helper.async_update(
-            ServicesTypes.LIGHTBULB, {CharacteristicsTypes.ON: True}
-        )
-        assert state.state == "off"
+        # Test that a poll triggers unavailable
+        for _ in range(MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE + 2):
+            state = await helper.poll_and_get_state()
+        assert state.state == "unavailable"
 
         chars = get_char.call_args[0][0]
         assert set(chars) == {(1, 8), (1, 9), (1, 10), (1, 11)}

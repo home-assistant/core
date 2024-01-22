@@ -1,13 +1,13 @@
 """The tests for the automation component."""
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
-from aiohttp import ClientWebSocketResponse
 import pytest
 
+from homeassistant import config_entries
 import homeassistant.components.automation as automation
 from homeassistant.components.automation import (
     ATTR_SOURCE,
@@ -27,6 +27,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import (
     Context,
@@ -37,6 +38,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
     SCRIPT_MODE_PARALLEL,
@@ -45,16 +47,20 @@ from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     _async_stop_scripts_at_shutdown,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     MockUser,
     assert_setup_component,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    help_test_all,
+    import_and_test_deprecated_constant,
     mock_restore_cache,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
@@ -1100,7 +1106,7 @@ async def test_reload_automation_when_blueprint_changes(
             autospec=True,
             return_value=config,
         ), patch(
-            "homeassistant.components.blueprint.models.yaml.load_yaml",
+            "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
             autospec=True,
             return_value=blueprint_config,
         ):
@@ -1196,7 +1202,7 @@ async def test_initial_value_off(hass: HomeAssistant) -> None:
 
 async def test_initial_value_on(hass: HomeAssistant) -> None:
     """Test initial value on."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     calls = async_mock_service(hass, "test", "automation")
 
     assert await async_setup_component(
@@ -1225,7 +1231,7 @@ async def test_initial_value_on(hass: HomeAssistant) -> None:
 
 async def test_initial_value_off_but_restore_on(hass: HomeAssistant) -> None:
     """Test initial value off and restored state is turned on."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     calls = async_mock_service(hass, "test", "automation")
     mock_restore_cache(hass, (State("automation.hello", STATE_ON),))
 
@@ -1322,7 +1328,7 @@ async def test_automation_is_on_if_no_initial_state_or_restore(
 
 async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     """Test if automation is not trigger on bootstrap."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     calls = async_mock_service(hass, "test", "automation")
 
     assert await async_setup_component(
@@ -1430,14 +1436,19 @@ async def test_automation_bad_config_validation(
         f" {details}"
     ) in caplog.text
 
-    # Make sure one bad automation does not prevent other automations from setting up
-    assert hass.states.async_entity_ids("automation") == ["automation.good_automation"]
+    # Make sure both automations are setup
+    assert set(hass.states.async_entity_ids("automation")) == {
+        "automation.bad_automation",
+        "automation.good_automation",
+    }
+    # The automation failing validation should be unavailable
+    assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
 
 
 async def test_automation_with_error_in_script(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test automation with an error in script."""
     assert await async_setup_component(
@@ -1539,8 +1550,78 @@ async def test_automation_restore_last_triggered_with_initial_state(
     assert state.attributes["last_triggered"] == time
 
 
-async def test_extraction_functions(hass: HomeAssistant) -> None:
+async def test_extraction_functions_not_setup(hass: HomeAssistant) -> None:
+    """Test extraction functions when automation is not setup."""
+    assert automation.automations_with_area(hass, "area-in-both") == []
+    assert automation.areas_in_automation(hass, "automation.test") == []
+    assert automation.automations_with_blueprint(hass, "blabla.yaml") == []
+    assert automation.blueprint_in_automation(hass, "automation.test") is None
+    assert automation.automations_with_device(hass, "device-in-both") == []
+    assert automation.devices_in_automation(hass, "automation.test") == []
+    assert automation.automations_with_entity(hass, "light.in_both") == []
+    assert automation.entities_in_automation(hass, "automation.test") == []
+
+
+async def test_extraction_functions_unknown_automation(hass: HomeAssistant) -> None:
+    """Test extraction functions for an unknown automation."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert automation.areas_in_automation(hass, "automation.unknown") == []
+    assert automation.blueprint_in_automation(hass, "automation.unknown") is None
+    assert automation.devices_in_automation(hass, "automation.unknown") == []
+    assert automation.entities_in_automation(hass, "automation.unknown") == []
+
+
+async def test_extraction_functions_unavailable_automation(hass: HomeAssistant) -> None:
+    """Test extraction functions for an unknown automation."""
+    entity_id = "automation.test1"
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "alias": "test1",
+                }
+            ]
+        },
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert automation.automations_with_area(hass, "area-in-both") == []
+    assert automation.areas_in_automation(hass, entity_id) == []
+    assert automation.automations_with_blueprint(hass, "blabla.yaml") == []
+    assert automation.blueprint_in_automation(hass, entity_id) is None
+    assert automation.automations_with_device(hass, "device-in-both") == []
+    assert automation.devices_in_automation(hass, entity_id) == []
+    assert automation.automations_with_entity(hass, "light.in_both") == []
+    assert automation.entities_in_automation(hass, entity_id) == []
+
+
+async def test_extraction_functions(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test extraction functions."""
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.add_to_hass(hass)
+
+    condition_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")},
+    )
+    device_in_both = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:02")},
+    )
+    device_in_last = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:03")},
+    )
+    trigger_device_2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:04")},
+    )
+
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     assert await async_setup_component(
         hass,
@@ -1601,9 +1682,13 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
                         },
                         {
                             "domain": "light",
-                            "device_id": "device-in-both",
+                            "device_id": device_in_both.id,
                             "entity_id": "light.bla",
                             "type": "turn_on",
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"area_id": "area-in-both"},
                         },
                     ],
                 },
@@ -1615,7 +1700,7 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
                             "domain": "light",
                             "type": "turned_on",
                             "entity_id": "light.trigger_2",
-                            "device_id": "trigger-device-2",
+                            "device_id": trigger_device_2.id,
                         },
                         {
                             "platform": "tag",
@@ -1636,7 +1721,7 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
                         {
                             "platform": "event",
                             "event_type": "esphome.button_pressed",
-                            "event_data": {"device_id": ["device-trigger-event"]},
+                            "event_data": {"device_id": ["device-trigger-event2"]},
                         },
                         # device_id is not a string
                         {
@@ -1647,7 +1732,7 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
                     ],
                     "condition": {
                         "condition": "device",
-                        "device_id": "condition-device",
+                        "device_id": condition_device.id,
                         "domain": "light",
                         "type": "is_on",
                         "entity_id": "light.bla",
@@ -1665,15 +1750,64 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
                         {"scene": "scene.hello"},
                         {
                             "domain": "light",
-                            "device_id": "device-in-both",
+                            "device_id": device_in_both.id,
                             "entity_id": "light.bla",
                             "type": "turn_on",
                         },
                         {
                             "domain": "light",
-                            "device_id": "device-in-last",
+                            "device_id": device_in_last.id,
                             "entity_id": "light.bla",
                             "type": "turn_on",
+                        },
+                    ],
+                },
+                {
+                    "alias": "test3",
+                    "trigger": [
+                        {
+                            "platform": "event",
+                            "event_type": "esphome.button_pressed",
+                            "event_data": {"area_id": "area-trigger-event"},
+                        },
+                        # area_id is a list of strings (not supported)
+                        {
+                            "platform": "event",
+                            "event_type": "esphome.button_pressed",
+                            "event_data": {"area_id": ["area-trigger-event2"]},
+                        },
+                        # area_id is not a string
+                        {
+                            "platform": "event",
+                            "event_type": "esphome.button_pressed",
+                            "event_data": {"area_id": 123},
+                        },
+                    ],
+                    "condition": {
+                        "condition": "device",
+                        "device_id": condition_device.id,
+                        "domain": "light",
+                        "type": "is_on",
+                        "entity_id": "light.bla",
+                    },
+                    "action": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_both"},
+                        },
+                        {
+                            "condition": "state",
+                            "entity_id": "sensor.condition",
+                            "state": "100",
+                        },
+                        {"scene": "scene.hello"},
+                        {
+                            "service": "test.test",
+                            "target": {"area_id": "area-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"area_id": "area-in-last"},
                         },
                     ],
                 },
@@ -1684,6 +1818,7 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
     assert set(automation.automations_with_entity(hass, "light.in_both")) == {
         "automation.test1",
         "automation.test2",
+        "automation.test3",
     }
     assert set(automation.entities_in_automation(hass, "automation.test1")) == {
         "calendar.trigger_calendar",
@@ -1694,20 +1829,29 @@ async def test_extraction_functions(hass: HomeAssistant) -> None:
         "light.in_both",
         "light.in_first",
     }
-    assert set(automation.automations_with_device(hass, "device-in-both")) == {
+    assert set(automation.automations_with_device(hass, device_in_both.id)) == {
         "automation.test1",
         "automation.test2",
     }
     assert set(automation.devices_in_automation(hass, "automation.test2")) == {
-        "trigger-device-2",
-        "condition-device",
-        "device-in-both",
-        "device-in-last",
+        trigger_device_2.id,
+        condition_device.id,
+        device_in_both.id,
+        device_in_last.id,
         "device-trigger-event",
         "device-trigger-tag1",
         "device-trigger-tag2",
         "device-trigger-tag3",
     }
+    assert set(automation.automations_with_area(hass, "area-in-both")) == {
+        "automation.test1",
+        "automation.test3",
+    }
+    assert set(automation.areas_in_automation(hass, "automation.test3")) == {
+        "area-in-both",
+        "area-in-last",
+    }
+    assert automation.blueprint_in_automation(hass, "automation.test3") is None
 
 
 async def test_logbook_humanify_automation_triggered_event(hass: HomeAssistant) -> None:
@@ -1981,6 +2125,13 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
     assert automation.entities_in_automation(hass, "automation.automation_0") == [
         "light.kitchen"
     ]
+    assert (
+        automation.blueprint_in_automation(hass, "automation.automation_0")
+        == "test_event_service.yaml"
+    )
+    assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == [
+        "automation.automation_0"
+    ]
 
 
 @pytest.mark.parametrize(
@@ -2210,6 +2361,7 @@ async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None
         (SCRIPT_MODE_SINGLE, "script1: Already running"),
     ),
 )
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation_starting_script(
     hass: HomeAssistant,
     automation_mode,
@@ -2308,7 +2460,7 @@ async def test_recursive_automation_starting_script(
         await asyncio.wait_for(script_done_event.wait(), 10)
 
         # Trigger 1st stage script shutdown
-        hass.state = CoreState.stopping
+        hass.set_state(CoreState.stopping)
         hass.bus.async_fire("homeassistant_stop")
         await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 10)
 
@@ -2320,6 +2472,7 @@ async def test_recursive_automation_starting_script(
 
 
 @pytest.mark.parametrize("automation_mode", SCRIPT_MODE_CHOICES)
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation(
     hass: HomeAssistant, automation_mode, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2368,7 +2521,7 @@ async def test_recursive_automation(
         await asyncio.wait_for(service_called.wait(), 1)
 
         # Trigger 1st stage script shutdown
-        hass.state = CoreState.stopping
+        hass.set_state(CoreState.stopping)
         hass.bus.async_fire("homeassistant_stop")
         await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
 
@@ -2415,3 +2568,27 @@ async def test_websocket_config(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(automation)
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "replacement"),
+    [
+        ("AutomationActionType", TriggerActionType),
+        ("AutomationTriggerData", TriggerData),
+        ("AutomationTriggerInfo", TriggerInfo),
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    replacement: Any,
+) -> None:
+    """Test deprecated automation constants."""
+    import_and_test_deprecated_constant(
+        caplog, automation, constant_name, replacement.__name__, replacement, "2025.1"
+    )

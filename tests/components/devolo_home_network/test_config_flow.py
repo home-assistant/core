@@ -7,7 +7,7 @@ from unittest.mock import patch
 from devolo_plc_api.exceptions.device import DeviceNotFound
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.devolo_home_network import config_flow
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
@@ -31,7 +31,7 @@ from .mock import MockDevice
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, info: dict[str, Any]):
+async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -191,7 +191,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
     with patch(
         "homeassistant.components.devolo_home_network.async_setup_entry",
@@ -203,7 +203,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 

@@ -70,7 +70,9 @@ async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
         (FatalHttpException(404), ERR_CLIENT),
     ],
 )
-async def test_create_entry_exceptions(recorder_mock, hass, exception, expected_error):
+async def test_create_entry_exceptions(
+    recorder_mock: Recorder, hass: HomeAssistant, exception, expected_error
+) -> None:
     """Test create entry from user input."""
     test_data = {
         CONF_ACCESS_TOKEN: "valid",
@@ -93,7 +95,9 @@ async def test_create_entry_exceptions(recorder_mock, hass, exception, expected_
     assert result["errors"][CONF_ACCESS_TOKEN] == expected_error
 
 
-async def test_flow_entry_already_exists(recorder_mock, hass, config_entry):
+async def test_flow_entry_already_exists(
+    recorder_mock: Recorder, hass: HomeAssistant, config_entry
+) -> None:
     """Test user input for config_entry that already exists."""
     test_data = {
         CONF_ACCESS_TOKEN: "valid",

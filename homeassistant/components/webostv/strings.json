@@ -3,11 +3,13 @@
     "flow_title": "LG webOS Smart TV",
     "step": {
       "user": {
-        "title": "Connect to webOS TV",
         "description": "Turn on TV, fill the following fields click submit",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your webOS TV."
         }
       },
       "pairing": {
@@ -15,8 +17,8 @@
         "description": "Click submit and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
       },
       "reauth_confirm": {
-        "title": "webOS TV Pairing",
-        "description": "Click submit and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
+        "title": "[%key:component::webostv::config::step::pairing::title%]",
+        "description": "[%key:component::webostv::config::step::pairing::description%]"
       }
     },
     "error": {
@@ -47,6 +49,54 @@
   "device_automation": {
     "trigger_type": {
       "webostv.turn_on": "Device is requested to turn on"
+    }
+  },
+  "services": {
+    "button": {
+      "name": "Button",
+      "description": "Sends a button press command.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of the webostv entities where to run the API method."
+        },
+        "button": {
+          "name": "Button",
+          "description": "Name of the button to press.  Known possible values are LEFT, RIGHT, DOWN, UP, HOME, MENU, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT, MUTE, RED, GREEN, BLUE, YELLOW, VOLUMEUP, VOLUMEDOWN, CHANNELUP, CHANNELDOWN, PLAY, PAUSE, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9."
+        }
+      }
+    },
+    "command": {
+      "name": "Command",
+      "description": "Sends a command.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "[%key:component::webostv::services::button::fields::entity_id::description%]"
+        },
+        "command": {
+          "name": "Command",
+          "description": "Endpoint of the command."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "An optional payload to provide to the endpoint in the format of key value pair(s)."
+        }
+      }
+    },
+    "select_sound_output": {
+      "name": "Select sound output",
+      "description": "Sends the TV the command to change sound output.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of the webostv entities to change sound output on."
+        },
+        "sound_output": {
+          "name": "Sound output",
+          "description": "Name of the sound output to switch to."
+        }
+      }
     }
   }
 }

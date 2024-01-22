@@ -7,7 +7,8 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyfritzhome"],
-  "requirements": ["pyfritzhome==0.6.7"],
+  "quality_scale": "gold",
+  "requirements": ["pyfritzhome==0.6.10"],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:fritzbox:1"

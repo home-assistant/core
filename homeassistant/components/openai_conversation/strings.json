@@ -11,9 +11,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "options": {
@@ -27,6 +24,41 @@
           "top_p": "Top P"
         }
       }
+    }
+  },
+  "services": {
+    "generate_image": {
+      "name": "Generate image",
+      "description": "Turn a prompt into an image",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service"
+        },
+        "prompt": {
+          "name": "Prompt",
+          "description": "The text to turn into an image",
+          "example": "A photo of a dog"
+        },
+        "size": {
+          "name": "Size",
+          "description": "The size of the image to generate"
+        },
+        "quality": {
+          "name": "Quality",
+          "description": "The quality of the image that will be generated"
+        },
+        "style": {
+          "name": "Style",
+          "description": "The style of the generated image"
+        }
+      }
+    }
+  },
+  "issues": {
+    "image_size_deprecated_format": {
+      "title": "Deprecated size format for image generation service",
+      "description": "OpenAI is now using Dall-E 3 to generate images when calling `openai_conversation.generate_image`, which supports different sizes. Valid values are now \"1024x1024\", \"1024x1792\", \"1792x1024\". The old values of \"256\", \"512\", \"1024\" are currently interpreted as \"1024x1024\".\nPlease update your scripts or automations with the new parameters."
     }
   }
 }

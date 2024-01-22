@@ -23,7 +23,7 @@
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
-      'supported_features': 0,
+      'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
         0.465,
         0.376,
@@ -68,6 +68,7 @@
     'original_icon': None,
     'original_name': None,
     'platform': 'elgato',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CN11A1A00001',
@@ -100,6 +101,7 @@
     'model': 'Elgato Key Light',
     'name': 'Frenck',
     'name_by_user': None,
+    'serial_number': 'CN11A1A00001',
     'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
@@ -130,7 +132,7 @@
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': 0,
+      'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
         0.465,
         0.376,
@@ -176,6 +178,7 @@
     'original_icon': None,
     'original_name': None,
     'platform': 'elgato',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CN11A1A00001',
@@ -208,6 +211,7 @@
     'model': 'Elgato Key Light',
     'name': 'Frenck',
     'name_by_user': None,
+    'serial_number': 'CN11A1A00001',
     'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
@@ -218,6 +222,8 @@
     'attributes': ReadOnlyDict({
       'brightness': 128,
       'color_mode': <ColorMode.HS: 'hs'>,
+      'color_temp': None,
+      'color_temp_kelvin': None,
       'friendly_name': 'Frenck',
       'hs_color': tuple(
         358.0,
@@ -236,7 +242,7 @@
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': 0,
+      'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
         0.34,
         0.327,
@@ -282,6 +288,7 @@
     'original_icon': None,
     'original_name': None,
     'platform': 'elgato',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CN11A1A00001',
@@ -314,6 +321,7 @@
     'model': 'Elgato Key Light',
     'name': 'Frenck',
     'name_by_user': None,
+    'serial_number': 'CN11A1A00001',
     'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,

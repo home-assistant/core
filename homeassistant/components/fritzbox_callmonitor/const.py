@@ -1,7 +1,7 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
+from enum import StrEnum
 from typing import Final
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import Platform
 
 
@@ -13,8 +13,6 @@ class FritzState(StrEnum):
     CONNECT = "CONNECT"
     DISCONNECT = "DISCONNECT"
 
-
-ICON_PHONE: Final = "mdi:phone"
 
 ATTR_PREFIXES = "prefixes"
 

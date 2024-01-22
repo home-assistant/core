@@ -21,6 +21,7 @@ from .const import (
     CONF_METER_DELTA_VALUES,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
+    CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
@@ -64,6 +65,9 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
+        vol.Required(
+            CONF_METER_PERIODICALLY_RESETTING,
+        ): selector.BooleanSelector(),
     }
 )
 
@@ -95,6 +99,10 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(
             CONF_METER_DELTA_VALUES, default=False
         ): selector.BooleanSelector(),
+        vol.Required(
+            CONF_METER_PERIODICALLY_RESETTING,
+            default=True,
+        ): selector.BooleanSelector(),
     }
 )
 
@@ -109,6 +117,8 @@ OPTIONS_FLOW = {
 
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Utility Meter."""
+
+    VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW

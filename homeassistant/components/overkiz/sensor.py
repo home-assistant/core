@@ -29,7 +29,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -44,7 +44,7 @@ from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
@@ -67,7 +67,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery",
         device_class=SensorDeviceClass.ENUM,
-        options=["full", "normal", "low", "verylow"],
+        options=["full", "normal", "medium", "low", "verylow"],
         translation_key="battery",
     ),
     OverkizSensorDescription(
@@ -100,7 +100,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Water volume estimation at 40 °C",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -110,14 +110,13 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         icon="mdi:water",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_OUTLET_ENGINE,
         name="Outlet engine",
         icon="mdi:fan-chevron-down",
-        native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
@@ -414,6 +413,22 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         options=["open", "tilt", "closed"],
         translation_key="three_way_handle_direction",
     ),
+    # Hitachi air to air heatpump outdoor temperature sensors (HLRRWIFI protocol)
+    OverkizSensorDescription(
+        key=OverkizState.HLRRWIFI_OUTDOOR_TEMPERATURE,
+        name="Outdoor temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    # Hitachi air to air heatpump outdoor temperature sensors (OVP protocol)
+    OverkizSensorDescription(
+        key=OverkizState.OVP_OUTDOOR_TEMPERATURE,
+        name="Outdoor temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
@@ -466,7 +481,16 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
-        if not state or not state.value:
+        if (
+            state is None
+            or state.value is None
+            # It seems that in some cases we return `None` if state.value is falsy.
+            # This is probably incorrect and should be fixed in a follow up PR.
+            # To ensure measurement sensors do not get an `unknown` state on
+            # a falsy value (e.g. 0 or 0.0) we also check the state_class.
+            or self.state_class != SensorStateClass.MEASUREMENT
+            and not state.value
+        ):
             return None
 
         # Transform the value with a lambda function
@@ -528,6 +552,6 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         # By default this sensor will be listed at a virtual HomekitStack device,
         # but it makes more sense to show this at the gateway device
         # in the entity registry.
-        return {
-            "identifiers": {(DOMAIN, self.executor.get_gateway_id())},
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.executor.get_gateway_id())},
+        )

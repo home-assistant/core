@@ -8,15 +8,15 @@ from aiolivisi.const import CAPABILITY_MAP
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LIVISI_REACHABILITY_CHANGE
 from .coordinator import LivisiDataUpdateCoordinator
 
 
-class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator], Entity):
+class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
     """Represents a base livisi entity."""
 
     _attr_has_entity_name = True
@@ -66,6 +66,7 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator], Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register callback for reachability."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

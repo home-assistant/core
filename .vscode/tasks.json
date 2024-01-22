@@ -16,7 +16,7 @@
     {
       "label": "Pytest",
       "type": "shell",
-      "command": "pytest --timeout=10 tests",
+      "command": "python3 -m pytest --timeout=10 tests",
       "dependsOn": ["Install all Test Requirements"],
       "group": {
         "kind": "test",
@@ -31,21 +31,7 @@
     {
       "label": "Pytest (changed tests only)",
       "type": "shell",
-      "command": "pytest --timeout=10 --picked",
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Flake8",
-      "type": "shell",
-      "command": "pre-commit run flake8 --all-files",
+      "command": "python3 -m pytest --timeout=10 --picked",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -89,7 +75,7 @@
       "label": "Code Coverage",
       "detail": "Generate code coverage report for a given integration.",
       "type": "shell",
-      "command": "pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
+      "command": "python3 -m pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -117,7 +103,7 @@
     {
       "label": "Install all Requirements",
       "type": "shell",
-      "command": "pip3 install --use-deprecated=legacy-resolver -r requirements_all.txt",
+      "command": "pip3 install -r requirements_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -131,7 +117,7 @@
     {
       "label": "Install all Test Requirements",
       "type": "shell",
-      "command": "pip3 install --use-deprecated=legacy-resolver -r requirements_test_all.txt",
+      "command": "pip3 install -r requirements_test_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -151,6 +137,40 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "Run scaffold",
+      "detail": "Add new functionality to a integration using a scaffold.",
+      "type": "shell",
+      "command": "python3 -m script.scaffold ${input:scaffoldName} --integration ${input:integrationName}",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Create new integration",
+      "detail": "Use the scaffold to create a new integration.",
+      "type": "shell",
+      "command": "python3 -m script.scaffold integration",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Install integration requirements",
+      "detail": "Install all requirements of a given integration.",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m script.install_integration_requirements ${input:integrationName}",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
     }
   ],
   "inputs": [
@@ -158,6 +178,23 @@
       "id": "integrationName",
       "type": "promptString",
       "description": "For which integration should the task run?"
+    },
+    {
+      "id": "scaffoldName",
+      "type": "pickString",
+      "options": [
+        "backup",
+        "config_flow",
+        "config_flow_discovery",
+        "config_flow_helper",
+        "config_flow_oauth2",
+        "device_action",
+        "device_condition",
+        "device_trigger",
+        "reproduce_state",
+        "significant_change"
+      ],
+      "description": "Which scaffold should be run?"
     }
   ]
 }

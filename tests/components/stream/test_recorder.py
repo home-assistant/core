@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from io import BytesIO
 import os
+from pathlib import Path
 from unittest.mock import patch
 
 import av
@@ -39,9 +40,9 @@ async def stream_component(hass):
 
 
 @pytest.fixture
-def filename(tmpdir):
+def filename(tmp_path: Path) -> str:
     """Use this filename for the tests."""
-    return f"{tmpdir}/test.mp4"
+    return str(tmp_path / "test.mp4")
 
 
 async def test_record_stream(hass: HomeAssistant, filename, h264_video) -> None:

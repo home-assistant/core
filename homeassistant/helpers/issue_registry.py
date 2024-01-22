@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
+from enum import StrEnum
 import functools as ft
 from typing import Any, cast
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -32,7 +32,7 @@ class IssueSeverity(StrEnum):
     WARNING = "warning"
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(slots=True, frozen=True)
 class IssueEntry:
     """Issue Registry Entry."""
 
@@ -95,16 +95,18 @@ class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
 class IssueRegistry:
     """Class to hold a registry of issues."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, *, read_only: bool = False) -> None:
         """Initialize the issue registry."""
         self.hass = hass
         self.issues: dict[tuple[str, str], IssueEntry] = {}
+        self._read_only = read_only
         self._store = IssueRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
+            read_only=read_only,
         )
 
     @callback
@@ -154,7 +156,7 @@ class IssueRegistry:
                 {"action": "create", "domain": domain, "issue_id": issue_id},
             )
         else:
-            issue = self.issues[(domain, issue_id)] = dataclasses.replace(
+            replacement = dataclasses.replace(
                 issue,
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
@@ -167,10 +169,14 @@ class IssueRegistry:
                 translation_key=translation_key,
                 translation_placeholders=translation_placeholders,
             )
-            self.hass.bus.async_fire(
-                EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-                {"action": "update", "domain": domain, "issue_id": issue_id},
-            )
+            # Only fire is something changed
+            if replacement != issue:
+                issue = self.issues[(domain, issue_id)] = replacement
+                self.async_schedule_save()
+                self.hass.bus.async_fire(
+                    EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+                    {"action": "update", "domain": domain, "issue_id": issue_id},
+                )
 
         return issue
 
@@ -274,10 +280,10 @@ def async_get(hass: HomeAssistant) -> IssueRegistry:
     return cast(IssueRegistry, hass.data[DATA_REGISTRY])
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, read_only: bool = False) -> None:
     """Load issue registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = IssueRegistry(hass)
+    hass.data[DATA_REGISTRY] = IssueRegistry(hass, read_only=read_only)
     await hass.data[DATA_REGISTRY].async_load()
 
 

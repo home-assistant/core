@@ -6,7 +6,6 @@ import logging
 import os
 from pathlib import Path
 import time
-from typing import cast
 
 import voluptuous as vol
 
@@ -15,7 +14,7 @@ from homeassistant.const import CONF_FILENAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
-from homeassistant.util.yaml import Secrets, load_yaml
+from homeassistant.util.yaml import Secrets, load_yaml_dict
 
 from .const import (
     CONF_ICON,
@@ -115,7 +114,7 @@ class LovelaceStorage(LovelaceConfig):
 
     async def async_load(self, force):
         """Load config."""
-        if self.hass.config.safe_mode:
+        if self.hass.config.recovery_mode:
             raise ConfigNotFound
 
         if self._data is None:
@@ -128,8 +127,8 @@ class LovelaceStorage(LovelaceConfig):
 
     async def async_save(self, config):
         """Save config."""
-        if self.hass.config.safe_mode:
-            raise HomeAssistantError("Saving not supported in safe mode")
+        if self.hass.config.recovery_mode:
+            raise HomeAssistantError("Saving not supported in recovery mode")
 
         if self._data is None:
             await self._load()
@@ -139,8 +138,8 @@ class LovelaceStorage(LovelaceConfig):
 
     async def async_delete(self):
         """Delete config."""
-        if self.hass.config.safe_mode:
-            raise HomeAssistantError("Deleting not supported in safe mode")
+        if self.hass.config.recovery_mode:
+            raise HomeAssistantError("Deleting not supported in recovery mode")
 
         await self._store.async_remove()
         self._data = None
@@ -202,7 +201,9 @@ class LovelaceYAML(LovelaceConfig):
         is_updated = self._cache is not None
 
         try:
-            config = load_yaml(self.path, Secrets(Path(self.hass.config.config_dir)))
+            config = load_yaml_dict(
+                self.path, Secrets(Path(self.hass.config.config_dir))
+            )
         except FileNotFoundError:
             raise ConfigNotFound from None
 
@@ -218,7 +219,7 @@ def _config_info(mode, config):
     }
 
 
-class DashboardsCollection(collection.StorageCollection):
+class DashboardsCollection(collection.DictStorageCollection):
     """Collection of dashboards."""
 
     CREATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
@@ -228,13 +229,12 @@ class DashboardsCollection(collection.StorageCollection):
         """Initialize the dashboards collection."""
         super().__init__(
             storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
-            _LOGGER,
         )
 
-    async def _async_load_data(self) -> dict | None:
+    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
         """Load the data."""
         if (data := await self.store.async_load()) is None:
-            return cast(dict | None, data)
+            return data
 
         updated = False
 
@@ -246,7 +246,7 @@ class DashboardsCollection(collection.StorageCollection):
         if updated:
             await self.store.async_save(data)
 
-        return cast(dict | None, data)
+        return data
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
@@ -263,10 +263,10 @@ class DashboardsCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return info[CONF_URL_PATH]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
-        updated = {**data, **update_data}
+        updated = {**item, **update_data}
 
         if CONF_ICON in updated and updated[CONF_ICON] is None:
             updated.pop(CONF_ICON)

@@ -1,7 +1,7 @@
 """The tests for the generic_hygrostat."""
 import datetime
-from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -31,6 +31,7 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -121,6 +122,7 @@ async def test_humidifier_input_boolean(hass: HomeAssistant, setup_comp_1) -> No
     await hass.async_block_till_done()
 
     assert hass.states.get(humidifier_switch).state == STATE_ON
+    assert hass.states.get(ENTITY).attributes.get("action") == "humidifying"
 
 
 async def test_humidifier_switch(
@@ -165,6 +167,34 @@ async def test_humidifier_switch(
     await hass.async_block_till_done()
 
     assert hass.states.get(humidifier_switch).state == STATE_ON
+    assert hass.states.get(ENTITY).attributes.get("action") == "humidifying"
+
+
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp_1
+) -> None:
+    """Test setting a unique ID."""
+    unique_id = "some_unique_id"
+    _setup_sensor(hass, 18)
+    await _setup_switch(hass, True)
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "unique_id": unique_id,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(ENTITY)
+    assert entry
+    assert entry.unique_id == unique_id
 
 
 def _setup_sensor(hass, humidity):
@@ -277,6 +307,7 @@ async def test_default_setup_params(hass: HomeAssistant, setup_comp_2) -> None:
     assert state.attributes.get("min_humidity") == 0
     assert state.attributes.get("max_humidity") == 100
     assert state.attributes.get("humidity") == 0
+    assert state.attributes.get("action") == "idle"
 
 
 async def test_default_setup_params_dehumidifier(
@@ -287,6 +318,7 @@ async def test_default_setup_params_dehumidifier(
     assert state.attributes.get("min_humidity") == 0
     assert state.attributes.get("max_humidity") == 100
     assert state.attributes.get("humidity") == 100
+    assert state.attributes.get("action") == "idle"
 
 
 async def test_get_modes(hass: HomeAssistant, setup_comp_2) -> None:
@@ -414,16 +446,26 @@ async def test_set_away_mode_twice_and_restore_prev_humidity(
     assert state.attributes.get("humidity") == 44
 
 
+async def test_sensor_affects_attribute(hass: HomeAssistant, setup_comp_2) -> None:
+    """Test that the sensor changes are reflected in the current_humidity attribute."""
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("current_humidity") == 45
+
+    _setup_sensor(hass, 47)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("current_humidity") == 47
+
+
 async def test_sensor_bad_value(hass: HomeAssistant, setup_comp_2) -> None:
     """Test sensor that have None as state."""
-    state = hass.states.get(ENTITY)
-    humidity = state.attributes.get("current_humidity")
+    assert hass.states.get(ENTITY).state == STATE_ON
 
     _setup_sensor(hass, None)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY)
-    assert humidity == state.attributes.get("current_humidity")
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
 
 
 async def test_set_target_humidity_humidifier_on(
@@ -638,6 +680,7 @@ async def test_set_target_humidity_dry_off(hass: HomeAssistant, setup_comp_3) ->
     assert call.domain == HASS_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
+    assert hass.states.get(ENTITY).attributes.get("action") == "drying"
 
 
 async def test_turn_away_mode_on_drying(hass: HomeAssistant, setup_comp_3) -> None:
@@ -789,6 +832,7 @@ async def test_running_when_operating_mode_is_off_2(
     assert call.domain == HASS_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
+    assert hass.states.get(ENTITY).attributes.get("action") == "off"
 
 
 async def test_no_state_change_when_operation_mode_off_2(
@@ -808,6 +852,7 @@ async def test_no_state_change_when_operation_mode_off_2(
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert len(calls) == 0
+    assert hass.states.get(ENTITY).attributes.get("action") == "off"
 
 
 @pytest.fixture
@@ -852,12 +897,8 @@ async def test_humidity_change_dry_trigger_on_long_enough(
     hass: HomeAssistant, setup_comp_4
 ) -> None:
     """Test if humidity change turn dry on."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
@@ -890,12 +931,8 @@ async def test_humidity_change_dry_trigger_off_long_enough(
     hass: HomeAssistant, setup_comp_4
 ) -> None:
     """Test if humidity change turn dry on."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -1018,12 +1055,8 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(
     hass: HomeAssistant, setup_comp_6
 ) -> None:
     """Test if humidity change turn humidifier on after min cycle."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -1042,12 +1075,8 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(
     hass: HomeAssistant, setup_comp_6
 ) -> None:
     """Test if humidity change turn humidifier off after min cycle."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
@@ -1347,7 +1376,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1385,7 +1414,7 @@ async def test_restore_state_target_humidity(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1428,7 +1457,7 @@ async def test_restore_state_and_return_to_normal(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1483,7 +1512,7 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,

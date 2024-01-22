@@ -1,6 +1,6 @@
 {
   "domain": "switch_as_x",
-  "name": "Switch as X",
+  "name": "Change device type of a switch",
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/switch_as_x",

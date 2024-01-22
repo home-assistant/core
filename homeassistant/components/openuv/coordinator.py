@@ -17,7 +17,7 @@ from .const import LOGGER
 DEFAULT_DEBOUNCER_COOLDOWN_SECONDS = 15 * 60
 
 
-class OpenUvCoordinator(DataUpdateCoordinator):
+class OpenUvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an OpenUV data coordinator."""
 
     config_entry: ConfigEntry

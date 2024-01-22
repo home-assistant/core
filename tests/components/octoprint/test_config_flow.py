@@ -1,4 +1,5 @@
 """Test the OctoPrint config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from pyoctoprintapi import ApiError, DiscoverySettings
@@ -94,8 +95,9 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )
+        await hass.async_block_till_done()
+    assert result["type"] == "progress"
 
-    assert result["type"] == "progress_done"
     with patch(
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         side_effect=ApiError,
@@ -143,8 +145,9 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )
+        await hass.async_block_till_done()
+    assert result["type"] == "progress"
 
-    assert result["type"] == "progress_done"
     with patch(
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         side_effect=Exception,
@@ -174,8 +177,8 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=80,
@@ -202,7 +205,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "progress_done"
+    assert result["type"] == "progress"
 
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
@@ -268,7 +271,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "progress_done"
+    assert result["type"] == "progress"
 
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
@@ -389,10 +392,11 @@ async def test_failed_auth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )
+        await hass.async_block_till_done()
 
-    assert result["type"] == "progress_done"
+    assert result["type"] == "progress"
+
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
     assert result["type"] == "abort"
     assert result["reason"] == "auth_failed"
 
@@ -420,10 +424,11 @@ async def test_failed_auth_unexpected_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )
+        await hass.async_block_till_done()
 
-    assert result["type"] == "progress_done"
+    assert result["type"] == "progress"
+
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
     assert result["type"] == "abort"
     assert result["reason"] == "auth_failed"
 
@@ -496,8 +501,8 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=80,

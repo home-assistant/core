@@ -4,7 +4,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pyrisco.common import Zone
+from pyrisco.cloud.zone import Zone as CloudZone
+from pyrisco.local.zone import Zone as LocalZone
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -50,14 +51,13 @@ class RiscoCloudBinarySensor(RiscoCloudZoneEntity, BinarySensorEntity):
     """Representation of a Risco cloud zone as a binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
+    _attr_name = None
 
     def __init__(
-        self, coordinator: RiscoDataUpdateCoordinator, zone_id: int, zone: Zone
+        self, coordinator: RiscoDataUpdateCoordinator, zone_id: int, zone: CloudZone
     ) -> None:
         """Init the zone."""
-        super().__init__(
-            coordinator=coordinator, name=None, suffix="", zone_id=zone_id, zone=zone
-        )
+        super().__init__(coordinator=coordinator, suffix="", zone_id=zone_id, zone=zone)
 
     @property
     def is_on(self) -> bool | None:
@@ -69,12 +69,11 @@ class RiscoLocalBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
     """Representation of a Risco local zone as a binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
+    _attr_name = None
 
-    def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
+    def __init__(self, system_id: str, zone_id: int, zone: LocalZone) -> None:
         """Init the zone."""
-        super().__init__(
-            system_id=system_id, name=None, suffix="", zone_id=zone_id, zone=zone
-        )
+        super().__init__(system_id=system_id, suffix="", zone_id=zone_id, zone=zone)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -93,11 +92,12 @@ class RiscoLocalBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
 class RiscoLocalAlarmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
     """Representation whether a zone in Risco local is currently triggering an alarm."""
 
-    def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
+    _attr_translation_key = "alarmed"
+
+    def __init__(self, system_id: str, zone_id: int, zone: LocalZone) -> None:
         """Init the zone."""
         super().__init__(
             system_id=system_id,
-            name="Alarmed",
             suffix="_alarmed",
             zone_id=zone_id,
             zone=zone,
@@ -112,11 +112,12 @@ class RiscoLocalAlarmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
 class RiscoLocalArmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
     """Representation whether a zone in Risco local is currently armed."""
 
-    def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
+    _attr_translation_key = "armed"
+
+    def __init__(self, system_id: str, zone_id: int, zone: LocalZone) -> None:
         """Init the zone."""
         super().__init__(
             system_id=system_id,
-            name="Armed",
             suffix="_armed",
             zone_id=zone_id,
             zone=zone,

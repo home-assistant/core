@@ -1,6 +1,7 @@
 """Test the sonos config flow."""
 from __future__ import annotations
 
+from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
@@ -162,8 +163,8 @@ async def test_zeroconf_sonos_v1(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.107",
-            addresses=["192.168.1.107"],
+            ip_address=ip_address("192.168.1.107"),
+            ip_addresses=[ip_address("192.168.1.107")],
             port=1443,
             hostname="sonos5CAAFDE47AC8.local.",
             type="_sonos._tcp.local.",

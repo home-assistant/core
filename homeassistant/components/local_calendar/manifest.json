@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/local_calendar",
   "iot_class": "local_polling",
   "loggers": ["ical"],
-  "requirements": ["ical==4.2.9"]
+  "requirements": ["ical==6.1.1"]
 }

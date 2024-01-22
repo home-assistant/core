@@ -1,7 +1,7 @@
 {
   "domain": "roomba",
   "name": "iRobot Roomba and Braava",
-  "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn"],
+  "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn", "@Xitee1"],
   "config_flow": true,
   "dhcp": [
     {
@@ -24,5 +24,15 @@
   "documentation": "https://www.home-assistant.io/integrations/roomba",
   "iot_class": "local_push",
   "loggers": ["paho_mqtt", "roombapy"],
-  "requirements": ["roombapy==1.6.5"]
+  "requirements": ["roombapy==1.6.10"],
+  "zeroconf": [
+    {
+      "type": "_amzn-alexa._tcp.local.",
+      "name": "irobot-*"
+    },
+    {
+      "type": "_amzn-alexa._tcp.local.",
+      "name": "roomba-*"
+    }
+  ]
 }

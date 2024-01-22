@@ -1,7 +1,7 @@
 """Support for SimpliSafe binary sensors."""
 from __future__ import annotations
 
-from simplipy.device import DeviceTypes
+from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
 
@@ -19,14 +19,21 @@ from .const import DOMAIN, LOGGER
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.CARBON_MONOXIDE,
+    DeviceTypes.DOORBELL,
     DeviceTypes.ENTRY,
     DeviceTypes.GLASS_BREAK,
+    DeviceTypes.KEYCHAIN,
     DeviceTypes.KEYPAD,
     DeviceTypes.LEAK,
+    DeviceTypes.LOCK,
     DeviceTypes.LOCK_KEYPAD,
     DeviceTypes.MOTION,
+    DeviceTypes.MOTION_V2,
+    DeviceTypes.PANIC_BUTTON,
+    DeviceTypes.REMOTE,
     DeviceTypes.SIREN,
     DeviceTypes.SMOKE,
+    DeviceTypes.SMOKE_AND_CARBON_MONOXIDE,
     DeviceTypes.TEMPERATURE,
 ]
 
@@ -36,8 +43,12 @@ TRIGGERED_SENSOR_TYPES = {
     DeviceTypes.GLASS_BREAK: BinarySensorDeviceClass.SAFETY,
     DeviceTypes.LEAK: BinarySensorDeviceClass.MOISTURE,
     DeviceTypes.MOTION: BinarySensorDeviceClass.MOTION,
+    DeviceTypes.MOTION_V2: BinarySensorDeviceClass.MOTION,
     DeviceTypes.SIREN: BinarySensorDeviceClass.SAFETY,
     DeviceTypes.SMOKE: BinarySensorDeviceClass.SMOKE,
+    # Although this sensor can technically apply to both smoke and carbon, we use the
+    # SMOKE device class for simplicity:
+    DeviceTypes.SMOKE_AND_CARBON_MONOXIDE: BinarySensorDeviceClass.SMOKE,
 }
 
 
@@ -66,6 +77,9 @@ async def async_setup_entry(
                 )
             if sensor.type in SUPPORTED_BATTERY_SENSOR_TYPES:
                 sensors.append(BatteryBinarySensor(simplisafe, system, sensor))
+
+        for lock in system.locks.values():
+            sensors.append(BatteryBinarySensor(simplisafe, system, lock))
 
     async_add_entities(sensors)
 
@@ -99,14 +113,13 @@ class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
-        self, simplisafe: SimpliSafe, system: SystemV3, sensor: SensorV3
+        self, simplisafe: SimpliSafe, system: SystemV3, device: DeviceV3
     ) -> None:
         """Initialize."""
-        super().__init__(simplisafe, system, device=sensor)
+        super().__init__(simplisafe, system, device=device)
 
-        self._attr_name = "Battery"
         self._attr_unique_id = f"{super().unique_id}-battery"
-        self._device: SensorV3
+        self._device: DeviceV3
 
     @callback
     def async_update_from_rest_api(self) -> None:

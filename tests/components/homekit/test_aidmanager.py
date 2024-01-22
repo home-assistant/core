@@ -2,7 +2,7 @@
 import os
 from unittest.mock import patch
 
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 
 from homeassistant.components.homekit.aidmanager import (
     AccessoryAidStorage,
@@ -66,9 +66,9 @@ async def test_aid_generation(
             == 1751603975
         )
 
-    aid_storage.delete_aid(get_system_unique_id(light_ent))
-    aid_storage.delete_aid(get_system_unique_id(light_ent2))
-    aid_storage.delete_aid(get_system_unique_id(remote_ent))
+    aid_storage.delete_aid(get_system_unique_id(light_ent, light_ent.unique_id))
+    aid_storage.delete_aid(get_system_unique_id(light_ent2, light_ent2.unique_id))
+    aid_storage.delete_aid(get_system_unique_id(remote_ent, remote_ent.unique_id))
     aid_storage.delete_aid("non-existent-one")
 
     for _ in range(0, 2):
@@ -386,7 +386,7 @@ async def test_aid_generation_no_unique_ids_handles_collision(
     await aid_storage.async_save()
     await hass.async_block_till_done()
 
-    with patch("fnvhash.fnv1a_32", side_effect=Exception):
+    with patch("fnv_hash_fast.fnv1a_32", side_effect=Exception):
         aid_storage = AccessoryAidStorage(hass, config_entry)
     await aid_storage.async_initialize()
 
@@ -618,3 +618,31 @@ async def test_aid_generation_no_unique_ids_handles_collision(
     aid_storage_path = hass.config.path(STORAGE_DIR, aidstore)
     if await hass.async_add_executor_job(os.path.exists, aid_storage_path):
         await hass.async_add_executor_job(os.unlink, aid_storage_path)
+
+
+async def test_handle_unique_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test handling unique id changes."""
+    light = entity_registry.async_get_or_create("light", "demo", "old_unique")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.homekit.aidmanager.AccessoryAidStorage.async_schedule_save"
+    ):
+        aid_storage = AccessoryAidStorage(hass, config_entry)
+    await aid_storage.async_initialize()
+
+    original_aid = aid_storage.get_or_allocate_aid_for_entity_id(light.entity_id)
+    assert aid_storage.allocations == {"demo.light.old_unique": 4202023227}
+
+    entity_registry.async_update_entity(light.entity_id, new_unique_id="new_unique")
+    await hass.async_block_till_done()
+
+    aid = aid_storage.get_or_allocate_aid_for_entity_id(light.entity_id)
+    assert aid == original_aid
+
+    # Verify that the old unique id is removed from the allocations
+    # and that the new unique id assumes the old aid
+    assert aid_storage.allocations == {"demo.light.new_unique": 4202023227}

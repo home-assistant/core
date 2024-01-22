@@ -1,8 +1,8 @@
 """Models used for the Matter integration."""
+from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import asdict, dataclass
-from typing import Any
+from dataclasses import dataclass
+from typing import TypedDict
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterAttributeDescriptor
@@ -12,19 +12,23 @@ from matter_server.client.models.node import MatterEndpoint
 from homeassistant.const import Platform
 from homeassistant.helpers.entity import EntityDescription
 
-
-class DataclassMustHaveAtLeastOne:
-    """A dataclass that must have at least one input parameter that is not None."""
-
-    def __post_init__(self) -> None:
-        """Post dataclass initialization."""
-        if all(val is None for val in asdict(self).values()):
-            raise ValueError("At least one input parameter must not be None")
-
-
 SensorValueTypes = type[
     clusters.uint | int | clusters.Nullable | clusters.float32 | float
 ]
+
+
+class MatterDeviceInfo(TypedDict):
+    """Dictionary with Matter Device info.
+
+    Used to send to other Matter controllers,
+    such as Google Home to prevent duplicated devices.
+
+    Reference: https://developers.home.google.com/matter/device-deduplication
+    """
+
+    unique_id: str
+    vendor_id: str  # vendorId hex string
+    product_id: str  # productId hex string
 
 
 @dataclass
@@ -46,8 +50,8 @@ class MatterEntityInfo:
     # entity class to use to instantiate the entity
     entity_class: type
 
-    # [optional] function to call to convert the value from the primary attribute
-    measurement_to_ha: Callable[[SensorValueTypes], SensorValueTypes] | None = None
+    # [optional] bool to specify if this primary value should be polled
+    should_poll: bool
 
     @property
     def primary_attribute(self) -> type[ClusterAttributeDescriptor]:
@@ -59,7 +63,8 @@ class MatterEntityInfo:
 class MatterDiscoverySchema:
     """Matter discovery schema.
 
-    The Matter endpoint and it's (primary) Attribute for an entity must match these conditions.
+    The Matter endpoint and its (primary) Attribute
+    for an entity must match these conditions.
     """
 
     # specify the hass platform for which this scheme applies (e.g. light, sensor)
@@ -105,5 +110,5 @@ class MatterDiscoverySchema:
     # by multiple platforms
     allow_multi: bool = False
 
-    # [optional] function to call to convert the value from the primary attribute
-    measurement_to_ha: Callable[[Any], Any] | None = None
+    # [optional] bool to specify if this primary value should be polled
+    should_poll: bool = False

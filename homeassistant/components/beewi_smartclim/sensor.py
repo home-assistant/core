@@ -1,7 +1,7 @@
 """Platform for beewi_smartclim integration."""
 from __future__ import annotations
 
-from beewi_smartclim import BeewiSmartClimPoller  # pylint: disable=import-error
+from beewi_smartclim import BeewiSmartClimPoller
 import voluptuous as vol
 
 from homeassistant.components.sensor import (

@@ -9,6 +9,9 @@
           "password": "[%key:common::config_flow::data::password%]",
           "rtsp_port": "RTSP port",
           "stream": "Stream"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Foscam camera."
         }
       }
     },
@@ -20,6 +23,32 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "services": {
+    "ptz": {
+      "name": "PTZ",
+      "description": "Pan/Tilt service for Foscam camera.",
+      "fields": {
+        "movement": {
+          "name": "Movement",
+          "description": "Direction of the movement."
+        },
+        "travel_time": {
+          "name": "Travel time",
+          "description": "Travel time in seconds."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "PTZ preset",
+      "description": "PTZ Preset service for Foscam camera.",
+      "fields": {
+        "preset_name": {
+          "name": "Preset name",
+          "description": "The name of the preset to move to. Presets can be created from within the official Foscam apps."
+        }
+      }
     }
   }
 }

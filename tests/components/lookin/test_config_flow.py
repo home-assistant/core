@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from aiolookin import NoUsableService
@@ -135,7 +136,7 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     zc_data_new_ip = dataclasses.replace(ZEROCONF_DATA)
-    zc_data_new_ip.host = "127.0.0.2"
+    zc_data_new_ip.ip_address = ip_address("127.0.0.2")
 
     with _patch_get_info(), patch(
         f"{MODULE}.async_setup_entry", return_value=True

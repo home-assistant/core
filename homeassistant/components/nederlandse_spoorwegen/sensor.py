@@ -26,7 +26,6 @@ CONF_TO = "to"
 CONF_VIA = "via"
 CONF_TIME = "time"
 
-ICON = "mdi:train"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
@@ -104,6 +103,7 @@ class NSDepartureSensor(SensorEntity):
     """Implementation of a NS Departure Sensor."""
 
     _attr_attribution = "Data provided by NS"
+    _attr_icon = "mdi:train"
 
     def __init__(self, nsapi, name, departure, heading, via, time):
         """Initialize the sensor."""
@@ -120,11 +120,6 @@ class NSDepartureSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
 
     @property
     def native_value(self):

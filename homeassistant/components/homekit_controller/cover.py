@@ -1,7 +1,7 @@
 """Support for Homekit covers."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -27,6 +27,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 STATE_STOPPED = "stopped"
 
@@ -128,6 +134,12 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
 class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     """Representation of a HomeKit Window or Window Covering."""
 
+    @callback
+    def _async_reconfigure(self) -> None:
+        """Reconfigure entity."""
+        self._async_clear_property_cache(("supported_features",))
+        super()._async_reconfigure()
+
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -142,7 +154,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
             CharacteristicsTypes.OBSTRUCTION_DETECTED,
         ]
 
-    @property
+    @cached_property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         features = (
@@ -154,14 +166,9 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         if self.service.has(CharacteristicsTypes.POSITION_HOLD):
             features |= CoverEntityFeature.STOP
 
-        supports_tilt = any(
-            (
-                self.service.has(CharacteristicsTypes.VERTICAL_TILT_CURRENT),
-                self.service.has(CharacteristicsTypes.HORIZONTAL_TILT_CURRENT),
-            )
-        )
-
-        if supports_tilt:
+        if self.service.has(
+            CharacteristicsTypes.VERTICAL_TILT_CURRENT
+        ) or self.service.has(CharacteristicsTypes.HORIZONTAL_TILT_CURRENT):
             features |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
@@ -216,6 +223,26 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
             tilt_position = self.service.value(
                 CharacteristicsTypes.HORIZONTAL_TILT_CURRENT
             )
+        # Recalculate to convert from arcdegree scale to percentage scale.
+        if self.is_vertical_tilt:
+            scale = 0.9
+            if (
+                self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT].minValue == -90
+                and self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT].maxValue
+                == 0
+            ):
+                scale = -0.9
+            tilt_position = int(tilt_position / scale)
+        elif self.is_horizontal_tilt:
+            scale = 0.9
+            if (
+                self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].minValue
+                == -90
+                and self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].maxValue
+                == 0
+            ):
+                scale = -0.9
+            tilt_position = int(tilt_position / scale)
         return tilt_position
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -241,10 +268,29 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         """Move the cover tilt to a specific position."""
         tilt_position = kwargs[ATTR_TILT_POSITION]
         if self.is_vertical_tilt:
+            # Recalculate to convert from percentage scale to arcdegree scale.
+            scale = 0.9
+            if (
+                self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET].minValue == -90
+                and self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET].maxValue
+                == 0
+            ):
+                scale = -0.9
+            tilt_position = int(tilt_position * scale)
             await self.async_put_characteristics(
                 {CharacteristicsTypes.VERTICAL_TILT_TARGET: tilt_position}
             )
         elif self.is_horizontal_tilt:
+            # Recalculate to convert from percentage scale to arcdegree scale.
+            scale = 0.9
+            if (
+                self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].minValue
+                == -90
+                and self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].maxValue
+                == 0
+            ):
+                scale = -0.9
+            tilt_position = int(tilt_position * scale)
             await self.async_put_characteristics(
                 {CharacteristicsTypes.HORIZONTAL_TILT_TARGET: tilt_position}
             )
@@ -260,8 +306,14 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         return {"obstruction-detected": obstruction_detected}
 
 
+class HomeKitWindow(HomeKitWindowCover):
+    """Representation of a HomeKit Window."""
+
+    _attr_device_class = CoverDeviceClass.WINDOW
+
+
 ENTITY_TYPES = {
     ServicesTypes.GARAGE_DOOR_OPENER: HomeKitGarageDoorCover,
     ServicesTypes.WINDOW_COVERING: HomeKitWindowCover,
-    ServicesTypes.WINDOW: HomeKitWindowCover,
+    ServicesTypes.WINDOW: HomeKitWindow,
 }

@@ -82,7 +82,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     from asyncio import TimeoutError
 
     with patch(
-        "homeassistant.components.upb.config_flow.async_timeout.timeout",
+        "homeassistant.components.upb.config_flow.asyncio.timeout",
         side_effect=TimeoutError,
     ):
         result = await valid_tcp_flow(hass, sync_complete=False)

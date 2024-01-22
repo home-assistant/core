@@ -1,5 +1,4 @@
 """The tests for the person component."""
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -7,7 +6,12 @@ import pytest
 
 from homeassistant.components import person
 from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SourceType
-from homeassistant.components.person import ATTR_SOURCE, ATTR_USER_ID, DOMAIN
+from homeassistant.components.person import (
+    ATTR_DEVICE_TRACKERS,
+    ATTR_SOURCE,
+    ATTR_USER_ID,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_GPS_ACCURACY,
@@ -19,48 +23,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
-from homeassistant.helpers import collection, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from .conftest import DEVICE_TRACKER, DEVICE_TRACKER_2
 
 from tests.common import MockUser, mock_component, mock_restore_cache
 from tests.typing import WebSocketGenerator
-
-DEVICE_TRACKER = "device_tracker.test_tracker"
-DEVICE_TRACKER_2 = "device_tracker.test_tracker_2"
-
-
-@pytest.fixture
-def storage_collection(hass):
-    """Return an empty storage collection."""
-    id_manager = collection.IDManager()
-    return person.PersonStorageCollection(
-        person.PersonStore(hass, person.STORAGE_VERSION, person.STORAGE_KEY),
-        logging.getLogger(f"{person.__name__}.storage_collection"),
-        id_manager,
-        collection.YamlCollection(
-            logging.getLogger(f"{person.__name__}.yaml_collection"), id_manager
-        ),
-    )
-
-
-@pytest.fixture
-def storage_setup(hass, hass_storage, hass_admin_user):
-    """Storage setup."""
-    hass_storage[DOMAIN] = {
-        "key": DOMAIN,
-        "version": 1,
-        "data": {
-            "persons": [
-                {
-                    "id": "1234",
-                    "name": "tracked person",
-                    "user_id": hass_admin_user.id,
-                    "device_trackers": [DEVICE_TRACKER],
-                }
-            ]
-        },
-    }
-    assert hass.loop.run_until_complete(async_setup_component(hass, DOMAIN, {}))
 
 
 async def test_minimal_setup(hass: HomeAssistant) -> None:
@@ -130,7 +99,7 @@ async def test_valid_invalid_user_ids(
 
 async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test set up person with one device tracker."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     user_id = hass_admin_user.id
     config = {
         DOMAIN: {
@@ -166,6 +135,7 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     assert state.attributes.get(ATTR_LONGITUDE) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
     hass.states.async_set(
         DEVICE_TRACKER,
@@ -182,13 +152,14 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     assert state.attributes.get(ATTR_GPS_ACCURACY) == 10
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
 
 async def test_setup_two_trackers(
     hass: HomeAssistant, hass_admin_user: MockUser
 ) -> None:
     """Test set up person with two device trackers."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     user_id = hass_admin_user.id
     config = {
         DOMAIN: {
@@ -221,6 +192,10 @@ async def test_setup_two_trackers(
     assert state.attributes.get(ATTR_GPS_ACCURACY) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER,
+        DEVICE_TRACKER_2,
+    ]
 
     hass.states.async_set(
         DEVICE_TRACKER_2,
@@ -246,6 +221,10 @@ async def test_setup_two_trackers(
     assert state.attributes.get(ATTR_GPS_ACCURACY) == 12
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER,
+        DEVICE_TRACKER_2,
+    ]
 
     hass.states.async_set(DEVICE_TRACKER_2, "zone1", {ATTR_SOURCE_TYPE: SourceType.GPS})
     await hass.async_block_till_done()
@@ -268,7 +247,7 @@ async def test_ignore_unavailable_states(
     hass: HomeAssistant, hass_admin_user: MockUser
 ) -> None:
     """Test set up person with two device trackers, one unavailable."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     user_id = hass_admin_user.id
     config = {
         DOMAIN: {
@@ -323,7 +302,7 @@ async def test_restore_home_state(
     }
     state = State("person.tracked_person", "home", attrs)
     mock_restore_cache(hass, (state,))
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     mock_component(hass, "recorder")
     config = {
         DOMAIN: {

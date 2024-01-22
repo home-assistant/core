@@ -1,0 +1,153 @@
+{
+  "page": 1,
+  "pageSize": 10,
+  "sortKey": "timeleft",
+  "sortDirection": "ascending",
+  "totalRecords": 2,
+  "records": [
+    {
+      "movieId": 0,
+      "languages": [
+        {
+          "id": 0,
+          "name": "string"
+        }
+      ],
+      "quality": {
+        "quality": {
+          "id": 0,
+          "name": "string",
+          "source": "string",
+          "resolution": 0,
+          "modifier": "string"
+        },
+        "revision": {
+          "version": 0,
+          "real": 0,
+          "isRepack": true
+        }
+      },
+      "customFormats": [
+        {
+          "id": 0,
+          "name": "string",
+          "includeCustomFormatWhenRenaming": true,
+          "specifications": [
+            {
+              "name": "string",
+              "implementation": "string",
+              "implementationName": "string",
+              "infoLink": "string",
+              "negate": true,
+              "required": true,
+              "fields": [
+                {
+                  "order": 0,
+                  "name": "string",
+                  "label": "string",
+                  "helpText": "string",
+                  "value": "string",
+                  "type": "string",
+                  "advanced": true
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "size": 0,
+      "title": "test",
+      "sizeleft": 0,
+      "timeleft": "string",
+      "estimatedCompletionTime": "2020-01-21T00:01:59Z",
+      "status": "string",
+      "trackedDownloadStatus": "string",
+      "trackedDownloadState": "downloading",
+      "statusMessages": [
+        {
+          "title": "string",
+          "messages": ["string"]
+        }
+      ],
+      "errorMessage": "string",
+      "downloadId": "string",
+      "protocol": "unknown",
+      "downloadClient": "string",
+      "indexer": "string",
+      "outputPath": "string",
+      "id": 0
+    },
+    {
+      "movieId": 0,
+      "languages": [
+        {
+          "id": 0,
+          "name": "string"
+        }
+      ],
+      "quality": {
+        "quality": {
+          "id": 0,
+          "name": "string",
+          "source": "string",
+          "resolution": 0,
+          "modifier": "string"
+        },
+        "revision": {
+          "version": 0,
+          "real": 0,
+          "isRepack": true
+        }
+      },
+      "customFormats": [
+        {
+          "id": 0,
+          "name": "string",
+          "includeCustomFormatWhenRenaming": true,
+          "specifications": [
+            {
+              "name": "string",
+              "implementation": "string",
+              "implementationName": "string",
+              "infoLink": "string",
+              "negate": true,
+              "required": true,
+              "fields": [
+                {
+                  "order": 0,
+                  "name": "string",
+                  "label": "string",
+                  "helpText": "string",
+                  "value": "string",
+                  "type": "string",
+                  "advanced": true
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "size": 0,
+      "title": "test2",
+      "sizeleft": 1000000,
+      "timeleft": "00:00:00",
+      "estimatedCompletionTime": "2020-01-21T00:01:59Z",
+      "status": "string",
+      "trackedDownloadStatus": "string",
+      "trackedDownloadState": "downloading",
+      "statusMessages": [
+        {
+          "title": "string",
+          "messages": ["string"]
+        }
+      ],
+      "errorMessage": "string",
+      "downloadId": "string",
+      "protocol": "unknown",
+      "downloadClient": "string",
+      "indexer": "string",
+      "outputPath": "string",
+      "id": 0
+    }
+  ]
+}

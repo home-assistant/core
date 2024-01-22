@@ -9,7 +9,7 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "verify_ssl": "Use ssl"
+          "verify_ssl": "[%key:common::config_flow::data::ssl%]"
         }
       },
       "reauth_confirm": {

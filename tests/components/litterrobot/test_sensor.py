@@ -101,5 +101,5 @@ async def test_feeder_robot_sensor(
     """Tests Feeder-Robot sensors."""
     await setup_integration(hass, mock_account_with_feederrobot, PLATFORM_DOMAIN)
     sensor = hass.states.get("sensor.test_food_level")
-    assert sensor.state == "20"
+    assert sensor.state == "10"
     assert sensor.attributes["unit_of_measurement"] == PERCENTAGE

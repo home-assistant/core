@@ -6,10 +6,22 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.config_entries import OptionsFlowWithConfigEntry
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    UnitOfLength,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
 from .const import (
     CONF_TRACK_HOME,
@@ -22,7 +34,7 @@ from .const import (
 
 @callback
 def configured_instances(hass: HomeAssistant) -> set[str]:
-    """Return a set of configured SimpliSafe instances."""
+    """Return a set of configured met.no instances."""
     entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data.get("track_home"):
@@ -47,7 +59,14 @@ def _get_data_schema(
                 vol.Required(
                     CONF_LONGITUDE, default=hass.config.longitude
                 ): cv.longitude,
-                vol.Required(CONF_ELEVATION, default=hass.config.elevation): int,
+                vol.Required(
+                    CONF_ELEVATION, default=hass.config.elevation
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement=UnitOfLength.METERS,
+                    )
+                ),
             }
         )
     # Not tracking home, default values come from config entry
@@ -62,7 +81,12 @@ def _get_data_schema(
             ): cv.longitude,
             vol.Required(
                 CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)
-            ): int,
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    mode=NumberSelectorMode.BOX,
+                    unit_of_measurement=UnitOfLength.METERS,
+                )
+            ),
         }
     )
 
@@ -72,15 +96,11 @@ class MetConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Init MetConfigFlowHandler."""
-        self._errors: dict[str, Any] = {}
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        self._errors = {}
+        errors = {}
 
         if user_input is not None:
             if (
@@ -90,12 +110,12 @@ class MetConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-            self._errors[CONF_NAME] = "already_configured"
+            errors[CONF_NAME] = "already_configured"
 
         return self.async_show_form(
             step_id="user",
             data_schema=_get_data_schema(self.hass),
-            errors=self._errors,
+            errors=errors,
         )
 
     async def async_step_onboarding(
@@ -123,13 +143,8 @@ class MetConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return MetOptionsFlowHandler(config_entry)
 
 
-class MetOptionsFlowHandler(config_entries.OptionsFlow):
+class MetOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Options flow for Met component."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize the Met OptionsFlow."""
-        self._config_entry = config_entry
-        self._errors: dict[str, Any] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -148,5 +163,4 @@ class MetOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=_get_data_schema(self.hass, config_entry=self._config_entry),
-            errors=self._errors,
         )

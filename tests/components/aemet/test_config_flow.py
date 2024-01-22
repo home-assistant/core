@@ -1,18 +1,21 @@
 """Define tests for the AEMET OpenData config flow."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-import requests_mock
+from aemet_opendata.exceptions import AuthError
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.aemet.const import CONF_STATION_UPDATES, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
 
-from .util import aemet_requests_mock
+from .util import mock_api_call
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 CONFIG = {
     CONF_NAME: "aemet",
@@ -22,21 +25,19 @@ CONFIG = {
 }
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test that the form is served with valid input."""
 
     with patch(
-        "homeassistant.components.aemet.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, requests_mock.mock() as _m:
-        aemet_requests_mock(_m)
-
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
@@ -58,15 +59,18 @@ async def test_form(hass: HomeAssistant) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_options(hass: HomeAssistant) -> None:
+async def test_form_options(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test the form options."""
 
-    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
-    ), requests_mock.mock() as _m:
-        aemet_requests_mock(_m)
-
+    hass.config.set_time_zone("UTC")
+    freezer.move_to("2021-01-09 12:00:00+00:00")
+    with patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN, unique_id="40.30403754--3.72935236", data=CONFIG
         )
@@ -114,15 +118,18 @@ async def test_form_options(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_form_duplicated_id(hass: HomeAssistant) -> None:
+async def test_form_duplicated_id(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test setting up duplicated entry."""
 
-    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
-    ), requests_mock.mock() as _m:
-        aemet_requests_mock(_m)
-
+    hass.config.set_time_zone("UTC")
+    freezer.move_to("2021-01-09 12:00:00+00:00")
+    with patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN, unique_id="40.30403754--3.72935236", data=CONFIG
         )
@@ -136,11 +143,10 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
 
-async def test_form_api_offline(hass: HomeAssistant) -> None:
-    """Test setting up with api call error."""
+async def test_form_auth_error(hass: HomeAssistant) -> None:
+    """Test setting up with api auth error."""
     mocked_aemet = MagicMock()
-
-    mocked_aemet.get_conventional_observation_stations.return_value = None
+    mocked_aemet.select_coordinates.side_effect = AuthError
 
     with patch(
         "homeassistant.components.aemet.config_flow.AEMET",

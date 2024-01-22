@@ -184,7 +184,11 @@ async def test_data_validation(geofency_client, webhook_id) -> None:
 
 
 async def test_gps_enter_and_exit_home(
-    hass: HomeAssistant, geofency_client, webhook_id
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    geofency_client,
+    webhook_id,
 ) -> None:
     """Test GPS based zone enter and exit."""
     url = f"/api/webhook/{webhook_id}"
@@ -223,11 +227,8 @@ async def test_gps_enter_and_exit_home(
     ]
     assert current_longitude == NOT_HOME_LONGITUDE
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == 1
-
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 1
+    assert len(device_registry.devices) == 1
+    assert len(entity_registry.entities) == 1
 
 
 async def test_beacon_enter_and_exit_home(

@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -42,7 +42,7 @@ async def test_select(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -76,7 +76,7 @@ async def test_select_set_option(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -90,7 +90,7 @@ async def test_select_set_option(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "failed"}},
     ), pytest.raises(
-        HomeAssistantError
+        HomeAssistantError,
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -122,7 +122,7 @@ async def test_select_set_option(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -132,7 +132,7 @@ async def test_select_set_option(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "Failed", "failureReason": "No connection"}},
     ), pytest.raises(
-        HomeAssistantError
+        HomeAssistantError,
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,

@@ -78,6 +78,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     _fan_speed: EnumTypeData | None = None
     _battery_level: IntegerTypeData | None = None
+    _attr_name = None
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
         """Init Tuya vacuum."""
@@ -85,7 +86,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
         self._attr_fan_speed_list = []
 
-        self._attr_supported_features |= VacuumEntityFeature.SEND_COMMAND
+        self._attr_supported_features = (
+            VacuumEntityFeature.SEND_COMMAND | VacuumEntityFeature.STATE
+        )
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
@@ -100,16 +103,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
         if self.find_dpcode(DPCode.SEEK, prefer_function=True):
             self._attr_supported_features |= VacuumEntityFeature.LOCATE
-
-        if self.find_dpcode(DPCode.STATUS, prefer_function=True):
-            self._attr_supported_features |= (
-                VacuumEntityFeature.STATE | VacuumEntityFeature.STATUS
-            )
-
-        if self.find_dpcode(DPCode.POWER, prefer_function=True):
-            self._attr_supported_features |= (
-                VacuumEntityFeature.TURN_ON | VacuumEntityFeature.TURN_OFF
-            )
 
         if self.find_dpcode(DPCode.POWER_GO, prefer_function=True):
             self._attr_supported_features |= (
@@ -152,14 +145,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             return None
         return TUYA_STATUS_TO_HA.get(status)
 
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        self._send_command([{"code": DPCode.POWER, "value": True}])
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        self._send_command([{"code": DPCode.POWER, "value": False}])
-
     def start(self, **kwargs: Any) -> None:
         """Start the device."""
         self._send_command([{"code": DPCode.POWER_GO, "value": True}])
@@ -190,9 +175,14 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self._send_command([{"code": DPCode.SUCTION, "value": fan_speed}])
 
     def send_command(
-        self, command: str, params: dict | list | None = None, **kwargs: Any
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send raw command."""
         if not params:
             raise ValueError("Params cannot be omitted for Tuya vacuum commands")
+        if not isinstance(params, list):
+            raise TypeError("Params must be a list for Tuya vacuum commands")
         self._send_command([{"code": command, "value": params[0]}])

@@ -28,5 +28,27 @@
         "description": "If you want to monitor not only state and district, choose its specific community"
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "unknown": {
+        "name": "Unknown"
+      },
+      "air": {
+        "name": "Air"
+      },
+      "urban_fights": {
+        "name": "Urban fights"
+      },
+      "artillery": {
+        "name": "Artillery"
+      },
+      "chemical": {
+        "name": "Chemical"
+      },
+      "nuclear": {
+        "name": "Nuclear"
+      }
+    }
   }
 }

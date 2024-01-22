@@ -1,11 +1,22 @@
 """Helpers to generate ulids."""
 from __future__ import annotations
 
-import time
+from ulid_transform import (
+    bytes_to_ulid,
+    ulid_at_time,
+    ulid_hex,
+    ulid_now,
+    ulid_to_bytes,
+)
 
-from ulid_transform import ulid_at_time, ulid_hex
-
-__all__ = ["ulid", "ulid_hex", "ulid_at_time"]
+__all__ = [
+    "ulid",
+    "ulid_hex",
+    "ulid_at_time",
+    "ulid_to_bytes",
+    "bytes_to_ulid",
+    "ulid_now",
+]
 
 
 def ulid(timestamp: float | None = None) -> str:
@@ -25,4 +36,4 @@ def ulid(timestamp: float | None = None) -> str:
     import ulid
     ulid.parse(ulid_util.ulid())
     """
-    return ulid_at_time(timestamp or time.time())
+    return ulid_now() if timestamp is None else ulid_at_time(timestamp)

@@ -3,16 +3,14 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Container, Iterable, MutableMapping
-from typing import Any, cast
+from typing import Any, Literal, TypedDict, cast
 
 import attr
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 
 from . import device_registry as dr, entity_registry as er
-from .frame import report
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
@@ -22,6 +20,13 @@ STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
+
+
+class EventAreaRegistryUpdatedData(TypedDict):
+    """EventAreaRegistryUpdated data."""
+
+    action: Literal["create", "remove", "update"]
+    area_id: str
 
 
 @attr.s(slots=True, frozen=True)
@@ -216,7 +221,7 @@ class AreaRegistry:
         if not new_values:
             return old
 
-        new = self.areas[area_id] = attr.evolve(old, **new_values)
+        new = self.areas[area_id] = attr.evolve(old, **new_values)  # type: ignore[arg-type]
         if normalized_name is not None:
             self._normalized_name_area_idx[
                 normalized_name
@@ -280,19 +285,6 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = AreaRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
-
-
-@bind_hass
-async def async_get_registry(hass: HomeAssistant) -> AreaRegistry:
-    """Get area registry.
-
-    This is deprecated and will be removed in the future. Use async_get instead.
-    """
-    report(
-        "uses deprecated `async_get_registry` to access area registry, use async_get"
-        " instead"
-    )
-    return async_get(hass)
 
 
 def normalize_area_name(area_name: str) -> str:

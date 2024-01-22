@@ -10,7 +10,6 @@ import logging
 import time
 from typing import Any, cast
 
-import async_timeout
 import defusedxml.ElementTree as ET
 from soco.core import SoCo
 from soco.events_base import Event as SonosEvent, SubscriptionBase
@@ -18,12 +17,14 @@ from soco.exceptions import SoCoException, SoCoUPnPException
 from soco.plugins.plex import PlexPlugin
 from soco.plugins.sharelink import ShareLinkPlugin
 from soco.snapshot import Snapshot
+from sonos_websocket import SonosWebsocket
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -97,6 +98,7 @@ class SonosSpeaker:
         """Initialize a SonosSpeaker."""
         self.hass = hass
         self.soco = soco
+        self.websocket: SonosWebsocket | None = None
         self.household_id: str = soco.household_id
         self.media = SonosMedia(hass, soco)
         self._plex_plugin: PlexPlugin | None = None
@@ -142,6 +144,7 @@ class SonosSpeaker:
         self.volume: int | None = None
         self.muted: bool | None = None
         self.cross_fade: bool | None = None
+        self.balance: tuple[int, int] | None = None
         self.bass: int | None = None
         self.treble: int | None = None
         self.loudness: bool | None = None
@@ -151,6 +154,7 @@ class SonosSpeaker:
         self.dialog_level: bool | None = None
         self.night_mode: bool | None = None
         self.sub_enabled: bool | None = None
+        self.sub_crossover: int | None = None
         self.sub_gain: int | None = None
         self.surround_enabled: bool | None = None
         self.surround_mode: bool | None = None
@@ -170,8 +174,13 @@ class SonosSpeaker:
         self.snapshot_group: list[SonosSpeaker] = []
         self._group_members_missing: set[str] = set()
 
-    async def async_setup_dispatchers(self, entry: ConfigEntry) -> None:
-        """Connect dispatchers in async context during setup."""
+    async def async_setup(self, entry: ConfigEntry) -> None:
+        """Complete setup in async context."""
+        self.websocket = SonosWebsocket(
+            self.soco.ip_address,
+            player_id=self.soco.uid,
+            session=async_get_clientsession(self.hass),
+        )
         dispatch_pairs: tuple[tuple[str, Callable[..., Any]], ...] = (
             (SONOS_CHECK_ACTIVITY, self.async_check_activity),
             (SONOS_SPEAKER_ADDED, self.update_group_for_uid),
@@ -198,7 +207,7 @@ class SonosSpeaker:
             self.media.poll_media()
 
         future = asyncio.run_coroutine_threadsafe(
-            self.async_setup_dispatchers(entry), self.hass.loop
+            self.async_setup(entry), self.hass.loop
         )
         future.result(timeout=10)
 
@@ -528,7 +537,10 @@ class SonosSpeaker:
         variables = event.variables
 
         if "volume" in variables:
-            self.volume = int(variables["volume"]["Master"])
+            volume = variables["volume"]
+            self.volume = int(volume["Master"])
+            if "LF" in volume and "RF" in volume:
+                self.balance = (int(volume["LF"]), int(volume["RF"]))
 
         if "mute" in variables:
             self.muted = variables["mute"]["Master"] == "1"
@@ -550,6 +562,7 @@ class SonosSpeaker:
             "audio_delay",
             "bass",
             "treble",
+            "sub_crossover",
             "sub_gain",
             "surround_level",
             "music_surround_level",
@@ -591,13 +604,20 @@ class SonosSpeaker:
             self.async_write_entity_states()
             self.hass.async_create_task(self.async_subscribe())
 
-    async def async_check_activity(self, now: datetime.datetime) -> None:
+    @callback
+    def async_check_activity(self, now: datetime.datetime) -> None:
         """Validate availability of the speaker based on recent activity."""
         if not self.available:
             return
         if time.monotonic() - self._last_activity < AVAILABILITY_TIMEOUT:
             return
+        # Ensure the ping is canceled at shutdown
+        self.hass.async_create_background_task(
+            self._async_check_activity(), f"sonos {self.uid} {self.zone_name} ping"
+        )
 
+    async def _async_check_activity(self) -> None:
+        """Validate availability of the speaker based on recent activity."""
         try:
             await self.hass.async_add_executor_job(self.ping)
         except SonosUpdateError:
@@ -1103,7 +1123,7 @@ class SonosSpeaker:
             return True
 
         try:
-            async with async_timeout.timeout(5):
+            async with asyncio.timeout(5):
                 while not _test_groups(groups):
                     await hass.data[DATA_SONOS].topology_condition.wait()
         except asyncio.TimeoutError:

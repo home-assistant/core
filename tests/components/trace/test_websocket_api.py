@@ -1,10 +1,12 @@
 """Test Trace websocket API."""
 import asyncio
+from collections import defaultdict
 import json
-from typing import Any, DefaultDict
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
@@ -13,7 +15,7 @@ from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.uuid import random_uuid_hex
 
-from tests.common import assert_lists_same, load_fixture
+from tests.common import load_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -155,7 +157,6 @@ async def test_get_trace(
     }
 
     sun_action = {
-        "limit": 10,
         "params": {
             "domain": "test",
             "service": "automation",
@@ -204,7 +205,7 @@ async def test_get_trace(
     _assert_raw_config(domain, sun_config, trace)
     assert trace["blueprint_inputs"] is None
     assert trace["context"]
-    assert trace["error"] == "Unable to find service test.automation"
+    assert trace["error"] == "Service test.automation not found."
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"
@@ -391,7 +392,7 @@ async def test_get_trace(
     trace_list = response["result"]
 
     # Get all traces and generate expected stored traces
-    traces = DefaultDict(list)
+    traces = defaultdict(list)
     for trace in trace_list:
         item_id = trace["item_id"]
         run_id = trace["run_id"]
@@ -425,7 +426,7 @@ async def test_restore_traces(
     hass: HomeAssistant, hass_storage: dict[str, Any], hass_ws_client, domain
 ) -> None:
     """Test restored traces."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     id = 1
 
     def next_id():
@@ -448,7 +449,7 @@ async def test_restore_traces(
     trace_list = response["result"]
 
     # Get all traces and generate expected stored traces
-    traces = DefaultDict(list)
+    traces = defaultdict(list)
     contexts = {}
     for trace in trace_list:
         item_id = trace["item_id"]
@@ -597,7 +598,7 @@ async def test_restore_traces_overflow(
     num_restored_moon_traces,
 ) -> None:
     """Test restored traces are evicted first."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     id = 1
 
     trace_uuids = []
@@ -678,7 +679,7 @@ async def test_restore_traces_late_overflow(
     restored_run_id,
 ) -> None:
     """Test restored traces are evicted first."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     id = 1
 
     trace_uuids = []
@@ -892,7 +893,7 @@ async def test_list_traces(
     assert len(_find_traces(response["result"], domain, "sun")) == 1
     trace = _find_traces(response["result"], domain, "sun")[0]
     assert trace["last_step"] == last_step[0].format(prefix=prefix)
-    assert trace["error"] == "Unable to find service test.automation"
+    assert trace["error"] == "Service test.automation not found."
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == script_execution[0]
     assert trace["timestamp"]
@@ -1086,8 +1087,7 @@ async def test_breakpoints(
     await client.send_json({"id": next_id(), "type": "trace/debug/breakpoint/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert_lists_same(
-        response["result"],
+    assert response["result"] == unordered(
         [
             {"node": f"{prefix}/1", "run_id": "*", "domain": domain, "item_id": "sun"},
             {"node": f"{prefix}/5", "run_id": "*", "domain": domain, "item_id": "sun"},
@@ -1593,7 +1593,6 @@ async def test_trace_blueprint_automation(
         },
     }
     sun_action = {
-        "limit": 10,
         "params": {
             "domain": "test",
             "service": "automation",
@@ -1633,7 +1632,7 @@ async def test_trace_blueprint_automation(
     assert trace["config"]["id"] == "sun"
     assert trace["blueprint_inputs"] == sun_config
     assert trace["context"]
-    assert trace["error"] == "Unable to find service test.automation"
+    assert trace["error"] == "Service test.automation not found."
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"

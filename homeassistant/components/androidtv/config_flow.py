@@ -1,4 +1,4 @@
-"""Config flow to configure the Android TV integration."""
+"""Config flow to configure the Android Debug Bridge integration."""
 from __future__ import annotations
 
 import logging
@@ -114,13 +114,14 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _async_check_connection(
         self, user_input: dict[str, Any]
     ) -> tuple[str | None, str | None]:
-        """Attempt to connect the Android TV."""
+        """Attempt to connect the Android device."""
 
         try:
             aftv, error_message = await async_connect_androidtv(self.hass, user_input)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Unknown error connecting with Android TV at %s", user_input[CONF_HOST]
+                "Unknown error connecting with Android device at %s",
+                user_input[CONF_HOST],
             )
             return RESULT_UNKNOWN, None
 
@@ -130,7 +131,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 
         dev_prop = aftv.device_properties
         _LOGGER.info(
-            "Android TV at %s: %s = %r, %s = %r",
+            "Android device at %s: %s = %r, %s = %r",
             user_input[CONF_HOST],
             PROP_ETHMAC,
             dev_prop.get(PROP_ETHMAC),
@@ -184,7 +185,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(OptionsFlowWithConfigEntry):
-    """Handle an option flow for Android TV."""
+    """Handle an option flow for Android Debug Bridge."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
@@ -384,4 +385,4 @@ def _validate_state_det_rules(state_det_rules: Any) -> list[Any] | None:
     except ValueError as exc:
         _LOGGER.warning("Invalid state detection rules: %s", exc)
         return None
-    return json_rules
+    return json_rules  # type: ignore[no-any-return]

@@ -8,38 +8,49 @@ from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
 
-from .common import MockModule, mock_integration
+from .common import MockModule, async_get_persistent_notifications, mock_integration
 
 
-async def test_component_dependencies(hass: HomeAssistant) -> None:
-    """Test if we can get the proper load order of components."""
+async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
+    """Test if we can detect circular dependencies of components."""
     mock_integration(hass, MockModule("mod1"))
     mock_integration(hass, MockModule("mod2", ["mod1"]))
-    mod_3 = mock_integration(hass, MockModule("mod3", ["mod2"]))
+    mock_integration(hass, MockModule("mod3", ["mod1"]))
+    mod_4 = mock_integration(hass, MockModule("mod4", ["mod2", "mod3"]))
 
-    assert {"mod1", "mod2", "mod3"} == await loader._async_component_dependencies(
-        hass, "mod_3", mod_3, set(), set()
-    )
+    deps = await loader._async_component_dependencies(hass, mod_4)
+    assert deps == {"mod1", "mod2", "mod3", "mod4"}
 
-    # Create circular dependency
+    # Create a circular dependency
+    mock_integration(hass, MockModule("mod1", ["mod4"]))
+    with pytest.raises(loader.CircularDependency):
+        await loader._async_component_dependencies(hass, mod_4)
+
+    # Create a different circular dependency
     mock_integration(hass, MockModule("mod1", ["mod3"]))
-
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
+        await loader._async_component_dependencies(hass, mod_4)
 
-    # Depend on non-existing component
-    mod_1 = mock_integration(hass, MockModule("mod1", ["nonexisting"]))
-
-    with pytest.raises(loader.IntegrationNotFound):
-        await loader._async_component_dependencies(hass, "mod_1", mod_1, set(), set())
-
-    # Having an after dependency 2 deps down that is circular
-    mod_1 = mock_integration(
-        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod_3"]})
+    # Create a circular after_dependency
+    mock_integration(
+        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod4"]})
     )
-
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
+        await loader._async_component_dependencies(hass, mod_4)
+
+    # Create a different circular after_dependency
+    mock_integration(
+        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod3"]})
+    )
+    with pytest.raises(loader.CircularDependency):
+        await loader._async_component_dependencies(hass, mod_4)
+
+
+async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
+    """Test if we can detect nonexistent dependencies of components."""
+    mod_1 = mock_integration(hass, MockModule("mod1", ["nonexistent"]))
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader._async_component_dependencies(hass, mod_1)
 
 
 def test_component_loader(hass: HomeAssistant) -> None:
@@ -61,7 +72,8 @@ async def test_component_wrapper(hass: HomeAssistant) -> None:
     components = loader.Components(hass)
     components.persistent_notification.async_create("message")
 
-    assert len(hass.states.async_entity_ids("persistent_notification")) == 1
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications)
 
 
 async def test_helpers_wrapper(hass: HomeAssistant) -> None:
@@ -149,7 +161,14 @@ async def test_custom_integration_version_not_valid(
 
 async def test_get_integration(hass: HomeAssistant) -> None:
     """Test resolving integration."""
+    with pytest.raises(loader.IntegrationNotLoaded):
+        loader.async_get_loaded_integration(hass, "hue")
+
     integration = await loader.async_get_integration(hass, "hue")
+    assert hue == integration.get_component()
+    assert hue_light == integration.get_platform("light")
+
+    integration = loader.async_get_loaded_integration(hass, "hue")
     assert hue == integration.get_component()
     assert hue_light == integration.get_platform("light")
 
@@ -671,9 +690,9 @@ async def test_get_mqtt(hass: HomeAssistant) -> None:
         assert mqtt["test_2"] == ["test_2/discovery"]
 
 
-async def test_get_custom_components_safe_mode(hass: HomeAssistant) -> None:
-    """Test that we get empty custom components in safe mode."""
-    hass.config.safe_mode = True
+async def test_get_custom_components_recovery_mode(hass: HomeAssistant) -> None:
+    """Test that we get empty custom components in recovery mode."""
+    hass.config.recovery_mode = True
     assert await loader.async_get_custom_components(hass) == {}
 
 
@@ -725,3 +744,143 @@ async def test_loggers(hass: HomeAssistant) -> None:
         },
     )
     assert integration.loggers == ["name1", "name2"]
+
+
+CORE_ISSUE_TRACKER = (
+    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+)
+CORE_ISSUE_TRACKER_BUILT_IN = (
+    CORE_ISSUE_TRACKER + "+label%3A%22integration%3A+bla_built_in%22"
+)
+CORE_ISSUE_TRACKER_CUSTOM = (
+    CORE_ISSUE_TRACKER + "+label%3A%22integration%3A+bla_custom%22"
+)
+CORE_ISSUE_TRACKER_CUSTOM_NO_TRACKER = (
+    CORE_ISSUE_TRACKER + "+label%3A%22integration%3A+bla_custom_no_tracker%22"
+)
+CORE_ISSUE_TRACKER_HUE = CORE_ISSUE_TRACKER + "+label%3A%22integration%3A+hue%22"
+CUSTOM_ISSUE_TRACKER = "https://blablabla.com"
+
+
+@pytest.mark.parametrize(
+    ("domain", "module", "issue_tracker"),
+    [
+        # If no information is available, open issue on core
+        (None, None, CORE_ISSUE_TRACKER),
+        ("hue", "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
+        ("hue", None, CORE_ISSUE_TRACKER_HUE),
+        ("bla_built_in", None, CORE_ISSUE_TRACKER_BUILT_IN),
+        # Integration domain is not currently deduced from module
+        (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER),
+        ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
+        # Custom integration with known issue tracker
+        ("bla_custom", "custom_components.bla_custom.sensor", CUSTOM_ISSUE_TRACKER),
+        ("bla_custom", None, CUSTOM_ISSUE_TRACKER),
+        # Custom integration without known issue tracker
+        (None, "custom_components.bla.sensor", None),
+        ("bla_custom_no_tracker", "custom_components.bla_custom.sensor", None),
+        ("bla_custom_no_tracker", None, None),
+        ("hue", "custom_components.bla.sensor", None),
+        # Integration domain has priority over module
+        ("bla_custom_no_tracker", "homeassistant.components.bla_custom.sensor", None),
+    ],
+)
+async def test_async_get_issue_tracker(
+    hass, domain: str | None, module: str | None, issue_tracker: str | None
+) -> None:
+    """Test async_get_issue_tracker."""
+    mock_integration(hass, MockModule("bla_built_in"))
+    mock_integration(
+        hass,
+        MockModule(
+            "bla_custom", partial_manifest={"issue_tracker": CUSTOM_ISSUE_TRACKER}
+        ),
+        built_in=False,
+    )
+    mock_integration(hass, MockModule("bla_custom_no_tracker"), built_in=False)
+    assert (
+        loader.async_get_issue_tracker(hass, integration_domain=domain, module=module)
+        == issue_tracker
+    )
+
+
+@pytest.mark.parametrize(
+    ("domain", "module", "issue_tracker"),
+    [
+        # If no information is available, open issue on core
+        (None, None, CORE_ISSUE_TRACKER),
+        ("hue", "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
+        ("hue", None, CORE_ISSUE_TRACKER_HUE),
+        ("bla_built_in", None, CORE_ISSUE_TRACKER_BUILT_IN),
+        # Integration domain is not currently deduced from module
+        (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER),
+        ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
+        # Custom integration with known issue tracker - can't find it without hass
+        ("bla_custom", "custom_components.bla_custom.sensor", None),
+        # Assumed to be a core integration without hass and without module
+        ("bla_custom", None, CORE_ISSUE_TRACKER_CUSTOM),
+    ],
+)
+async def test_async_get_issue_tracker_no_hass(
+    hass, domain: str | None, module: str | None, issue_tracker: str
+) -> None:
+    """Test async_get_issue_tracker."""
+    mock_integration(hass, MockModule("bla_built_in"))
+    mock_integration(
+        hass,
+        MockModule(
+            "bla_custom", partial_manifest={"issue_tracker": CUSTOM_ISSUE_TRACKER}
+        ),
+        built_in=False,
+    )
+    assert (
+        loader.async_get_issue_tracker(None, integration_domain=domain, module=module)
+        == issue_tracker
+    )
+
+
+REPORT_CUSTOM = (
+    "report it to the author of the 'bla_custom_no_tracker' custom integration"
+)
+REPORT_CUSTOM_UNKNOWN = "report it to the custom integration author"
+
+
+@pytest.mark.parametrize(
+    ("domain", "module", "report_issue"),
+    [
+        (None, None, f"create a bug report at {CORE_ISSUE_TRACKER}"),
+        ("bla_custom", None, f"create a bug report at {CUSTOM_ISSUE_TRACKER}"),
+        ("bla_custom_no_tracker", None, REPORT_CUSTOM),
+        (None, "custom_components.hue.sensor", REPORT_CUSTOM_UNKNOWN),
+    ],
+)
+async def test_async_suggest_report_issue(
+    hass, domain: str | None, module: str | None, report_issue: str
+) -> None:
+    """Test async_suggest_report_issue."""
+    mock_integration(hass, MockModule("bla_built_in"))
+    mock_integration(
+        hass,
+        MockModule(
+            "bla_custom", partial_manifest={"issue_tracker": CUSTOM_ISSUE_TRACKER}
+        ),
+        built_in=False,
+    )
+    mock_integration(hass, MockModule("bla_custom_no_tracker"), built_in=False)
+    assert (
+        loader.async_suggest_report_issue(
+            hass, integration_domain=domain, module=module
+        )
+        == report_issue
+    )
+
+
+async def test_config_folder_not_in_path(hass):
+    """Test that config folder is not in path."""
+
+    # Verify that we are unable to import this file from top level
+    with pytest.raises(ImportError):
+        import check_config_not_in_path  # noqa: F401
+
+    # Verify that we are able to load the file with absolute path
+    import tests.testing_config.check_config_not_in_path  # noqa: F401

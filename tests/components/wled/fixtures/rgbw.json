@@ -68,7 +68,8 @@
     "brand": "WLED",
     "product": "DIY light",
     "btype": "bin",
-    "mac": "aabbccddee11"
+    "mac": "aabbccddee11",
+    "ip": "127.0.0.1"
   },
   "effects": [
     "Solid",

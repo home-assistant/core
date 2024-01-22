@@ -1,5 +1,6 @@
 """Tests for Philips Hue config flow."""
 import asyncio
+from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
 from aiohue.discovery import URL_NUPNP
@@ -15,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, ClientError
 
 
 @pytest.fixture(name="hue_setup", autouse=True)
@@ -416,8 +417,8 @@ async def test_bridge_homekit(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="0.0.0.0",
-            addresses=["0.0.0.0"],
+            ip_address=ip_address("0.0.0.0"),
+            ip_addresses=[ip_address("0.0.0.0")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -466,8 +467,8 @@ async def test_bridge_homekit_already_configured(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="0.0.0.0",
-            addresses=["0.0.0.0"],
+            ip_address=ip_address("0.0.0.0"),
+            ip_addresses=[ip_address("0.0.0.0")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -526,7 +527,10 @@ def _get_schema_default(schema, key_name):
     raise KeyError(f"{key_name} not found in schema")
 
 
-async def test_options_flow_v2(hass: HomeAssistant) -> None:
+async def test_options_flow_v2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test options config flow for a V2 bridge."""
     entry = MockConfigEntry(
         domain="hue",
@@ -535,9 +539,8 @@ async def test_options_flow_v2(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    dev_reg = dr.async_get(hass)
     mock_dev_id = "aabbccddee"
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, identifiers={(const.DOMAIN, mock_dev_id)}
     )
 
@@ -568,8 +571,8 @@ async def test_bridge_zeroconf(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.217",
-            addresses=["192.168.1.217"],
+            ip_address=ip_address("192.168.1.217"),
+            ip_addresses=[ip_address("192.168.1.217")],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -604,8 +607,8 @@ async def test_bridge_zeroconf_already_exists(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.217",
-            addresses=["192.168.1.217"],
+            ip_address=ip_address("192.168.1.217"),
+            ip_addresses=[ip_address("192.168.1.217")],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -629,8 +632,8 @@ async def test_bridge_zeroconf_ipv6(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="fd00::eeb5:faff:fe84:b17d",
-            addresses=["fd00::eeb5:faff:fe84:b17d"],
+            ip_address=ip_address("fd00::eeb5:faff:fe84:b17d"),
+            ip_addresses=[ip_address("fd00::eeb5:faff:fe84:b17d")],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -645,3 +648,76 @@ async def test_bridge_zeroconf_ipv6(hass: HomeAssistant) -> None:
 
     assert result["type"] == "abort"
     assert result["reason"] == "invalid_host"
+
+
+async def test_bridge_connection_failed(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that connection errors to the bridge are handled."""
+    create_mock_api_discovery(aioclient_mock, [])
+
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_bridge",
+        side_effect=ClientError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"host": "blah"}
+        )
+
+        # a warning message should have been logged that the bridge could not be reached
+        assert "Error while attempting to retrieve discovery information" in caplog.text
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
+
+        # test again with zeroconf discovered wrong bridge IP
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf.ZeroconfServiceInfo(
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
+                port=443,
+                hostname="Philips-hue.local",
+                type="_hue._tcp.local.",
+                name="Philips Hue - ABCABC._hue._tcp.local.",
+                properties={
+                    "_raw": {"bridgeid": b"ecb5fafffeabcabc", "modelid": b"BSB002"},
+                    "bridgeid": "ecb5fafffeabcabc",
+                    "modelid": "BSB002",
+                },
+            ),
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
+
+        # test again with homekit discovered wrong bridge IP
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data=zeroconf.ZeroconfServiceInfo(
+                ip_address=ip_address("0.0.0.0"),
+                ip_addresses=[ip_address("0.0.0.0")],
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
+            ),
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
+
+        # repeat test with import flow
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": "blah"},
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"

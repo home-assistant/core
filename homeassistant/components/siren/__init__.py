@@ -1,10 +1,10 @@
 """Component to interface with various sirens/chimes."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
-from typing import Any, TypedDict, cast, final
+from typing import TYPE_CHECKING, Any, TypedDict, cast, final
 
 import voluptuous as vol
 
@@ -16,23 +16,33 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
+from homeassistant.helpers.deprecation import (
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
+    _DEPRECATED_SUPPORT_DURATION,
+    _DEPRECATED_SUPPORT_TONES,
+    _DEPRECATED_SUPPORT_TURN_OFF,
+    _DEPRECATED_SUPPORT_TURN_ON,
+    _DEPRECATED_SUPPORT_VOLUME_SET,
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DOMAIN,
-    SUPPORT_DURATION,
-    SUPPORT_TONES,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET,
     SirenEntityFeature,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +141,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_TOGGLE,
         {},
         "async_toggle",
-        [SirenEntityFeature.TURN_ON & SirenEntityFeature.TURN_OFF],
+        [SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF],
     )
 
     return True
@@ -149,15 +159,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class SirenEntityDescription(ToggleEntityDescription):
+class SirenEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
     """A class that describes siren entities."""
 
     available_tones: list[int | str] | dict[int, str] | None = None
 
 
-class SirenEntity(ToggleEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "available_tones",
+    "supported_features",
+}
+
+
+class SirenEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a siren device."""
+
+    _entity_component_unrecorded_attributes = frozenset({ATTR_AVAILABLE_TONES})
 
     entity_description: SirenEntityDescription
     _attr_available_tones: list[int | str] | dict[int, str] | None
@@ -175,7 +192,7 @@ class SirenEntity(ToggleEntity):
 
         return None
 
-    @property
+    @cached_property
     def available_tones(self) -> list[int | str] | dict[int, str] | None:
         """Return a list of available tones.
 
@@ -187,7 +204,22 @@ class SirenEntity(ToggleEntity):
             return self.entity_description.available_tones
         return None
 
-    @property
+    @cached_property
     def supported_features(self) -> SirenEntityFeature:
         """Return the list of supported features."""
-        return self._attr_supported_features
+        features = self._attr_supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = SirenEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
+
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

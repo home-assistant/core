@@ -278,7 +278,6 @@ async def async_devices_disconnect(
     """
     assert data.context.user_id is not None
     await data.config.async_disconnect_agent_user(data.context.user_id)
-    return None
 
 
 @HANDLERS.register("action.devices.IDENTIFY")

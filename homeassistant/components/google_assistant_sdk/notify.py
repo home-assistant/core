@@ -20,17 +20,17 @@ LANG_TO_BROADCAST_COMMAND = {
     "it": ("Trasmetti {0}", "Trasmetti in {1} {0}"),
     "ja": ("{0}とブロードキャストして", "{0}と{1}にブロードキャストして"),
     "ko": ("{0} 라고 방송해 줘", "{0} 라고 {1}에 방송해 줘"),
-    "pt": ("Transmite {0}", "Transmite para {1} {0}"),
+    "pt": ("Transmitir {0}", "Transmitir {0} para {1}"),
 }
 
 
-def broadcast_commands(language_code: str):
+def broadcast_commands(language_code: str) -> tuple[str, str]:
     """Get the commands for broadcasting a message for the given language code.
 
     Return type is a tuple where [0] is for broadcasting to your entire home,
     while [1] is for broadcasting to a specific target.
     """
-    return LANG_TO_BROADCAST_COMMAND.get(language_code.split("-", maxsplit=1)[0])
+    return LANG_TO_BROADCAST_COMMAND[language_code.split("-", maxsplit=1)[0]]
 
 
 async def async_get_service(
@@ -60,7 +60,7 @@ class BroadcastNotificationService(BaseNotificationService):
             CONF_LANGUAGE_CODE, default_language_code(self.hass)
         )
 
-        commands = []
+        commands: list[str] = []
         targets = kwargs.get(ATTR_TARGET)
         if not targets:
             commands.append(broadcast_commands(language_code)[0].format(message))

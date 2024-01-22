@@ -19,7 +19,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry."""
     await init_integration(hass)
 
-    state = hass.states.get("sensor.nettigo_air_monitor_sds011_particulate_matter_2_5")
+    state = hass.states.get("sensor.nettigo_air_monitor_sds011_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "11.0"
@@ -93,11 +93,11 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert not hass.data.get(DOMAIN)
 
 
-async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
+async def test_remove_air_quality_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test remove air_quality entities from registry."""
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         AIR_QUALITY_PLATFORM,
         DOMAIN,
         "aa:bb:cc:dd:ee:ff-sds011",
@@ -105,7 +105,7 @@ async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
         disabled_by=None,
     )
 
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         AIR_QUALITY_PLATFORM,
         DOMAIN,
         "aa:bb:cc:dd:ee:ff-sps30",
@@ -115,8 +115,8 @@ async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
 
     await init_integration(hass)
 
-    entry = registry.async_get("air_quality.nettigo_air_monitor_sds011")
+    entry = entity_registry.async_get("air_quality.nettigo_air_monitor_sds011")
     assert entry is None
 
-    entry = registry.async_get("air_quality.nettigo_air_monitor_sps30")
+    entry = entity_registry.async_get("air_quality.nettigo_air_monitor_sps30")
     assert entry is None

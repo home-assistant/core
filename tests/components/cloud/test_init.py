@@ -1,18 +1,25 @@
 """Test the cloud component."""
+from collections.abc import Callable, Coroutine
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from hass_nabucasa import Cloud
 import pytest
 
 from homeassistant.components import cloud
-from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.components.cloud import (
+    CloudNotAvailable,
+    CloudNotConnected,
+    async_get_or_create_cloudhook,
+)
+from homeassistant.components.cloud.const import DOMAIN, PREF_CLOUDHOOKS
 from homeassistant.components.cloud.prefs import STORAGE_KEY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockUser
+from tests.common import MockConfigEntry, MockUser
 
 
 async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
@@ -31,7 +38,6 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
                     "relayer_server": "test-relayer-server",
                     "accounts_server": "test-acounts-server",
                     "cloudhook_server": "test-cloudhook-server",
-                    "remote_sni_server": "test-remote-sni-server",
                     "alexa_server": "test-alexa-server",
                     "acme_server": "test-acme-server",
                     "remotestate_server": "test-remotestate-server",
@@ -134,7 +140,7 @@ async def test_setup_existing_cloud_user(
 
 async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test cloud on connect triggers."""
-    cl = hass.data["cloud"]
+    cl: Cloud[cloud.client.CloudClient] = hass.data["cloud"]
 
     assert len(cl.iot._on_connect) == 3
 
@@ -152,10 +158,17 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     await cl.iot._on_connect[-1]()
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 0
+
+    # The on_start callback discovers the binary sensor platform
+    assert "async_setup" in str(cl._on_start[-1])
+    await cl._on_start[-1]()
+    await hass.async_block_till_done()
+
     assert len(hass.states.async_entity_ids("binary_sensor")) == 1
 
     with patch("homeassistant.helpers.discovery.async_load_platform") as mock_load:
-        await cl.iot._on_connect[-1]()
+        await cl._on_start[-1]()
         await hass.async_block_till_done()
 
     assert len(mock_load.mock_calls) == 0
@@ -163,12 +176,22 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     assert len(cloud_states) == 1
     assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
 
+    await cl.iot._on_connect[-1]()
+    await hass.async_block_till_done()
+    assert len(cloud_states) == 2
+    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
+
     assert len(cl.iot._on_disconnect) == 2
     assert "async_setup" in str(cl.iot._on_disconnect[-1])
     await cl.iot._on_disconnect[-1]()
     await hass.async_block_till_done()
 
-    assert len(cloud_states) == 2
+    assert len(cloud_states) == 3
+    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
+
+    await cl.iot._on_disconnect[-1]()
+    await hass.async_block_till_done()
+    assert len(cloud_states) == 4
     assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
 
 
@@ -197,3 +220,73 @@ async def test_remote_ui_url(hass: HomeAssistant, mock_cloud_fixture) -> None:
         cl.client.prefs._prefs["remote_domain"] = "example.com"
 
         assert cloud.async_remote_ui_url(hass) == "https://example.com"
+
+
+async def test_async_get_or_create_cloudhook(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+) -> None:
+    """Test async_get_or_create_cloudhook."""
+    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+
+    webhook_id = "mock-webhook-id"
+    cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
+
+    with patch(
+        "homeassistant.components.cloud.async_create_cloudhook",
+        return_value=cloudhook_url,
+    ) as async_create_cloudhook_mock:
+        # create cloudhook as it does not exist
+        assert (await async_get_or_create_cloudhook(hass, webhook_id)) == cloudhook_url
+        async_create_cloudhook_mock.assert_called_once_with(hass, webhook_id)
+
+        await set_cloud_prefs(
+            {
+                PREF_CLOUDHOOKS: {
+                    webhook_id: {
+                        "webhook_id": webhook_id,
+                        "cloudhook_id": "random-id",
+                        "cloudhook_url": cloudhook_url,
+                        "managed": True,
+                    }
+                }
+            }
+        )
+
+        async_create_cloudhook_mock.reset_mock()
+
+        # get cloudhook as it exists
+        assert await async_get_or_create_cloudhook(hass, webhook_id) == cloudhook_url
+        async_create_cloudhook_mock.assert_not_called()
+
+    # Simulate logged out
+    await cloud.logout()
+
+    # Not logged in
+    with pytest.raises(CloudNotAvailable):
+        await async_get_or_create_cloudhook(hass, webhook_id)
+
+    # Simulate disconnected
+    cloud.iot.state = "disconnected"
+
+    # Not connected
+    with pytest.raises(CloudNotConnected):
+        await async_get_or_create_cloudhook(hass, webhook_id)
+
+
+async def test_cloud_logout(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+) -> None:
+    """Test cloud setup with existing config entry when user is logged out."""
+    assert cloud.is_logged_in is False
+
+    mock_config_entry = MockConfigEntry(domain=DOMAIN)
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    assert cloud.is_logged_in is False

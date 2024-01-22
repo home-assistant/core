@@ -1,5 +1,4 @@
 """Websocket API handlers for the logger integration."""
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -16,6 +15,7 @@ from .helpers import (
     LogPersistance,
     LogSettingsType,
     async_get_domain_config,
+    get_logger,
 )
 
 
@@ -27,9 +27,9 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, handle_module_log_level)
 
 
+@callback
 @websocket_api.websocket_command({vol.Required("type"): "logger/log_info"})
-@websocket_api.async_response
-async def handle_integration_log_info(
+def handle_integration_log_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations logger info."""
@@ -38,7 +38,7 @@ async def handle_integration_log_info(
         [
             {
                 "domain": integration,
-                "level": logging.getLogger(
+                "level": get_logger(
                     f"homeassistant.components.{integration}"
                 ).getEffectiveLevel(),
             }

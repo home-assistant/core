@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
-from huawei_lte_api.Session import GetResponseType
 from huawei_lte_api.exceptions import (
     LoginErrorPasswordWrongException,
     LoginErrorUsernamePasswordOverrunException,
@@ -16,7 +15,8 @@ from huawei_lte_api.exceptions import (
     LoginErrorUsernameWrongException,
     ResponseErrorException,
 )
-from requests.exceptions import Timeout
+from huawei_lte_api.Session import GetResponseType
+from requests.exceptions import SSLError, Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -44,7 +45,7 @@ from .const import (
     DEFAULT_UNAUTHENTICATED_MODE,
     DOMAIN,
 )
-from .utils import get_device_macs
+from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +82,13 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         ),
                     ): str,
                     vol.Optional(
+                        CONF_VERIFY_SSL,
+                        default=user_input.get(
+                            CONF_VERIFY_SSL,
+                            False,
+                        ),
+                    ): bool,
+                    vol.Optional(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
                     ): str,
                     vol.Optional(
@@ -111,7 +119,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def _try_connect(
+    async def _connect(
         self, user_input: dict[str, Any], errors: dict[str, str]
     ) -> Connection | None:
         """Try connecting with given data."""
@@ -119,11 +127,20 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input.get(CONF_PASSWORD) or ""
 
         def _get_connection() -> Connection:
+            if (
+                user_input[CONF_URL].startswith("https://")
+                and not user_input[CONF_VERIFY_SSL]
+            ):
+                requests_session = non_verifying_requests_session(user_input[CONF_URL])
+            else:
+                requests_session = None
+
             return Connection(
                 url=user_input[CONF_URL],
                 username=username,
                 password=password,
                 timeout=CONNECTION_TIMEOUT,
+                requests_session=requests_session,
             )
 
         conn = None
@@ -140,6 +157,12 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except ResponseErrorException:
             _LOGGER.warning("Response error", exc_info=True)
             errors["base"] = "response_error"
+        except SSLError:
+            _LOGGER.warning("SSL error", exc_info=True)
+            if user_input[CONF_VERIFY_SSL]:
+                errors[CONF_URL] = "ssl_error_try_unverified"
+            else:
+                errors[CONF_URL] = "ssl_error_try_plain"
         except Timeout:
             _LOGGER.warning("Connection timeout", exc_info=True)
             errors[CONF_URL] = "connection_timeout"
@@ -149,11 +172,12 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return conn
 
     @staticmethod
-    def _logout(conn: Connection) -> None:
+    def _disconnect(conn: Connection) -> None:
         try:
-            conn.user_session.user.logout()  # type: ignore[union-attr]
+            conn.close()
+            conn.requests_session.close()
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.debug("Could not logout", exc_info=True)
+            _LOGGER.debug("Disconnect error", exc_info=True)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -197,7 +221,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 wlan_settings = {}
             return device_info, wlan_settings
 
-        conn = await self._try_connect(user_input, errors)
+        conn = await self._connect(user_input, errors)
         if errors:
             return await self._async_show_user_form(
                 user_input=user_input, errors=errors
@@ -207,7 +231,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         info, wlan_settings = await self.hass.async_add_executor_job(
             get_device_info, conn
         )
-        await self.hass.async_add_executor_job(self._logout, conn)
+        await self.hass.async_add_executor_job(self._disconnect, conn)
 
         user_input.update(
             {
@@ -298,9 +322,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         new_data = {**entry.data, **user_input}
         errors: dict[str, str] = {}
-        conn = await self._try_connect(new_data, errors)
+        conn = await self._connect(new_data, errors)
         if conn:
-            await self.hass.async_add_executor_job(self._logout, conn)
+            await self.hass.async_add_executor_job(self._disconnect, conn)
         if errors:
             return await self._async_show_reauth_form(
                 user_input=user_input, errors=errors

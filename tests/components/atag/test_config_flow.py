@@ -1,6 +1,8 @@
 """Tests for the Atag config flow."""
 from unittest.mock import PropertyMock, patch
 
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.atag import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -8,6 +10,8 @@ from homeassistant.core import HomeAssistant
 from . import UID, USER_INPUT, init_integration, mock_connection
 
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_show_form(
@@ -27,7 +31,8 @@ async def test_adding_second_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that only one Atag configuration is allowed."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, unique_id=UID)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT
     )

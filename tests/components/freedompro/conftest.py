@@ -1,9 +1,10 @@
 """Fixtures for Freedompro integration tests."""
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -14,17 +15,26 @@ from .const import DEVICES, DEVICES_STATE
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.freedompro.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 @pytest.fixture(autouse=True)
 def mock_freedompro():
     """Mock freedompro get_list and get_states."""
     with patch(
-        "homeassistant.components.freedompro.get_list",
+        "homeassistant.components.freedompro.coordinator.get_list",
         return_value={
             "state": True,
             "devices": DEVICES,
         },
     ), patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=DEVICES_STATE,
     ):
         yield
@@ -62,13 +72,13 @@ async def init_integration_no_state(hass) -> MockConfigEntry:
     )
 
     with patch(
-        "homeassistant.components.freedompro.get_list",
+        "homeassistant.components.freedompro.coordinator.get_list",
         return_value={
             "state": True,
             "devices": DEVICES,
         },
     ), patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=[],
     ):
         entry.add_to_hass(hass)

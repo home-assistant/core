@@ -11,9 +11,13 @@ from homeassistant import config
 import homeassistant.components as comps
 from homeassistant.components.homeassistant import (
     ATTR_ENTRY_ID,
+    ATTR_SAFE_MODE,
     SERVICE_CHECK_CONFIG,
+    SERVICE_HOMEASSISTANT_RESTART,
+    SERVICE_HOMEASSISTANT_STOP,
     SERVICE_RELOAD_ALL,
     SERVICE_RELOAD_CORE_CONFIG,
+    SERVICE_RELOAD_CUSTOM_TEMPLATES,
     SERVICE_SET_LOCATION,
 )
 from homeassistant.const import (
@@ -21,8 +25,6 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     EVENT_CORE_CONFIG_UPDATE,
-    SERVICE_HOMEASSISTANT_RESTART,
-    SERVICE_HOMEASSISTANT_STOP,
     SERVICE_SAVE_PERSISTENT_STATES,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -304,6 +306,8 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     # Just to make sure that we are updating values.
     assert hass.config.latitude != 30
     assert hass.config.longitude != 40
+    elevation = hass.config.elevation
+    assert elevation != 50
     await hass.services.async_call(
         "homeassistant",
         "set_location",
@@ -313,6 +317,15 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     assert len(events) == 1
     assert hass.config.latitude == 30
     assert hass.config.longitude == 40
+    assert hass.config.elevation == elevation
+
+    await hass.services.async_call(
+        "homeassistant",
+        "set_location",
+        {"latitude": 30, "longitude": 40, "elevation": 50},
+        blocking=True,
+    )
+    assert hass.config.elevation == 50
 
 
 async def test_require_admin(
@@ -524,22 +537,32 @@ async def test_raises_when_config_is_invalid(
     assert mock_async_check_ha_config_file.called
 
 
-async def test_restart_homeassistant(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("service_data", "safe_mode_enabled"),
+    [({}, False), ({ATTR_SAFE_MODE: False}, False), ({ATTR_SAFE_MODE: True}, True)],
+)
+async def test_restart_homeassistant(
+    hass: HomeAssistant, service_data: dict, safe_mode_enabled: bool
+) -> None:
     """Test we can restart when there is no configuration error."""
     await async_setup_component(hass, "homeassistant", {})
     with patch(
         "homeassistant.config.async_check_ha_config_file", return_value=None
     ) as mock_check, patch(
+        "homeassistant.config.async_enable_safe_mode"
+    ) as mock_safe_mode, patch(
         "homeassistant.core.HomeAssistant.async_stop", return_value=None
     ) as mock_restart:
         await hass.services.async_call(
             "homeassistant",
             SERVICE_HOMEASSISTANT_RESTART,
+            service_data,
             blocking=True,
         )
         assert mock_check.called
         await hass.async_block_till_done()
         assert mock_restart.called
+        assert mock_safe_mode.called == safe_mode_enabled
 
 
 async def test_stop_homeassistant(hass: HomeAssistant) -> None:
@@ -575,6 +598,21 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
         assert mock_save.called
 
 
+async def test_reload_custom_templates(hass: HomeAssistant) -> None:
+    """Test we can call reload_custom_templates."""
+    await async_setup_component(hass, "homeassistant", {})
+    with patch(
+        "homeassistant.components.homeassistant.async_load_custom_templates",
+        return_value=None,
+    ) as mock_load_custom_templates:
+        await hass.services.async_call(
+            "homeassistant",
+            SERVICE_RELOAD_CUSTOM_TEMPLATES,
+            blocking=True,
+        )
+        assert mock_load_custom_templates.called
+
+
 async def test_reload_all(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -586,6 +624,7 @@ async def test_reload_all(
     notify = async_mock_service(hass, "notify", "reload")
     core_config = async_mock_service(hass, "homeassistant", "reload_core_config")
     themes = async_mock_service(hass, "frontend", "reload_themes")
+    jinja = async_mock_service(hass, "homeassistant", "reload_custom_templates")
 
     with patch(
         "homeassistant.config.async_check_ha_config_file",
@@ -632,3 +671,4 @@ async def test_reload_all(
     assert len(test2) == 1
     assert len(core_config) == 1
     assert len(themes) == 1
+    assert len(jinja) == 1

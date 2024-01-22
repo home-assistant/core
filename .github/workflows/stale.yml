@@ -11,16 +11,16 @@ jobs:
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
-      # The 90 day stale policy for PRs
+      # The 60 day stale policy for PRs
       # Used for:
       # - PRs
       # - No PRs marked as no-stale
       # - No issues (-1)
-      - name: 90 days stale PRs policy
-        uses: actions/stale@v7.0.0
+      - name: 60 days stale PRs policy
+        uses: actions/stale@v9.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 90
+          days-before-stale: 60
           days-before-close: 7
           days-before-issue-stale: -1
           days-before-issue-close: -1
@@ -33,7 +33,11 @@ jobs:
             pull request has been automatically marked as stale because of that
             and will be closed if no further activity occurs within 7 days.
 
-            Thank you for your contributions.
+            If you are the author of this PR, please leave a comment if you want
+            to keep it open. Also, please rebase your PR onto the latest dev
+            branch to ensure that it's up to date with the latest changes.
+
+            Thank you for your contribution!
 
       # Generate a token for the GitHub App, we use this method to avoid
       # hitting API limits for our GitHub actions + have a higher rate limit.
@@ -42,7 +46,7 @@ jobs:
         id: token
         # Pinned to a specific version of the action for security reasons
         # v1.7.0
-        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a
         with:
           app_id: ${{ secrets.ISSUE_TRIAGE_APP_ID }}
           private_key: ${{ secrets.ISSUE_TRIAGE_APP_PEM }}
@@ -53,7 +57,7 @@ jobs:
       # - No issues marked as no-stale or help-wanted
       # - No PRs (-1)
       - name: 90 days stale issues
-        uses: actions/stale@v7.0.0
+        uses: actions/stale@v9.0.0
         with:
           repo-token: ${{ steps.token.outputs.token }}
           days-before-stale: 90
@@ -83,7 +87,7 @@ jobs:
       # - No Issues marked as no-stale or help-wanted
       # - No PRs (-1)
       - name: Needs more information stale issues policy
-        uses: actions/stale@v7.0.0
+        uses: actions/stale@v9.0.0
         with:
           repo-token: ${{ steps.token.outputs.token }}
           only-labels: "needs-more-information"

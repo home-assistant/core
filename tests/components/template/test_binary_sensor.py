@@ -1,9 +1,11 @@
 """The tests for the Template Binary sensor platform."""
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import logging
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
 from homeassistant.components import binary_sensor, template
@@ -22,6 +24,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     assert_setup_component,
     async_fire_time_changed,
     mock_restore_cache,
@@ -120,6 +123,55 @@ async def test_setup(hass: HomeAssistant, start_ha, entity_id) -> None:
     assert state.name == "virtual thingy"
     assert state.state == ON
     assert state.attributes["device_class"] == "motion"
+
+
+@pytest.mark.parametrize(
+    "config_entry_extra_options",
+    [
+        {},
+        {"device_class": "battery"},
+    ],
+)
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry_extra_options: dict[str, str],
+) -> None:
+    """Test the config flow."""
+    state_template = (
+        "{{ states('binary_sensor.one') == 'on' or "
+        "   states('binary_sensor.two') == 'on' }}"
+    )
+    input_entities = ["one", "two"]
+    input_states = {"one": "on", "two": "off"}
+    template_type = binary_sensor.DOMAIN
+
+    for input_entity in input_entities:
+        hass.states.async_set(
+            f"{template_type}.{input_entity}",
+            input_states[input_entity],
+            {},
+        )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": state_template,
+            "template_type": template_type,
+        }
+        | config_entry_extra_options,
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{template_type}.my_template")
+    assert state is not None
+    assert state == snapshot
 
 
 @pytest.mark.parametrize("count", [0])
@@ -712,7 +764,7 @@ async def test_no_update_template_match_all(
 ) -> None:
     """Test that we do not update sensors that match on all."""
 
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     await setup.async_setup_component(
         hass,
@@ -1257,7 +1309,12 @@ async def test_trigger_entity_restore_state(
 )
 @pytest.mark.parametrize("restored_state", [ON, OFF])
 async def test_trigger_entity_restore_state_auto_off(
-    hass: HomeAssistant, count, domain, config, restored_state, freezer
+    hass: HomeAssistant,
+    count,
+    domain,
+    config,
+    restored_state,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test restoring trigger template binary sensor."""
 
@@ -1270,9 +1327,7 @@ async def test_trigger_entity_restore_state_auto_off(
     fake_extra_data = {
         "auto_off_time": {
             "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(
-                2022, 2, 2, 12, 2, 2, tzinfo=timezone.utc
-            ).isoformat(),
+            "isoformat": datetime(2022, 2, 2, 12, 2, 2, tzinfo=UTC).isoformat(),
         },
     }
     mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
@@ -1317,7 +1372,7 @@ async def test_trigger_entity_restore_state_auto_off(
     ],
 )
 async def test_trigger_entity_restore_state_auto_off_expired(
-    hass: HomeAssistant, count, domain, config, freezer
+    hass: HomeAssistant, count, domain, config, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test restoring trigger template binary sensor."""
 
@@ -1330,9 +1385,7 @@ async def test_trigger_entity_restore_state_auto_off_expired(
     fake_extra_data = {
         "auto_off_time": {
             "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(
-                2022, 2, 2, 12, 2, 0, tzinfo=timezone.utc
-            ).isoformat(),
+            "isoformat": datetime(2022, 2, 2, 12, 2, 0, tzinfo=UTC).isoformat(),
         },
     }
     mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))

@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from sfrbox_api.models import DslInfo, SystemInfo
+from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,14 +26,14 @@ from .models import DomainData
 _T = TypeVar("_T")
 
 
-@dataclass
+@dataclass(frozen=True)
 class SFRBoxBinarySensorMixin(Generic[_T]):
     """Mixin for SFR Box sensors."""
 
     value_fn: Callable[[_T], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SFRBoxBinarySensorEntityDescription(
     BinarySensorEntityDescription, SFRBoxBinarySensorMixin[_T]
 ):
@@ -42,10 +43,28 @@ class SFRBoxBinarySensorEntityDescription(
 DSL_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[DslInfo], ...] = (
     SFRBoxBinarySensorEntityDescription[DslInfo](
         key="status",
-        name="Status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x.status == "up",
+        translation_key="dsl_status",
+    ),
+)
+FTTH_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[FtthInfo], ...] = (
+    SFRBoxBinarySensorEntityDescription[FtthInfo](
+        key="status",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda x: x.status == "up",
+        translation_key="ftth_status",
+    ),
+)
+WAN_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[WanInfo], ...] = (
+    SFRBoxBinarySensorEntityDescription[WanInfo](
+        key="status",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda x: x.status == "up",
+        translation_key="wan_status",
     ),
 )
 
@@ -56,10 +75,20 @@ async def async_setup_entry(
     """Set up the sensors."""
     data: DomainData = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
-        SFRBoxBinarySensor(data.dsl, description, data.system.data)
-        for description in DSL_SENSOR_TYPES
+    entities: list[SFRBoxBinarySensor] = [
+        SFRBoxBinarySensor(data.wan, description, data.system.data)
+        for description in WAN_SENSOR_TYPES
     ]
+    if (net_infra := data.system.data.net_infra) == "adsl":
+        entities.extend(
+            SFRBoxBinarySensor(data.dsl, description, data.system.data)
+            for description in DSL_SENSOR_TYPES
+        )
+    elif net_infra == "ftth":
+        entities.extend(
+            SFRBoxBinarySensor(data.ftth, description, data.system.data)
+            for description in FTTH_SENSOR_TYPES
+        )
 
     async_add_entities(entities)
 
@@ -84,7 +113,9 @@ class SFRBoxBinarySensor(
         self._attr_unique_id = (
             f"{system_info.mac_addr}_{coordinator.name}_{description.key}"
         )
-        self._attr_device_info = {"identifiers": {(DOMAIN, system_info.mac_addr)}}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, system_info.mac_addr)},
+        )
 
     @property
     def is_on(self) -> bool | None:

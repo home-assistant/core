@@ -1,10 +1,12 @@
 """The islamic_prayer_times component."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from .const import DOMAIN
 from .coordinator import IslamicPrayerDataUpdateCoordinator
@@ -13,17 +15,60 @@ PLATFORMS = [Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Islamic Prayer Component."""
+
+    @callback
+    def update_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        if not entity_entry.unique_id.startswith(f"{config_entry.entry_id}-"):
+            new_unique_id = f"{config_entry.entry_id}-{entity_entry.unique_id}"
+            return {"new_unique_id": new_unique_id}
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
     coordinator = IslamicPrayerDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, coordinator)
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
     config_entry.async_on_unload(
         config_entry.add_update_listener(async_options_updated)
     )
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+    if config_entry.version == 1:
+        new = {**config_entry.data}
+        if config_entry.minor_version < 2:
+            lat = hass.config.latitude
+            lon = hass.config.longitude
+            new = {
+                CONF_LATITUDE: lat,
+                CONF_LONGITUDE: lon,
+            }
+            unique_id = f"{lat}-{lon}"
+        config_entry.version = 1
+        config_entry.minor_version = 2
+        hass.config_entries.async_update_entry(
+            config_entry, data=new, unique_id=unique_id
+        )
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
     return True
 
@@ -33,15 +78,19 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        coordinator: IslamicPrayerDataUpdateCoordinator = hass.data.pop(DOMAIN)
+        coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN].pop(
+            config_entry.entry_id
+        )
         if coordinator.event_unsub:
             coordinator.event_unsub()
+        if not hass.data[DOMAIN]:
+            del hass.data[DOMAIN]
     return unload_ok
 
 
 async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Triggered by config entry options updates."""
-    coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     if coordinator.event_unsub:
         coordinator.event_unsub()
     await coordinator.async_request_refresh()

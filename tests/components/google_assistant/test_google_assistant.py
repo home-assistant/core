@@ -1,26 +1,22 @@
 """The tests for the Google Assistant component."""
 from http import HTTPStatus
 import json
+from unittest.mock import patch
 
 from aiohttp.hdrs import AUTHORIZATION
 import pytest
 
 from homeassistant import const, core, setup
 from homeassistant.components import (
-    alarm_control_panel,
-    climate,
-    cover,
-    fan,
     google_assistant as ga,
     humidifier,
     light,
-    lock,
     media_player,
-    switch,
 )
 from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     EntityCategory,
+    Platform,
     UnitOfTemperature,
 )
 from homeassistant.helpers import entity_registry as er
@@ -65,6 +61,26 @@ def assistant_client(event_loop, hass, hass_client_no_auth):
     return loop.run_until_complete(hass_client_no_auth())
 
 
+@pytest.fixture(autouse=True)
+async def wanted_platforms_only() -> None:
+    """Enable only the wanted demo platforms."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [
+            Platform.ALARM_CONTROL_PANEL,
+            Platform.CLIMATE,
+            Platform.COVER,
+            Platform.FAN,
+            Platform.HUMIDIFIER,
+            Platform.LIGHT,
+            Platform.LOCK,
+            Platform.MEDIA_PLAYER,
+            Platform.SWITCH,
+        ],
+    ):
+        yield
+
+
 @pytest.fixture
 def hass_fixture(event_loop, hass):
     """Set up a Home Assistant instance for these tests."""
@@ -73,55 +89,7 @@ def hass_fixture(event_loop, hass):
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(setup.async_setup_component(hass, core.DOMAIN, {}))
 
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, light.DOMAIN, {"light": [{"platform": "demo"}]}
-        )
-    )
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, switch.DOMAIN, {"switch": [{"platform": "demo"}]}
-        )
-    )
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, cover.DOMAIN, {"cover": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, media_player.DOMAIN, {"media_player": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(hass, fan.DOMAIN, {"fan": [{"platform": "demo"}]})
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(hass, lock.DOMAIN, {"lock": [{"platform": "demo"}]})
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass,
-            alarm_control_panel.DOMAIN,
-            {"alarm_control_panel": [{"platform": "demo"}]},
-        )
-    )
+    loop.run_until_complete(setup.async_setup_component(hass, "demo", {}))
 
     return hass
 
@@ -383,11 +351,13 @@ async def test_query_humidifier_request(
         "on": True,
         "online": True,
         "humiditySetpointPercent": 68,
+        "humidityAmbientPercent": 45,
     }
     assert devices["humidifier.dehumidifier"] == {
         "on": True,
         "online": True,
         "humiditySetpointPercent": 54,
+        "humidityAmbientPercent": 59,
     }
     assert devices["humidifier.hygrostat"] == {
         "on": True,

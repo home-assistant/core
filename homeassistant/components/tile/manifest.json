@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pytile"],
-  "requirements": ["pytile==2022.02.0"]
+  "requirements": ["pytile==2023.04.0"]
 }

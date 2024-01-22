@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Generator, Iterable
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -14,6 +14,7 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
@@ -31,6 +32,8 @@ from homeassistant.components import (
     switch,
     timer,
     vacuum,
+    valve,
+    water_heater,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -247,6 +250,9 @@ class DisplayCategory:
     # Indicates a vacuum cleaner.
     VACUUM_CLEANER = "VACUUM_CLEANER"
 
+    # Indicates a water heater.
+    WATER_HEATER = "WATER_HEATER"
+
     # Indicates a network-connected wearable device, such as an Apple Watch,
     # Fitbit, or Samsung Gear.
     WEARABLE = "WEARABLE"
@@ -273,22 +279,23 @@ class AlexaEntity:
         self.entity_conf = config.entity_config.get(entity.entity_id, {})
 
     @property
-    def entity_id(self):
+    def entity_id(self) -> str:
         """Return the Entity ID."""
         return self.entity.entity_id
 
-    def friendly_name(self):
+    def friendly_name(self) -> str:
         """Return the Alexa API friendly name."""
-        return self.entity_conf.get(CONF_NAME, self.entity.name).translate(
-            TRANSLATION_TABLE
-        )
+        friendly_name: str = self.entity_conf.get(
+            CONF_NAME, self.entity.name
+        ).translate(TRANSLATION_TABLE)
+        return friendly_name
 
-    def description(self):
+    def description(self) -> str:
         """Return the Alexa API description."""
         description = self.entity_conf.get(CONF_DESCRIPTION) or self.entity_id
         return f"{description} via Home Assistant".translate(TRANSLATION_TABLE)
 
-    def alexa_id(self):
+    def alexa_id(self) -> str:
         """Return the Alexa API entity id."""
         return generate_alexa_id(self.entity.entity_id)
 
@@ -316,7 +323,7 @@ class AlexaEntity:
         """
         raise NotImplementedError
 
-    def serialize_properties(self):
+    def serialize_properties(self) -> Generator[dict[str, Any], None, None]:
         """Yield each supported property in API format."""
         for interface in self.interfaces():
             if not interface.properties_proactively_reported():
@@ -324,9 +331,9 @@ class AlexaEntity:
 
             yield from interface.serialize_properties()
 
-    def serialize_discovery(self):
+    def serialize_discovery(self) -> dict[str, Any]:
         """Serialize the entity for discovery."""
-        result = {
+        result: dict[str, Any] = {
             "displayCategories": self.display_categories(),
             "cookie": {},
             "endpointId": self.alexa_id(),
@@ -365,7 +372,7 @@ def async_get_entities(
     hass: HomeAssistant, config: AbstractConfig
 ) -> list[AlexaEntity]:
     """Return all entities that are supported by Alexa."""
-    entities = []
+    entities: list[AlexaEntity] = []
     for state in hass.states.async_all():
         if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             continue
@@ -454,23 +461,46 @@ class ButtonCapabilities(AlexaEntity):
 
 
 @ENTITY_ADAPTERS.register(climate.DOMAIN)
+@ENTITY_ADAPTERS.register(water_heater.DOMAIN)
 class ClimateCapabilities(AlexaEntity):
     """Class to represent Climate capabilities."""
 
     def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
+        if self.entity.domain == water_heater.DOMAIN:
+            return [DisplayCategory.WATER_HEATER]
         return [DisplayCategory.THERMOSTAT]
 
     def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         # If we support two modes, one being off, we allow turning on too.
-        if climate.HVACMode.OFF in self.entity.attributes.get(
-            climate.ATTR_HVAC_MODES, []
+        supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if (
+            self.entity.domain == climate.DOMAIN
+            and climate.HVACMode.OFF
+            in self.entity.attributes.get(climate.ATTR_HVAC_MODES, [])
+            or self.entity.domain == water_heater.DOMAIN
+            and (supported_features & water_heater.WaterHeaterEntityFeature.ON_OFF)
         ):
             yield AlexaPowerController(self.entity)
 
-        yield AlexaThermostatController(self.hass, self.entity)
-        yield AlexaTemperatureSensor(self.hass, self.entity)
+        if (
+            self.entity.domain == climate.DOMAIN
+            or self.entity.domain == water_heater.DOMAIN
+            and (
+                supported_features
+                & water_heater.WaterHeaterEntityFeature.OPERATION_MODE
+            )
+        ):
+            yield AlexaThermostatController(self.hass, self.entity)
+            yield AlexaTemperatureSensor(self.hass, self.entity)
+        if self.entity.domain == water_heater.DOMAIN and (
+            supported_features & water_heater.WaterHeaterEntityFeature.OPERATION_MODE
+        ):
+            yield AlexaModeController(
+                self.entity,
+                instance=f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}",
+            )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 
@@ -523,6 +553,26 @@ class CoverCapabilities(AlexaEntity):
             )
         if supported & cover.CoverEntityFeature.SET_TILT_POSITION:
             yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.entity)
+
+
+@ENTITY_ADAPTERS.register(event.DOMAIN)
+class EventCapabilities(AlexaEntity):
+    """Class to represent doorbel event capabilities."""
+
+    def default_display_categories(self) -> list[str] | None:
+        """Return the display categories for this entity."""
+        attrs = self.entity.attributes
+        device_class: event.EventDeviceClass | None = attrs.get(ATTR_DEVICE_CLASS)
+        if device_class == event.EventDeviceClass.DOORBELL:
+            return [DisplayCategory.DOORBELL]
+        return None
+
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
+        """Yield the supported interfaces."""
+        if self.default_display_categories() is not None:
+            yield AlexaDoorbellEventSource(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 
@@ -685,7 +735,8 @@ class MediaPlayerCapabilities(AlexaEntity):
 
         # AlexaEqualizerController is disabled for denonavr
         # since it blocks alexa from discovering any devices.
-        domain = entity_sources(self.hass).get(self.entity_id, {}).get("domain")
+        entity_info = entity_sources(self.hass).get(self.entity_id)
+        domain = entity_info["domain"] if entity_info else None
         if (
             supported & media_player.MediaPlayerEntityFeature.SELECT_SOUND_MODE
             and domain != "denonavr"
@@ -704,7 +755,7 @@ class MediaPlayerCapabilities(AlexaEntity):
 class SceneCapabilities(AlexaEntity):
     """Class to represent Scene capabilities."""
 
-    def description(self):
+    def description(self) -> str:
         """Return the Alexa API description."""
         description = AlexaEntity.description(self)
         if "scene" not in description.casefold():
@@ -922,6 +973,31 @@ class VacuumCapabilities(AlexaEntity):
                 self.entity, allow_remote_resume=support_resume
             )
 
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.entity)
+
+
+@ENTITY_ADAPTERS.register(valve.DOMAIN)
+class ValveCapabilities(AlexaEntity):
+    """Class to represent Valve capabilities."""
+
+    def default_display_categories(self) -> list[str]:
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
+        """Yield the supported interfaces."""
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & valve.ValveEntityFeature.SET_POSITION:
+            yield AlexaRangeController(
+                self.entity, instance=f"{valve.DOMAIN}.{valve.ATTR_POSITION}"
+            )
+        elif supported & (
+            valve.ValveEntityFeature.CLOSE | valve.ValveEntityFeature.OPEN
+        ):
+            yield AlexaModeController(self.entity, instance=f"{valve.DOMAIN}.state")
+        if supported & valve.ValveEntityFeature.STOP:
+            yield AlexaToggleController(self.entity, instance=f"{valve.DOMAIN}.stop")
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 

@@ -1,4 +1,6 @@
 """Tests for the Agent DVR config flow."""
+import pytest
+
 from homeassistant import data_entry_flow
 from homeassistant.components.agent_dvr import config_flow
 from homeassistant.components.agent_dvr.const import SERVER_URL
@@ -10,6 +12,8 @@ from . import init_integration
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:

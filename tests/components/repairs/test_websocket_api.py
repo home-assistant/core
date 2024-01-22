@@ -1,13 +1,10 @@
 """Test the repairs websocket API."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock
 
-from aiohttp import ClientWebSocketResponse
-from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -316,6 +313,7 @@ async def test_fix_issue(
         "flow_id": ANY,
         "handler": domain,
         "last_step": None,
+        "preview": None,
         "step_id": step,
         "type": "form",
     }
@@ -340,6 +338,7 @@ async def test_fix_issue(
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": domain,
+        "minor_version": 1,
         "type": "create_entry",
         "version": 1,
     }
@@ -432,7 +431,7 @@ async def test_step_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-@freeze_time("2022-07-19 07:53:05")
+@pytest.mark.freeze_time("2022-07-19 07:53:05")
 async def test_list_issues(
     hass: HomeAssistant, hass_storage: dict[str, Any], hass_ws_client
 ) -> None:
@@ -524,7 +523,7 @@ async def test_list_issues(
 async def test_fix_issue_aborted(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we can fix an issue."""
     assert await async_setup_component(hass, "http", {})

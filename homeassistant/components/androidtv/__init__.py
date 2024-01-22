@@ -1,4 +1,4 @@
-"""Support for functionality to interact with Android TV/Fire TV devices."""
+"""Support for functionality to interact with Android/Fire TV devices."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -28,7 +28,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -135,11 +135,11 @@ async def async_connect_androidtv(
     if not aftv.available:
         # Determine the name that will be used for the device in the log
         if config[CONF_DEVICE_CLASS] == DEVICE_ANDROIDTV:
-            device_name = "Android TV device"
+            device_name = "Android device"
         elif config[CONF_DEVICE_CLASS] == DEVICE_FIRETV:
             device_name = "Fire TV device"
         else:
-            device_name = "Android TV / Fire TV device"
+            device_name = "Android / Fire TV device"
 
         error_message = f"Could not connect to {device_name} at {address} {adb_log}"
         return None, error_message
@@ -148,7 +148,7 @@ async def async_connect_androidtv(
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Android TV platform."""
+    """Set up Android Debug Bridge platform."""
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
     if CONF_ADB_SERVER_IP not in entry.data:
@@ -166,8 +166,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not aftv:
         raise ConfigEntryNotReady(error_message)
 
-    async def async_close_connection(event):
-        """Close Android TV connection on HA Stop."""
+    async def async_close_connection(event: Event) -> None:
+        """Close Android Debug Bridge connection on HA Stop."""
         await aftv.adb_close()
 
     entry.async_on_unload(

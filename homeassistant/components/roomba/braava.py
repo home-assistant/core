@@ -29,6 +29,8 @@ SUPPORT_BRAAVA = SUPPORT_IROBOT | VacuumEntityFeature.FAN_SPEED
 class BraavaJet(IRobotVacuum):
     """Braava Jet."""
 
+    _attr_supported_features = SUPPORT_BRAAVA
+
     def __init__(self, roomba, blid):
         """Initialize the Roomba handler."""
         super().__init__(roomba, blid)
@@ -38,12 +40,7 @@ class BraavaJet(IRobotVacuum):
         for behavior in BRAAVA_MOP_BEHAVIORS:
             for spray in BRAAVA_SPRAY_AMOUNT:
                 speed_list.append(f"{behavior}-{spray}")
-        self._speed_list = speed_list
-
-    @property
-    def supported_features(self):
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_BRAAVA
+        self._attr_fan_speed_list = speed_list
 
     @property
     def fan_speed(self):
@@ -61,11 +58,6 @@ class BraavaJet(IRobotVacuum):
         # "disposable" and "reusable" values are always the same
         pad_wetness_value = pad_wetness.get("disposable")
         return f"{behavior}-{pad_wetness_value}"
-
-    @property
-    def fan_speed_list(self):
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        return self._speed_list
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""

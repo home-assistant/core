@@ -4,17 +4,17 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
+from dataclasses import fields
 import datetime
 from io import SEEK_END, BytesIO
 import logging
 from threading import Event
-from typing import Any, cast
+from typing import Any, Self, cast
 
-import attr
 import av
-from typing_extensions import Self
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import redact_credentials
 from .const import (
@@ -141,7 +141,7 @@ class StreamMuxer:
         self._part_has_keyframe = False
         self._stream_settings = stream_settings
         self._stream_state = stream_state
-        self._start_time = datetime.datetime.utcnow()
+        self._start_time = dt_util.utcnow()
 
     def make_new_av(
         self,
@@ -283,7 +283,7 @@ class StreamMuxer:
             init=read_init(self._memory_file),
             # Fetch the latest StreamOutputs, which may have changed since the
             # worker started.
-            stream_outputs=self._stream_state.outputs,
+            _stream_outputs=self._stream_state.outputs,
             start_time=self._start_time,
         )
         self._memory_file_pos = self._memory_file.tell()
@@ -537,7 +537,7 @@ def stream_worker(
         audio_stream = None
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
-        for field in attr.fields(StreamSettings):
+        for field in fields(StreamSettings):
             setattr(
                 stream_settings,
                 field.name,
@@ -624,4 +624,4 @@ def stream_worker(
             muxer.mux_packet(packet)
 
             if packet.is_keyframe and is_video(packet):
-                keyframe_converter.packet = packet
+                keyframe_converter.stash_keyframe_packet(packet)

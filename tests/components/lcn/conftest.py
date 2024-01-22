@@ -128,6 +128,6 @@ def get_device(hass, entry, address):
     """Get LCN device for specified address."""
     device_registry = dr.async_get(hass)
     identifiers = {(DOMAIN, generate_unique_id(entry.entry_id, address))}
-    device = device_registry.async_get_device(identifiers)
+    device = device_registry.async_get_device(identifiers=identifiers)
     assert device
     return device
