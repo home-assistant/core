@@ -91,26 +91,28 @@ async def setup_entity(
 ):
     """Set up entity and config entry."""
 
-    config_entry_oauth2_flow.async_register_implementation(
-        hass,
-        DOMAIN,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
-            hass,
-            DOMAIN,
-            "awfwf",
-            "afwfe",
-            "http://example/authorize",
-            "http://example/token",
-        ),
-    )
-
-    mower_data = mower_list_fixture
-    test_mower: MowerAttributes = mower_data[TEST_MOWER_ID]
-    test_mower.mower.activity = activity
-    test_mower.mower.state = state
-
-    mock_config_entry.add_to_hass(hass)
+    mower_data: MowerAttributes = mower_list_fixture[TEST_MOWER_ID]
+    mower_data.mower.activity = activity
+    mower_data.mower.state = state
+    config_entry: MockConfigEntry = mock_config_entry
+    config_entry.add_to_hass(hass)
     with patch(
+        "aioautomower.session.AutomowerSession",
+        return_value=AsyncMock(
+            name="AutomowerMockSession",
+            model=AutomowerSession,
+            data=mower_list_fixture,
+            register_data_callback=MagicMock(),
+            unregister_data_callback=MagicMock(),
+            connect=AsyncMock(),
+            resume_schedule=AsyncMock(),
+        ),
+    ), patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ), patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session",
+        return_value=AsyncMock(),
+    ), patch("jwt.decode", return_value=load_token_decoded_fixture), patch(
         "homeassistant.components.husqvarna_automower.coordinator.AutomowerDataUpdateCoordinator._async_update_data",
         return_value=mower_data,
     ):
