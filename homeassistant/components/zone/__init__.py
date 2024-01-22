@@ -132,6 +132,7 @@ def async_active_zone(
                     zone_attrs[ATTR_LONGITUDE],
                 )
             )
+            # Skip zone that are outside the radius
             or not (zone_dist - (radius := zone_attrs[ATTR_RADIUS]) < radius)
         ):
             continue
