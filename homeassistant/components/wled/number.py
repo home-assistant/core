@@ -50,7 +50,6 @@ NUMBERS = [
     WLEDNumberEntityDescription(
         key=ATTR_SPEED,
         translation_key="speed",
-        icon="mdi:speedometer",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
