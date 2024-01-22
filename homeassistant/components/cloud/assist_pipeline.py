@@ -81,13 +81,12 @@ async def async_migrate_cloud_pipeline_engine(
     # We need to make sure that that both stt and tts are loaded before this migration.
     # Assist pipeline will call default engine when setting up the store.
     # Wait for the stt or tts platform loaded event here.
-    kwargs: dict[str, str] = {}
     if platform == Platform.STT:
         wait_for_platform = Platform.TTS
-        kwargs["stt_engine"] = engine_id
+        pipeline_attribute = "stt_engine"
     elif platform == Platform.TTS:
         wait_for_platform = Platform.STT
-        kwargs["tts_engine"] = engine_id
+        pipeline_attribute = "tts_engine"
     else:
         raise ValueError(f"Invalid platform {platform}")
 
@@ -98,7 +97,8 @@ async def async_migrate_cloud_pipeline_engine(
     # is an after dependency of cloud
     await async_setup_pipeline_store(hass)
 
+    kwargs: dict[str, str] = {pipeline_attribute: engine_id}
     pipelines = async_get_pipelines(hass)
     for pipeline in pipelines:
-        if DOMAIN in (pipeline.stt_engine, pipeline.tts_engine):
+        if getattr(pipeline, pipeline_attribute) == DOMAIN:
             await async_update_pipeline(hass, pipeline, **kwargs)
