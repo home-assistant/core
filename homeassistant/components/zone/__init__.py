@@ -119,8 +119,11 @@ def async_active_zone(
     for entity_id in zone_entity_ids:
         if (
             not (zone := hass.states.get(entity_id))
+            # Skip unavailable zones
             or zone.state == STATE_UNAVAILABLE
+            # Skip passive zones
             or (zone_attrs := zone.attributes).get(ATTR_PASSIVE)
+            # Skip zones where we cannot calculate distance
             or (
                 zone_dist := distance(
                     latitude,
@@ -130,7 +133,7 @@ def async_active_zone(
                 )
             )
             is None
-            or (not zone_dist - (radius := zone_attrs[ATTR_RADIUS]) < radius)
+            or not (zone_dist - (radius := zone_attrs[ATTR_RADIUS]) < radius)
         ):
             continue
 
