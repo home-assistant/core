@@ -19,6 +19,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "mop_attached": {
+        "name": "Mop attached"
+      }
+    },
     "vacuum": {
       "vacuum": {
         "state_attributes": {
