@@ -525,6 +525,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="pcc_transfer_power_exchange",
         translation_key="pcc_transfer_power_exchange",
+        icon="mdi:transmission-tower",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getPointOfCommonCouplingTransferPowerExchange(),
@@ -532,6 +533,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="pcc_energy_consumption",
         translation_key="pcc_energy_consumption",
+        icon="mdi:transmission-tower-export",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_getter=lambda api: api.getPointOfCommonCouplingTransferConsumptionTotal(),
@@ -540,6 +542,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="pcc_energy_feed_in",
         translation_key="pcc_energy_feed_in",
+        icon="mdi:transmission-tower-import",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_getter=lambda api: api.getPointOfCommonCouplingTransferFeedInTotal(),
@@ -556,6 +559,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="photovoltaic_energy_production_today",
         translation_key="photovoltaic_energy_production_today",
+        icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentDay(),
