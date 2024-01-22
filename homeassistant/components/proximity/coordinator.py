@@ -204,38 +204,38 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         entities_data = self.data.entities
 
         # calculate distance for all tracked entities
-        for device in self.tracked_entities:
-            if (device_state := self.hass.states.get(device)) is None:
-                if entities_data.pop(device, None) is not None:
+        for entity_id in self.tracked_entities:
+            if (device_state := self.hass.states.get(entity_id)) is None:
+                if entities_data.pop(entity_id, None) is not None:
                     _LOGGER.debug(
-                        "%s: %s does not exist -> remove", self.friendly_name, device
+                        "%s: %s does not exist -> remove", self.friendly_name, entity_id
                     )
                 continue
 
-            if device not in entities_data:
-                _LOGGER.debug("%s: %s is new -> add", self.friendly_name, device)
-                entities_data[device] = {
+            if entity_id not in entities_data:
+                _LOGGER.debug("%s: %s is new -> add", self.friendly_name, entity_id)
+                entities_data[entity_id] = {
                     ATTR_DIST_TO: None,
                     ATTR_DIR_OF_TRAVEL: None,
                     ATTR_NAME: device_state.name,
                     ATTR_IN_IGNORED_ZONE: False,
                 }
-            entities_data[device][ATTR_IN_IGNORED_ZONE] = (
+            entities_data[entity_id][ATTR_IN_IGNORED_ZONE] = (
                 device_state.state.lower() in self.ignored_zones
             )
-            entities_data[device][ATTR_DIST_TO] = self._calc_distance_to_zone(
+            entities_data[entity_id][ATTR_DIST_TO] = self._calc_distance_to_zone(
                 zone_state,
                 device_state,
                 device_state.attributes.get(ATTR_LATITUDE),
                 device_state.attributes.get(ATTR_LONGITUDE),
             )
-            if entities_data[device][ATTR_DIST_TO] is None:
+            if entities_data[entity_id][ATTR_DIST_TO] is None:
                 _LOGGER.debug(
                     "%s: %s has unknown distance got -> direction_of_travel=None",
                     self.friendly_name,
-                    device,
+                    entity_id,
                 )
-                entities_data[device][ATTR_DIR_OF_TRAVEL] = None
+                entities_data[entity_id][ATTR_DIR_OF_TRAVEL] = None
 
         # calculate direction of travel only for last updated tracked entity
         if (state_change_data := self.state_change_data) is not None and (
