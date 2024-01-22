@@ -19,10 +19,10 @@
     "step": {
       "init": {
         "data": {
-          "forecast": "[%key:component::switch_as_x::config::step::user::data::invert%]"
+          "invert": "[%key:component::switch_as_x::config::step::user::data::invert%]"
         },
         "data_description": {
-          "forecast": "[%key:component::switch_as_x::config::step::user::data_description::invert%]"
+          "invert": "[%key:component::switch_as_x::config::step::user::data_description::invert%]"
         }
       }
     }
