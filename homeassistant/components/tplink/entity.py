@@ -50,8 +50,3 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
             sw_version=device.hw_info["sw_ver"],
             hw_version=device.hw_info["hw_ver"],
         )
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if switch is on."""
-        return bool(self.device.is_on)

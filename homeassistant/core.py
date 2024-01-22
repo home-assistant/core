@@ -1153,6 +1153,23 @@ _FilterableJobType = tuple[
 ]
 
 
+@dataclass(slots=True)
+class _OneTimeListener:
+    hass: HomeAssistant
+    listener: Callable[[Event], Coroutine[Any, Any, None] | None]
+    remove: CALLBACK_TYPE | None = None
+
+    @callback
+    def async_call(self, event: Event) -> None:
+        """Remove listener from event bus and then fire listener."""
+        if not self.remove:
+            # If the listener was already removed, we don't need to do anything
+            return
+        self.remove()
+        self.remove = None
+        self.hass.async_run_job(self.listener, event)
+
+
 class EventBus:
     """Allow the firing of and listening for events."""
 
@@ -1344,39 +1361,21 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        filterable_job: _FilterableJobType | None = None
-
-        @callback
-        def _onetime_listener(event: Event) -> None:
-            """Remove listener from event bus and then fire listener."""
-            nonlocal filterable_job
-            if hasattr(_onetime_listener, "run"):
-                return
-            # Set variable so that we will never run twice.
-            # Because the event bus loop might have async_fire queued multiple
-            # times, its possible this listener may already be lined up
-            # multiple times as well.
-            # This will make sure the second time it does nothing.
-            setattr(_onetime_listener, "run", True)
-            assert filterable_job is not None
-            self._async_remove_listener(event_type, filterable_job)
-            self._hass.async_run_job(listener, event)
-
-        functools.update_wrapper(
-            _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
-        )
-
-        filterable_job = (
-            HassJob(
-                _onetime_listener,
-                f"onetime listen {event_type} {listener}",
-                job_type=HassJobType.Callback,
+        one_time_listener = _OneTimeListener(self._hass, listener)
+        remove = self._async_listen_filterable_job(
+            event_type,
+            (
+                HassJob(
+                    one_time_listener.async_call,
+                    f"onetime listen {event_type} {listener}",
+                    job_type=HassJobType.Callback,
+                ),
+                None,
+                False,
             ),
-            None,
-            False,
         )
-
-        return self._async_listen_filterable_job(event_type, filterable_job)
+        one_time_listener.remove = remove
+        return remove
 
     @callback
     def _async_remove_listener(
