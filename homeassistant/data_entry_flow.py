@@ -316,6 +316,9 @@ class FlowManager(abc.ABC):
         result: FlowResult | None = None
         while not result or result["type"] == FlowResultType.SHOW_PROGRESS_DONE:
             result = await self._async_configure(flow_id, user_input)
+            flow = self._progress.get(flow_id)
+            if flow and flow.deprecated_show_progress:
+                break
         return result
 
     async def _async_configure(
@@ -540,6 +543,7 @@ class FlowHandler:
 
     __progress_task: asyncio.Task[Any] | None = None
     __no_progress_task_reported = False
+    deprecated_show_progress = False
 
     @property
     def source(self) -> str | None:
@@ -709,6 +713,9 @@ class FlowHandler:
                 cls.__name__,
                 report_issue,
             )
+
+        if progress_task is None:
+            self.deprecated_show_progress = True
 
         flow_result = FlowResult(
             type=FlowResultType.SHOW_PROGRESS,

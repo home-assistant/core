@@ -4144,3 +4144,46 @@ def test_raise_trying_to_add_same_config_entry_twice(
     entry.add_to_hass(hass)
     entry.add_to_hass(hass)
     assert f"An entry with the id {entry.entry_id} already exists" in caplog.text
+
+
+async def test_update_entry_and_reload(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test updating an entry and reloading."""
+    entry = MockConfigEntry(
+        domain="comp",
+        title="Test",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass, MockModule("comp", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_reauth(self, data):
+            """Mock Reauth."""
+            return self.async_update_reload_and_abort(
+                entry=entry,
+                title="Updated Title",
+                data={"vendor": "data2"},
+                options={"vendor": "options2"},
+            )
+
+    with patch.dict(config_entries.HANDLERS, {"comp": MockFlowHandler}):
+        task = await manager.flow.async_init("comp", context={"source": "reauth"})
+        await hass.async_block_till_done()
+
+        assert entry.title == "Updated Title"
+        assert entry.data == {"vendor": "data2"}
+        assert entry.options == {"vendor": "options2"}
+        assert entry.state == config_entries.ConfigEntryState.LOADED
+        assert task["type"] == FlowResultType.ABORT
+        assert task["reason"] == "reauth_successful"

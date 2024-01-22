@@ -18,6 +18,34 @@
       },
       "discovery_confirm": {
         "description": "Do you want to set up {name} {model} ({host})?"
+      },
+      "user_auth_confirm": {
+        "title": "Authenticate",
+        "description": "The device requires authentication, please input your credentials below.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "discovery_auth_confirm": {
+        "title": "Authenticate",
+        "description": "The device requires authentication, please input your credentials below.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The device needs updated credentials, please input your credentials below."
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The device needs updated credentials, please input your credentials below.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -25,7 +53,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
