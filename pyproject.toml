@@ -49,7 +49,7 @@ dependencies    = [
     "orjson==3.9.12",
     "packaging>=23.1",
     "pip>=21.3.1",
-    "python-slugify==4.0.1",
+    "python-slugify==8.0.1",
     "PyYAML==6.0.1",
     "requests==2.31.0",
     "typing-extensions>=4.9.0,<5.0",
