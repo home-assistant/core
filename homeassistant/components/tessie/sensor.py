@@ -38,11 +38,9 @@ from .entity import TessieEntity
 @callback
 def hours_to_datetime(value: StateType) -> datetime | None:
     """Convert relative hours into absolute datetime."""
-    return (
-        dt_util.now() + timedelta(hours=value)
-        if isinstance(value, (int, float)) and value > 0
-        else None
-    )
+    if isinstance(value, (int, float)) and value > 0:
+        return dt_util.now() + timedelta(hours=value)
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
