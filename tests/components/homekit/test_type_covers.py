@@ -610,7 +610,7 @@ async def test_windowcovering_basic_restore(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
 ) -> None:
     """Test setting up an entity from state in the event registry."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "cover",
@@ -648,7 +648,7 @@ async def test_windowcovering_restore(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
 ) -> None:
     """Test setting up an entity from state in the event entity_registry."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "cover",
