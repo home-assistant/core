@@ -15,17 +15,20 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from . import RainMachineData, RainMachineEntity
 from .const import DATA_RESTRICTIONS_UNIVERSAL, DOMAIN
-from .model import RainMachineEntityDescription
+from .model import (
+    RainMachineEntityDescription,
+    RainMachineEntityDescriptionMixinDataKey,
+)
 from .util import key_exists
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class RainMachineSelectDescription(
-    SelectEntityDescription, RainMachineEntityDescription
+    SelectEntityDescription,
+    RainMachineEntityDescription,
+    RainMachineEntityDescriptionMixinDataKey,
 ):
     """Describe a generic RainMachine select."""
-
-    data_key: str
 
 
 @dataclass
@@ -37,11 +40,18 @@ class FreezeProtectionSelectOption:
     metric_label: str
 
 
-@dataclass(frozen=True, kw_only=True)
-class FreezeProtectionSelectDescription(RainMachineSelectDescription):
-    """Describe a freeze protection temperature select."""
+@dataclass(frozen=True)
+class FreezeProtectionTemperatureMixin:
+    """Define an entity description mixin to include an options list."""
 
     extended_options: list[FreezeProtectionSelectOption]
+
+
+@dataclass(frozen=True)
+class FreezeProtectionSelectDescription(
+    RainMachineSelectDescription, FreezeProtectionTemperatureMixin
+):
+    """Describe a freeze protection temperature select."""
 
 
 TYPE_FREEZE_PROTECTION_TEMPERATURE = "freeze_protection_temperature"

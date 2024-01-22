@@ -46,4 +46,3 @@ MIN_SEEN_TRANSIENT_NEW = (
 
 CONF_IGNORE_ADDRESSES = "ignore_addresses"
 CONF_IGNORE_UUIDS = "ignore_uuids"
-CONF_ALLOW_NAMELESS_UUIDS = "allow_nameless_uuids"

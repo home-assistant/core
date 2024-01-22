@@ -48,9 +48,6 @@
       },
       "cost_year": {
         "name": "Yearly energy cost"
-      },
-      "power_usage": {
-        "name": "Power usage {sid}"
       }
     }
   }

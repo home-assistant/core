@@ -1,11 +1,11 @@
 """Base class for August entity."""
-from __future__ import annotations
+
 
 from abc import abstractmethod
 from datetime import datetime, timedelta
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
 
@@ -34,7 +34,7 @@ class AugustSubscriberMixin:
 
         self._subscriptions.setdefault(device_id, []).append(update_callback)
 
-        def _unsubscribe() -> None:
+        def _unsubscribe():
             self.async_unsubscribe_device_id(device_id, update_callback)
 
         return _unsubscribe
@@ -54,10 +54,9 @@ class AugustSubscriberMixin:
         )
 
         @callback
-        def _async_cancel_update_interval(_: Event) -> None:
+        def _async_cancel_update_interval(_):
             self._stop_interval = None
-            if self._unsub_interval:
-                self._unsub_interval()
+            self._unsub_interval()
 
         self._stop_interval = self._hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP, _async_cancel_update_interval

@@ -8,7 +8,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import MAC_ADDRESS, _mocked_bulb, _mocked_plug, _patch_connect, _patch_discovery
+from . import (
+    MAC_ADDRESS,
+    _mocked_bulb,
+    _mocked_plug,
+    _patch_discovery,
+    _patch_single_discovery,
+)
 
 from tests.common import MockConfigEntry
 
@@ -29,7 +35,7 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
         current=5,
     )
     bulb.emeter_today = 5000.0036
-    with _patch_discovery(device=bulb), _patch_connect(device=bulb):
+    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -69,7 +75,7 @@ async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
         current=5.035,
     )
     plug.emeter_today = None
-    with _patch_discovery(device=plug), _patch_connect(device=plug):
+    with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -97,7 +103,7 @@ async def test_color_light_no_emeter(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb()
     bulb.color_temp = None
     bulb.has_emeter = False
-    with _patch_discovery(device=bulb), _patch_connect(device=bulb):
+    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -133,7 +139,7 @@ async def test_sensor_unique_id(hass: HomeAssistant) -> None:
         current=5,
     )
     plug.emeter_today = None
-    with _patch_discovery(device=plug), _patch_connect(device=plug):
+    with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 

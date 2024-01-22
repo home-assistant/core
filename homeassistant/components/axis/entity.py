@@ -42,7 +42,7 @@ class AxisEntity(Entity):
         self.device = device
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(AXIS_DOMAIN, device.unique_id)},  # type: ignore[arg-type]
+            identifiers={(AXIS_DOMAIN, device.unique_id)},
             serial_number=device.unique_id,
         )
 

@@ -1,9 +1,6 @@
 """Provides a binary sensor which is a collection of ffmpeg tools."""
 from __future__ import annotations
 
-from typing import Any, TypeVar
-
-from haffmpeg.core import HAFFmpeg
 import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
@@ -17,7 +14,6 @@ from homeassistant.components.ffmpeg import (
     CONF_INITIAL_STATE,
     CONF_INPUT,
     FFmpegBase,
-    FFmpegManager,
     get_ffmpeg_manager,
 )
 from homeassistant.const import CONF_NAME, CONF_REPEAT
@@ -25,8 +21,6 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-_HAFFmpegT = TypeVar("_HAFFmpegT", bound=HAFFmpeg)
 
 CONF_RESET = "reset"
 CONF_CHANGES = "changes"
@@ -69,45 +63,43 @@ async def async_setup_platform(
     async_add_entities([entity])
 
 
-class FFmpegBinarySensor(FFmpegBase[_HAFFmpegT], BinarySensorEntity):
+class FFmpegBinarySensor(FFmpegBase, BinarySensorEntity):
     """A binary sensor which use FFmpeg for noise detection."""
 
-    def __init__(self, ffmpeg: _HAFFmpegT, config: dict[str, Any]) -> None:
+    def __init__(self, config):
         """Init for the binary sensor noise detection."""
-        super().__init__(ffmpeg, config[CONF_INITIAL_STATE])
+        super().__init__(config.get(CONF_INITIAL_STATE))
 
-        self._state: bool | None = False
+        self._state = False
         self._config = config
-        self._name: str = config[CONF_NAME]
+        self._name = config.get(CONF_NAME)
 
     @callback
-    def _async_callback(self, state: bool | None) -> None:
+    def _async_callback(self, state):
         """HA-FFmpeg callback for noise detection."""
         self._state = state
         self.async_write_ha_state()
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self):
         """Return true if the binary sensor is on."""
         return self._state
 
     @property
-    def name(self) -> str:
+    def name(self):
         """Return the name of the entity."""
         return self._name
 
 
-class FFmpegMotion(FFmpegBinarySensor[ffmpeg_sensor.SensorMotion]):
+class FFmpegMotion(FFmpegBinarySensor):
     """A binary sensor which use FFmpeg for noise detection."""
 
-    def __init__(
-        self, hass: HomeAssistant, manager: FFmpegManager, config: dict[str, Any]
-    ) -> None:
+    def __init__(self, hass, manager, config):
         """Initialize FFmpeg motion binary sensor."""
-        ffmpeg = ffmpeg_sensor.SensorMotion(manager.binary, self._async_callback)
-        super().__init__(ffmpeg, config)
+        super().__init__(config)
+        self.ffmpeg = ffmpeg_sensor.SensorMotion(manager.binary, self._async_callback)
 
-    async def _async_start_ffmpeg(self, entity_ids: list[str] | None) -> None:
+    async def _async_start_ffmpeg(self, entity_ids):
         """Start a FFmpeg instance.
 
         This method is a coroutine.
@@ -117,19 +109,19 @@ class FFmpegMotion(FFmpegBinarySensor[ffmpeg_sensor.SensorMotion]):
 
         # init config
         self.ffmpeg.set_options(
-            time_reset=self._config[CONF_RESET],
+            time_reset=self._config.get(CONF_RESET),
             time_repeat=self._config.get(CONF_REPEAT_TIME, 0),
             repeat=self._config.get(CONF_REPEAT, 0),
-            changes=self._config[CONF_CHANGES],
+            changes=self._config.get(CONF_CHANGES),
         )
 
         # run
         await self.ffmpeg.open_sensor(
-            input_source=self._config[CONF_INPUT],
+            input_source=self._config.get(CONF_INPUT),
             extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
         )
 
     @property
-    def device_class(self) -> BinarySensorDeviceClass:
+    def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return BinarySensorDeviceClass.MOTION

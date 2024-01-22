@@ -16,11 +16,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NotionEntity
 from .const import DOMAIN, SENSOR_MOLD, SENSOR_TEMPERATURE
-from .model import NotionEntityDescription
+from .model import NotionEntityDescriptionMixin
 
 
-@dataclass(frozen=True, kw_only=True)
-class NotionSensorDescription(SensorEntityDescription, NotionEntityDescription):
+@dataclass(frozen=True)
+class NotionSensorDescription(SensorEntityDescription, NotionEntityDescriptionMixin):
     """Describe a Notion sensor."""
 
 

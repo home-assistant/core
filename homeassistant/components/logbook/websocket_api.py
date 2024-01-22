@@ -16,7 +16,7 @@ from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.json import JSON_DUMP
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -70,7 +70,7 @@ def _async_send_empty_response(
     stream_end_time = end_time or dt_util.utcnow()
     empty_stream_message = _generate_stream_message([], start_time, stream_end_time)
     empty_response = messages.event_message(msg_id, empty_stream_message)
-    connection.send_message(json_bytes(empty_response))
+    connection.send_message(JSON_DUMP(empty_response))
 
 
 async def _async_send_historical_events(
@@ -165,7 +165,7 @@ async def _async_get_ws_stream_events(
     formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
-) -> tuple[bytes, dt | None]:
+) -> tuple[str, dt | None]:
     """Async wrapper around _ws_formatted_get_events."""
     return await get_instance(hass).async_add_executor_job(
         _ws_stream_get_events,
@@ -196,7 +196,7 @@ def _ws_stream_get_events(
     formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
-) -> tuple[bytes, dt | None]:
+) -> tuple[str, dt | None]:
     """Fetch events and convert them to json in the executor."""
     events = event_processor.get_events(start_day, end_day)
     last_time = None
@@ -209,7 +209,7 @@ def _ws_stream_get_events(
         # data in case the UI needs to show that historical
         # data is still loading in the future
         message["partial"] = True
-    return json_bytes(formatter(msg_id, message)), last_time
+    return JSON_DUMP(formatter(msg_id, message)), last_time
 
 
 async def _async_events_consumer(
@@ -238,7 +238,7 @@ async def _async_events_consumer(
             async_event_to_row(e) for e in events
         ):
             connection.send_message(
-                json_bytes(
+                JSON_DUMP(
                     messages.event_message(
                         msg_id,
                         {"events": logbook_events},
@@ -435,9 +435,9 @@ def _ws_formatted_get_events(
     start_time: dt,
     end_time: dt,
     event_processor: EventProcessor,
-) -> bytes:
+) -> str:
     """Fetch events and convert them to json in the executor."""
-    return json_bytes(
+    return JSON_DUMP(
         messages.result_message(
             msg_id, event_processor.get_events(start_time, end_time)
         )

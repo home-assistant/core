@@ -36,7 +36,6 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     UnitOfTemperature,
     __version__,
 )
@@ -507,7 +506,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         _LOGGER.debug("New_state: %s", new_state)
         # HomeKit handles unavailable state via the available property
         # so we should not propagate it here
-        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if new_state is None or new_state.state == STATE_UNAVAILABLE:
             return
         battery_state = None
         battery_charging_state = None

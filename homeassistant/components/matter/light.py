@@ -89,10 +89,6 @@ class MatterLight(MatterEntity, LightEntity):
                 colorY=int(matter_xy[1]),
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
-                # allow setting the color while the light is off,
-                # by setting the optionsMask to 1 (=ExecuteIfOff)
-                optionsMask=1,
-                optionsOverride=1,
             )
         )
 
@@ -107,10 +103,6 @@ class MatterLight(MatterEntity, LightEntity):
                 saturation=int(matter_hs[1]),
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
-                # allow setting the color while the light is off,
-                # by setting the optionsMask to 1 (=ExecuteIfOff)
-                optionsMask=1,
-                optionsOverride=1,
             )
         )
 
@@ -122,10 +114,6 @@ class MatterLight(MatterEntity, LightEntity):
                 colorTemperatureMireds=color_temp,
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
-                # allow setting the color while the light is off,
-                # by setting the optionsMask to 1 (=ExecuteIfOff)
-                optionsMask=1,
-                optionsOverride=1,
             )
         )
 

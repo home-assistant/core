@@ -13,11 +13,9 @@ import voluptuous as vol
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-
-KeyType = tuple[str, tuple[str, int], str | None]
 
 CONF_MAX_ENTRIES = "max_entries"
 CONF_FIRE_EVENT = "fire_event"
@@ -62,7 +60,7 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 
 
 def _figure_out_source(
-    record: logging.LogRecord, paths_re: re.Pattern[str]
+    record: logging.LogRecord, paths_re: re.Pattern
 ) -> tuple[str, int]:
     """Figure out where a log message came from."""
     # If a stack trace exists, extract file names from the entire call stack.
@@ -186,7 +184,7 @@ class LogEntry:
         self.count = 1
         self.key = (self.name, source, self.root_cause)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self):
         """Convert object into dict to maintain backward compatibility."""
         return {
             "name": self.name,
@@ -200,10 +198,10 @@ class LogEntry:
         }
 
 
-class DedupStore(OrderedDict[KeyType, LogEntry]):
+class DedupStore(OrderedDict):
     """Data store to hold max amount of deduped entries."""
 
-    def __init__(self, maxlen: int = 50) -> None:
+    def __init__(self, maxlen=50):
         """Initialize a new DedupStore."""
         super().__init__()
         self.maxlen = maxlen
@@ -229,7 +227,7 @@ class DedupStore(OrderedDict[KeyType, LogEntry]):
             # Removes the first record which should also be the oldest
             self.popitem(last=False)
 
-    def to_list(self) -> list[dict[str, Any]]:
+    def to_list(self):
         """Return reversed list of log entries - LIFO."""
         return [value.to_dict() for value in reversed(self.values())]
 
@@ -238,11 +236,7 @@ class LogErrorHandler(logging.Handler):
     """Log handler for error messages."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        maxlen: int,
-        fire_event: bool,
-        paths_re: re.Pattern[str],
+        self, hass: HomeAssistant, maxlen: int, fire_event: bool, paths_re: re.Pattern
     ) -> None:
         """Initialize a new LogErrorHandler."""
         super().__init__()
@@ -282,7 +276,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = handler
 
     @callback
-    def _async_stop_handler(_: Event) -> None:
+    def _async_stop_handler(_) -> None:
         """Cleanup handler."""
         logging.root.removeHandler(handler)
         del hass.data[DOMAIN]

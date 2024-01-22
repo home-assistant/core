@@ -24,7 +24,10 @@ ATTR_LEVEL = "level"
 ATTR_TYPE = "type_value"
 
 # Service names
+SERVICE_PTZ = "ptz"
+SERVICE_ALARM_TRIGGER = "sound_alarm"
 SERVICE_WAKE_DEVICE = "wake_device"
+SERVICE_ALARM_SOUND = "alarm_sound"
 SERVICE_DETECTION_SENSITIVITY = "set_alarm_detection_sensibility"
 
 # Defaults

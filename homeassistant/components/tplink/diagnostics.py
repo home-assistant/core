@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
-from .models import TPLinkData
+from .coordinator import TPLinkDataUpdateCoordinator
 
 TO_REDACT = {
     # Entry fields
@@ -36,8 +36,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: TPLinkData = hass.data[DOMAIN][entry.entry_id]
-    coordinator = data.parent_coordinator
+    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     oui = format_mac(coordinator.device.mac)[:8].upper()
     return async_redact_data(
         {"device_last_response": coordinator.device.internal_state, "oui": oui},

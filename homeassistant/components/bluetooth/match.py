@@ -237,12 +237,10 @@ class BluetoothMatcherIndexBase(Generic[_T]):
     def match(self, service_info: BluetoothServiceInfoBleak) -> list[_T]:
         """Check for a match."""
         matches = []
-        if (name := service_info.name) and (
-            local_name_matchers := self.local_name.get(
-                name[:LOCAL_NAME_MIN_MATCH_LENGTH]
-            )
-        ):
-            for matcher in local_name_matchers:
+        if service_info.name and len(service_info.name) >= LOCAL_NAME_MIN_MATCH_LENGTH:
+            for matcher in self.local_name.get(
+                service_info.name[:LOCAL_NAME_MIN_MATCH_LENGTH], []
+            ):
                 if ble_device_matches(matcher, service_info):
                     matches.append(matcher)
 
@@ -353,6 +351,11 @@ def _local_name_to_index_key(local_name: str) -> str:
     if they try to setup a matcher that will is overly broad
     as would match too many devices and cause a performance hit.
     """
+    if len(local_name) < LOCAL_NAME_MIN_MATCH_LENGTH:
+        raise ValueError(
+            "Local name matchers must be at least "
+            f"{LOCAL_NAME_MIN_MATCH_LENGTH} characters long ({local_name})"
+        )
     match_part = local_name[:LOCAL_NAME_MIN_MATCH_LENGTH]
     if "*" in match_part or "[" in match_part:
         raise ValueError(
@@ -374,29 +377,35 @@ def ble_device_matches(
     if matcher.get(CONNECTABLE, True) and not service_info.connectable:
         return False
 
+    advertisement_data = service_info.advertisement
     if (
         service_uuid := matcher.get(SERVICE_UUID)
-    ) and service_uuid not in service_info.service_uuids:
+    ) and service_uuid not in advertisement_data.service_uuids:
         return False
 
     if (
         service_data_uuid := matcher.get(SERVICE_DATA_UUID)
-    ) and service_data_uuid not in service_info.service_data:
+    ) and service_data_uuid not in advertisement_data.service_data:
         return False
 
-    if manufacturer_id := matcher.get(MANUFACTURER_ID):
-        if manufacturer_id not in service_info.manufacturer_data:
+    if manfacturer_id := matcher.get(MANUFACTURER_ID):
+        if manfacturer_id not in advertisement_data.manufacturer_data:
             return False
-
         if manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START):
-            if not service_info.manufacturer_data[manufacturer_id].startswith(
-                bytes(manufacturer_data_start)
+            manufacturer_data_start_bytes = bytearray(manufacturer_data_start)
+            if not any(
+                manufacturer_data.startswith(manufacturer_data_start_bytes)
+                for manufacturer_data in advertisement_data.manufacturer_data.values()
             ):
                 return False
 
-    if (local_name := matcher.get(LOCAL_NAME)) and not _memorized_fnmatch(
-        service_info.name,
-        local_name,
+    if (local_name := matcher.get(LOCAL_NAME)) and (
+        (device_name := advertisement_data.local_name or service_info.device.name)
+        is None
+        or not _memorized_fnmatch(
+            device_name,
+            local_name,
+        )
     ):
         return False
 

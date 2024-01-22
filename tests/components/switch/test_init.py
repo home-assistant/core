@@ -9,11 +9,7 @@ from homeassistant.setup import async_setup_component
 
 from . import common
 
-from tests.common import (
-    MockUser,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
-)
+from tests.common import MockUser, import_and_test_deprecated_constant_enum
 
 
 @pytest.fixture(autouse=True)
@@ -84,11 +80,6 @@ async def test_switch_context(
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(switch)
 
 
 @pytest.mark.parametrize(("enum"), list(switch.SwitchDeviceClass))

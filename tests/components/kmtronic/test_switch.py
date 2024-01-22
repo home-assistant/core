@@ -39,18 +39,15 @@ async def test_relay_on_off(
         text="",
     )
 
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == "off"
 
     await hass.services.async_call(
-        "switch",
-        "turn_on",
-        {"entity_id": "switch.controller_1_1_1_1_relay_1"},
-        blocking=True,
+        "switch", "turn_on", {"entity_id": "switch.relay1"}, blocking=True
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == "on"
 
     # Mocks the response for turning a relay1 off
@@ -60,14 +57,11 @@ async def test_relay_on_off(
     )
 
     await hass.services.async_call(
-        "switch",
-        "turn_off",
-        {"entity_id": "switch.controller_1_1_1_1_relay_1"},
-        blocking=True,
+        "switch", "turn_off", {"entity_id": "switch.relay1"}, blocking=True
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == "off"
 
     # Mocks the response for turning a relay1 on
@@ -77,14 +71,11 @@ async def test_relay_on_off(
     )
 
     await hass.services.async_call(
-        "switch",
-        "toggle",
-        {"entity_id": "switch.controller_1_1_1_1_relay_1"},
-        blocking=True,
+        "switch", "toggle", {"entity_id": "switch.relay1"}, blocking=True
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == "on"
 
 
@@ -104,7 +95,7 @@ async def test_update(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert await async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == "off"
 
     aioclient_mock.clear_requests()
@@ -115,7 +106,7 @@ async def test_update(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     async_fire_time_changed(hass, future)
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == "on"
 
 
@@ -137,7 +128,7 @@ async def test_failed_update(
     assert await async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == "off"
 
     aioclient_mock.clear_requests()
@@ -149,7 +140,7 @@ async def test_failed_update(
     async_fire_time_changed(hass, future)
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == STATE_UNAVAILABLE
 
     future += timedelta(minutes=10)
@@ -161,7 +152,7 @@ async def test_failed_update(
     async_fire_time_changed(hass, future)
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -189,18 +180,15 @@ async def test_relay_on_off_reversed(
         text="",
     )
 
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == "on"
 
     await hass.services.async_call(
-        "switch",
-        "turn_off",
-        {"entity_id": "switch.controller_1_1_1_1_relay_1"},
-        blocking=True,
+        "switch", "turn_off", {"entity_id": "switch.relay1"}, blocking=True
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == "off"
 
     # Mocks the response for turning a relay1 off
@@ -210,12 +198,9 @@ async def test_relay_on_off_reversed(
     )
 
     await hass.services.async_call(
-        "switch",
-        "turn_on",
-        {"entity_id": "switch.controller_1_1_1_1_relay_1"},
-        blocking=True,
+        "switch", "turn_on", {"entity_id": "switch.relay1"}, blocking=True
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.controller_1_1_1_1_relay_1")
+    state = hass.states.get("switch.relay1")
     assert state.state == "on"

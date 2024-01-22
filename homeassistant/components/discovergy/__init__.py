@@ -1,9 +1,12 @@
 """The Discovergy integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
+from pydiscovergy.models import Meter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
@@ -17,21 +20,35 @@ from .coordinator import DiscovergyUpdateCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
+@dataclass
+class DiscovergyData:
+    """Discovergy data class to share meters and api client."""
+
+    api_client: Discovergy
+    meters: list[Meter]
+    coordinators: dict[str, DiscovergyUpdateCoordinator]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Discovergy from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    client = Discovergy(
-        email=entry.data[CONF_EMAIL],
-        password=entry.data[CONF_PASSWORD],
-        httpx_client=get_async_client(hass),
-        authentication=BasicAuth(),
+    # init discovergy data class
+    discovergy_data = DiscovergyData(
+        api_client=Discovergy(
+            email=entry.data[CONF_EMAIL],
+            password=entry.data[CONF_PASSWORD],
+            httpx_client=get_async_client(hass),
+            authentication=BasicAuth(),
+        ),
+        meters=[],
+        coordinators={},
     )
 
     try:
         # try to get meters from api to check if credentials are still valid and for later use
         # if no exception is raised everything is fine to go
-        meters = await client.meters()
+        discovergy_data.meters = await discovergy_data.api_client.meters()
     except discovergyError.InvalidLogin as err:
         raise ConfigEntryAuthFailed("Invalid email or password") from err
     except Exception as err:
@@ -40,19 +57,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
 
     # Init coordinators for meters
-    coordinators = []
-    for meter in meters:
+    for meter in discovergy_data.meters:
         # Create coordinator for meter, set config entry and fetch initial data,
         # so we have data when entities are added
         coordinator = DiscovergyUpdateCoordinator(
             hass=hass,
             meter=meter,
-            discovergy_client=client,
+            discovergy_client=discovergy_data.api_client,
         )
         await coordinator.async_config_entry_first_refresh()
-        coordinators.append(coordinator)
 
-    hass.data[DOMAIN][entry.entry_id] = coordinators
+        discovergy_data.coordinators[meter.meter_id] = coordinator
+
+    hass.data[DOMAIN][entry.entry_id] = discovergy_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

@@ -2,7 +2,6 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import TadoConnector
 from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
 
 
@@ -12,7 +11,7 @@ class TadoDeviceEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, device_info: dict[str, str]) -> None:
+    def __init__(self, device_info):
         """Initialize a Tado device."""
         super().__init__()
         self._device_info = device_info
@@ -35,7 +34,7 @@ class TadoHomeEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, tado: TadoConnector) -> None:
+    def __init__(self, tado):
         """Initialize a Tado home."""
         super().__init__()
         self.home_name = tado.home_name
@@ -55,7 +54,7 @@ class TadoZoneEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, zone_name: str, home_id: int, zone_id: int) -> None:
+    def __init__(self, zone_name, home_id, zone_id):
         """Initialize a Tado zone."""
         super().__init__()
         self.zone_name = zone_name

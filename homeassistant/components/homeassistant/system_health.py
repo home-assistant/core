@@ -1,8 +1,4 @@
 """Provide info to system health."""
-from __future__ import annotations
-
-from typing import Any
-
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import system_info
@@ -16,7 +12,7 @@ def async_register(
     register.async_register_info(system_health_info)
 
 
-async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
+async def system_health_info(hass):
     """Get info for the info page."""
     info = await system_info.async_get_system_info(hass)
 

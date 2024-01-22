@@ -1,12 +1,9 @@
 """Integrate with DuckDNS."""
-from __future__ import annotations
-
-from collections.abc import Callable, Coroutine, Sequence
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
-from aiohttp import ClientSession
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
@@ -53,11 +50,11 @@ SERVICE_TXT_SCHEMA = vol.Schema({vol.Required(ATTR_TXT): vol.Any(None, cv.string
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the DuckDNS component."""
-    domain: str = config[DOMAIN][CONF_DOMAIN]
-    token: str = config[DOMAIN][CONF_ACCESS_TOKEN]
+    domain = config[DOMAIN][CONF_DOMAIN]
+    token = config[DOMAIN][CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
-    async def update_domain_interval(_now: datetime) -> bool:
+    async def update_domain_interval(_now):
         """Update the DuckDNS entry."""
         return await _update_duckdns(session, domain, token)
 
@@ -84,14 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 _SENTINEL = object()
 
 
-async def _update_duckdns(
-    session: ClientSession,
-    domain: str,
-    token: str,
-    *,
-    txt: str | None | object = _SENTINEL,
-    clear: bool = False,
-) -> bool:
+async def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False):
     """Update DuckDNS."""
     params = {"domains": domain, "token": token}
 
@@ -101,7 +91,7 @@ async def _update_duckdns(
             params["txt"] = ""
             clear = True
         else:
-            params["txt"] = cast(str, txt)
+            params["txt"] = txt
 
     if clear:
         params["clear"] = "true"
@@ -121,9 +111,11 @@ async def _update_duckdns(
 def async_track_time_interval_backoff(
     hass: HomeAssistant,
     action: Callable[[datetime], Coroutine[Any, Any, bool]],
-    intervals: Sequence[timedelta],
+    intervals,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
+    if not isinstance(intervals, (list, tuple)):
+        intervals = (intervals,)
     remove: CALLBACK_TYPE | None = None
     failed = 0
 

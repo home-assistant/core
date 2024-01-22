@@ -8,7 +8,7 @@ from aemet_opendata.helpers import dict_nested_value
 from homeassistant.components.weather import Forecast
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import WeatherUpdateCoordinator
+from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
 class AemetEntity(CoordinatorEntity[WeatherUpdateCoordinator]):

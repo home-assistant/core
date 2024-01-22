@@ -79,6 +79,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
+      'icon': 'mdi:cloud',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
@@ -108,7 +109,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:cloud',
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -154,6 +155,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Switch lock',
+      'icon': 'mdi:lock-open',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_switch_lock',
@@ -183,7 +185,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:lock-open',
     'original_name': 'Switch lock',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -229,6 +231,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
+      'icon': 'mdi:cloud',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
@@ -258,7 +261,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:cloud',
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -304,6 +307,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
+      'icon': 'mdi:cloud',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
@@ -333,7 +337,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:cloud',
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,

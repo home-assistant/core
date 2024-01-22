@@ -114,7 +114,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         store = Store[dict[str, Any]](self.hass, STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(token_info)
 
-        return token_info  # type: ignore[no-any-return]
+        return token_info
 
     def _generate_view(self) -> None:
         self.hass.http.register_view(AmbiclimateAuthCallbackView())
@@ -132,12 +132,12 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             clientsession,
         )
 
-    def _cb_url(self) -> str:
+    def _cb_url(self):
         return f"{get_url(self.hass, prefer_external=True)}{AUTH_CALLBACK_PATH}"
 
-    async def _get_authorize_url(self) -> str:
+    async def _get_authorize_url(self):
         oauth = self._generate_oauth()
-        return oauth.get_authorize_url()  # type: ignore[no-any-return]
+        return oauth.get_authorize_url()
 
 
 class AmbiclimateAuthCallbackView(HomeAssistantView):

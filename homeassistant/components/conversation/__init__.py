@@ -8,7 +8,6 @@ import logging
 import re
 from typing import Any, Literal
 
-from aiohttp import web
 from hassil.recognize import RecognizeResult
 import voluptuous as vol
 
@@ -43,7 +42,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_TEXT = "text"
 ATTR_LANGUAGE = "language"
 ATTR_AGENT_ID = "agent_id"
-ATTR_CONVERSATION_ID = "conversation_id"
 
 DOMAIN = "conversation"
 
@@ -68,7 +66,6 @@ SERVICE_PROCESS_SCHEMA = vol.Schema(
         vol.Required(ATTR_TEXT): cv.string,
         vol.Optional(ATTR_LANGUAGE): cv.string,
         vol.Optional(ATTR_AGENT_ID): agent_id_validator,
-        vol.Optional(ATTR_CONVERSATION_ID): cv.string,
     }
 )
 
@@ -109,7 +106,7 @@ def async_set_agent(
     hass: core.HomeAssistant,
     config_entry: ConfigEntry,
     agent: AbstractConversationAgent,
-) -> None:
+):
     """Set the agent to handle the conversations."""
     _get_agent_manager(hass).async_set_agent(config_entry.entry_id, agent)
 
@@ -119,7 +116,7 @@ def async_set_agent(
 def async_unset_agent(
     hass: core.HomeAssistant,
     config_entry: ConfigEntry,
-) -> None:
+):
     """Set the agent to handle the conversations."""
     _get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
@@ -134,7 +131,7 @@ async def async_get_conversation_languages(
     all conversation agents.
     """
     agent_manager = _get_agent_manager(hass)
-    languages: set[str] = set()
+    languages = set()
 
     agent_ids: Iterable[str]
     if agent_id is None:
@@ -167,7 +164,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             result = await async_converse(
                 hass=hass,
                 text=text,
-                conversation_id=service.data.get(ATTR_CONVERSATION_ID),
+                conversation_id=None,
                 context=service.context,
                 language=service.data.get(ATTR_LANGUAGE),
                 agent_id=service.data.get(ATTR_AGENT_ID),
@@ -409,7 +406,7 @@ class ConversationProcessView(http.HomeAssistantView):
             }
         )
     )
-    async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
+    async def post(self, request, data):
         """Send a request for processing."""
         hass = request.app["hass"]
 

@@ -65,6 +65,7 @@ SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="main_brush_time_left",
+        icon="mdi:brush",
         device_class=SensorDeviceClass.DURATION,
         translation_key="main_brush_time_left",
         value_fn=lambda data: data.consumable.main_brush_time_left,
@@ -74,6 +75,7 @@ SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="side_brush_time_left",
+        icon="mdi:brush",
         device_class=SensorDeviceClass.DURATION,
         translation_key="side_brush_time_left",
         value_fn=lambda data: data.consumable.side_brush_time_left,
@@ -83,6 +85,7 @@ SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="filter_time_left",
+        icon="mdi:air-filter",
         device_class=SensorDeviceClass.DURATION,
         translation_key="filter_time_left",
         value_fn=lambda data: data.consumable.filter_time_left,
@@ -92,6 +95,7 @@ SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="sensor_time_left",
+        icon="mdi:eye-outline",
         device_class=SensorDeviceClass.DURATION,
         translation_key="sensor_time_left",
         value_fn=lambda data: data.consumable.sensor_time_left,
@@ -109,12 +113,14 @@ SENSOR_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="total_cleaning_time",
         translation_key="total_cleaning_time",
+        icon="mdi:history",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.clean_summary.clean_time,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
         key="status",
+        icon="mdi:information-outline",
         device_class=SensorDeviceClass.ENUM,
         translation_key="status",
         value_fn=lambda data: data.status.state_name,
@@ -124,6 +130,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescription(
         key="cleaning_area",
+        icon="mdi:texture-box",
         translation_key="cleaning_area",
         value_fn=lambda data: data.status.square_meter_clean_area,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -131,6 +138,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescription(
         key="total_cleaning_area",
+        icon="mdi:texture-box",
         translation_key="total_cleaning_area",
         value_fn=lambda data: data.clean_summary.square_meter_clean_area,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -138,6 +146,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescription(
         key="vacuum_error",
+        icon="mdi:alert-circle",
         translation_key="vacuum_error",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda data: data.status.error_code_name,
@@ -156,6 +165,7 @@ SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         key="last_clean_start",
         translation_key="last_clean_start",
+        icon="mdi:clock-time-twelve",
         value_fn=lambda data: data.last_clean_record.begin_datetime
         if data.last_clean_record is not None
         else None,
@@ -165,6 +175,7 @@ SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         key="last_clean_end",
         translation_key="last_clean_end",
+        icon="mdi:clock-time-twelve",
         value_fn=lambda data: data.last_clean_record.end_datetime
         if data.last_clean_record is not None
         else None,
@@ -174,6 +185,7 @@ SENSOR_DESCRIPTIONS = [
     # Only available on some newer models
     RoborockSensorDescription(
         key="clean_percent",
+        icon="mdi:progress-check",
         translation_key="clean_percent",
         value_fn=lambda data: data.status.clean_percent,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -182,6 +194,7 @@ SENSOR_DESCRIPTIONS = [
     # Only available with more than just the basic dock
     RoborockSensorDescription(
         key="dock_error",
+        icon="mdi:garage-open",
         translation_key="dock_error",
         value_fn=_dock_error_value_fn,
         entity_category=EntityCategory.DIAGNOSTIC,

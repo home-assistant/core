@@ -5,7 +5,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "geonetnz_quakes"
 
-PLATFORMS = [Platform.GEO_LOCATION, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.GEO_LOCATION]
 
 CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
 CONF_MMI = "mmi"

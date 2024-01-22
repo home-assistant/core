@@ -49,7 +49,8 @@ class WLEDNumberEntityDescription(NumberEntityDescription):
 NUMBERS = [
     WLEDNumberEntityDescription(
         key=ATTR_SPEED,
-        translation_key="speed",
+        name="Speed",
+        icon="mdi:speedometer",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -58,7 +59,7 @@ NUMBERS = [
     ),
     WLEDNumberEntityDescription(
         key=ATTR_INTENSITY,
-        translation_key="intensity",
+        name="Intensity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -86,8 +87,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
         if segment != 0:
-            self._attr_translation_key = f"segment_{description.translation_key}"
-            self._attr_translation_placeholders = {"segment": str(segment)}
+            self._attr_name = f"Segment {segment} {description.name}"
 
         self._attr_unique_id = (
             f"{coordinator.data.info.mac_address}_{description.key}_{segment}"

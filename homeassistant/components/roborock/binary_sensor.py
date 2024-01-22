@@ -40,6 +40,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="dry_status",
         translation_key="mop_drying_status",
+        icon="mdi:heat-wave",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.dry_status,
@@ -47,6 +48,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="water_box_carriage_status",
         translation_key="mop_attached",
+        icon="mdi:square-rounded",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_box_carriage_status,
@@ -54,6 +56,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="water_box_status",
         translation_key="water_box_attached",
+        icon="mdi:water",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_box_status,
@@ -61,6 +64,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="water_shortage",
         translation_key="water_shortage",
+        icon="mdi:water",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_shortage_status,
@@ -68,6 +72,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="in_cleaning",
         translation_key="in_cleaning",
+        icon="mdi:vacuum",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.in_cleaning,

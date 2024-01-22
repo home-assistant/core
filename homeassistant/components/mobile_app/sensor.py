@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, UnitOfTemperature
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -79,28 +79,26 @@ async def async_setup_entry(
 class MobileAppSensor(MobileAppEntity, RestoreSensor):
     """Representation of an mobile app sensor."""
 
-    async def async_restore_last_state(self, last_state: State) -> None:
+    async def async_restore_last_state(self, last_state):
         """Restore previous state."""
+
         await super().async_restore_last_state(last_state)
-        config = self._config
+
         if not (last_sensor_data := await self.async_get_last_sensor_data()):
             # Workaround to handle migration to RestoreSensor, can be removed
             # in HA Core 2023.4
-            config[ATTR_SENSOR_STATE] = None
+            self._config[ATTR_SENSOR_STATE] = None
             webhook_id = self._entry.data[CONF_WEBHOOK_ID]
-            if TYPE_CHECKING:
-                assert self.unique_id is not None
             sensor_unique_id = _extract_sensor_unique_id(webhook_id, self.unique_id)
             if (
                 self.device_class == SensorDeviceClass.TEMPERATURE
                 and sensor_unique_id == "battery_temperature"
             ):
-                config[ATTR_SENSOR_UOM] = UnitOfTemperature.CELSIUS
-        else:
-            config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
-            config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
+                self._config[ATTR_SENSOR_UOM] = UnitOfTemperature.CELSIUS
+            return
 
-        self._async_update_attr_from_config()
+        self._config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
+        self._config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
 
     @property
     def native_value(self) -> StateType | date | datetime:
@@ -108,25 +106,29 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
         if (state := self._config[ATTR_SENSOR_STATE]) in (None, STATE_UNKNOWN):
             return None
 
-        device_class = self.device_class
-
         if (
-            device_class in (SensorDeviceClass.DATE, SensorDeviceClass.TIMESTAMP)
+            self.device_class
+            in (
+                SensorDeviceClass.DATE,
+                SensorDeviceClass.TIMESTAMP,
+            )
             # Only parse strings: if the sensor's state is restored, the state is a
             # native date or datetime, not str
             and isinstance(state, str)
             and (timestamp := dt_util.parse_datetime(state)) is not None
         ):
-            if device_class == SensorDeviceClass.DATE:
+            if self.device_class == SensorDeviceClass.DATE:
                 return timestamp.date()
             return timestamp
 
         return state
 
-    @callback
-    def _async_update_attr_from_config(self) -> None:
-        """Update the entity from the config."""
-        super()._async_update_attr_from_config()
-        config = self._config
-        self._attr_native_unit_of_measurement = config.get(ATTR_SENSOR_UOM)
-        self._attr_state_class = config.get(ATTR_SENSOR_STATE_CLASS)
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement this sensor expresses itself in."""
+        return self._config.get(ATTR_SENSOR_UOM)
+
+    @property
+    def state_class(self) -> str | None:
+        """Return state class."""
+        return self._config.get(ATTR_SENSOR_STATE_CLASS)

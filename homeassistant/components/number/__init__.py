@@ -424,22 +424,22 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         if native_unit_of_measurement != unit_of_measurement:
-            if TYPE_CHECKING:
-                assert native_unit_of_measurement
-                assert unit_of_measurement
+            assert native_unit_of_measurement
+            assert unit_of_measurement
 
             value_s = str(value)
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
 
             # Suppress ValueError (Could not convert value to float)
             with suppress(ValueError):
-                value_new: float = UNIT_CONVERTERS[device_class].converter_factory(
+                value_new: float = UNIT_CONVERTERS[device_class].convert(
+                    value,
                     native_unit_of_measurement,
                     unit_of_measurement,
-                )(value)
+                )
 
                 # Round to the wanted precision
-                return method(value_new, prec)
+                value = method(value_new, prec)
 
         return value
 
@@ -453,22 +453,21 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         if native_unit_of_measurement != unit_of_measurement:
-            if TYPE_CHECKING:
-                assert native_unit_of_measurement
-                assert unit_of_measurement
+            assert native_unit_of_measurement
+            assert unit_of_measurement
 
-            return UNIT_CONVERTERS[device_class].converter_factory(
+            value = UNIT_CONVERTERS[device_class].convert(
+                value,
                 unit_of_measurement,
                 native_unit_of_measurement,
-            )(value)
+            )
 
         return value
 
     @callback
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
-        if TYPE_CHECKING:
-            assert self.registry_entry
+        assert self.registry_entry
         if (
             (number_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))

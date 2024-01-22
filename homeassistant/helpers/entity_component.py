@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
-from functools import partial
 from itertools import chain
 import logging
 from types import ModuleType
@@ -21,8 +20,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
+    EntityServiceResponse,
     Event,
-    HassJob,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -90,13 +89,12 @@ class EntityComponent(Generic[_EntityT]):
 
         self.config: ConfigType | None = None
 
-        domain_platform = self._async_init_entity_platform(domain, None)
         self._platforms: dict[
             str | tuple[str, timedelta | None, str | None], EntityPlatform
-        ] = {domain: domain_platform}
-        self.async_add_entities = domain_platform.async_add_entities
-        self.add_entities = domain_platform.add_entities
-        self._entities: dict[str, entity.Entity] = domain_platform.domain_entities
+        ] = {domain: self._async_init_entity_platform(domain, None)}
+        self.async_add_entities = self._platforms[domain].async_add_entities
+        self.add_entities = self._platforms[domain].add_entities
+
         hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
 
     @property
@@ -107,11 +105,18 @@ class EntityComponent(Generic[_EntityT]):
         callers that iterate over this asynchronously should make a copy
         using list() before iterating.
         """
-        return self._entities.values()  # type: ignore[return-value]
+        return chain.from_iterable(
+            platform.entities.values()  # type: ignore[misc]
+            for platform in self._platforms.values()
+        )
 
     def get_entity(self, entity_id: str) -> _EntityT | None:
         """Get an entity."""
-        return self._entities.get(entity_id)  # type: ignore[return-value]
+        for platform in self._platforms.values():
+            entity_obj = platform.entities.get(entity_id)
+            if entity_obj is not None:
+                return entity_obj  # type: ignore[return-value]
+        return None
 
     def register_shutdown(self) -> None:
         """Register shutdown on Home Assistant STOP event.
@@ -226,16 +231,13 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        service_func: str | HassJob[..., Any]
-        service_func = func if isinstance(func, str) else HassJob(func)
-
         async def handle_service(
             call: ServiceCall,
         ) -> ServiceResponse:
             """Handle the service."""
 
             result = await service.entity_service_call(
-                self.hass, self._entities, service_func, call, required_features
+                self.hass, self._platforms.values(), func, call, required_features
             )
 
             if result:
@@ -263,21 +265,16 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        service_func: str | HassJob[..., Any]
-        service_func = func if isinstance(func, str) else HassJob(func)
+        async def handle_service(
+            call: ServiceCall,
+        ) -> EntityServiceResponse | None:
+            """Handle the service."""
+            return await service.entity_service_call(
+                self.hass, self._platforms.values(), func, call, required_features
+            )
 
         self.hass.services.async_register(
-            self.domain,
-            name,
-            partial(
-                service.entity_service_call,
-                self.hass,
-                self._entities,
-                service_func,
-                required_features=required_features,
-            ),
-            schema,
-            supports_response,
+            self.domain, name, handle_service, schema, supports_response
         )
 
     async def async_setup_platform(

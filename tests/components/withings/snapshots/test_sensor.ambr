@@ -34,6 +34,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Average heart rate',
+      'icon': 'mdi:heart-pulse',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'bpm',
     }),
@@ -78,6 +79,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'weight',
       'friendly_name': 'henk Bone mass',
+      'icon': 'mdi:bone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
     }),
@@ -119,6 +121,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Deep sleep',
+      'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -148,6 +151,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'henk Distance travelled last workout',
+      'icon': 'mdi:map-marker-distance',
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
     'context': <ANY>,
@@ -162,6 +166,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'henk Distance travelled today',
+      'icon': 'mdi:map-marker-distance',
       'last_reset': '2023-10-20T00:00:00-07:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
@@ -178,6 +183,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'henk Elevation change last workout',
+      'icon': 'mdi:stairs-up',
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
     'context': <ANY>,
@@ -192,6 +198,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'henk Elevation change today',
+      'icon': 'mdi:stairs-up',
       'last_reset': '2023-10-20T00:00:00-07:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
@@ -266,6 +273,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Heart pulse',
+      'icon': 'mdi:heart-pulse',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'bpm',
     }),
@@ -296,6 +304,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'weight',
       'friendly_name': 'henk Hydration',
+      'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
     }),
@@ -342,6 +351,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Last workout duration',
+      'icon': 'mdi:timer',
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -432,6 +442,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Light sleep',
+      'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -446,6 +457,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Maximum heart rate',
+      'icon': 'mdi:heart-pulse',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'bpm',
     }),
@@ -474,6 +486,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Minimum heart rate',
+      'icon': 'mdi:heart-pulse',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'bpm',
     }),
@@ -534,6 +547,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Pause during last workout',
+      'icon': 'mdi:timer-pause',
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -563,6 +577,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk REM sleep',
+      'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -593,6 +608,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Sleep goal',
+      'icon': 'mdi:bed-clock',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -607,6 +623,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Sleep score',
+      'icon': 'mdi:medal',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'points',
     }),
@@ -677,6 +694,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Step goal',
+      'icon': 'mdi:shoe-print',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'steps',
     }),
@@ -691,6 +709,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Steps today',
+      'icon': 'mdi:shoe-print',
       'last_reset': '2023-10-20T00:00:00-07:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'steps',
@@ -736,6 +755,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Time to sleep',
+      'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -751,6 +771,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Time to wakeup',
+      'icon': 'mdi:sleep-off',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -806,6 +827,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'henk Wakeup count',
+      'icon': 'mdi:sleep-off',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'times',
     }),
@@ -821,6 +843,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'henk Wakeup time',
+      'icon': 'mdi:sleep-off',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),

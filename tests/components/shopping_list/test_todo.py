@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 
 from tests.typing import WebSocketGenerator
 
@@ -339,7 +338,7 @@ async def test_update_invalid_item(
 ) -> None:
     """Test updating a todo item that does not exist."""
 
-    with pytest.raises(ServiceValidationError, match="Unable to find"):
+    with pytest.raises(ValueError, match="Unable to find"):
         await hass.services.async_call(
             TODO_DOMAIN,
             "update_item",

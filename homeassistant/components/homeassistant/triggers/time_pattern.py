@@ -1,9 +1,4 @@
 """Offer time listening automation rules."""
-from __future__ import annotations
-
-from datetime import datetime
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
@@ -24,15 +19,15 @@ class TimePattern:
     :raises Invalid: If the value has a wrong format or is outside the range.
     """
 
-    def __init__(self, maximum: int) -> None:
+    def __init__(self, maximum):
         """Initialize time pattern."""
         self.maximum = maximum
 
-    def __call__(self, value: Any) -> str | int:
+    def __call__(self, value):
         """Validate input."""
         try:
             if value == "*":
-                return value  # type: ignore[no-any-return]
+                return value
 
             if isinstance(value, str) and value.startswith("/"):
                 number = int(value[1:])
@@ -44,7 +39,7 @@ class TimePattern:
         except ValueError as err:
             raise vol.Invalid("invalid time_pattern value") from err
 
-        return value  # type: ignore[no-any-return]
+        return value
 
 
 TRIGGER_SCHEMA = vol.All(
@@ -80,7 +75,7 @@ async def async_attach_trigger(
         seconds = 0
 
     @callback
-    def time_automation_listener(now: datetime) -> None:
+    def time_automation_listener(now):
         """Listen for time changes and calls action."""
         hass.async_run_hass_job(
             job,

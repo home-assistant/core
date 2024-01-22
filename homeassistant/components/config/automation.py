@@ -1,7 +1,4 @@
 """Provide configuration end points for Automations."""
-from __future__ import annotations
-
-from typing import Any
 import uuid
 
 from homeassistant.components.automation.config import (
@@ -11,16 +8,15 @@ from homeassistant.components.automation.config import (
 )
 from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from . import ACTION_DELETE, EditIdBasedConfigView
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+async def async_setup(hass):
     """Set up the Automation config API."""
 
-    async def hook(action: str, config_key: str) -> None:
+    async def hook(action, config_key):
         """post_write_hook for Config View that reloads automations."""
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
 
@@ -53,13 +49,7 @@ async def async_setup(hass: HomeAssistant) -> bool:
 class EditAutomationConfigView(EditIdBasedConfigView):
     """Edit automation config."""
 
-    def _write_value(
-        self,
-        hass: HomeAssistant,
-        data: list[dict[str, Any]],
-        config_key: str,
-        new_value: dict[str, Any],
-    ) -> None:
+    def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
         updated_value = {CONF_ID: config_key}
 

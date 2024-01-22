@@ -2,11 +2,7 @@
 
 import logging
 
-from bleak_retry_connector import (
-    BleakError,
-    close_stale_connections_by_address,
-    get_device,
-)
+from bleak_retry_connector import BleakError, close_stale_connections, get_device
 from ld2410_ble import LD2410BLE
 
 from homeassistant.components import bluetooth
@@ -28,9 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LD2410 BLE from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
-
-    await close_stale_connections_by_address(address)
-
     ble_device = bluetooth.async_ble_device_from_address(
         hass, address.upper(), True
     ) or await get_device(address)
@@ -38,6 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not find LD2410B device with address {address}"
         )
+
+    await close_stale_connections(ble_device)
 
     ld2410_ble = LD2410BLE(ble_device)
 

@@ -24,13 +24,20 @@ from .const import DATA_PROVISION_SETTINGS, DOMAIN
 from .model import RainMachineEntityDescription
 
 
-@dataclass(frozen=True, kw_only=True)
-class RainMachineButtonDescription(
-    ButtonEntityDescription, RainMachineEntityDescription
-):
-    """Describe a RainMachine button description."""
+@dataclass(frozen=True)
+class RainMachineButtonDescriptionMixin:
+    """Define an entity description mixin for RainMachine buttons."""
 
     push_action: Callable[[Controller], Awaitable]
+
+
+@dataclass(frozen=True)
+class RainMachineButtonDescription(
+    ButtonEntityDescription,
+    RainMachineEntityDescription,
+    RainMachineButtonDescriptionMixin,
+):
+    """Describe a RainMachine button description."""
 
 
 BUTTON_KIND_REBOOT = "reboot"

@@ -51,8 +51,8 @@ from .const import (
     SIGNAL_NAME,
 )
 from .data_handler import HOME, PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
-from .entity import NetatmoBaseEntity
 from .helper import NetatmoArea
+from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -399,7 +399,7 @@ async def async_setup_entry(
     await add_public_entities(False)
 
 
-class NetatmoWeatherSensor(NetatmoBaseEntity, SensorEntity):
+class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
     """Implementation of a Netatmo weather/home coach sensor."""
 
     _attr_has_entity_name = True
@@ -478,7 +478,7 @@ class NetatmoWeatherSensor(NetatmoBaseEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class NetatmoClimateBatterySensor(NetatmoBaseEntity, SensorEntity):
+class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -525,7 +525,7 @@ class NetatmoClimateBatterySensor(NetatmoBaseEntity, SensorEntity):
         self._attr_native_value = self._module.battery
 
 
-class NetatmoSensor(NetatmoBaseEntity, SensorEntity):
+class NetatmoSensor(NetatmoBase, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -613,7 +613,7 @@ def process_wifi(strength: int) -> str:
     return "Full"
 
 
-class NetatmoRoomSensor(NetatmoBaseEntity, SensorEntity):
+class NetatmoRoomSensor(NetatmoBase, SensorEntity):
     """Implementation of a Netatmo room sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -662,7 +662,7 @@ class NetatmoRoomSensor(NetatmoBaseEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
+class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     """Represent a single sensor in a Netatmo."""
 
     _attr_has_entity_name = True

@@ -110,7 +110,7 @@ class MeteoFranceWeather(
         )
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self):
         """Return the unique id of the sensor."""
         return self._unique_id
 

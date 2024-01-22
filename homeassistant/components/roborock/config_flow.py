@@ -5,6 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from roborock.api import RoborockApiClient
 from roborock.containers import UserData
 from roborock.exceptions import (
     RoborockAccountDoesNotExist,
@@ -13,7 +14,6 @@ from roborock.exceptions import (
     RoborockInvalidEmail,
     RoborockUrlException,
 )
-from roborock.web_api import RoborockApiClient
 import voluptuous as vol
 
 from homeassistant import config_entries

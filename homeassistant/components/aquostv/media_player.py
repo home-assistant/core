@@ -1,9 +1,7 @@
 """Support for interface with an Aquos TV."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import sharp_aquos_rc
 import voluptuous as vol
@@ -26,9 +24,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-_SharpAquosTVDeviceT = TypeVar("_SharpAquosTVDeviceT", bound="SharpAquosTVDevice")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,12 +79,10 @@ def setup_platform(
     add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
 
 
-def _retry(
-    func: Callable[Concatenate[_SharpAquosTVDeviceT, _P], Any],
-) -> Callable[Concatenate[_SharpAquosTVDeviceT, _P], None]:
+def _retry(func):
     """Handle query retries."""
 
-    def wrapper(obj: _SharpAquosTVDeviceT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    def wrapper(obj, *args, **kwargs):
         """Wrap all query functions."""
         update_retries = 5
         while update_retries > 0:
@@ -119,6 +112,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.PLAY
     )
+    _attr_volume_step = 2 / 60
 
     def __init__(
         self, name: str, remote: sharp_aquos_rc.TV, power_on_enabled: bool = False
@@ -132,7 +126,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         # Assume that the TV is not muted
         self._remote = remote
 
-    def set_state(self, state: MediaPlayerState) -> None:
+    def set_state(self, state):
         """Set TV state."""
         self._attr_state = state
 
@@ -162,22 +156,6 @@ class SharpAquosTVDevice(MediaPlayerEntity):
     def turn_off(self) -> None:
         """Turn off tvplayer."""
         self._remote.power(0)
-
-    @_retry
-    def volume_up(self) -> None:
-        """Volume up the media player."""
-        if self.volume_level is None:
-            _LOGGER.debug("Unknown volume in volume_up")
-            return
-        self._remote.volume(int(self.volume_level * 60) + 2)
-
-    @_retry
-    def volume_down(self) -> None:
-        """Volume down media player."""
-        if self.volume_level is None:
-            _LOGGER.debug("Unknown volume in volume_down")
-            return
-        self._remote.volume(int(self.volume_level * 60) - 2)
 
     @_retry
     def set_volume_level(self, volume: float) -> None:

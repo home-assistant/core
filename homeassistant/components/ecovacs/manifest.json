@@ -1,10 +1,9 @@
 {
   "domain": "ecovacs",
   "name": "Ecovacs",
-  "codeowners": ["@OverloadUT", "@mib1185", "@edenhaus"],
-  "config_flow": true,
+  "codeowners": ["@OverloadUT", "@mib1185"],
   "documentation": "https://www.home-assistant.io/integrations/ecovacs",
   "iot_class": "cloud_push",
-  "loggers": ["sleekxmppfs", "sucks", "deebot_client"],
-  "requirements": ["py-sucks==0.9.8", "deebot-client==4.3.0"]
+  "loggers": ["sleekxmppfs", "sucks"],
+  "requirements": ["py-sucks==0.9.8"]
 }

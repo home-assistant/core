@@ -1,5 +1,4 @@
 """The aurora component."""
-from __future__ import annotations
 
 from datetime import timedelta
 import logging
@@ -13,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-class AuroraDataUpdateCoordinator(DataUpdateCoordinator[int]):
+class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the NOAA Aurora API."""
 
     def __init__(
@@ -38,7 +37,7 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator[int]):
         self.longitude = int(longitude)
         self.threshold = int(threshold)
 
-    async def _async_update_data(self) -> int:
+    async def _async_update_data(self):
         """Fetch the data from the NOAA Aurora Forecast."""
 
         try:

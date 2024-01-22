@@ -20,6 +20,7 @@ class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
         self,
         coordinator: AuroraDataUpdateCoordinator,
         translation_key: str,
+        icon: str,
     ) -> None:
         """Initialize the Aurora Entity."""
 
@@ -27,6 +28,7 @@ class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
 
         self._attr_translation_key = translation_key
         self._attr_unique_id = f"{coordinator.latitude}_{coordinator.longitude}"
+        self._attr_icon = icon
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._attr_unique_id)},

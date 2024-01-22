@@ -72,7 +72,6 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     _reauth_entry: ConfigEntry | None
     _reauth_host: str
     _reauth_port: int
-    _reauth_type: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -110,7 +109,6 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._reauth_host = entry_data[CONF_HOST]
         self._reauth_port = entry_data.get(CONF_PORT, DEFAULT_PORT)
-        self._reauth_type = entry_data.get(CONF_TYPE, BRIDGE)
 
         self.context["title_placeholders"] = {"host": self._reauth_host}
         return await self.async_step_reauth_confirm()
@@ -129,7 +127,6 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         CONF_HOST: self._reauth_host,
                         CONF_PORT: self._reauth_port,
-                        CONF_TYPE: self._reauth_type,
                     }
                     | user_input,
                 )
@@ -147,7 +144,6 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: self._reauth_host,
                         CONF_PORT: self._reauth_port,
                         CONF_PIN: user_input[CONF_PIN],
-                        CONF_TYPE: self._reauth_type,
                     },
                 )
                 self.hass.async_create_task(

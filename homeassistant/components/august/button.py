@@ -36,5 +36,5 @@ class AugustWakeLockButton(AugustEntityMixin, ButtonEntity):
         await self._data.async_status_async(self._device_id, self._hyper_bridge)
 
     @callback
-    def _update_from_data(self) -> None:
+    def _update_from_data(self):
         """Nothing to update as buttons are stateless."""

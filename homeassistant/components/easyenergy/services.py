@@ -111,8 +111,7 @@ def __get_coordinator(
             },
         )
 
-    coordinator: EasyEnergyDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-    return coordinator
+    return hass.data[DOMAIN][entry_id]
 
 
 async def __get_prices(

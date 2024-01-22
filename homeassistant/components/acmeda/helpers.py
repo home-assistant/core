@@ -1,8 +1,6 @@
 """Helper functions for Acmeda Pulse."""
 from __future__ import annotations
 
-from aiopulse import Roller
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -18,7 +16,7 @@ def async_add_acmeda_entities(
     config_entry: ConfigEntry,
     current: set[int],
     async_add_entities: AddEntitiesCallback,
-) -> None:
+):
     """Add any new entities."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
     LOGGER.debug("Looking for new %s on: %s", entity_class.__name__, hub.host)
@@ -36,9 +34,7 @@ def async_add_acmeda_entities(
     async_add_entities(new_items)
 
 
-async def update_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, api: dict[int, Roller]
-) -> None:
+async def update_devices(hass: HomeAssistant, config_entry: ConfigEntry, api):
     """Tell hass that device info has been updated."""
     dev_registry = dr.async_get(hass)
 

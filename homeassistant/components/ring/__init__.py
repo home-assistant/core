@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.async_ import run_callback_threadsafe
 
 from .const import (
     DEVICES_SCAN_INTERVAL,
@@ -40,13 +41,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def token_updater(token):
         """Handle from sync context when token is updated."""
-        hass.loop.call_soon_threadsafe(
+        run_callback_threadsafe(
+            hass.loop,
             partial(
                 hass.config_entries.async_update_entry,
                 entry,
                 data={**entry.data, CONF_TOKEN: token},
-            )
-        )
+            ),
+        ).result()
 
     auth = ring_doorbell.Auth(
         f"{APPLICATION_NAME}/{__version__}", entry.data[CONF_TOKEN], token_updater

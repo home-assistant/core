@@ -25,7 +25,6 @@ from .const import (
     CONF_LOCALE,
     EVENT_ALEXA_SMART_HOME,
 )
-from .diagnostics import async_redact_auth_data
 from .errors import AlexaBridgeUnreachableError, AlexaError
 from .handlers import HANDLERS
 from .state_report import AlexaDirective
@@ -150,21 +149,12 @@ class SmartHomeView(HomeAssistantView):
         user: User = request["hass_user"]
         message: dict[str, Any] = await request.json()
 
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug(
-                "Received Alexa Smart Home request: %s",
-                async_redact_auth_data(message),
-            )
+        _LOGGER.debug("Received Alexa Smart Home request: %s", message)
 
         response = await async_handle_message(
             hass, self.smart_home_config, message, context=core.Context(user_id=user.id)
         )
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug(
-                "Sending Alexa Smart Home response: %s",
-                async_redact_auth_data(response),
-            )
-
+        _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
         return b"" if response is None else self.json(response)
 
 

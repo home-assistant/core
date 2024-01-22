@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
-import functools
+from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, Final, TypeVar
 
@@ -12,7 +11,6 @@ from zigpy.typing import EndpointType as ZigpyEndpointType
 from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from . import const, discovery, registries
 from .cluster_handlers import ClusterHandler
@@ -171,32 +169,20 @@ class Endpoint:
 
     async def async_initialize(self, from_cache: bool = False) -> None:
         """Initialize claimed cluster handlers."""
-        await self._execute_handler_tasks(
-            "async_initialize", from_cache, max_concurrency=1
-        )
+        await self._execute_handler_tasks("async_initialize", from_cache)
 
     async def async_configure(self) -> None:
         """Configure claimed cluster handlers."""
         await self._execute_handler_tasks("async_configure")
 
-    async def _execute_handler_tasks(
-        self, func_name: str, *args: Any, max_concurrency: int | None = None
-    ) -> None:
+    async def _execute_handler_tasks(self, func_name: str, *args: Any) -> None:
         """Add a throttled cluster handler task and swallow exceptions."""
         cluster_handlers = [
             *self.claimed_cluster_handlers.values(),
             *self.client_cluster_handlers.values(),
         ]
         tasks = [getattr(ch, func_name)(*args) for ch in cluster_handlers]
-
-        gather: Callable[..., Awaitable]
-
-        if max_concurrency is None:
-            gather = asyncio.gather
-        else:
-            gather = functools.partial(gather_with_limited_concurrency, max_concurrency)
-
-        results = await gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         for cluster_handler, outcome in zip(cluster_handlers, results):
             if isinstance(outcome, Exception):
                 cluster_handler.warning(

@@ -34,7 +34,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.helpers.typing import EventType
 import homeassistant.util.dt as dt_util
 
@@ -72,9 +72,9 @@ def _ws_get_significant_states(
     significant_changes_only: bool,
     minimal_response: bool,
     no_attributes: bool,
-) -> bytes:
+) -> str:
     """Fetch history significant_states and convert them to json in the executor."""
-    return json_bytes(
+    return JSON_DUMP(
         messages.result_message(
             msg_id,
             history.get_significant_states(
@@ -201,9 +201,9 @@ def _generate_websocket_response(
     start_time: dt,
     end_time: dt,
     states: MutableMapping[str, list[dict[str, Any]]],
-) -> bytes:
+) -> str:
     """Generate a websocket response."""
-    return json_bytes(
+    return JSON_DUMP(
         messages.event_message(
             msg_id, _generate_stream_message(states, start_time, end_time)
         )
@@ -221,7 +221,7 @@ def _generate_historical_response(
     minimal_response: bool,
     no_attributes: bool,
     send_empty: bool,
-) -> tuple[float, dt | None, bytes | None]:
+) -> tuple[float, dt | None, str | None]:
     """Generate a historical response."""
     states = cast(
         MutableMapping[str, list[dict[str, Any]]],
@@ -302,9 +302,13 @@ def _history_compressed_state(state: State, no_attributes: bool) -> dict[str, An
     comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state.state}
     if not no_attributes or state.domain in history.NEED_ATTRIBUTE_DOMAINS:
         comp_state[COMPRESSED_STATE_ATTRIBUTES] = state.attributes
-    comp_state[COMPRESSED_STATE_LAST_UPDATED] = state.last_updated_timestamp
+    comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
+        state.last_updated
+    )
     if state.last_changed != state.last_updated:
-        comp_state[COMPRESSED_STATE_LAST_CHANGED] = state.last_changed_timestamp
+        comp_state[COMPRESSED_STATE_LAST_CHANGED] = dt_util.utc_to_timestamp(
+            state.last_changed
+        )
     return comp_state
 
 
@@ -346,7 +350,7 @@ async def _async_events_consumer(
 
         if history_states := _events_to_compressed_states(events, no_attributes):
             connection.send_message(
-                json_bytes(
+                JSON_DUMP(
                     messages.event_message(
                         msg_id,
                         {"states": history_states},

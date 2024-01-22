@@ -7,7 +7,6 @@ from typing import Any, TypeVar, cast
 
 from fitbit import Fitbit
 from fitbit.exceptions import HTTPException, HTTPUnauthorized
-from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -133,9 +132,6 @@ class FitbitApi(ABC):
         """Run client command."""
         try:
             return await self._hass.async_add_executor_job(func)
-        except RequestsConnectionError as err:
-            _LOGGER.debug("Connection error to fitbit API: %s", err)
-            raise FitbitApiException("Connection error to fitbit API") from err
         except HTTPUnauthorized as err:
             _LOGGER.debug("Unauthorized error from fitbit API: %s", err)
             raise FitbitAuthException("Authentication error from fitbit API") from err

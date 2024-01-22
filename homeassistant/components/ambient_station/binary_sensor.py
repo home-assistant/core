@@ -63,11 +63,18 @@ TYPE_RELAY8 = "relay8"
 TYPE_RELAY9 = "relay9"
 
 
-@dataclass(frozen=True, kw_only=True)
-class AmbientBinarySensorDescription(BinarySensorEntityDescription):
-    """Describe an Ambient PWS binary sensor."""
+@dataclass(frozen=True)
+class AmbientBinarySensorDescriptionMixin:
+    """Define an entity description mixin for binary sensors."""
 
     on_state: Literal[0, 1]
+
+
+@dataclass(frozen=True)
+class AmbientBinarySensorDescription(
+    BinarySensorEntityDescription, AmbientBinarySensorDescriptionMixin
+):
+    """Describe an Ambient PWS binary sensor."""
 
 
 BINARY_SENSOR_DESCRIPTIONS = (

@@ -1,6 +1,4 @@
 """Support for functionality to download files."""
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 import os
@@ -63,7 +61,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def download_file(service: ServiceCall) -> None:
         """Start thread to download file specified in the URL."""
 
-        def do_download() -> None:
+        def do_download():
             """Download the file."""
             try:
                 url = service.data[ATTR_URL]

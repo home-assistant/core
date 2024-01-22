@@ -3,54 +3,46 @@ from __future__ import annotations
 
 from typing import Any
 
-from pylutron import Button, Keypad, Lutron
-
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, LutronData
-from .entity import LutronKeypad
+from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 
-async def async_setup_entry(
+def setup_platform(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Lutron scene platform.
+    """Set up the Lutron scenes."""
+    devs = []
+    for scene_data in hass.data[LUTRON_DEVICES]["scene"]:
+        (area_name, keypad_name, device, led) = scene_data
+        dev = LutronScene(
+            area_name, keypad_name, device, led, hass.data[LUTRON_CONTROLLER]
+        )
+        devs.append(dev)
 
-    Adds scenes from the Main Repeater associated with the config_entry as
-    scene entities.
-    """
-    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
-
-    async_add_entities(
-        [
-            LutronScene(area_name, keypad, device, entry_data.client)
-            for area_name, keypad, device, led in entry_data.scenes
-        ],
-        True,
-    )
+    add_entities(devs, True)
 
 
-class LutronScene(LutronKeypad, Scene):
+class LutronScene(LutronDevice, Scene):
     """Representation of a Lutron Scene."""
 
-    _lutron_device: Button
-
-    def __init__(
-        self,
-        area_name: str,
-        keypad: Keypad,
-        lutron_device: Button,
-        controller: Lutron,
-    ) -> None:
+    def __init__(self, area_name, keypad_name, lutron_device, lutron_led, controller):
         """Initialize the scene/button."""
-        super().__init__(area_name, lutron_device, controller, keypad)
-        self._attr_name = lutron_device.name
+        super().__init__(area_name, lutron_device, controller)
+        self._keypad_name = keypad_name
+        self._led = lutron_led
 
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self._lutron_device.press()
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return f"{self._area_name} {self._keypad_name}: {self._lutron_device.name}"

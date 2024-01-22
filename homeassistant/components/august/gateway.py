@@ -34,20 +34,19 @@ _LOGGER = logging.getLogger(__name__)
 class AugustGateway:
     """Handle the connection to August."""
 
-    api: ApiAsync
-    authenticator: AuthenticatorAsync
-    authentication: Authentication
-    _access_token_cache_file: str
-
     def __init__(self, hass: HomeAssistant, aiohttp_session: ClientSession) -> None:
         """Init the connection."""
         self._aiohttp_session = aiohttp_session
         self._token_refresh_lock = asyncio.Lock()
+        self._access_token_cache_file: str | None = None
         self._hass: HomeAssistant = hass
         self._config: Mapping[str, Any] | None = None
+        self.api: ApiAsync | None = None
+        self.authenticator: AuthenticatorAsync | None = None
+        self.authentication: Authentication | None = None
 
     @property
-    def access_token(self) -> str:
+    def access_token(self):
         """Access token for the api."""
         return self.authentication.access_token
 
@@ -98,8 +97,9 @@ class AugustGateway:
 
         await self.authenticator.async_setup_authentication()
 
-    async def async_authenticate(self) -> Authentication:
+    async def async_authenticate(self):
         """Authenticate with the details provided to setup."""
+        self.authentication = None
         try:
             self.authentication = await self.authenticator.async_authenticate()
             if self.authentication.state == AuthenticationState.AUTHENTICATED:
@@ -132,17 +132,17 @@ class AugustGateway:
 
         return self.authentication
 
-    async def async_reset_authentication(self) -> None:
+    async def async_reset_authentication(self):
         """Remove the cache file."""
         await self._hass.async_add_executor_job(self._reset_authentication)
 
-    def _reset_authentication(self) -> None:
+    def _reset_authentication(self):
         """Remove the cache file."""
         path = self._hass.config.path(self._access_token_cache_file)
         if os.path.exists(path):
             os.unlink(path)
 
-    async def async_refresh_access_token_if_needed(self) -> None:
+    async def async_refresh_access_token_if_needed(self):
         """Refresh the august access token if needed."""
         if not self.authenticator.should_refresh():
             return

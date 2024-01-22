@@ -64,6 +64,7 @@ class AwairSensorEntityDescription(SensorEntityDescription, AwairRequiredKeysMix
 
 SENSOR_TYPE_SCORE = AwairSensorEntityDescription(
     key=API_SCORE,
+    icon="mdi:blur",
     native_unit_of_measurement=PERCENTAGE,
     translation_key="score",
     unique_id_tag="score",  # matches legacy format
@@ -95,6 +96,7 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     ),
     AwairSensorEntityDescription(
         key=API_VOC,
+        icon="mdi:molecule",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         unique_id_tag="VOC",  # matches legacy format

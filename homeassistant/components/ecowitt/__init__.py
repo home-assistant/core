@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     @callback
-    def _stop_ecowitt(_: Event) -> None:
+    def _stop_ecowitt(_: Event):
         """Stop the Ecowitt listener."""
         webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 

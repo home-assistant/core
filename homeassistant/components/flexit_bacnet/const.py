@@ -15,9 +15,6 @@ from homeassistant.components.climate import (
 
 DOMAIN = "flexit_bacnet"
 
-MAX_TEMP = 30
-MIN_TEMP = 10
-
 VENTILATION_TO_PRESET_MODE_MAP = {
     VENTILATION_MODE_STOP: PRESET_NONE,
     VENTILATION_MODE_AWAY: PRESET_AWAY,

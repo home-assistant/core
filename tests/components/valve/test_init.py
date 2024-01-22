@@ -2,7 +2,6 @@
 from collections.abc import Generator
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
     DOMAIN,
@@ -194,34 +193,26 @@ def mock_config_entry(hass) -> tuple[MockConfigEntry, list[ValveEntity]]:
 
 
 async def test_valve_setup(
-    hass: HomeAssistant,
-    mock_config_entry: tuple[MockConfigEntry, list[ValveEntity]],
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, mock_config_entry: tuple[MockConfigEntry, list[ValveEntity]]
 ) -> None:
     """Test setup and tear down of valve platform and entity."""
     config_entry = mock_config_entry[0]
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    entity_id = mock_config_entry[1][0].entity_id
 
     assert config_entry.state == ConfigEntryState.LOADED
-    for entity in mock_config_entry[1]:
-        entity_id = entity.entity_id
-        state = hass.states.get(entity_id)
-        assert state
-        assert state == snapshot
+    assert hass.states.get(entity_id)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+    entity_state = hass.states.get(entity_id)
 
-    for entity in mock_config_entry[1]:
-        entity_id = entity.entity_id
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.state == STATE_UNAVAILABLE
-        assert state == snapshot
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
 
 
 async def test_services(

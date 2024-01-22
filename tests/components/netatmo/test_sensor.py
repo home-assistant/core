@@ -1,41 +1,18 @@
 """The tests for the Netatmo sensor platform."""
-from unittest.mock import AsyncMock
+from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
 
 from homeassistant.components.netatmo import sensor
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import selected_platforms, snapshot_platform_entities
-
-from tests.common import MockConfigEntry
+from .common import TEST_TIME, selected_platforms
 
 
-async def test_entity(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    netatmo_auth: AsyncMock,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test entities."""
-    await snapshot_platform_entities(
-        hass,
-        config_entry,
-        Platform.SENSOR,
-        entity_registry,
-        snapshot,
-    )
-
-
-async def test_indoor_sensor(
-    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
-) -> None:
+async def test_indoor_sensor(hass: HomeAssistant, config_entry, netatmo_auth) -> None:
     """Test indoor sensor setup."""
-    with selected_platforms([Platform.SENSOR]):
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -48,11 +25,9 @@ async def test_indoor_sensor(
     assert hass.states.get(f"{prefix}pressure").state == "1014.5"
 
 
-async def test_weather_sensor(
-    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
-) -> None:
+async def test_weather_sensor(hass: HomeAssistant, config_entry, netatmo_auth) -> None:
     """Test weather sensor unreachable."""
-    with selected_platforms([Platform.SENSOR]):
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -63,10 +38,10 @@ async def test_weather_sensor(
 
 
 async def test_public_weather_sensor(
-    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+    hass: HomeAssistant, config_entry, netatmo_auth
 ) -> None:
     """Test public weather sensor setup."""
-    with selected_platforms([Platform.SENSOR]):
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -118,7 +93,7 @@ async def test_public_weather_sensor(
     ("strength", "expected"),
     [(50, "Full"), (60, "High"), (80, "Medium"), (90, "Low")],
 )
-async def test_process_wifi(strength: int, expected: str) -> None:
+async def test_process_wifi(strength, expected) -> None:
     """Test wifi strength translation."""
     assert sensor.process_wifi(strength) == expected
 
@@ -127,7 +102,7 @@ async def test_process_wifi(strength: int, expected: str) -> None:
     ("strength", "expected"),
     [(50, "Full"), (70, "High"), (80, "Medium"), (90, "Low")],
 )
-async def test_process_rf(strength: int, expected: str) -> None:
+async def test_process_rf(strength, expected) -> None:
     """Test radio strength translation."""
     assert sensor.process_rf(strength) == expected
 
@@ -136,7 +111,7 @@ async def test_process_rf(strength: int, expected: str) -> None:
     ("health", "expected"),
     [(4, "Unhealthy"), (3, "Poor"), (2, "Fair"), (1, "Fine"), (0, "Healthy")],
 )
-async def test_process_health(health: int, expected: str) -> None:
+async def test_process_health(health, expected) -> None:
     """Test health index translation."""
     assert sensor.process_health(health) == expected
 
@@ -207,15 +182,10 @@ async def test_process_health(health: int, expected: str) -> None:
     ],
 )
 async def test_weather_sensor_enabling(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    uid: str,
-    name: str,
-    expected: str,
-    netatmo_auth: AsyncMock,
+    hass: HomeAssistant, config_entry, uid, name, expected, netatmo_auth
 ) -> None:
     """Test enabling of by default disabled sensors."""
-    with selected_platforms([Platform.SENSOR]):
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         states_before = len(hass.states.async_all())
         assert hass.states.get(f"sensor.{name}") is None
 
@@ -236,10 +206,12 @@ async def test_weather_sensor_enabling(
 
 
 async def test_climate_battery_sensor(
-    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+    hass: HomeAssistant, config_entry, netatmo_auth
 ) -> None:
     """Test climate device battery sensor."""
-    with selected_platforms([Platform.CLIMATE, Platform.SENSOR]):
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(
+        ["sensor", "climate"]
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()

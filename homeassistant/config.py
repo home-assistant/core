@@ -67,7 +67,6 @@ from .requirements import RequirementsNotFound, async_get_integration_with_requi
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
-from .util.yaml.objects import NodeStrClass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1222,45 +1221,9 @@ async def async_process_component_and_handle_errors(
     integration_config_info = await async_process_component_config(
         hass, config, integration
     )
-    async_handle_component_errors(
+    return async_handle_component_errors(
         hass, integration_config_info, integration, raise_on_failure
     )
-    return async_drop_config_annotations(integration_config_info, integration)
-
-
-@callback
-def async_drop_config_annotations(
-    integration_config_info: IntegrationConfigInfo,
-    integration: Integration,
-) -> ConfigType | None:
-    """Remove file and line annotations from str items in component configuration."""
-    if (config := integration_config_info.config) is None:
-        return None
-
-    def drop_config_annotations_rec(node: Any) -> Any:
-        if isinstance(node, dict):
-            # Some integrations store metadata in custom dict classes, preserve those
-            tmp = dict(node)
-            node.clear()
-            node.update(
-                (drop_config_annotations_rec(k), drop_config_annotations_rec(v))
-                for k, v in tmp.items()
-            )
-            return node
-
-        if isinstance(node, list):
-            return [drop_config_annotations_rec(v) for v in node]
-
-        if isinstance(node, NodeStrClass):
-            return str(node)
-
-        return node
-
-    # Don't drop annotations from the homeassistant integration because it may
-    # have configuration for other integrations as packages.
-    if integration.domain in config and integration.domain != CONF_CORE:
-        drop_config_annotations_rec(config[integration.domain])
-    return config
 
 
 @callback
@@ -1269,16 +1232,18 @@ def async_handle_component_errors(
     integration_config_info: IntegrationConfigInfo,
     integration: Integration,
     raise_on_failure: bool = False,
-) -> None:
+) -> ConfigType | None:
     """Handle component configuration errors from async_process_component_config.
 
     In case of errors:
     - Print the error messages to the log.
     - Raise a ConfigValidationError if raise_on_failure is set.
+
+    Returns the integration config or `None`.
     """
 
     if not (config_exception_info := integration_config_info.exception_info_list):
-        return
+        return integration_config_info.config
 
     platform_exception: ConfigExceptionInfo
     domain = integration.domain
@@ -1296,7 +1261,7 @@ def async_handle_component_errors(
         )
 
     if not raise_on_failure:
-        return
+        return integration_config_info.config
 
     if len(config_exception_info) == 1:
         translation_key = platform_exception.translation_key

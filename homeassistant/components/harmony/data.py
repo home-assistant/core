@@ -45,7 +45,7 @@ class HarmonyData(HarmonySubscriberMixin):
         ]
 
     @property
-    def activity_names(self) -> list[str]:
+    def activity_names(self):
         """Names of all the remotes activities."""
         activity_infos = self.activities
         activities = [activity["label"] for activity in activity_infos]
@@ -61,7 +61,7 @@ class HarmonyData(HarmonySubscriberMixin):
         return devices
 
     @property
-    def name(self) -> str:
+    def name(self):
         """Return the Harmony device's name."""
         return self._name
 
@@ -138,7 +138,7 @@ class HarmonyData(HarmonySubscriberMixin):
                 f"{self._name}: Unable to connect to HUB at: {self._address}:8088"
             )
 
-    async def shutdown(self) -> None:
+    async def shutdown(self):
         """Close connection on shutdown."""
         _LOGGER.debug("%s: Closing Harmony Hub", self._name)
         try:
@@ -146,7 +146,7 @@ class HarmonyData(HarmonySubscriberMixin):
         except aioexc.TimeOut:
             _LOGGER.warning("%s: Disconnect timed-out", self._name)
 
-    async def async_start_activity(self, activity: str) -> None:
+    async def async_start_activity(self, activity: str):
         """Start an activity from the Harmony device."""
 
         if not activity:
@@ -189,7 +189,7 @@ class HarmonyData(HarmonySubscriberMixin):
             _LOGGER.error("%s: Starting activity %s timed-out", self.name, activity)
             self.async_unlock_start_activity()
 
-    async def async_power_off(self) -> None:
+    async def async_power_off(self):
         """Start the PowerOff activity."""
         _LOGGER.debug("%s: Turn Off", self.name)
         try:
@@ -204,7 +204,7 @@ class HarmonyData(HarmonySubscriberMixin):
         num_repeats: int,
         delay_secs: float,
         hold_secs: float,
-    ) -> None:
+    ):
         """Send a list of commands to one device."""
         device_id = None
         if device.isdigit():
@@ -259,7 +259,7 @@ class HarmonyData(HarmonySubscriberMixin):
                 result.msg,
             )
 
-    async def change_channel(self, channel: int) -> None:
+    async def change_channel(self, channel: int):
         """Change the channel using Harmony remote."""
         _LOGGER.debug("%s: Changing channel to %s", self.name, channel)
         try:

@@ -10,7 +10,6 @@ from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
-from homeassistant.util.json import json_loads
 
 from . import start
 from .entity import Entity
@@ -71,9 +70,9 @@ class StoredState:
         self.state = state
 
     def as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of the stored state to be JSON serialized."""
+        """Return a dict representation of the stored state."""
         result = {
-            "state": self.state.json_fragment,
+            "state": self.state.as_dict(),
             "extra_data": self.extra_data.as_dict() if self.extra_data else None,
             "last_seen": self.last_seen,
         }
@@ -179,8 +178,8 @@ class RestoreStateData:
         now = dt_util.utcnow()
         all_states = self.hass.states.async_all()
         # Entities currently backed by an entity object
-        current_states_by_entity_id = {
-            state.entity_id: state
+        current_entity_ids = {
+            state.entity_id
             for state in all_states
             if not state.attributes.get(ATTR_RESTORED)
         }
@@ -188,12 +187,13 @@ class RestoreStateData:
         # Start with the currently registered states
         stored_states = [
             StoredState(
-                current_states_by_entity_id[entity_id],
-                entity.extra_restore_state_data,
-                now,
+                state, self.entities[state.entity_id].extra_restore_state_data, now
             )
-            for entity_id, entity in self.entities.items()
-            if entity_id in current_states_by_entity_id
+            for state in all_states
+            if state.entity_id in self.entities
+            and
+            # Ignore all states that are entity registry placeholders
+            not state.attributes.get(ATTR_RESTORED)
         ]
         expiration_time = now - STATE_EXPIRATION
 
@@ -201,7 +201,7 @@ class RestoreStateData:
             # Don't save old states that have entities in the current run
             # They are either registered and already part of stored_states,
             # or no longer care about restoring.
-            if entity_id in current_states_by_entity_id:
+            if entity_id in current_entity_ids:
                 continue
 
             # Don't save old states that have expired
@@ -271,13 +271,39 @@ class RestoreStateData:
         # To fully mimic all the attribute data types when loaded from storage,
         # we're going to serialize it to JSON and then re-load it.
         if state is not None:
-            state = State.from_dict(json_loads(state.as_dict_json))  # type: ignore[arg-type]
+            state = State.from_dict(_encode_complex(state.as_dict()))
         if state is not None:
             self.last_states[entity_id] = StoredState(
                 state, extra_data, dt_util.utcnow()
             )
 
         self.entities.pop(entity_id)
+
+
+def _encode(value: Any) -> Any:
+    """Little helper to JSON encode a value."""
+    try:
+        return JSONEncoder.default(
+            None,  # type: ignore[arg-type]
+            value,
+        )
+    except TypeError:
+        return value
+
+
+def _encode_complex(value: Any) -> Any:
+    """Recursively encode all values with the JSONEncoder."""
+    if isinstance(value, dict):
+        return {_encode(key): _encode_complex(value) for key, value in value.items()}
+    if isinstance(value, list):
+        return [_encode_complex(val) for val in value]
+
+    new_value = _encode(value)
+
+    if isinstance(new_value, type(value)):
+        return new_value
+
+    return _encode_complex(new_value)
 
 
 class RestoreEntity(Entity):

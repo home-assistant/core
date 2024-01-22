@@ -1,14 +1,13 @@
 """Fixtures for Met Office weather integration tests."""
+import sys
 from unittest.mock import patch
 
 import pytest
 
-# All tests are marked as disabled, as the integration is disabled in the
-# integration manifest. `datapoint` isn't compatible with Python 3.12
-#
-# from datapoint.exceptions import APIException
-APIException = Exception
-collect_ignore_glob = ["test_*.py"]
+if sys.version_info < (3, 12):
+    from datapoint.exceptions import APIException
+else:
+    collect_ignore_glob = ["test_*.py"]
 
 
 @pytest.fixture

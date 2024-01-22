@@ -96,7 +96,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key=CONF_CURRENT_VALUES,
-        translation_key="power_usage",
+        name="Power Usage",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -156,8 +156,7 @@ class EfergySensor(EfergyEntity, SensorEntity):
         super().__init__(api, server_unique_id)
         self.entity_description = description
         if description.key == CONF_CURRENT_VALUES:
-            assert sid is not None
-            self._attr_translation_placeholders = {"sid": str(sid)}
+            self._attr_name = f"{description.name}_{'' if sid is None else sid}"
         self._attr_unique_id = (
             f"{server_unique_id}/{description.key}_{'' if sid is None else sid}"
         )

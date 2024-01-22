@@ -9,11 +9,9 @@ from homeassistant.auth.providers import insecure_example
 
 
 @pytest.fixture
-async def store(hass):
+def store(hass):
     """Mock store."""
-    store = auth_store.AuthStore(hass)
-    await store.async_load()
-    return store
+    return auth_store.AuthStore(hass)
 
 
 @pytest.fixture

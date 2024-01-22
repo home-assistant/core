@@ -28,8 +28,8 @@ class MeshRoles(StrEnum):
 DOMAIN = "fritz"
 
 PLATFORMS = [
-    Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
     Platform.IMAGE,
     Platform.SENSOR,

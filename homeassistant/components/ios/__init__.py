@@ -1,9 +1,7 @@
 """Native Home Assistant iOS app component."""
 import datetime
 from http import HTTPStatus
-from typing import Any
 
-from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -26,8 +24,6 @@ from .const import (
     CONF_ACTION_LABEL_COLOR,
     CONF_ACTION_LABEL_TEXT,
     CONF_ACTION_NAME,
-    CONF_ACTION_SHOW_IN_CARPLAY,
-    CONF_ACTION_SHOW_IN_WATCH,
     CONF_ACTIONS,
     DOMAIN,
 )
@@ -149,8 +145,6 @@ ACTION_SCHEMA = vol.Schema(
             vol.Optional(CONF_ACTION_ICON_ICON): cv.string,
             vol.Optional(CONF_ACTION_ICON_COLOR): cv.string,
         },
-        vol.Optional(CONF_ACTION_SHOW_IN_CARPLAY): cv.boolean,
-        vol.Optional(CONF_ACTION_SHOW_IN_WATCH): cv.boolean,
     },
 )
 
@@ -224,7 +218,7 @@ CONFIGURATION_FILE = ".ios.conf"
 PLATFORMS = [Platform.SENSOR]
 
 
-def devices_with_push(hass: HomeAssistant) -> dict[str, str]:
+def devices_with_push(hass):
     """Return a dictionary of push enabled targets."""
     return {
         device_name: device.get(ATTR_PUSH_ID)
@@ -233,7 +227,7 @@ def devices_with_push(hass: HomeAssistant) -> dict[str, str]:
     }
 
 
-def enabled_push_ids(hass: HomeAssistant) -> list[str]:
+def enabled_push_ids(hass):
     """Return a list of push enabled target push IDs."""
     return [
         device.get(ATTR_PUSH_ID)
@@ -242,16 +236,16 @@ def enabled_push_ids(hass: HomeAssistant) -> list[str]:
     ]
 
 
-def devices(hass: HomeAssistant) -> dict[str, dict[str, Any]]:
+def devices(hass):
     """Return a dictionary of all identified devices."""
-    return hass.data[DOMAIN][ATTR_DEVICES]  # type: ignore[no-any-return]
+    return hass.data[DOMAIN][ATTR_DEVICES]
 
 
-def device_name_for_push_id(hass: HomeAssistant, push_id: str) -> str | None:
+def device_name_for_push_id(hass, push_id):
     """Return the device name for the push ID."""
     for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items():
         if device.get(ATTR_PUSH_ID) is push_id:
-            return device_name  # type: ignore[no-any-return]
+            return device_name
     return None
 
 
@@ -305,12 +299,12 @@ class iOSPushConfigView(HomeAssistantView):
     url = "/api/ios/push"
     name = "api:ios:push"
 
-    def __init__(self, push_config: dict[str, Any]) -> None:
+    def __init__(self, push_config):
         """Init the view."""
         self.push_config = push_config
 
     @callback
-    def get(self, request: web.Request) -> web.Response:
+    def get(self, request):
         """Handle the GET request for the push configuration."""
         return self.json(self.push_config)
 
@@ -321,12 +315,12 @@ class iOSConfigView(HomeAssistantView):
     url = "/api/ios/config"
     name = "api:ios:config"
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(self, config):
         """Init the view."""
         self.config = config
 
     @callback
-    def get(self, request: web.Request) -> web.Response:
+    def get(self, request):
         """Handle the GET request for the user-defined configuration."""
         return self.json(self.config)
 
@@ -337,18 +331,18 @@ class iOSIdentifyDeviceView(HomeAssistantView):
     url = "/api/ios/identify"
     name = "api:ios:identify"
 
-    def __init__(self, config_path: str) -> None:
+    def __init__(self, config_path):
         """Initialize the view."""
         self._config_path = config_path
 
-    async def post(self, request: web.Request) -> web.Response:
+    async def post(self, request):
         """Handle the POST request for device identification."""
         try:
             data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app["hass"]
 
         data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 

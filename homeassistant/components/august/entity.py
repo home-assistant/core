@@ -1,7 +1,7 @@
 """Base class for August entity."""
 from abc import abstractmethod
 
-from yalexs.doorbell import Doorbell, DoorbellDetail
+from yalexs.doorbell import Doorbell
 from yalexs.lock import Lock, LockDetail
 from yalexs.util import get_configuration_url
 
@@ -42,28 +42,28 @@ class AugustEntityMixin(Entity):
             self._attr_device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_BLUETOOTH, mac)}
 
     @property
-    def _device_id(self) -> str:
+    def _device_id(self):
         return self._device.device_id
 
     @property
-    def _detail(self) -> DoorbellDetail | LockDetail:
+    def _detail(self):
         return self._data.get_device_detail(self._device.device_id)
 
     @property
-    def _hyper_bridge(self) -> bool:
+    def _hyper_bridge(self):
         """Check if the lock has a paired hyper bridge."""
         return bool(self._detail.bridge and self._detail.bridge.hyper_bridge)
 
     @callback
-    def _update_from_data_and_write_state(self) -> None:
+    def _update_from_data_and_write_state(self):
         self._update_from_data()
         self.async_write_ha_state()
 
     @abstractmethod
-    def _update_from_data(self) -> None:
+    def _update_from_data(self):
         """Update the entity state from the data object."""
 
-    async def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self):
         """Subscribe to updates."""
         self.async_on_remove(
             self._data.async_subscribe_device_id(
@@ -77,7 +77,7 @@ class AugustEntityMixin(Entity):
         )
 
 
-def _remove_device_types(name: str, device_types: list[str]) -> str:
+def _remove_device_types(name, device_types):
     """Strip device types from a string.
 
     August stores the name as Master Bed Lock

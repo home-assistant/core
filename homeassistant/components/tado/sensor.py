@@ -19,7 +19,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import TadoConnector
 from .const import (
     CONDITIONS_MAP,
     DATA,
@@ -61,14 +60,14 @@ def format_condition(condition: str) -> str:
     return condition
 
 
-def get_tado_mode(data: dict[str, str]) -> str | None:
+def get_tado_mode(data) -> str | None:
     """Return Tado Mode based on Presence attribute."""
     if "presence" in data:
         return data["presence"]
     return None
 
 
-def get_automatic_geofencing(data: dict[str, str]) -> bool:
+def get_automatic_geofencing(data) -> bool:
     """Return whether Automatic Geofencing is enabled based on Presence Locked attribute."""
     if "presenceLocked" in data:
         if data["presenceLocked"]:
@@ -77,7 +76,7 @@ def get_automatic_geofencing(data: dict[str, str]) -> bool:
     return False
 
 
-def get_geofencing_mode(data: dict[str, str]) -> str:
+def get_geofencing_mode(data) -> str:
     """Return Geofencing Mode based on Presence and Presence Locked attributes."""
     tado_mode = ""
     tado_mode = data.get("presence", "unknown")
@@ -241,9 +240,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
 
     entity_description: TadoSensorEntityDescription
 
-    def __init__(
-        self, tado: TadoConnector, entity_description: TadoSensorEntityDescription
-    ) -> None:
+    def __init__(self, tado, entity_description: TadoSensorEntityDescription) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
         super().__init__(tado)
@@ -264,13 +261,13 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         self._async_update_home_data()
 
     @callback
-    def _async_update_callback(self) -> None:
+    def _async_update_callback(self):
         """Update and write state."""
         self._async_update_home_data()
         self.async_write_ha_state()
 
     @callback
-    def _async_update_home_data(self) -> None:
+    def _async_update_home_data(self):
         """Handle update callbacks."""
         try:
             tado_weather_data = self._tado.data["weather"]
@@ -297,9 +294,9 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
 
     def __init__(
         self,
-        tado: TadoConnector,
-        zone_name: str,
-        zone_id: int,
+        tado,
+        zone_name,
+        zone_id,
         entity_description: TadoSensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
@@ -324,13 +321,13 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
         self._async_update_zone_data()
 
     @callback
-    def _async_update_callback(self) -> None:
+    def _async_update_callback(self):
         """Update and write state."""
         self._async_update_zone_data()
         self.async_write_ha_state()
 
     @callback
-    def _async_update_zone_data(self) -> None:
+    def _async_update_zone_data(self):
         """Handle update callbacks."""
         try:
             tado_zone_data = self._tado.data["zone"][self.zone_id]

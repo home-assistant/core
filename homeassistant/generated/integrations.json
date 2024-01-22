@@ -65,12 +65,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "aep_ohio": {
+    "aepohio": {
       "name": "AEP Ohio",
       "integration_type": "virtual",
       "supported_by": "opower"
     },
-    "aep_texas": {
+    "aeptexas": {
       "name": "AEP Texas",
       "integration_type": "virtual",
       "supported_by": "opower"
@@ -1381,7 +1381,7 @@
     "ecovacs": {
       "name": "Ecovacs",
       "integration_type": "hub",
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_push"
     },
     "ecowitt": {
@@ -1577,12 +1577,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "epion": {
-      "name": "Epion",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "epson": {
       "name": "Epson",
       "integrations": {
@@ -1685,6 +1679,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "facebox": {
+      "name": "Facebox",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_push"
     },
     "fail2ban": {
       "name": "Fail2Ban",
@@ -2266,22 +2266,11 @@
         }
       }
     },
-    "govee": {
-      "name": "Govee",
-      "integrations": {
-        "govee_ble": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_push",
-          "name": "Govee Bluetooth"
-        },
-        "govee_light_local": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_push",
-          "name": "Govee lights local"
-        }
-      }
+    "govee_ble": {
+      "name": "Govee Bluetooth",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "gpsd": {
       "name": "GPSD",
@@ -2457,12 +2446,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "hko": {
-      "name": "Hong Kong Observatory",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "hlk_sw16": {
       "name": "Hi-Link HLK-SW16",
       "integration_type": "hub",
@@ -2470,6 +2453,7 @@
       "iot_class": "local_push"
     },
     "holiday": {
+      "name": "Holiday",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3016,12 +3000,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "lamarzocco": {
-      "name": "La Marzocco",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "lametric": {
       "name": "LaMetric",
       "integration_type": "device",
@@ -3115,6 +3093,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "life360": {
+      "name": "Life360",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "lifx": {
       "name": "LIFX",
@@ -3297,7 +3281,7 @@
       "integrations": {
         "lutron": {
           "integration_type": "hub",
-          "config_flow": true,
+          "config_flow": false,
           "iot_class": "local_polling",
           "name": "Lutron"
         },
@@ -3747,12 +3731,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
-    },
-    "myuplink": {
-      "name": "myUplink",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "nad": {
       "name": "NAD",
@@ -4687,12 +4665,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "rabbitair": {
-      "name": "Rabbit Air",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "rachio": {
       "name": "Rachio",
       "integration_type": "hub",
@@ -4723,22 +4695,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "rainforest": {
-      "name": "Rainforest Automation",
-      "integrations": {
-        "rainforest_eagle": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "Rainforest Eagle"
-        },
-        "rainforest_raven": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "Rainforest RAVEn"
-        }
-      }
+    "rainforest_eagle": {
+      "name": "Rainforest Eagle",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "rainmachine": {
       "name": "RainMachine",
@@ -5843,23 +5804,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "technove": {
-      "name": "TechnoVE",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "ted5000": {
       "name": "The Energy Detective TED5000",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "tedee": {
-      "name": "Tedee",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
     },
     "telegram": {
       "name": "Telegram",
@@ -6092,7 +6041,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_polling",
-          "name": "TP-Link Smart Home"
+          "name": "TP-Link Kasa Smart"
         },
         "tplink_omada": {
           "integration_type": "hub",
@@ -7022,7 +6971,6 @@
     "google_travel_time",
     "group",
     "growatt_server",
-    "holiday",
     "homekit_controller",
     "input_boolean",
     "input_button",

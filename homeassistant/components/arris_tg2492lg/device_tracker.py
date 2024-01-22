@@ -40,13 +40,13 @@ class ArrisDeviceScanner(DeviceScanner):
         self.connect_box = connect_box
         self.last_results: list[Device] = []
 
-    def scan_devices(self) -> list[str]:
+    def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
-        return [device.mac for device in self.last_results if device.mac]
+        return [device.mac for device in self.last_results]
 
-    def get_device_name(self, device: str) -> str | None:
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         name = next(
             (result.hostname for result in self.last_results if result.mac == device),
@@ -54,12 +54,12 @@ class ArrisDeviceScanner(DeviceScanner):
         )
         return name
 
-    def _update_info(self) -> None:
+    def _update_info(self):
         """Ensure the information from the Arris TG2492LG router is up to date."""
         result = self.connect_box.get_connected_devices()
 
-        last_results: list[Device] = []
-        mac_addresses: set[str | None] = set()
+        last_results = []
+        mac_addresses = set()
 
         for device in result:
             if device.online and device.mac not in mac_addresses:

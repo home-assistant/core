@@ -22,7 +22,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:molecule-co2',
     'original_name': 'CO2 intensity',
     'platform': 'co2signal',
     'previous_unique_id': None,
@@ -38,6 +38,7 @@
       'attribution': 'Data provided by Electricity Maps',
       'country_code': 'FR',
       'friendly_name': 'Electricity Maps CO2 intensity',
+      'icon': 'mdi:molecule-co2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'gCO2eq/kWh',
     }),
@@ -71,7 +72,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:molecule-co2',
     'original_name': 'Grid fossil fuel percentage',
     'platform': 'co2signal',
     'previous_unique_id': None,
@@ -87,6 +88,7 @@
       'attribution': 'Data provided by Electricity Maps',
       'country_code': 'FR',
       'friendly_name': 'Electricity Maps Grid fossil fuel percentage',
+      'icon': 'mdi:molecule-co2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),

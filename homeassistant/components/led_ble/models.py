@@ -14,4 +14,4 @@ class LEDBLEData:
 
     title: str
     device: LEDBLE
-    coordinator: DataUpdateCoordinator[None]
+    coordinator: DataUpdateCoordinator

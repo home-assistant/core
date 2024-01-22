@@ -1,0 +1,41 @@
+effect:
+  target:
+    entity:
+      integration: wled
+      domain: light
+  fields:
+    effect:
+      example: "Rainbow"
+      selector:
+        text:
+    intensity:
+      selector:
+        number:
+          min: 0
+          max: 255
+    palette:
+      example: "Tiamat"
+      selector:
+        text:
+    speed:
+      selector:
+        number:
+          min: 0
+          max: 255
+    reverse:
+      default: false
+      selector:
+        boolean:
+
+preset:
+  target:
+    entity:
+      integration: wled
+      domain: light
+  fields:
+    preset:
+      selector:
+        number:
+          min: -1
+          max: 65535
+          mode: box

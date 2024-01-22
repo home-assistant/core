@@ -11,9 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ROOM_NAME_UNICODE, STATE_ATTRIBUTE_ROOM_NAME
-from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import HDEntity
-from .model import PowerviewDeviceInfo, PowerviewEntryData
+from .model import PowerviewEntryData
 
 
 async def async_setup_entry(
@@ -23,7 +22,7 @@ async def async_setup_entry(
 
     pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
-    pvscenes: list[PowerViewScene] = []
+    pvscenes = []
     for raw_scene in pv_entry.scene_data.values():
         scene = PvScene(raw_scene, pv_entry.api)
         room_name = pv_entry.room_data.get(scene.room_id, {}).get(ROOM_NAME_UNICODE, "")
@@ -38,13 +37,7 @@ class PowerViewScene(HDEntity, Scene):
 
     _attr_icon = "mdi:blinds"
 
-    def __init__(
-        self,
-        coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: PowerviewDeviceInfo,
-        room_name: str,
-        scene: PvScene,
-    ) -> None:
+    def __init__(self, coordinator, device_info, room_name, scene):
         """Initialize the scene."""
         super().__init__(coordinator, device_info, room_name, scene.id)
         self._scene = scene

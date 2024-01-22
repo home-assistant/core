@@ -29,7 +29,7 @@
         },
         "apply_filter": {
           "name": "Apply filter",
-          "description": "Apply `entity_id` and `event_type` filters in addition to time-based purge."
+          "description": "Applys `entity_id` and `event_type` filters in addition to time-based purge."
         }
       }
     },

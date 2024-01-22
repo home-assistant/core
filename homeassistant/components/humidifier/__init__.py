@@ -24,7 +24,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
 )
 from homeassistant.helpers.deprecation import (
-    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -82,11 +81,17 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(HumidifierDeviceClass))
 # use the HumidifierDeviceClass enum instead.
 DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
 
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
+
 # mypy: disallow-any-generics
 
 
 @bind_hass
-def is_on(hass: HomeAssistant, entity_id: str) -> bool:
+def is_on(hass, entity_id):
     """Return if the humidifier is on based on the statemachine.
 
     Async friendly.
@@ -180,7 +185,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
 
-        if HumidifierEntityFeature.MODES in self.supported_features_compat:
+        if HumidifierEntityFeature.MODES in self.supported_features:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
@@ -209,7 +214,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if HumidifierEntityFeature.MODES in self.supported_features_compat:
+        if HumidifierEntityFeature.MODES in self.supported_features:
             data[ATTR_MODE] = self.mode
 
         return data
@@ -275,26 +280,3 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     def supported_features(self) -> HumidifierEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
-
-    @property
-    def supported_features_compat(self) -> HumidifierEntityFeature:
-        """Return the supported features as HumidifierEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = HumidifierEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
-
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

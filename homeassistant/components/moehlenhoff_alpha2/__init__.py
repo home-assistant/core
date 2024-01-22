@@ -8,7 +8,7 @@ import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -17,14 +17,14 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR, Platform.BINARY_SENSOR]
 
 UPDATE_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    base = Alpha2Base(entry.data[CONF_HOST])
+    base = Alpha2Base(entry.data["host"])
     coordinator = Alpha2BaseCoordinator(hass, base)
 
     await coordinator.async_config_entry_first_refresh()

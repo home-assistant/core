@@ -386,10 +386,7 @@ async def test_calling_service_response_data(
                             "target": {},
                         },
                         "running_script": False,
-                    },
-                    "variables": {
-                        "my_response": {"data": "value-12345"},
-                    },
+                    }
                 }
             ],
             "1": [
@@ -402,7 +399,10 @@ async def test_calling_service_response_data(
                             "target": {},
                         },
                         "running_script": False,
-                    }
+                    },
+                    "variables": {
+                        "my_response": {"data": "value-12345"},
+                    },
                 }
             ],
         }
@@ -1163,13 +1163,13 @@ async def test_wait_template_not_schedule(hass: HomeAssistant) -> None:
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [
+            "1": [{"result": {"wait": {"completed": True, "remaining": None}}}],
+            "2": [
                 {
-                    "result": {"wait": {"completed": True, "remaining": None}},
+                    "result": {"event": "test_event", "event_data": {}},
                     "variables": {"wait": {"completed": True, "remaining": None}},
                 }
             ],
-            "2": [{"result": {"event": "test_event", "event_data": {}}}],
         }
     )
 
@@ -1230,13 +1230,13 @@ async def test_wait_timeout(
     else:
         variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
     expected_trace = {
-        "0": [
+        "0": [{"result": variable_wait}],
+        "1": [
             {
-                "result": variable_wait,
+                "result": {"event": "test_event", "event_data": {}},
                 "variables": variable_wait,
             }
         ],
-        "1": [{"result": {"event": "test_event", "event_data": {}}}],
     }
     assert_action_trace(expected_trace)
 
@@ -1291,14 +1291,19 @@ async def test_wait_continue_on_timeout(
     else:
         variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
     expected_trace = {
-        "0": [{"result": variable_wait, "variables": variable_wait}],
+        "0": [{"result": variable_wait}],
     }
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
         expected_trace["0"][0]["error_type"] = asyncio.TimeoutError
         expected_script_execution = "aborted"
     else:
-        expected_trace["1"] = [{"result": {"event": "test_event", "event_data": {}}}]
+        expected_trace["1"] = [
+            {
+                "result": {"event": "test_event", "event_data": {}},
+                "variables": variable_wait,
+            }
+        ]
         expected_script_execution = "finished"
     assert_action_trace(expected_trace, expected_script_execution)
 
@@ -3264,12 +3269,12 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
                             "description": "state of switch.trigger",
                         },
                     }
-                },
-                "variables": {"wait": {"remaining": None}},
+                }
             }
         ],
         "0/parallel/1/sequence/0": [
             {
+                "variables": {},
                 "result": {
                     "event": "test_event",
                     "event_data": {"hello": "from action 2", "what": "world"},
@@ -3278,6 +3283,7 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         ],
         "0/parallel/0/sequence/1": [
             {
+                "variables": {"wait": {"remaining": None}},
                 "result": {
                     "event": "test_event",
                     "event_data": {"hello": "from action 1", "what": "world"},
@@ -4340,7 +4346,7 @@ async def test_shutdown_after(
     script_obj = script.Script(hass, sequence, "test script", "test_domain")
     delay_started_flag = async_watch_for_action(script_obj, delay_alias)
 
-    hass.set_state(CoreState.stopping)
+    hass.state = CoreState.stopping
     hass.bus.async_fire("homeassistant_stop")
     await hass.async_block_till_done()
 
@@ -4379,7 +4385,7 @@ async def test_start_script_after_shutdown(
     script_obj = script.Script(hass, sequence, "test script", "test_domain")
 
     # Trigger 1st stage script shutdown
-    hass.set_state(CoreState.stopping)
+    hass.state = CoreState.stopping
     hass.bus.async_fire("homeassistant_stop")
     await hass.async_block_till_done()
     # Trigger 2nd stage script shutdown
@@ -4456,7 +4462,7 @@ async def test_set_variable(
     assert f"Executing step {alias}" in caplog.text
 
     expected_trace = {
-        "0": [{"variables": {"variable": "value"}}],
+        "0": [{}],
         "1": [
             {
                 "result": {
@@ -4468,6 +4474,7 @@ async def test_set_variable(
                     },
                     "running_script": False,
                 },
+                "variables": {"variable": "value"},
             }
         ],
     }
@@ -4497,7 +4504,7 @@ async def test_set_redefines_variable(
     assert mock_calls[1].data["value"] == 2
 
     expected_trace = {
-        "0": [{"variables": {"variable": "1"}}],
+        "0": [{}],
         "1": [
             {
                 "result": {
@@ -4508,10 +4515,11 @@ async def test_set_redefines_variable(
                         "target": {},
                     },
                     "running_script": False,
-                }
+                },
+                "variables": {"variable": "1"},
             }
         ],
-        "2": [{"variables": {"variable": 2}}],
+        "2": [{}],
         "3": [
             {
                 "result": {
@@ -4522,7 +4530,8 @@ async def test_set_redefines_variable(
                         "target": {},
                     },
                     "running_script": False,
-                }
+                },
+                "variables": {"variable": 2},
             }
         ],
     }

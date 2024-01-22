@@ -210,7 +210,9 @@ async def test_option_flow_install_multi_pan_addon(
     assert result["step_id"] == "install_addon"
     assert result["progress_action"] == "install_addon"
 
-    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "configure_addon"
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
@@ -229,7 +231,9 @@ async def test_option_flow_install_multi_pan_addon(
         },
     )
 
-    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "finish_addon_setup"
     start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
@@ -309,7 +313,9 @@ async def test_option_flow_install_multi_pan_addon_zha(
     assert result["step_id"] == "install_addon"
     assert result["progress_action"] == "install_addon"
 
-    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "configure_addon"
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
@@ -337,7 +343,9 @@ async def test_option_flow_install_multi_pan_addon_zha(
         "radio_type": "ezsp",
     }
 
-    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "finish_addon_setup"
     start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])

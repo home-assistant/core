@@ -1,6 +1,4 @@
 """Offer API to configure the Home Assistant auth provider."""
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -11,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import Unauthorized
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+async def async_setup(hass):
     """Enable the Home Assistant views."""
     websocket_api.async_register_command(hass, websocket_create)
     websocket_api.async_register_command(hass, websocket_delete)
@@ -117,7 +115,7 @@ async def websocket_change_password(
 ) -> None:
     """Change current user password."""
     if (user := connection.user) is None:
-        connection.send_error(msg["id"], "user_not_found", "User not found")  # type: ignore[unreachable]
+        connection.send_error(msg["id"], "user_not_found", "User not found")
         return
 
     provider = auth_ha.async_get_provider(hass)

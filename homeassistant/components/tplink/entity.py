@@ -24,7 +24,7 @@ def async_refresh_after(
 
     async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         await func(self, *args, **kwargs)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh_without_children()
 
     return _async_wrap
 
@@ -50,3 +50,8 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
             sw_version=device.hw_info["sw_ver"],
             hw_version=device.hw_info["hw_ver"],
         )
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if switch is on."""
+        return bool(self.device.is_on)

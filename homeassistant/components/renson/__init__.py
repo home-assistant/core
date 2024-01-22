@@ -19,7 +19,6 @@ PLATFORMS = [
     Platform.FAN,
     Platform.NUMBER,
     Platform.SENSOR,
-    Platform.TIME,
 ]
 
 

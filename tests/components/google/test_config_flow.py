@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import datetime
 from http import HTTPStatus
@@ -11,7 +10,6 @@ from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientError
 from freezegun import freeze_time
-from freezegun.api import FrozenDateTimeFactory
 from oauth2client.client import (
     DeviceFlowInfo,
     FlowExchangeError,
@@ -275,7 +273,6 @@ async def test_exchange_error(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an error while exchanging the code for credentials."""
     await async_import_client_credential(
@@ -293,19 +290,14 @@ async def test_exchange_error(
     assert "url" in result["description_placeholders"]
 
     # Run one tick to invoke the credential exchange check
-    step2_exchange_called = asyncio.Event()
-
-    def step2_exchange(*args, **kwargs):
-        hass.loop.call_soon_threadsafe(step2_exchange_called.set)
-        raise FlowExchangeError
-
+    now = utcnow()
     with patch(
         "homeassistant.components.google.api.OAuth2WebServerFlow.step2_exchange",
-        side_effect=step2_exchange,
+        side_effect=FlowExchangeError(),
     ):
-        freezer.tick(CODE_CHECK_ALARM_TIMEDELTA)
-        async_fire_time_changed(hass, utcnow())
-        await step2_exchange_called.wait()
+        now += CODE_CHECK_ALARM_TIMEDELTA
+        await fire_alarm(hass, now)
+        await hass.async_block_till_done()
 
     # Status has not updated, will retry
     result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])
@@ -316,8 +308,8 @@ async def test_exchange_error(
     with patch(
         "homeassistant.components.google.async_setup_entry", return_value=True
     ) as mock_setup:
-        freezer.tick(CODE_CHECK_ALARM_TIMEDELTA)
-        async_fire_time_changed(hass, utcnow())
+        now += CODE_CHECK_ALARM_TIMEDELTA
+        await fire_alarm(hass, now)
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"]

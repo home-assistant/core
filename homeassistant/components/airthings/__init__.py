@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from airthings import Airthings, AirthingsDevice, AirthingsError
+from airthings import Airthings, AirthingsError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, Platform
@@ -19,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=6)
 
-AirthingsDataCoordinatorType = DataUpdateCoordinator[dict[str, AirthingsDevice]]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Airthings from a config entry."""
@@ -32,10 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_get_clientsession(hass),
     )
 
-    async def _update_method() -> dict[str, AirthingsDevice]:
+    async def _update_method():
         """Get the latest data from Airthings."""
         try:
-            return await airthings.update_devices()  # type: ignore[no-any-return]
+            return await airthings.update_devices()
         except AirthingsError as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 

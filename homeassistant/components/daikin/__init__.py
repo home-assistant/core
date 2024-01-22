@@ -1,10 +1,7 @@
 """Platform for the Daikin AC."""
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
 
 from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
@@ -71,13 +68,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def daikin_api_setup(
-    hass: HomeAssistant,
-    host: str,
-    key: str | None,
-    uuid: str | None,
-    password: str | None,
-) -> DaikinApi | None:
+async def daikin_api_setup(hass: HomeAssistant, host, key, uuid, password):
     """Create a Daikin instance only once."""
 
     session = async_get_clientsession(hass)
@@ -112,7 +103,7 @@ class DaikinApi:
         self._available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self, **kwargs: Any) -> None:
+    async def async_update(self, **kwargs):
         """Pull the latest data from Daikin."""
         try:
             await self.device.update_status()

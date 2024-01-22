@@ -53,9 +53,7 @@ async def async_attach_trigger(
     job = HassJob(action, f"time trigger {trigger_info}")
 
     @callback
-    def time_automation_listener(
-        description: str, now: datetime, *, entity_id: str | None = None
-    ) -> None:
+    def time_automation_listener(description, now, *, entity_id=None):
         """Listen for time changes and calls action."""
         hass.async_run_hass_job(
             job,
@@ -185,7 +183,7 @@ async def async_attach_trigger(
     )
 
     @callback
-    def remove_track_time_changes() -> None:
+    def remove_track_time_changes():
         """Remove tracked time changes."""
         for remove in entities.values():
             remove()

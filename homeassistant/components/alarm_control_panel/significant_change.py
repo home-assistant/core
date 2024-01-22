@@ -26,16 +26,13 @@ def async_check_significant_change(
     if old_state != new_state:
         return True
 
-    old_attrs_s = set(
-        {k: v for k, v in old_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
-    )
-    new_attrs_s = set(
-        {k: v for k, v in new_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
-    )
+    old_attrs_s = set(old_attrs.items())
+    new_attrs_s = set(new_attrs.items())
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
 
-    if changed_attrs:
-        return True
+    for attr_name in changed_attrs:
+        if attr_name in SIGNIFICANT_ATTRIBUTES:
+            return True
 
     # no significant attribute change detected
     return False

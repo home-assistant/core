@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from sqlalchemy.engine.row import Row
 
@@ -17,15 +17,9 @@ from homeassistant.core import Context, State
 import homeassistant.util.dt as dt_util
 
 from .state_attributes import decode_attributes_from_source
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+from .time import process_timestamp
 
 _LOGGER = logging.getLogger(__name__)
-
-EMPTY_CONTEXT = Context(id=None)
 
 
 def extract_metadata_ids(
@@ -41,6 +35,15 @@ def extract_metadata_ids(
 
 class LazyState(State):
     """A lazy version of core State after schema 31."""
+
+    __slots__ = [
+        "_row",
+        "_attributes",
+        "_last_changed_ts",
+        "_last_updated_ts",
+        "_context",
+        "attr_cache",
+    ]
 
     def __init__(  # pylint: disable=super-init-not-called
         self,
@@ -58,34 +61,60 @@ class LazyState(State):
         self.state = state or ""
         self._attributes: dict[str, Any] | None = None
         self._last_updated_ts: float | None = last_updated_ts or start_time_ts
+        self._last_changed_ts: float | None = None
+        self._context: Context | None = None
         self.attr_cache = attr_cache
-        self.context = EMPTY_CONTEXT
 
-    @cached_property  # type: ignore[override]
+    @property  # type: ignore[override]
     def attributes(self) -> dict[str, Any]:
         """State attributes."""
-        return decode_attributes_from_source(
-            getattr(self._row, "attributes", None), self.attr_cache
-        )
+        if self._attributes is None:
+            self._attributes = decode_attributes_from_source(
+                getattr(self._row, "attributes", None), self.attr_cache
+            )
+        return self._attributes
 
-    @cached_property
-    def _last_changed_ts(self) -> float | None:
-        """Last changed timestamp."""
-        return getattr(self._row, "last_changed_ts", None)
+    @attributes.setter
+    def attributes(self, value: dict[str, Any]) -> None:
+        """Set attributes."""
+        self._attributes = value
 
-    @cached_property
-    def last_changed(self) -> datetime:  # type: ignore[override]
+    @property
+    def context(self) -> Context:
+        """State context."""
+        if self._context is None:
+            self._context = Context(id=None)
+        return self._context
+
+    @context.setter
+    def context(self, value: Context) -> None:
+        """Set context."""
+        self._context = value
+
+    @property
+    def last_changed(self) -> datetime:
         """Last changed datetime."""
-        return dt_util.utc_from_timestamp(
-            self._last_changed_ts or self._last_updated_ts
-        )
+        if self._last_changed_ts is None:
+            self._last_changed_ts = (
+                getattr(self._row, "last_changed_ts", None) or self._last_updated_ts
+            )
+        return dt_util.utc_from_timestamp(self._last_changed_ts)
 
-    @cached_property
-    def last_updated(self) -> datetime:  # type: ignore[override]
+    @last_changed.setter
+    def last_changed(self, value: datetime) -> None:
+        """Set last changed datetime."""
+        self._last_changed_ts = process_timestamp(value).timestamp()
+
+    @property
+    def last_updated(self) -> datetime:
         """Last updated datetime."""
-        if TYPE_CHECKING:
-            assert self._last_updated_ts is not None
+        assert self._last_updated_ts is not None
         return dt_util.utc_from_timestamp(self._last_updated_ts)
+
+    @last_updated.setter
+    def last_updated(self, value: datetime) -> None:
+        """Set last updated datetime."""
+        self._last_updated_ts = process_timestamp(value).timestamp()
 
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a dict representation of the LazyState.

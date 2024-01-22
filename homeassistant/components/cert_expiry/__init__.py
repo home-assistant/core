@@ -14,8 +14,8 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load the saved entities."""
-    host: str = entry.data[CONF_HOST]
-    port: int = entry.data[CONF_PORT]
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
 
     coordinator = CertExpiryDataUpdateCoordinator(hass, host, port)
 
@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=f"{host}:{port}")
 
-    async def _async_finish_startup(_: HomeAssistant) -> None:
+    async def _async_finish_startup(_):
         await coordinator.async_refresh()
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

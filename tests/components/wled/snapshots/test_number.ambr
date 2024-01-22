@@ -2,7 +2,7 @@
 # name: test_numbers[number.wled_rgb_light_segment_1_intensity-42-intensity]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Segment 1 intensity',
+      'friendly_name': 'WLED RGB Light Segment 1 Intensity',
       'max': 255,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -42,11 +42,11 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Segment 1 intensity',
+    'original_name': 'Segment 1 Intensity',
     'platform': 'wled',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'segment_intensity',
+    'translation_key': None,
     'unique_id': 'aabbccddeeff_intensity_1',
     'unit_of_measurement': None,
   })
@@ -86,7 +86,8 @@
 # name: test_numbers[number.wled_rgb_light_segment_1_speed-42-speed]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Segment 1 speed',
+      'friendly_name': 'WLED RGB Light Segment 1 Speed',
+      'icon': 'mdi:speedometer',
       'max': 255,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -125,12 +126,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Segment 1 speed',
+    'original_icon': 'mdi:speedometer',
+    'original_name': 'Segment 1 Speed',
     'platform': 'wled',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'segment_speed',
+    'translation_key': None,
     'unique_id': 'aabbccddeeff_speed_1',
     'unit_of_measurement': None,
   })

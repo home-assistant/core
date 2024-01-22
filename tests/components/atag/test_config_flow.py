@@ -31,7 +31,8 @@ async def test_adding_second_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that only one Atag configuration is allowed."""
-    await init_integration(hass, aioclient_mock, unique_id=UID)
+    entry = await init_integration(hass, aioclient_mock)
+    entry.unique_id = UID
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT

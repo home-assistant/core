@@ -9,17 +9,25 @@ blink_update:
           integration: blink
 
 trigger_camera:
-  target:
-    entity:
-      integration: blink
-      domain: camera
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: blink
 
 save_video:
-  target:
-    entity:
-      integration: blink
-      domain: camera
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: blink
+    name:
+      required: true
+      example: "Living Room"
+      selector:
+        text:
     filename:
       required: true
       example: "/tmp/video.mp4"
@@ -27,11 +35,17 @@ save_video:
         text:
 
 save_recent_clips:
-  target:
-    entity:
-      integration: blink
-      domain: camera
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: blink
+    name:
+      required: true
+      example: "Living Room"
+      selector:
+        text:
     file_path:
       required: true
       example: "/tmp"
@@ -40,10 +54,10 @@ save_recent_clips:
 
 send_pin:
   fields:
-    config_entry_id:
+    device_id:
       required: true
       selector:
-        config_entry:
+        device:
           integration: blink
     pin:
       example: "abc123"

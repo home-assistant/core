@@ -2,13 +2,10 @@
 import asyncio
 import logging
 from random import randrange
-from typing import TYPE_CHECKING, cast
 
 from pyatv import connect, exceptions, scan
-from pyatv.conf import AppleTV
 from pyatv.const import DeviceModel, Protocol
 from pyatv.convert import model_str
-from pyatv.interface import AppleTV as AppleTVInterface, DeviceListener
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
@@ -95,14 +92,10 @@ class AppleTVEntity(Entity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(
-        self, name: str, identifier: str | None, manager: "AppleTVManager"
-    ) -> None:
+    def __init__(self, name, identifier, manager):
         """Initialize device."""
-        self.atv: AppleTVInterface = None  # type: ignore[assignment]
+        self.atv = None
         self.manager = manager
-        if TYPE_CHECKING:
-            assert identifier is not None
         self._attr_unique_id = identifier
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
@@ -150,7 +143,7 @@ class AppleTVEntity(Entity):
         """Handle when connection was lost to device."""
 
 
-class AppleTVManager(DeviceListener):
+class AppleTVManager:
     """Connection and power manager for an Apple TV.
 
     An instance is used per device to share the same power state between
@@ -158,11 +151,11 @@ class AppleTVManager(DeviceListener):
     in case of problems.
     """
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass, config_entry):
         """Initialize power manager."""
         self.config_entry = config_entry
         self.hass = hass
-        self.atv: AppleTVInterface | None = None
+        self.atv = None
         self.is_on = not config_entry.options.get(CONF_START_OFF, False)
         self._connection_attempts = 0
         self._connection_was_lost = False
@@ -227,7 +220,7 @@ class AppleTVManager(DeviceListener):
                 "Not starting connect loop (%s, %s)", self.atv is None, self.is_on
             )
 
-    async def connect_once(self, raise_missing_credentials: bool) -> None:
+    async def connect_once(self, raise_missing_credentials):
         """Try to connect once."""
         try:
             if conf := await self._scan():
@@ -271,51 +264,49 @@ class AppleTVManager(DeviceListener):
         _LOGGER.debug("Connect loop ended")
         self._task = None
 
-    async def _scan(self) -> AppleTV | None:
+    async def _scan(self):
         """Try to find device by scanning for it."""
-        config_entry = self.config_entry
-        identifiers: set[str] = set(
-            config_entry.data.get(CONF_IDENTIFIERS, [config_entry.unique_id])
+        identifiers = set(
+            self.config_entry.data.get(CONF_IDENTIFIERS, [self.config_entry.unique_id])
         )
-        address: str = config_entry.data[CONF_ADDRESS]
-        hass = self.hass
+        address = self.config_entry.data[CONF_ADDRESS]
 
         # Only scan for and set up protocols that was successfully paired
         protocols = {
-            Protocol(int(protocol)) for protocol in config_entry.data[CONF_CREDENTIALS]
+            Protocol(int(protocol))
+            for protocol in self.config_entry.data[CONF_CREDENTIALS]
         }
 
-        _LOGGER.debug("Discovering device %s", config_entry.title)
-        aiozc = await zeroconf.async_get_async_instance(hass)
+        _LOGGER.debug("Discovering device %s", self.config_entry.title)
+        aiozc = await zeroconf.async_get_async_instance(self.hass)
         atvs = await scan(
-            hass.loop,
+            self.hass.loop,
             identifier=identifiers,
             protocol=protocols,
             hosts=[address],
             aiozc=aiozc,
         )
         if atvs:
-            return cast(AppleTV, atvs[0])
+            return atvs[0]
 
         _LOGGER.debug(
             "Failed to find device %s with address %s",
-            config_entry.title,
+            self.config_entry.title,
             address,
         )
         # We no longer multicast scan for the device since as soon as async_step_zeroconf runs,
         # it will update the address and reload the config entry when the device is found.
         return None
 
-    async def _connect(self, conf: AppleTV, raise_missing_credentials: bool) -> None:
+    async def _connect(self, conf, raise_missing_credentials):
         """Connect to device."""
-        config_entry = self.config_entry
-        credentials: dict[int, str | None] = config_entry.data[CONF_CREDENTIALS]
-        name: str = config_entry.data[CONF_NAME]
+        credentials = self.config_entry.data[CONF_CREDENTIALS]
+        name = self.config_entry.data[CONF_NAME]
         missing_protocols = []
         for protocol_int, creds in credentials.items():
             protocol = Protocol(int(protocol_int))
             if conf.get_service(protocol) is not None:
-                conf.set_credentials(protocol, creds)  # type: ignore[arg-type]
+                conf.set_credentials(protocol, creds)
             else:
                 missing_protocols.append(protocol.name)
 

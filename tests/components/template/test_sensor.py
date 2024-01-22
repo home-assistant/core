@@ -507,7 +507,7 @@ async def test_no_template_match_all(
     """Test that we allow static templates."""
     hass.states.async_set("sensor.test_sensor", "startup")
 
-    hass.set_state(CoreState.not_running)
+    hass.state = CoreState.not_running
 
     await async_setup_component(
         hass,
@@ -752,7 +752,7 @@ async def test_this_variable_early_hass_not_running(
     """
     entity_id = "sensor.none_false"
 
-    hass.set_state(CoreState.not_running)
+    hass.state = CoreState.not_running
 
     # Setup template
     with assert_setup_component(count, domain):
@@ -818,7 +818,7 @@ async def test_this_variable_early_hass_running(
     """
 
     # Start hass
-    assert hass.state is CoreState.running
+    assert hass.state == CoreState.running
     await hass.async_start()
     await hass.async_block_till_done()
 

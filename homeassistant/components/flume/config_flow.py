@@ -1,6 +1,4 @@
 """Config flow for flume integration."""
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import os
@@ -38,9 +36,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def _validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any], clear_token_file: bool
-) -> FlumeDeviceList:
+def _validate_input(hass: core.HomeAssistant, data: dict, clear_token_file: bool):
     """Validate in the executor."""
     flume_token_full_path = hass.config.path(
         f"{BASE_TOKEN_FILENAME}-{data[CONF_USERNAME]}"
@@ -60,8 +56,8 @@ def _validate_input(
 
 
 async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any], clear_token_file: bool = False
-) -> dict[str, Any]:
+    hass: core.HomeAssistant, data: dict, clear_token_file: bool = False
+):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -89,13 +85,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Init flume config flow."""
-        self._reauth_unique_id: str | None = None
+        self._reauth_unique_id = None
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        errors: dict[str, str] = {}
+        errors = {}
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
@@ -117,13 +111,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_unique_id = self.context["unique_id"]
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth_confirm(self, user_input=None):
         """Handle reauth input."""
-        errors: dict[str, str] = {}
+        errors = {}
         existing_entry = await self.async_set_unique_id(self._reauth_unique_id)
-        assert existing_entry
         if user_input is not None:
             new_data = {**existing_entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
             try:

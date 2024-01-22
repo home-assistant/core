@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def config_entry() -> MockConfigEntry:
+def config_entry():
     """Create a mock GDACS config entry."""
     return MockConfigEntry(
         domain=DOMAIN,

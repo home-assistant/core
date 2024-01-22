@@ -9,8 +9,8 @@ CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 
 PLATFORMS = [
-    Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.BINARY_SENSOR,
     Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,

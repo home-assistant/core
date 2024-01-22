@@ -1,9 +1,6 @@
 """Config flow for the Daikin platform."""
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
@@ -27,12 +24,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Initialize the Daikin config flow."""
-        self.host: str | None = None
+        self.host = None
 
     @property
-    def schema(self) -> vol.Schema:
+    def schema(self):
         """Return current schema."""
         return vol.Schema(
             {
@@ -42,14 +39,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def _create_entry(
-        self,
-        host: str,
-        mac: str,
-        key: str | None = None,
-        uuid: str | None = None,
-        password: str | None = None,
-    ) -> FlowResult:
+    async def _create_entry(self, host, mac, key=None, uuid=None, password=None):
         """Register new entry."""
         if not self.unique_id:
             await self.async_set_unique_id(mac)
@@ -66,9 +56,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _create_device(
-        self, host: str, key: str | None = None, password: str | None = None
-    ) -> FlowResult:
+    async def _create_device(self, host, key=None, password=None):
         """Create device."""
         # BRP07Cxx devices needs uuid together with key
         if key:
@@ -120,14 +108,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mac = device.mac
         return await self._create_entry(host, mac, key, uuid, password)
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_user(self, user_input=None):
         """User initiated config flow."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=self.schema)
         if user_input.get(CONF_API_KEY) and user_input.get(CONF_PASSWORD):
-            self.host = user_input[CONF_HOST]
+            self.host = user_input.get(CONF_HOST)
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,

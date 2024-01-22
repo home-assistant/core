@@ -17,7 +17,6 @@ from pyatmo.modules.device_types import (
     DeviceType as NetatmoDeviceType,
 )
 
-from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
@@ -37,7 +36,6 @@ from .const import (
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
     NETATMO_CREATE_COVER,
-    NETATMO_CREATE_FAN,
     NETATMO_CREATE_LIGHT,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
@@ -71,10 +69,6 @@ PUBLISHERS = {
 }
 
 BATCH_SIZE = 3
-DEV_FACTOR = 7
-DEV_LIMIT = 400
-CLOUD_FACTOR = 2
-CLOUD_LIMIT = 150
 DEFAULT_INTERVALS = {
     ACCOUNT: 10800,
     HOME: 300,
@@ -132,7 +126,6 @@ class NetatmoDataHandler:
     """Manages the Netatmo data handling."""
 
     account: pyatmo.AsyncAccount
-    _interval_factor: int
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize self."""
@@ -142,14 +135,6 @@ class NetatmoDataHandler:
         self.publisher: dict[str, NetatmoPublisher] = {}
         self._queue: deque = deque()
         self._webhook: bool = False
-        if config_entry.data["auth_implementation"] == cloud.DOMAIN:
-            self._interval_factor = CLOUD_FACTOR
-            self._rate_limit = CLOUD_LIMIT
-        else:
-            self._interval_factor = DEV_FACTOR
-            self._rate_limit = DEV_LIMIT
-        self.poll_start = time()
-        self.poll_count = 0
 
     async def async_setup(self) -> None:
         """Set up the Netatmo data handler."""
@@ -182,29 +167,16 @@ class NetatmoDataHandler:
         We do up to BATCH_SIZE calls in one update in order
         to minimize the calls on the api service.
         """
-        for data_class in islice(self._queue, 0, BATCH_SIZE * self._interval_factor):
+        for data_class in islice(self._queue, 0, BATCH_SIZE):
             if data_class.next_scan > time():
                 continue
 
             if publisher := data_class.name:
-                error = await self.async_fetch_data(publisher)
+                self.publisher[publisher].next_scan = time() + data_class.interval
 
-                if error:
-                    self.publisher[publisher].next_scan = (
-                        time() + data_class.interval * 10
-                    )
-                else:
-                    self.publisher[publisher].next_scan = time() + data_class.interval
+                await self.async_fetch_data(publisher)
 
         self._queue.rotate(BATCH_SIZE)
-        cph = self.poll_count / (time() - self.poll_start) * 3600
-        _LOGGER.debug("Calls per hour: %i", cph)
-        if cph > self._rate_limit:
-            for publisher in self.publisher.values():
-                publisher.next_scan += 60
-        if (time() - self.poll_start) > 3600:
-            self.poll_start = time()
-            self.poll_count = 0
 
     @callback
     def async_force_update(self, signal_name: str) -> None:
@@ -226,28 +198,30 @@ class NetatmoDataHandler:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self.async_force_update(ACCOUNT)
 
-    async def async_fetch_data(self, signal_name: str) -> bool:
+    async def async_fetch_data(self, signal_name: str) -> None:
         """Fetch data and notify."""
-        self.poll_count += 1
-        has_error = False
         try:
             await getattr(self.account, self.publisher[signal_name].method)(
                 **self.publisher[signal_name].kwargs
             )
 
-        except (pyatmo.NoDevice, pyatmo.ApiError) as err:
+        except pyatmo.NoDevice as err:
             _LOGGER.debug(err)
-            has_error = True
 
-        except (asyncio.TimeoutError, aiohttp.ClientConnectorError) as err:
+        except pyatmo.ApiError as err:
             _LOGGER.debug(err)
-            return True
+
+        except asyncio.TimeoutError as err:
+            _LOGGER.debug(err)
+            return
+
+        except aiohttp.ClientConnectorError as err:
+            _LOGGER.debug(err)
+            return
 
         for update_callback in self.publisher[signal_name].subscriptions:
             if update_callback:
                 update_callback()
-
-        return has_error
 
     async def subscribe(
         self,
@@ -265,11 +239,10 @@ class NetatmoDataHandler:
         if publisher == "public":
             kwargs = {"area_id": self.account.register_public_weather_area(**kwargs)}
 
-        interval = int(DEFAULT_INTERVALS[publisher] / self._interval_factor)
         self.publisher[signal_name] = NetatmoPublisher(
             name=signal_name,
-            interval=interval,
-            next_scan=time() + interval,
+            interval=DEFAULT_INTERVALS[publisher],
+            next_scan=time() + DEFAULT_INTERVALS[publisher],
             subscriptions={update_callback},
             method=PUBLISHERS[publisher],
             kwargs=kwargs,
@@ -357,7 +330,6 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_SENSOR,
             ],
             NetatmoDeviceCategory.meter: [NETATMO_CREATE_SENSOR],
-            NetatmoDeviceCategory.fan: [NETATMO_CREATE_FAN],
         }
         for module in home.modules.values():
             if not module.device_category:

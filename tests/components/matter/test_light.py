@@ -202,8 +202,6 @@ async def test_color_temperature_light(
                 command=clusters.ColorControl.Commands.MoveToColorTemperature(
                     colorTemperatureMireds=300,
                     transitionTime=0,
-                    optionsMask=1,
-                    optionsOverride=1,
                 ),
             ),
             call(
@@ -280,11 +278,7 @@ async def test_extended_color_light(
                 node_id=light_node.node_id,
                 endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToColor(
-                    colorX=0.5 * 65536,
-                    colorY=0.5 * 65536,
-                    transitionTime=0,
-                    optionsMask=1,
-                    optionsOverride=1,
+                    colorX=0.5 * 65536, colorY=0.5 * 65536, transitionTime=0
                 ),
             ),
             call(
@@ -317,8 +311,8 @@ async def test_extended_color_light(
                     hue=167,
                     saturation=254,
                     transitionTime=0,
-                    optionsMask=1,
-                    optionsOverride=1,
+                    optionsMask=0,
+                    optionsOverride=0,
                 ),
             ),
             call(

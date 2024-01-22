@@ -33,7 +33,6 @@ ALLOW_NAME_TRANSLATION = {
     "garages_amsterdam",
     "generic",
     "google_travel_time",
-    "holiday",
     "homekit_controller",
     "islamic_prayer_times",
     "local_calendar",

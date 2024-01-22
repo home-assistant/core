@@ -460,7 +460,6 @@ async def test_entity_device_info_with_connection(
                 "name": "Beer",
                 "model": "Glass",
                 "hw_version": "rev1",
-                "serial_number": "1234deadbeef",
                 "sw_version": "0.1-beta",
             },
         }
@@ -477,7 +476,6 @@ async def test_entity_device_info_with_connection(
     assert device.name == "Beer"
     assert device.model == "Glass"
     assert device.hw_version == "rev1"
-    assert device.serial_number == "1234deadbeef"
     assert device.sw_version == "0.1-beta"
 
 
@@ -498,7 +496,6 @@ async def test_entity_device_info_with_identifier(
                 "name": "Beer",
                 "model": "Glass",
                 "hw_version": "rev1",
-                "serial_number": "1234deadbeef",
                 "sw_version": "0.1-beta",
             },
         }
@@ -513,7 +510,6 @@ async def test_entity_device_info_with_identifier(
     assert device.name == "Beer"
     assert device.model == "Glass"
     assert device.hw_version == "rev1"
-    assert device.serial_number == "1234deadbeef"
     assert device.sw_version == "0.1-beta"
 
 
@@ -533,7 +529,6 @@ async def test_entity_device_info_update(
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
-            "serial_number": "1234deadbeef",
             "sw_version": "0.1-beta",
         },
     }

@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "gdacs"
 
-PLATFORMS = [Platform.GEO_LOCATION, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.GEO_LOCATION]
 
 FEED = "feed"
 

@@ -2,12 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 
 import aiopulse
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ACMEDA_ENTITY_REMOVE, ACMEDA_HUB_UPDATE, LOGGER
@@ -17,29 +14,31 @@ from .helpers import update_devices
 class PulseHub:
     """Manages a single Pulse Hub."""
 
-    api: aiopulse.Hub
-
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass, config_entry):
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
-        self.tasks: list[asyncio.Task[None]] = []
-        self.current_rollers: dict[int, aiopulse.Roller] = {}
-        self.cleanup_callbacks: list[Callable[[], None]] = []
+        self.api: aiopulse.Hub | None = None
+        self.tasks = []
+        self.current_rollers = {}
+        self.cleanup_callbacks = []
 
     @property
-    def title(self) -> str:
+    def title(self):
         """Return the title of the hub shown in the integrations list."""
         return f"{self.api.id} ({self.api.host})"
 
     @property
-    def host(self) -> str:
+    def host(self):
         """Return the host of this hub."""
-        return self.config_entry.data["host"]  # type: ignore[no-any-return]
+        return self.config_entry.data["host"]
 
-    async def async_setup(self, tries: int = 0) -> bool:
+    async def async_setup(self, tries=0):
         """Set up a hub based on host parameter."""
-        self.api = hub = aiopulse.Hub(self.host)
+        host = self.host
+
+        hub = aiopulse.Hub(host)
+        self.api = hub
 
         hub.callback_subscribe(self.async_notify_update)
         self.tasks.append(asyncio.create_task(hub.run()))
@@ -47,7 +46,7 @@ class PulseHub:
         LOGGER.debug("Hub setup complete")
         return True
 
-    async def async_reset(self) -> bool:
+    async def async_reset(self):
         """Reset this hub to default state."""
 
         for cleanup_callback in self.cleanup_callbacks:
@@ -67,7 +66,7 @@ class PulseHub:
 
         return True
 
-    async def async_notify_update(self, update_type: aiopulse.UpdateType) -> None:
+    async def async_notify_update(self, update_type):
         """Evaluate entities when hub reports that update has occurred."""
         LOGGER.debug("Hub {update_type.name} updated")
 

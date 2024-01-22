@@ -21,7 +21,11 @@ from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from . import RainMachineData, RainMachineEntity
 from .const import DATA_PROGRAMS, DATA_PROVISION_SETTINGS, DATA_ZONES, DOMAIN
-from .model import RainMachineEntityDescription
+from .model import (
+    RainMachineEntityDescription,
+    RainMachineEntityDescriptionMixinDataKey,
+    RainMachineEntityDescriptionMixinUid,
+)
 from .util import (
     RUN_STATE_MAP,
     EntityDomainReplacementStrategy,
@@ -44,22 +48,22 @@ TYPE_RAIN_SENSOR_RAIN_START = "rain_sensor_rain_start"
 TYPE_ZONE_RUN_COMPLETION_TIME = "zone_run_completion_time"
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class RainMachineSensorDataDescription(
-    SensorEntityDescription, RainMachineEntityDescription
+    SensorEntityDescription,
+    RainMachineEntityDescription,
+    RainMachineEntityDescriptionMixinDataKey,
 ):
     """Describe a RainMachine sensor."""
 
-    data_key: str
 
-
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class RainMachineSensorCompletionTimerDescription(
-    SensorEntityDescription, RainMachineEntityDescription
+    SensorEntityDescription,
+    RainMachineEntityDescription,
+    RainMachineEntityDescriptionMixinUid,
 ):
     """Describe a RainMachine completion timer sensor."""
-
-    uid: int
 
 
 SENSOR_DESCRIPTIONS = (

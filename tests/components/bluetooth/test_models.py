@@ -18,7 +18,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.core import HomeAssistant
 
 from . import (
-    FakeScannerMixin,
     MockBleakClient,
     _get_manager,
     generate_advertisement_data,
@@ -80,7 +79,7 @@ async def test_wrapped_bleak_client_local_adapter_only(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}, rssi=-100
     )
 
-    class FakeScanner(FakeScannerMixin, BaseHaScanner):
+    class FakeScanner(BaseHaScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -156,7 +155,7 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}, rssi=-100
     )
 
-    class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -267,7 +266,7 @@ async def test_ble_device_with_proxy_client_out_of_connections(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -332,7 +331,7 @@ async def test_ble_device_with_proxy_clear_cache(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -435,7 +434,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         "esp32_no_connection_slot",
     )
 
-    class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -547,7 +546,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         "esp32_no_connection_slot",
     )
 
-    class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""

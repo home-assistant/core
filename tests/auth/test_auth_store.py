@@ -3,8 +3,6 @@ import asyncio
 from typing import Any
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.auth import auth_store
 from homeassistant.core import HomeAssistant
 
@@ -69,7 +67,6 @@ async def test_loading_no_group_data_format(
     }
 
     store = auth_store.AuthStore(hass)
-    await store.async_load()
     groups = await store.async_get_groups()
     assert len(groups) == 3
     admin_group = groups[0]
@@ -168,7 +165,6 @@ async def test_loading_all_access_group_data_format(
     }
 
     store = auth_store.AuthStore(hass)
-    await store.async_load()
     groups = await store.async_get_groups()
     assert len(groups) == 3
     admin_group = groups[0]
@@ -209,7 +205,6 @@ async def test_loading_empty_data(
 ) -> None:
     """Test we correctly load with no existing data."""
     store = auth_store.AuthStore(hass)
-    await store.async_load()
     groups = await store.async_get_groups()
     assert len(groups) == 3
     admin_group = groups[0]
@@ -237,7 +232,7 @@ async def test_system_groups_store_id_and_name(
     Name is stored so that we remain backwards compat with < 0.82.
     """
     store = auth_store.AuthStore(hass)
-    await store.async_load()
+    await store._async_load()
     data = store._data_to_save()
     assert len(data["users"]) == 0
     assert data["groups"] == [
@@ -247,8 +242,8 @@ async def test_system_groups_store_id_and_name(
     ]
 
 
-async def test_loading_only_once(hass: HomeAssistant) -> None:
-    """Test only one storage load is allowed."""
+async def test_loading_race_condition(hass: HomeAssistant) -> None:
+    """Test only one storage load called when concurrent loading occurred ."""
     store = auth_store.AuthStore(hass)
     with patch(
         "homeassistant.helpers.entity_registry.async_get"
@@ -257,10 +252,6 @@ async def test_loading_only_once(hass: HomeAssistant) -> None:
     ) as mock_dev_registry, patch(
         "homeassistant.helpers.storage.Store.async_load", return_value=None
     ) as mock_load:
-        await store.async_load()
-        with pytest.raises(RuntimeError, match="Auth storage is already loaded"):
-            await store.async_load()
-
         results = await asyncio.gather(store.async_get_users(), store.async_get_users())
 
         mock_ent_registry.assert_called_once_with(hass)

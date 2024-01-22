@@ -42,12 +42,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Initialize an envoy flow."""
-        self.ip_address: str | None = None
+        self.ip_address = None
         self.username = None
         self.protovers: str | None = None
-        self._reauth_entry: config_entries.ConfigEntry | None = None
+        self._reauth_entry = None
 
     @callback
     def _async_generate_schema(self) -> vol.Schema:

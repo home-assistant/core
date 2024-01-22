@@ -281,17 +281,20 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_LASTRAIN,
         translation_key="last_rain",
+        icon="mdi:water",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_DAY,
         translation_key="lightning_strikes_per_day",
+        icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_HOUR,
         translation_key="lightning_strikes_per_hour",
+        icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes",
         state_class=SensorStateClass.TOTAL,
     ),
@@ -592,21 +595,25 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_WINDDIR,
         translation_key="wind_direction",
+        icon="mdi:weather-windy",
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR_AVG10M,
         translation_key="wind_direction_average_10m",
+        icon="mdi:weather-windy",
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR_AVG2M,
         translation_key="wind_direction_average_2m",
+        icon="mdi:weather-windy",
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTDIR,
         translation_key="wind_gust_direction",
+        icon="mdi:weather-windy",
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(

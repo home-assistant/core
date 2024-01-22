@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
-from typing import Any
 
 import requests
 
@@ -26,13 +25,11 @@ _LOGGER = logging.getLogger(__name__)
 PUSH_URL = "https://ios-push.home-assistant.io/push"
 
 
-def log_rate_limits(
-    hass: HomeAssistant, target: str, resp: dict[str, Any], level: int = 20
-) -> None:
+def log_rate_limits(hass, target, resp, level=20):
     """Output rate limit log line at given level."""
     rate_limits = resp["rateLimits"]
     resetsAt = dt_util.parse_datetime(rate_limits["resetsAt"])
-    resetsAtTime = resetsAt - dt_util.utcnow() if resetsAt is not None else "---"
+    resetsAtTime = resetsAt - dt_util.utcnow()
     rate_limit_msg = (
         "iOS push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "
@@ -72,13 +69,13 @@ class iOSNotificationService(BaseNotificationService):
         """Initialize the service."""
 
     @property
-    def targets(self) -> dict[str, str]:
+    def targets(self):
         """Return a dictionary of registered targets."""
         return ios.devices_with_push(self.hass)
 
-    def send_message(self, message: str = "", **kwargs: Any) -> None:
+    def send_message(self, message="", **kwargs):
         """Send a message to the Lambda APNS gateway."""
-        data: dict[str, Any] = {ATTR_MESSAGE: message}
+        data = {ATTR_MESSAGE: message}
 
         # Remove default title from notifications.
         if (

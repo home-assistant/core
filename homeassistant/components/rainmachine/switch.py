@@ -31,7 +31,11 @@ from .const import (
     DEFAULT_ZONE_RUN,
     DOMAIN,
 )
-from .model import RainMachineEntityDescription
+from .model import (
+    RainMachineEntityDescription,
+    RainMachineEntityDescriptionMixinDataKey,
+    RainMachineEntityDescriptionMixinUid,
+)
 from .util import RUN_STATE_MAP, key_exists
 
 ATTR_AREA = "area"
@@ -130,25 +134,26 @@ def raise_on_request_error(
     return decorator
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class RainMachineSwitchDescription(
-    SwitchEntityDescription, RainMachineEntityDescription
+    SwitchEntityDescription,
+    RainMachineEntityDescription,
 ):
     """Describe a RainMachine switch."""
 
 
-@dataclass(frozen=True, kw_only=True)
-class RainMachineActivitySwitchDescription(RainMachineSwitchDescription):
+@dataclass(frozen=True)
+class RainMachineActivitySwitchDescription(
+    RainMachineSwitchDescription, RainMachineEntityDescriptionMixinUid
+):
     """Describe a RainMachine activity (program/zone) switch."""
 
-    uid: int
 
-
-@dataclass(frozen=True, kw_only=True)
-class RainMachineRestrictionSwitchDescription(RainMachineSwitchDescription):
+@dataclass(frozen=True)
+class RainMachineRestrictionSwitchDescription(
+    RainMachineSwitchDescription, RainMachineEntityDescriptionMixinDataKey
+):
     """Describe a RainMachine restriction switch."""
-
-    data_key: str
 
 
 TYPE_RESTRICTIONS_FREEZE_PROTECT_ENABLED = "freeze_protect_enabled"

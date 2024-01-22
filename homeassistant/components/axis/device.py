@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_TRIGGER_TIME,
     CONF_USERNAME,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -65,86 +65,80 @@ class AxisNetworkDevice:
         self.additional_diagnostics: dict[str, Any] = {}
 
     @property
-    def host(self) -> str:
+    def host(self):
         """Return the host address of this device."""
-        host: str = self.config_entry.data[CONF_HOST]
-        return host
+        return self.config_entry.data[CONF_HOST]
 
     @property
-    def port(self) -> int:
+    def port(self):
         """Return the HTTP port of this device."""
-        port: int = self.config_entry.data[CONF_PORT]
-        return port
+        return self.config_entry.data[CONF_PORT]
 
     @property
-    def username(self) -> str:
+    def username(self):
         """Return the username of this device."""
-        username: str = self.config_entry.data[CONF_USERNAME]
-        return username
+        return self.config_entry.data[CONF_USERNAME]
 
     @property
-    def password(self) -> str:
+    def password(self):
         """Return the password of this device."""
-        password: str = self.config_entry.data[CONF_PASSWORD]
-        return password
+        return self.config_entry.data[CONF_PASSWORD]
 
     @property
-    def model(self) -> str:
+    def model(self):
         """Return the model of this device."""
-        model: str = self.config_entry.data[CONF_MODEL]
-        return model
+        return self.config_entry.data[CONF_MODEL]
 
     @property
-    def name(self) -> str:
+    def name(self):
         """Return the name of this device."""
-        name: str = self.config_entry.data[CONF_NAME]
-        return name
+        return self.config_entry.data[CONF_NAME]
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self):
         """Return the unique ID (serial number) of this device."""
         return self.config_entry.unique_id
 
     # Options
 
     @property
-    def option_events(self) -> bool:
+    def option_events(self):
         """Config entry option defining if platforms based on events should be created."""
         return self.config_entry.options.get(CONF_EVENTS, DEFAULT_EVENTS)
 
     @property
-    def option_stream_profile(self) -> str:
+    def option_stream_profile(self):
         """Config entry option defining what stream profile camera platform should use."""
         return self.config_entry.options.get(
             CONF_STREAM_PROFILE, DEFAULT_STREAM_PROFILE
         )
 
     @property
-    def option_trigger_time(self) -> int:
+    def option_trigger_time(self):
         """Config entry option defining minimum number of seconds to keep trigger high."""
         return self.config_entry.options.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME)
 
     @property
-    def option_video_source(self) -> str:
+    def option_video_source(self):
         """Config entry option defining what video source camera platform should use."""
         return self.config_entry.options.get(CONF_VIDEO_SOURCE, DEFAULT_VIDEO_SOURCE)
 
     # Signals
 
     @property
-    def signal_reachable(self) -> str:
+    def signal_reachable(self):
         """Device specific event to signal a change in connection status."""
         return f"axis_reachable_{self.unique_id}"
 
     @property
-    def signal_new_address(self) -> str:
+    def signal_new_address(self):
         """Device specific event to signal a change in device address."""
         return f"axis_new_address_{self.unique_id}"
 
     # Callbacks
 
     @callback
-    def async_connection_status_callback(self, status: Signal) -> None:
+    def async_connection_status_callback(self, status):
         """Handle signals of device connection status.
 
         This is called on every RTSP keep-alive message.
@@ -175,8 +169,8 @@ class AxisNetworkDevice:
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             configuration_url=self.api.config.url,
-            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},  # type: ignore[arg-type]
-            identifiers={(AXIS_DOMAIN, self.unique_id)},  # type: ignore[arg-type]
+            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
+            identifiers={(AXIS_DOMAIN, self.unique_id)},
             manufacturer=ATTR_MANUFACTURER,
             model=f"{self.model} {self.product_type}",
             name=self.name,
@@ -208,7 +202,7 @@ class AxisNetworkDevice:
 
     # Setup and teardown methods
 
-    def async_setup_events(self) -> None:
+    def async_setup_events(self):
         """Set up the device events."""
 
         if self.option_events:
@@ -228,7 +222,7 @@ class AxisNetworkDevice:
             self.api.stream.connection_status_callback.clear()
         self.api.stream.stop()
 
-    async def shutdown(self, event: Event) -> None:
+    async def shutdown(self, event) -> None:
         """Stop the event stream."""
         self.disconnect_from_stream()
 

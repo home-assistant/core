@@ -87,21 +87,12 @@ async def test_async_enable_logging(
 
 
 async def test_load_hassio(hass: HomeAssistant) -> None:
-    """Test that we load the hassio integration when using Supervisor."""
+    """Test that we load Hass.io component."""
     with patch.dict(os.environ, {}, clear=True):
-        assert "hassio" not in bootstrap._get_domains(hass, {})
+        assert bootstrap._get_domains(hass, {}) == set()
 
     with patch.dict(os.environ, {"SUPERVISOR": "1"}):
-        assert "hassio" in bootstrap._get_domains(hass, {})
-
-
-async def test_load_backup(hass: HomeAssistant) -> None:
-    """Test that we load the backup integration when not using Supervisor."""
-    with patch.dict(os.environ, {}, clear=True):
-        assert "backup" in bootstrap._get_domains(hass, {})
-
-    with patch.dict(os.environ, {"SUPERVISOR": "1"}):
-        assert "backup" not in bootstrap._get_domains(hass, {})
+        assert bootstrap._get_domains(hass, {}) == {"hassio"}
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -793,7 +784,6 @@ async def test_setup_recovery_mode_if_no_frontend(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
 async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     hass: HomeAssistant,
 ) -> None:
@@ -846,7 +836,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
 
     assert integrations[0] != {}
     assert "an_after_dep" in integrations[0]
-    assert integrations[-2] != {}
+    assert integrations[-3] != {}
     assert integrations[-1] == {}
 
     assert "normal_integration" in hass.config.components

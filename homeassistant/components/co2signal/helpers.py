@@ -1,6 +1,4 @@
 """Helper functions for the CO2 Signal integration."""
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 

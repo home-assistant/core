@@ -1112,17 +1112,13 @@ class AlexaThermostatController(AlexaCapability):
         """Return what properties this entity supports."""
         properties = [{"name": "thermostatMode"}]
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if self.entity.domain == climate.DOMAIN:
-            if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
-                properties.append({"name": "lowerSetpoint"})
-                properties.append({"name": "upperSetpoint"})
-            if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE:
-                properties.append({"name": "targetSetpoint"})
-        elif (
-            self.entity.domain == water_heater.DOMAIN
-            and supported & water_heater.WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        ):
+        if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE:
             properties.append({"name": "targetSetpoint"})
+        if supported & water_heater.WaterHeaterEntityFeature.TARGET_TEMPERATURE:
+            properties.append({"name": "targetSetpoint"})
+        if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+            properties.append({"name": "lowerSetpoint"})
+            properties.append({"name": "upperSetpoint"})
         return properties
 
     def properties_proactively_reported(self) -> bool:

@@ -75,9 +75,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_AZIMUTH, default=180): vol.All(
                         vol.Coerce(int), vol.Range(min=0, max=360)
                     ),
-                    vol.Required(CONF_MODULES_POWER): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
-                    ),
+                    vol.Required(CONF_MODULES_POWER): vol.Coerce(int),
                 }
             ),
         )
@@ -128,7 +126,7 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                     vol.Required(
                         CONF_MODULES_POWER,
                         default=self.config_entry.options[CONF_MODULES_POWER],
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                    ): vol.Coerce(int),
                     vol.Optional(
                         CONF_DAMPING_MORNING,
                         default=self.config_entry.options.get(

@@ -59,7 +59,6 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA_BASE,
 )
 from homeassistant.helpers.deprecation import (
-    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -120,6 +119,12 @@ __all__ = [
     "SensorExtraStoredData",
     "SensorStateClass",
 ]
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 # mypy: disallow-any-generics
 
@@ -666,10 +671,11 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             converter := UNIT_CONVERTERS.get(device_class)
         ):
             # Unit conversion needed
-            converted_numerical_value = converter.converter_factory(
+            converted_numerical_value = converter.convert(
+                float(numerical_value),
                 native_unit_of_measurement,
                 unit_of_measurement,
-            )(float(numerical_value))
+            )
 
             # If unit conversion is happening, and there's no rounding for display,
             # do a best effort rounding here.
@@ -727,6 +733,17 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         return value
+
+    def __repr__(self) -> str:
+        """Return the representation.
+
+        Entity.__repr__ includes the state in the generated string, this fails if we're
+        called before self.hass is set.
+        """
+        if not self.hass:
+            return f"<Entity {self.name}>"
+
+        return super().__repr__()
 
     def _suggested_precision_or_none(self) -> int | None:
         """Return suggested display precision, or None if not set."""
@@ -949,13 +966,3 @@ def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> st
         value = f"{numerical_value:z.{precision}f}"
 
     return value
-
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

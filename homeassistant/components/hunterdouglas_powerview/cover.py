@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from contextlib import suppress
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from math import ceil
 from typing import Any
@@ -137,7 +137,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._scheduled_transition_update: CALLBACK_TYPE | None = None
         if self._device_info.model != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP
-        self._forced_resync: Callable[[], None] | None = None
+        self._forced_resync = None
 
     @property
     def assumed_state(self) -> bool:
@@ -291,7 +291,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
             self._async_complete_schedule_update,
         )
 
-    async def _async_complete_schedule_update(self, _: datetime) -> None:
+    async def _async_complete_schedule_update(self, _):
         """Update status of the cover."""
         _LOGGER.debug("Processing scheduled update for %s", self.name)
         self._scheduled_transition_update = None
@@ -382,7 +382,7 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
         return hd_position_to_hass(self.positions.vane, self._max_tilt)
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self):
         """Return the steps to make a move."""
         return hd_position_to_hass(
             self.positions.primary, MAX_POSITION

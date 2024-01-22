@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "sensor_id": "Sensor ID",
+          "station_id": "Sensor ID",
           "show_on_map": "Show on map"
         }
       }

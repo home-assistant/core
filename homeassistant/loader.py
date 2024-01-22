@@ -35,16 +35,11 @@ from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
+# Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from functools import cached_property
-
-    # The relative imports below are guarded by TYPE_CHECKING
-    # because they would cause a circular import otherwise.
     from .config_entries import ConfigEntry
     from .helpers import device_registry as dr
     from .helpers.typing import ConfigType
-else:
-    from .backports.functools import cached_property
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
@@ -655,12 +650,12 @@ class Integration:
 
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
-    @cached_property
+    @property
     def name(self) -> str:
         """Return name."""
         return self.manifest["name"]
 
-    @cached_property
+    @property
     def disabled(self) -> str | None:
         """Return reason integration is disabled."""
         return self.manifest.get("disabled")
@@ -715,7 +710,7 @@ class Integration:
         """Return the integration IoT Class."""
         return self.manifest.get("iot_class")
 
-    @cached_property
+    @property
     def integration_type(
         self,
     ) -> Literal["entity", "device", "hardware", "helper", "hub", "service", "system"]:
@@ -1182,12 +1177,8 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
 
     Async friendly but not a coroutine.
     """
-
-    sys.path.insert(0, hass.config.config_dir)
-    with suppress(ImportError):
-        import custom_components  # pylint: disable=import-outside-toplevel  # noqa: F401
-    sys.path.remove(hass.config.config_dir)
-    sys.path_importer_cache.pop(hass.config.config_dir, None)
+    if hass.config.config_dir not in sys.path:
+        sys.path.insert(0, hass.config.config_dir)
 
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:

@@ -19,11 +19,18 @@ from .const import DOMAIN
 from .typing import SystemType
 
 
-@dataclass(frozen=True, kw_only=True)
-class SimpliSafeButtonDescription(ButtonEntityDescription):
-    """Describe a SimpliSafe button entity."""
+@dataclass(frozen=True)
+class SimpliSafeButtonDescriptionMixin:
+    """Define an entity description mixin for SimpliSafe buttons."""
 
     push_action: Callable[[System], Awaitable]
+
+
+@dataclass(frozen=True)
+class SimpliSafeButtonDescription(
+    ButtonEntityDescription, SimpliSafeButtonDescriptionMixin
+):
+    """Describe a SimpliSafe button entity."""
 
 
 BUTTON_KIND_CLEAR_NOTIFICATIONS = "clear_notifications"

@@ -21,8 +21,15 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import FlowResult
 
-from . import ServerVersionMismatch, get_api
-from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from . import get_api
+from .const import (
+    CONF_VERSION,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_VERSION,
+    DOMAIN,
+    SUPPORTED_VERSIONS,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -30,6 +37,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SUPPORTED_VERSIONS),
         vol.Optional(CONF_SSL, default=False): bool,
         vol.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
@@ -57,8 +65,9 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._reauth_entry
         if user_input is not None:
             user_input = {**self._reauth_entry.data, **user_input}
+            api = get_api(self.hass, user_input)
             try:
-                await get_api(self.hass, user_input)
+                await api.get_ha_sensor_data()
             except GlancesApiAuthorizationError:
                 errors["base"] = "invalid_auth"
             except GlancesApiConnectionError:
@@ -92,11 +101,12 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
+            api = get_api(self.hass, user_input)
             try:
-                await get_api(self.hass, user_input)
+                await api.get_ha_sensor_data()
             except GlancesApiAuthorizationError:
                 errors["base"] = "invalid_auth"
-            except (GlancesApiConnectionError, ServerVersionMismatch):
+            except GlancesApiConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(

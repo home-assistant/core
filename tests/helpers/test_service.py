@@ -19,13 +19,7 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import (
-    Context,
-    HassJob,
-    HomeAssistant,
-    ServiceCall,
-    SupportsResponse,
-)
+from homeassistant.core import Context, HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -808,8 +802,8 @@ async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
         hass,
-        mock_entities,
-        HassJob(test_service_mock),
+        [Mock(entities=mock_entities)],
+        test_service_mock,
         ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
         required_features=[SUPPORT_A],
     )
@@ -827,8 +821,8 @@ async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -
     with pytest.raises(exceptions.HomeAssistantError):
         await service.entity_service_call(
             hass,
-            mock_entities,
-            HassJob(test_service_mock),
+            [Mock(entities=mock_entities)],
+            test_service_mock,
             ServiceCall(
                 "test_domain", "test_service", {"entity_id": "light.living_room"}
             ),
@@ -844,8 +838,8 @@ async def test_call_with_both_required_features(
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
         hass,
-        mock_entities,
-        HassJob(test_service_mock),
+        [Mock(entities=mock_entities)],
+        test_service_mock,
         ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
         required_features=[SUPPORT_A | SUPPORT_B],
     )
@@ -863,8 +857,8 @@ async def test_call_with_one_of_required_features(
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
         hass,
-        mock_entities,
-        HassJob(test_service_mock),
+        [Mock(entities=mock_entities)],
+        test_service_mock,
         ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
         required_features=[SUPPORT_A, SUPPORT_C],
     )
@@ -884,8 +878,8 @@ async def test_call_with_sync_func(hass: HomeAssistant, mock_entities) -> None:
     test_service_mock = Mock(return_value=None)
     await service.entity_service_call(
         hass,
-        mock_entities,
-        HassJob(test_service_mock),
+        [Mock(entities=mock_entities)],
+        test_service_mock,
         ServiceCall("test_domain", "test_service", {"entity_id": "light.kitchen"}),
     )
     assert test_service_mock.call_count == 1
@@ -896,7 +890,7 @@ async def test_call_with_sync_attr(hass: HomeAssistant, mock_entities) -> None:
     mock_method = mock_entities["light.kitchen"].sync_method = Mock(return_value=None)
     await service.entity_service_call(
         hass,
-        mock_entities,
+        [Mock(entities=mock_entities)],
         "sync_method",
         ServiceCall(
             "test_domain",
@@ -914,7 +908,7 @@ async def test_call_context_user_not_exist(hass: HomeAssistant) -> None:
     with pytest.raises(exceptions.UnknownUser) as err:
         await service.entity_service_call(
             hass,
-            {},
+            [],
             Mock(),
             ServiceCall(
                 "test_domain",
@@ -941,7 +935,7 @@ async def test_call_context_target_all(
     ):
         await service.entity_service_call(
             hass,
-            mock_entities,
+            [Mock(entities=mock_entities)],
             Mock(),
             ServiceCall(
                 "test_domain",
@@ -969,7 +963,7 @@ async def test_call_context_target_specific(
     ):
         await service.entity_service_call(
             hass,
-            mock_entities,
+            [Mock(entities=mock_entities)],
             Mock(),
             ServiceCall(
                 "test_domain",
@@ -993,7 +987,7 @@ async def test_call_context_target_specific_no_auth(
     ):
         await service.entity_service_call(
             hass,
-            mock_entities,
+            [Mock(entities=mock_entities)],
             Mock(),
             ServiceCall(
                 "test_domain",
@@ -1013,7 +1007,7 @@ async def test_call_no_context_target_all(
     """Check we target all if no user context given."""
     await service.entity_service_call(
         hass,
-        mock_entities,
+        [Mock(entities=mock_entities)],
         Mock(),
         ServiceCall(
             "test_domain", "test_service", data={"entity_id": ENTITY_MATCH_ALL}
@@ -1032,7 +1026,7 @@ async def test_call_no_context_target_specific(
     """Check we can target specified entities."""
     await service.entity_service_call(
         hass,
-        mock_entities,
+        [Mock(entities=mock_entities)],
         Mock(),
         ServiceCall(
             "test_domain",
@@ -1054,7 +1048,7 @@ async def test_call_with_match_all(
     """Check we only target allowed entities if targeting all."""
     await service.entity_service_call(
         hass,
-        mock_entities,
+        [Mock(entities=mock_entities)],
         Mock(),
         ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
     )
@@ -1071,7 +1065,7 @@ async def test_call_with_omit_entity_id(
     """Check service call if we do not pass an entity ID."""
     await service.entity_service_call(
         hass,
-        mock_entities,
+        [Mock(entities=mock_entities)],
         Mock(),
         ServiceCall("test_domain", "test_service"),
     )

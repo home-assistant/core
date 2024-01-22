@@ -104,17 +104,9 @@ class CloudPreferences:
     @callback
     def async_listen_updates(
         self, listener: Callable[[CloudPreferences], Coroutine[Any, Any, None]]
-    ) -> Callable[[], None]:
+    ) -> None:
         """Listen for updates to the preferences."""
-
-        @callback
-        def unsubscribe() -> None:
-            """Remove the listener."""
-            self._listeners.remove(listener)
-
         self._listeners.append(listener)
-
-        return unsubscribe
 
     async def async_update(
         self,

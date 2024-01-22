@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from aioguardian import Client
+from aioguardian.errors import GuardianError
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -14,21 +15,28 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
 from .const import API_SYSTEM_DIAGNOSTICS, DOMAIN
-from .util import convert_exceptions_to_homeassistant_error
 
 
-@dataclass(frozen=True, kw_only=True)
-class ValveControllerButtonDescription(
-    ButtonEntityDescription, ValveControllerEntityDescription
-):
-    """Describe a Guardian valve controller button."""
+@dataclass(frozen=True)
+class GuardianButtonEntityDescriptionMixin:
+    """Define an mixin for button entities."""
 
     push_action: Callable[[Client], Awaitable]
+
+
+@dataclass(frozen=True)
+class ValveControllerButtonDescription(
+    ButtonEntityDescription,
+    ValveControllerEntityDescription,
+    GuardianButtonEntityDescriptionMixin,
+):
+    """Describe a Guardian valve controller button."""
 
 
 BUTTON_KIND_REBOOT = "reboot"
@@ -95,10 +103,14 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
 
         self._client = data.client
 
-    @convert_exceptions_to_homeassistant_error
     async def async_press(self) -> None:
         """Send out a restart command."""
-        async with self._client:
-            await self.entity_description.push_action(self._client)
+        try:
+            async with self._client:
+                await self.entity_description.push_action(self._client)
+        except GuardianError as err:
+            raise HomeAssistantError(
+                f'Error while pressing button "{self.entity_id}": {err}'
+            ) from err
 
         async_dispatcher_send(self.hass, self.coordinator.signal_reboot_requested)

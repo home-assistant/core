@@ -3,9 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyrisco import RiscoCloud
-from pyrisco.cloud.zone import Zone as CloudZone
-from pyrisco.local.zone import Zone as LocalZone
+from pyrisco.common import Zone
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -16,7 +14,7 @@ from . import RiscoDataUpdateCoordinator, zone_update_signal
 from .const import DOMAIN
 
 
-def zone_unique_id(risco: RiscoCloud, zone_id: int) -> str:
+def zone_unique_id(risco, zone_id: int) -> str:
     """Return unique id for a cloud zone."""
     return f"{risco.site_uuid}_zone_{zone_id}"
 
@@ -38,7 +36,7 @@ class RiscoCloudEntity(CoordinatorEntity[RiscoDataUpdateCoordinator]):
         self.async_write_ha_state()
 
     @property
-    def _risco(self) -> RiscoCloud:
+    def _risco(self):
         """Return the Risco API object."""
         return self.coordinator.risco
 
@@ -54,7 +52,7 @@ class RiscoCloudZoneEntity(RiscoCloudEntity):
         coordinator: RiscoDataUpdateCoordinator,
         suffix: str,
         zone_id: int,
-        zone: CloudZone,
+        zone: Zone,
         **kwargs: Any,
     ) -> None:
         """Init the zone."""
@@ -86,7 +84,7 @@ class RiscoLocalZoneEntity(Entity):
         system_id: str,
         suffix: str,
         zone_id: int,
-        zone: LocalZone,
+        zone: Zone,
         **kwargs: Any,
     ) -> None:
         """Init the zone."""

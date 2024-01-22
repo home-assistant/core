@@ -16,7 +16,6 @@ APPLICATION_CREDENTIALS = [
     "husqvarna_automower",
     "lametric",
     "lyric",
-    "myuplink",
     "neato",
     "nest",
     "netatmo",

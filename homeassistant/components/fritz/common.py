@@ -315,14 +315,12 @@ class FritzBoxTools(
         }
         try:
             await self.async_scan_devices()
-            for key in list(self._entity_update_functions):
+            for key, update_fn in self._entity_update_functions.items():
                 _LOGGER.debug("update entity %s", key)
                 entity_data["entity_states"][
                     key
                 ] = await self.hass.async_add_executor_job(
-                    self._entity_update_functions[key],
-                    self.fritz_status,
-                    self.data["entity_states"].get(key),
+                    update_fn, self.fritz_status, self.data["entity_states"].get(key)
                 )
             if self.has_call_deflections:
                 entity_data[
@@ -1065,7 +1063,6 @@ class SwitchInfo(TypedDict):
     type: str
     callback_update: Callable
     callback_switch: Callable
-    init_state: bool
 
 
 class FritzBoxBaseEntity:

@@ -59,7 +59,6 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
-    help_test_all,
     import_and_test_deprecated_constant,
     mock_restore_cache,
 )
@@ -1202,7 +1201,7 @@ async def test_initial_value_off(hass: HomeAssistant) -> None:
 
 async def test_initial_value_on(hass: HomeAssistant) -> None:
     """Test initial value on."""
-    hass.set_state(CoreState.not_running)
+    hass.state = CoreState.not_running
     calls = async_mock_service(hass, "test", "automation")
 
     assert await async_setup_component(
@@ -1231,7 +1230,7 @@ async def test_initial_value_on(hass: HomeAssistant) -> None:
 
 async def test_initial_value_off_but_restore_on(hass: HomeAssistant) -> None:
     """Test initial value off and restored state is turned on."""
-    hass.set_state(CoreState.not_running)
+    hass.state = CoreState.not_running
     calls = async_mock_service(hass, "test", "automation")
     mock_restore_cache(hass, (State("automation.hello", STATE_ON),))
 
@@ -1328,7 +1327,7 @@ async def test_automation_is_on_if_no_initial_state_or_restore(
 
 async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     """Test if automation is not trigger on bootstrap."""
-    hass.set_state(CoreState.not_running)
+    hass.state = CoreState.not_running
     calls = async_mock_service(hass, "test", "automation")
 
     assert await async_setup_component(
@@ -2460,7 +2459,7 @@ async def test_recursive_automation_starting_script(
         await asyncio.wait_for(script_done_event.wait(), 10)
 
         # Trigger 1st stage script shutdown
-        hass.set_state(CoreState.stopping)
+        hass.state = CoreState.stopping
         hass.bus.async_fire("homeassistant_stop")
         await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 10)
 
@@ -2521,7 +2520,7 @@ async def test_recursive_automation(
         await asyncio.wait_for(service_called.wait(), 1)
 
         # Trigger 1st stage script shutdown
-        hass.set_state(CoreState.stopping)
+        hass.state = CoreState.stopping
         hass.bus.async_fire("homeassistant_stop")
         await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
 
@@ -2568,11 +2567,6 @@ async def test_websocket_config(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(automation)
 
 
 @pytest.mark.parametrize(

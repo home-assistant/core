@@ -22,15 +22,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
-  "entity": {
-    "sensor": {
-      "average": {
-        "name": "{label} average"
-      },
-      "max": {
-        "name": "{label} max"
-      }
-    }
   }
 }

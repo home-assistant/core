@@ -621,11 +621,6 @@ ZEROCONF = {
             "name": "brother*",
         },
     ],
-    "_rabbitair._udp.local.": [
-        {
-            "domain": "rabbitair",
-        },
-    ],
     "_raop._tcp.local.": [
         {
             "domain": "apple_tv",

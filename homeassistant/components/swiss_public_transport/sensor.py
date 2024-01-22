@@ -1,18 +1,14 @@
 """Support for transport.opendata.ch."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorDeviceClass,
-    SensorEntity,
-)
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
@@ -111,7 +107,6 @@ class SwissPublicTransportSensor(
     _attr_icon = "mdi:bus"
     _attr_has_entity_name = True
     _attr_translation_key = "departure"
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self,
@@ -127,27 +122,17 @@ class SwissPublicTransportSensor(
             entry_type=DeviceEntryType.SERVICE,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Prepare the extra attributes at start."""
-        self._async_update_attrs()
-        await super().async_added_to_hass()
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle the state update and prepare the extra state attributes."""
-        self._async_update_attrs()
-        return super()._handle_coordinator_update()
-
-    @callback
-    def _async_update_attrs(self) -> None:
-        """Update the extra state attributes based on the coordinator data."""
         self._attr_extra_state_attributes = {
             key: value
             for key, value in self.coordinator.data.items()
             if key not in {"departure"}
         }
+        return super()._handle_coordinator_update()
 
     @property
-    def native_value(self) -> datetime | None:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.data["departure"]

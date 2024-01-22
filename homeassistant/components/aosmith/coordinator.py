@@ -1,12 +1,12 @@
 """The data update coordinator for the A. O. Smith integration."""
 import logging
+from typing import Any
 
 from py_aosmith import (
     AOSmithAPIClient,
     AOSmithInvalidCredentialsException,
     AOSmithUnknownException,
 )
-from py_aosmith.models import Device as AOSmithDevice
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -17,7 +17,7 @@ from .const import DOMAIN, ENERGY_USAGE_INTERVAL, FAST_INTERVAL, REGULAR_INTERVA
 _LOGGER = logging.getLogger(__name__)
 
 
-class AOSmithStatusCoordinator(DataUpdateCoordinator[dict[str, AOSmithDevice]]):
+class AOSmithStatusCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Coordinator for device status, updating with a frequent interval."""
 
     def __init__(self, hass: HomeAssistant, client: AOSmithAPIClient) -> None:
@@ -25,7 +25,7 @@ class AOSmithStatusCoordinator(DataUpdateCoordinator[dict[str, AOSmithDevice]]):
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=REGULAR_INTERVAL)
         self.client = client
 
-    async def _async_update_data(self) -> dict[str, AOSmithDevice]:
+    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch latest data from the device status endpoint."""
         try:
             devices = await self.client.get_devices()
@@ -34,9 +34,12 @@ class AOSmithStatusCoordinator(DataUpdateCoordinator[dict[str, AOSmithDevice]]):
         except AOSmithUnknownException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-        mode_pending = any(device.status.mode_change_pending for device in devices)
+        mode_pending = any(
+            device.get("data", {}).get("modePending") for device in devices
+        )
         setpoint_pending = any(
-            device.status.temperature_setpoint_pending for device in devices
+            device.get("data", {}).get("temperatureSetpointPending")
+            for device in devices
         )
 
         if mode_pending or setpoint_pending:
@@ -44,7 +47,7 @@ class AOSmithStatusCoordinator(DataUpdateCoordinator[dict[str, AOSmithDevice]]):
         else:
             self.update_interval = REGULAR_INTERVAL
 
-        return {device.junction_id: device for device in devices}
+        return {device.get("junctionId"): device for device in devices}
 
 
 class AOSmithEnergyCoordinator(DataUpdateCoordinator[dict[str, float]]):
@@ -75,6 +78,6 @@ class AOSmithEnergyCoordinator(DataUpdateCoordinator[dict[str, float]]):
             except AOSmithUnknownException as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-            energy_usage_by_junction_id[junction_id] = energy_usage.lifetime_kwh
+            energy_usage_by_junction_id[junction_id] = energy_usage.get("lifetimeKwh")
 
         return energy_usage_by_junction_id

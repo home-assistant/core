@@ -24,7 +24,6 @@ TO_REDACT = {
     "remoteOperateSecret",
     "users",
     "zWaveDSK",
-    "contentToken",
 }
 
 

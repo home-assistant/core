@@ -1,7 +1,6 @@
 """Coordinator to handle Opower connections."""
 from datetime import datetime, timedelta
 import logging
-import socket
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -52,7 +51,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             update_interval=timedelta(hours=12),
         )
         self.api = Opower(
-            aiohttp_client.async_get_clientsession(hass, family=socket.AF_INET),
+            aiohttp_client.async_get_clientsession(hass),
             entry_data[CONF_UTILITY],
             entry_data[CONF_USERNAME],
             entry_data[CONF_PASSWORD],

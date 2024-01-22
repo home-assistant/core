@@ -340,7 +340,7 @@ async def test_restored_state(
     )
 
     # Home assistant is not running yet
-    hass.set_state(CoreState.not_running)
+    hass.state = CoreState.not_running
     mock_restore_cache_with_extra_data(
         hass,
         [
@@ -351,7 +351,8 @@ async def test_restored_state(
         ],
     )
 
-    await _create_august_with_devices(hass, [lock_one])
+    august_entry = await _create_august_with_devices(hass, [lock_one])
+    august_entry.add_to_hass(hass)
 
     await hass.async_block_till_done()
 

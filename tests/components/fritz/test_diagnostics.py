@@ -62,7 +62,6 @@ async def test_entry_diagnostics(
                 "WANDSLInterfaceConfig1",
                 "WANIPConn1",
                 "WANPPPConnection1",
-                "WLANConfiguration1",
                 "X_AVM-DE_Homeauto1",
                 "X_AVM-DE_HostFilter1",
             ],

@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-from tesla_powerwall import MeterResponse, MeterType
+from tesla_powerwall import Meter, MeterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -37,7 +36,7 @@ _METER_DIRECTION_IMPORT = "import"
 class PowerwallRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[MeterResponse], float]
+    value_fn: Callable[[Meter], float]
 
 
 @dataclass(frozen=True)
@@ -47,24 +46,24 @@ class PowerwallSensorEntityDescription(
     """Describes Powerwall entity."""
 
 
-def _get_meter_power(meter: MeterResponse) -> float:
+def _get_meter_power(meter: Meter) -> float:
     """Get the current value in kW."""
     return meter.get_power(precision=3)
 
 
-def _get_meter_frequency(meter: MeterResponse) -> float:
+def _get_meter_frequency(meter: Meter) -> float:
     """Get the current value in Hz."""
     return round(meter.frequency, 1)
 
 
-def _get_meter_total_current(meter: MeterResponse) -> float:
+def _get_meter_total_current(meter: Meter) -> float:
     """Get the current value in A."""
     return meter.get_instant_total_current()
 
 
-def _get_meter_average_voltage(meter: MeterResponse) -> float:
+def _get_meter_average_voltage(meter: Meter) -> float:
     """Get the current value in V."""
-    return round(meter.instant_average_voltage, 1)
+    return round(meter.average_voltage, 1)
 
 
 POWERWALL_INSTANT_SENSORS = (
@@ -172,13 +171,9 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
         self._attr_unique_id = f"{self.base_unique_id}_{meter.value}_{description.key}"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float:
         """Get the current value."""
-        meter = self.data.meters.get_meter(self._meter)
-        if meter is not None:
-            return self.entity_description.value_fn(meter)
-
-        return None
+        return self.entity_description.value_fn(self.data.meters.get_meter(self._meter))
 
 
 class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
@@ -229,10 +224,10 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
         we do not want to include in statistics and its a
         transient data error.
         """
-        return super().available and self.meter is not None
+        return super().available and self.native_value != 0
 
     @property
-    def meter(self) -> MeterResponse | None:
+    def meter(self) -> Meter:
         """Get the meter for the sensor."""
         return self.data.meters.get_meter(self._meter)
 
@@ -249,12 +244,9 @@ class PowerWallExportSensor(PowerWallEnergyDirectionSensor):
         super().__init__(powerwall_data, meter, _METER_DIRECTION_EXPORT)
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float:
         """Get the current value in kWh."""
-        meter = self.meter
-        if TYPE_CHECKING:
-            assert meter is not None
-        return meter.get_energy_exported()
+        return self.meter.get_energy_exported()
 
 
 class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
@@ -269,9 +261,6 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
         super().__init__(powerwall_data, meter, _METER_DIRECTION_IMPORT)
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float:
         """Get the current value in kWh."""
-        meter = self.meter
-        if TYPE_CHECKING:
-            assert meter is not None
-        return meter.get_energy_imported()
+        return self.meter.get_energy_imported()

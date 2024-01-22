@@ -1,10 +1,5 @@
 get_gas_prices:
   fields:
-    config_entry:
-      required: true
-      selector:
-        config_entry:
-          integration: energyzero
     incl_vat:
       required: true
       default: true
@@ -22,11 +17,6 @@ get_gas_prices:
         datetime:
 get_energy_prices:
   fields:
-    config_entry:
-      required: true
-      selector:
-        config_entry:
-          integration: energyzero
     incl_vat:
       required: true
       default: true

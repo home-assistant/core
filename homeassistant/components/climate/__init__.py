@@ -28,7 +28,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     make_entity_service_schema,
 )
 from homeassistant.helpers.deprecation import (
-    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -142,6 +141,12 @@ SET_TEMPERATURE_SCHEMA = vol.All(
     ),
 )
 
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
+
 # mypy: disallow-any-generics
 
 
@@ -222,7 +227,6 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "temperature_unit",
     "current_humidity",
     "target_humidity",
-    "hvac_mode",
     "hvac_modes",
     "hvac_action",
     "current_temperature",
@@ -312,7 +316,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
         temperature_unit = self.temperature_unit
         precision = self.precision
         hass = self.hass
@@ -345,7 +349,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
         temperature_unit = self.temperature_unit
         precision = self.precision
         hass = self.hass
@@ -410,7 +414,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the humidity we try to reach."""
         return self._attr_target_humidity
 
-    @cached_property
+    @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         return self._attr_hvac_mode
@@ -661,19 +665,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the list of supported features."""
         return self._attr_supported_features
 
-    @property
-    def supported_features_compat(self) -> ClimateEntityFeature:
-        """Return the supported features as ClimateEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = ClimateEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
-
     @cached_property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
@@ -729,13 +720,3 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

@@ -23,8 +23,6 @@ from .const import (
     DOMAIN,
 )
 
-DEFAULT_RETRIES = 2
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=120)
@@ -69,7 +67,6 @@ class WanIpSensor(SensorEntity):
         self.resolver = aiodns.DNSResolver()
         self.resolver.nameservers = [resolver]
         self.querytype = "AAAA" if ipv6 else "A"
-        self._retries = DEFAULT_RETRIES
         self._attr_extra_state_attributes = {
             "Resolver": resolver,
             "Querytype": self.querytype,
@@ -93,8 +90,5 @@ class WanIpSensor(SensorEntity):
         if response:
             self._attr_native_value = response[0].host
             self._attr_available = True
-            self._retries = DEFAULT_RETRIES
-        elif self._retries > 0:
-            self._retries -= 1
         else:
             self._attr_available = False

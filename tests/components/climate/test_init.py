@@ -36,7 +36,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_service,
-    help_test_all,
     import_and_test_deprecated_constant,
     import_and_test_deprecated_constant_enum,
     mock_integration,
@@ -156,15 +155,6 @@ def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
     for enum in enum:
         result.append((enum, constant_prefix))
     return result
-
-
-@pytest.mark.parametrize(
-    "module",
-    [climate, climate.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
 
 
 @pytest.mark.parametrize(
@@ -343,23 +333,3 @@ async def test_preset_mode_validation(
         )
     assert str(exc.value) == "The fan_mode invalid is not a valid fan_mode: auto, off"
     assert exc.value.translation_key == "not_valid_fan_mode"
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockClimateEntity(ClimateEntity):
-        @property
-        def supported_features(self) -> int:
-            """Return supported features."""
-            return 1
-
-    entity = MockClimateEntity()
-    assert entity.supported_features_compat is ClimateEntityFeature(1)
-    assert "MockClimateEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "ClimateEntityFeature.TARGET_TEMPERATURE" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is ClimateEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text

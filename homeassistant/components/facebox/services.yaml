@@ -1,0 +1,17 @@
+teach_face:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: facebox
+          domain: image_processing
+    name:
+      required: true
+      example: "my_name"
+      selector:
+        text:
+    file_path:
+      required: true
+      example: "/images/my_image.jpg"
+      selector:
+        text:

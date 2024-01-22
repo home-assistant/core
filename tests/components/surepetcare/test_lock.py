@@ -2,12 +2,12 @@
 import pytest
 from surepy.exceptions import SurePetcareError
 
+from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
-from . import HOUSEHOLD_ID, MOCK_CAT_FLAP, MOCK_PET_FLAP
-
-from tests.common import MockConfigEntry
+from . import HOUSEHOLD_ID, MOCK_CAT_FLAP, MOCK_CONFIG, MOCK_PET_FLAP
 
 EXPECTED_ENTITY_IDS = {
     "lock.cat_flap_locked_in": f"{HOUSEHOLD_ID}-{MOCK_CAT_FLAP['id']}-locked_in",
@@ -19,10 +19,11 @@ EXPECTED_ENTITY_IDS = {
 }
 
 
-async def test_locks(
-    hass: HomeAssistant, surepetcare, mock_config_entry_setup: MockConfigEntry
-) -> None:
+async def test_locks(hass: HomeAssistant, surepetcare) -> None:
     """Test the generation of unique ids."""
+    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
+    await hass.async_block_till_done()
+
     entity_registry = er.async_get(hass)
     state_entity_ids = hass.states.async_entity_ids()
 
@@ -77,10 +78,11 @@ async def test_locks(
         assert surepetcare.unlock.call_count == 1
 
 
-async def test_lock_failing(
-    hass: HomeAssistant, surepetcare, mock_config_entry_setup: MockConfigEntry
-) -> None:
+async def test_lock_failing(hass: HomeAssistant, surepetcare) -> None:
     """Test handling of lock failing."""
+    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
+    await hass.async_block_till_done()
+
     surepetcare.lock_in.side_effect = SurePetcareError
     surepetcare.lock_out.side_effect = SurePetcareError
     surepetcare.lock.side_effect = SurePetcareError
@@ -94,10 +96,11 @@ async def test_lock_failing(
         assert state.state == "unlocked"
 
 
-async def test_unlock_failing(
-    hass: HomeAssistant, surepetcare, mock_config_entry_setup: MockConfigEntry
-) -> None:
+async def test_unlock_failing(hass: HomeAssistant, surepetcare) -> None:
     """Test handling of unlock failing."""
+    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
+    await hass.async_block_till_done()
+
     entity_id = list(EXPECTED_ENTITY_IDS)[0]
 
     await hass.services.async_call(

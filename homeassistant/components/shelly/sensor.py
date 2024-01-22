@@ -1,6 +1,7 @@
 """Sensor for Shelly."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final, cast
 
@@ -961,6 +962,17 @@ RPC_SENSORS: Final = {
 }
 
 
+def _build_block_description(entry: RegistryEntry) -> BlockSensorDescription:
+    """Build description when restoring block attribute entities."""
+    return BlockSensorDescription(
+        key="",
+        name="",
+        icon=entry.original_icon,
+        native_unit_of_measurement=entry.unit_of_measurement,
+        device_class=entry.original_device_class,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -989,6 +1001,7 @@ async def async_setup_entry(
             async_add_entities,
             SENSORS,
             BlockSleepingSensor,
+            _build_block_description,
         )
     else:
         async_setup_entry_attribute_entities(
@@ -997,6 +1010,7 @@ async def async_setup_entry(
             async_add_entities,
             SENSORS,
             BlockSensor,
+            _build_block_description,
         )
         async_setup_entry_rest(
             hass, config_entry, async_add_entities, REST_SENSORS, RestSensor
@@ -1060,9 +1074,10 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         attribute: str,
         description: BlockSensorDescription,
         entry: RegistryEntry | None = None,
+        sensors: Mapping[tuple[str, str], BlockSensorDescription] | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
-        super().__init__(coordinator, block, attribute, description, entry)
+        super().__init__(coordinator, block, attribute, description, entry, sensors)
         self.restored_data: SensorExtraStoredData | None = None
 
     async def async_added_to_hass(self) -> None:

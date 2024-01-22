@@ -1,7 +1,5 @@
 """The tests for Netatmo cover."""
-from unittest.mock import AsyncMock, patch
-
-from syrupy import SnapshotAssertion
+from unittest.mock import patch
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -11,37 +9,17 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
 
-from .common import selected_platforms, snapshot_platform_entities
-
-from tests.common import MockConfigEntry
-
-
-async def test_entity(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    netatmo_auth: AsyncMock,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test entities."""
-    await snapshot_platform_entities(
-        hass,
-        config_entry,
-        Platform.COVER,
-        entity_registry,
-        snapshot,
-    )
+from .common import selected_platforms
 
 
 async def test_cover_setup_and_services(
-    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+    hass: HomeAssistant, config_entry, netatmo_auth
 ) -> None:
     """Test setup and services."""
-    with selected_platforms([Platform.COVER]):
+    with selected_platforms(["cover"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()

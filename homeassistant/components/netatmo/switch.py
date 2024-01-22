@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_SWITCH
 from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
-from .entity import NetatmoBaseEntity
+from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoSwitch(NetatmoBaseEntity, SwitchEntity):
+class NetatmoSwitch(NetatmoBase, SwitchEntity):
     """Representation of a Netatmo switch device."""
 
     def __init__(

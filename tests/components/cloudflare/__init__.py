@@ -57,7 +57,7 @@ async def init_integration(
     *,
     data: dict = ENTRY_CONFIG,
     options: dict = ENTRY_OPTIONS,
-    unique_id: str = MOCK_ZONE["name"],
+    unique_id: str = MOCK_ZONE,
     skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Cloudflare integration in Home Assistant."""

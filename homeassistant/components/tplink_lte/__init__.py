@@ -1,9 +1,6 @@
 """Support for TP-Link LTE modems."""
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
 
 import aiohttp
 import attr
@@ -18,7 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -62,20 +59,20 @@ CONFIG_SCHEMA = vol.Schema(
 class ModemData:
     """Class for modem state."""
 
-    host: str = attr.ib()
-    modem: tp_connected.Modem = attr.ib()
+    host = attr.ib()
+    modem = attr.ib()
 
-    connected: bool = attr.ib(init=False, default=True)
+    connected = attr.ib(init=False, default=True)
 
 
 @attr.s
 class LTEData:
     """Shared state."""
 
-    websession: aiohttp.ClientSession = attr.ib()
+    websession = attr.ib()
     modem_data: dict[str, ModemData] = attr.ib(init=False, factory=dict)
 
-    def get_modem_data(self, config: dict[str, Any]) -> ModemData | None:
+    def get_modem_data(self, config):
         """Get the requested or the only modem_data value."""
         if CONF_HOST in config:
             return self.modem_data.get(config[CONF_HOST])
@@ -97,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     tasks = [_setup_lte(hass, conf) for conf in domain_config]
     if tasks:
-        await asyncio.gather(*tasks)
+        await asyncio.wait(tasks)
 
     for conf in domain_config:
         for notify_conf in conf.get(CONF_NOTIFY, []):
@@ -110,16 +107,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _setup_lte(
-    hass: HomeAssistant, lte_config: dict[str, Any], delay: int = 0
-) -> None:
+async def _setup_lte(hass, lte_config, delay=0):
     """Set up a TP-Link LTE modem."""
 
-    host: str = lte_config[CONF_HOST]
-    password: str = lte_config[CONF_PASSWORD]
+    host = lte_config[CONF_HOST]
+    password = lte_config[CONF_PASSWORD]
 
-    lte_data: LTEData = hass.data[DATA_KEY]
-    modem = tp_connected.Modem(hostname=host, websession=lte_data.websession)
+    websession = hass.data[DATA_KEY].websession
+    modem = tp_connected.Modem(hostname=host, websession=websession)
 
     modem_data = ModemData(host, modem)
 
@@ -129,7 +124,7 @@ async def _setup_lte(
         retry_task = hass.loop.create_task(_retry_login(hass, modem_data, password))
 
         @callback
-        def cleanup_retry(event: Event) -> None:
+        def cleanup_retry(event):
             """Clean up retry task resources."""
             if not retry_task.done():
                 retry_task.cancel()
@@ -137,23 +132,20 @@ async def _setup_lte(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_retry)
 
 
-async def _login(hass: HomeAssistant, modem_data: ModemData, password: str) -> None:
+async def _login(hass, modem_data, password):
     """Log in and complete setup."""
     await modem_data.modem.login(password=password)
     modem_data.connected = True
-    lte_data: LTEData = hass.data[DATA_KEY]
-    lte_data.modem_data[modem_data.host] = modem_data
+    hass.data[DATA_KEY].modem_data[modem_data.host] = modem_data
 
-    async def cleanup(event: Event) -> None:
+    async def cleanup(event):
         """Clean up resources."""
         await modem_data.modem.logout()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
 
-async def _retry_login(
-    hass: HomeAssistant, modem_data: ModemData, password: str
-) -> None:
+async def _retry_login(hass, modem_data, password):
     """Sleep and retry setup."""
 
     _LOGGER.warning("Could not connect to %s. Will keep trying", modem_data.host)

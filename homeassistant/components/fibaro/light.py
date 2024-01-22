@@ -1,7 +1,9 @@
 """Support for Fibaro lights."""
 from __future__ import annotations
 
+import asyncio
 from contextlib import suppress
+from functools import partial
 from typing import Any
 
 from pyfibaro.fibaro_device import DeviceModel
@@ -66,6 +68,8 @@ class FibaroLight(FibaroDevice, LightEntity):
 
     def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the light."""
+        self._update_lock = asyncio.Lock()
+
         supports_color = (
             "color" in fibaro_device.properties
             or "colorComponents" in fibaro_device.properties
@@ -102,8 +106,13 @@ class FibaroLight(FibaroDevice, LightEntity):
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
+        async with self._update_lock:
+            await self.hass.async_add_executor_job(partial(self._turn_on, **kwargs))
+
+    def _turn_on(self, **kwargs):
+        """Really turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
             self.set_level(scaleto99(self._attr_brightness))
@@ -111,23 +120,26 @@ class FibaroLight(FibaroDevice, LightEntity):
 
         if ATTR_RGB_COLOR in kwargs:
             # Update based on parameters
-            rgb = kwargs[ATTR_RGB_COLOR]
-            self._attr_rgb_color = rgb
-            self.call_set_color(int(rgb[0]), int(rgb[1]), int(rgb[2]), 0)
+            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+            self.call_set_color(*self._attr_rgb_color, 0)
             return
 
         if ATTR_RGBW_COLOR in kwargs:
             # Update based on parameters
-            rgbw = kwargs[ATTR_RGBW_COLOR]
-            self._attr_rgbw_color = rgbw
-            self.call_set_color(int(rgbw[0]), int(rgbw[1]), int(rgbw[2]), int(rgbw[3]))
+            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+            self.call_set_color(*self._attr_rgbw_color)
             return
 
         # The simplest case is left for last. No dimming, just switch on
         self.call_turn_on()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
+        async with self._update_lock:
+            await self.hass.async_add_executor_job(partial(self._turn_off, **kwargs))
+
+    def _turn_off(self, **kwargs):
+        """Really turn the light off."""
         self.call_turn_off()
 
     @property
@@ -153,8 +165,13 @@ class FibaroLight(FibaroDevice, LightEntity):
 
         return False
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
+        async with self._update_lock:
+            await self.hass.async_add_executor_job(self._update)
+
+    def _update(self):
+        """Really update the state."""
         super().update()
         # Brightness handling
         if brightness_supported(self.supported_color_modes):

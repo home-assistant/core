@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD
@@ -209,6 +210,16 @@ RPC_SENSORS: Final = {
 }
 
 
+def _build_block_description(entry: RegistryEntry) -> BlockBinarySensorDescription:
+    """Build description when restoring block attribute entities."""
+    return BlockBinarySensorDescription(
+        key="",
+        name="",
+        icon=entry.original_icon,
+        device_class=entry.original_device_class,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -237,6 +248,7 @@ async def async_setup_entry(
             async_add_entities,
             SENSORS,
             BlockSleepingBinarySensor,
+            _build_block_description,
         )
     else:
         async_setup_entry_attribute_entities(
@@ -245,6 +257,7 @@ async def async_setup_entry(
             async_add_entities,
             SENSORS,
             BlockBinarySensor,
+            _build_block_description,
         )
         async_setup_entry_rest(
             hass,

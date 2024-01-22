@@ -348,11 +348,7 @@ async def test_power_level_notification(
 
 
 async def test_unknown_notification(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    hank_binary_switch,
-    integration,
-    client,
+    hass: HomeAssistant, hank_binary_switch, integration, client
 ) -> None:
     """Test behavior of unknown notification type events."""
     # just pick a random node to fake the notification event
@@ -362,9 +358,8 @@ async def test_unknown_notification(
     # by the lib. We will use a class that is guaranteed not to be recognized
     notification_obj = AsyncMock()
     notification_obj.node = node
-    node.emit("notification", {"notification": notification_obj})
-
-    assert f"Unhandled notification type: {notification_obj}" in caplog.text
+    with pytest.raises(TypeError):
+        node.emit("notification", {"notification": notification_obj})
 
     notification_events = async_capture_events(hass, "zwave_js_notification")
 

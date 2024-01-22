@@ -26,7 +26,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
-from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import DOMAIN
 from .coordinator import OctoprintDataUpdateCoordinator
@@ -160,9 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     connector = aiohttp.TCPConnector(
         force_close=True,
-        ssl=get_default_no_verify_context()
-        if not entry.data[CONF_VERIFY_SSL]
-        else get_default_context(),
+        ssl=False if not entry.data[CONF_VERIFY_SSL] else None,
     )
     session = aiohttp.ClientSession(connector=connector)
 

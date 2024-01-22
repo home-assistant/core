@@ -3,6 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Live override',
+      'icon': 'mdi:theater',
       'options': list([
         '0',
         '1',
@@ -43,7 +44,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:theater',
     'original_name': 'Live override',
     'platform': 'wled',
     'previous_unique_id': None,
@@ -89,6 +90,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Segment 1 color palette',
+      'icon': 'mdi:palette-outline',
       'options': list([
         'Analogous',
         'April Night',
@@ -223,12 +225,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:palette-outline',
     'original_name': 'Segment 1 color palette',
     'platform': 'wled',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'segment_color_palette',
+    'translation_key': None,
     'unique_id': 'aabbccddeeff_palette_1',
     'unit_of_measurement': None,
   })
@@ -269,6 +271,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGBW Light Playlist',
+      'icon': 'mdi:play-speed',
       'options': list([
         'Playlist 1',
         'Playlist 2',
@@ -307,7 +310,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:play-speed',
     'original_name': 'Playlist',
     'platform': 'wled',
     'previous_unique_id': None,
@@ -353,6 +356,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGBW Light Preset',
+      'icon': 'mdi:playlist-play',
       'options': list([
         'Preset 1',
         'Preset 2',
@@ -391,7 +395,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:playlist-play',
     'original_name': 'Preset',
     'platform': 'wled',
     'previous_unique_id': None,

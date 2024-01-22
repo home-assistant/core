@@ -9,14 +9,9 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from . import ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_PERCENTAGE, ATTR_PRESET_MODE
+from . import ATTR_PERCENTAGE, ATTR_PERCENTAGE_STEP
 
-SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
-}
+INSIGNIFICANT_ATTRIBUTES: set[str] = {ATTR_PERCENTAGE_STEP}
 
 
 @callback
@@ -32,15 +27,14 @@ def async_check_significant_change(
     if old_state != new_state:
         return True
 
-    old_attrs_s = set(
-        {k: v for k, v in old_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
-    )
-    new_attrs_s = set(
-        {k: v for k, v in new_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
-    )
+    old_attrs_s = set(old_attrs.items())
+    new_attrs_s = set(new_attrs.items())
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
 
     for attr_name in changed_attrs:
+        if attr_name in INSIGNIFICANT_ATTRIBUTES:
+            continue
+
         if attr_name != ATTR_PERCENTAGE:
             return True
 

@@ -1,9 +1,5 @@
 """Support for Soma Smartshades."""
-from __future__ import annotations
-
-from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, TypeVar
 
 from api.soma_api import SomaApi
 from requests import RequestException
@@ -20,8 +16,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import API, DOMAIN, HOST, PORT
 from .utils import is_api_response_success
-
-_SomaEntityT = TypeVar("_SomaEntityT", bound="SomaEntity")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,12 +69,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def soma_api_call(
-    api_call: Callable[[_SomaEntityT], Coroutine[Any, Any, dict]],
-) -> Callable[[_SomaEntityT], Coroutine[Any, Any, dict]]:
+def soma_api_call(api_call):
     """Soma api call decorator."""
 
-    async def inner(self: _SomaEntityT) -> dict:
+    async def inner(self) -> dict:
         response = {}
         try:
             response_from_api = await api_call(self)

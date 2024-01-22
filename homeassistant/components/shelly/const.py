@@ -14,10 +14,7 @@ from aioshelly.const import (
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_DUO,
-    MODEL_DW,
-    MODEL_DW_2,
     MODEL_GAS,
-    MODEL_HT,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_RGBW2,
@@ -56,12 +53,6 @@ MODELS_SUPPORTING_LIGHT_EFFECTS: Final = (
     MODEL_BULB,
     MODEL_BULB_RGBW,
     MODEL_RGBW2,
-)
-
-MODELS_WITH_WRONG_SLEEP_PERIOD: Final = (
-    MODEL_DW,
-    MODEL_DW_2,
-    MODEL_HT,
 )
 
 # Bulbs that support white & color modes
@@ -185,10 +176,6 @@ KELVIN_MAX_VALUE: Final = 6500
 KELVIN_MIN_VALUE_WHITE: Final = 2700
 KELVIN_MIN_VALUE_COLOR: Final = 3000
 
-# Sleep period
-BLOCK_WRONG_SLEEP_PERIOD = 21600
-BLOCK_EXPECTED_SLEEP_PERIOD = 43200
-
 UPTIME_DEVIATION: Final = 5
 
 # Time to wait before reloading entry upon device config change
@@ -227,5 +214,3 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_MOTION_2,
     MODEL_VALVE,
 )
-
-CONF_GEN = "gen"

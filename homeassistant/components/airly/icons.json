@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "caqi": {
-        "default": "mdi:air-filter"
-      }
-    }
-  }
-}

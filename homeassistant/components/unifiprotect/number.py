@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
-from typing import Any
 
 from pyunifiprotect.data import (
     Camera,
@@ -27,18 +25,21 @@ from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
-_LOGGER = logging.getLogger(__name__)
 
-
-@dataclass(frozen=True, kw_only=True)
-class ProtectNumberEntityDescription(
-    ProtectSetableKeysMixin[T], NumberEntityDescription
-):
-    """Describes UniFi Protect Number entity."""
+@dataclass(frozen=True)
+class NumberKeysMixin:
+    """Mixin for required keys."""
 
     ufp_max: int | float
     ufp_min: int | float
     ufp_step: int | float
+
+
+@dataclass(frozen=True)
+class ProtectNumberEntityDescription(
+    ProtectSetableKeysMixin[T], NumberEntityDescription, NumberKeysMixin
+):
+    """Describes UniFi Protect Number entity."""
 
 
 def _get_pir_duration(obj: Light) -> int:
@@ -269,11 +270,19 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
         await self.entity_description.ufp_set(self.device, value)
 
     @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
 
-        Called before and after updating entity and state is only written if there
-        is a change.
+        Only the native value and available are ever updated for these
+        entities, and since the websocket update for the device will trigger
+        an update for all entities connected to the device, we want to avoid
+        writing state unless something has actually changed.
         """
-
-        return (self._attr_available, self._attr_native_value)
+        previous_value = self._attr_native_value
+        previous_available = self._attr_available
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_native_value != previous_value
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()

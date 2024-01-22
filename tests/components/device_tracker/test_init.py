@@ -34,7 +34,6 @@ from . import common
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
-    help_test_all,
     import_and_test_deprecated_constant_enum,
     mock_registry,
     mock_restore_cache,
@@ -684,15 +683,6 @@ def test_see_schema_allowing_ios_calls() -> None:
             "hostname": "beer",
         }
     )
-
-
-@pytest.mark.parametrize(
-    "module",
-    [device_tracker, device_tracker.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
 
 
 @pytest.mark.parametrize(("enum"), list(SourceType))

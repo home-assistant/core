@@ -44,7 +44,7 @@ TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 @callback
 def _get_data(hass: HomeAssistant) -> TraceData:
-    return hass.data[DATA_TRACE]  # type: ignore[no-any-return]
+    return hass.data[DATA_TRACE]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

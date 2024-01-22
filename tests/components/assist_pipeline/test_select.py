@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant.components.assist_pipeline import Pipeline
 from homeassistant.components.assist_pipeline.pipeline import (
-    AssistDevice,
     PipelineData,
     PipelineStorageCollection,
 )
@@ -34,7 +33,7 @@ class SelectPlatform(MockPlatform):
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Set up fake select platform."""
-        pipeline_entity = AssistPipelineSelect(hass, "test-domain", "test-prefix")
+        pipeline_entity = AssistPipelineSelect(hass, "test")
         pipeline_entity._attr_device_info = DeviceInfo(
             identifiers={("test", "test")},
         )
@@ -110,15 +109,13 @@ async def test_select_entity_registering_device(
     assert device is not None
 
     # Test device is registered
-    assert pipeline_data.pipeline_devices == {
-        device.id: AssistDevice("test-domain", "test-prefix")
-    }
+    assert pipeline_data.pipeline_devices == {device.id}
 
     await hass.config_entries.async_remove(init_select.entry_id)
     await hass.async_block_till_done()
 
     # Test device is removed
-    assert pipeline_data.pipeline_devices == {}
+    assert pipeline_data.pipeline_devices == set()
 
 
 async def test_select_entity_changing_pipelines(
@@ -131,7 +128,7 @@ async def test_select_entity_changing_pipelines(
     """Test entity tracking pipeline changes."""
     config_entry = init_select  # nicer naming
 
-    state = hass.states.get("select.assist_pipeline_test_prefix_pipeline")
+    state = hass.states.get("select.assist_pipeline_test_pipeline")
     assert state is not None
     assert state.state == "preferred"
     assert state.attributes["options"] == [
@@ -146,13 +143,13 @@ async def test_select_entity_changing_pipelines(
         "select",
         "select_option",
         {
-            "entity_id": "select.assist_pipeline_test_prefix_pipeline",
+            "entity_id": "select.assist_pipeline_test_pipeline",
             "option": pipeline_2.name,
         },
         blocking=True,
     )
 
-    state = hass.states.get("select.assist_pipeline_test_prefix_pipeline")
+    state = hass.states.get("select.assist_pipeline_test_pipeline")
     assert state is not None
     assert state.state == pipeline_2.name
 
@@ -160,14 +157,14 @@ async def test_select_entity_changing_pipelines(
     assert await hass.config_entries.async_forward_entry_unload(config_entry, "select")
     assert await hass.config_entries.async_forward_entry_setup(config_entry, "select")
 
-    state = hass.states.get("select.assist_pipeline_test_prefix_pipeline")
+    state = hass.states.get("select.assist_pipeline_test_pipeline")
     assert state is not None
     assert state.state == pipeline_2.name
 
     # Remove selected pipeline
     await pipeline_storage.async_delete_item(pipeline_2.id)
 
-    state = hass.states.get("select.assist_pipeline_test_prefix_pipeline")
+    state = hass.states.get("select.assist_pipeline_test_pipeline")
     assert state is not None
     assert state.state == "preferred"
     assert state.attributes["options"] == [

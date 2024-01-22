@@ -2,7 +2,7 @@
 from homeassistant.const import Platform
 
 DOMAIN = "roomba"
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.VACUUM]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.VACUUM]
 CONF_CERT = "certificate"
 CONF_CONTINUOUS = "continuous"
 CONF_BLID = "blid"

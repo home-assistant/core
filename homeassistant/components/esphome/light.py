@@ -1,8 +1,7 @@
 """Support for ESPHome lights."""
 from __future__ import annotations
 
-from functools import lru_cache
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from aioesphomeapi import (
     APIVersion,
@@ -112,7 +111,6 @@ def _mired_to_kelvin(mired_temperature: float) -> int:
     return round(1000000 / mired_temperature)
 
 
-@lru_cache
 def _color_mode_to_ha(mode: int) -> str:
     """Convert an esphome color mode to a HA color mode constant.
 
@@ -136,34 +134,20 @@ def _color_mode_to_ha(mode: int) -> str:
     return candidates[-1][0]
 
 
-@lru_cache
 def _filter_color_modes(
     supported: list[int], features: LightColorCapability
-) -> tuple[int, ...]:
+) -> list[int]:
     """Filter the given supported color modes.
 
     Excluding all values that don't have the requested features.
     """
-    features_value = features.value
-    return tuple(
-        mode for mode in supported if (mode & features_value) == features_value
-    )
-
-
-@lru_cache
-def _least_complex_color_mode(color_modes: tuple[int, ...]) -> int:
-    """Return the color mode with the least complexity."""
-    # popcount with bin() function because it appears
-    # to be the best way: https://stackoverflow.com/a/9831671
-    color_modes_list = list(color_modes)
-    color_modes_list.sort(key=lambda mode: bin(mode).count("1"))
-    return color_modes_list[0]
+    return [mode for mode in supported if (mode & features) == features]
 
 
 class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     """A light implementation for ESPHome."""
 
-    _native_supported_color_modes: tuple[int, ...]
+    _native_supported_color_modes: list[int]
     _supports_color_mode = False
 
     @property
@@ -247,10 +231,10 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         if (color_temp_k := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
             # Do not use kelvin_to_mired here to prevent precision loss
             data["color_temperature"] = 1000000.0 / color_temp_k
-            if color_temp_modes := _filter_color_modes(
-                color_modes, LightColorCapability.COLOR_TEMPERATURE
-            ):
-                color_modes = color_temp_modes
+            if _filter_color_modes(color_modes, LightColorCapability.COLOR_TEMPERATURE):
+                color_modes = _filter_color_modes(
+                    color_modes, LightColorCapability.COLOR_TEMPERATURE
+                )
             else:
                 color_modes = _filter_color_modes(
                     color_modes, LightColorCapability.COLD_WARM_WHITE
@@ -283,7 +267,10 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             else:
                 # otherwise try the color mode with the least complexity
                 # (fewest capabilities set)
-                data["color_mode"] = _least_complex_color_mode(color_modes)
+                # popcount with bin() function because it appears
+                # to be the best way: https://stackoverflow.com/a/9831671
+                color_modes.sort(key=lambda mode: bin(mode).count("1"))
+                data["color_mode"] = color_modes[0]
 
         await self._client.light_command(**data)
 
@@ -307,10 +294,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
         if not self._supports_color_mode:
-            supported_color_modes = self.supported_color_modes
-            if TYPE_CHECKING:
-                assert supported_color_modes is not None
-            return next(iter(supported_color_modes))
+            if not (supported := self.supported_color_modes):
+                return None
+            return next(iter(supported))
 
         return _color_mode_to_ha(self._state.color_mode)
 
@@ -388,8 +374,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         super()._on_static_info_update(static_info)
         static_info = self._static_info
         self._supports_color_mode = self._api_version >= APIVersion(1, 6)
-        self._native_supported_color_modes = tuple(
-            static_info.supported_color_modes_compat(self._api_version)
+        self._native_supported_color_modes = static_info.supported_color_modes_compat(
+            self._api_version
         )
         flags = LightEntityFeature.FLASH
 

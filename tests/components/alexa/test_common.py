@@ -224,20 +224,9 @@ class ReportedProperties:
 
     def assert_equal(self, namespace, name, value):
         """Assert a property is equal to a given value."""
-        prop_set = None
-        prop_count = 0
         for prop in self.properties:
             if prop["namespace"] == namespace and prop["name"] == name:
                 assert prop["value"] == value
-                prop_set = prop
-                prop_count += 1
-
-        if prop_count > 1:
-            pytest.fail(
-                f"property {namespace}:{name} more than once in {self.properties!r}"
-            )
-
-        if prop_set:
-            return prop_set
+                return prop
 
         pytest.fail(f"property {namespace}:{name} not in {self.properties!r}")

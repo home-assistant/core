@@ -5,7 +5,6 @@ from functools import partial
 from homeassistant.helpers.deprecation import (
     DeprecatedConstant,
     DeprecatedConstantEnum,
-    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -67,9 +66,6 @@ _DEPRECATED_SUPPORT_MODES = DeprecatedConstantEnum(
     HumidifierEntityFeature.MODES, "2025.1"
 )
 
-# These can be removed if no deprecated constant are in this module anymore
+# Both can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())

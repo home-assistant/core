@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 import json
 import logging
-from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import CONTENT_TYPE
@@ -269,11 +267,11 @@ class MicrosoftFace:
         """Store group/person data and IDs."""
         return self._store
 
-    async def update_store(self) -> None:
+    async def update_store(self):
         """Load all group/person data into local store."""
         groups = await self.call_api("get", "persongroups")
 
-        remove_tasks: list[Coroutine[Any, Any, None]] = []
+        remove_tasks = []
         new_entities = []
         for group in groups:
             g_id = group["personGroupId"]
@@ -295,7 +293,7 @@ class MicrosoftFace:
                 self._store[g_id][person["name"]] = person["personId"]
 
         if remove_tasks:
-            await asyncio.gather(*remove_tasks)
+            await asyncio.gather(remove_tasks)
         await self._component.async_add_entities(new_entities)
 
     async def call_api(self, method, function, data=None, binary=False, params=None):
