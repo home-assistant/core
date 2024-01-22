@@ -162,7 +162,7 @@ class AuthManager:
         self._providers = providers
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
-        self._revoke_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
+        self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
         self._expire_callback: CALLBACK_TYPE | None = None
         self._remove_expired_job = HassJob(self._async_remove_expired_refresh_tokens)
 
