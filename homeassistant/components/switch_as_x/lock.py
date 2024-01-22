@@ -85,7 +85,7 @@ class LockSwitch(BaseInvertableEntity, LockEntity):
 
         # Logic is the same as the lock device class for binary sensors
         # on means open (unlocked), off means closed (locked)
-        if not self._invert_state:
-            self._attr_is_locked = state.state != STATE_ON
-        else:
+        if self._invert_state:
             self._attr_is_locked = state.state == STATE_ON
+        else:
+            self._attr_is_locked = state.state != STATE_ON

@@ -32,7 +32,7 @@ CONFIG_FLOW = {
                 vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=Platform.SWITCH),
                 ),
-                vol.Required(CONF_INVERT): selector.BooleanSelector(),
+                vol.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
                 vol.Required(CONF_TARGET_DOMAIN): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=TARGET_DOMAIN_OPTIONS),
                 ),

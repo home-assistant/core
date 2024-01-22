@@ -89,7 +89,7 @@ class CoverSwitch(BaseInvertableEntity, CoverEntity):
         ):
             return
 
-        if not self._invert_state:
-            self._attr_is_closed = state.state != STATE_ON
-        else:
+        if self._invert_state:
             self._attr_is_closed = state.state == STATE_ON
+        else:
+            self._attr_is_closed = state.state != STATE_ON
