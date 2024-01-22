@@ -458,23 +458,22 @@ class AuthManager:
             credential,
         )
 
-    async def async_get_refresh_token(
-        self, token_id: str
-    ) -> models.RefreshToken | None:
+    @callback
+    def async_get_refresh_token(self, token_id: str) -> models.RefreshToken | None:
         """Get refresh token by id."""
-        return await self._store.async_get_refresh_token(token_id)
+        return self._store.async_get_refresh_token(token_id)
 
-    async def async_get_refresh_token_by_token(
+    @callback
+    def async_get_refresh_token_by_token(
         self, token: str
     ) -> models.RefreshToken | None:
         """Get refresh token by token."""
-        return await self._store.async_get_refresh_token_by_token(token)
+        return self._store.async_get_refresh_token_by_token(token)
 
-    async def async_remove_refresh_token(
-        self, refresh_token: models.RefreshToken
-    ) -> None:
+    @callback
+    def async_remove_refresh_token(self, refresh_token: models.RefreshToken) -> None:
         """Delete a refresh token."""
-        await self._store.async_remove_refresh_token(refresh_token)
+        self._store.async_remove_refresh_token(refresh_token)
 
         callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:
@@ -554,16 +553,15 @@ class AuthManager:
         if provider := self._async_resolve_provider(refresh_token):
             provider.async_validate_refresh_token(refresh_token, remote_ip)
 
-    async def async_validate_access_token(
-        self, token: str
-    ) -> models.RefreshToken | None:
+    @callback
+    def async_validate_access_token(self, token: str) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
         try:
             unverif_claims = jwt_wrapper.unverified_hs256_token_decode(token)
         except jwt.InvalidTokenError:
             return None
 
-        refresh_token = await self.async_get_refresh_token(
+        refresh_token = self.async_get_refresh_token(
             cast(str, unverif_claims.get("iss"))
         )
 
