@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Container, Iterable, MutableMapping
+from collections.abc import Iterable, MutableMapping
 import dataclasses
 from typing import Any, Literal, TypedDict, cast
 
@@ -37,16 +37,6 @@ class AreaEntry:
     name: str
     normalized_name: str
     picture: str | None
-
-    @staticmethod
-    def generate_id(existing_ids: Container[str], name: str) -> str:
-        """Generate ID."""
-        suggestion = suggestion_base = slugify(name)
-        tries = 1
-        while suggestion in existing_ids:
-            tries += 1
-            suggestion = f"{suggestion_base}_{tries}"
-        return suggestion
 
 
 class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
@@ -131,7 +121,7 @@ class AreaRegistry:
         if self.async_get_area_by_name(name):
             raise ValueError(f"The name {name} ({normalized_name}) is already in use")
 
-        area_id = AreaEntry.generate_id(self.areas, name)
+        area_id = self._generate_area_id(name)
         area = AreaEntry(
             aliases=aliases or set(),
             id=area_id,
@@ -274,6 +264,15 @@ class AreaRegistry:
         ]
 
         return data
+
+    def _generate_area_id(self, name: str) -> str:
+        """Generate area ID."""
+        suggestion = suggestion_base = slugify(name)
+        tries = 1
+        while suggestion in self.areas:
+            tries += 1
+            suggestion = f"{suggestion_base}_{tries}"
+        return suggestion
 
 
 @callback
