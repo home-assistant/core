@@ -135,12 +135,12 @@ def async_active_zone(
         if closest is None:
             closer_zone = True
         else:
-            closer_zone = zone_dist < min_dist
             smaller_zone = (
                 zone_dist == min_dist and radius < closest.attributes[ATTR_RADIUS]
             )
+            closer_zone = zone_dist < min_dist or smaller_zone
 
-        if within_zone and (closer_zone or smaller_zone):
+        if within_zone and closer_zone:
             min_dist = zone_dist
             closest = zone
 
