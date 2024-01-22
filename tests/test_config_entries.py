@@ -4152,6 +4152,7 @@ async def test_update_entry_and_reload(
     """Test updating an entry and reloading."""
     entry = MockConfigEntry(
         domain="comp",
+        unique_id="1234",
         title="Test",
         data={"vendor": "data"},
         options={"vendor": "options"},
@@ -4172,6 +4173,7 @@ async def test_update_entry_and_reload(
             """Mock Reauth."""
             return self.async_update_reload_and_abort(
                 entry=entry,
+                unique_id="5678",
                 title="Updated Title",
                 data={"vendor": "data2"},
                 options={"vendor": "options2"},
@@ -4182,6 +4184,7 @@ async def test_update_entry_and_reload(
         await hass.async_block_till_done()
 
         assert entry.title == "Updated Title"
+        assert entry.unique_id == "5678"
         assert entry.data == {"vendor": "data2"}
         assert entry.options == {"vendor": "options2"}
         assert entry.state == config_entries.ConfigEntryState.LOADED
