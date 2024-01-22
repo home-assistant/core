@@ -45,7 +45,7 @@ types-Pillow==10.1.0.20240106
 types-protobuf==4.24.0.20240106
 types-psutil==5.9.5.20240106
 types-python-dateutil==2.8.19.20240106
-types-python-slugify==0.1.2
+types-python-slugify==8.0.0.3
 types-pytz==2023.3.1.1
 types-PyYAML==6.0.12.12
 types-requests==2.31.0.3
