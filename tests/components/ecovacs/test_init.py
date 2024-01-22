@@ -1,6 +1,6 @@
 """Test init of ecovacs."""
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 import pytest
@@ -15,22 +15,31 @@ from .const import IMPORT_DATA
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_api_client")
+@pytest.mark.usefixtures("init_integration")
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test loading and unloading the integration."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
+    mock_config_entry = init_integration
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert DOMAIN in hass.data
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert DOMAIN not in hass.data
+
+
+@pytest.fixture
+def mock_api_client(mock_authenticator: Mock) -> Mock:
+    """Mock the API client."""
+    with patch(
+        "homeassistant.components.ecovacs.controller.ApiClient",
+        autospec=True,
+    ) as mock_api_client:
+        yield mock_api_client.return_value
 
 
 async def test_config_entry_not_ready(

@@ -37,7 +37,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsBinarySensorEntityDescription, ...] = (
         value_fn=lambda e: e.mop_attached,
         key="mop_attached",
         translation_key="mop_attached",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

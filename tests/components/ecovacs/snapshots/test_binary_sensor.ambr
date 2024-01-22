@@ -1,0 +1,72 @@
+# serializer version: 1
+# name: test_mop_attached
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.ozmo_950_mop_attached',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mop attached',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mop_attached',
+    'unique_id': 'E1234567890000000001_mop_attached',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_mop_attached.1
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ecovacs',
+        'E1234567890000000001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Ecovacs',
+    'model': 'DEEBOT OZMO 950 Series',
+    'name': 'Ozmo 950',
+    'name_by_user': None,
+    'serial_number': 'E1234567890000000001',
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_mop_attached.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ozmo 950 Mop attached',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ozmo_950_mop_attached',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
