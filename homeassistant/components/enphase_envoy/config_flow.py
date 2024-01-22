@@ -103,13 +103,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 and entry.data[CONF_HOST] == self.ip_address
             ):
                 title = f"{ENVOY} {serial}" if entry.title == ENVOY else ENVOY
-                self.hass.config_entries.async_update_entry(
-                    entry, title=title, unique_id=serial
+                return self.async_update_reload_and_abort(
+                    entry, title=title, unique_id=serial, reason="already_configured"
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
-                return self.async_abort(reason="already_configured")
 
         return await self.async_step_user()
 
