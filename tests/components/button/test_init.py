@@ -14,7 +14,12 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_PLATFORM,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
@@ -104,6 +109,21 @@ async def test_restore_state(
     await hass.async_block_till_done()
 
     assert hass.states.get("button.button_1").state == "2021-01-01T23:59:59+00:00"
+
+
+async def test_restore_state_does_not_restore_unavailable(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test we restore state integration except for unavailable."""
+    mock_restore_cache(hass, (State("button.button_1", STATE_UNAVAILABLE),))
+
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("button.button_1").state == STATE_UNKNOWN
 
 
 class MockFlow(ConfigFlow):

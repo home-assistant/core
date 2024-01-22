@@ -1,12 +1,16 @@
 {
   "domain": "tplink",
-  "name": "TP-Link Kasa Smart",
-  "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco"],
+  "name": "TP-Link Smart Home",
+  "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco", "@sdb9696"],
   "config_flow": true,
   "dependencies": ["network"],
   "dhcp": [
     {
       "registered_devices": true
+    },
+    {
+      "hostname": "e[sp]*",
+      "macaddress": "3C52A1*"
     },
     {
       "hostname": "e[sp]*",
@@ -31,6 +35,10 @@
     {
       "hostname": "hs*",
       "macaddress": "9C5322*"
+    },
+    {
+      "hostname": "k[lps]*",
+      "macaddress": "5091E3*"
     },
     {
       "hostname": "k[lps]*",
@@ -163,11 +171,31 @@
     {
       "hostname": "k[lps]*",
       "macaddress": "1C61B4*"
+    },
+    {
+      "hostname": "l5*",
+      "macaddress": "5CE931*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "482254*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "30DE4B*"
+    },
+    {
+      "hostname": "l9*",
+      "macaddress": "A842A1*"
+    },
+    {
+      "hostname": "l9*",
+      "macaddress": "3460F9*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/tplink",
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",
-  "requirements": ["python-kasa[speedups]==0.5.4"]
+  "requirements": ["python-kasa[speedups]==0.6.0.1"]
 }

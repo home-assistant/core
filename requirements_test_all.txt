@@ -36,7 +36,7 @@ HATasmota==0.8.0
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.1.0
+Pillow==10.2.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.7
@@ -359,7 +359,7 @@ aiounifi==69
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.4.3
+aiovodafone==0.5.4
 
 # homeassistant.components.waqi
 aiowaqi==3.0.1
@@ -380,7 +380,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.5.6-2
+airthings-ble==0.6.0
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -427,7 +427,7 @@ arcam-fmj==1.4.0
 async-upnp-client==0.38.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.4.2
+asyncsleepiq==1.5.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
@@ -812,7 +812,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.2.0
+habluetooth==2.3.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.75.1
@@ -1683,7 +1683,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.5.4
+python-kasa[speedups]==0.6.0.1
 
 # homeassistant.components.matter
 python-matter-server==5.1.1
@@ -1720,7 +1720,7 @@ python-roborock==0.39.0
 python-smarttub==0.0.36
 
 # homeassistant.components.songpal
-python-songpal==0.16
+python-songpal==0.16.1
 
 # homeassistant.components.tado
 python-tado==0.17.4

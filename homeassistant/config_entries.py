@@ -1937,6 +1937,29 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
         return result
 
+    @callback
+    def async_update_reload_and_abort(
+        self,
+        entry: ConfigEntry,
+        title: str | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        reason: str = "reauth_successful",
+    ) -> data_entry_flow.FlowResult:
+        """Update config entry, reload config entry and finish config flow."""
+        result = self.hass.config_entries.async_update_entry(
+            entry=entry,
+            title=title,
+            data=data,
+            options=options,
+        )
+        if result:
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(entry.entry_id),
+                f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+            )
+        return self.async_abort(reason=reason)
+
 
 class OptionsFlowManager(data_entry_flow.FlowManager):
     """Flow to set options for a configuration entry."""
