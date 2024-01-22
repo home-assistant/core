@@ -1,7 +1,7 @@
 """Support for the definition of zones."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 import logging
 from operator import attrgetter
 import sys
@@ -112,37 +112,45 @@ def async_active_zone(
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
     min_dist: float = sys.maxsize
     closest: State | None = None
+
     # This can be called before async_setup by device tracker
-    zone_entity_ids: list[str] = hass.data.get(ZONE_ENTITY_IDS, [])
+    zone_entity_ids: Iterable[str] = hass.data.get(ZONE_ENTITY_IDS, ())
+
     for entity_id in zone_entity_ids:
-        zone = hass.states.get(entity_id)
+        if not (zone := hass.states.get(entity_id)) or zone.state == STATE_UNAVAILABLE:
+            continue
+
+        zone_attrs = zone.attributes
+        if zone.attributes.get(ATTR_PASSIVE):
+            continue
+
         if (
-            not zone
-            or zone.state == STATE_UNAVAILABLE
-            or (zone_attrs := zone.attributes).get(ATTR_PASSIVE)
-        ):
+            zone_dist := distance(
+                latitude,
+                longitude,
+                zone_attrs[ATTR_LATITUDE],
+                zone_attrs[ATTR_LONGITUDE],
+            )
+        ) is None:
             continue
 
-        zone_dist = distance(
-            latitude, longitude, zone_attrs[ATTR_LATITUDE], zone_attrs[ATTR_LONGITUDE]
-        )
-        if zone_dist is None:
+        # If not within the zone radius, skip it
+        if not zone_dist - (radius := zone_attrs[ATTR_RADIUS]) < radius:
             continue
 
-        radius = zone_attrs[ATTR_RADIUS]
-        within_zone = zone_dist - radius < radius
-
-        if closest is None:
-            closer_zone = True
-        else:
-            closer_zone = zone_dist < min_dist or (
+        # If we don't have a closest yet skip this one
+        # if its not closer than the closest.
+        if closest and not (
+            zone_dist < min_dist
+            or (
                 # If same distance, prefer smaller zone
                 zone_dist == min_dist and radius < closest.attributes[ATTR_RADIUS]
             )
+        ):
+            continue
 
-        if within_zone and closer_zone:
-            min_dist = zone_dist
-            closest = zone
+        min_dist = zone_dist
+        closest = zone
 
     return closest
 
