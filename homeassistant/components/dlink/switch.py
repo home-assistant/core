@@ -10,7 +10,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_TOTAL_CONSUMPTION, DOMAIN
+from .const import ATTR_CURRENT_CONSUMPTION, ATTR_TOTAL_CONSUMPTION, DOMAIN
 from .entity import DLinkEntity
 
 SCAN_INTERVAL = timedelta(minutes=2)
@@ -46,12 +46,19 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
             temperature = None
 
         try:
+            current_consumption = float(self.data.current_consumption)
+        except ValueError:
+            current_consumption = None
+
+        try:
             total_consumption = float(self.data.total_consumption)
         except ValueError:
             total_consumption = None
 
+
         attrs = {
             ATTR_TOTAL_CONSUMPTION: total_consumption,
+            ATTR_CURRENT_CONSUMPTION: current_consumption,
             ATTR_TEMPERATURE: temperature,
         }
 
