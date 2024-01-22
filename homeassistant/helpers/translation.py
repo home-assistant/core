@@ -18,7 +18,6 @@ from homeassistant.util.json import load_json
 
 _LOGGER = logging.getLogger(__name__)
 
-TRANSLATION_LOAD_LOCK = "translation_load_lock"
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
 
