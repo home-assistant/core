@@ -205,7 +205,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         # calculate distance for all tracked entities
         for entity_id in self.tracked_entities:
-            if (device_state := self.hass.states.get(entity_id)) is None:
+            if (tracked_entity_state := self.hass.states.get(entity_id)) is None:
                 if entities_data.pop(entity_id, None) is not None:
                     _LOGGER.debug(
                         "%s: %s does not exist -> remove", self.friendly_name, entity_id
@@ -217,17 +217,17 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 entities_data[entity_id] = {
                     ATTR_DIST_TO: None,
                     ATTR_DIR_OF_TRAVEL: None,
-                    ATTR_NAME: device_state.name,
+                    ATTR_NAME: tracked_entity_state.name,
                     ATTR_IN_IGNORED_ZONE: False,
                 }
             entities_data[entity_id][ATTR_IN_IGNORED_ZONE] = (
-                device_state.state.lower() in self.ignored_zones
+                tracked_entity_state.state.lower() in self.ignored_zones
             )
             entities_data[entity_id][ATTR_DIST_TO] = self._calc_distance_to_zone(
                 zone_state,
-                device_state,
-                device_state.attributes.get(ATTR_LATITUDE),
-                device_state.attributes.get(ATTR_LONGITUDE),
+                tracked_entity_state,
+                tracked_entity_state.attributes.get(ATTR_LATITUDE),
+                tracked_entity_state.attributes.get(ATTR_LONGITUDE),
             )
             if entities_data[entity_id][ATTR_DIST_TO] is None:
                 _LOGGER.debug(
