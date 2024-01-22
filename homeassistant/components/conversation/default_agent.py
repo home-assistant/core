@@ -358,12 +358,11 @@ class DefaultAgent(AbstractConversationAgent):
             allow_unmatched_entities=True,
         ):
             # Remove missing entities that couldn't be filled from context
-            result.unmatched_entities = {
-                key: entity
-                for key, entity in result.unmatched_entities.items()
-                if isinstance(entity, UnmatchedTextEntity)
-                and (entity.text != MISSING_ENTITY)
-            }
+            for entity_key, entity in list(result.unmatched_entities.items()):
+                if isinstance(entity, UnmatchedTextEntity) and (
+                    entity.text == MISSING_ENTITY
+                ):
+                    result.unmatched_entities.pop(entity_key)
 
             if maybe_result is None:
                 # First result

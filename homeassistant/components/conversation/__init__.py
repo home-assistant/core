@@ -322,51 +322,55 @@ async def websocket_hass_agent_debug(
     ]
 
     # Return results for each sentence in the same order as the input.
-    connection.send_result(
-        msg["id"],
-        {
-            "results": [
-                {
-                    # Name of the matching intent (or the closest)
-                    "intent": {
-                        "name": result.intent.name,
-                    },
-                    # Slot values that would be received by the intent
-                    "slots": {  # direct access to values
-                        entity_key: entity.value
-                        for entity_key, entity in result.entities.items()
-                    },
-                    # Extra slot details, such as the originally matched text
-                    "details": {
-                        entity_key: {
-                            "name": entity.name,
-                            "value": entity.value,
-                            "text": entity.text,
-                        }
-                        for entity_key, entity in result.entities.items()
-                    },
-                    # Entities/areas/etc. that would be targeted
-                    "targets": {
-                        state.entity_id: {"matched": is_matched}
-                        for state, is_matched in _get_debug_targets(hass, result)
-                    }
-                    if (not result.unmatched_entities)
-                    else {},
-                    # True if match was completed with nothing left over
-                    "match": (not result.unmatched_entities),
-                    # Text of the sentence template that matched (or was closest)
-                    "sentence_template": ""
-                    if (result.intent_sentence is None)
-                    else result.intent_sentence.text,
-                    # When match is incomplete, this will contain the best slot guesses
-                    "unmatched_slots": _get_unmatched_slots(result),
+    result_dicts: list[dict[str, Any] | None] = []
+    for result in results:
+        if result is None:
+            # Indicate that a recognition failure occurred
+            result_dicts.append(None)
+            continue
+
+        successful_match = not result.unmatched_entities
+        result_dict = {
+            # Name of the matching intent (or the closest)
+            "intent": {
+                "name": result.intent.name,
+            },
+            # Slot values that would be received by the intent
+            "slots": {  # direct access to values
+                entity_key: entity.value
+                for entity_key, entity in result.entities.items()
+            },
+            # Extra slot details, such as the originally matched text
+            "details": {
+                entity_key: {
+                    "name": entity.name,
+                    "value": entity.value,
+                    "text": entity.text,
                 }
-                if result is not None
-                else None
-                for result in results
-            ]
-        },
-    )
+                for entity_key, entity in result.entities.items()
+            },
+            # Entities/areas/etc. that would be targeted
+            "targets": {},
+            # True if match was successful
+            "match": successful_match,
+            # Text of the sentence template that matched (or was closest)
+            "sentence_template": "",
+            # When match is incomplete, this will contain the best slot guesses
+            "unmatched_slots": _get_unmatched_slots(result),
+        }
+
+        if successful_match:
+            result_dict["targets"] = {
+                state.entity_id: {"matched": is_matched}
+                for state, is_matched in _get_debug_targets(hass, result)
+            }
+
+        if result.intent_sentence is not None:
+            result_dict["sentence_template"] = result.intent_sentence.text
+
+        result_dicts.append(result_dict)
+
+    connection.send_result(msg["id"], {"results": result_dicts})
 
 
 def _get_debug_targets(
