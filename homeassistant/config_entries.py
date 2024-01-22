@@ -1938,7 +1938,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return result
 
     @callback
-    def async_update_and_reload_entry(
+    def async_update_reload_and_abort(
         self,
         entry: ConfigEntry,
         title: str | UndefinedType = UNDEFINED,
