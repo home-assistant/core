@@ -5974,6 +5974,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "time_date": {
+      "name": "Time & Date",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "tmb": {
       "name": "Transports Metropolitans de Barcelona",
       "integration_type": "hub",
@@ -6927,12 +6933,6 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "time_date": {
-      "name": "Time & Date",
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_push"
     },
     "timer": {
       "name": "Timer",
