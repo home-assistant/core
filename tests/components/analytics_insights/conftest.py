@@ -25,22 +25,22 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_analytics_client() -> Generator[AsyncMock, None, None]:
     """Mock a Homeassistant Analytics client."""
-    mock = AsyncMock()
     with patch(
         "homeassistant.components.analytics_insights.HomeassistantAnalyticsClient",
-        return_value=mock,
-    ), patch(
+        autospec=True
+    ) as mock_client, patch(
         "homeassistant.components.analytics_insights.config_flow.HomeassistantAnalyticsClient",
-        return_value=mock,
+        new=mock_client,
     ):
-        mock.get_current_analytics.return_value = CurrentAnalytics.from_json(
+        client = mock_client
+        client.get_current_analytics.return_value = CurrentAnalytics.from_json(
             load_fixture("analytics_insights/current_data.json")
         )
         integrations = load_json_object_fixture("analytics_insights/integrations.json")
-        mock.get_integrations.return_value = {
+        client.get_integrations.return_value = {
             key: Integration.from_dict(value) for key, value in integrations.items()
         }
-        yield mock
+        yield client
 
 
 @pytest.fixture
