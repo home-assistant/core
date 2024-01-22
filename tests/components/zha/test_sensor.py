@@ -164,11 +164,26 @@ async def async_test_metering(hass, cluster, entity_id):
     assert hass.states.get(entity_id).attributes["status"] in ("<bitmap8.32: 32>", "32")
 
 
-async def async_test_smart_energy_summation(hass, cluster, entity_id):
-    """Test SmartEnergy Summation delivered sensro."""
+async def async_test_smart_energy_summation_delivered(hass, cluster, entity_id):
+    """Test SmartEnergy Summation delivered sensor."""
 
     await send_attributes_report(
         hass, cluster, {1025: 1, "current_summ_delivered": 12321, 1026: 100}
+    )
+    assert_state(hass, entity_id, "12.321", UnitOfEnergy.KILO_WATT_HOUR)
+    assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
+    assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
+    assert (
+        hass.states.get(entity_id).attributes[ATTR_DEVICE_CLASS]
+        == SensorDeviceClass.ENERGY
+    )
+
+
+async def async_test_smart_energy_summation_received(hass, cluster, entity_id):
+    """Test SmartEnergy Summation received sensor."""
+
+    await send_attributes_report(
+        hass, cluster, {1025: 1, "current_summ_received": 12321, 1026: 100}
     )
     assert_state(hass, entity_id, "12.321", UnitOfEnergy.KILO_WATT_HOUR)
     assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
@@ -338,12 +353,12 @@ async def async_test_device_temperature(hass, cluster, entity_id):
                 "multiplier": 1,
                 "status": 0x00,
             },
-            {"current_summ_delivered"},
+            {"current_summ_delivered", "current_summ_received"},
         ),
         (
             smartenergy.Metering.cluster_id,
             "summation_delivered",
-            async_test_smart_energy_summation,
+            async_test_smart_energy_summation_delivered,
             9,
             {
                 "demand_formatting": 0xF9,
@@ -354,7 +369,23 @@ async def async_test_device_temperature(hass, cluster, entity_id):
                 "summation_formatting": 0b1_0111_010,
                 "unit_of_measure": 0x00,
             },
-            {"instaneneous_demand"},
+            {"instaneneous_demand", "current_summ_received"},
+        ),
+        (
+            smartenergy.Metering.cluster_id,
+            "summation_received",
+            async_test_smart_energy_summation_received,
+            9,
+            {
+                "demand_formatting": 0xF9,
+                "divisor": 1000,
+                "metering_device_type": 0x00,
+                "multiplier": 1,
+                "status": 0x00,
+                "summation_formatting": 0b1_0111_010,
+                "unit_of_measure": 0x00,
+            },
+            {"instaneneous_demand", "current_summ_delivered"},
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
@@ -710,6 +741,7 @@ async def test_electrical_measurement_init(
             },
             {
                 "summation_delivered",
+                "summation_received",
             },
             {
                 "instantaneous_demand",
@@ -717,19 +749,21 @@ async def test_electrical_measurement_init(
         ),
         (
             smartenergy.Metering.cluster_id,
-            {"instantaneous_demand", "current_summ_delivered"},
+            {"instantaneous_demand", "current_summ_delivered", "current_summ_received"},
             {},
             {
-                "summation_delivered",
                 "instantaneous_demand",
+                "summation_delivered",
+                "summation_received",
             },
         ),
         (
             smartenergy.Metering.cluster_id,
             {},
             {
-                "summation_delivered",
                 "instantaneous_demand",
+                "summation_delivered",
+                "summation_received",
             },
             {},
         ),
