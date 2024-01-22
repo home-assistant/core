@@ -124,7 +124,7 @@ def async_active_zone(
             # Skip passive zones
             or (zone_attrs := zone.attributes).get(ATTR_PASSIVE)
             # Skip zones where we cannot calculate distance
-            or not (
+            or (
                 zone_dist := distance(
                     latitude,
                     longitude,
@@ -132,6 +132,7 @@ def async_active_zone(
                     zone_attrs[ATTR_LONGITUDE],
                 )
             )
+            is None
             # Skip zone that are outside the radius aka the
             # lat/long is outside the zone
             or not (zone_dist - (radius := zone_attrs[ATTR_RADIUS]) < radius)
