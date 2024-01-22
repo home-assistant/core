@@ -589,21 +589,37 @@ async def test_remove_expired_refresh_token(hass: HomeAssistant) -> None:
     user = MockUser().add_to_auth_manager(manager)
     now = dt_util.utcnow()
     with freeze_time(now):
-        refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+        refresh_token1 = await manager.async_create_refresh_token(user, CLIENT_ID)
         assert (
-            refresh_token.expire_at
+            refresh_token1.expire_at
             == now.timestamp() + timedelta(days=90).total_seconds()
+        )
+
+    with freeze_time(now + timedelta(days=30)):
+        async_fire_time_changed(hass, now + timedelta(days=30))
+        refresh_token2 = await manager.async_create_refresh_token(user, CLIENT_ID)
+        assert (
+            refresh_token2.expire_at
+            == now.timestamp() + timedelta(days=120).total_seconds()
         )
 
     with freeze_time(now + timedelta(days=89, hours=23)):
         async_fire_time_changed(hass, now + timedelta(days=89, hours=23))
         await hass.async_block_till_done()
-        assert await manager.async_get_refresh_token(refresh_token.id)
+        assert await manager.async_get_refresh_token(refresh_token1.id)
+        assert await manager.async_get_refresh_token(refresh_token2.id)
 
     with freeze_time(now + timedelta(days=90, seconds=5)):
         async_fire_time_changed(hass, now + timedelta(days=90, seconds=5))
         await hass.async_block_till_done()
-        assert await manager.async_get_refresh_token(refresh_token.id) is None
+        assert await manager.async_get_refresh_token(refresh_token1.id) is None
+        assert await manager.async_get_refresh_token(refresh_token2.id)
+
+    with freeze_time(now + timedelta(days=120, seconds=5)):
+        async_fire_time_changed(hass, now + timedelta(days=120, seconds=5))
+        await hass.async_block_till_done()
+        assert await manager.async_get_refresh_token(refresh_token1.id) is None
+        assert await manager.async_get_refresh_token(refresh_token2.id) is None
 
 
 async def test_update_expire_at_refresh_token(hass: HomeAssistant) -> None:
