@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,20 +25,29 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
+@callback
+def hours_to_datetime(value: StateType) -> datetime | None:
+    """Convert relative hours into absolute datetime."""
+    if isinstance(value, (int, float)) and value > 0:
+        return dt_util.now() + timedelta(minutes=value)
+    return None
+
+
 @dataclass(frozen=True, kw_only=True)
 class TessieSensorEntityDescription(SensorEntityDescription):
     """Describes Tessie Sensor entity."""
 
-    value_fn: Callable[[StateType], StateType] = lambda x: x
+    value_fn: Callable[[StateType], StateType | datetime] = lambda x: x
 
 
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
@@ -80,6 +90,12 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieSensorEntityDescription(
+        key="charge_state_minutes_to_full_charge",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=hours_to_datetime,
     ),
     TessieSensorEntityDescription(
         key="charge_state_battery_range",
@@ -243,6 +259,6 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.get())
