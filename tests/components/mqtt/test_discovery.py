@@ -481,11 +481,11 @@ async def test_discover_alarm_control_panel(
             "vacuum",
         ),
         (
-            "homeassistant/vacuum/object/bla/config",
-            '{ "name": "Hello World 17", "obj_id": "hello_id", "state_topic": "test-topic", "schema": "legacy" }',
-            "vacuum.hello_id",
+            "homeassistant/valve/object/bla/config",
+            '{ "name": "Hello World 17", "obj_id": "hello_id", "state_topic": "test-topic" }',
+            "valve.hello_id",
             "Hello World 17",
-            "vacuum",
+            "valve",
         ),
         (
             "homeassistant/lock/object/bla/config",

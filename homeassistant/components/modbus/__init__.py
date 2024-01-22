@@ -190,7 +190,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_SCALE, default=1): number_validator,
         vol.Optional(CONF_OFFSET, default=0): number_validator,
-        vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
+        vol.Optional(CONF_PRECISION): cv.positive_int,
         vol.Optional(
             CONF_SWAP,
         ): vol.In(

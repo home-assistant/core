@@ -343,6 +343,7 @@ async def test_saving_loading(
     await flush_store(manager._store._store)
 
     store2 = auth_store.AuthStore(hass)
+    await store2.async_load()
     users = await store2.async_get_users()
     assert len(users) == 1
     assert users[0].permissions == user.permissions

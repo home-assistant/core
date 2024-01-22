@@ -5,6 +5,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import timedelta
+from functools import partial
 import time
 from typing import Any, cast
 
@@ -47,6 +48,7 @@ async def auth_manager_from_config(
     mfa modules exist in configs.
     """
     store = auth_store.AuthStore(hass)
+    await store.async_load()
     if provider_configs:
         providers = await asyncio.gather(
             *(
@@ -73,8 +75,7 @@ async def auth_manager_from_config(
     for module in modules:
         module_hash[module.id] = module
 
-    manager = AuthManager(hass, store, provider_hash, module_hash)
-    return manager
+    return AuthManager(hass, store, provider_hash, module_hash)
 
 
 class AuthManagerFlowManager(data_entry_flow.FlowManager):
@@ -157,7 +158,7 @@ class AuthManager:
         self._providers = providers
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
-        self._revoke_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
+        self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
@@ -475,9 +476,16 @@ class AuthManager:
         """Delete a refresh token."""
         await self._store.async_remove_refresh_token(refresh_token)
 
-        callbacks = self._revoke_callbacks.pop(refresh_token.id, [])
+        callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:
             revoke_callback()
+
+    @callback
+    def _async_unregister(
+        self, callbacks: set[CALLBACK_TYPE], callback_: CALLBACK_TYPE
+    ) -> None:
+        """Unregister a callback."""
+        callbacks.remove(callback_)
 
     @callback
     def async_register_revoke_token_callback(
@@ -485,17 +493,11 @@ class AuthManager:
     ) -> CALLBACK_TYPE:
         """Register a callback to be called when the refresh token id is revoked."""
         if refresh_token_id not in self._revoke_callbacks:
-            self._revoke_callbacks[refresh_token_id] = []
+            self._revoke_callbacks[refresh_token_id] = set()
 
         callbacks = self._revoke_callbacks[refresh_token_id]
-        callbacks.append(revoke_callback)
-
-        @callback
-        def unregister() -> None:
-            if revoke_callback in callbacks:
-                callbacks.remove(revoke_callback)
-
-        return unregister
+        callbacks.add(revoke_callback)
+        return partial(self._async_unregister, callbacks, revoke_callback)
 
     @callback
     def async_create_access_token(

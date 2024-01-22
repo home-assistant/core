@@ -1,9 +1,11 @@
 """Support for Enigma2 media players."""
 from __future__ import annotations
 
+from aiohttp.client_exceptions import ClientConnectorError
 from openwebif.api import OpenWebIfDevice
-from openwebif.enums import RemoteControlCodes
+from openwebif.enums import RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -20,6 +22,8 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -86,19 +90,28 @@ async def async_setup_platform(
         config[CONF_DEEP_STANDBY] = DEFAULT_DEEP_STANDBY
         config[CONF_SOURCE_BOUQUET] = DEFAULT_SOURCE_BOUQUET
 
-    device = OpenWebIfDevice(
+    base_url = URL.build(
+        scheme="https" if config[CONF_SSL] else "http",
         host=config[CONF_HOST],
         port=config.get(CONF_PORT),
-        username=config.get(CONF_USERNAME),
+        user=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
-        is_https=config[CONF_SSL],
+    )
+
+    session = async_create_clientsession(hass, verify_ssl=False, base_url=base_url)
+
+    device = OpenWebIfDevice(
+        host=session,
         turn_off_to_deep=config.get(CONF_DEEP_STANDBY),
         source_bouquet=config.get(CONF_SOURCE_BOUQUET),
     )
 
-    async_add_entities(
-        [Enigma2Device(config[CONF_NAME], device, await device.get_about())]
-    )
+    try:
+        about = await device.get_about()
+    except ClientConnectorError as err:
+        raise PlatformNotReady from err
+
+    async_add_entities([Enigma2Device(config[CONF_NAME], device, about)])
 
 
 class Enigma2Device(MediaPlayerEntity):
@@ -142,15 +155,11 @@ class Enigma2Device(MediaPlayerEntity):
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        if self._attr_volume_level is None:
-            return
-        await self._device.set_volume(int(self._attr_volume_level * 100) + 5)
+        await self._device.set_volume(SetVolumeOption.UP)
 
     async def async_volume_down(self) -> None:
         """Volume down media player."""
-        if self._attr_volume_level is None:
-            return
-        await self._device.set_volume(int(self._attr_volume_level * 100) - 5)
+        await self._device.set_volume(SetVolumeOption.DOWN)
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
@@ -169,8 +178,8 @@ class Enigma2Device(MediaPlayerEntity):
         await self._device.send_remote_control_action(RemoteControlCodes.CHANNEL_UP)
 
     async def async_media_previous_track(self) -> None:
-        """Send next track command."""
-        self._device.send_remote_control_action(RemoteControlCodes.CHANNEL_DOWN)
+        """Send previous track command."""
+        await self._device.send_remote_control_action(RemoteControlCodes.CHANNEL_DOWN)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""

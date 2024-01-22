@@ -185,10 +185,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._swap = config[CONF_SWAP]
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
-        self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
-        if self._scale < 1 and not self._precision:
-            self._precision = 2
+        self._precision = config.get(CONF_PRECISION, 2 if self._scale < 1 else 0)
         self._offset = config[CONF_OFFSET]
         self._slave_count = config.get(CONF_SLAVE_COUNT, None) or config.get(
             CONF_VIRTUAL_COUNT, 0
