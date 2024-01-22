@@ -240,11 +240,13 @@ async def test_zeroconf_without_mac_station_exists_abort(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_technove")
 async def test_zeroconf_with_mac_station_exists_abort(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_technove: MagicMock
 ) -> None:
     """Test we abort zeroconf flow if TechnoVE station already configured."""
     mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -259,5 +261,6 @@ async def test_zeroconf_with_mac_station_exists_abort(
         ),
     )
 
+    mock_technove.update.assert_not_called()
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
