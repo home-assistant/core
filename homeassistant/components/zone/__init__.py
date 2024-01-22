@@ -120,8 +120,7 @@ def async_active_zone(
         if not (zone := hass.states.get(entity_id)) or zone.state == STATE_UNAVAILABLE:
             continue
 
-        zone_attrs = zone.attributes
-        if zone.attributes.get(ATTR_PASSIVE):
+        if (zone_attrs := zone.attributes).get(ATTR_PASSIVE):
             continue
 
         if (
