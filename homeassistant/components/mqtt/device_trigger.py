@@ -265,9 +265,11 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
             mqtt_data = get_mqtt_data(self.hass)
             if new_trigger_id in mqtt_data.device_triggers:
                 _LOGGER.error(
-                    "Cannot update the type or subtype for this MQTT device trigger. "
-                    "Restart Home Assistant to re-setup the triggers and "
-                    "check any automations that make use of the device trigger"
+                    "Cannot update device trigger %s due to an existing duplicate "
+                    "device trigger with the same device_id, "
+                    "type and subtype. Got: %s",
+                    discovery_hash,
+                    config,
                 )
                 return
             # Update trigger_id based index after update of type or subtype

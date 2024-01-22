@@ -385,7 +385,14 @@ async def test_if_discovery_id_is_prefered(
     calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test if discovery is preferred over referencing by type/subtype."""
+    """Test if discovery is preferred over referencing by type/subtype.
+
+    The use of CONF_DISCOVERY_ID was deprecated in HA Core 2024.2.
+    By default, a MQTT device trigger now will be referenced by
+    device_id, type and subtype instead.
+    If discovery_id is found an an automation it will have a higher
+    priority and than type and subtype.
+    """
     await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
@@ -728,14 +735,7 @@ async def test_if_fires_on_mqtt_message_after_update(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test triggers firing after update.
-
-    The use of CONF_DISCOVERY_ID was deprecated in HA Core 2024.2.
-    By default, a MQTT device trigger now will be referenced by
-    device_id, type and subtype instead.
-    If discovery_id is found an an automation it will have a higher
-    priority and than type and subtype.
-    """
+    """Test triggers firing after update."""
     await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
@@ -795,9 +795,7 @@ async def test_if_fires_on_mqtt_message_after_update(
     # Update the trigger with existing type/subtype change
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data1)
     await hass.async_block_till_done()
-    assert (
-        "Cannot update the type or subtype for this MQTT device trigger" in caplog.text
-    )
+    assert "Cannot update device trigger ('device_automation', 'bla2')" in caplog.text
 
     # Update the trigger with different topic
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data3)
