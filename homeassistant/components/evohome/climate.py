@@ -182,8 +182,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
         else:
             self._attr_unique_id = evo_device.zoneId
 
-        self._attr_name = evo_device.name
-
         if evo_broker.client_v1:
             self._attr_precision = PRECISION_TENTHS
         else:
@@ -220,6 +218,11 @@ class EvoZone(EvoChild, EvoClimateEntity):
         )
 
     @property
+    def name(self) -> str | None:
+        """Return the name of the evohome entity."""
+        return self._evo_device.name  # zones can be easily renamed
+
+    @property
     def hvac_mode(self) -> HVACMode | None:
         """Return the current operating mode of a Zone."""
         if self._evo_tcs.system_mode in (EVO_AWAY, EVO_HEATOFF):
@@ -248,16 +251,20 @@ class EvoZone(EvoChild, EvoClimateEntity):
     def min_temp(self) -> float:
         """Return the minimum target temperature of a Zone.
 
-        The default is 5, but is user-configurable within 5-35 (in Celsius).
+        The default is 5, but is user-configurable within 5-21 (in Celsius).
         """
+        if self._evo_device.min_heat_setpoint is None:
+            return 5
         return self._evo_device.min_heat_setpoint
 
     @property
     def max_temp(self) -> float:
         """Return the maximum target temperature of a Zone.
 
-        The default is 35, but is user-configurable within 5-35 (in Celsius).
+        The default is 35, but is user-configurable within 21-35 (in Celsius).
         """
+        if self._evo_device.max_heat_setpoint is None:
+            return 35
         return self._evo_device.max_heat_setpoint
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
