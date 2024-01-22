@@ -76,7 +76,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class ProximitySensor(SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordinator]):
+class ProximitySensor(CoordinatorEntity[ProximityDataUpdateCoordinator], SensorEntity):
     """Represents a Proximity sensor."""
 
     _attr_has_entity_name = True
@@ -106,7 +106,7 @@ class ProximitySensor(SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordin
 
 
 class ProximityTrackedEntitySensor(
-    SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordinator]
+    CoordinatorEntity[ProximityDataUpdateCoordinator], SensorEntity
 ):
     """Represents a Proximity tracked entity sensor."""
 
