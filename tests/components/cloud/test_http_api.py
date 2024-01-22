@@ -147,15 +147,19 @@ async def test_google_actions_sync_fails(
         assert mock_request_sync.call_count == 1
 
 
-async def test_login_view_missing_stt_entity(
+@pytest.mark.parametrize(
+    "entity_id", ["stt.home_assistant_cloud", "tts.home_assistant_cloud"]
+)
+async def test_login_view_missing_entity(
     hass: HomeAssistant,
     setup_cloud: None,
     entity_registry: er.EntityRegistry,
     hass_client: ClientSessionGenerator,
+    entity_id: str,
 ) -> None:
-    """Test logging in when the cloud stt entity is missing."""
-    # Make sure that the cloud stt entity does not exist.
-    entity_registry.async_remove("stt.home_assistant_cloud")
+    """Test logging in when a cloud assist pipeline needed entity is missing."""
+    # Make sure that the cloud entity does not exist.
+    entity_registry.async_remove(entity_id)
     await hass.async_block_till_done()
 
     cloud_client = await hass_client()
@@ -243,7 +247,7 @@ async def test_login_view_create_pipeline(
     create_pipeline_mock.assert_awaited_once_with(
         hass,
         stt_engine_id="stt.home_assistant_cloud",
-        tts_engine_id="cloud",
+        tts_engine_id="tts.home_assistant_cloud",
         pipeline_name="Home Assistant Cloud",
     )
 
@@ -282,7 +286,7 @@ async def test_login_view_create_pipeline_fail(
     create_pipeline_mock.assert_awaited_once_with(
         hass,
         stt_engine_id="stt.home_assistant_cloud",
-        tts_engine_id="cloud",
+        tts_engine_id="tts.home_assistant_cloud",
         pipeline_name="Home Assistant Cloud",
     )
 
