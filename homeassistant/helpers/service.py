@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from enum import Enum
-from functools import cache, partial, wraps
+from functools import cache, partial
 import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar, cast
@@ -965,6 +965,24 @@ async def _handle_entity_call(
     return result
 
 
+async def _async_admin_handler(
+    hass: HomeAssistant,
+    service_job: HassJob[[None], Callable[[ServiceCall], Awaitable[None] | None]],
+    call: ServiceCall,
+) -> None:
+    """Run an admin service."""
+    if call.context.user_id:
+        user = await hass.auth.async_get_user(call.context.user_id)
+        if user is None:
+            raise UnknownUser(context=call.context)
+        if not user.is_admin:
+            raise Unauthorized(context=call.context)
+
+    result = hass.async_run_hass_job(service_job, call)
+    if result is not None:
+        await result
+
+
 @bind_hass
 @callback
 def async_register_admin_service(
@@ -975,21 +993,16 @@ def async_register_admin_service(
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
-
-    @wraps(service_func)
-    async def admin_handler(call: ServiceCall) -> None:
-        if call.context.user_id:
-            user = await hass.auth.async_get_user(call.context.user_id)
-            if user is None:
-                raise UnknownUser(context=call.context)
-            if not user.is_admin:
-                raise Unauthorized(context=call.context)
-
-        result = hass.async_run_job(service_func, call)
-        if result is not None:
-            await result
-
-    hass.services.async_register(domain, service, admin_handler, schema)
+    hass.services.async_register(
+        domain,
+        service,
+        partial(
+            _async_admin_handler,
+            hass,
+            HassJob(service_func, f"admin service {domain}.{service}"),
+        ),
+        schema,
+    )
 
 
 @bind_hass
