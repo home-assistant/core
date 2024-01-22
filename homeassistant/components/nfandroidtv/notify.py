@@ -135,7 +135,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             if imagedata := data.get(ATTR_IMAGE):
                 if isinstance(imagedata, str):
                     image_file = self.load_file(url=imagedata) if imagedata.startswith(
-                        "http") else self.load_file(path=imagedata)
+                        "http") else self.load_file(local_path=imagedata)
                 elif isinstance(imagedata, dict):
                     image_file = self.load_file(
                         url=imagedata.get(ATTR_IMAGE_URL),
@@ -150,7 +150,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             if icondata := data.get(ATTR_ICON):
                 if isinstance(icondata, str):
                     icondata = self.load_file(url=icondata) if icondata.startswith(
-                        "http") else self.load_file(path=icondata)
+                        "http") else self.load_file(local_path=icondata)
                 elif isinstance(icondata, dict):
                     image_file = self.load_file(
                         url=icondata.get(ATTR_IMAGE_URL),
