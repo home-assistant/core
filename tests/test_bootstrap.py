@@ -96,7 +96,7 @@ async def test_load_hassio(hass: HomeAssistant) -> None:
 
 
 async def test_load_backup(hass: HomeAssistant) -> None:
-    """Test that we load the hassio integration when not using Supervisor."""
+    """Test that we load the backup integration when not using Supervisor."""
     with patch.dict(os.environ, {}, clear=True):
         assert "backup" in bootstrap._get_domains(hass, {})
 
