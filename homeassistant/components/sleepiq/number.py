@@ -89,6 +89,8 @@ async def _async_set_foot_warmer_time(
     if temperature != FootWarmingTemps.OFF:
         await foot_warmer.turn_on(temperature, time)
 
+    foot_warmer.timer = time
+
 
 def _get_foot_warming_name(bed: SleepIQBed, foot_warmer: SleepIQFootWarmer) -> str:
     sleeper = sleeper_for_side(bed, foot_warmer.side)
