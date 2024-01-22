@@ -1,0 +1,14 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "title": "Enter the Torque Information",
+          "data": {
+            "id": "Device id",
+            "name": "Vehicle name"
+          }
+        }
+      }
+    }
+  }
+  
