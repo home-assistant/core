@@ -32,7 +32,7 @@ def mock_analytics_client() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.analytics_insights.config_flow.HomeassistantAnalyticsClient",
         new=mock_client,
     ):
-        client = mock_client
+        client = mock_client.return_value
         client.get_current_analytics.return_value = CurrentAnalytics.from_json(
             load_fixture("analytics_insights/current_data.json")
         )
