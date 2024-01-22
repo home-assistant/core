@@ -16,7 +16,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Nextcloud update entity."""
     coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    if coordinator.data.get("system_update_available") is None:
+    if coordinator.data.get("update_available") is None:
         return
     async_add_entities(
         [
