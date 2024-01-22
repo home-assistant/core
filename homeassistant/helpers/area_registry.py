@@ -33,7 +33,7 @@ class AreaEntry:
     """Area Registry Entry."""
 
     aliases: set[str]
-    id: str | None
+    id: str
     name: str
     normalized_name: str
     picture: str | None
