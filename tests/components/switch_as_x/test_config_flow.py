@@ -125,17 +125,6 @@ async def test_config_flow_registered_entity(
     assert switch_entity_entry.hidden_by == hidden_by_after
 
 
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # Wanted key absent from schema
-    raise Exception
-
-
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_options(
     hass: HomeAssistant,
@@ -171,7 +160,8 @@ async def test_options(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
-    assert get_suggested(schema, CONF_INVERT) is True
+    schema_key = next(k for k in schema if k == CONF_INVERT)
+    assert schema_key.description["suggested_value"] is True
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
