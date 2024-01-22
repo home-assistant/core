@@ -255,7 +255,7 @@ async def test_core_climate(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) -
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate",
-            ATTR_OPTION: "heating high",
+            ATTR_OPTION: "heating_push_high",
         },
         blocking=True,
     )
