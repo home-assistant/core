@@ -2,13 +2,13 @@
   "title": "Time & Date",
   "config": {
     "abort": {
-      "already_configured": "Time & Date option type has already been configured"
+      "already_configured": "The chosen Time & Date sensor has already been configured"
     },
     "step": {
       "user": {
-        "description": "Select your type below",
+        "description": "Select from the sensor options below",
         "data": {
-          "display_options": "Sensors"
+          "display_options": "Sensor type"
         }
       }
     },
