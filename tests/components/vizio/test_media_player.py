@@ -678,7 +678,7 @@ async def test_setup_with_unknown_app_config(
         _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + APP_NAME_LIST), attr)
         assert attr[ATTR_INPUT_SOURCE] == UNKNOWN_APP
         assert attr["app_name"] == UNKNOWN_APP
-        assert attr["app_id"] == "UNKNOWN"
+        assert attr["app_id"] == UNKNOWN_APP_CONFIG
 
 
 async def test_setup_with_no_running_app(
