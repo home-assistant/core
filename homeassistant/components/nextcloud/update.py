@@ -39,7 +39,7 @@ class NextcloudUpdateSensor(NextcloudEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self.coordinator.data.get(
-            "system_update_available_version", self.installed_version
+            "update_available_version", self.installed_version
         )
 
     @property
