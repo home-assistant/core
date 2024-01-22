@@ -35,7 +35,8 @@ from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
-def hours_to_datetime(value: StateType):
+@callback
+def hours_to_datetime(value: StateType) -> datetime:
     """Convert relative hours into absolute datetime."""
     if isinstance(value, (int, float)) and value > 0:
         return dt_util.now() + timedelta(hours=value)
