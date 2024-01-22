@@ -95,17 +95,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if self._existing_entry:
-                    self.hass.config_entries.async_update_entry(
-                        self._existing_entry,
+                    return self.async_update_reload_and_abort(
+                        entry=self._existing_entry,
                         data={
                             CONF_EMAIL: user_input[CONF_EMAIL],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
                         },
                     )
-                    await self.hass.config_entries.async_reload(
-                        self._existing_entry.entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
 
                 # set unique id to title which is the account email
                 await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
