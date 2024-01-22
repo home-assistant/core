@@ -5975,7 +5975,6 @@
       "iot_class": "local_push"
     },
     "time_date": {
-      "name": "Time & Date",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
@@ -6999,6 +6998,7 @@
     "switch_as_x",
     "tag",
     "threshold",
+    "time_date",
     "tod",
     "uptime",
     "utility_meter",
