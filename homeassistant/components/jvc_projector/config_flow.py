@@ -10,12 +10,12 @@ from jvcprojector.projector import DEFAULT_PORT
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_host_valid
 
-from .const import CONF_READONLY, DOMAIN, NAME
+from .const import DOMAIN, NAME
 
 
 class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -32,11 +32,9 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            name = user_input[CONF_NAME]
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
             password = user_input.get(CONF_PASSWORD)
-            readonly = user_input[CONF_READONLY]
 
             try:
                 if not is_host_valid(host):
@@ -58,11 +56,9 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=NAME,
                     data={
-                        CONF_NAME: name,
                         CONF_HOST: host,
                         CONF_PORT: port,
                         CONF_PASSWORD: password,
-                        CONF_READONLY: readonly,
                     },
                 )
 
@@ -70,11 +66,9 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=NAME): str,
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
                     vol.Optional(CONF_PASSWORD): str,
-                    vol.Required(CONF_READONLY): bool,
                 }
             ),
             errors=errors,
@@ -96,11 +90,9 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            name = self._reauth_entry.data[CONF_NAME]
             host = self._reauth_entry.data[CONF_HOST]
             port = self._reauth_entry.data[CONF_PORT]
             password = user_input[CONF_PASSWORD]
-            readonly = self._reauth_entry.data[CONF_READONLY]
 
             try:
                 await get_mac_address(host, port, password)
@@ -112,11 +104,9 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry,
                     data={
-                        CONF_NAME: name,
                         CONF_HOST: host,
                         CONF_PORT: port,
                         CONF_PASSWORD: password,
-                        CONF_READONLY: readonly,
                     },
                 )
                 await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)

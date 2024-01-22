@@ -12,6 +12,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import NAME
+
 _LOGGER = logging.getLogger(__name__)
 
 # To trigger appropriate actions on power on and power off we need the same time
@@ -21,14 +23,12 @@ INTERVAL = timedelta(seconds=5)
 class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     """Data update coordinator for the JVC Projector integration."""
 
-    def __init__(
-        self, hass: HomeAssistant, device: JvcProjector, jvc_name: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, device: JvcProjector) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=_LOGGER,
-            name=jvc_name,
+            name=NAME,
             update_interval=INTERVAL,
         )
 

@@ -4,4 +4,3 @@
 NAME = "JVC Projector"
 DOMAIN = "jvc_projector"
 MANUFACTURER = "JVC"
-CONF_READONLY = "readonly"

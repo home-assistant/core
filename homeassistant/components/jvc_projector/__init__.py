@@ -9,7 +9,6 @@ from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnec
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -18,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_READONLY, DOMAIN
+from .const import DOMAIN
 from .coordinator import JvcProjectorDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await device.disconnect()
         raise ConfigEntryAuthFailed("Password authentication failed") from err
 
-    coordinator = JvcProjectorDataUpdateCoordinator(hass, device, entry.data[CONF_NAME])
+    coordinator = JvcProjectorDataUpdateCoordinator(hass, device)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -58,9 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, [Platform.BINARY_SENSOR]
     )
-    # We remove the remote if is ReadOnly
-    if entry.data[CONF_READONLY] is False:
-        await hass.config_entries.async_forward_entry_setups(entry, [Platform.REMOTE])
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.REMOTE])
 
     return True
 
@@ -71,13 +68,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, Platform.BINARY_SENSOR
     )
 
-    if entry.data[CONF_READONLY] is False:
-        unload_remote = await hass.config_entries.async_unload_platforms(
-            entry, Platform.REMOTE
-        )
-        unload_ok = unload_binarysensor and unload_remote
-    else:
-        unload_ok = unload_binarysensor
+    unload_remote = await hass.config_entries.async_unload_platforms(
+        entry, Platform.REMOTE
+    )
+    unload_ok = unload_binarysensor and unload_remote
 
     if unload_ok:
         await hass.data[DOMAIN][entry.entry_id].device.disconnect()
