@@ -82,4 +82,5 @@ async def test_data_not_modified(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    mock_analytics_client.get_current_analytics.assert_called()
     assert hass.states.get("sensor.homeassistant_analytics_spotify").state == "24388"
