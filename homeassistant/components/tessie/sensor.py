@@ -25,7 +25,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
@@ -36,10 +36,11 @@ from .entity import TessieEntity
 
 
 @callback
-def hours_to_datetime(value: StateType) -> datetime:
+def hours_to_datetime(value: StateType) -> datetime | None:
     """Convert relative hours into absolute datetime."""
     if isinstance(value, (int, float)) and value > 0:
         return dt_util.now() + timedelta(hours=value)
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
