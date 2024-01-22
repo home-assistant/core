@@ -137,7 +137,7 @@ def async_active_zone(
         if not zone_dist - (radius := zone_attrs[ATTR_RADIUS]) < radius:
             continue
 
-        # If we don't have a closest yet skip if its not closer than the closest.
+        # If have a closest and its not closer than the closest skip it
         if closest and not (
             zone_dist < min_dist
             or (
