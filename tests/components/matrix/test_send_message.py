@@ -27,22 +27,51 @@ async def test_send_message(
     await matrix_bot._login()
 
     # Send a message without an attached image.
+    matrix_bot._handle_multi_room_send.reset_mock()
     data = {ATTR_MESSAGE: "Test message", ATTR_TARGET: list(TEST_JOINABLE_ROOMS)}
     await hass.services.async_call(
         MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True
+    )
+
+    expected_data = {
+        "target_rooms": list(TEST_JOINABLE_ROOMS.keys()),
+        "message_type": "m.room.message",
+        "content": {"msgtype": "m.text", "body": data[ATTR_MESSAGE]},
+    }
+    matrix_bot._handle_multi_room_send.assert_called_once_with(
+        target_rooms=expected_data["target_rooms"],
+        message_type=expected_data["message_type"],
+        content=expected_data["content"],
     )
 
     for room_alias_or_id in TEST_JOINABLE_ROOMS:
         assert f"Message delivered to room '{room_alias_or_id}'" in caplog.messages
 
     # Send an HTML message without an attached image.
+    matrix_bot._handle_multi_room_send.reset_mock()
     data = {
-        ATTR_MESSAGE: "Test message",
+        ATTR_MESSAGE: "Test <b>html</b> message",
         ATTR_TARGET: list(TEST_JOINABLE_ROOMS),
         ATTR_DATA: {ATTR_FORMAT: FORMAT_HTML},
     }
     await hass.services.async_call(
         MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True
+    )
+
+    expected_data = {
+        "target_rooms": list(TEST_JOINABLE_ROOMS.keys()),
+        "message_type": "m.room.message",
+        "content": {
+            "msgtype": "m.text",
+            "body": data[ATTR_MESSAGE],
+            "format": "org.matrix.custom.html",
+            "formatted_body": data[ATTR_MESSAGE],
+        },
+    }
+    matrix_bot._handle_multi_room_send.assert_called_once_with(
+        target_rooms=expected_data["target_rooms"],
+        message_type=expected_data["message_type"],
+        content=expected_data["content"],
     )
 
     for room_alias_or_id in TEST_JOINABLE_ROOMS:
@@ -58,13 +87,26 @@ async def test_send_message(
         assert f"Message delivered to room '{room_alias_or_id}'" in caplog.messages
 
     # Send bot notice (m.notice) message.
+    matrix_bot._handle_multi_room_send.reset_mock()
     data = {
         ATTR_MESSAGE: "Test bot (notice) message",
         ATTR_TARGET: list(TEST_JOINABLE_ROOMS),
         ATTR_DATA: {ATTR_FORMAT: FORMAT_NOTICE},
     }
+
     await hass.services.async_call(
         MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True
+    )
+
+    expected_data = {
+        "target_rooms": list(TEST_JOINABLE_ROOMS.keys()),
+        "message_type": "m.room.message",
+        "content": {"msgtype": "m.notice", "body": data[ATTR_MESSAGE]},
+    }
+    matrix_bot._handle_multi_room_send.assert_called_once_with(
+        target_rooms=expected_data["target_rooms"],
+        message_type=expected_data["message_type"],
+        content=expected_data["content"],
     )
 
     for room_alias_or_id in TEST_JOINABLE_ROOMS:

@@ -287,9 +287,11 @@ async def matrix_bot(
     await hass.async_block_till_done()
     assert isinstance(matrix_bot := hass.data[MATRIX_DOMAIN], MatrixBot)
 
-    await hass.async_start()
-
-    return matrix_bot
+    with patch.object(
+        matrix_bot, "_handle_multi_room_send", wraps=matrix_bot._handle_multi_room_send
+    ) as mock:
+        await hass.async_start()
+        yield matrix_bot
 
 
 @pytest.fixture
