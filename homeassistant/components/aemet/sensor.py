@@ -90,8 +90,8 @@ from .const import (
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
 )
+from .coordinator import WeatherUpdateCoordinator
 from .entity import AemetEntity
-from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

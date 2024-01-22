@@ -230,7 +230,7 @@
     'platform': 'wled',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'segment_color_palette',
     'unique_id': 'aabbccddeeff_palette_1',
     'unit_of_measurement': None,
   })

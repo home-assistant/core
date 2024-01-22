@@ -40,7 +40,7 @@ from .const import (
     LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
-from .util import GuardianDataUpdateCoordinator
+from .coordinator import GuardianDataUpdateCoordinator
 
 DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 
@@ -76,7 +76,13 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
     },
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
 
 @dataclass
