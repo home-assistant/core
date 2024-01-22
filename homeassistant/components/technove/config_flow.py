@@ -53,7 +53,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        # Abort quick if the mac address is provided by discovery info
+        # Abort quick if the device with provided mac is already configured
         if mac := discovery_info.properties.get(CONF_MAC):
             await self.async_set_unique_id(mac)
             self._abort_if_unique_id_configured(
