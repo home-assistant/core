@@ -111,6 +111,8 @@ async def _async_set_core_climate_time(
     if temperature != CoreTemps.OFF:
         await core_climate.turn_on(temperature, time)
 
+    core_climate.timer = time
+
 
 def _get_core_climate_name(bed: SleepIQBed, core_climate: SleepIQCoreClimate) -> str:
     sleeper = sleeper_for_side(bed, core_climate.side)
