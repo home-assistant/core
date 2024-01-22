@@ -589,14 +589,14 @@ async def async_get_all_descriptions(
 
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
-    missing: set[str] = set()
+    domains_with_missing_services: set[str] = set()
     all_services: set[tuple[str, str]] = set()
     for domain, services_by_domain in services.items():
         for service_name in services_by_domain:
             cache_key = (domain, service_name)
             all_services.add(cache_key)
             if cache_key not in descriptions_cache:
-                missing.add(domain)
+                domains_with_missing_services.add(domain)
 
     # If we have a complete cache, check if it is still valid
     all_cache: tuple[set[tuple[str, str]], dict[str, dict[str, Any]]] | None
@@ -609,8 +609,8 @@ async def async_get_all_descriptions(
     # Files we loaded for missing descriptions
     loaded: dict[str, JSON_TYPE] = {}
 
-    if missing:
-        ints_or_excs = await async_get_integrations(hass, missing)
+    if domains_with_missing_services:
+        ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
             if type(int_or_exc) is Integration:  # noqa: E721
@@ -622,7 +622,7 @@ async def async_get_all_descriptions(
         contents = await hass.async_add_executor_job(
             _load_services_files, hass, integrations
         )
-        loaded = dict(zip(missing, contents))
+        loaded = dict(zip(domains_with_missing_services, contents))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
