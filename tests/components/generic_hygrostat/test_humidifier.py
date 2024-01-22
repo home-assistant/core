@@ -1376,7 +1376,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1414,7 +1414,7 @@ async def test_restore_state_target_humidity(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1457,7 +1457,7 @@ async def test_restore_state_and_return_to_normal(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1512,7 +1512,7 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
