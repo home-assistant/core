@@ -12,8 +12,6 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
-    PRESET_AWAY,
-    PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -38,7 +36,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import EcobeeData
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
-from .util import ecobee_date, ecobee_time
+from .util import ecobee_date, ecobee_time, is_indefinite_hold
 
 ATTR_COOL_TEMP = "cool_temp"
 ATTR_END_DATE = "end_date"
@@ -56,10 +54,9 @@ ATTR_AUTO_AWAY = "auto_away"
 ATTR_FOLLOW_ME = "follow_me"
 
 DEFAULT_RESUME_ALL = False
+PRESET_AWAY_INDEFINITELY = "away_indefinitely"
 PRESET_TEMPERATURE = "temp"
 PRESET_VACATION = "vacation"
-PRESET_HOLD_NEXT_TRANSITION = "next_transition"
-PRESET_HOLD_INDEFINITE = "indefinite"
 AWAY_MODE = "awayMode"
 PRESET_HOME = "home"
 PRESET_SLEEP = "sleep"
@@ -101,11 +98,6 @@ ECOBEE_HVAC_ACTION_TO_HASS = {
     "compHotWater": None,
     "auxHotWater": None,
     "compWaterHeater": None,
-}
-
-PRESET_TO_ECOBEE_HOLD = {
-    PRESET_HOLD_NEXT_TRANSITION: "nextTransition",
-    PRESET_HOLD_INDEFINITE: "indefinite",
 }
 
 SERVICE_CREATE_VACATION = "create_vacation"
@@ -325,6 +317,7 @@ class Thermostat(ClimateEntity):
     _attr_name = None
     _attr_has_entity_name = True
     _enable_turn_on_off_backwards_compatibility = False
+    _attr_translation_key = "ecobee"
 
     def __init__(
         self, data: EcobeeData, thermostat_index: int, thermostat: dict
@@ -481,6 +474,11 @@ class Thermostat(ClimateEntity):
                 continue
 
             if event["type"] == "hold":
+                if event["holdClimateRef"] == "away" and is_indefinite_hold(
+                    event["startDate"], event["endDate"]
+                ):
+                    return PRESET_AWAY_INDEFINITELY
+
                 if event["holdClimateRef"] in self._preset_modes:
                     return self._preset_modes[event["holdClimateRef"]]
 
@@ -577,26 +575,11 @@ class Thermostat(ClimateEntity):
         if self.preset_mode == PRESET_VACATION:
             self.data.ecobee.delete_vacation(self.thermostat_index, self.vacation)
 
-        if preset_mode == PRESET_AWAY:
+        if preset_mode == PRESET_AWAY_INDEFINITELY:
             self.data.ecobee.set_climate_hold(
                 self.thermostat_index, "away", "indefinite", self.hold_hours()
             )
-
-        elif preset_mode == PRESET_TEMPERATURE:
-            self.set_temp_hold(self.current_temperature)
-
-        elif preset_mode in (PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
-            self.data.ecobee.set_climate_hold(
-                self.thermostat_index,
-                PRESET_TO_ECOBEE_HOLD[preset_mode],
-                self.hold_preference(),
-                self.hold_hours(),
-            )
-
-        elif preset_mode == PRESET_NONE:
-            self.data.ecobee.resume_program(self.thermostat_index)
-
-        elif preset_mode in self.preset_modes:
+        else:
             climate_ref = None
 
             for comfort in self.thermostat["program"]["climates"]:
@@ -614,18 +597,12 @@ class Thermostat(ClimateEntity):
             else:
                 _LOGGER.warning("Received unknown preset mode: %s", preset_mode)
 
-        else:
-            self.data.ecobee.set_climate_hold(
-                self.thermostat_index,
-                preset_mode,
-                self.hold_preference(),
-                self.hold_hours(),
-            )
-
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return list(self._preset_modes.values())
+        # Return presets provided by the ecobee API, and an indefinite away
+        # preset which we handle separately in set_preset_mode().
+        return list(self._preset_modes.values()) + [PRESET_AWAY_INDEFINITELY]
 
     def set_auto_temp_hold(self, heat_temp, cool_temp):
         """Set temperature hold in auto mode."""
