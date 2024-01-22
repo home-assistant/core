@@ -451,6 +451,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             severity=IssueSeverity.WARNING,
             translation_key="state_classes_not_matching",
             translation_placeholders={
+                "entity_id": self.entity_id,
                 "source_entities": ", ".join(self._entity_ids),
                 "state_classes:": ", ".join(state_classes),
             },
@@ -493,6 +494,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             severity=IssueSeverity.WARNING,
             translation_key="device_classes_not_matching",
             translation_placeholders={
+                "entity_id": self.entity_id,
                 "source_entities": ", ".join(self._entity_ids),
                 "device_classes:": ", ".join(device_classes),
             },
@@ -542,6 +544,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                 severity=IssueSeverity.WARNING,
                 translation_key="uoms_not_matching_device_class",
                 translation_placeholders={
+                    "entity_id": self.entity_id,
                     "device_class": device_class,
                     "source_entities": ", ".join(self._entity_ids),
                     "uoms:": ", ".join(unit_of_measurements),
@@ -557,6 +560,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                 severity=IssueSeverity.WARNING,
                 translation_key="uoms_not_matching_no_device_class",
                 translation_placeholders={
+                    "entity_id": self.entity_id,
                     "source_entities": ", ".join(self._entity_ids),
                     "uoms:": ", ".join(unit_of_measurements),
                 },
