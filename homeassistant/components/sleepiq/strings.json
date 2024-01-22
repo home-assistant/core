@@ -33,6 +33,17 @@
           "medium": "Medium",
           "high": "High"
         }
+      },
+      "core_climate_temp": {
+        "state": {
+          "off": "Off",
+          "heating_push_low": "Heating Low",
+          "heating_push_med": "Heating Medium",
+          "heating_push_high": "Heating High",
+          "cooling_pull_low": "Cooling Low",
+          "cooling_pull_med": "Cooling Medium",
+          "cooling_pull_high": "Cooling High"
+        }
       }
     }
   }
