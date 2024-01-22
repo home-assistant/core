@@ -164,16 +164,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 name = self._async_envoy_name()
 
                 if self._reauth_entry:
-                    self.hass.config_entries.async_update_entry(
+                    return self.async_update_reload_and_abort(
                         self._reauth_entry,
                         data=self._reauth_entry.data | user_input,
                     )
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(
-                            self._reauth_entry.entry_id
-                        )
-                    )
-                    return self.async_abort(reason="reauth_successful")
 
                 if not self.unique_id:
                     await self.async_set_unique_id(envoy.serial_number)
