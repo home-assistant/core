@@ -1,87 +1,95 @@
-"""Config Flow for microBees."""
-
-from __future__ import annotations
-import voluptuous as vol
+"""Config flow for microBees integration."""
 import logging
+from typing import Any
+
+from microbees.microbees import MicroBeesConnector
+from microBeesPy.exceptions import MicroBeesWrongCredentialsException
+from requests.exceptions import ConnectTimeout, HTTPError
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_DOMAIN,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_TOKEN,
 )
-from .const import CONFIG_ENTRY_VERSION, GET_TOKEN_URL
-import json
-import aiohttp
-import base64
-from homeassistant.helpers import aiohttp_client
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_EMAIL): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_CLIENT_ID): str,
+        vol.Required(CONF_CLIENT_SECRET): str,
+    }
+)
 
-class microBeesFlowHandler(config_entries.ConfigFlow, domain=CONF_DOMAIN):
-    """Handle a microBees config flow."""
 
-    VERSION = CONFIG_ENTRY_VERSION
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for microBees."""
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self.data = {}
+    VERSION = 1
 
-    async def async_step_user(self, user_input=None):
-        """Prompt user input. Create or edit entry."""
-        errors = {}
+    async def validate_input_sync(self, hass, data):
+        """Validate the user input allows us to connect."""
+        try:
+            hass.data[DOMAIN] = {}
+            hass.data[DOMAIN]["connector"] = MicroBeesConnector(
+                data[CONF_CLIENT_ID], data[CONF_CLIENT_SECRET]
+            )
+            token = await hass.data[DOMAIN]["connector"].login(
+                data[CONF_EMAIL], data[CONF_PASSWORD]
+            )
+            hass.data[DOMAIN][CONF_TOKEN] = token
+        except (ConnectTimeout, HTTPError):
+            raise CannotConnect
+        except MicroBeesWrongCredentialsException:
+            raise InvalidAuth
 
-        # Login to microBees with user data.
+        return {"title": data[CONF_EMAIL], "access_token": token}
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            self.data.update(user_input)
-            async with aiohttp_client.async_create_clientsession(self.hass) as session:
-                userpass = (
-                    self.data[CONF_CLIENT_ID] + ":" + self.data[CONF_CLIENT_SECRET]
+            try:
+                info = await self.validate_input_sync(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            else:
+                return self.async_create_entry(
+                    title=info["title"],
+                    data=user_input,
+                    options={CONF_TOKEN: info["access_token"]},
                 )
-                auth = base64.b64encode(userpass.encode()).decode()
 
-                headers = {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Authorization": "Basic %s" % auth,
-                }
-
-                body = {
-                    "username": self.data[CONF_USERNAME],
-                    "password": self.data[CONF_PASSWORD],
-                    "scope": "read write",
-                    "grant_type": "password",
-                }
-
-                async with session.post(
-                    GET_TOKEN_URL, headers=headers, data=body
-                ) as resp:
-                    if resp.ok:
-                        data = await resp.text()
-                        js = json.loads(data)
-                        self.data[CONF_TOKEN] = js.get("access_token")
-                    else:
-                        errors["base"] = "invalid_token"
-
-                    if not errors:
-                        return self.async_create_entry(
-                            title=self.data[CONF_USERNAME], data=self.data
-                        )
-
-        # Show User Input form.
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_CLIENT_ID): str,
-                vol.Required(CONF_CLIENT_SECRET): str,
-            }
-        )
         return self.async_show_form(
-            description_placeholders={CONF_USERNAME: "Username"},
+            description_placeholders={
+                CONF_EMAIL: "Email",
+                CONF_PASSWORD: "Password",
+                "client_id": "Client Id",
+                "client_secret": "Client Secret",
+            },
             step_id="user",
-            data_schema=schema,
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(HomeAssistantError):
+    """Error to indicate there is invalid auth."""

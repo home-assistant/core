@@ -1,33 +1,45 @@
-""" Integration microBees """
-
+"""The microBees integration."""
 import logging
-from homeassistant.const import Platform, CONF_DOMAIN, CONF_PLATFORM
+
+from microbees.microbees import MicroBeesConnector
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from .servicesMicrobees import getBees
+
+from .const import DOMAIN
+
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
-
-platforms = []
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up microBees from a config entry."""
 
-    token = dict(entry.data)["token"]
+    hass.data.setdefault(DOMAIN, {})
 
-    bees = await getBees(hass, token)
+    platforms = []
 
-    entry.data = dict({"token": token, "bees": bees})
+    if "connector" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["connector"] = MicroBeesConnector(
+            token=entry.options.get(CONF_TOKEN)
+        )
 
+    microbees = hass.data[DOMAIN]["connector"]
+
+    bees = await microbees.getBees()
+
+    hass.data[DOMAIN]["bees"] = bees
+
+    availablePlatforms = []
     for bee in bees:
-        availablePlatforms = []
-        for actuator in bee.get("actuators"):
-            match actuator.get("device_type"):
+        for sensor in bee.sensors:
+            match sensor.device_type:
                 case 0:
                     availablePlatforms.append(Platform.SWITCH)
 
-        match bee.get("productID"):
+        match bee.productID:
             case 46:
                 availablePlatforms.append(Platform.SWITCH)
 
@@ -43,8 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
-    if unload_ok:
-        hass.data[CONF_DOMAIN].pop(entry.entry_id)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.options.get(CONF_TOKEN))
 
     return unload_ok

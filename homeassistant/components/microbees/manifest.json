@@ -1,11 +1,13 @@
 {
   "domain": "microbees",
   "name": "microBees",
-  "documentation": "https://www.home-assistant.io/integrations/microbees",
-  "dependencies": [],
+  "codeowners": ["@microBeesTech"],
   "config_flow": true,
-  "codeowners": [
-    "@microBeesTech"
-  ],
-  "iot_class": "cloud_polling"
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/microbees",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["microBeesPy==0.1.7"],
+  "ssdp": [],
+  "zeroconf": []
 }
