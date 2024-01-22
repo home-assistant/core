@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the swiss_public_transport integration."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import TypedDict
 
@@ -21,9 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 class DataConnection(TypedDict):
     """A connection data class."""
 
-    departure: str
-    next_departure: str
-    next_on_departure: str
+    departure: datetime | None
+    next_departure: str | None
+    next_on_departure: str | None
     duration: str
     platform: str
     remaining_time: str
@@ -58,18 +58,35 @@ class SwissPublicTransportDataUpdateCoordinator(DataUpdateCoordinator[DataConnec
             )
             raise UpdateFailed from e
 
-        departure_time = dt_util.parse_datetime(
-            self._opendata.connections[0]["departure"]
+        departure_time = (
+            dt_util.parse_datetime(self._opendata.connections[0]["departure"])
+            if self._opendata.connections[0] is not None
+            else None
         )
+        next_departure_time = (
+            dt_util.parse_datetime(self._opendata.connections[1]["departure"])
+            if self._opendata.connections[1] is not None
+            else None
+        )
+        next_on_departure_time = (
+            dt_util.parse_datetime(self._opendata.connections[2]["departure"])
+            if self._opendata.connections[2] is not None
+            else None
+        )
+
         if departure_time:
             remaining_time = departure_time - dt_util.as_local(dt_util.utcnow())
         else:
             remaining_time = None
 
         return DataConnection(
-            departure=self._opendata.connections[0]["departure"],
-            next_departure=self._opendata.connections[1]["departure"],
-            next_on_departure=self._opendata.connections[2]["departure"],
+            departure=departure_time,
+            next_departure=next_departure_time.isoformat()
+            if next_departure_time is not None
+            else None,
+            next_on_departure=next_on_departure_time.isoformat()
+            if next_on_departure_time is not None
+            else None,
             train_number=self._opendata.connections[0]["number"],
             platform=self._opendata.connections[0]["platform"],
             transfers=self._opendata.connections[0]["transfers"],

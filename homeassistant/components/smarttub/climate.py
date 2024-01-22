@@ -23,11 +23,13 @@ from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLL
 from .entity import SmartTubEntity
 
 PRESET_DAY = "day"
+PRESET_READY = "ready"
 
 PRESET_MODES = {
     Spa.HeatMode.AUTO: PRESET_NONE,
     Spa.HeatMode.ECONOMY: PRESET_ECO,
     Spa.HeatMode.DAY: PRESET_DAY,
+    Spa.HeatMode.READY: PRESET_READY,
 }
 
 HEAT_MODES = {v: k for k, v in PRESET_MODES.items()}

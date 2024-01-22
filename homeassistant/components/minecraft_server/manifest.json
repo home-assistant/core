@@ -7,5 +7,5 @@
   "iot_class": "local_polling",
   "loggers": ["dnspython", "mcstatus"],
   "quality_scale": "gold",
-  "requirements": ["mcstatus==11.0.0"]
+  "requirements": ["mcstatus==11.1.1"]
 }

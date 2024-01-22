@@ -1084,7 +1084,7 @@ async def test_setup_retrying_during_unload(hass: HomeAssistant) -> None:
 async def test_setup_retrying_during_unload_before_started(hass: HomeAssistant) -> None:
     """Test if we unload an entry that is in retry mode before started."""
     entry = MockConfigEntry(domain="test")
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
 
     mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
@@ -1121,7 +1121,7 @@ async def test_setup_does_not_retry_during_shutdown(hass: HomeAssistant) -> None
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
     assert len(mock_setup_entry.mock_calls) == 1
 
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
@@ -3123,6 +3123,9 @@ async def test_updating_entry_with_and_without_changes(
         state=config_entries.ConfigEntryState.SETUP_ERROR,
     )
     entry.add_to_manager(manager)
+    assert "abc123" in str(entry)
+
+    assert manager.async_entry_for_domain_unique_id("test", "abc123") is entry
 
     assert manager.async_update_entry(entry) is False
 
@@ -3137,6 +3140,10 @@ async def test_updating_entry_with_and_without_changes(
     ):
         assert manager.async_update_entry(entry, **change) is True
         assert manager.async_update_entry(entry, **change) is False
+
+    assert manager.async_entry_for_domain_unique_id("test", "abc123") is None
+    assert manager.async_entry_for_domain_unique_id("test", "abcd1234") is entry
+    assert "abcd1234" in str(entry)
 
 
 async def test_entry_reload_calls_on_unload_listeners(
@@ -4127,3 +4134,56 @@ async def test_preview_not_supported(
         )
 
     assert result["preview"] is None
+
+
+def test_raise_trying_to_add_same_config_entry_twice(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we log an error if trying to add same config entry twice."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
+    assert f"An entry with the id {entry.entry_id} already exists" in caplog.text
+
+
+async def test_update_entry_and_reload(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test updating an entry and reloading."""
+    entry = MockConfigEntry(
+        domain="comp",
+        title="Test",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass, MockModule("comp", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_reauth(self, data):
+            """Mock Reauth."""
+            return self.async_update_reload_and_abort(
+                entry=entry,
+                title="Updated Title",
+                data={"vendor": "data2"},
+                options={"vendor": "options2"},
+            )
+
+    with patch.dict(config_entries.HANDLERS, {"comp": MockFlowHandler}):
+        task = await manager.flow.async_init("comp", context={"source": "reauth"})
+        await hass.async_block_till_done()
+
+        assert entry.title == "Updated Title"
+        assert entry.data == {"vendor": "data2"}
+        assert entry.options == {"vendor": "options2"}
+        assert entry.state == config_entries.ConfigEntryState.LOADED
+        assert task["type"] == FlowResultType.ABORT
+        assert task["reason"] == "reauth_successful"
