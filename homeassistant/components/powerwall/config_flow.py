@@ -166,7 +166,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         try:
             info = await validate_input(self.hass, user_input)
-        except PowerwallUnreachableError as ex:
+        except (PowerwallUnreachableError, asyncio.TimeoutError) as ex:
             errors[CONF_IP_ADDRESS] = "cannot_connect"
             description_placeholders = {"error": str(ex)}
         except WrongVersion as ex:

@@ -401,7 +401,7 @@ class EntityPlatform:
                     self._async_cancel_retry_setup = None
                     await self._async_setup_platform(async_create_setup_task, tries)
 
-                if hass.state == CoreState.running:
+                if hass.state is CoreState.running:
                     self._async_cancel_retry_setup = async_call_later(
                         hass, wait_time, setup_again
                     )

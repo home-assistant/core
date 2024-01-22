@@ -76,16 +76,9 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
 
         # Attributes that we mock with default values.
 
-        mock_cloud.id_token = jwt.encode(
-            {
-                "email": "hello@home-assistant.io",
-                "custom:sub-exp": "2018-01-03",
-                "cognito:username": "abcdefghjkl",
-            },
-            "test",
-        )
-        mock_cloud.access_token = "test_access_token"
-        mock_cloud.refresh_token = "test_refresh_token"
+        mock_cloud.id_token = None
+        mock_cloud.access_token = None
+        mock_cloud.refresh_token = None
 
         # Properties that we keep as properties.
 
@@ -122,10 +115,30 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
 
             When called, it should call the on_start callback.
             """
+            mock_cloud.id_token = jwt.encode(
+                {
+                    "email": "hello@home-assistant.io",
+                    "custom:sub-exp": "2018-01-03",
+                    "cognito:username": "abcdefghjkl",
+                },
+                "test",
+            )
+            mock_cloud.access_token = "test_access_token"
+            mock_cloud.refresh_token = "test_refresh_token"
             on_start_callback = mock_cloud.register_on_start.call_args[0][0]
             await on_start_callback()
 
         mock_cloud.login.side_effect = mock_login
+
+        async def mock_logout() -> None:
+            """Mock logout."""
+            mock_cloud.id_token = None
+            mock_cloud.access_token = None
+            mock_cloud.refresh_token = None
+            await mock_cloud.stop()
+            await mock_cloud.client.logout_cleanups()
+
+        mock_cloud.logout.side_effect = mock_logout
 
         yield mock_cloud
 
