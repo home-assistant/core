@@ -51,6 +51,7 @@ class LutronCover(LutronDevice, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
     _lutron_device: Output
+    _attr_name = None
 
     @property
     def is_closed(self) -> bool:
