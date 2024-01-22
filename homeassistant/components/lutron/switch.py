@@ -8,13 +8,11 @@ from pylutron import Button, Keypad, Led, Lutron, Output
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, LutronData
-from .entity import LutronBaseEntity, LutronDevice
+from .entity import LutronDevice, LutronKeypad
 
 
 async def async_setup_entry(
@@ -77,7 +75,7 @@ class LutronSwitch(LutronDevice, SwitchEntity):
             self._prev_state = self._lutron_device.level > 0
 
 
-class LutronLed(LutronBaseEntity, SwitchEntity):
+class LutronLed(LutronKeypad, SwitchEntity):
     """Representation of a Lutron Keypad LED."""
 
     _lutron_device: Led
@@ -91,18 +89,9 @@ class LutronLed(LutronBaseEntity, SwitchEntity):
         controller: Lutron,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(area_name, led_device, controller)
+        super().__init__(area_name, led_device, controller, keypad)
         self._keypad_name = keypad.name
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, keypad.id)},
-            manufacturer="Lutron",
-            name=keypad.name,
-        )
         self._attr_name = scene_device.name
-        if keypad.type == "MAIN_REPEATER":
-            self._attr_device_info[ATTR_IDENTIFIERS].add((DOMAIN, controller.guid))
-        else:
-            self._attr_device_info[ATTR_VIA_DEVICE] = (DOMAIN, controller.guid)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the LED on."""

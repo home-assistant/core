@@ -7,13 +7,11 @@ from pylutron import Button, Keypad, Lutron
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, LutronData
-from .entity import LutronBaseEntity
+from .entity import LutronKeypad
 
 
 async def async_setup_entry(
@@ -37,7 +35,7 @@ async def async_setup_entry(
     )
 
 
-class LutronScene(LutronBaseEntity, Scene):
+class LutronScene(LutronKeypad, Scene):
     """Representation of a Lutron Scene."""
 
     _lutron_device: Button
@@ -50,17 +48,8 @@ class LutronScene(LutronBaseEntity, Scene):
         controller: Lutron,
     ) -> None:
         """Initialize the scene/button."""
-        super().__init__(area_name, lutron_device, controller)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, keypad.id)},
-            manufacturer="Lutron",
-            name=keypad.name,
-        )
+        super().__init__(area_name, lutron_device, controller, keypad)
         self._attr_name = lutron_device.name
-        if keypad.type == "MAIN_REPEATER":
-            self._attr_device_info[ATTR_IDENTIFIERS].add((DOMAIN, controller.guid))
-        else:
-            self._attr_device_info[ATTR_VIA_DEVICE] = (DOMAIN, controller.guid)
 
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
