@@ -25,7 +25,7 @@ from homeassistant.components.climate.const import (
     ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -154,7 +154,8 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
 def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
     result = []
     for enum in enum:
-        result.append((enum, constant_prefix))
+        if enum not in [ClimateEntityFeature.TURN_ON, ClimateEntityFeature.TURN_OFF]:
+            result.append((enum, constant_prefix))
     return result
 
 
@@ -363,3 +364,97 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
     caplog.clear()
     assert entity.supported_features_compat is ClimateEntityFeature(1)
     assert "is using deprecated supported features values" not in caplog.text
+
+
+async def test_warning_not_implemented_turn_on_off_feature(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config_flow_fixture: None
+) -> None:
+    """Test mode validation for fan, swing and preset."""
+
+    called = []
+
+    class MockClimateEntityTest(MockClimateEntity):
+        """Mock Climate device."""
+
+        def turn_on(self) -> None:
+            """Turn on."""
+            called.append("turn_on")
+
+        def turn_off(self) -> None:
+            """Turn off."""
+            called.append("turn_off")
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        return True
+
+    async def async_setup_entry_climate_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test climate platform via config entry."""
+        async_add_entities(
+            [MockClimateEntityTest(name="test", entity_id="climate.test")]
+        )
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.climate",
+        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state is not None
+
+    assert (
+        "Entity climate.test (<class 'tests.components.climate.test_init."
+        "test_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
+        " has not implemented ClimateEntityFeature.TURN_OFF supported feature but is"
+        " implementing the turn_off service call. Please report it to the author of the"
+        " 'test' custom integration" in caplog.text
+    )
+    assert (
+        "Entity climate.test (<class 'tests.components.climate.test_init."
+        "test_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
+        " has not implemented ClimateEntityFeature.TURN_ON supported feature but is"
+        " implementing the turn_on service call. Please report it to the author of the"
+        " 'test' custom integration" in caplog.text
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            "entity_id": "climate.test",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            "entity_id": "climate.test",
+        },
+        blocking=True,
+    )
+
+    assert len(called) == 2
+    assert "turn_on" in called
+    assert "turn_off" in called

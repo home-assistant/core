@@ -1,6 +1,7 @@
 """Provides functionality to interact with climate devices."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
@@ -10,7 +11,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -35,6 +35,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -153,7 +154,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(
+        SERVICE_TURN_ON,
+        {},
+        "async_turn_on",
+        [ClimateEntityFeature.TURN_ON],
+    )
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
         {},
@@ -294,6 +300,58 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
 
+    __mod_supported_features: ClimateEntityFeature | None = None
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
+        if "supported_features" in cls.__dict__:
+            cls.__mod_supported_features = getattr(cls, "supported_features")
+
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: asyncio.Semaphore | None,
+    ) -> None:
+        """Start adding an entity to a platform."""
+        super().add_to_platform_start(hass, platform, parallel_updates)
+
+        def _report_turn_on_off(feature: str) -> None:
+            """Log warning not implemented turn on/off feature."""
+            report_issue = self._suggest_report_issue()
+            _LOGGER.warning(
+                (
+                    "Entity %s (%s) has not implemented ClimateEntityFeature.%s supported feature"
+                    " but is implementing the %s service call. Please %s"
+                ),
+                self.entity_id,
+                type(self),
+                feature,
+                feature.lower(),
+                report_issue,
+            )
+
+        # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
+        # which should be removed in 2024.8.
+        features = ClimateEntityFeature(0)
+        if HVACMode.OFF in self.hvac_modes:
+            features |= ClimateEntityFeature.TURN_OFF
+            _report_turn_on_off("TURN_OFF")
+        for mode in self.hvac_modes:
+            if mode != HVACMode.OFF:
+                features |= ClimateEntityFeature.TURN_ON
+                _report_turn_on_off("TURN_ON")
+                break
+        if self.__mod_supported_features is not None:
+            new_supported_features = self.__mod_supported_features
+            new_supported_features |= features
+        else:
+            new_supported_features = self._attr_supported_features
+            new_supported_features |= features
+        setattr(ClimateEntity, "supported_features", new_supported_features)
+
     @final
     @property
     def state(self) -> str | None:
@@ -314,14 +372,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
-
-    @callback
-    def _async_generate_attributes(self) -> tuple[str, dict[str, Any]]:
-        """Calculate state string and attribute mapping."""
-        state, attr = super()._async_generate_attributes()
-        if HVACMode.OFF in self.hvac_modes:
-            attr[ATTR_SUPPORTED_FEATURES] |= ClimateEntityFeature.TURN_OFF
-        return (state, attr)
 
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
@@ -670,10 +720,30 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if HVACMode.OFF in self.hvac_modes:
             await self.async_set_hvac_mode(HVACMode.OFF)
 
-    @cached_property
+    @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
+
+    @supported_features.setter
+    def supported_features(self, new_features: ClimateEntityFeature) -> None:
+        """Return the list of supported features.
+
+        For backwards compatibility for turn_on/turn_off
+        ClimateEntityFeatures
+        """
+        self.__mod_supported_features = new_features
+
+    @supported_features.getter
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features.
+
+        For backwards compatibility for turn_on/turn_off
+        ClimateEntityFeatures
+        """
+        if mod_supported_features := self.__mod_supported_features:
+            return mod_supported_features
+        return ClimateEntityFeature(0)
 
     @property
     def supported_features_compat(self) -> ClimateEntityFeature:
