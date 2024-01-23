@@ -6,7 +6,10 @@ import logging
 
 import lupupy.constants as CONST
 
-from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -74,6 +77,8 @@ class LupusecBinarySensor(LupusecDevice, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
-        if self._device.generic_type not in DEVICE_CLASSES:
+        if self._device.generic_type not in (
+            item.value for item in BinarySensorDeviceClass
+        ):
             return None
         return self._device.generic_type
