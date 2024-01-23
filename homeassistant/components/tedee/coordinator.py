@@ -108,7 +108,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     def webhook_received(self, message: dict[str, Any]) -> None:
         """Handle webhook message."""
         self.tedee_client.parse_webhook_message(message)
-        self.async_update_listeners()
+        self.async_set_updated_data(self.tedee_client.locks_dict)
 
     def _async_add_remove_locks(self) -> None:
         """Add new locks, remove non-existing locks."""

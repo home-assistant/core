@@ -64,8 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     _LOGGER.warning(
                         "Failed to unregister Tedee webhook from bridge: %s", ex
                     )
+                else:
+                    _LOGGER.debug("Unregistered Tedee webhook")
                 webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-                _LOGGER.debug("Unregistered Tedee webhook")
 
     async def register_webhook() -> None:
         async with register_lock:
@@ -108,9 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
