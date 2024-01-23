@@ -1086,8 +1086,10 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
             return
 
-        # When an effect is active, we allow the light to set its color mode to on_off and
-        # to brightness if the light allows adjusting brightness
+        # When an effect is active, the color mode should indicate what adjustments are
+        # supported by the effect. To make this possible, we allow the light to set its
+        # color mode to on_off, and to brightness if the light allows adjusting
+        # brightness, in addition to the otherwise supported color modes.
         effect_color_modes = supported_color_modes | {ColorMode.ONOFF}
         if brightness_supported(effect_color_modes):
             effect_color_modes.add(ColorMode.BRIGHTNESS)
