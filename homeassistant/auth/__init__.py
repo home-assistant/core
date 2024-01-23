@@ -449,7 +449,7 @@ class AuthManager:
             else:
                 token_type = models.TOKEN_TYPE_NORMAL
 
-        if token_type == models.TOKEN_TYPE_NORMAL:
+        if token_type is models.TOKEN_TYPE_NORMAL:
             expire_at = time.time() + REFRESH_TOKEN_EXPIRATION
         else:
             expire_at = None
