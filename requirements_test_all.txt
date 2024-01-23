@@ -10,7 +10,7 @@ AEMET-OpenData==0.4.7
 AIOAladdinConnect==0.1.58
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.24
+AIOSomecomfort==0.0.25
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -856,9 +856,6 @@ homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.16
-
-# homeassistant.components.home_plus_control
-homepluscontrol==0.0.5
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4

@@ -515,8 +515,6 @@ omit =
     homeassistant/components/home_connect/light.py
     homeassistant/components/home_connect/sensor.py
     homeassistant/components/home_connect/switch.py
-    homeassistant/components/home_plus_control/api.py
-    homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homematic/__init__.py
     homeassistant/components/homematic/binary_sensor.py
     homeassistant/components/homematic/climate.py
