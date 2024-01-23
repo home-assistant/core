@@ -2651,6 +2651,7 @@ def test_report_invalid_color_mode(
         _attr_color_mode = color_mode
         _attr_effect = effect
         _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
         _attr_supported_color_modes = supported_color_modes
 
     entity = MockLightEntityEntity()
