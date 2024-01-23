@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "power": {
+        "default": "mdi:power"
+      }
+    }
+  }
+}

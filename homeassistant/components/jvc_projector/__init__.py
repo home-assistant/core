@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnectError
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,8 +18,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .const import DOMAIN
 from .coordinator import JvcProjectorDataUpdateCoordinator
 
-PLATFORMS = [Platform.REMOTE, Platform.BINARY_SENSOR]
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.REMOTE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -62,9 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await hass.data[DOMAIN][entry.entry_id].device.disconnect()
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

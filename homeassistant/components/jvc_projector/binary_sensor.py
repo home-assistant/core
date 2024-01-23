@@ -28,8 +28,8 @@ async def async_setup_entry(
 class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
     """The entity class for JVC Projector integration."""
 
-    _attr_name = "Power"
-
+    # _attr_name = "Power"
+    translation_key = "power"
     icon = "mdi:power"
 
     def __init__(
@@ -38,7 +38,6 @@ class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the JVC Projector sensor."""
         super().__init__(coordinator)
-        # self.coordinator = coordinator
         self._attr_unique_id = f"{coordinator.device.mac}_power"
 
     @property
