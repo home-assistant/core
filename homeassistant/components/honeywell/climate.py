@@ -142,6 +142,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "honeywell"
 
     def __init__(
         self,
