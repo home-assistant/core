@@ -5549,7 +5549,12 @@ async def test_conversation_response_subscript_if(
     assert result.conversation_response == response
 
     expected_trace = {
-        "0": [{"result": {"conversation_response": "Testing 123"}}],
+        "0": [
+            {
+                "result": {"conversation_response": "Testing 123"},
+                "variables": {"var": var},
+            }
+        ],
         "1": [{"result": {"choice": choice}}],
         "1/if": [{"result": {"result": if_result}}],
         "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
@@ -5588,7 +5593,12 @@ async def test_conversation_response_not_set_subscript_if(
     assert result.conversation_response == "Testing 123"
 
     expected_trace = {
-        "0": [{"result": {"conversation_response": "Testing 123"}}],
+        "0": [
+            {
+                "result": {"conversation_response": "Testing 123"},
+                "variables": {"var": var},
+            }
+        ],
         "1": [{"result": {"choice": choice}}],
         "1/if": [{"result": {"result": if_result}}],
         "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
