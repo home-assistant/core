@@ -174,7 +174,7 @@ async def async_setup_entry(
 
 
 class EcovacsSensor(
-    EcovacsDescriptionEntity[CapabilityEvent, EcovacsSensorEntityDescription],
+    EcovacsDescriptionEntity[CapabilityEvent],
     SensorEntity,
 ):
     """Ecovacs sensor."""
@@ -197,7 +197,7 @@ class EcovacsSensor(
 
 
 class EcovacsLifeSpanSensor(
-    EcovacsDescriptionEntity[CapabilityLifeSpan, SensorEntityDescription],
+    EcovacsDescriptionEntity[CapabilityLifeSpan],
     SensorEntity,
 ):
     """Life span sensor."""

@@ -93,21 +93,14 @@ class EcovacsEntity(Entity, Generic[CapabilityT]):
             self._device.events.request_refresh(event_type)
 
 
-_EntityDescriptionT = TypeVar("_EntityDescriptionT", bound=EntityDescription)
-
-
-class EcovacsDescriptionEntity(
-    EcovacsEntity[CapabilityT], Generic[CapabilityT, _EntityDescriptionT]
-):
+class EcovacsDescriptionEntity(EcovacsEntity[CapabilityT], Generic[CapabilityT]):
     """Ecovacs entity."""
-
-    entity_description: _EntityDescriptionT
 
     def __init__(
         self,
         device: Device,
         capability: CapabilityT,
-        entity_description: _EntityDescriptionT,
+        entity_description: EntityDescription,
         **kwargs: Any,
     ) -> None:
         """Initialize entity."""

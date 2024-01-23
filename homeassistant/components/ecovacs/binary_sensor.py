@@ -56,9 +56,7 @@ async def async_setup_entry(
 
 
 class EcovacsBinarySensor(
-    EcovacsDescriptionEntity[
-        CapabilityEvent[EventT], EcovacsBinarySensorEntityDescription
-    ],
+    EcovacsDescriptionEntity[CapabilityEvent[EventT]],
     BinarySensorEntity,
 ):
     """Ecovacs binary sensor."""
