@@ -6,7 +6,9 @@ from lupupy.exceptions import LupusecException
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PASSWORD,
@@ -73,10 +75,50 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up this integration using YAML is not supported."""
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up this integration using UI."""
+
+    if hass.data.get(DOMAIN) is None:
+        hass.data.setdefault(DOMAIN, {})
+
+    host = entry.data.get(CONF_HOST)
+    username = entry.data.get(CONF_USERNAME)
+    password = entry.data.get(CONF_PASSWORD)
+    name = entry.data.get(CONF_NAME)
+
+    try:
+        lupusec_system = await hass.async_add_executor_job(
+            LupusecSystem, username, password, host, name
+        )
+        hass.data[DOMAIN] = lupusec_system
+    except LupusecException as ex:
+        _LOGGER.error(ex)
+
+        persistent_notification.create(
+            hass,
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID,
+        )
+        return False
+
+    for platform in LUPUSEC_PLATFORMS:
+        hass.async_add_job(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
+
+    return True
+
+
 class LupusecSystem:
     """Lupusec System class."""
 
-    def __init__(self, username, password, ip_address, name):
+    def __init__(self, username, password, ip_address, name) -> None:
         """Initialize the system."""
         self.lupusec = lupupy.Lupusec(username, password, ip_address)
         self.name = name
@@ -85,10 +127,14 @@ class LupusecSystem:
 class LupusecDevice(Entity):
     """Representation of a Lupusec device."""
 
-    def __init__(self, data, device):
+    def __init__(self, data, device, config_entry=None) -> None:
         """Initialize a sensor for Lupusec device."""
         self._data = data
         self._device = device
+        self._entry_id = ""
+
+        self._config_entry = config_entry
+        self._entry_id = config_entry.entry_id if config_entry else "_none"
 
     def update(self):
         """Update automation state."""
@@ -98,3 +144,14 @@ class LupusecDevice(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._device.name
+
+    @property
+    def device_info(self):
+        """Return device information about the sensor."""
+        return {
+            "identifiers": {(DOMAIN, self._entry_id)},
+            "name": "Lupusec XT",
+            "manufacturer": "Lupus Electronics",
+            "model": f"Lupusec XT{self._data.lupusec.model}",
+            "via_device": (DOMAIN, "lupusec_state"),
+        }

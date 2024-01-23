@@ -697,7 +697,9 @@ omit =
     homeassistant/components/loqed/sensor.py
     homeassistant/components/luci/device_tracker.py
     homeassistant/components/luftdaten/sensor.py
-    homeassistant/components/lupusec/*
+    homeassistant/components/lupusec/alarm_control_panel.py
+    homeassistant/components/lupusec/binary_sensor.py
+    homeassistant/components/lupusec/switch.py
     homeassistant/components/lutron/__init__.py
     homeassistant/components/lutron/binary_sensor.py
     homeassistant/components/lutron/cover.py

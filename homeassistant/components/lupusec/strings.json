@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Lupus Electronics LUPUSEC connection",
+        "data": {
+          "host": "Hostname/IP",
+          "username": "Username",
+          "password": "Password",
+          "name": "Name"
+        }
+      }
+    },
+    "error": {
+      "connection": "Failed to connect, check hostname, username and password."
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single instance is allowed!"
+    }
+  },
+  "options": {
+    "step": {
+      "user_options": {
+        "title": "Lupus Electronics LUPUSEC connection",
+        "data": {
+          "host": "Hostname/IP",
+          "username": "Username",
+          "password": "Password",
+          "name": "Name"
+        }
+      }
+    },
+    "error": {
+      "connection": "Failed to connect, check hostname, username and password."
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single instance is allowed!"
+    }
+  }
+}
