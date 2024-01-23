@@ -33,6 +33,7 @@ async def async_setup_entry(
     """
     ent_reg = er.async_get(hass)
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    lights = []
 
     for area_name, device in entry_data.lights:
         if device.type == "CEILING_FAN_TYPE":
@@ -45,10 +46,7 @@ async def async_setup_entry(
                     # If the entity exists and is disabled then we want to remove the entity so that the user is using the new fan entity instead.
                     ent_reg.async_remove(entity_id)
                 else:
-                    async_add_entities(
-                        [LutronLight(area_name, device, entry_data.client)],
-                        True,
-                    )
+                    lights.append([area_name, device, entry_data.client])
                     async_create_issue(
                         hass,
                         DOMAIN,
@@ -59,10 +57,14 @@ async def async_setup_entry(
                         translation_key="deprecated_light_fan",
                     )
         else:
-            async_add_entities(
-                [LutronLight(area_name, device, entry_data.client)],
-                True,
-            )
+            lights.append([area_name, device, entry_data.client])
+    async_add_entities(
+        [
+            LutronLight(area_name, device, entry_data.client)
+            for area_name, device, entry_data.client in lights
+        ],
+        True,
+    )
 
 
 def to_lutron_level(level):
@@ -106,7 +108,8 @@ class LutronLight(LutronDevice, LightEntity):
                 DOMAIN,
                 "deprecated_light_fan_on",
                 breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
+                is_fixable=True,
+                is_persistent=True,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_light_fan_on",
             )

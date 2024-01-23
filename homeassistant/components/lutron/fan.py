@@ -40,8 +40,6 @@ async def async_setup_entry(
 class LutronFan(LutronDevice, FanEntity):
     """Representation of a Lutron fan."""
 
-    _attr_preset_mode = None
-    _attr_preset_modes = None
     _attr_should_poll = False
     _attr_speed_count = 3
     _attr_supported_features = FanEntityFeature.SET_SPEED
@@ -53,13 +51,8 @@ class LutronFan(LutronDevice, FanEntity):
         """Initialize the fan."""
 
         super().__init__(area_name, lutron_device, controller)
-        self._attr_extra_state_attributes = {
-            "lutron_integration_id": self._lutron_device.id
-        }
         self._prev_percentage: int | None = None
         self._percentage: int | None = None
-        self._oscillating: bool | None = None
-        self._direction: str | None = None
 
     @property
     def percentage(self) -> int | None:
@@ -71,8 +64,6 @@ class LutronFan(LutronDevice, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        if percentage is None:
-            percentage = 0
         if percentage > 0:
             self._prev_percentage = percentage
         self._percentage = percentage
@@ -93,10 +84,7 @@ class LutronFan(LutronDevice, FanEntity):
             return
         if percentage is not None:
             new_percentage = percentage
-        elif self._prev_percentage == 0:
-            # Default to medium speed
-            new_percentage = 67
-        elif self._prev_percentage is None:
+        elif not self._prev_percentage:
             # Default to medium speed
             new_percentage = 67
         else:
@@ -111,7 +99,10 @@ class LutronFan(LutronDevice, FanEntity):
         """Call when forcing a refresh of the device."""
 
         # Reading the property (rather than last_level()) fetches value
-        level = self._lutron_device.level
-        _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, level)
+        _LOGGER.debug(
+            "Lutron ID: %d updated to %f",
+            self._lutron_device.id,
+            self._lutron_device.level,
+        )
         if self._prev_percentage is None:
             self._prev_percentage = self._lutron_device.level
