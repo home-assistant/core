@@ -403,9 +403,7 @@ async def async_attach_trigger(
     discovery_id: str | None = config.get(CONF_DISCOVERY_ID)
     if discovery_id is not None:
         for trig_id, trig in mqtt_data.device_triggers.items():
-            if (
-                discovery_data := trig.discovery_data
-            ) is not None and discovery_id == discovery_data[ATTR_DISCOVERY_HASH][1]:
+            if trig.discovery_id == discovery_id:
                 trigger_id = trig_id
                 break
 
