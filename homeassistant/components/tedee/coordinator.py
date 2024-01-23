@@ -114,6 +114,11 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         """Register the webhook at the Tedee bridge."""
         self.tedee_webhook_id = await self.tedee_client.register_webhook(webhook_url)
 
+    async def async_unregister_webhook(self) -> None:
+        """Unregister the webhook at the Tedee bridge."""
+        if self.tedee_webhook_id is not None:
+            await self.tedee_client.delete_webhook(self.tedee_webhook_id)
+
     def _async_add_remove_locks(self) -> None:
         """Add new locks, remove non-existing locks."""
         if not self._locks_last_update:
