@@ -76,6 +76,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/amcrest/ @flacjacket
 /homeassistant/components/analytics/ @home-assistant/core @ludeeus
 /tests/components/analytics/ @home-assistant/core @ludeeus
+/homeassistant/components/analytics_insights/ @joostlek
+/tests/components/analytics_insights/ @joostlek
 /homeassistant/components/android_ip_webcam/ @engrbm87
 /tests/components/android_ip_webcam/ @engrbm87
 /homeassistant/components/androidtv/ @JeffLIrion @ollo69
