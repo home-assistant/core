@@ -172,21 +172,29 @@ async def async_setup_entry(
     entities: list[OpowerSensor] = []
     forecasts = coordinator.data.values()
 
-    # Utility account id is not necessarily unique.  For backwards
-    # compatibility, when it is unique, use that in the id and name generation,
-    # but when it is not, use the uuid.
+    # Utility account id is not necessarily unique if there are multiple
+    # meters for a single account.  If there are 2 meters that have the
+    # same utility account id, then it is a multi-meter account.
     utility_account_ids = [
         forecast.account.utility_account_id for forecast in forecasts
     ]
-    duplicate_utility_account_ids = [
+    multi_meter_utility_account_ids = [
         i for i in set(utility_account_ids) if utility_account_ids.count(i) > 1
     ]
 
     for forecast in forecasts:
-        device_id = f"{coordinator.api.utility.subdomain()}_{forecast.account.uuid if forecast.account.utility_account_id in duplicate_utility_account_ids else forecast.account.utility_account_id}"
+        # For backwards compatibility, use the utility_account_id
+        # if there is only a single meter for the account.
+        meter_id = (
+            forecast.account.uuid
+            if forecast.account.utility_account_id in multi_meter_utility_account_ids
+            else forecast.account.utility_account_id
+        )
+
+        device_id = f"{coordinator.api.utility.subdomain()}_{meter_id}"
         device = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name=f"{forecast.account.meter_type.name} account {forecast.account.uuid if forecast.account.utility_account_id in duplicate_utility_account_ids else forecast.account.utility_account_id}",
+            name=f"{forecast.account.meter_type.name} account {meter_id}",
             manufacturer="Opower",
             model=coordinator.api.utility.name(),
             entry_type=DeviceEntryType.SERVICE,
