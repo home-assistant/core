@@ -1,7 +1,6 @@
 """The tests for the Modbus sensor component."""
 import struct
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.modbus.const import (
@@ -10,7 +9,6 @@ from homeassistant.components.modbus.const import (
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
@@ -19,7 +17,6 @@ from homeassistant.components.modbus.const import (
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_VIRTUAL_COUNT,
@@ -50,7 +47,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
+from .conftest import TEST_ENTITY_NAME, ReadResult
 
 from tests.common import mock_restore_cache_with_extra_data
 
@@ -81,7 +78,6 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_SCALE: 1,
                     CONF_OFFSET: 0,
                     CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
-                    CONF_LAZY_ERROR: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_DEVICE_CLASS: "battery",
                 }
@@ -98,7 +94,6 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_SCALE: 1,
                     CONF_OFFSET: 0,
                     CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
-                    CONF_LAZY_ERROR: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_DEVICE_CLASS: "battery",
                 }
@@ -125,7 +120,6 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_DATA_TYPE: DataType.INT16,
-                    CONF_SWAP: CONF_SWAP_NONE,
                 }
             ]
         },
@@ -228,7 +222,6 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                         CONF_ADDRESS: 1234,
                         CONF_DATA_TYPE: DataType.CUSTOM,
                         CONF_COUNT: 4,
-                        CONF_SWAP: CONF_SWAP_NONE,
                         CONF_STRUCTURE: "invalid",
                     },
                 ]
@@ -555,7 +548,6 @@ async def test_config_wrong_struct_sensor(
         (
             {
                 CONF_DATA_TYPE: DataType.INT16,
-                CONF_SWAP: CONF_SWAP_NONE,
             },
             [0x0102],
             False,
@@ -1154,41 +1146,6 @@ async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_SCAN_INTERVAL: 10,
-                    CONF_LAZY_ERROR: 1,
-                },
-            ],
-        },
-    ],
-)
-@pytest.mark.parametrize(
-    ("register_words", "do_exception"),
-    [
-        (
-            [0x8000],
-            True,
-        ),
-    ],
-)
-async def test_lazy_error_sensor(
-    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory
-) -> None:
-    """Run test for sensor."""
-    hass.states.async_set(ENTITY_ID, 17)
-    await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == "17"
-    await do_next_cycle(hass, mock_do_cycle, 5)
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 1,
                 },
             ],
@@ -1290,7 +1247,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
     [
         (
             {
-                CONF_SWAP: CONF_SWAP_NONE,
                 CONF_DATA_TYPE: DataType.UINT16,
             },
             [0x0102],
@@ -1306,7 +1262,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
         ),
         (
             {
-                CONF_SWAP: CONF_SWAP_NONE,
                 CONF_DATA_TYPE: DataType.UINT32,
             },
             [0x0102, 0x0304],

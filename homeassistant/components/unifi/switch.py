@@ -180,7 +180,7 @@ async def async_wlan_control_fn(
     await controller.api.request(WlanEnableRequest.create(obj_id, target))
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiSwitchEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
@@ -188,7 +188,7 @@ class UnifiSwitchEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     is_on_fn: Callable[[UniFiController, ApiItemT], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiSwitchEntityDescription(
     SwitchEntityDescription,
     UnifiEntityDescription[HandlerT, ApiItemT],

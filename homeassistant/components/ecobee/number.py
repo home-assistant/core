@@ -18,7 +18,7 @@ from .entity import EcobeeBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class EcobeeNumberEntityDescriptionBase:
     """Required values when describing Ecobee number entities."""
 
@@ -26,7 +26,7 @@ class EcobeeNumberEntityDescriptionBase:
     set_fn: Callable[[EcobeeData, int, int], Awaitable]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EcobeeNumberEntityDescription(
     NumberEntityDescription, EcobeeNumberEntityDescriptionBase
 ):

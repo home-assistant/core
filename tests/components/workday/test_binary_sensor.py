@@ -316,6 +316,18 @@ async def test_check_date_service(
     )
     assert response == {"binary_sensor.workday_sensor": {"workday": True}}
 
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHECK_DATE,
+        {
+            "entity_id": "binary_sensor.workday_sensor",
+            "check_date": date(2022, 12, 17),  # Saturday (no workday)
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor": {"workday": False}}
+
 
 async def test_language_difference_english_language(
     hass: HomeAssistant,

@@ -1,6 +1,14 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
+from functools import partial
+
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 
 
 class HVACMode(StrEnum):
@@ -31,13 +39,13 @@ class HVACMode(StrEnum):
 
 # These HVAC_MODE_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the HVACMode enum instead.
-HVAC_MODE_OFF = "off"
-HVAC_MODE_HEAT = "heat"
-HVAC_MODE_COOL = "cool"
-HVAC_MODE_HEAT_COOL = "heat_cool"
-HVAC_MODE_AUTO = "auto"
-HVAC_MODE_DRY = "dry"
-HVAC_MODE_FAN_ONLY = "fan_only"
+_DEPRECATED_HVAC_MODE_OFF = DeprecatedConstantEnum(HVACMode.OFF, "2025.1")
+_DEPRECATED_HVAC_MODE_HEAT = DeprecatedConstantEnum(HVACMode.HEAT, "2025.1")
+_DEPRECATED_HVAC_MODE_COOL = DeprecatedConstantEnum(HVACMode.COOL, "2025.1")
+_DEPRECATED_HVAC_MODE_HEAT_COOL = DeprecatedConstantEnum(HVACMode.HEAT_COOL, "2025.1")
+_DEPRECATED_HVAC_MODE_AUTO = DeprecatedConstantEnum(HVACMode.AUTO, "2025.1")
+_DEPRECATED_HVAC_MODE_DRY = DeprecatedConstantEnum(HVACMode.DRY, "2025.1")
+_DEPRECATED_HVAC_MODE_FAN_ONLY = DeprecatedConstantEnum(HVACMode.FAN_ONLY, "2025.1")
 HVAC_MODES = [cls.value for cls in HVACMode]
 
 # No preset is active
@@ -99,12 +107,12 @@ class HVACAction(StrEnum):
 
 # These CURRENT_HVAC_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the HVACAction enum instead.
-CURRENT_HVAC_OFF = "off"
-CURRENT_HVAC_HEAT = "heating"
-CURRENT_HVAC_COOL = "cooling"
-CURRENT_HVAC_DRY = "drying"
-CURRENT_HVAC_IDLE = "idle"
-CURRENT_HVAC_FAN = "fan"
+_DEPRECATED_CURRENT_HVAC_OFF = DeprecatedConstantEnum(HVACAction.OFF, "2025.1")
+_DEPRECATED_CURRENT_HVAC_HEAT = DeprecatedConstantEnum(HVACAction.HEATING, "2025.1")
+_DEPRECATED_CURRENT_HVAC_COOL = DeprecatedConstantEnum(HVACAction.COOLING, "2025.1")
+_DEPRECATED_CURRENT_HVAC_DRY = DeprecatedConstantEnum(HVACAction.DRYING, "2025.1")
+_DEPRECATED_CURRENT_HVAC_IDLE = DeprecatedConstantEnum(HVACAction.IDLE, "2025.1")
+_DEPRECATED_CURRENT_HVAC_FAN = DeprecatedConstantEnum(HVACAction.FAN, "2025.1")
 CURRENT_HVAC_ACTIONS = [cls.value for cls in HVACAction]
 
 
@@ -159,10 +167,31 @@ class ClimateEntityFeature(IntFlag):
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the ClimateEntityFeature enum instead.
-SUPPORT_TARGET_TEMPERATURE = 1
-SUPPORT_TARGET_TEMPERATURE_RANGE = 2
-SUPPORT_TARGET_HUMIDITY = 4
-SUPPORT_FAN_MODE = 8
-SUPPORT_PRESET_MODE = 16
-SUPPORT_SWING_MODE = 32
-SUPPORT_AUX_HEAT = 64
+_DEPRECATED_SUPPORT_TARGET_TEMPERATURE = DeprecatedConstantEnum(
+    ClimateEntityFeature.TARGET_TEMPERATURE, "2025.1"
+)
+_DEPRECATED_SUPPORT_TARGET_TEMPERATURE_RANGE = DeprecatedConstantEnum(
+    ClimateEntityFeature.TARGET_TEMPERATURE_RANGE, "2025.1"
+)
+_DEPRECATED_SUPPORT_TARGET_HUMIDITY = DeprecatedConstantEnum(
+    ClimateEntityFeature.TARGET_HUMIDITY, "2025.1"
+)
+_DEPRECATED_SUPPORT_FAN_MODE = DeprecatedConstantEnum(
+    ClimateEntityFeature.FAN_MODE, "2025.1"
+)
+_DEPRECATED_SUPPORT_PRESET_MODE = DeprecatedConstantEnum(
+    ClimateEntityFeature.PRESET_MODE, "2025.1"
+)
+_DEPRECATED_SUPPORT_SWING_MODE = DeprecatedConstantEnum(
+    ClimateEntityFeature.SWING_MODE, "2025.1"
+)
+_DEPRECATED_SUPPORT_AUX_HEAT = DeprecatedConstantEnum(
+    ClimateEntityFeature.AUX_HEAT, "2025.1"
+)
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

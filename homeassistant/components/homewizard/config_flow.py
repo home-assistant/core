@@ -12,13 +12,12 @@ from voluptuous import Required, Schema
 
 from homeassistant.components import onboarding, zeroconf
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_API_ENABLED,
-    CONF_PATH,
     CONF_PRODUCT_NAME,
     CONF_PRODUCT_TYPE,
     CONF_SERIAL,

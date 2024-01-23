@@ -5,20 +5,26 @@ from homeassistant import auth, data_entry_flow
 from homeassistant.auth import auth_store
 from homeassistant.auth.providers import legacy_api_password
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.issue_registry as ir
+from homeassistant.setup import async_setup_component
+
+from tests.common import ensure_auth_manager_loaded
+
+CONFIG = {"type": "legacy_api_password", "api_password": "test-password"}
 
 
 @pytest.fixture
-def store(hass):
+async def store(hass):
     """Mock store."""
-    return auth_store.AuthStore(hass)
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+    return store
 
 
 @pytest.fixture
 def provider(hass, store):
     """Mock provider."""
-    return legacy_api_password.LegacyApiPasswordAuthProvider(
-        hass, store, {"type": "legacy_api_password", "api_password": "test-password"}
-    )
+    return legacy_api_password.LegacyApiPasswordAuthProvider(hass, store, CONFIG)
 
 
 @pytest.fixture
@@ -68,3 +74,15 @@ async def test_login_flow_works(hass: HomeAssistant, manager) -> None:
         flow_id=result["flow_id"], user_input={"password": "test-password"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+async def test_create_repair_issue(hass: HomeAssistant):
+    """Test legacy api password auth provider creates a reapir issue."""
+    hass.auth = await auth.auth_manager_from_config(hass, [CONFIG], [])
+    ensure_auth_manager_loaded(hass.auth)
+    await async_setup_component(hass, "auth", {})
+    issue_registry: ir.IssueRegistry = ir.async_get(hass)
+
+    assert issue_registry.async_get_issue(
+        domain="auth", issue_id="deprecated_legacy_api_password"
+    )

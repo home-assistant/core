@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import cast
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -12,14 +12,13 @@ from homeassistant.components.todo import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_COORDINATOR, DOMAIN
+from .coordinator import PicnicUpdateCoordinator
 from .services import product_search
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,10 +32,10 @@ async def async_setup_entry(
     """Set up the Picnic shopping cart todo platform config entry."""
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
-    async_add_entities([PicnicCart(hass, picnic_coordinator, config_entry)])
+    async_add_entities([PicnicCart(picnic_coordinator, config_entry)])
 
 
-class PicnicCart(TodoListEntity, CoordinatorEntity):
+class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
     """A Picnic Shopping Cart TodoListEntity."""
 
     _attr_has_entity_name = True
@@ -46,8 +45,7 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: PicnicUpdateCoordinator,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize PicnicCart."""
@@ -58,7 +56,6 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
             manufacturer="Picnic",
             model=config_entry.unique_id,
         )
-        self.hass = hass
         self._attr_unique_id = f"{config_entry.unique_id}-cart"
 
     @property
@@ -89,7 +86,7 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
         )
 
         if not product_id:
-            raise ValueError("No product found or no product ID given")
+            raise ServiceValidationError("No product found or no product ID given")
 
         await self.hass.async_add_executor_job(
             self.coordinator.picnic_api_client.add_product, product_id, 1

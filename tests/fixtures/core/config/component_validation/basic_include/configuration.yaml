@@ -8,3 +8,6 @@ custom_validator_ok_1: !include integrations/custom_validator_ok_1.yaml
 custom_validator_ok_2: !include integrations/custom_validator_ok_2.yaml
 custom_validator_bad_1: !include integrations/custom_validator_bad_1.yaml
 custom_validator_bad_2: !include integrations/custom_validator_bad_2.yaml
+"iot_domain ": !include integrations/iot_domain .yaml
+"": !include integrations/.yaml
+5: !include integrations/5.yaml

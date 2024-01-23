@@ -101,7 +101,8 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         "homeassistant.components.hassio.HassIO.get_ingress_panels",
         return_value={"panels": {}},
     ), patch.dict(
-        os.environ, {"SUPERVISOR_TOKEN": "123456"}
+        os.environ,
+        {"SUPERVISOR_TOKEN": "123456"},
     ):
         yield
 
@@ -231,9 +232,7 @@ async def test_onboarding_user(
     assert resp.status == 200
     tokens = await resp.json()
 
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
     # Validate created areas
     assert len(area_registry.areas) == 3
@@ -346,9 +345,7 @@ async def test_onboarding_integration(
     assert const.STEP_INTEGRATION in hass_storage[const.DOMAIN]["data"]["done"]
     tokens = await resp.json()
 
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
     # Onboarding refresh token and new refresh token
     user = await hass.auth.async_get_user(hass_admin_user.id)
@@ -367,7 +364,7 @@ async def test_onboarding_integration_missing_credential(
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     refresh_token.credential = None
 
     client = await hass_client()

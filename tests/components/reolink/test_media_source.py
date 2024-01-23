@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_PROTOCOL,
     CONF_USERNAME,
     Platform,
 )
@@ -271,7 +272,7 @@ async def test_browsing_not_loaded(
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME2,
     )

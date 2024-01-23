@@ -49,6 +49,7 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
     """Define a mocked Envoy fixture."""
     mock_envoy = Mock(spec=Envoy)
     mock_envoy.serial_number = serial_number
+    mock_envoy.firmware = "7.1.2"
     mock_envoy.authenticate = mock_authenticate
     mock_envoy.setup = mock_setup
     mock_envoy.auth = mock_auth
@@ -89,7 +90,8 @@ async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
         "homeassistant.components.enphase_envoy.Envoy",
         return_value=mock_envoy,
     ), patch(
-        "homeassistant.components.enphase_envoy.PLATFORMS", []
+        "homeassistant.components.enphase_envoy.PLATFORMS",
+        [],
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

@@ -33,9 +33,10 @@ from .const import (
 )
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity
+from .models import TPLinkData
 
 
-@dataclass
+@dataclass(frozen=True)
 class TPLinkSensorEntityDescription(SensorEntityDescription):
     """Describes TPLink sensor entity."""
 
@@ -106,31 +107,39 @@ def async_emeter_from_device(
     return None if device.is_bulb else 0.0
 
 
+def _async_sensors_for_device(
+    device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
+) -> list[SmartPlugSensor]:
+    """Generate the sensors for the device."""
+    return [
+        SmartPlugSensor(device, coordinator, description)
+        for description in ENERGY_SENSORS
+        if async_emeter_from_device(device, description) is not None
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    parent_coordinator = data.parent_coordinator
+    children_coordinators = data.children_coordinators
     entities: list[SmartPlugSensor] = []
-    parent = coordinator.device
+    parent = parent_coordinator.device
     if not parent.has_emeter:
         return
 
-    def _async_sensors_for_device(device: SmartDevice) -> list[SmartPlugSensor]:
-        return [
-            SmartPlugSensor(device, coordinator, description)
-            for description in ENERGY_SENSORS
-            if async_emeter_from_device(device, description) is not None
-        ]
-
     if parent.is_strip:
         # Historically we only add the children if the device is a strip
-        for child in parent.children:
-            entities.extend(_async_sensors_for_device(child))
+        for idx, child in enumerate(parent.children):
+            entities.extend(
+                _async_sensors_for_device(child, children_coordinators[idx])
+            )
     else:
-        entities.extend(_async_sensors_for_device(parent))
+        entities.extend(_async_sensors_for_device(parent, parent_coordinator))
 
     async_add_entities(entities)
 

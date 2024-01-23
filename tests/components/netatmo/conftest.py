@@ -5,13 +5,35 @@ from unittest.mock import AsyncMock, patch
 from pyatmo.const import ALL_SCOPES
 import pytest
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.netatmo.const import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
 from .common import fake_get_image, fake_post_request
 
 from tests.common import MockConfigEntry
 
+CLIENT_ID = "1234"
+CLIENT_SECRET = "5678"
+
+
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+    )
+
 
 @pytest.fixture(name="config_entry")
-def mock_config_entry_fixture(hass):
+def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     mock_entry = MockConfigEntry(
         domain="netatmo",
@@ -55,7 +77,7 @@ def mock_config_entry_fixture(hass):
 
 
 @pytest.fixture(name="netatmo_auth")
-def netatmo_auth():
+def netatmo_auth() -> AsyncMock:
     """Restrict loaded platforms to list given."""
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"

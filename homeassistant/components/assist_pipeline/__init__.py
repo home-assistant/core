@@ -31,6 +31,7 @@ from .pipeline import (
     async_get_pipeline,
     async_get_pipelines,
     async_setup_pipeline_store,
+    async_update_pipeline,
 )
 from .websocket_api import async_register_websocket_api
 
@@ -40,6 +41,7 @@ __all__ = (
     "async_get_pipelines",
     "async_setup",
     "async_pipeline_from_audio_stream",
+    "async_update_pipeline",
     "AudioSettings",
     "Pipeline",
     "PipelineEvent",
