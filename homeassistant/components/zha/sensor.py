@@ -1214,3 +1214,25 @@ class AqaraSmokeDensityDbm(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_icon: str = "mdi:google-circles-communities"
     _attr_suggested_display_precision: int = 3
+
+
+class SonoffIlluminationStates(types.enum8):
+    """Enum for displaying last Illumination state."""
+
+    Dark = 0x00
+    Light = 0x01
+
+
+@MULTI_MATCH(cluster_handler_names="sonoff_manufacturer", models={"SNZB-06P"})
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SonoffPresenceSenorIlluminationStatus(Sensor):
+    """Sensor that displays the illumination status the last time peresence was detected."""
+
+    _attribute_name = "last_illumination_state"
+    _unique_id_suffix = "last_illumination"
+    _attr_translation_key: str = "last_illumination_state"
+    _attr_icon: str = "mdi:theme-light-dark"
+
+    def formatter(self, value: int) -> int | float | None:
+        """Numeric pass-through formatter."""
+        return SonoffIlluminationStates(value).name
