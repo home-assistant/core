@@ -54,6 +54,7 @@ class HomeWizardExternalSensorEntityDescription(SensorEntityDescription):
     """Class describing HomeWizard sensor entities."""
 
     suggested_device_class: SensorDeviceClass
+    device_name: str
 
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
@@ -412,34 +413,39 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
 
 EXTERNAL_SENSORS = {
     ExternalDevice.DeviceType.GAS_METER: HomeWizardExternalSensorEntityDescription(
-        key="Gas meter",
+        key="gas_meter",
         translation_key="total_gas_m3",
         suggested_device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_name="Gas meter",
     ),
     ExternalDevice.DeviceType.HEAT_METER: HomeWizardExternalSensorEntityDescription(
-        key="Heat meter",
+        key="heat_meter",
         translation_key="total_energy_gj",
         suggested_device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_name="Heat meter",
     ),
     ExternalDevice.DeviceType.WARM_WATER_METER: HomeWizardExternalSensorEntityDescription(
-        key="Warm water meter",
+        key="warm_water_meter",
         translation_key="total_liter_m3",
         suggested_device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_name="Warm water meter",
     ),
     ExternalDevice.DeviceType.WATER_METER: HomeWizardExternalSensorEntityDescription(
-        key="Water meter",
+        key="water_meter",
         translation_key="total_liter_m3",
         suggested_device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_name="Water meter",
     ),
     ExternalDevice.DeviceType.INLET_HEAT_METER: HomeWizardExternalSensorEntityDescription(
-        key="Inlet heat meter",
+        key="inlet_heat_meter",
         translation_key="total_energy_gj",
         suggested_device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_name="Inlet heat meter",
     ),
 }
 
@@ -487,7 +493,7 @@ async def async_setup_entry(
             if description := EXTERNAL_SENSORS.get(device.meter_type):
                 device_info = DeviceInfo(
                     identifiers={(DOMAIN, unique_id)},
-                    name=description.key,
+                    name=description.device_name,
                     manufacturer="HomeWizard",
                     model=coordinator.data.device.product_type,
                 )
