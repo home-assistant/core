@@ -537,7 +537,7 @@
     'state': 'spotArea',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wifi_rssi:entity-registry]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wi_fi_rssi:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -549,7 +549,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_wifi_rssi',
+    'entity_id': 'sensor.ozmo_950_wi_fi_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -559,7 +559,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wifi rssi',
+    'original_name': 'Wi-Fi RSSI',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -568,19 +568,19 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wifi_rssi:state]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wi_fi_rssi:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Wifi rssi',
+      'friendly_name': 'Ozmo 950 Wi-Fi RSSI',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_wifi_rssi',
+    'entity_id': 'sensor.ozmo_950_wi_fi_rssi',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '-62',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wifi_ssid:entity-registry]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wi_fi_ssid:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -592,7 +592,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_wifi_ssid',
+    'entity_id': 'sensor.ozmo_950_wi_fi_ssid',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -602,7 +602,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wifi ssid',
+    'original_name': 'Wi-Fi SSID',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -611,13 +611,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wifi_ssid:state]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Wifi ssid',
+      'friendly_name': 'Ozmo 950 Wi-Fi SSID',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_wifi_ssid',
+    'entity_id': 'sensor.ozmo_950_wi_fi_ssid',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'Testnetwork',
