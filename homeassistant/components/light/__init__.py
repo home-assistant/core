@@ -1119,7 +1119,12 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         supported_features_value = supported_features.value
         _is_on = self.is_on
         color_mode = self._light_internal_color_mode if _is_on else None
-        effect = self.effect
+
+        effect: str | None
+        if LightEntityFeature.EFFECT in supported_features:
+            data[ATTR_EFFECT] = effect = self.effect if _is_on else None
+        else:
+            effect = None
 
         self.__validate_color_mode(color_mode, legacy_supported_color_modes, effect)
 
@@ -1179,9 +1184,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_RGBWW_COLOR] = None
             if color_mode:
                 data.update(self._light_internal_convert_color(color_mode))
-
-        if LightEntityFeature.EFFECT in supported_features:
-            data[ATTR_EFFECT] = effect if _is_on else None
 
         return data
 
