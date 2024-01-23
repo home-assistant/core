@@ -2,11 +2,11 @@
 
 from dataclasses import dataclass
 import logging
-from typing import TypedDict
 
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_NAME,
     CONF_DEVICES,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
@@ -19,6 +19,10 @@ from homeassistant.util.location import distance
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
+    ATTR_DIR_OF_TRAVEL,
+    ATTR_DIST_TO,
+    ATTR_IN_IGNORED_ZONE,
+    ATTR_NEAREST,
     CONF_IGNORED_ZONES,
     CONF_TOLERANCE,
     DEFAULT_DIR_OF_TRAVEL,
@@ -38,12 +42,22 @@ class StateChangedData:
     new_state: State | None
 
 
-class ProximityData(TypedDict):
-    """ProximityData type class."""
+@dataclass
+class ProximityData:
+    """ProximityCoordinatorData class."""
 
-    dist_to_zone: str | float
-    dir_of_travel: str | float
-    nearest: str | float
+    proximity: dict[str, str | float]
+    entities: dict[str, dict[str, str | int | None]]
+
+
+DEFAULT_DATA = ProximityData(
+    {
+        ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
+        ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
+        ATTR_NEAREST: DEFAULT_NEAREST,
+    },
+    {},
+)
 
 
 class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
@@ -54,7 +68,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     ) -> None:
         """Initialize the Proximity coordinator."""
         self.ignored_zones: list[str] = config[CONF_IGNORED_ZONES]
-        self.proximity_devices: list[str] = config[CONF_DEVICES]
+        self.tracked_entities: list[str] = config[CONF_DEVICES]
         self.tolerance: int = config[CONF_TOLERANCE]
         self.proximity_zone: str = config[CONF_ZONE]
         self.unit_of_measurement: str = config.get(
@@ -69,11 +83,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             update_interval=None,
         )
 
-        self.data = {
-            "dist_to_zone": DEFAULT_DIST_TO_ZONE,
-            "dir_of_travel": DEFAULT_DIR_OF_TRAVEL,
-            "nearest": DEFAULT_NEAREST,
-        }
+        self.data = DEFAULT_DATA
 
         self.state_change_data: StateChangedData | None = None
 
@@ -81,177 +91,216 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self, entity: str, old_state: State | None, new_state: State | None
     ) -> None:
         """Fetch and process state change event."""
-        if new_state is None:
-            _LOGGER.debug("no new_state -> abort")
-            return
-
         self.state_change_data = StateChangedData(entity, old_state, new_state)
         await self.async_refresh()
 
-    async def _async_update_data(self) -> ProximityData:
-        """Calculate Proximity data."""
-        if (
-            state_change_data := self.state_change_data
-        ) is None or state_change_data.new_state is None:
-            return self.data
-
-        entity_name = state_change_data.new_state.name
-        devices_to_calculate = False
-        devices_in_zone = []
-
-        zone_state = self.hass.states.get(f"zone.{self.proximity_zone}")
-        proximity_latitude = (
-            zone_state.attributes.get(ATTR_LATITUDE) if zone_state else None
-        )
-        proximity_longitude = (
-            zone_state.attributes.get(ATTR_LONGITUDE) if zone_state else None
+    def _convert(self, value: float | str) -> float | str:
+        """Round and convert given distance value."""
+        if isinstance(value, str):
+            return value
+        return round(
+            DistanceConverter.convert(
+                value,
+                UnitOfLength.METERS,
+                self.unit_of_measurement,
+            )
         )
 
-        # Check for devices in the monitored zone.
-        for device in self.proximity_devices:
-            if (device_state := self.hass.states.get(device)) is None:
-                devices_to_calculate = True
-                continue
-
-            if device_state.state not in self.ignored_zones:
-                devices_to_calculate = True
-
-            # Check the location of all devices.
-            if (device_state.state).lower() == (self.proximity_zone).lower():
-                device_friendly = device_state.name
-                devices_in_zone.append(device_friendly)
-
-        # No-one to track so reset the entity.
-        if not devices_to_calculate:
-            _LOGGER.debug("no devices_to_calculate -> abort")
-            return {
-                "dist_to_zone": DEFAULT_DIST_TO_ZONE,
-                "dir_of_travel": DEFAULT_DIR_OF_TRAVEL,
-                "nearest": DEFAULT_NEAREST,
-            }
-
-        # At least one device is in the monitored zone so update the entity.
-        if devices_in_zone:
-            _LOGGER.debug("at least one device is in zone -> arrived")
-            return {
-                "dist_to_zone": 0,
-                "dir_of_travel": "arrived",
-                "nearest": ", ".join(devices_in_zone),
-            }
-
-        # We can't check proximity because latitude and longitude don't exist.
-        if "latitude" not in state_change_data.new_state.attributes:
-            _LOGGER.debug("no latitude and longitude -> reset")
-            return self.data
-
-        # Collect distances to the zone for all devices.
-        distances_to_zone: dict[str, float] = {}
-        for device in self.proximity_devices:
-            # Ignore devices in an ignored zone.
-            device_state = self.hass.states.get(device)
-            if not device_state or device_state.state in self.ignored_zones:
-                continue
-
-            # Ignore devices if proximity cannot be calculated.
-            if "latitude" not in device_state.attributes:
-                continue
-
-            # Calculate the distance to the proximity zone.
-            proximity = distance(
-                proximity_latitude,
-                proximity_longitude,
-                device_state.attributes[ATTR_LATITUDE],
-                device_state.attributes[ATTR_LONGITUDE],
+    def _calc_distance_to_zone(
+        self,
+        zone: State,
+        device: State,
+        latitude: float | None,
+        longitude: float | None,
+    ) -> int | None:
+        if device.state.lower() == self.proximity_zone.lower():
+            _LOGGER.debug(
+                "%s: %s in zone -> distance=0",
+                self.friendly_name,
+                device.entity_id,
             )
+            return 0
 
-            # Add the device and distance to a dictionary.
-            if proximity is None:
-                continue
-            distances_to_zone[device] = round(
-                DistanceConverter.convert(
-                    proximity, UnitOfLength.METERS, self.unit_of_measurement
-                ),
-                1,
+        if latitude is None or longitude is None:
+            _LOGGER.debug(
+                "%s: %s has no coordinates -> distance=None",
+                self.friendly_name,
+                device.entity_id,
             )
+            return None
 
-        # Loop through each of the distances collected and work out the
-        # closest.
-        closest_device: str | None = None
-        dist_to_zone: float | None = None
+        distance_to_zone = distance(
+            zone.attributes[ATTR_LATITUDE],
+            zone.attributes[ATTR_LONGITUDE],
+            latitude,
+            longitude,
+        )
 
-        for device, zone in distances_to_zone.items():
-            if not dist_to_zone or zone < dist_to_zone:
-                closest_device = device
-                dist_to_zone = zone
+        # it is ensured, that distance can't be None, since zones must have lat/lon coordinates
+        assert distance_to_zone is not None
+        return round(distance_to_zone)
 
-        # If the closest device is one of the other devices.
-        if closest_device is not None and closest_device != state_change_data.entity_id:
-            _LOGGER.debug("closest device is one of the other devices -> unknown")
-            device_state = self.hass.states.get(closest_device)
-            assert device_state
-            return {
-                "dist_to_zone": round(distances_to_zone[closest_device]),
-                "dir_of_travel": "unknown",
-                "nearest": device_state.name,
-            }
+    def _calc_direction_of_travel(
+        self,
+        zone: State,
+        device: State,
+        old_latitude: float | None,
+        old_longitude: float | None,
+        new_latitude: float | None,
+        new_longitude: float | None,
+    ) -> str | None:
+        if device.state.lower() == self.proximity_zone.lower():
+            _LOGGER.debug(
+                "%s: %s in zone -> direction_of_travel=arrived",
+                self.friendly_name,
+                device.entity_id,
+            )
+            return "arrived"
 
-        # Stop if we cannot calculate the direction of travel (i.e. we don't
-        # have a previous state and a current LAT and LONG).
         if (
-            state_change_data.old_state is None
-            or "latitude" not in state_change_data.old_state.attributes
+            old_latitude is None
+            or old_longitude is None
+            or new_latitude is None
+            or new_longitude is None
         ):
-            _LOGGER.debug("no lat and lon in old_state -> unknown")
-            return {
-                "dist_to_zone": round(distances_to_zone[state_change_data.entity_id]),
-                "dir_of_travel": "unknown",
-                "nearest": entity_name,
-            }
+            return None
 
-        # Reset the variables
-        distance_travelled: float = 0
-
-        # Calculate the distance travelled.
         old_distance = distance(
-            proximity_latitude,
-            proximity_longitude,
-            state_change_data.old_state.attributes[ATTR_LATITUDE],
-            state_change_data.old_state.attributes[ATTR_LONGITUDE],
+            zone.attributes[ATTR_LATITUDE],
+            zone.attributes[ATTR_LONGITUDE],
+            old_latitude,
+            old_longitude,
         )
         new_distance = distance(
-            proximity_latitude,
-            proximity_longitude,
-            state_change_data.new_state.attributes[ATTR_LATITUDE],
-            state_change_data.new_state.attributes[ATTR_LONGITUDE],
+            zone.attributes[ATTR_LATITUDE],
+            zone.attributes[ATTR_LONGITUDE],
+            new_latitude,
+            new_longitude,
         )
-        assert new_distance is not None and old_distance is not None
+
+        # it is ensured, that distance can't be None, since zones must have lat/lon coordinates
+        assert old_distance is not None
+        assert new_distance is not None
         distance_travelled = round(new_distance - old_distance, 1)
 
-        # Check for tolerance
         if distance_travelled < self.tolerance * -1:
-            direction_of_travel = "towards"
-        elif distance_travelled > self.tolerance:
-            direction_of_travel = "away_from"
-        else:
-            direction_of_travel = "stationary"
+            return "towards"
 
-        # Update the proximity entity
-        dist_to: float | str
-        if dist_to_zone is not None:
-            dist_to = round(dist_to_zone)
-        else:
-            dist_to = DEFAULT_DIST_TO_ZONE
+        if distance_travelled > self.tolerance:
+            return "away_from"
 
-        _LOGGER.debug(
-            "%s updated: distance=%s: direction=%s: device=%s",
-            self.friendly_name,
-            dist_to,
-            direction_of_travel,
-            entity_name,
-        )
+        return "stationary"
 
-        return {
-            "dist_to_zone": dist_to,
-            "dir_of_travel": direction_of_travel,
-            "nearest": entity_name,
+    async def _async_update_data(self) -> ProximityData:
+        """Calculate Proximity data."""
+        if (zone_state := self.hass.states.get(f"zone.{self.proximity_zone}")) is None:
+            _LOGGER.debug(
+                "%s: zone %s does not exist -> reset",
+                self.friendly_name,
+                self.proximity_zone,
+            )
+            return DEFAULT_DATA
+
+        entities_data = self.data.entities
+
+        # calculate distance for all tracked entities
+        for entity_id in self.tracked_entities:
+            if (tracked_entity_state := self.hass.states.get(entity_id)) is None:
+                if entities_data.pop(entity_id, None) is not None:
+                    _LOGGER.debug(
+                        "%s: %s does not exist -> remove", self.friendly_name, entity_id
+                    )
+                continue
+
+            if entity_id not in entities_data:
+                _LOGGER.debug("%s: %s is new -> add", self.friendly_name, entity_id)
+                entities_data[entity_id] = {
+                    ATTR_DIST_TO: None,
+                    ATTR_DIR_OF_TRAVEL: None,
+                    ATTR_NAME: tracked_entity_state.name,
+                    ATTR_IN_IGNORED_ZONE: False,
+                }
+            entities_data[entity_id][ATTR_IN_IGNORED_ZONE] = (
+                tracked_entity_state.state.lower() in self.ignored_zones
+            )
+            entities_data[entity_id][ATTR_DIST_TO] = self._calc_distance_to_zone(
+                zone_state,
+                tracked_entity_state,
+                tracked_entity_state.attributes.get(ATTR_LATITUDE),
+                tracked_entity_state.attributes.get(ATTR_LONGITUDE),
+            )
+            if entities_data[entity_id][ATTR_DIST_TO] is None:
+                _LOGGER.debug(
+                    "%s: %s has unknown distance got -> direction_of_travel=None",
+                    self.friendly_name,
+                    entity_id,
+                )
+                entities_data[entity_id][ATTR_DIR_OF_TRAVEL] = None
+
+        # calculate direction of travel only for last updated tracked entity
+        if (state_change_data := self.state_change_data) is not None and (
+            new_state := state_change_data.new_state
+        ) is not None:
+            _LOGGER.debug(
+                "%s: calculate direction of travel for %s",
+                self.friendly_name,
+                state_change_data.entity_id,
+            )
+
+            if (old_state := state_change_data.old_state) is not None:
+                old_lat = old_state.attributes.get(ATTR_LATITUDE)
+                old_lon = old_state.attributes.get(ATTR_LONGITUDE)
+            else:
+                old_lat = None
+                old_lon = None
+
+            entities_data[state_change_data.entity_id][
+                ATTR_DIR_OF_TRAVEL
+            ] = self._calc_direction_of_travel(
+                zone_state,
+                new_state,
+                old_lat,
+                old_lon,
+                new_state.attributes.get(ATTR_LATITUDE),
+                new_state.attributes.get(ATTR_LONGITUDE),
+            )
+
+        # takeover data for legacy proximity entity
+        proximity_data: dict[str, str | float] = {
+            ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
+            ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
+            ATTR_NEAREST: DEFAULT_NEAREST,
         }
+        for entity_data in entities_data.values():
+            if (distance_to := entity_data[ATTR_DIST_TO]) is None or entity_data[
+                ATTR_IN_IGNORED_ZONE
+            ]:
+                continue
+
+            if isinstance((nearest_distance_to := proximity_data[ATTR_DIST_TO]), str):
+                _LOGGER.debug("set first entity_data: %s", entity_data)
+                proximity_data = {
+                    ATTR_DIST_TO: distance_to,
+                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL] or "unknown",
+                    ATTR_NEAREST: str(entity_data[ATTR_NAME]),
+                }
+                continue
+
+            if float(nearest_distance_to) > float(distance_to):
+                _LOGGER.debug("set closer entity_data: %s", entity_data)
+                proximity_data = {
+                    ATTR_DIST_TO: distance_to,
+                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL] or "unknown",
+                    ATTR_NEAREST: str(entity_data[ATTR_NAME]),
+                }
+                continue
+
+            if float(nearest_distance_to) == float(distance_to):
+                _LOGGER.debug("set equally close entity_data: %s", entity_data)
+                proximity_data[
+                    ATTR_NEAREST
+                ] = f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
+
+        proximity_data[ATTR_DIST_TO] = self._convert(proximity_data[ATTR_DIST_TO])
+
+        return ProximityData(proximity_data, entities_data)
