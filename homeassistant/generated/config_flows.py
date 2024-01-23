@@ -33,6 +33,7 @@ FLOWS = {
         "airthings",
         "airthings_ble",
         "airtouch4",
+        "airtouch5",
         "airvisual",
         "airvisual_pro",
         "airzone",
