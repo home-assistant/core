@@ -178,8 +178,12 @@ class AuthManager:
     def async_setup(self) -> None:
         """Set up the auth manager."""
         hass = self.hass
-        hass.async_add_shutdown_job(HassJob(self.async_cancel_expiration_schedule))
-        self.async_track_next_refresh_token_expiration()
+        hass.async_add_shutdown_job(
+            HassJob(
+                self._async_cancel_expiration_schedule, job_type=HassJobType.Callback
+            )
+        )
+        self._async_track_next_refresh_token_expiration()
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
@@ -513,10 +517,10 @@ class AuthManager:
         for token in self._store.async_get_refresh_tokens()[:]:
             if (expire_at := token.expire_at) is not None and expire_at <= now:
                 self.async_remove_refresh_token(token)
-        self.async_track_next_refresh_token_expiration()
+        self._async_track_next_refresh_token_expiration()
 
     @callback
-    def async_track_next_refresh_token_expiration(self) -> None:
+    def _async_track_next_refresh_token_expiration(self) -> None:
         """Initialise all token expiration scheduled tasks."""
         next_expiration = time.time() + REFRESH_TOKEN_EXPIRATION
         for token in self._store.async_get_refresh_tokens():
@@ -531,10 +535,12 @@ class AuthManager:
             dt_util.utc_from_timestamp(next_expiration),
         )
 
-    async def async_cancel_expiration_schedule(self) -> None:
+    @callback
+    def _async_cancel_expiration_schedule(self) -> None:
         """Cancel tracking of expired refresh tokens."""
         if self._expire_callback:
             self._expire_callback()
+            self._expire_callback = None
 
     @callback
     def _async_unregister(
