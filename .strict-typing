@@ -53,6 +53,7 @@ homeassistant.components.airnow.*
 homeassistant.components.airq.*
 homeassistant.components.airthings.*
 homeassistant.components.airthings_ble.*
+homeassistant.components.airtouch5.*
 homeassistant.components.airvisual.*
 homeassistant.components.airvisual_pro.*
 homeassistant.components.airzone.*
@@ -69,6 +70,7 @@ homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.analytics.*
+homeassistant.components.analytics_insights.*
 homeassistant.components.android_ip_webcam.*
 homeassistant.components.androidtv.*
 homeassistant.components.androidtv_remote.*
@@ -77,6 +79,7 @@ homeassistant.components.anova.*
 homeassistant.components.anthemav.*
 homeassistant.components.apache_kafka.*
 homeassistant.components.apcupsd.*
+homeassistant.components.api.*
 homeassistant.components.apprise.*
 homeassistant.components.aprs.*
 homeassistant.components.aqualogic.*
@@ -105,6 +108,7 @@ homeassistant.components.blockchain.*
 homeassistant.components.blue_current.*
 homeassistant.components.blueprint.*
 homeassistant.components.bluetooth.*
+homeassistant.components.bluetooth_adapters.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
@@ -132,6 +136,7 @@ homeassistant.components.crownstone.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
 homeassistant.components.deconz.*
+homeassistant.components.default_config.*
 homeassistant.components.demo.*
 homeassistant.components.derivative.*
 homeassistant.components.device_automation.*
@@ -152,6 +157,7 @@ homeassistant.components.duckdns.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
+homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
@@ -237,6 +243,7 @@ homeassistant.components.input_select.*
 homeassistant.components.input_text.*
 homeassistant.components.integration.*
 homeassistant.components.intent.*
+homeassistant.components.intent_script.*
 homeassistant.components.ios.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
@@ -272,6 +279,7 @@ homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
+homeassistant.components.map.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
@@ -290,6 +298,7 @@ homeassistant.components.moon.*
 homeassistant.components.mopeka.*
 homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
+homeassistant.components.my.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
 homeassistant.components.nam.*
