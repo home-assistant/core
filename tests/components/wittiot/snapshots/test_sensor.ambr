@@ -1,106 +1,683 @@
 # serializer version: 1
-# name: test_sensors[sensor.gw2000b_wificb44_leaf_battery_ch1_leaf_battery-state]
+# name: test_sensors[sensor.gw2000b_wificb44_ch1_leaf_ch1_leaf-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Leaf Battery CH1 Leaf Battery',
-      'icon': 'mdi:battery',
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH1 Leaf CH1 Leaf',
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_leaf_battery_ch1_leaf_battery',
+    'entity_id': 'sensor.gw2000b_wificb44_ch1_leaf_ch1_leaf',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '100%',
+    'state': '0',
   })
 # ---
-# name: test_sensors[sensor.gw2000b_wificb44_leaf_battery_ch2_leaf_battery-state]
+# name: test_sensors[sensor.gw2000b_wificb44_ch1_leaf_ch1_leaf_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Leaf Battery CH2 Leaf Battery',
+      'friendly_name': 'GW2000B-WIFICB44_CH1 Leaf CH1 Leaf Battery',
       'icon': 'mdi:battery',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_leaf_battery_ch2_leaf_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '40%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_leaf_battery_ch3_leaf_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Leaf Battery CH3 Leaf Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_leaf_battery_ch3_leaf_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_leaf_battery_ch5_leaf_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Leaf Battery CH5 Leaf Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_leaf_battery_ch5_leaf_battery',
+    'entity_id': 'sensor.gw2000b_wificb44_ch1_leaf_ch1_leaf_battery',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '20%',
   })
 # ---
-# name: test_sensors[sensor.gw2000b_wificb44_leak_battery_ch1_leak_battery-state]
+# name: test_sensors[sensor.gw2000b_wificb44_ch1_pm25_ch1_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Leak Battery CH1 Leak Battery',
-      'icon': 'mdi:battery',
+      'device_class': 'pm25',
+      'friendly_name': 'GW2000B-WIFICB44_CH1 PM25 CH1 PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_leak_battery_ch1_leak_battery',
+    'entity_id': 'sensor.gw2000b_wificb44_ch1_pm25_ch1_pm2_5',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '80%',
+    'state': '62.0',
   })
 # ---
-# name: test_sensors[sensor.gw2000b_wificb44_leak_battery_ch2_leak_battery-state]
+# name: test_sensors[sensor.gw2000b_wificb44_ch1_pm25_ch1_pm2_5_24h_aqi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Leak Battery CH2 Leak Battery',
+      'device_class': 'aqi',
+      'friendly_name': 'GW2000B-WIFICB44_CH1 PM25 CH1 PM2.5 24H AQI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch1_pm25_ch1_pm2_5_24h_aqi',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '41',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch1_pm25_ch1_pm2_5_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'aqi',
+      'friendly_name': 'GW2000B-WIFICB44_CH1 PM25 CH1 PM2.5 AQI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch1_pm25_ch1_pm2_5_aqi',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '154',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch1_pm25_ch1_pm2_5_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH1 PM25 CH1 PM2.5 Battery',
       'icon': 'mdi:battery',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_leak_battery_ch2_leak_battery',
+    'entity_id': 'sensor.gw2000b_wificb44_ch1_pm25_ch1_pm2_5_battery',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '100%',
   })
 # ---
-# name: test_sensors[sensor.gw2000b_wificb44_leak_battery_ch3_leak_battery-state]
+# name: test_sensors[sensor.gw2000b_wificb44_ch1_t_h_ch1_t_h_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Leak Battery CH3 Leak Battery',
+      'friendly_name': 'GW2000B-WIFICB44_CH1 T&H CH1 T&H Battery',
       'icon': 'mdi:battery',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_leak_battery_ch3_leak_battery',
+    'entity_id': 'sensor.gw2000b_wificb44_ch1_t_h_ch1_t_h_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch1_t_h_ch1_t_h_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH1 T&H CH1 T&H Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch1_t_h_ch1_t_h_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.5',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch1_temp_ch1_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH1 Temp CH1 Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch1_temp_ch1_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19.1',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch1_temp_ch1_temp_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH1 Temp CH1 Temp Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch1_temp_ch1_temp_battery',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '100%',
   })
 # ---
-# name: test_sensors[sensor.gw2000b_wificb44_leak_battery_ch4_leak_battery-state]
+# name: test_sensors[sensor.gw2000b_wificb44_ch2_leaf_ch2_leaf-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Leak Battery CH4 Leak Battery',
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH2 Leaf CH2 Leaf',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch2_leaf_ch2_leaf',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch2_leaf_ch2_leaf_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH2 Leaf CH2 Leaf Battery',
       'icon': 'mdi:battery',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_leak_battery_ch4_leak_battery',
+    'entity_id': 'sensor.gw2000b_wificb44_ch2_leaf_ch2_leaf_battery',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '60%',
+    'state': '100%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch2_soil_ch2_soil-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH2 Soil CH2 Soil',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch2_soil_ch2_soil',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch2_soil_ch2_soil_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH2 Soil CH2 Soil Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch2_soil_ch2_soil_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch2_t_h_ch2_t_h_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH2 T&H CH2 T&H Humidity',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch2_t_h_ch2_t_h_humidity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch2_t_h_ch2_t_h_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH2 T&H CH2 T&H Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch2_t_h_ch2_t_h_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.9',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch2_temp_ch2_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH2 Temp CH2 Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch2_temp_ch2_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch2_temp_ch2_temp_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH2 Temp CH2 Temp Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch2_temp_ch2_temp_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch3_leaf_ch3_leaf-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH3 Leaf CH3 Leaf',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch3_leaf_ch3_leaf',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch3_leaf_ch3_leaf_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH3 Leaf CH3 Leaf Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch3_leaf_ch3_leaf_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch3_t_h_ch3_t_h_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH3 T&H CH3 T&H Humidity',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch3_t_h_ch3_t_h_humidity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '39',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch3_t_h_ch3_t_h_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH3 T&H CH3 T&H Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch3_t_h_ch3_t_h_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.2',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch3_temp_ch3_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH3 Temp CH3 Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch3_temp_ch3_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.6',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch3_temp_ch3_temp_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH3 Temp CH3 Temp Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch3_temp_ch3_temp_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch4_leaf_ch4_leaf-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH4 Leaf CH4 Leaf',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch4_leaf_ch4_leaf',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch4_leaf_ch4_leaf_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH4 Leaf CH4 Leaf Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch4_leaf_ch4_leaf_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch4_leak_ch4_leak-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH4 LEAK CH4 LEAK',
+      'icon': 'mdi:water-alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch4_leak_ch4_leak',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Normal',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch4_leak_ch4_leak_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH4 LEAK CH4 LEAK Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch4_leak_ch4_leak_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch4_soil_ch4_soil-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH4 Soil CH4 Soil',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch4_soil_ch4_soil',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch4_soil_ch4_soil_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH4 Soil CH4 Soil Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch4_soil_ch4_soil_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch4_t_h_ch4_t_h_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH4 T&H CH4 T&H Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch4_t_h_ch4_t_h_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.3',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch5_soil_ch5_soil-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH5 Soil CH5 Soil',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch5_soil_ch5_soil',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch5_soil_ch5_soil_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH5 Soil CH5 Soil Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch5_soil_ch5_soil_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch5_t_h_ch5_t_h_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH5 T&H CH5 T&H Humidity',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch5_t_h_ch5_t_h_humidity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '43',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch5_t_h_ch5_t_h_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH5 T&H CH5 T&H Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch5_t_h_ch5_t_h_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.6',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch5_temp_ch5_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH5 Temp CH5 Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch5_temp_ch5_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '73.0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch5_temp_ch5_temp_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH5 Temp CH5 Temp Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch5_temp_ch5_temp_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch6_soil_ch6_soil-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH6 Soil CH6 Soil',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch6_soil_ch6_soil',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch6_soil_ch6_soil_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH6 Soil CH6 Soil Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch6_soil_ch6_soil_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch6_temp_ch6_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH6 Temp CH6 Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch6_temp_ch6_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24.0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch6_temp_ch6_temp_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH6 Temp CH6 Temp Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch6_temp_ch6_temp_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch7_t_h_ch7_t_h_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH7 T&H CH7 T&H Humidity',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch7_t_h_ch7_t_h_humidity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '37',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch7_t_h_ch7_t_h_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH7 T&H CH7 T&H Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch7_t_h_ch7_t_h_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch8_t_h_ch8_t_h_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH8 T&H CH8 T&H Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch8_t_h_ch8_t_h_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch8_t_h_ch8_t_h_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_CH8 T&H CH8 T&H Humidity',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch8_t_h_ch8_t_h_humidity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '36',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch8_t_h_ch8_t_h_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH8 T&H CH8 T&H Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch8_t_h_ch8_t_h_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.0',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch8_temp_ch8_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_CH8 Temp CH8 Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch8_temp_ch8_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.8',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_ch8_temp_ch8_temp_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GW2000B-WIFICB44_CH8 Temp CH8 Temp Battery',
+      'icon': 'mdi:battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_ch8_temp_ch8_temp_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100%',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_main_data_24h_co2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'carbon_dioxide',
+      'friendly_name': 'GW2000B-WIFICB44_Main Data 24H CO2',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_main_data_24h_co2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '171',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_absolute-state]
@@ -114,7 +691,135 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_absolute',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '302.07',
+    'state': '1025.74',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_main_data_co2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'carbon_dioxide',
+      'friendly_name': 'GW2000B-WIFICB44_Main Data CO2',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_main_data_co2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '265',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_main_data_co2_24h_pm10_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'aqi',
+      'friendly_name': 'GW2000B-WIFICB44_Main Data CO2 24H PM10 AQI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_main_data_co2_24h_pm10_aqi',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_main_data_co2_24h_pm2_5_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'aqi',
+      'friendly_name': 'GW2000B-WIFICB44_Main Data CO2 24H PM2.5 AQI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_main_data_co2_24h_pm2_5_aqi',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_main_data_co2_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'GW2000B-WIFICB44_Main Data CO2 Humidity',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_main_data_co2_humidity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '36',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_main_data_co2_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm10',
+      'friendly_name': 'GW2000B-WIFICB44_Main Data CO2 PM10',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_main_data_co2_pm10',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.9',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_main_data_co2_pm10_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'aqi',
+      'friendly_name': 'GW2000B-WIFICB44_Main Data CO2 PM10 AQI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_main_data_co2_pm10_aqi',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '46',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_main_data_co2_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm25',
+      'friendly_name': 'GW2000B-WIFICB44_Main Data CO2 PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_main_data_co2_pm2_5',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.8',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_main_data_co2_pm2_5_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'aqi',
+      'friendly_name': 'GW2000B-WIFICB44_Main Data CO2 PM2.5 AQI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_main_data_co2_pm2_5_aqi',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '139',
+  })
+# ---
+# name: test_sensors[sensor.gw2000b_wificb44_main_data_co2_temp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GW2000B-WIFICB44_Main Data CO2 Temp',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gw2000b_wificb44_main_data_co2_temp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.5',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_day_wind_max-state]
@@ -129,7 +834,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_day_wind_max',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '3.35',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_dew_point-state]
@@ -144,7 +849,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_dew_point',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '16.2',
+    'state': '6.9',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_feel_like-state]
@@ -159,7 +864,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_feel_like',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '26.5',
+    'state': '22.7',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_indoor_humidity-state]
@@ -173,7 +878,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_indoor_humidity',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '36',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_indoor_temp-state]
@@ -188,7 +893,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_indoor_temp',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '13.5',
+    'state': '22.6',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_outdoor_humidity-state]
@@ -202,7 +907,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_outdoor_humidity',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '53',
+    'state': '36',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_outdoor_temp-state]
@@ -217,97 +922,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_outdoor_temp',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '26.5',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_main_data_piezo_rain_day-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Main Data Piezo Rain Day',
-      'icon': 'mdi:water',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.INCHES: 'in'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_main_data_piezo_rain_day',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_main_data_piezo_rain_event-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Main Data Piezo Rain Event',
-      'icon': 'mdi:water',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.INCHES: 'in'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_main_data_piezo_rain_event',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_main_data_piezo_rain_month-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Main Data Piezo Rain Month',
-      'icon': 'mdi:water',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.INCHES: 'in'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_main_data_piezo_rain_month',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.47',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_main_data_piezo_rain_rate-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Main Data Piezo Rain Rate',
-      'icon': 'mdi:water',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.INCHES: 'in'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_main_data_piezo_rain_rate',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_main_data_piezo_rain_week-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Main Data Piezo Rain Week',
-      'icon': 'mdi:water',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.INCHES: 'in'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_main_data_piezo_rain_week',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.01',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_main_data_piezo_rain_year-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Main Data Piezo Rain Year',
-      'icon': 'mdi:water',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.INCHES: 'in'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_main_data_piezo_rain_year',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.47',
+    'state': '22.7',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_rain_day-state]
@@ -322,7 +937,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_rain_day',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '22.78',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_rain_event-state]
@@ -337,7 +952,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_rain_event',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '22.78',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_rain_month-state]
@@ -352,7 +967,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_rain_month',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.47',
+    'state': '295.3',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_rain_rate-state]
@@ -367,7 +982,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_rain_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '10.99',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_rain_week-state]
@@ -382,7 +997,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_rain_week',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.01',
+    'state': '161.6',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_rain_year-state]
@@ -397,7 +1012,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_rain_year',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.47',
+    'state': '295.3',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_relative-state]
@@ -411,7 +1026,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_relative',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '388.76',
+    'state': '1025.74',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_solar_irradiance-state]
@@ -426,7 +1041,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_solar_irradiance',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.87',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_uv_index-state]
@@ -455,7 +1070,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_wind_direction',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '75',
+    'state': '275',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_wind_gust-state]
@@ -470,7 +1085,7 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_wind_gust',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '2.06',
   })
 # ---
 # name: test_sensors[sensor.gw2000b_wificb44_main_data_wind_speed-state]
@@ -485,700 +1100,6 @@
     'entity_id': 'sensor.gw2000b_wificb44_main_data_wind_speed',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_leaf_ch1_leaf-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Leaf CH1 Leaf',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_leaf_ch1_leaf',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_leaf_ch2_leaf-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Leaf CH2 Leaf',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_leaf_ch2_leaf',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_leaf_ch3_leaf-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Leaf CH3 Leaf',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_leaf_ch3_leaf',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_leaf_ch5_leaf-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Leaf CH5 Leaf',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_leaf_ch5_leaf',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_leak_ch1_leak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Leak CH1 Leak',
-      'icon': 'mdi:water-alert',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_leak_ch1_leak',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Normal',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_leak_ch2_leak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Leak CH2 Leak',
-      'icon': 'mdi:water-alert',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_leak_ch2_leak',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Normal',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_leak_ch3_leak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Leak CH3 Leak',
-      'icon': 'mdi:water-alert',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_leak_ch3_leak',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Normal',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_leak_ch4_leak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Leak CH4 Leak',
-      'icon': 'mdi:water-alert',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_leak_ch4_leak',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Normal',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_pm25_ch1_pm2_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pm25',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH PM25 CH1 PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_pm25_ch1_pm2_5',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '30.0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_pm25_ch1_pm2_5_24h_aqi-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'aqi',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH PM25 CH1 PM2.5 24H AQI',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_pm25_ch1_pm2_5_24h_aqi',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '111',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_pm25_ch1_pm2_5_aqi-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'aqi',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH PM25 CH1 PM2.5 AQI',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_pm25_ch1_pm2_5_aqi',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '89',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_soil_ch2_soil-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Soil CH2 Soil',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_soil_ch2_soil',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_soil_ch4_soil-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Soil CH4 Soil',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_soil_ch4_soil',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_soil_ch6_soil-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Soil CH6 Soil',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_soil_ch6_soil',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_soil_ch7_soil-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Soil CH7 Soil',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_soil_ch7_soil',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '13',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_soil_ch8_soil-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Soil CH8 Soil',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_soil_ch8_soil',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_ch2_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp CH2 Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_ch2_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '24.2',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_ch3_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp CH3 Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_ch3_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.2',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_ch5_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp CH5 Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_ch5_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '27.6',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_ch6_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp CH6 Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_ch6_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.3',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_ch7_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp CH7 Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_ch7_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.8',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch1_t_h_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH1 T&H Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch1_t_h_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.4',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch2_t_h_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH2 T&H Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch2_t_h_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.6',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch3_t_h_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH3 T&H Humidity',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch3_t_h_humidity',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '51',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch3_t_h_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH3 T&H Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch3_t_h_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '27.5',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch4_t_h_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH4 T&H Humidity',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch4_t_h_humidity',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '44',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch4_t_h_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH4 T&H Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch4_t_h_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '29.2',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch5_t_h_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH5 T&H Humidity',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch5_t_h_humidity',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '51',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch5_t_h_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH5 T&H Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch5_t_h_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.6',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch6_t_h_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH6 T&H Humidity',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch6_t_h_humidity',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '51',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch6_t_h_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH6 T&H Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch6_t_h_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.8',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch7_t_h_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH7 T&H Humidity',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch7_t_h_humidity',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '58',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch7_t_h_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH7 T&H Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch7_t_h_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.0',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch8_t_h_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH8 T&H Humidity',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch8_t_h_humidity',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '48',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_multi_ch_temp_humi_ch8_t_h_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'GW2000B-WIFICB44_Multi_CH Temp&Humi CH8 T&H Temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_multi_ch_temp_humi_ch8_t_h_temp',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '27.3',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_pm25_battery_ch1_pm2_5_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_PM25 Battery CH1 PM2.5 Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_pm25_battery_ch1_pm2_5_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_soil_battery_ch2_soil_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Soil Battery CH2 Soil Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_soil_battery_ch2_soil_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_soil_battery_ch4_soil_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Soil Battery CH4 Soil Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_soil_battery_ch4_soil_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_soil_battery_ch6_soil_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Soil Battery CH6 Soil Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_soil_battery_ch6_soil_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_soil_battery_ch7_soil_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Soil Battery CH7 Soil Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_soil_battery_ch7_soil_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_soil_battery_ch8_soil_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Soil Battery CH8 Soil Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_soil_battery_ch8_soil_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_temp_battery_ch2_temp_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Temp Battery CH2 Temp Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_temp_battery_ch2_temp_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_temp_battery_ch3_temp_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Temp Battery CH3 Temp Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_temp_battery_ch3_temp_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_temp_battery_ch5_temp_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Temp Battery CH5 Temp Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_temp_battery_ch5_temp_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_temp_battery_ch6_temp_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Temp Battery CH6 Temp Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_temp_battery_ch6_temp_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_temp_battery_ch7_temp_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Temp Battery CH7 Temp Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_temp_battery_ch7_temp_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_temp_humi_battery_ch4_t_h_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Temp&Humi Battery CH4 T&H Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_temp_humi_battery_ch4_t_h_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_temp_humi_battery_ch6_t_h_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Temp&Humi Battery CH6 T&H Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_temp_humi_battery_ch6_t_h_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_temp_humi_battery_ch7_t_h_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Temp&Humi Battery CH7 T&H Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_temp_humi_battery_ch7_t_h_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20%',
-  })
-# ---
-# name: test_sensors[sensor.gw2000b_wificb44_temp_humi_battery_ch8_t_h_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GW2000B-WIFICB44_Temp&Humi Battery CH8 T&H Battery',
-      'icon': 'mdi:battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gw2000b_wificb44_temp_humi_battery_ch8_t_h_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20%',
+    'state': '2.06',
   })
 # ---

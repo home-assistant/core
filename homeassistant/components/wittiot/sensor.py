@@ -450,7 +450,7 @@ async def async_setup_entry(
     sensors: list[MainDevWittiotSensor | SubDevWittiotSensor] = []
     # Main Device Data
     for desc in SENSOR_DESCRIPTIONS:
-        if coordinator.data.get(desc.key) not in ("", "--", "--.-", "None"):
+        if desc.key in coordinator.data:
             sensors.append(
                 MainDevWittiotSensor(
                     coordinator,
@@ -462,25 +462,24 @@ async def async_setup_entry(
 
     # Subdevice Data
     for key in coordinator.data:
-        if coordinator.data.get(key) not in ("", "--", "--.-", "None"):
-            if key in MultiSensorInfo.SENSOR_INFO:
-                mapping = WITTIOT_SENSORS_MAPPING[
-                    MultiSensorInfo.SENSOR_INFO[key]["data_type"]
-                ]
-                description = dataclasses.replace(
-                    mapping,
-                    key=key,
-                    sensor_type=MultiSensorInfo.SENSOR_INFO[key]["dev_type"],
-                    name=MultiSensorInfo.SENSOR_INFO[key]["name"],
+        if key in MultiSensorInfo.SENSOR_INFO:
+            mapping = WITTIOT_SENSORS_MAPPING[
+                MultiSensorInfo.SENSOR_INFO[key]["data_type"]
+            ]
+            description = dataclasses.replace(
+                mapping,
+                key=key,
+                sensor_type=MultiSensorInfo.SENSOR_INFO[key]["dev_type"],
+                name=MultiSensorInfo.SENSOR_INFO[key]["name"],
+            )
+            sensors.append(
+                SubDevWittiotSensor(
+                    coordinator,
+                    entry.data[CONF_HOST],
+                    entry.data[DEVICE_NAME],
+                    description,
                 )
-                sensors.append(
-                    SubDevWittiotSensor(
-                        coordinator,
-                        entry.data[CONF_HOST],
-                        entry.data[DEVICE_NAME],
-                        description,
-                    )
-                )
+            )
 
     async_add_entities(sensors, True)
 
@@ -515,10 +514,11 @@ class MainDevWittiotSensor(
     @property
     def native_value(self) -> str | int | float | None:
         """Return the state."""
-        state = self.coordinator.data[self.entity_description.key]
-        if state not in ("", "--", "--.-", "None"):
-            return state
-        return None
+        try:
+            state = self.coordinator.data[self.entity_description.key]
+        except KeyError:
+            return None
+        return state
 
 
 class SubDevWittiotSensor(
@@ -552,7 +552,8 @@ class SubDevWittiotSensor(
     @property
     def native_value(self) -> str | int | float | None:
         """Return the state."""
-        state = self.coordinator.data[self.entity_description.key]
-        if state not in ("", "--", "--.-", "None"):
-            return state
-        return None
+        try:
+            state = self.coordinator.data[self.entity_description.key]
+        except KeyError:
+            return None
+        return state

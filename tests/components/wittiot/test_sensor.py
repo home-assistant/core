@@ -4,12 +4,8 @@ from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.wittiot.const import (
-    CONF_IP,
-    CONNECTION_TYPE,
-    DEVICE_NAME,
-    DOMAIN,
-)
+from homeassistant.components.wittiot.const import CONNECTION_TYPE, DEVICE_NAME, DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -27,7 +23,7 @@ async def test_sensors(
         unique_id="GW2000B-WIFICB44",
         data={
             DEVICE_NAME: "GW2000B-WIFICB44",
-            CONF_IP: "1.1.1.1",
+            CONF_HOST: "1.1.1.1",
             CONNECTION_TYPE: "Local",
         },
     )
@@ -39,7 +35,7 @@ async def test_sensors(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 84
+    assert len(hass.states.async_all()) == 78
     for entry in entity_registry.entities.values():
         state = hass.states.get(entry.entity_id)
         assert state
