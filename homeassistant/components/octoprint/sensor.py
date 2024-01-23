@@ -256,6 +256,8 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
                 )
                 if val is None:
                     return None
+                if type(val) == str:
+                    val = float(val)
 
                 return round(val, 2)
 
