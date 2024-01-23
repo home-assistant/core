@@ -3,11 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from math import floor
-from typing import Any, Generic
+from typing import Generic
 
 from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan
-from deebot_client.device import Device
 from deebot_client.events import (
     BatteryEvent,
     ErrorEvent,
@@ -77,12 +75,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
     ),
-    EcovacsSensorEntityDescription[StatsEvent](
-        capability_fn=lambda caps: caps.stats.clean,
-        value_fn=lambda e: e.type,
-        key="stats_type",
-        translation_key="stats_type",
-    ),
     # TotalStats
     EcovacsSensorEntityDescription[TotalStatsEvent](
         capability_fn=lambda caps: caps.stats.total,
@@ -94,10 +86,11 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
         capability_fn=lambda caps: caps.stats.total,
-        value_fn=lambda e: round(e.time / 3600),
+        value_fn=lambda e: e.time,
         key="stats_total_time",
         translation_key="stats_total_time",
-        native_unit_of_measurement=UnitOfTime.HOURS,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
@@ -142,11 +135,41 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
 )
 
 
-_SUPPORTED_LIFE_SPAN_TYPES = (
-    LifeSpan.BRUSH,
-    LifeSpan.FILTER,
-    LifeSpan.SIDE_BRUSH,
-)
+@dataclass(kw_only=True, frozen=True)
+class EcovacsLifeSpanSensorEntityDescription(SensorEntityDescription):
+    """Ecovacs life span sensor entity description."""
+
+    component: LifeSpan
+    value_fn: Callable[[LifeSpanEvent], int | float]
+
+
+LIFE_SPAN_ENTITY_DESCRIPTIONS = {
+    component: (
+        EcovacsLifeSpanSensorEntityDescription(
+            component=component,
+            value_fn=lambda e: e.percent,
+            key=f"life_span_{component.name.lower()}_lifetime",
+            translation_key=f"life_span_{component.name.lower()}_lifetime",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        EcovacsLifeSpanSensorEntityDescription(
+            component=component,
+            value_fn=lambda e: e.remaining,
+            key=f"life_span_{component.name.lower()}_remaining",
+            translation_key=f"life_span_{component.name.lower()}_remaining",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            suggested_unit_of_measurement=UnitOfTime.MINUTES,
+            entity_registry_enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    )
+    for component in (
+        LifeSpan.BRUSH,
+        LifeSpan.FILTER,
+        LifeSpan.SIDE_BRUSH,
+    )
+}
 
 
 async def async_setup_entry(
@@ -162,10 +185,10 @@ async def async_setup_entry(
     )
     for device in controller.devices:
         lifespan_capability = device.capabilities.life_span
-        for component in _SUPPORTED_LIFE_SPAN_TYPES:
-            if component in lifespan_capability.types:
+        for component in lifespan_capability.types:
+            for description in LIFE_SPAN_ENTITY_DESCRIPTIONS.get(component, []):
                 entities.append(
-                    EcovacsLifeSpanSensor(device, lifespan_capability, component)
+                    EcovacsLifeSpanSensor(device, lifespan_capability, description)
                 )
 
         if capability := device.capabilities.error:
@@ -203,40 +226,15 @@ class EcovacsLifeSpanSensor(
 ):
     """Life span sensor."""
 
-    entity_description: SensorEntityDescription
-
-    def __init__(
-        self,
-        device: Device,
-        capability: CapabilityLifeSpan,
-        component: LifeSpan,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize entity."""
-        key = f"life_span_{component.name.lower()}"
-        super().__init__(
-            device,
-            capability,
-            SensorEntityDescription(
-                key=key,
-                translation_key=key,
-                native_unit_of_measurement=PERCENTAGE,
-                entity_category=EntityCategory.DIAGNOSTIC,
-            ),
-            **kwargs,
-        )
-        self._component = component
+    entity_description: EcovacsLifeSpanSensorEntityDescription
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
 
         async def on_event(event: LifeSpanEvent) -> None:
-            if event.type == self._component:
-                self._attr_native_value = event.percent
-                self._attr_extra_state_attributes = {
-                    "remaining": floor(event.remaining / 60)
-                }
+            if event.type == self.entity_description.component:
+                self._attr_native_value = self.entity_description.value_fn(event)
                 self.async_write_ha_state()
 
         self._subscribe(self._capability.event, on_event)

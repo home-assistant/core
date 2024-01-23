@@ -25,8 +25,8 @@ pytestmark = [pytest.mark.usefixtures("init_integration")]
 
 async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     """Notify events."""
-    event_bus.notify(StatsEvent(10, 5 * 60, "spotArea"))
-    event_bus.notify(TotalStatsEvent(60, 40 * 60, 123))
+    event_bus.notify(StatsEvent(10, 300, "spotArea"))
+    event_bus.notify(TotalStatsEvent(60, 144000, 123))
     event_bus.notify(BatteryEvent(100))
     event_bus.notify(BatteryEvent(100))
     event_bus.notify(
@@ -48,17 +48,19 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
             [
                 "sensor.ozmo_950_stats_area",
                 "sensor.ozmo_950_stats_time",
-                "sensor.ozmo_950_stats_type",
                 "sensor.ozmo_950_stats_total_area",
                 "sensor.ozmo_950_stats_total_time",
                 "sensor.ozmo_950_stats_total_cleanings",
                 "sensor.ozmo_950_battery",
-                "sensor.ozmo_950_ip",
+                "sensor.ozmo_950_ip_address",
                 "sensor.ozmo_950_wi_fi_rssi",
                 "sensor.ozmo_950_wi_fi_ssid",
-                "sensor.ozmo_950_brush",
-                "sensor.ozmo_950_filter",
-                "sensor.ozmo_950_side_brush",
+                "sensor.ozmo_950_brush_lifetime",
+                "sensor.ozmo_950_brush_remaining",
+                "sensor.ozmo_950_filter_lifetime",
+                "sensor.ozmo_950_filter_remaining",
+                "sensor.ozmo_950_side_brush_lifetime",
+                "sensor.ozmo_950_side_brush_remaining",
                 "sensor.ozmo_950_last_error",
             ],
         ),
@@ -94,10 +96,13 @@ async def test_sensors(
         (
             "yna5x1",
             [
-                "sensor.ozmo_950_ip",
+                "sensor.ozmo_950_ip_address",
                 "sensor.ozmo_950_wi_fi_rssi",
                 "sensor.ozmo_950_wi_fi_ssid",
                 "sensor.ozmo_950_last_error",
+                "sensor.ozmo_950_brush_remaining",
+                "sensor.ozmo_950_filter_remaining",
+                "sensor.ozmo_950_side_brush_remaining",
             ],
         ),
     ],
@@ -109,6 +114,8 @@ async def test_disabled_by_default_sensors(
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
-        assert (entry := entity_registry.async_get(entity_id))
+        assert (
+            entry := entity_registry.async_get(entity_id)
+        ), f"Entity registry entry for {entity_id} is missing"
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

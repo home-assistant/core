@@ -28,14 +28,23 @@
       "last_error": {
         "name": "Last error"
       },
-      "life_span_brush": {
-        "name": "Brush"
+      "life_span_brush_lifetime": {
+        "name": "Brush lifetime"
       },
-      "life_span_filter": {
-        "name": "Filter"
+      "life_span_brush_remaining": {
+        "name": "Brush remaining"
       },
-      "life_span_side_brush": {
-        "name": "Side brush"
+      "life_span_filter_lifetime": {
+        "name": "Filter lifetime"
+      },
+      "life_span_filter_remaining": {
+        "name": "Filter remaining"
+      },
+      "life_span_side_brush_lifetime": {
+        "name": "Side brush lifetime"
+      },
+      "life_span_side_brush_remaining": {
+        "name": "Side brush remaining"
       },
       "stats_area": {
         "name": "Stats area"

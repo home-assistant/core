@@ -93,7 +93,7 @@ class EcovacsEntity(Entity, Generic[CapabilityT]):
             self._device.events.request_refresh(event_type)
 
 
-class EcovacsDescriptionEntity(EcovacsEntity[CapabilityT], Generic[CapabilityT]):
+class EcovacsDescriptionEntity(EcovacsEntity[CapabilityT]):
     """Ecovacs entity."""
 
     def __init__(
