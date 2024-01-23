@@ -59,7 +59,8 @@ async def test_switches_implementation(
         blocking=True,
     )
 
-    assert len(mock_flexit_bacnet.mock_calls) == 3
+    mocked_method = getattr(mock_flexit_bacnet, "disable_electric_heater")
+    assert len(mocked_method.mock_calls) == 1
     assert hass.states.get(ENTITY_ID) == snapshot(name=f"{ENTITY_ID}-state")
 
     await hass.services.async_call(
@@ -69,5 +70,6 @@ async def test_switches_implementation(
         blocking=True,
     )
 
-    assert len(mock_flexit_bacnet.mock_calls) == 5
+    mocked_method = getattr(mock_flexit_bacnet, "enable_electric_heater")
+    assert len(mocked_method.mock_calls) == 1
     assert hass.states.get(ENTITY_ID) == snapshot(name=f"{ENTITY_ID}-state")
