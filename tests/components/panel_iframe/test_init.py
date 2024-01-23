@@ -45,6 +45,13 @@ async def test_correct_config(hass: HomeAssistant) -> None:
                     "title": "FTP",
                     "url": "ftp://some/ftp",
                 },
+                "webusb": {
+                    "icon": "mdi:network-wireless",
+                    "title": "WebUSB",
+                    "url": "http://192.168.1.1",
+                    "require_admin": True,
+                    "allow": "usb"
+                },
             }
         },
     )
@@ -59,6 +66,18 @@ async def test_correct_config(hass: HomeAssistant) -> None:
         "title": "Router",
         "url_path": "router",
         "require_admin": True,
+        "allow": "fullscreen"
+    }
+
+    assert panels.get("webusb").to_response() == {
+        "component_name": "iframe",
+        "config": {"url": "http://192.168.1.1"},
+        "config_panel_domain": None,
+        "icon": "mdi:network-wireless",
+        "title": "WebUSB",
+        "url_path": "webusb",
+        "require_admin": True,
+        "allow": "usb"
     }
 
     assert panels.get("weather").to_response() == {
@@ -69,6 +88,7 @@ async def test_correct_config(hass: HomeAssistant) -> None:
         "title": "Weather",
         "url_path": "weather",
         "require_admin": True,
+        "allow": "fullscreen"
     }
 
     assert panels.get("api").to_response() == {
@@ -79,6 +99,7 @@ async def test_correct_config(hass: HomeAssistant) -> None:
         "title": "Api",
         "url_path": "api",
         "require_admin": False,
+        "allow": "fullscreen"
     }
 
     assert panels.get("ftp").to_response() == {
@@ -89,4 +110,5 @@ async def test_correct_config(hass: HomeAssistant) -> None:
         "title": "FTP",
         "url_path": "ftp",
         "require_admin": False,
+        "allow": "fullscreen"
     }
