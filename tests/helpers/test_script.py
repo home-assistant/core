@@ -5380,6 +5380,29 @@ async def test_conversation_response(
     )
 
 
+async def test_conversation_response_template(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a templated conversation response."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"my_var": "234"}},
+            {"set_conversation_response": '{{ "Testing " + my_var }}'},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+    assert result.conversation_response == "Testing 234"
+
+    assert_action_trace(
+        {
+            "0": [{"variables": {"my_var": "234"}}],
+            "1": [{"result": {"conversation_response": "Testing 234"}}],
+        }
+    )
+
+
 async def test_conversation_response_not_set(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
