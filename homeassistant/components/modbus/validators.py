@@ -209,8 +209,8 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
     errors = []
     for key, value in config[CONF_FAN_MODE_VALUES].items():
         if value in fan_modes:
-            wrn = f"Modbus fan mode {key} has a duplicate value {value}, not loaded, values must be unique!"
-            _LOGGER.warning(wrn)
+            warn = f"Modbus fan mode {key} has a duplicate value {value}, not loaded, values must be unique!"
+            _LOGGER.warning(warn)
             errors.append(key)
         else:
             fan_modes.add(value)
