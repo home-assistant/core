@@ -380,28 +380,26 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
 
 def check_hvac_target_temp_registers(config: dict) -> dict:
     """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes."""
-    if CONF_TARGET_TEMP not in config:
-        return config
 
     if (
         CONF_HVAC_MODE_REGISTER in config
         and config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
     ):
-        wrn = f"In {CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). It is is not loaded!"
+        wrn = f"{CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_MODE_REGISTER} is not loaded!"
         _LOGGER.warning(wrn)
         del config[CONF_HVAC_MODE_REGISTER]
     if (
         CONF_HVAC_ONOFF_REGISTER in config
         and config[CONF_HVAC_ONOFF_REGISTER] in config[CONF_TARGET_TEMP]
     ):
-        wrn = f"In {CONF_HVAC_ONOFF_REGISTER} Register overlaps CONF_TARGET_TEMP register(s). It is is not loaded!"
+        wrn = f"{CONF_HVAC_ONOFF_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_ONOFF_REGISTER} is not loaded!"
         _LOGGER.warning(wrn)
         del config[CONF_HVAC_ONOFF_REGISTER]
     if (
         CONF_FAN_MODE_REGISTER in config
         and config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
     ):
-        wrn = f"In {CONF_FAN_MODE_REGISTER} Register overlaps CONF_TARGET_TEMP register(s). It is is not loaded!"
+        wrn = f"{CONF_FAN_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_FAN_MODE_REGISTER} is not loaded!"
         _LOGGER.warning(wrn)
         del config[CONF_FAN_MODE_REGISTER]
 

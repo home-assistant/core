@@ -12,7 +12,7 @@ This file is responsible for testing:
 
 It uses binary_sensors/sensors to do black box testing of the read calls.
 """
-import contextlib
+from contextlib import suppress
 from datetime import timedelta
 import logging
 from unittest import mock
@@ -146,15 +146,13 @@ async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodb
 async def test_fixedRegList_validator() -> None:
     """Test fixed temp registers validator."""
 
-    registers: list(int) = [30, 31, 32, 33, 34, 35, 36]
-
     for value in (
         15,
-        registers,
+        [30, 31, 32, 33, 34, 35, 36],
     ):
         assert isinstance(hvac_fixedsize_reglist_validator(value), list)
 
-    with contextlib.suppress(vol.Invalid):
+    with suppress(vol.Invalid):
         hvac_fixedsize_reglist_validator([15, "ab", 17, 18, 19, 20, 21])
     try:
         hvac_fixedsize_reglist_validator([15, 17])
