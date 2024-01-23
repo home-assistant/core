@@ -528,11 +528,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if result == RESULT_SUCCESS:
                 new_data = dict(self._reauth_entry.data)
                 new_data[CONF_TOKEN] = bridge.token
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=new_data
+                return self.async_update_reload_and_abort(
+                    self._reauth_entry,
+                    data=new_data,
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
             if result not in (RESULT_AUTH_MISSING, RESULT_CANNOT_CONNECT):
                 return self.async_abort(reason=result)
 
@@ -569,7 +568,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 and (token := await self._authenticator.try_pin(pin))
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self._reauth_entry,
                     data={
                         **self._reauth_entry.data,
@@ -577,8 +576,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SESSION_ID: session_id,
                     },
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
             errors = {"base": RESULT_INVALID_PIN}
 

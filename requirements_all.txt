@@ -10,7 +10,7 @@ AEMET-OpenData==0.4.7
 AIOAladdinConnect==0.1.58
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.24
+AIOSomecomfort==0.0.25
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -414,6 +414,9 @@ airthings-cloud==0.2.0
 
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
+
+# homeassistant.components.airtouch5
+airtouch5py==0.2.8
 
 # homeassistant.components.alpha_vantage
 alpha-vantage==2.3.1
@@ -1007,7 +1010,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.3.1
+habluetooth==2.4.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.75.1
@@ -1061,9 +1064,6 @@ homeconnect==0.7.2
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.16
 
-# homeassistant.components.home_plus_control
-homepluscontrol==0.0.5
-
 # homeassistant.components.horizon
 horimote==0.4.1
 
@@ -1088,6 +1088,7 @@ ibeacon-ble==1.0.1
 # homeassistant.components.watson_iot
 ibmiotf==0.3.4
 
+# homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 ical==6.1.1
@@ -1147,7 +1148,7 @@ jellyfin-apiclient-python==1.9.2
 jsonpath==0.82.2
 
 # homeassistant.components.justnimbus
-justnimbus==0.6.0
+justnimbus==0.7.3
 
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.0.0
@@ -1428,7 +1429,7 @@ openai==1.3.8
 # opencv-python-headless==4.6.0.66
 
 # homeassistant.components.openerz
-openerz-api==0.2.0
+openerz-api==0.3.0
 
 # homeassistant.components.openevse
 openevsewifi==1.1.2
@@ -1936,7 +1937,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.5.4
+pymodbus==3.6.3
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2196,6 +2197,9 @@ python-gc100==1.0.3a0
 
 # homeassistant.components.gitlab_ci
 python-gitlab==1.6.0
+
+# homeassistant.components.analytics_insights
+python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==4.1.0

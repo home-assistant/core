@@ -1,0 +1,9 @@
+{
+  "youtube": {
+    "title": "YouTube",
+    "description": "Instructions on how to integrate YouTube within Home Assistant.",
+    "quality_scale": "",
+    "iot_class": "Cloud Polling",
+    "integration_type": "service"
+  }
+}
