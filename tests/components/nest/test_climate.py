@@ -39,7 +39,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .common import (
     DEVICE_COMMAND,
@@ -1192,7 +1192,7 @@ async def test_thermostat_invalid_fan_mode(
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await common.async_set_fan_mode(hass, FAN_LOW)
         await hass.async_block_till_done()
 
@@ -1474,7 +1474,7 @@ async def test_thermostat_invalid_set_preset_mode(
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
 
     # Set preset mode that is invalid
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await common.async_set_preset_mode(hass, PRESET_SLEEP)
         await hass.async_block_till_done()
 

@@ -2,15 +2,10 @@
 
 from unittest.mock import MagicMock
 
+from py_aosmith.models import OperationMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.aosmith.const import (
-    AOSMITH_MODE_ELECTRIC,
-    AOSMITH_MODE_HEAT_PUMP,
-    AOSMITH_MODE_HYBRID,
-    AOSMITH_MODE_VACATION,
-)
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
@@ -59,8 +54,8 @@ async def test_state(
 
 
 @pytest.mark.parametrize(
-    ("get_devices_fixture"),
-    ["get_devices_no_vacation_mode"],
+    ("get_devices_fixture_has_vacation_mode"),
+    [False],
 )
 async def test_state_away_mode_unsupported(
     hass: HomeAssistant, init_integration: MockConfigEntry
@@ -77,9 +72,9 @@ async def test_state_away_mode_unsupported(
 @pytest.mark.parametrize(
     ("hass_mode", "aosmith_mode"),
     [
-        (STATE_HEAT_PUMP, AOSMITH_MODE_HEAT_PUMP),
-        (STATE_ECO, AOSMITH_MODE_HYBRID),
-        (STATE_ELECTRIC, AOSMITH_MODE_ELECTRIC),
+        (STATE_HEAT_PUMP, OperationMode.HEAT_PUMP),
+        (STATE_ECO, OperationMode.HYBRID),
+        (STATE_ELECTRIC, OperationMode.ELECTRIC),
     ],
 )
 async def test_set_operation_mode(
@@ -122,8 +117,8 @@ async def test_set_temperature(
 @pytest.mark.parametrize(
     ("hass_away_mode", "aosmith_mode"),
     [
-        (True, AOSMITH_MODE_VACATION),
-        (False, AOSMITH_MODE_HYBRID),
+        (True, OperationMode.VACATION),
+        (False, OperationMode.HYBRID),
     ],
 )
 async def test_away_mode(

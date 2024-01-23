@@ -2,7 +2,6 @@
 
 DOMAIN = "swiss_public_transport"
 
-
 CONF_DESTINATION = "to"
 CONF_START = "from"
 

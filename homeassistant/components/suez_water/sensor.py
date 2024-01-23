@@ -18,6 +18,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfVolume
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -89,21 +90,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up Suez Water sensor from a config entry."""
     client = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SuezSensor(client)], True)
+    async_add_entities([SuezSensor(client, entry.data[CONF_COUNTER_ID])], True)
 
 
 class SuezSensor(SensorEntity):
     """Representation of a Sensor."""
 
-    _attr_name = "Suez Water Client"
-    _attr_icon = "mdi:water-pump"
+    _attr_has_entity_name = True
+    _attr_translation_key = "water_usage_yesterday"
     _attr_native_unit_of_measurement = UnitOfVolume.LITERS
     _attr_device_class = SensorDeviceClass.WATER
 
-    def __init__(self, client: SuezClient) -> None:
+    def __init__(self, client: SuezClient, counter_id: int) -> None:
         """Initialize the data object."""
         self.client = client
         self._attr_extra_state_attributes = {}
+        self._attr_unique_id = f"{counter_id}_water_usage_yesterday"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(counter_id))},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Suez",
+        )
 
     def _fetch_data(self) -> None:
         """Fetch latest data from Suez."""

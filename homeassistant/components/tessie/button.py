@@ -35,7 +35,7 @@ DESCRIPTIONS: tuple[TessieButtonEntityDescription, ...] = (
     TessieButtonEntityDescription(
         key="flash_lights", func=lambda: flash_lights, icon="mdi:flashlight"
     ),
-    TessieButtonEntityDescription(key="honk", func=honk, icon="mdi:bullhorn"),
+    TessieButtonEntityDescription(key="honk", func=lambda: honk, icon="mdi:bullhorn"),
     TessieButtonEntityDescription(
         key="trigger_homelink", func=lambda: trigger_homelink, icon="mdi:garage"
     ),

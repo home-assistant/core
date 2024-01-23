@@ -6,10 +6,14 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components import humidifier
-from homeassistant.components.humidifier import HumidifierEntity
+from homeassistant.components.humidifier import (
+    ATTR_MODE,
+    HumidifierEntity,
+    HumidifierEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 
 
 class MockHumidifierEntity(HumidifierEntity):
@@ -51,6 +55,15 @@ def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
 
 
 @pytest.mark.parametrize(
+    "module",
+    [humidifier, humidifier.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
     ("enum", "constant_prefix"),
     _create_tuples(humidifier.HumidifierEntityFeature, "SUPPORT_")
     + _create_tuples(humidifier.HumidifierDeviceClass, "DEVICE_CLASS_"),
@@ -66,3 +79,27 @@ def test_deprecated_constants(
     import_and_test_deprecated_constant_enum(
         caplog, module, enum, constant_prefix, "2025.1"
     )
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockHumidifierEntity(HumidifierEntity):
+        _attr_mode = "mode1"
+
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockHumidifierEntity()
+    assert entity.supported_features_compat is HumidifierEntityFeature(1)
+    assert "MockHumidifierEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "HumidifierEntityFeature.MODES" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is HumidifierEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text
+
+    assert entity.state_attributes[ATTR_MODE] == "mode1"
