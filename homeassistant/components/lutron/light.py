@@ -9,6 +9,7 @@ from pylutron import Lutron, LutronEntity, Output
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,8 +39,12 @@ async def async_setup_entry(
     for area_name, device in entry_data.lights:
         if device.type == "CEILING_FAN_TYPE":
             # If this is a fan check to see if this entity already exists. If not, do not create a new one.
-            entity_id = f"light.{slugify(f'{area_name} {device.name}')}"
-            if ent_reg.async_is_registered(entity_id):
+            entity_id = ent_reg.async_get_entity_id(
+                Platform.LIGHT,
+                DOMAIN,
+                slugify(f"{entry_data.client.guid} {device.uuid}"),
+            )
+            if entity_id:
                 entity_entry = ent_reg.async_get(entity_id)
                 assert entity_entry
                 if entity_entry.disabled:
