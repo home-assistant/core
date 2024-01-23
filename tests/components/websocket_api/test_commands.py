@@ -775,7 +775,7 @@ async def test_call_service_context_with_user(
         msg = await ws.receive_json()
         assert msg["success"]
 
-        refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+        refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
         assert len(calls) == 1
         call = calls[0]
