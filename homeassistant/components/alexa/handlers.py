@@ -570,7 +570,7 @@ async def async_api_select_input(
 
     # Attempt to map the ALL UPPERCASE payload name to a source.
     # Strips trailing 1 to match single input devices.
-    source_list = entity.attributes.get(media_player.const.ATTR_INPUT_SOURCE_LIST, [])
+    source_list = entity.attributes.get(media_player.const.ATTR_INPUT_SOURCE_LIST) or []
     for source in source_list:
         formatted_source = (
             source.lower().replace("-", "").replace("_", "").replace(" ", "")
@@ -987,7 +987,7 @@ async def async_api_set_thermostat_mode(
     ha_preset = next((k for k, v in API_THERMOSTAT_PRESETS.items() if v == mode), None)
 
     if ha_preset:
-        presets = entity.attributes.get(climate.ATTR_PRESET_MODES, [])
+        presets = entity.attributes.get(climate.ATTR_PRESET_MODES) or []
 
         if ha_preset not in presets:
             msg = f"The requested thermostat mode {ha_preset} is not supported"
@@ -997,7 +997,7 @@ async def async_api_set_thermostat_mode(
         data[climate.ATTR_PRESET_MODE] = ha_preset
 
     elif mode == "CUSTOM":
-        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES, [])
+        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES) or []
         custom_mode = directive.payload["thermostatMode"]["customName"]
         custom_mode = next(
             (k for k, v in API_THERMOSTAT_MODES_CUSTOM.items() if v == custom_mode),
@@ -1013,7 +1013,7 @@ async def async_api_set_thermostat_mode(
         data[climate.ATTR_HVAC_MODE] = custom_mode
 
     else:
-        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES, [])
+        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES) or []
         ha_modes: dict[str, str] = {
             k: v for k, v in API_THERMOSTAT_MODES.items() if v == mode
         }
