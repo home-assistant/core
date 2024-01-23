@@ -37,26 +37,37 @@ async def test_switches(
             name=f"{entity_entry.entity_id}-state"
         )
 
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_entry.entity_id},
-            blocking=True,
-        )
 
-        assert len(mock_flexit_bacnet.mock_calls) == 3
-        assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=f"{entity_entry.entity_id}-state"
-        )
+ENTITY_ID = "switch.device_name_electric_heater"
 
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_entry.entity_id},
-            blocking=True,
-        )
 
-        assert len(mock_flexit_bacnet.mock_calls) == 5
-        assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=f"{entity_entry.entity_id}-state"
-        )
+async def test_switches_implementation(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_flexit_bacnet: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the switch can be turned on and off."""
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SWITCH])
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_flexit_bacnet.mock_calls) == 3
+    assert hass.states.get(ENTITY_ID) == snapshot(name=f"{ENTITY_ID}-state")
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_flexit_bacnet.mock_calls) == 5
+    assert hass.states.get(ENTITY_ID) == snapshot(name=f"{ENTITY_ID}-state")

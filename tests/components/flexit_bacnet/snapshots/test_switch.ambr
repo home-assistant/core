@@ -44,3 +44,17 @@
     'state': 'on',
   })
 # ---
+# name: test_switches_implementation[switch.device_name_electric_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Device Name Electric heater',
+      'icon': 'mdi:radiator',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_name_electric_heater',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
