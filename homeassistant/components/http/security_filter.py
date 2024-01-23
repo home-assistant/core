@@ -71,7 +71,7 @@ def setup_security_filter(app: Application) -> None:
                 )
                 raise HTTPBadRequest
 
-        if FILTERS.search(_recursive_unquote(request.url.path_qs)):
+        if FILTERS.search(_recursive_unquote(f"{request.path}?{request.query_string}")):
             # Check the full path with query string first, if its
             # a hit, than check just the query string to give a more
             # specific warning.
