@@ -1,1 +1,1 @@
-"""Virtual integration: AEP Ohio."""
+"""Virtual integration: Legrand Home+ Control."""
