@@ -606,20 +606,20 @@ async def test_remove_expired_refresh_token(hass: HomeAssistant) -> None:
     with freeze_time(now + timedelta(days=89, hours=23)):
         async_fire_time_changed(hass, now + timedelta(days=89, hours=23))
         await hass.async_block_till_done()
-        assert await manager.async_get_refresh_token(refresh_token1.id)
-        assert await manager.async_get_refresh_token(refresh_token2.id)
+        assert manager.async_get_refresh_token(refresh_token1.id)
+        assert manager.async_get_refresh_token(refresh_token2.id)
 
     with freeze_time(now + timedelta(days=90, seconds=5)):
         async_fire_time_changed(hass, now + timedelta(days=90, seconds=5))
         await hass.async_block_till_done()
-        assert await manager.async_get_refresh_token(refresh_token1.id) is None
-        assert await manager.async_get_refresh_token(refresh_token2.id)
+        assert manager.async_get_refresh_token(refresh_token1.id) is None
+        assert manager.async_get_refresh_token(refresh_token2.id)
 
     with freeze_time(now + timedelta(days=120, seconds=5)):
         async_fire_time_changed(hass, now + timedelta(days=120, seconds=5))
         await hass.async_block_till_done()
-        assert await manager.async_get_refresh_token(refresh_token1.id) is None
-        assert await manager.async_get_refresh_token(refresh_token2.id) is None
+        assert manager.async_get_refresh_token(refresh_token1.id) is None
+        assert manager.async_get_refresh_token(refresh_token2.id) is None
 
 
 async def test_update_expire_at_refresh_token(hass: HomeAssistant) -> None:

@@ -12,7 +12,13 @@ from typing import Any, cast
 import jwt
 
 from homeassistant import data_entry_flow
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -164,7 +170,9 @@ class AuthManager:
         self.login_flow = AuthManagerFlowManager(hass, self)
         self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
         self._expire_callback: CALLBACK_TYPE | None = None
-        self._remove_expired_job = HassJob(self._async_remove_expired_refresh_tokens)
+        self._remove_expired_job = HassJob(
+            self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
+        )
 
     @callback
     def async_setup(self) -> None:
@@ -498,14 +506,13 @@ class AuthManager:
         for revoke_callback in callbacks:
             revoke_callback()
 
-    async def _async_remove_expired_refresh_tokens(
-        self, _: datetime | None = None
-    ) -> None:
+    @callback
+    def _async_remove_expired_refresh_tokens(self, _: datetime | None = None) -> None:
         """Remove expired refresh tokens."""
         now = time.time()
         for token in self._store.async_get_refresh_tokens()[:]:
             if (expire_at := token.expire_at) is not None and expire_at <= now:
-                await self.async_remove_refresh_token(token)
+                self.async_remove_refresh_token(token)
         self.async_track_next_refresh_token_expiration()
 
     @callback
