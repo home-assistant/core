@@ -51,16 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     async def unregister_webhook(_: Any) -> None:
-        if coordinator.tedee_webhook_id is not None:
-            try:
-                await coordinator.async_unregister_webhook()
-            except TedeeWebhookException as ex:
-                _LOGGER.warning(
-                    "Failed to unregister Tedee webhook from bridge: %s", ex
-                )
-            else:
-                _LOGGER.debug("Unregistered Tedee webhook")
-            webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        await coordinator.async_unregister_webhook()
+        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook() -> None:
         webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])

@@ -11,6 +11,7 @@ from pytedee_async import (
     TedeeDataUpdateException,
     TedeeLocalAuthException,
     TedeeLock,
+    TedeeWebhookException,
 )
 from pytedee_async.bridge import TedeeBridge
 
@@ -117,7 +118,14 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     async def async_unregister_webhook(self) -> None:
         """Unregister the webhook at the Tedee bridge."""
         if self.tedee_webhook_id is not None:
-            await self.tedee_client.delete_webhook(self.tedee_webhook_id)
+            try:
+                await self.tedee_client.delete_webhook(self.tedee_webhook_id)
+            except TedeeWebhookException as ex:
+                _LOGGER.warning(
+                    "Failed to unregister Tedee webhook from bridge: %s", ex
+                )
+            else:
+                _LOGGER.debug("Unregistered Tedee webhook")
 
     def _async_add_remove_locks(self) -> None:
         """Add new locks, remove non-existing locks."""
