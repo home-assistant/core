@@ -51,7 +51,7 @@ INSECURE_PASSPHRASES = (
 
 def compose_default_network_name(pan_id: int) -> str:
     """Generate a default network name."""
-    return f"homeassistant-{pan_id >> 8:02x}"
+    return f"ha-thread-{pan_id:04x}"
 
 
 def generate_random_pan_id() -> int:
