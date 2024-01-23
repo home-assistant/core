@@ -28,7 +28,7 @@ from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.location import async_detect_location_info
@@ -66,7 +66,8 @@ _CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
 }
 
 
-async def async_setup(hass: HomeAssistant) -> None:
+@callback
+def async_setup(hass: HomeAssistant) -> None:
     """Initialize the HTTP API."""
     websocket_api.async_register_command(hass, websocket_cloud_status)
     websocket_api.async_register_command(hass, websocket_subscription)
@@ -116,7 +117,9 @@ _P = ParamSpec("_P")
 
 
 def _handle_cloud_errors(
-    handler: Callable[Concatenate[_HassViewT, web.Request, _P], Awaitable[web.Response]]
+    handler: Callable[
+        Concatenate[_HassViewT, web.Request, _P], Awaitable[web.Response]
+    ],
 ) -> Callable[
     Concatenate[_HassViewT, web.Request, _P], Coroutine[Any, Any, web.Response]
 ]:

@@ -1,4 +1,10 @@
 {
+  "config": {
+    "step": {},
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
   "system_health": {
     "info": {
       "can_reach_cert_server": "Reach Certificate Server",
@@ -30,6 +36,14 @@
           "operation_took_too_long": "The operation took too long. Please try again later."
         }
       }
+    },
+    "warn_bad_custom_domain_configuration": {
+      "title": "Detected wrong custom domain configuration",
+      "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. Please check the DNS configuration of your domain and make sure it points to the correct CNAME."
+    },
+    "reset_bad_custom_domain_configuration": {
+      "title": "Custom domain ignored",
+      "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. This domain has now been ignored and will not be used for Home Assistant Cloud. If you want to use this domain, please fix the DNS configuration and restart Home Assistant. If you do not need this anymore, you can remove it from the account page."
     }
   },
   "services": {

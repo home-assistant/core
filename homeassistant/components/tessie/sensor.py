@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,29 +23,34 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, TessieStatus
-from .coordinator import TessieDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
-@dataclass
+@callback
+def hours_to_datetime(value: StateType) -> datetime | None:
+    """Convert relative hours into absolute datetime."""
+    if isinstance(value, (int, float)) and value > 0:
+        return dt_util.now() + timedelta(minutes=value)
+    return None
+
+
+@dataclass(frozen=True, kw_only=True)
 class TessieSensorEntityDescription(SensorEntityDescription):
     """Describes Tessie Sensor entity."""
 
-    value_fn: Callable[[StateType], StateType] = lambda x: x
+    value_fn: Callable[[StateType], StateType | datetime] = lambda x: x
 
 
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
-    TessieSensorEntityDescription(
-        key="state",
-        options=[status.value for status in TessieStatus],
-        device_class=SensorDeviceClass.ENUM,
-    ),
     TessieSensorEntityDescription(
         key="charge_state_usable_battery_level",
         state_class=SensorStateClass.MEASUREMENT,
@@ -84,6 +90,12 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieSensorEntityDescription(
+        key="charge_state_minutes_to_full_charge",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=hours_to_datetime,
     ),
     TessieSensorEntityDescription(
         key="charge_state_battery_range",
@@ -186,6 +198,36 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_traffic_minutes_delay",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_energy_at_arrival",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_miles_to_arrival",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+    ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_minutes_to_arrival",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_destination",
+        icon="mdi:map-marker",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 
@@ -193,13 +235,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TessieSensorEntity(coordinator, description)
-        for coordinator in coordinators
+        TessieSensorEntity(vehicle.state_coordinator, description)
+        for vehicle in data
         for description in DESCRIPTIONS
-        if description.key in coordinator.data
     )
 
 
@@ -210,7 +251,7 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
         description: TessieSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -218,6 +259,6 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._value)
+        return self.entity_description.value_fn(self.get())

@@ -1,4 +1,6 @@
 """Support for functionality to download files."""
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 import os

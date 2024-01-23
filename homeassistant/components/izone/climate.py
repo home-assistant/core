@@ -1,9 +1,9 @@
 """Support for the iZone HVAC."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
-from typing import Any
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from pizone import Controller, Zone
 import voluptuous as vol
@@ -46,6 +46,12 @@ from .const import (
     DISPATCH_ZONE_UPDATE,
     IZONE,
 )
+
+_DeviceT = TypeVar("_DeviceT", bound="ControllerDevice | ZoneDevice")
+_T = TypeVar("_T")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+_FuncType = Callable[Concatenate[_T, _P], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,13 +118,15 @@ async def async_setup_entry(
     )
 
 
-def _return_on_connection_error(ret=None):
-    def wrap(func):
-        def wrapped_f(*args, **kwargs):
-            if not args[0].available:
+def _return_on_connection_error(
+    ret: _T = None,  # type: ignore[assignment]
+) -> Callable[[_FuncType[_DeviceT, _P, _R]], _FuncType[_DeviceT, _P, _R | _T]]:
+    def wrap(func: _FuncType[_DeviceT, _P, _R]) -> _FuncType[_DeviceT, _P, _R | _T]:
+        def wrapped_f(self: _DeviceT, *args: _P.args, **kwargs: _P.kwargs) -> _R | _T:
+            if not self.available:
                 return ret
             try:
-                return func(*args, **kwargs)
+                return func(self, *args, **kwargs)
             except ConnectionError:
                 return ret
 
@@ -498,7 +506,7 @@ class ZoneDevice(ClimateEntity):
         return self._controller.available
 
     @property
-    @_return_on_connection_error(0)
+    @_return_on_connection_error(ClimateEntityFeature(0))
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self._zone.mode == Zone.Mode.AUTO:

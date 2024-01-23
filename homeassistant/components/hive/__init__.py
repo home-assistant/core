@@ -131,7 +131,7 @@ async def async_remove_config_entry_device(
 
 
 def refresh_system(
-    func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]]
+    func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_HiveEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
 

@@ -828,6 +828,36 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
     assert len(mock_init.mock_calls) == 0
 
 
+async def test_device_tracker_invalid_ip_address(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an invalid ip address."""
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        await device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "device_tracker.august_connect",
+            STATE_HOME,
+            {
+                ATTR_IP: "invalid",
+                ATTR_SOURCE_TYPE: SourceType.ROUTER,
+                ATTR_MAC: "B8:B7:F1:6D:B5:33",
+            },
+        )
+        await hass.async_block_till_done()
+        await device_tracker_watcher.async_stop()
+        await hass.async_block_till_done()
+
+    assert "Ignoring invalid IP Address: invalid" in caplog.text
+    assert len(mock_init.mock_calls) == 0
+
+
 async def test_device_tracker_ignore_self_assigned_ips_before_start(
     hass: HomeAssistant,
 ) -> None:

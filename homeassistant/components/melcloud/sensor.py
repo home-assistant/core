@@ -23,7 +23,7 @@ from . import MelCloudDevice
 from .const import DOMAIN
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class MelcloudRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -31,7 +31,7 @@ class MelcloudRequiredKeysMixin:
     enabled: Callable[[Any], bool]
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class MelcloudSensorEntityDescription(
     SensorEntityDescription, MelcloudRequiredKeysMixin
 ):

@@ -1,12 +1,15 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     ScannerEntity,
@@ -31,6 +34,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import PingDomainData
 from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DOMAIN
@@ -91,6 +95,7 @@ async def async_setup_scanner(
                         CONF_NAME: dev_name,
                         CONF_HOST: dev_host,
                         CONF_PING_COUNT: config[CONF_PING_COUNT],
+                        CONF_CONSIDER_HOME: config[CONF_CONSIDER_HOME],
                     },
                 )
             )
@@ -131,6 +136,8 @@ async def async_setup_entry(
 class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity):
     """Representation of a Ping device tracker."""
 
+    _last_seen: datetime | None = None
+
     def __init__(
         self, config_entry: ConfigEntry, coordinator: PingUpdateCoordinator
     ) -> None:
@@ -139,6 +146,11 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
 
         self._attr_name = config_entry.title
         self.config_entry = config_entry
+        self._consider_home_interval = timedelta(
+            seconds=config_entry.options.get(
+                CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.seconds
+            )
+        )
 
     @property
     def ip_address(self) -> str:
@@ -157,8 +169,14 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
 
     @property
     def is_connected(self) -> bool:
-        """Return true if ping returns is_alive."""
-        return self.coordinator.data.is_alive
+        """Return true if ping returns is_alive or considered home."""
+        if self.coordinator.data.is_alive:
+            self._last_seen = dt_util.utcnow()
+
+        return (
+            self._last_seen is not None
+            and (dt_util.utcnow() - self._last_seen) < self._consider_home_interval
+        )
 
     @property
     def entity_registry_enabled_default(self) -> bool:

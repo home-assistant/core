@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger_template_entity import (
@@ -46,16 +47,103 @@ ENTRY_CONFIG_WITH_VALUE_TEMPLATE = {
 
 ENTRY_CONFIG_INVALID_QUERY = {
     CONF_NAME: "Get Value",
+    CONF_QUERY: "SELECT 5 FROM as value",
+    CONF_COLUMN_NAME: "size",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+
+ENTRY_CONFIG_INVALID_QUERY_2 = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "SELECT5 FROM as value",
+    CONF_COLUMN_NAME: "size",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+
+ENTRY_CONFIG_INVALID_QUERY_3 = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: ";;",
+    CONF_COLUMN_NAME: "size",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+
+ENTRY_CONFIG_INVALID_QUERY_OPT = {
+    CONF_QUERY: "SELECT 5 FROM as value",
+    CONF_COLUMN_NAME: "size",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+
+ENTRY_CONFIG_INVALID_QUERY_2_OPT = {
+    CONF_QUERY: "SELECT5 FROM as value",
+    CONF_COLUMN_NAME: "size",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+
+ENTRY_CONFIG_INVALID_QUERY_3_OPT = {
+    CONF_QUERY: ";;",
+    CONF_COLUMN_NAME: "size",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+
+ENTRY_CONFIG_QUERY_READ_ONLY_CTE = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
+    CONF_COLUMN_NAME: "state",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+ENTRY_CONFIG_QUERY_NO_READ_ONLY = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "UPDATE states SET state = 999999 WHERE state_id = 11125",
+    CONF_COLUMN_NAME: "state",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;",
+    CONF_COLUMN_NAME: "size",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+ENTRY_CONFIG_QUERY_READ_ONLY_CTE_OPT = {
+    CONF_QUERY: "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
+    CONF_COLUMN_NAME: "state",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+ENTRY_CONFIG_QUERY_NO_READ_ONLY_OPT = {
     CONF_QUERY: "UPDATE 5 as value",
     CONF_COLUMN_NAME: "size",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
 
-ENTRY_CONFIG_INVALID_QUERY_OPT = {
-    CONF_QUERY: "UPDATE 5 as value",
+ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE_OPT = {
+    CONF_QUERY: "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;",
     CONF_COLUMN_NAME: "size",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
+
+
+ENTRY_CONFIG_MULTIPLE_QUERIES = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "SELECT 5 as state; UPDATE states SET state = 10;",
+    CONF_COLUMN_NAME: "state",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+
+ENTRY_CONFIG_MULTIPLE_QUERIES_OPT = {
+    CONF_QUERY: "SELECT 5 as state; UPDATE states SET state = 10;",
+    CONF_COLUMN_NAME: "state",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
 
 ENTRY_CONFIG_INVALID_COLUMN_NAME = {
     CONF_NAME: "Get Value",
@@ -83,10 +171,10 @@ YAML_CONFIG = {
         CONF_NAME: "Get Value",
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_UNIT_OF_MEASUREMENT: UnitOfInformation.MEBIBYTES,
         CONF_UNIQUE_ID: "unique_id_12345",
         CONF_VALUE_TEMPLATE: "{{ value }}",
-        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_RATE,
+        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
         CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
     }
 }

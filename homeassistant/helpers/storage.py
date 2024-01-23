@@ -260,7 +260,7 @@ class Store(Generic[_T]):
             "data": data,
         }
 
-        if self.hass.state == CoreState.stopping:
+        if self.hass.state is CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
 
@@ -286,7 +286,7 @@ class Store(Generic[_T]):
         self._async_cleanup_delay_listener()
         self._async_ensure_final_write_listener()
 
-        if self.hass.state == CoreState.stopping:
+        if self.hass.state is CoreState.stopping:
             return
 
         self._unsub_delay_listener = async_call_later(
@@ -318,7 +318,7 @@ class Store(Generic[_T]):
     async def _async_callback_delayed_write(self, _now):
         """Handle a delayed write callback."""
         # catch the case where a call is scheduled and then we stop Home Assistant
-        if self.hass.state == CoreState.stopping:
+        if self.hass.state is CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
         await self._async_handle_write_data()

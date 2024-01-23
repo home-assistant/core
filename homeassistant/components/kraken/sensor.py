@@ -32,14 +32,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class KrakenRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[DataUpdateCoordinator[KrakenResponse], str], float | int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class KrakenSensorEntityDescription(SensorEntityDescription, KrakenRequiredKeysMixin):
     """Describes Kraken sensor entity."""
 

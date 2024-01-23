@@ -35,16 +35,16 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 COVER_SUPPORT = (
-    cover.SUPPORT_OPEN
-    | cover.SUPPORT_CLOSE
-    | cover.SUPPORT_STOP
-    | cover.SUPPORT_SET_POSITION
+    cover.CoverEntityFeature.OPEN
+    | cover.CoverEntityFeature.CLOSE
+    | cover.CoverEntityFeature.STOP
+    | cover.CoverEntityFeature.SET_POSITION
 )
 TILT_SUPPORT = (
-    cover.SUPPORT_OPEN_TILT
-    | cover.SUPPORT_CLOSE_TILT
-    | cover.SUPPORT_STOP_TILT
-    | cover.SUPPORT_SET_TILT_POSITION
+    cover.CoverEntityFeature.OPEN_TILT
+    | cover.CoverEntityFeature.CLOSE_TILT
+    | cover.CoverEntityFeature.STOP_TILT
+    | cover.CoverEntityFeature.SET_TILT_POSITION
 )
 
 
