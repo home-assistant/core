@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from functools import lru_cache
 import logging
 import re
 from typing import Final
@@ -43,6 +44,7 @@ UNSAFE_URL_BYTES = ["\t", "\r", "\n"]
 def setup_security_filter(app: Application) -> None:
     """Create security filter middleware for the app."""
 
+    @lru_cache
     def _recursive_unquote(value: str) -> str:
         """Handle values that are encoded multiple times."""
         if (unquoted := unquote(value)) != value:
@@ -69,16 +71,19 @@ def setup_security_filter(app: Application) -> None:
                 )
                 raise HTTPBadRequest
 
-        if FILTERS.search(_recursive_unquote(request.path)):
+        if FILTERS.search(_recursive_unquote(request.url.path_qs)):
+            # Check the full path with query string first, if its
+            # a hit, than check just the query string to give a more
+            # specific warning.
+            if FILTERS.search(_recursive_unquote(request.query_string)):
+                _LOGGER.warning(
+                    "Filtered a request with a potential harmful query string: %s",
+                    request.raw_path,
+                )
+                raise HTTPBadRequest
+
             _LOGGER.warning(
                 "Filtered a potential harmful request to: %s", request.raw_path
-            )
-            raise HTTPBadRequest
-
-        if FILTERS.search(_recursive_unquote(request.query_string)):
-            _LOGGER.warning(
-                "Filtered a request with a potential harmful query string: %s",
-                request.raw_path,
             )
             raise HTTPBadRequest
 
