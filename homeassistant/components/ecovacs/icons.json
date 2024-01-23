@@ -9,7 +9,7 @@
       }
     },
     "sensor": {
-      "last_error": {
+      "error": {
         "default": "mdi:alert-circle"
       },
       "life_span_brush": {

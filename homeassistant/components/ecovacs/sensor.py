@@ -192,7 +192,7 @@ async def async_setup_entry(
                 )
 
         if capability := device.capabilities.error:
-            entities.append(EcovacsLastErrorSensor(device, capability))
+            entities.append(EcovacsErrorSensor(device, capability))
 
     async_add_entities(entities)
 
@@ -240,17 +240,17 @@ class EcovacsLifeSpanSensor(
         self._subscribe(self._capability.event, on_event)
 
 
-class EcovacsLastErrorSensor(
+class EcovacsErrorSensor(
     EcovacsEntity[CapabilityEvent[ErrorEvent]],
     SensorEntity,
 ):
-    """Last error sensor."""
+    """Error sensor."""
 
     _always_available = True
     _unrecorded_attributes = frozenset({CONF_DESCRIPTION})
     entity_description: SensorEntityDescription = SensorEntityDescription(
-        key="last_error",
-        translation_key="last_error",
+        key="error",
+        translation_key="error",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     )

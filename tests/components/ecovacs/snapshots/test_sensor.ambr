@@ -135,6 +135,50 @@
     'state': '3600',
   })
 # ---
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_error:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ozmo_950_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Error',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'error',
+    'unique_id': 'E1234567890000000001_error',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_error:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'NoError: Robot is operational',
+      'friendly_name': 'Ozmo 950 Error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ozmo_950_error',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_filter_lifetime:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -267,50 +311,6 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '192.168.0.10',
-  })
-# ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_last_error:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_last_error',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Last error',
-    'platform': 'ecovacs',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_error',
-    'unique_id': 'E1234567890000000001_last_error',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_last_error:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'description': 'NoError: Robot is operational',
-      'friendly_name': 'Ozmo 950 Last error',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_last_error',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
   })
 # ---
 # name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brush_lifetime:entity-registry]

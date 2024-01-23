@@ -25,8 +25,13 @@
       }
     },
     "sensor": {
-      "last_error": {
-        "name": "Last error"
+      "error": {
+        "name": "Error",
+        "state_attributes": {
+          "description": {
+            "name": "Description"
+          }
+        }
       },
       "life_span_brush_lifetime": {
         "name": "Brush lifetime"
