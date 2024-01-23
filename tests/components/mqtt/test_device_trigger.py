@@ -247,7 +247,7 @@ async def test_update_remove_triggers(
 
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry.name == "milk"
-    expected_triggers = [
+    expected_triggers1 = [
         {
             "platform": "device",
             "domain": DOMAIN,
@@ -257,21 +257,13 @@ async def test_update_remove_triggers(
             "metadata": {},
         },
     ]
-    expected_triggers2 = [
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "type": "button_short_press",
-            "subtype": "button_2",
-            "metadata": {},
-        },
-    ]
+    expected_triggers2 = [dict(expected_triggers1[0])]
+    expected_triggers2[0]["subtype"] = "button_2"
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert triggers == unordered(expected_triggers)
+    assert triggers == unordered(expected_triggers1)
     assert device_entry.name == "milk"
 
     # Update trigger topic
@@ -280,7 +272,7 @@ async def test_update_remove_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert triggers == unordered(expected_triggers)
+    assert triggers == unordered(expected_triggers1)
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry.name == "beer"
 
