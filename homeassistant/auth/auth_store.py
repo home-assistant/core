@@ -207,18 +207,16 @@ class AuthStore:
         self._async_schedule_save()
         return refresh_token
 
-    async def async_remove_refresh_token(
-        self, refresh_token: models.RefreshToken
-    ) -> None:
+    @callback
+    def async_remove_refresh_token(self, refresh_token: models.RefreshToken) -> None:
         """Remove a refresh token."""
         for user in self._users.values():
             if user.refresh_tokens.pop(refresh_token.id, None):
                 self._async_schedule_save()
                 break
 
-    async def async_get_refresh_token(
-        self, token_id: str
-    ) -> models.RefreshToken | None:
+    @callback
+    def async_get_refresh_token(self, token_id: str) -> models.RefreshToken | None:
         """Get refresh token by id."""
         for user in self._users.values():
             refresh_token = user.refresh_tokens.get(token_id)
@@ -227,7 +225,8 @@ class AuthStore:
 
         return None
 
-    async def async_get_refresh_token_by_token(
+    @callback
+    def async_get_refresh_token_by_token(
         self, token: str
     ) -> models.RefreshToken | None:
         """Get refresh token by token."""
