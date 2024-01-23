@@ -72,9 +72,10 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_time",
         capability_fn=lambda caps: caps.stats.clean,
-        value_fn=lambda e: round(e.time / 60) if e.time is not None else None,
+        value_fn=lambda e: e.time,
         translation_key="stats_time",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     EcovacsSensorEntityDescription[StatsEvent](
         capability_fn=lambda caps: caps.stats.clean,
@@ -219,7 +220,7 @@ class EcovacsLifeSpanSensor(
             SensorEntityDescription(
                 key=key,
                 translation_key=key,
-                native_unit_of_measurement="%",
+                native_unit_of_measurement=PERCENTAGE,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             **kwargs,
@@ -247,7 +248,7 @@ class EcovacsLastErrorSensor(
 ):
     """Last error sensor."""
 
-    _always_available: bool = True
+    _always_available = True
     _unrecorded_attributes = frozenset({CONF_DESCRIPTION})
     entity_description: SensorEntityDescription = SensorEntityDescription(
         key="last_error",

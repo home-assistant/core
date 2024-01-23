@@ -56,7 +56,7 @@
         "name": "Stats type"
       },
       "wifi_ip": {
-        "name": "Ip"
+        "name": "IP address"
       },
       "wifi_rssi": {
         "name": "Wi-Fi RSSI"
