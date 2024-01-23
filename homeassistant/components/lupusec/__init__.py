@@ -127,6 +127,8 @@ class LupusecSystem:
 class LupusecDevice(Entity):
     """Representation of a Lupusec device."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, data, device, config_entry=None) -> None:
         """Initialize a sensor for Lupusec device."""
         self._data = data
@@ -150,8 +152,8 @@ class LupusecDevice(Entity):
         """Return device information about the sensor."""
         return {
             "identifiers": {(DOMAIN, self._entry_id)},
-            "name": "Lupusec XT",
+            "name": f"Lupusec-XT{self._data.lupusec.model}",
             "manufacturer": "Lupus Electronics",
-            "model": f"Lupusec XT{self._data.lupusec.model}",
+            "model": f"Lupusec-XT{self._data.lupusec.model}",
             "via_device": (DOMAIN, "lupusec_state"),
         }
