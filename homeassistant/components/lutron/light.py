@@ -89,6 +89,7 @@ class LutronLight(LutronDevice, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _lutron_device: Output
     _prev_brightness: int | None = None
+    _attr_name = None
 
     def __init__(
         self, area_name: str, lutron_device: LutronEntity, controller: Lutron

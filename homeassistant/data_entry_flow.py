@@ -313,6 +313,18 @@ class FlowManager(abc.ABC):
         self, flow_id: str, user_input: dict | None = None
     ) -> FlowResult:
         """Continue a data entry flow."""
+        result: FlowResult | None = None
+        while not result or result["type"] == FlowResultType.SHOW_PROGRESS_DONE:
+            result = await self._async_configure(flow_id, user_input)
+            flow = self._progress.get(flow_id)
+            if flow and flow.deprecated_show_progress:
+                break
+        return result
+
+    async def _async_configure(
+        self, flow_id: str, user_input: dict | None = None
+    ) -> FlowResult:
+        """Continue a data entry flow."""
         if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
 
@@ -455,7 +467,7 @@ class FlowManager(abc.ABC):
             # The flow's progress task was changed, register a callback on it
             async def call_configure() -> None:
                 with suppress(UnknownFlow):
-                    await self.async_configure(flow.flow_id)
+                    await self._async_configure(flow.flow_id)
 
             def schedule_configure(_: asyncio.Task) -> None:
                 self.hass.async_create_task(call_configure())
@@ -531,6 +543,7 @@ class FlowHandler:
 
     __progress_task: asyncio.Task[Any] | None = None
     __no_progress_task_reported = False
+    deprecated_show_progress = False
 
     @property
     def source(self) -> str | None:
@@ -700,6 +713,9 @@ class FlowHandler:
                 cls.__name__,
                 report_issue,
             )
+
+        if progress_task is None:
+            self.deprecated_show_progress = True
 
         flow_result = FlowResult(
             type=FlowResultType.SHOW_PROGRESS,
