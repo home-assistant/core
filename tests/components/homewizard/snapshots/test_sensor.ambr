@@ -136,7 +136,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l1_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -216,7 +216,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l2_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -296,7 +296,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l3_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -542,7 +542,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l1_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -625,7 +625,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l2_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -708,7 +708,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l3_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -877,7 +877,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l1_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -957,7 +957,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l2_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1037,7 +1037,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l3_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1803,7 +1803,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t1_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1883,7 +1883,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t2_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1963,7 +1963,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t3_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2043,7 +2043,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t4_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2203,7 +2203,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t1_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2283,7 +2283,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t2_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2363,7 +2363,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t3_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2443,7 +2443,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t4_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2681,7 +2681,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l1_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l1_count',
     'unit_of_measurement': None,
   })
@@ -2756,7 +2756,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l2_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l2_count',
     'unit_of_measurement': None,
   })
@@ -2831,7 +2831,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l3_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l3_count',
     'unit_of_measurement': None,
   })
@@ -2906,7 +2906,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l1_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l1_count',
     'unit_of_measurement': None,
   })
@@ -2981,7 +2981,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l2_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l2_count',
     'unit_of_measurement': None,
   })
@@ -3056,7 +3056,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l3_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l3_count',
     'unit_of_measurement': None,
   })
@@ -3364,7 +3364,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l1_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -3444,7 +3444,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l2_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -3524,7 +3524,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l3_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -3770,7 +3770,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l1_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -3853,7 +3853,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l2_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -3936,7 +3936,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l3_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -4016,7 +4016,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l1_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -4096,7 +4096,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l2_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -4176,7 +4176,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l3_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -4642,7 +4642,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t1_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -4722,7 +4722,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t2_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -4802,7 +4802,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t3_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -4882,7 +4882,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t4_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -5042,7 +5042,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t1_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -5122,7 +5122,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t2_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -5202,7 +5202,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t3_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -5282,7 +5282,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t4_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -5520,7 +5520,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l1_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l1_count',
     'unit_of_measurement': None,
   })
@@ -5595,7 +5595,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l2_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l2_count',
     'unit_of_measurement': None,
   })
@@ -5670,7 +5670,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l3_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l3_count',
     'unit_of_measurement': None,
   })
@@ -5745,7 +5745,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l1_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l1_count',
     'unit_of_measurement': None,
   })
@@ -5820,7 +5820,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l2_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l2_count',
     'unit_of_measurement': None,
   })
@@ -5895,7 +5895,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l3_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l3_count',
     'unit_of_measurement': None,
   })
@@ -6058,7 +6058,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l1_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -6851,7 +6851,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l1_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -7331,7 +7331,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l1_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -7414,7 +7414,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l2_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -7497,7 +7497,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l3_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
