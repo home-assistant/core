@@ -65,4 +65,4 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class DirectoryDoesNotExist(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    """Error to indicate the specified download directory does not exist."""

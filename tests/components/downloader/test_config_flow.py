@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.downloader.config_flow import CannotConnect
+from homeassistant.components.downloader.config_flow import DirectoryDoesNotExist
 from homeassistant.components.downloader.const import CONF_DOWNLOAD_DIR, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
 
         with patch(
             "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
-            side_effect=CannotConnect,
+            side_effect=DirectoryDoesNotExist,
         ):
             assert result["type"] == FlowResultType.FORM
             assert result["step_id"] == "user"
