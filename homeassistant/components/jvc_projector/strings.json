@@ -35,7 +35,7 @@
   "entity": {
     "binary_sensor": {
       "power": {
-        "name": "Power"
+        "name": "[%key:component::sensor::entity_component::power::name%]"
       }
     }
   }
