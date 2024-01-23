@@ -25,7 +25,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema({vol.Required(CONF_HOST): str})
 
         if user_input is not None:
-            ip = user_input[CONF_HOST].replace(" ", "")
+            ip = user_input[CONF_HOST]
 
             api = API(ip, session=aiohttp_client.async_get_clientsession(self.hass))
 

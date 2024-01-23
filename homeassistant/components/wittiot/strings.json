@@ -4,7 +4,7 @@
       "user": {
         "title": "Device IP address",
         "data": {
-          "host": "Device IP address"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "description": "Please enter the IP address of the device to view the data"
       }
