@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pylutron import Lutron, LutronEntity, Output
+from pylutron import Output
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -44,15 +44,7 @@ class LutronFan(LutronDevice, FanEntity):
     _attr_speed_count = 3
     _attr_supported_features = FanEntityFeature.SET_SPEED
     _lutron_device: Output
-
-    def __init__(
-        self, area_name: str, lutron_device: LutronEntity, controller: Lutron
-    ) -> None:
-        """Initialize the fan."""
-
-        super().__init__(area_name, lutron_device, controller)
-        self._prev_percentage: int | None = None
-        self._percentage: int | None = None
+    _prev_percentage: int | None = None
 
     @property
     def percentage(self) -> int | None:
@@ -66,7 +58,6 @@ class LutronFan(LutronDevice, FanEntity):
         """Set the speed of the fan, as a percentage."""
         if percentage > 0:
             self._prev_percentage = percentage
-        self._percentage = percentage
         self._lutron_device.level = percentage
         self.async_write_ha_state()
 

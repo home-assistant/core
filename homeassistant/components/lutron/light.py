@@ -7,14 +7,15 @@ from typing import Any
 
 from pylutron import Lutron, LutronEntity, Output
 
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.util import slugify
 
 from . import DOMAIN, LutronData
 from .entity import LutronDevice
@@ -42,7 +43,7 @@ async def async_setup_entry(
             entity_id = ent_reg.async_get_entity_id(
                 Platform.LIGHT,
                 DOMAIN,
-                slugify(f"{entry_data.client.guid} {device.uuid}"),
+                f"{entry_data.client.guid}_{device.uuid}",
             )
             if entity_id:
                 entity_entry = ent_reg.async_get(entity_id)
@@ -52,17 +53,25 @@ async def async_setup_entry(
                     ent_reg.async_remove(entity_id)
                 else:
                     lights.append([area_name, device, entry_data.client])
-                    async_create_issue(
-                        hass,
-                        DOMAIN,
-                        "deprecated_light_fan",
-                        breaks_in_ha_version="2024.7.0",
-                        is_fixable=False,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="deprecated_light_fan",
-                    )
+                    entity_automations = automations_with_entity(hass, entity_id)
+                    entity_scripts = scripts_with_entity(hass, entity_id)
+                    for item in entity_automations + entity_scripts:
+                        async_create_issue(
+                            hass,
+                            DOMAIN,
+                            f"deprecated_light_fan_{entity_id}_{item}",
+                            breaks_in_ha_version="2024.8.0",
+                            is_fixable=False,
+                            severity=IssueSeverity.WARNING,
+                            translation_key="deprecated_light_fan_entity",
+                            translation_placeholders={
+                                "entity": entity_id,
+                                "info": item,
+                            },
+                        )
         else:
             lights.append([area_name, device, entry_data.client])
+
     async_add_entities(
         [
             LutronLight(area_name, device, entry_data.client)
@@ -113,7 +122,7 @@ class LutronLight(LutronDevice, LightEntity):
                 self.hass,
                 DOMAIN,
                 "deprecated_light_fan_on",
-                breaks_in_ha_version="2024.7.0",
+                breaks_in_ha_version="2024.8.0",
                 is_fixable=True,
                 is_persistent=True,
                 severity=IssueSeverity.WARNING,
@@ -135,7 +144,7 @@ class LutronLight(LutronDevice, LightEntity):
                 self.hass,
                 DOMAIN,
                 "deprecated_light_fan_off",
-                breaks_in_ha_version="2024.7.0",
+                breaks_in_ha_version="2024.8.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_light_fan_off",
