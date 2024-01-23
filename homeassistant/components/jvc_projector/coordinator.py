@@ -5,7 +5,12 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnectError
+from jvcprojector import (
+    JvcProjector,
+    JvcProjectorAuthError,
+    JvcProjectorConnectError,
+    const,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -16,8 +21,8 @@ from .const import NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-# To trigger appropriate actions on power on and power off we need the same time
-INTERVAL = timedelta(seconds=5)
+INTERVAL_SLOW = timedelta(seconds=60)
+INTERVAL_FAST = timedelta(seconds=6)
 
 
 class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
@@ -29,7 +34,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             hass=hass,
             logger=_LOGGER,
             name=NAME,
-            update_interval=INTERVAL,
+            update_interval=INTERVAL_SLOW,
         )
 
         self.device = device
@@ -44,10 +49,13 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         except JvcProjectorAuthError as err:
             raise ConfigEntryAuthFailed("Password authentication failed") from err
 
-        _LOGGER.debug(
-            "JVC Projector - get_state = power %s - input %s",
-            state["power"],
-            state["input"],
-        )
+        old_interval = self.update_interval
 
+        if state[const.POWER] != const.STANDBY:
+            self.update_interval = INTERVAL_FAST
+        else:
+            self.update_interval = INTERVAL_SLOW
+
+        if self.update_interval != old_interval:
+            _LOGGER.debug("Changed update interval to %s", self.update_interval)
         return state

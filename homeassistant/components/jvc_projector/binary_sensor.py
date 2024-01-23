@@ -13,6 +13,8 @@ from . import JvcProjectorDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import JvcProjectorEntity
 
+ON_STATUS = [const.ON, const.WARMING]
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -26,10 +28,8 @@ async def async_setup_entry(
 class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
     """The entity class for JVC Projector integration."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
+    _attr_name = "Power"
 
-    """_attr_device_class = BinarySensorDeviceClass.POWER"""
     icon = "mdi:power"
 
     def __init__(
@@ -38,11 +38,10 @@ class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the JVC Projector sensor."""
         super().__init__(coordinator)
-        self._coordinator = coordinator
-        self._attr_unique_id = f"{self._coordinator.device.mac}_BinarySensor"
-        self._attributes: dict[str, str] = {}
+        # self.coordinator = coordinator
+        self._attr_unique_id = f"{coordinator.device.mac}_power"
 
     @property
     def is_on(self) -> bool:
         """Return true if the JVC is on."""
-        return self.coordinator.data["power"] in [const.ON, const.WARMING]
+        return self.coordinator.data["power"] in ON_STATUS

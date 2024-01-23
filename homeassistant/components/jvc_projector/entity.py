@@ -27,7 +27,6 @@ class JvcProjectorEntity(CoordinatorEntity[JvcProjectorDataUpdateCoordinator]):
         self._attr_unique_id = coordinator.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
-            name=coordinator.name,
             model=self.device.model,
             manufacturer=MANUFACTURER,
         )

@@ -103,11 +103,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry,
-                    data={
-                        CONF_HOST: host,
-                        CONF_PORT: port,
-                        CONF_PASSWORD: password,
-                    },
+                    data={CONF_HOST: host, CONF_PORT: port, CONF_PASSWORD: password},
                 )
                 await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
