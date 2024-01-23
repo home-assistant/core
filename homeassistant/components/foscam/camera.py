@@ -118,16 +118,15 @@ class HassFoscamCamera(CoordinatorEntity[FoscamCoordinator], Camera):
         if self._rtsp_port:
             self._attr_supported_features = CameraEntityFeature.STREAM
 
-        dev_info = coordinator.data.get("dev_info", None)
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="Foscam",
-            model=dev_info["productName"] if dev_info else None,
             name=config_entry.title,
-            sw_version=dev_info["firmwareVer"] if dev_info else None,
-            hw_version=dev_info["hardwareVer"] if dev_info else None,
         )
+        if dev_info := coordinator.data.get("dev_info"):
+            self._attr_device_info["model"] = dev_info["productName"]
+            self._attr_device_info["sw_version"] = dev_info["firmwareVer"]
+            self._attr_device_info["hw_version"] = dev_info["hardwareVer"]
 
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to hass."""
