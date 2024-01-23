@@ -157,6 +157,9 @@
       },
       "total_liter_m3": {
         "name": "Total water usage"
+      },
+      "total_energy_gj": {
+        "name": "Total heat energy"
       }
     },
     "switch": {
