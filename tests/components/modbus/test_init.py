@@ -12,6 +12,7 @@ This file is responsible for testing:
 
 It uses binary_sensors/sensors to do black box testing of the read calls.
 """
+from contextlib import suppress
 from datetime import timedelta
 import logging
 from unittest import mock
@@ -83,6 +84,7 @@ from homeassistant.components.modbus.validators import (
     duplicate_modbus_validator,
     nan_validator,
     number_validator,
+    register_int_list_validator,
     struct_validator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -135,6 +137,27 @@ async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodb
     assert DOMAIN in hass.config.components
     assert caplog.text == ""
     return mock_pymodbus
+
+
+async def test_register_int_list_validator() -> None:
+    """Test conf address register validator."""
+    for value, vtype in (
+        (15, int),
+        ([15], list),
+    ):
+        assert isinstance(register_int_list_validator(value), vtype)
+
+    with suppress(vol.Invalid):
+        register_int_list_validator([15, 16])
+
+    with suppress(vol.Invalid):
+        register_int_list_validator(-15)
+
+    try:
+        register_int_list_validator(["aq"])
+    except vol.Invalid:
+        return
+    pytest.fail("register_int_list_validator not throwing exception")
 
 
 async def test_number_validator() -> None:

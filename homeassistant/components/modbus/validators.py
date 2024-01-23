@@ -353,3 +353,17 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
     for key in reversed(errors):
         del config[CONF_FAN_MODE_VALUES][key]
     return config
+
+
+def register_int_list_validator(value: Any) -> Any:
+    """Check if a register (CONF_ADRESS) is an int or a list having only 1 register."""
+    if isinstance(value, int) and value >= 0:
+        return value
+
+    if isinstance(value, list):
+        if (len(value) == 1) and isinstance(value[0], int) and value[0] >= 0:
+            return value
+
+    raise vol.Invalid(
+        f"Invalid {CONF_ADDRESS} register for fan mode. Required type: positive integer, allowed 1 or list of 1 register."
+    )
