@@ -896,19 +896,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _light_internal_color_mode(self) -> str:
         """Return the color mode of the light with backwards compatibility."""
         if (color_mode := self.color_mode) is None:
-            # Backwards compatibility for color_mode added in 2021.4
-            # Add warning in 2024.3, remove in 2025.3
-            supported = self._light_internal_supported_color_modes
-
-            if ColorMode.HS in supported and self.hs_color is not None:
-                return ColorMode.HS
-            if ColorMode.COLOR_TEMP in supported and self.color_temp_kelvin is not None:
-                return ColorMode.COLOR_TEMP
-            if ColorMode.BRIGHTNESS in supported and self.brightness is not None:
-                return ColorMode.BRIGHTNESS
-            if ColorMode.ONOFF in supported:
-                return ColorMode.ONOFF
-            return ColorMode.UNKNOWN
+            raise ValueError("Light does not set a color mode")
 
         return color_mode
 
@@ -1077,14 +1065,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             # color modes
             if color_mode in supported_color_modes:
                 return
-            # Increase severity to warning in 2024.3, reject in 2025.3
-            _LOGGER.debug(
-                "%s: set to unsupported color_mode: %s, supported_color_modes: %s",
-                self.entity_id,
-                color_mode,
-                supported_color_modes,
-            )
-            return
+            raise ValueError(f"Color mode must be one of {supported_color_modes}")
 
         # When an effect is active, the color mode should indicate what adjustments are
         # supported by the effect. To make this possible, we allow the light to set its
@@ -1097,14 +1078,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if color_mode in effect_color_modes:
             return
 
-        # Increase severity to warning in 2024.3, reject in 2025.3
-        _LOGGER.debug(
-            "%s: set to unsupported color_mode: %s, supported for effect: %s",
-            self.entity_id,
-            color_mode,
-            effect_color_modes,
-        )
-        return
+        raise ValueError(f"Color mode must be one of {effect_color_modes}")
 
     @final
     @property
@@ -1136,12 +1110,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 data[ATTR_BRIGHTNESS] = None
         elif supported_features_value & SUPPORT_BRIGHTNESS:
-            # Backwards compatibility for ambiguous / incomplete states
-            # Add warning in 2024.3, remove in 2025.3
-            if _is_on:
-                data[ATTR_BRIGHTNESS] = self.brightness
-            else:
-                data[ATTR_BRIGHTNESS] = None
+            raise ValueError("SUPPORT_BRIGHTNESS is deprecated")
 
         if color_temp_supported(supported_color_modes):
             if color_mode == ColorMode.COLOR_TEMP:
@@ -1157,20 +1126,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_COLOR_TEMP_KELVIN] = None
                 data[ATTR_COLOR_TEMP] = None
         elif supported_features_value & SUPPORT_COLOR_TEMP:
-            # Backwards compatibility
-            # Add warning in 2024.3, remove in 2025.3
-            if _is_on:
-                color_temp_kelvin = self.color_temp_kelvin
-                data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
-                if color_temp_kelvin:
-                    data[
-                        ATTR_COLOR_TEMP
-                    ] = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
-                else:
-                    data[ATTR_COLOR_TEMP] = None
-            else:
-                data[ATTR_COLOR_TEMP_KELVIN] = None
-                data[ATTR_COLOR_TEMP] = None
+            raise ValueError("SUPPORT_COLOR_TEMP is deprecated")
 
         if color_supported(legacy_supported_color_modes) or color_temp_supported(
             legacy_supported_color_modes
@@ -1193,23 +1149,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (_supported_color_modes := self.supported_color_modes) is not None:
             return _supported_color_modes
 
-        # Backwards compatibility for supported_color_modes added in 2021.4
-        # Add warning in 2024.3, remove in 2025.3
-        supported_features = self.supported_features_compat
-        supported_features_value = supported_features.value
-        supported_color_modes: set[ColorMode] = set()
-
-        if supported_features_value & SUPPORT_COLOR_TEMP:
-            supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if supported_features_value & SUPPORT_COLOR:
-            supported_color_modes.add(ColorMode.HS)
-        if not supported_color_modes and supported_features_value & SUPPORT_BRIGHTNESS:
-            supported_color_modes = {ColorMode.BRIGHTNESS}
-
-        if not supported_color_modes:
-            supported_color_modes = {ColorMode.ONOFF}
-
-        return supported_color_modes
+        raise ValueError("Light does not set supported_color_modes")
 
     @cached_property
     def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
