@@ -39,6 +39,20 @@ def setup_platform(
     add_entities(alarm_devices)
 
 
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up an alarm control panel for a Lupusec device."""
+    data = hass.data[LUPUSEC_DOMAIN]
+
+    alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm(), config_entry)]
+
+    async_add_devices(alarm_devices)
+
+
+def get_unique_id(config_entry_id: str, key: str) -> str:
+    """Create a unique_id id for a lupusec entity."""
+    return f"{LUPUSEC_DOMAIN}_{config_entry_id}_{key}"
+
+
 class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Lupusec."""
 
@@ -47,6 +61,11 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+
+    def __init__(self, data, device, config_entry=None) -> None:
+        """Initialize a Lupusec alarm control panel."""
+        super().__init__(data, device, config_entry)
+        self._attr_unique_id = get_unique_id(config_entry.entry_id, device.device_id)
 
     @property
     def state(self) -> str | None:

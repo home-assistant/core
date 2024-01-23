@@ -286,6 +286,7 @@ FLOWS = {
         "lookin",
         "loqed",
         "luftdaten",
+        "lupusec",
         "lutron",
         "lutron_caseta",
         "lyric",
