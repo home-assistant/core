@@ -210,7 +210,7 @@ _ATTR_ROOMS = "rooms"
 
 
 class EcovacsVacuum(
-    EcovacsEntity[Capabilities, StateVacuumEntityDescription],
+    EcovacsEntity[Capabilities],
     StateVacuumEntity,
 ):
     """Ecovacs vacuum."""
