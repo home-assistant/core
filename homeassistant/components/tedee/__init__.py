@@ -1,5 +1,4 @@
 """Init the tedee component."""
-import asyncio
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
@@ -51,52 +50,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    register_lock = asyncio.Lock()
-
     async def unregister_webhook(_: Any) -> None:
-        async with register_lock:
-            if coordinator.tedee_webhook_id is not None:
-                try:
-                    await coordinator.tedee_client.delete_webhook(
-                        coordinator.tedee_webhook_id
-                    )
-                except TedeeWebhookException as ex:
-                    _LOGGER.warning(
-                        "Failed to unregister Tedee webhook from bridge: %s", ex
-                    )
-                else:
-                    _LOGGER.debug("Unregistered Tedee webhook")
-                webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-
-    async def register_webhook() -> None:
-        async with register_lock:
-            webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
-            webhook_name = "Tedee"
-            if entry.title != NAME:
-                webhook_name = f"{NAME} {entry.title}"
-
-            webhook_register(
-                hass,
-                DOMAIN,
-                webhook_name,
-                entry.data[CONF_WEBHOOK_ID],
-                get_webhook_handler(coordinator),
-                allowed_methods=[METH_POST],
-            )
-            _LOGGER.debug("Registered Tedee webhook at hass: %s", webhook_url)
-
+        if coordinator.tedee_webhook_id is not None:
             try:
-                coordinator.tedee_webhook_id = (
-                    await coordinator.tedee_client.register_webhook(webhook_url)
+                await coordinator.tedee_client.delete_webhook(
+                    coordinator.tedee_webhook_id
                 )
             except TedeeWebhookException as ex:
-                _LOGGER.warning("Failed to register Tedee webhook from bridge: %s", ex)
-            else:
-                entry.async_on_unload(
-                    hass.bus.async_listen_once(
-                        EVENT_HOMEASSISTANT_STOP, unregister_webhook
-                    )
+                _LOGGER.warning(
+                    "Failed to unregister Tedee webhook from bridge: %s", ex
                 )
+            else:
+                _LOGGER.debug("Unregistered Tedee webhook")
+            webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+
+    async def register_webhook() -> None:
+        webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
+        webhook_name = "Tedee"
+        if entry.title != NAME:
+            webhook_name = f"{NAME} {entry.title}"
+
+        webhook_register(
+            hass,
+            DOMAIN,
+            webhook_name,
+            entry.data[CONF_WEBHOOK_ID],
+            get_webhook_handler(coordinator),
+            allowed_methods=[METH_POST],
+        )
+        _LOGGER.debug("Registered Tedee webhook at hass: %s", webhook_url)
+
+        try:
+            await coordinator.async_register_webhook(webhook_url)
+        except TedeeWebhookException as ex:
+            _LOGGER.warning("Failed to register Tedee webhook from bridge: %s", ex)
+        else:
+            entry.async_on_unload(
+                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+            )
 
     entry.async_create_background_task(
         hass, register_webhook(), "tedee_register_webhook"
