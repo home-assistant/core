@@ -96,28 +96,52 @@
         "name": "Last reported"
       },
       "current_power_production": {
-        "name": "Current power production{phase_name}"
+        "name": "Current power production"
       },
       "daily_production": {
-        "name": "Energy production today{phase_name}"
+        "name": "Energy production today"
       },
       "seven_days_production": {
-        "name": "Energy production last seven days{phase_name}"
+        "name": "Energy production last seven days"
       },
       "lifetime_production": {
-        "name": "Lifetime energy production{phase_name}"
+        "name": "Lifetime energy production"
       },
       "current_power_consumption": {
-        "name": "Current power consumption{phase_name}"
+        "name": "Current power consumption"
       },
       "daily_consumption": {
-        "name": "Energy consumption today{phase_name}"
+        "name": "Energy consumption today"
       },
       "seven_days_consumption": {
-        "name": "Energy consumption last seven days{phase_name}"
+        "name": "Energy consumption last seven days"
       },
       "lifetime_consumption": {
-        "name": "Lifetime energy consumption{phase_name}"
+        "name": "Lifetime energy consumption"
+      },
+      "current_power_production_phase": {
+        "name": "Current power production {phase_name}"
+      },
+      "daily_production_phase": {
+        "name": "Energy production today {phase_name}"
+      },
+      "seven_days_production_phase": {
+        "name": "Energy production last seven days {phase_name}"
+      },
+      "lifetime_production_phase": {
+        "name": "Lifetime energy production {phase_name}"
+      },
+      "current_power_consumption_phase": {
+        "name": "Current power consumption {phase_name}"
+      },
+      "daily_consumption_phase": {
+        "name": "Energy consumption today {phase_name}"
+      },
+      "seven_days_consumption_phase": {
+        "name": "Energy consumption last seven days {phase_name}"
+      },
+      "lifetime_consumption_phase": {
+        "name": "Lifetime energy consumption {phase_name}"
       },
       "reserve_soc": {
         "name": "Reserve battery level"

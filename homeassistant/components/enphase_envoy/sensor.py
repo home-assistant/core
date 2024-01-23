@@ -105,7 +105,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=3,
         value_fn=lambda production: production.watts_now,
-        translation_placeholders={"phase_name": ""},
     ),
     EnvoyProductionSensorEntityDescription(
         key="daily_production",
@@ -116,7 +115,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=lambda production: production.watt_hours_today,
-        translation_placeholders={"phase_name": ""},
     ),
     EnvoyProductionSensorEntityDescription(
         key="seven_days_production",
@@ -126,7 +124,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         value_fn=lambda production: production.watt_hours_last_7_days,
-        translation_placeholders={"phase_name": ""},
     ),
     EnvoyProductionSensorEntityDescription(
         key="lifetime_production",
@@ -137,7 +134,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=lambda production: production.watt_hours_lifetime,
-        translation_placeholders={"phase_name": ""},
     ),
 )
 
@@ -157,8 +153,8 @@ def phase_sensor_from_production_sensor(
     """Build phase sensors from production sensors."""
     return [
         EnvoyProductionPhaseSensorEntityDescription(
-            key=sensor.key + f"_l{phase + 1}",
-            translation_key=sensor.translation_key,
+            key=f"{sensor.key}_l{phase + 1}",
+            translation_key=f"{sensor.translation_key}_phase",
             native_unit_of_measurement=sensor.native_unit_of_measurement,
             state_class=sensor.state_class,
             device_class=sensor.device_class,
@@ -166,7 +162,7 @@ def phase_sensor_from_production_sensor(
             suggested_display_precision=sensor.suggested_display_precision,
             value_fn=sensor.value_fn,
             on_phase=PhaseNames(PHASENAMES[phase]),
-            translation_placeholders={"phase_name": f" l{phase + 1}"},
+            translation_placeholders={"phase_name": f"l{phase + 1}"},
         )
         for sensor in sensors
         for phase in range(0, 3)
@@ -202,7 +198,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=3,
         value_fn=lambda consumption: consumption.watts_now,
-        translation_placeholders={"phase_name": ""},
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="daily_consumption",
@@ -213,7 +208,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=lambda consumption: consumption.watt_hours_today,
-        translation_placeholders={"phase_name": ""},
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="seven_days_consumption",
@@ -223,7 +217,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         value_fn=lambda consumption: consumption.watt_hours_last_7_days,
-        translation_placeholders={"phase_name": ""},
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="lifetime_consumption",
@@ -234,7 +227,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=lambda consumption: consumption.watt_hours_lifetime,
-        translation_placeholders={"phase_name": ""},
     ),
 )
 
@@ -254,8 +246,8 @@ def phase_sensor_from_consumption_sensor(
     """Build phase sensors from production sensors."""
     return [
         EnvoyConsumptionPhaseSensorEntityDescription(
-            key=sensor.key + f"_l{phase + 1}",
-            translation_key=sensor.translation_key,
+            key=f"{sensor.key}_l{phase + 1}",
+            translation_key=f"{sensor.translation_key}_phase",
             native_unit_of_measurement=sensor.native_unit_of_measurement,
             state_class=sensor.state_class,
             device_class=sensor.device_class,
@@ -263,7 +255,7 @@ def phase_sensor_from_consumption_sensor(
             suggested_display_precision=sensor.suggested_display_precision,
             value_fn=sensor.value_fn,
             on_phase=PhaseNames(PHASENAMES[phase]),
-            translation_placeholders={"phase_name": f" l{phase + 1}"},
+            translation_placeholders={"phase_name": f"l{phase + 1}"},
         )
         for sensor in sensors
         for phase in range(0, 3)
