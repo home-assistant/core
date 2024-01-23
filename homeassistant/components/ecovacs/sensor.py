@@ -143,7 +143,7 @@ class EcovacsLifespanSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[LifeSpanEvent], int | float]
 
 
-LIFESPAN_ENTITY_DESCRIPTIONS = (
+LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
     EcovacsLifespanSensorEntityDescription(
         component=component,
         value_fn=lambda e: e.percent,
