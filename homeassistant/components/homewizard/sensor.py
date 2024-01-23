@@ -49,7 +49,7 @@ class HomeWizardSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Data], StateType]
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class HomeWizardExternalSensorEntityDescription(SensorEntityDescription):
     """Class describing HomeWizard sensor entities."""
 
