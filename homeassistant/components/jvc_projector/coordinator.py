@@ -58,4 +58,5 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         if self.update_interval != old_interval:
             _LOGGER.debug("Changed update interval to %s", self.update_interval)
+
         return state
