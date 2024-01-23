@@ -41,6 +41,7 @@ from homeassistant.helpers import (
     trace,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -4601,6 +4602,9 @@ async def test_validate_action_config(
         cv.SCRIPT_ACTION_PARALLEL: {
             "parallel": [templated_device_action("parallel_event")],
         },
+        cv.SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: {
+            "set_conversation_response": "Hello world"
+        },
     }
     expected_templates = {
         cv.SCRIPT_ACTION_CHECK_CONDITION: None,
@@ -5357,3 +5361,158 @@ async def test_condition_not_shorthand(
             "2": [{"result": {"event": "test_event", "event_data": {}}}],
         }
     )
+
+
+async def test_conversation_response(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setting conversation response."""
+    sequence = cv.SCRIPT_SCHEMA([{"set_conversation_response": "Testing 123"}])
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+    assert result.conversation_response == "Testing 123"
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"conversation_response": "Testing 123"}}],
+        }
+    )
+
+
+async def test_conversation_response_template(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a templated conversation response."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"my_var": "234"}},
+            {"set_conversation_response": '{{ "Testing " + my_var }}'},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+    assert result.conversation_response == "Testing 234"
+
+    assert_action_trace(
+        {
+            "0": [{"variables": {"my_var": "234"}}],
+            "1": [{"result": {"conversation_response": "Testing 234"}}],
+        }
+    )
+
+
+async def test_conversation_response_not_set(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test not setting conversation response."""
+    sequence = cv.SCRIPT_SCHEMA([])
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+    assert result.conversation_response is UNDEFINED
+
+    assert_action_trace({})
+
+
+async def test_conversation_response_unset(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test clearing conversation response."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"set_conversation_response": "Testing 123"},
+            {"set_conversation_response": None},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+    assert result.conversation_response is None
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"conversation_response": "Testing 123"}}],
+            "1": [{"result": {"conversation_response": None}}],
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("var", "if_result", "choice", "response"),
+    [(1, True, "then", "If: Then"), (2, False, "else", "If: Else")],
+)
+async def test_conversation_response_subscript_if(
+    hass: HomeAssistant,
+    var: int,
+    if_result: bool,
+    choice: str,
+    response: str,
+) -> None:
+    """Test setting conversation response in a subscript."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"set_conversation_response": "Testing 123"},
+            {
+                "if": {
+                    "condition": "template",
+                    "value_template": "{{ var == 1 }}",
+                },
+                "then": {"set_conversation_response": "If: Then"},
+                "else": {"set_conversation_response": "If: Else"},
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    run_vars = MappingProxyType({"var": var})
+    result = await script_obj.async_run(run_vars, context=Context())
+    assert result.conversation_response == response
+
+    expected_trace = {
+        "0": [{"result": {"conversation_response": "Testing 123"}}],
+        "1": [{"result": {"choice": choice}}],
+        "1/if": [{"result": {"result": if_result}}],
+        "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
+        f"1/{choice}/0": [{"result": {"conversation_response": response}}],
+    }
+    assert_action_trace(expected_trace)
+
+
+@pytest.mark.parametrize(
+    ("var", "if_result", "choice"), [(1, True, "then"), (2, False, "else")]
+)
+async def test_conversation_response_not_set_subscript_if(
+    hass: HomeAssistant,
+    var: int,
+    if_result: bool,
+    choice: str,
+) -> None:
+    """Test not setting conversation response in a subscript."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"set_conversation_response": "Testing 123"},
+            {
+                "if": {
+                    "condition": "template",
+                    "value_template": "{{ var == 1 }}",
+                },
+                "then": [],
+                "else": [],
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    run_vars = MappingProxyType({"var": var})
+    result = await script_obj.async_run(run_vars, context=Context())
+    assert result.conversation_response == "Testing 123"
+
+    expected_trace = {
+        "0": [{"result": {"conversation_response": "Testing 123"}}],
+        "1": [{"result": {"choice": choice}}],
+        "1/if": [{"result": {"result": if_result}}],
+        "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
+    }
+    assert_action_trace(expected_trace)
