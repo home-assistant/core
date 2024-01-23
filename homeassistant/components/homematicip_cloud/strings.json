@@ -130,8 +130,8 @@
       "description": "Sets the minimum Floor Heating Valve Position.",
       "fields": {
         "entity_id": {
-          "name": "Entity",
-          "description": "The ID of the climate entity. Use 'all' keyword to switch the profile for all entities."
+          "name": "FALMOT-C12 Entiy",
+          "description": "The ID of a FALMOT-C12 Channel Entity. Use 'all' keyword to switch the profile for all devices."
         },
         "valve_position": {
           "name": "Minimum Valve Position",

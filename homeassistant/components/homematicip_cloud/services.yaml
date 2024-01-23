@@ -95,7 +95,7 @@ reset_energy_counter:
   fields:
     entity_id:
       required: true
-      example: switch.livingroom
+      example: switch.livingrooms
       selector:
         text:
 
@@ -108,7 +108,7 @@ set_minimum_floor_heating_valve_position:
       selector:
         text:
     accesspoint_id:
-      example: 3014xxxxxxxxxxxxxxxxxxxx
+      default: 3014xxxxxxxxxxxxxxxxxxxx
       selector:
         text:
     valve_position:

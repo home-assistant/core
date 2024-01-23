@@ -145,11 +145,12 @@ async def async_setup_entry(
         if isinstance(device, AsyncFloorTerminalBlock12):
             for channel in device.functionalChannels:
                 if isinstance(channel, FloorTerminalBlockMechanicChannel):
-                    entities.append(
-                        HomematicipFloorTerminalBlockMechanicChannelValve(
-                            hap, device, channel=channel.index
+                    if getattr(channel, "valvePosition", None) is not None:
+                        entities.append(
+                            HomematicipFloorTerminalBlockMechanicChannelValve(
+                                hap, device, channel=channel.index
+                            )
                         )
-                    )
                 elif isinstance(channel, DeviceBaseFloorHeatingChannel):
                     entities.append(
                         HomematicipMinimumFloorHeatingValvePosition(
