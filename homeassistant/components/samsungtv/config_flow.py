@@ -35,12 +35,9 @@ from .const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
-    ENCRYPTED_WEBSOCKET_PORT,
-    LEGACY_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
-    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_INVALID_PIN,
@@ -50,7 +47,6 @@ from .const import (
     SUCCESSFUL_RESULTS,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
-    WEBSOCKET_PORTS,
 )
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
@@ -188,7 +184,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise AbortFlow(result)
         assert method is not None
         self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
-        return
 
     async def _async_get_device_info_and_method(
         self,
@@ -224,31 +219,15 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title = f"{self._name} ({self._model})"
         self._udn = _strip_uuid(dev_info.get("udn", info["id"]))
         if mac := mac_from_device_info(info):
-            self._mac = mac
+            # Samsung sometimes returns a value of "none" for the mac address
+            # this should be ignored - but also shouldn't trigger getmac
+            if mac != "none":
+                self._mac = mac
         elif mac := await self.hass.async_add_executor_job(
             partial(getmac.get_mac_address, ip=self._host)
         ):
             self._mac = mac
         return True
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle configuration by yaml file."""
-        # We need to import even if we cannot validate
-        # since the TV may be off at startup
-        await self._async_set_name_host_from_input(user_input)
-        self._async_abort_entries_match({CONF_HOST: self._host})
-        port = user_input.get(CONF_PORT)
-        if port in WEBSOCKET_PORTS:
-            user_input[CONF_METHOD] = METHOD_WEBSOCKET
-        elif port == ENCRYPTED_WEBSOCKET_PORT:
-            user_input[CONF_METHOD] = METHOD_ENCRYPTED_WEBSOCKET
-        elif port == LEGACY_PORT:
-            user_input[CONF_METHOD] = METHOD_LEGACY
-        user_input[CONF_MANUFACTURER] = DEFAULT_MANUFACTURER
-        return self.async_create_entry(
-            title=self._title,
-            data=user_input,
-        )
 
     async def _async_set_name_host_from_input(self, user_input: dict[str, Any]) -> None:
         try:
@@ -549,11 +528,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if result == RESULT_SUCCESS:
                 new_data = dict(self._reauth_entry.data)
                 new_data[CONF_TOKEN] = bridge.token
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=new_data
+                return self.async_update_reload_and_abort(
+                    self._reauth_entry,
+                    data=new_data,
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
             if result not in (RESULT_AUTH_MISSING, RESULT_CANNOT_CONNECT):
                 return self.async_abort(reason=result)
 
@@ -590,7 +568,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 and (token := await self._authenticator.try_pin(pin))
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self._reauth_entry,
                     data={
                         **self._reauth_entry.data,
@@ -598,8 +576,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SESSION_ID: session_id,
                     },
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
             errors = {"base": RESULT_INVALID_PIN}
 

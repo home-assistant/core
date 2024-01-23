@@ -1,0 +1,36 @@
+get_forecast:
+  target:
+    entity:
+      domain: weather
+      supported_features:
+        - weather.WeatherEntityFeature.FORECAST_DAILY
+        - weather.WeatherEntityFeature.FORECAST_HOURLY
+        - weather.WeatherEntityFeature.FORECAST_TWICE_DAILY
+  fields:
+    type:
+      required: true
+      selector:
+        select:
+          options:
+            - "daily"
+            - "hourly"
+            - "twice_daily"
+          translation_key: forecast_type
+get_forecasts:
+  target:
+    entity:
+      domain: weather
+      supported_features:
+        - weather.WeatherEntityFeature.FORECAST_DAILY
+        - weather.WeatherEntityFeature.FORECAST_HOURLY
+        - weather.WeatherEntityFeature.FORECAST_TWICE_DAILY
+  fields:
+    type:
+      required: true
+      selector:
+        select:
+          options:
+            - "daily"
+            - "hourly"
+            - "twice_daily"
+          translation_key: forecast_type

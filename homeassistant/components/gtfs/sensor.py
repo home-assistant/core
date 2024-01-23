@@ -341,7 +341,7 @@ def get_next_departure(
                  {tomorrow_order}
                  origin_stop_time.departure_time
         LIMIT :limit
-        """
+        """  # noqa: S608
     result = schedule.engine.connect().execute(
         text(sql_query),
         {
@@ -505,7 +505,6 @@ def setup_platform(
     joined_path = os.path.join(gtfs_dir, sqlite_file)
     gtfs = pygtfs.Schedule(joined_path)
 
-    # pylint: disable=no-member
     if not gtfs.feeds:
         pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
@@ -610,14 +609,6 @@ class GTFSDepartureSensor(SensorEntity):
                 self._include_tomorrow,
             )
 
-            # Define the state as a UTC timestamp with ISO 8601 format
-            if not self._departure:
-                self._state = None
-            else:
-                self._state = self._departure["departure_time"].replace(
-                    tzinfo=dt_util.UTC
-                )
-
             # Fetch trip and route details once, unless updated
             if not self._departure:
                 self._trip = None
@@ -647,6 +638,18 @@ class GTFSDepartureSensor(SensorEntity):
                         self._route.agency_id,
                     )
                     self._agency = False
+
+            # Define the state as a UTC timestamp with ISO 8601 format
+            if not self._departure:
+                self._state = None
+            elif self._agency:
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.get_time_zone(self._agency.agency_timezone)
+                )
+            else:
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.UTC
+                )
 
             # Assign attributes, icon and name
             self.update_attributes()

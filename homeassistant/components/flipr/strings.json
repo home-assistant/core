@@ -26,5 +26,29 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ph_status": {
+        "name": "pH status"
+      },
+      "chlorine_status": {
+        "name": "Chlorine status"
+      }
+    },
+    "sensor": {
+      "chlorine": {
+        "name": "Chlorine"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      },
+      "last_measured": {
+        "name": "Last measured"
+      },
+      "red_ox": {
+        "name": "Red OX"
+      }
+    }
   }
 }

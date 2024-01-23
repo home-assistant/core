@@ -6,6 +6,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import call, patch
 
+from freezegun import freeze_time
 import pytest
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import (
@@ -456,6 +457,7 @@ async def test_options_update(
         options=new_options,
     )
     assert config_entry.options == updated_options
+    await hass.async_block_till_done()
     await _test_service(
         hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None, num=VOLUME_STEP
     )
@@ -471,7 +473,7 @@ async def _test_update_availability_switch(
     future_interval = timedelta(minutes=1)
 
     # Setup device as if time is right now
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         await _test_setup_speaker(hass, initial_power_state)
 
     # Clear captured logs so that only availability state changes are captured for
@@ -484,9 +486,7 @@ async def _test_update_availability_switch(
         with patch(
             "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
             return_value=final_power_state,
-        ), patch("homeassistant.util.dt.utcnow", return_value=future), patch(
-            "homeassistant.util.utcnow", return_value=future
-        ):
+        ), freeze_time(future):
             async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
             if final_power_state is None:
@@ -746,6 +746,8 @@ async def test_apps_update(
                 "homeassistant.components.vizio.gen_apps_list_from_url",
                 return_value=APP_LIST,
             ):
+                async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
+                await hass.async_block_till_done()
                 async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
                 await hass.async_block_till_done()
                 # Check source list, remove TV inputs, and verify that the integration is

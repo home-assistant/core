@@ -4,34 +4,33 @@ These APIs are the only documented way to interact with the bluetooth integratio
 """
 from __future__ import annotations
 
+import asyncio
 from asyncio import Future
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
-import async_timeout
+from habluetooth import (
+    BaseHaScanner,
+    BluetoothScannerDevice,
+    BluetoothScanningMode,
+    HaBleakScannerWrapper,
+)
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
-from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import DATA_MANAGER
-from .manager import BluetoothManager
+from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher
-from .models import (
-    BluetoothCallback,
-    BluetoothChange,
-    BluetoothScanningMode,
-    ProcessAdvertisementCallback,
-)
-from .wrappers import HaBleakScannerWrapper
+from .models import BluetoothCallback, BluetoothChange, ProcessAdvertisementCallback
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
 
 
-def _get_manager(hass: HomeAssistant) -> BluetoothManager:
+def _get_manager(hass: HomeAssistant) -> HomeAssistantBluetoothManager:
     """Get the bluetooth manager."""
-    return cast(BluetoothManager, hass.data[DATA_MANAGER])
+    return cast(HomeAssistantBluetoothManager, hass.data[DATA_MANAGER])
 
 
 @hass_callback
@@ -138,7 +137,7 @@ async def async_process_advertisements(
     timeout: int,
 ) -> BluetoothServiceInfoBleak:
     """Process advertisements until callback returns true or timeout expires."""
-    done: Future[BluetoothServiceInfoBleak] = Future()
+    done: Future[BluetoothServiceInfoBleak] = hass.loop.create_future()
 
     @hass_callback
     def _async_discovered_device(
@@ -152,7 +151,7 @@ async def async_process_advertisements(
     )
 
     try:
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             return await done
     finally:
         unload()
@@ -182,13 +181,10 @@ def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
 def async_register_scanner(
     hass: HomeAssistant,
     scanner: BaseHaScanner,
-    connectable: bool,
     connection_slots: int | None = None,
 ) -> CALLBACK_TYPE:
     """Register a BleakScanner."""
-    return _get_manager(hass).async_register_scanner(
-        scanner, connectable, connection_slots
-    )
+    return _get_manager(hass).async_register_scanner(scanner, connection_slots)
 
 
 @hass_callback
@@ -197,3 +193,27 @@ def async_get_advertisement_callback(
 ) -> Callable[[BluetoothServiceInfoBleak], None]:
     """Get the advertisement callback."""
     return _get_manager(hass).scanner_adv_received
+
+
+@hass_callback
+def async_get_learned_advertising_interval(
+    hass: HomeAssistant, address: str
+) -> float | None:
+    """Get the learned advertising interval for a MAC address."""
+    return _get_manager(hass).async_get_learned_advertising_interval(address)
+
+
+@hass_callback
+def async_get_fallback_availability_interval(
+    hass: HomeAssistant, address: str
+) -> float | None:
+    """Get the fallback availability timeout for a MAC address."""
+    return _get_manager(hass).async_get_fallback_availability_interval(address)
+
+
+@hass_callback
+def async_set_fallback_availability_interval(
+    hass: HomeAssistant, address: str, interval: float
+) -> None:
+    """Override the fallback availability timeout for a MAC address."""
+    _get_manager(hass).async_set_fallback_availability_interval(address, interval)

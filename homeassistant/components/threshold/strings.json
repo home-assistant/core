@@ -9,7 +9,7 @@
           "entity_id": "Input sensor",
           "hysteresis": "Hysteresis",
           "lower": "Lower limit",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "upper": "Upper limit"
         }
       }
@@ -26,7 +26,7 @@
           "entity_id": "[%key:component::threshold::config::step::user::data::entity_id%]",
           "hysteresis": "[%key:component::threshold::config::step::user::data::hysteresis%]",
           "lower": "[%key:component::threshold::config::step::user::data::lower%]",
-          "name": "[%key:component::threshold::config::step::user::data::name%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "upper": "[%key:component::threshold::config::step::user::data::upper%]"
         }
       }

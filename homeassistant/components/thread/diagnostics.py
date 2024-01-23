@@ -148,7 +148,8 @@ async def async_get_config_entry_diagnostics(
                 "unexpected_routers": set(),
             },
         )
-        if mlp := record.dataset.get(MeshcopTLVType.MESHLOCALPREFIX):
+        if mlp_item := record.dataset.get(MeshcopTLVType.MESHLOCALPREFIX):
+            mlp = str(mlp_item)
             network["prefixes"].add(f"{mlp[0:4]}:{mlp[4:8]}:{mlp[8:12]}:{mlp[12:16]}")
 
     # Find all routes currently act that might be thread related, so we can match them to

@@ -1,6 +1,7 @@
 """The tests for the Group Sensor platform."""
 from __future__ import annotations
 
+from math import prod
 import statistics
 from typing import Any
 from unittest.mock import patch
@@ -45,6 +46,7 @@ MEAN = statistics.mean(VALUES)
 MEDIAN = statistics.median(VALUES)
 RANGE = max(VALUES) - min(VALUES)
 SUM_VALUE = sum(VALUES)
+PRODUCT_VALUE = prod(VALUES)
 
 
 @pytest.mark.parametrize(
@@ -57,10 +59,12 @@ SUM_VALUE = sum(VALUES)
         ("last", VALUES[2], {ATTR_LAST_ENTITY_ID: "sensor.test_3"}),
         ("range", RANGE, {}),
         ("sum", SUM_VALUE, {}),
+        ("product", PRODUCT_VALUE, {}),
     ],
 )
 async def test_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     sensor_type: str,
     result: str,
     attributes: dict[str, Any],
@@ -104,8 +108,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "L"
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get(f"sensor.sensor_group_{sensor_type}")
+    entity = entity_registry.async_get(f"sensor.sensor_group_{sensor_type}")
     assert entity.unique_id == "very_unique_id"
 
 

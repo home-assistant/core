@@ -129,6 +129,7 @@ async def test_entry_diagnostics(
             "disabled_by": None,
             "domain": "unifi",
             "entry_id": "1",
+            "minor_version": 1,
             "options": {
                 "allow_bandwidth_sensors": True,
                 "allow_uptime_sensors": True,
@@ -141,7 +142,7 @@ async def test_entry_diagnostics(
             "unique_id": "1",
             "version": 1,
         },
-        "site_role": "admin",
+        "role_is_admin": True,
         "clients": {
             "00:00:00:00:00:00": {
                 "blocked": False,

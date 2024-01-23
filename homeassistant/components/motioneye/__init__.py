@@ -51,11 +51,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -110,7 +111,7 @@ def get_motioneye_device_identifier(
 
 
 def split_motioneye_device_identifier(
-    identifier: tuple[str, str]
+    identifier: tuple[str, str],
 ) -> tuple[str, str, int] | None:
     """Get the identifiers for a motionEye device."""
     if len(identifier) != 2 or identifier[0] != DOMAIN or "_" not in identifier[1]:
@@ -169,10 +170,7 @@ def async_generate_motioneye_webhook(
 ) -> str | None:
     """Generate the full local URL for a webhook_id."""
     try:
-        return "{}{}".format(
-            get_url(hass, allow_cloud=False),
-            async_generate_path(webhook_id),
-        )
+        return f"{get_url(hass, allow_cloud=False)}{async_generate_path(webhook_id)}"
     except NoURLAvailableError:
         _LOGGER.warning(
             "Unable to get Home Assistant URL. Have you set the internal and/or "
@@ -535,6 +533,8 @@ def get_media_url(
 
 class MotionEyeEntity(CoordinatorEntity):
     """Base class for motionEye entities."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

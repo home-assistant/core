@@ -1,8 +1,10 @@
 """Test the runner."""
 import asyncio
+from collections.abc import Iterator
 import threading
 from unittest.mock import patch
 
+import packaging.tags
 import py
 import pytest
 
@@ -11,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import executor, thread
 
 # https://github.com/home-assistant/supervisor/blob/main/supervisor/docker/homeassistant.py
-SUPERVISOR_HARD_TIMEOUT = 220
+SUPERVISOR_HARD_TIMEOUT = 240
 
 TIMEOUT_SAFETY_MARGIN = 10
 
@@ -19,9 +21,10 @@ TIMEOUT_SAFETY_MARGIN = 10
 async def test_cumulative_shutdown_timeout_less_than_supervisor() -> None:
     """Verify the cumulative shutdown timeout is at least 10s less than the supervisor."""
     assert (
-        core.STAGE_1_SHUTDOWN_TIMEOUT
-        + core.STAGE_2_SHUTDOWN_TIMEOUT
-        + core.STAGE_3_SHUTDOWN_TIMEOUT
+        core.STOPPING_STAGE_SHUTDOWN_TIMEOUT
+        + core.STOP_STAGE_SHUTDOWN_TIMEOUT
+        + core.FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT
+        + core.CLOSE_STAGE_SHUTDOWN_TIMEOUT
         + executor.EXECUTOR_SHUTDOWN_TIMEOUT
         + thread.THREADING_SHUTDOWN_TIMEOUT
         + TIMEOUT_SAFETY_MARGIN
@@ -73,7 +76,7 @@ def test_run_executor_shutdown_throws(
         "homeassistant.runner.InterruptibleThreadPoolExecutor.shutdown",
         side_effect=RuntimeError,
     ) as mock_shutdown, patch(
-        "homeassistant.core.HomeAssistant.async_run"
+        "homeassistant.core.HomeAssistant.async_run",
     ) as mock_run:
         runner.run(default_config)
 
@@ -147,19 +150,22 @@ async def test_unhandled_exception_traceback(
 
 
 def test__enable_posix_spawn() -> None:
-    """Test that we can enable posix_spawn on Alpine."""
+    """Test that we can enable posix_spawn on musllinux."""
 
-    def _mock_alpine_exists(path):
-        return path == "/etc/alpine-release"
+    def _mock_sys_tags_any() -> Iterator[packaging.tags.Tag]:
+        yield from packaging.tags.parse_tag("py3-none-any")
 
-    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch.object(
-        runner.os.path, "exists", _mock_alpine_exists
+    def _mock_sys_tags_musl() -> Iterator[packaging.tags.Tag]:
+        yield from packaging.tags.parse_tag("cp311-cp311-musllinux_1_1_x86_64")
+
+    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch(
+        "homeassistant.runner.packaging.tags.sys_tags", side_effect=_mock_sys_tags_musl
     ):
         runner._enable_posix_spawn()
         assert runner.subprocess._USE_POSIX_SPAWN is True
 
-    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch.object(
-        runner.os.path, "exists", return_value=False
+    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch(
+        "homeassistant.runner.packaging.tags.sys_tags", side_effect=_mock_sys_tags_any
     ):
         runner._enable_posix_spawn()
         assert runner.subprocess._USE_POSIX_SPAWN is False

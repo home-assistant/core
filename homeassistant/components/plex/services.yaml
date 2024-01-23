@@ -1,21 +1,13 @@
 refresh_library:
-  name: Refresh library
-  description: Refresh a Plex library to scan for new and updated media.
   fields:
     server_name:
-      name: Server name
-      description: Name of a Plex server if multiple Plex servers configured.
       example: "My Plex Server"
       selector:
         text:
     library_name:
-      name: Library name
-      description: Name of the Plex library to refresh.
       required: true
       example: "TV Shows"
       selector:
         text:
 
 scan_for_clients:
-  name: Scan for clients
-  description: Scan for available clients from the Plex server(s), local network, and plex.tv.

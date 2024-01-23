@@ -3,7 +3,8 @@ from unittest.mock import AsyncMock
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
-    CONF_DAMPING,
+    CONF_DAMPING_EVENING,
+    CONF_DAMPING_MORNING,
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
@@ -24,7 +25,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -75,7 +76,8 @@ async def test_options_flow_invalid_api(
             CONF_DECLINATION: 21,
             CONF_AZIMUTH: 22,
             CONF_MODULES_POWER: 2122,
-            CONF_DAMPING: 0.25,
+            CONF_DAMPING_MORNING: 0.25,
+            CONF_DAMPING_EVENING: 0.25,
             CONF_INVERTER_SIZE: 2000,
         },
     )
@@ -108,7 +110,8 @@ async def test_options_flow(
             CONF_DECLINATION: 21,
             CONF_AZIMUTH: 22,
             CONF_MODULES_POWER: 2122,
-            CONF_DAMPING: 0.25,
+            CONF_DAMPING_MORNING: 0.25,
+            CONF_DAMPING_EVENING: 0.25,
             CONF_INVERTER_SIZE: 2000,
         },
     )
@@ -120,7 +123,8 @@ async def test_options_flow(
         CONF_DECLINATION: 21,
         CONF_AZIMUTH: 22,
         CONF_MODULES_POWER: 2122,
-        CONF_DAMPING: 0.25,
+        CONF_DAMPING_MORNING: 0.25,
+        CONF_DAMPING_EVENING: 0.25,
         CONF_INVERTER_SIZE: 2000,
     }
 
@@ -147,7 +151,8 @@ async def test_options_flow_without_key(
             CONF_DECLINATION: 21,
             CONF_AZIMUTH: 22,
             CONF_MODULES_POWER: 2122,
-            CONF_DAMPING: 0.25,
+            CONF_DAMPING_MORNING: 0.25,
+            CONF_DAMPING_EVENING: 0.25,
             CONF_INVERTER_SIZE: 2000,
         },
     )
@@ -159,6 +164,7 @@ async def test_options_flow_without_key(
         CONF_DECLINATION: 21,
         CONF_AZIMUTH: 22,
         CONF_MODULES_POWER: 2122,
-        CONF_DAMPING: 0.25,
+        CONF_DAMPING_MORNING: 0.25,
+        CONF_DAMPING_EVENING: 0.25,
         CONF_INVERTER_SIZE: 2000,
     }

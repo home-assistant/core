@@ -3,29 +3,27 @@ from __future__ import annotations
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_DEFAULT_NAME, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the demo Number entity."""
+    """Set up the demo number platform."""
     async_add_entities(
         [
             DemoNumber(
                 "volume1",
                 "volume",
                 42.0,
-                "mdi:volume-high",
+                "volume",
                 False,
                 mode=NumberMode.SLIDER,
             ),
@@ -33,7 +31,7 @@ async def async_setup_platform(
                 "pwm1",
                 "PWM 1",
                 0.42,
-                "mdi:square-wave",
+                "pwm",
                 False,
                 native_min_value=0.0,
                 native_max_value=1.0,
@@ -44,7 +42,7 @@ async def async_setup_platform(
                 "large_range",
                 "Large Range",
                 500,
-                "mdi:square-wave",
+                "range",
                 False,
                 native_min_value=1,
                 native_max_value=1000,
@@ -54,7 +52,7 @@ async def async_setup_platform(
                 "small_range",
                 "Small Range",
                 128,
-                "mdi:square-wave",
+                "range",
                 False,
                 native_min_value=1,
                 native_max_value=255,
@@ -64,7 +62,7 @@ async def async_setup_platform(
                 "temp1",
                 "Temperature setting",
                 22,
-                "mdi:thermometer",
+                None,
                 False,
                 device_class=NumberDeviceClass.TEMPERATURE,
                 native_min_value=15.0,
@@ -77,26 +75,19 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
-
-
 class DemoNumber(NumberEntity):
     """Representation of a demo Number entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
         self,
         unique_id: str,
-        name: str,
+        device_name: str,
         state: float,
-        icon: str,
+        translation_key: str | None,
         assumed_state: bool,
         *,
         device_class: NumberDeviceClass | None = None,
@@ -109,9 +100,8 @@ class DemoNumber(NumberEntity):
         """Initialize the Demo Number entity."""
         self._attr_assumed_state = assumed_state
         self._attr_device_class = device_class
-        self._attr_icon = icon
+        self._attr_translation_key = translation_key
         self._attr_mode = mode
-        self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_native_value = state
         self._attr_unique_id = unique_id
@@ -128,7 +118,7 @@ class DemoNumber(NumberEntity):
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, unique_id)
             },
-            name=self.name,
+            name=device_name,
         )
 
     async def async_set_native_value(self, value: float) -> None:

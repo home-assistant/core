@@ -17,14 +17,14 @@ from . import AzureDevOpsDeviceEntity, AzureDevOpsEntityDescription
 from .const import CONF_ORG, DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class AzureDevOpsSensorEntityDescriptionMixin:
     """Mixin class for required Azure DevOps sensor description keys."""
 
     build_key: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class AzureDevOpsSensorEntityDescription(
     AzureDevOpsEntityDescription,
     SensorEntityDescription,

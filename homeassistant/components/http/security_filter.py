@@ -35,6 +35,9 @@ FILTERS: Final = re.compile(
 )
 # fmt: on
 
+# Unsafe bytes to be removed per WHATWG spec
+UNSAFE_URL_BYTES = ["\t", "\r", "\n"]
+
 
 @callback
 def setup_security_filter(app: Application) -> None:
@@ -51,6 +54,21 @@ def setup_security_filter(app: Application) -> None:
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
     ) -> StreamResponse:
         """Process request and block commonly known exploit attempts."""
+        for unsafe_byte in UNSAFE_URL_BYTES:
+            if unsafe_byte in request.path:
+                _LOGGER.warning(
+                    "Filtered a request with an unsafe byte in path: %s",
+                    request.raw_path,
+                )
+                raise HTTPBadRequest
+
+            if unsafe_byte in request.query_string:
+                _LOGGER.warning(
+                    "Filtered a request with unsafe byte query string: %s",
+                    request.raw_path,
+                )
+                raise HTTPBadRequest
+
         if FILTERS.search(_recursive_unquote(request.path)):
             _LOGGER.warning(
                 "Filtered a potential harmful request to: %s", request.raw_path

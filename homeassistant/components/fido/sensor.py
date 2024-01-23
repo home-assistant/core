@@ -235,11 +235,10 @@ class FidoSensor(SensorEntity):
         if (sensor_type := self.entity_description.key) == "balance":
             if self.fido_data.data.get(sensor_type) is not None:
                 self._attr_native_value = round(self.fido_data.data[sensor_type], 2)
-        else:
-            if self.fido_data.data.get(self._number, {}).get(sensor_type) is not None:
-                self._attr_native_value = round(
-                    self.fido_data.data[self._number][sensor_type], 2
-                )
+        elif self.fido_data.data.get(self._number, {}).get(sensor_type) is not None:
+            self._attr_native_value = round(
+                self.fido_data.data[self._number][sensor_type], 2
+            )
 
 
 class FidoData:

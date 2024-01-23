@@ -1,26 +1,52 @@
 """Support for a ScreenLogic number entity."""
+from dataclasses import dataclass
 import logging
 
-from screenlogicpy.const import BODY_TYPE, DATA as SL_DATA, EQUIPMENT, SCG
+from screenlogicpy.const.common import ScreenLogicCommunicationError, ScreenLogicError
+from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
+from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import (
+    DOMAIN,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ScreenlogicDataUpdateCoordinator
-from .const import DOMAIN
-from .entity import ScreenlogicEntity
+from .const import DOMAIN as SL_DOMAIN
+from .coordinator import ScreenlogicDataUpdateCoordinator
+from .entity import ScreenLogicEntity, ScreenLogicEntityDescription
+from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-SUPPORTED_SCG_NUMBERS = (
-    "scg_level1",
-    "scg_level2",
-)
+
+@dataclass(frozen=True)
+class ScreenLogicNumberDescription(
+    NumberEntityDescription,
+    ScreenLogicEntityDescription,
+):
+    """Describes a ScreenLogic number entity."""
+
+
+SUPPORTED_SCG_NUMBERS = [
+    ScreenLogicNumberDescription(
+        data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
+        key=VALUE.POOL_SETPOINT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    ScreenLogicNumberDescription(
+        data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
+        key=VALUE.SPA_SETPOINT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -29,66 +55,79 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+    entities: list[ScreenLogicNumber] = []
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
         config_entry.entry_id
     ]
-    equipment_flags = coordinator.gateway_data[SL_DATA.KEY_CONFIG]["equipment_flags"]
-    if equipment_flags & EQUIPMENT.FLAG_CHLORINATOR:
-        async_add_entities(
-            [
-                ScreenLogicNumber(coordinator, scg_level)
-                for scg_level in coordinator.gateway_data[SL_DATA.KEY_SCG]
-                if scg_level in SUPPORTED_SCG_NUMBERS
-            ]
+    gateway = coordinator.gateway
+
+    for scg_number_description in SUPPORTED_SCG_NUMBERS:
+        scg_number_data_path = (
+            *scg_number_description.data_root,
+            scg_number_description.key,
         )
+        if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
+            cleanup_excluded_entity(coordinator, DOMAIN, scg_number_data_path)
+            continue
+        if gateway.get_data(*scg_number_data_path):
+            entities.append(ScreenLogicSCGNumber(coordinator, scg_number_description))
+
+    async_add_entities(entities)
 
 
-class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
-    """Class to represent a ScreenLogic Number."""
+class ScreenLogicNumber(ScreenLogicEntity, NumberEntity):
+    """Base class to represent a ScreenLogic Number entity."""
 
-    _attr_has_entity_name = True
+    entity_description: ScreenLogicNumberDescription
 
-    def __init__(self, coordinator, data_key, enabled=True):
-        """Initialize of the entity."""
-        super().__init__(coordinator, data_key, enabled)
-        self._body_type = SUPPORTED_SCG_NUMBERS.index(self._data_key)
-        self._attr_native_max_value = SCG.LIMIT_FOR_BODY[self._body_type]
-        self._attr_name = self.sensor["name"]
-        self._attr_native_unit_of_measurement = self.sensor["unit"]
-        self._attr_entity_category = EntityCategory.CONFIG
+    def __init__(
+        self,
+        coordinator: ScreenlogicDataUpdateCoordinator,
+        entity_description: ScreenLogicNumberDescription,
+    ) -> None:
+        """Initialize a ScreenLogic number entity."""
+        super().__init__(coordinator, entity_description)
+
+        self._attr_native_unit_of_measurement = get_ha_unit(
+            self.entity_data.get(ATTR.UNIT)
+        )
+        if entity_description.native_max_value is None and isinstance(
+            max_val := self.entity_data.get(ATTR.MAX_SETPOINT), int | float
+        ):
+            self._attr_native_max_value = max_val
+        if entity_description.native_min_value is None and isinstance(
+            min_val := self.entity_data.get(ATTR.MIN_SETPOINT), int | float
+        ):
+            self._attr_native_min_value = min_val
+        if entity_description.native_step is None and isinstance(
+            step := self.entity_data.get(ATTR.STEP), int | float
+        ):
+            self._attr_native_step = step
 
     @property
     def native_value(self) -> float:
         """Return the current value."""
-        return self.sensor["value"]
+        return self.entity_data[ATTR.VALUE]
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        # Need to set both levels at the same time, so we gather
-        # both existing level values and override the one that changed.
-        levels = {}
-        for level in SUPPORTED_SCG_NUMBERS:
-            levels[level] = self.gateway_data[SL_DATA.KEY_SCG][level]["value"]
-        levels[self._data_key] = int(value)
+        raise NotImplementedError()
 
-        if await self.coordinator.gateway.async_set_scg_config(
-            levels[SUPPORTED_SCG_NUMBERS[BODY_TYPE.POOL]],
-            levels[SUPPORTED_SCG_NUMBERS[BODY_TYPE.SPA]],
-        ):
-            _LOGGER.debug(
-                "Set SCG to %i, %i",
-                levels[SUPPORTED_SCG_NUMBERS[BODY_TYPE.POOL]],
-                levels[SUPPORTED_SCG_NUMBERS[BODY_TYPE.SPA]],
-            )
-            await self._async_refresh()
-        else:
-            _LOGGER.warning(
-                "Failed to set_scg to %i, %i",
-                levels[SUPPORTED_SCG_NUMBERS[BODY_TYPE.POOL]],
-                levels[SUPPORTED_SCG_NUMBERS[BODY_TYPE.SPA]],
-            )
 
-    @property
-    def sensor(self) -> dict:
-        """Shortcut to access the level sensor data."""
-        return self.gateway_data[SL_DATA.KEY_SCG][self._data_key]
+class ScreenLogicSCGNumber(ScreenLogicNumber):
+    """Class to represent a ScreenLoigic SCG Number entity."""
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+
+        # Current API requires int values for the currently supported numbers.
+        value = int(value)
+
+        try:
+            await self.gateway.async_set_scg_config(**{self._data_key: value})
+        except (ScreenLogicCommunicationError, ScreenLogicError) as sle:
+            raise HomeAssistantError(
+                f"Failed to set '{self._data_key}' to {value}: {sle.msg}"
+            ) from sle
+        _LOGGER.debug("Set '%s' to %s", self._data_key, value)
+        await self._async_refresh()

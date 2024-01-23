@@ -45,9 +45,9 @@ async def silent_ssdp_scanner(hass):
     ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
         "homeassistant.components.ssdp.Scanner.async_scan"
     ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+        "homeassistant.components.ssdp.Server._async_start_upnp_servers",
     ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
+        "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
     ):
         yield
 
@@ -233,7 +233,7 @@ def remotews_fixture() -> Mock:
     remotews.app_list_data = None
 
     async def _start_listening(
-        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None
+        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
         remotews.ws_event_callback = ws_event_callback
 
@@ -272,7 +272,7 @@ def remoteencws_fixture() -> Mock:
     remoteencws.__aexit__ = AsyncMock()
 
     def _start_listening(
-        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None
+        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
         remoteencws.ws_event_callback = ws_event_callback
 
@@ -288,15 +288,6 @@ def remoteencws_fixture() -> Mock:
     ) as remotews_class:
         remotews_class.return_value = remoteencws
         yield remoteencws
-
-
-@pytest.fixture(name="delay")
-def delay_fixture() -> Mock:
-    """Patch the delay script function."""
-    with patch(
-        "homeassistant.components.samsungtv.media_player.Script.async_run"
-    ) as delay:
-        yield delay
 
 
 @pytest.fixture

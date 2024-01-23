@@ -30,7 +30,7 @@ MOCK_DATA_NEXT = (
     '"ipAddress":false}}'
 )
 
-MOCK_DATA_MISSING = '{"software": {},' '"system": {},' '"wan": {}}'
+MOCK_DATA_MISSING = '{"software": {},"system": {},"wan": {}}'
 
 
 async def test_setup_minimum(

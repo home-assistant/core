@@ -1,5 +1,6 @@
 """Tests for the Spotify config flow."""
 from http import HTTPStatus
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -22,8 +23,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 BLANK_ZEROCONF_INFO = zeroconf.ZeroconfServiceInfo(
-    host="1.2.3.4",
-    addresses=["1.2.3.4"],
+    ip_address=ip_address("1.2.3.4"),
+    ip_addresses=[ip_address("1.2.3.4")],
     hostname="mock_hostname",
     name="mock_name",
     port=None,

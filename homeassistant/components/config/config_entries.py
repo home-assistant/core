@@ -1,8 +1,9 @@
 """Http views to control the config manager."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from http import HTTPStatus
-from typing import Any
+from typing import Any, NoReturn
 
 from aiohttp import web
 import aiohttp.web_exceptions
@@ -11,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
 import homeassistant.helpers.config_validation as cv
@@ -29,7 +30,7 @@ from homeassistant.loader import (
 )
 
 
-async def async_setup(hass):
+async def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
     hass.http.register_view(ConfigManagerEntryIndexView)
     hass.http.register_view(ConfigManagerEntryResourceView)
@@ -43,6 +44,7 @@ async def async_setup(hass):
 
     websocket_api.async_register_command(hass, config_entries_get)
     websocket_api.async_register_command(hass, config_entry_disable)
+    websocket_api.async_register_command(hass, config_entry_get_single)
     websocket_api.async_register_command(hass, config_entry_update)
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
@@ -57,7 +59,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
     url = "/api/config/config_entries/entry"
     name = "api:config:config_entries:entry"
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """List available config entries."""
         hass: HomeAssistant = request.app["hass"]
         domain = None
@@ -75,12 +77,12 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
     url = "/api/config/config_entries/entry/{entry_id}"
     name = "api:config:config_entries:entry:resource"
 
-    async def delete(self, request, entry_id):
+    async def delete(self, request: web.Request, entry_id: str) -> web.Response:
         """Delete a config entry."""
         if not request["hass_user"].is_admin:
             raise Unauthorized(config_entry_id=entry_id, permission="remove")
 
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
 
         try:
             result = await hass.config_entries.async_remove(entry_id)
@@ -96,12 +98,12 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
     url = "/api/config/config_entries/entry/{entry_id}/reload"
     name = "api:config:config_entries:entry:resource:reload"
 
-    async def post(self, request, entry_id):
+    async def post(self, request: web.Request, entry_id: str) -> web.Response:
         """Reload a config entry."""
         if not request["hass_user"].is_admin:
             raise Unauthorized(config_entry_id=entry_id, permission="remove")
 
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
         entry = hass.config_entries.async_get_entry(entry_id)
         if not entry:
             return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
@@ -115,7 +117,12 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
         return self.json({"require_restart": not entry.state.recoverable})
 
 
-def _prepare_config_flow_result_json(result, prepare_result_json):
+def _prepare_config_flow_result_json(
+    result: data_entry_flow.FlowResult,
+    prepare_result_json: Callable[
+        [data_entry_flow.FlowResult], data_entry_flow.FlowResult
+    ],
+) -> data_entry_flow.FlowResult:
     """Convert result to JSON."""
     if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
         return prepare_result_json(result)
@@ -133,17 +140,15 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
     url = "/api/config/config_entries/flow"
     name = "api:config:config_entries:flow"
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> NoReturn:
         """Not implemented."""
         raise aiohttp.web_exceptions.HTTPMethodNotAllowed("GET", ["POST"])
 
-    # pylint: disable=arguments-differ
-    async def post(self, request):
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    )
+    async def post(self, request: web.Request) -> web.Response:
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-
-        # pylint: disable=no-value-for-parameter
         try:
             return await super().post(request)
         except DependencyError as exc:
@@ -152,7 +157,9 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-    def _prepare_result_json(self, result):
+    def _prepare_result_json(
+        self, result: data_entry_flow.FlowResult
+    ) -> data_entry_flow.FlowResult:
         """Convert result to JSON."""
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
@@ -163,23 +170,23 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
     url = "/api/config/config_entries/flow/{flow_id}"
     name = "api:config:config_entries:flow:resource"
 
-    async def get(self, request, flow_id):
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    )
+    async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-
         return await super().get(request, flow_id)
 
-    # pylint: disable=arguments-differ
-    async def post(self, request, flow_id):
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    )
+    async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-
-        # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
 
-    def _prepare_result_json(self, result):
+    def _prepare_result_json(
+        self, result: data_entry_flow.FlowResult
+    ) -> data_entry_flow.FlowResult:
         """Convert result to JSON."""
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
@@ -190,10 +197,10 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
     url = "/api/config/config_entries/flow_handlers"
     name = "api:config:config_entries:flow_handlers"
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """List available flow handlers."""
-        hass = request.app["hass"]
-        kwargs = {}
+        hass: HomeAssistant = request.app["hass"]
+        kwargs: dict[str, Any] = {}
         if "type" in request.query:
             kwargs["type_filter"] = request.query["type"]
         return self.json(await async_get_config_flows(hass, **kwargs))
@@ -205,16 +212,14 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
     url = "/api/config/config_entries/options/flow"
     name = "api:config:config_entries:option:flow"
 
-    # pylint: disable=arguments-differ
-    async def post(self, request):
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
+    async def post(self, request: web.Request) -> web.Response:
         """Handle a POST request.
 
         handler in request is entry_id.
         """
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-
-        # pylint: disable=no-value-for-parameter
         return await super().post(request)
 
 
@@ -224,20 +229,18 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
     url = "/api/config/config_entries/options/flow/{flow_id}"
     name = "api:config:config_entries:options:flow:resource"
 
-    async def get(self, request, flow_id):
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
+    async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-
         return await super().get(request, flow_id)
 
-    # pylint: disable=arguments-differ
-    async def post(self, request, flow_id):
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
+    async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-
-        # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
 
 
@@ -282,6 +285,28 @@ def get_entry(
     if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
         send_entry_not_found(connection, msg_id)
     return entry
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/get_single",
+        "entry_id": str,
+    }
+)
+@websocket_api.async_response
+async def config_entry_get_single(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Update config entry."""
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
+    if entry is None:
+        return
+
+    result = {"config_entry": entry_json(entry)}
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin
@@ -520,7 +545,7 @@ async def async_matching_config_entries(
 
 
 @callback
-def entry_json(entry: config_entries.ConfigEntry) -> dict:
+def entry_json(entry: config_entries.ConfigEntry) -> dict[str, Any]:
     """Return JSON value of a config entry."""
     handler = config_entries.HANDLERS.get(entry.domain)
     # work out if handler has support for options flow
@@ -535,8 +560,8 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "source": entry.source,
         "state": entry.state.value,
         "supports_options": supports_options,
-        "supports_remove_device": entry.supports_remove_device,
-        "supports_unload": entry.supports_unload,
+        "supports_remove_device": entry.supports_remove_device or False,
+        "supports_unload": entry.supports_unload or False,
         "pref_disable_new_entities": entry.pref_disable_new_entities,
         "pref_disable_polling": entry.pref_disable_polling,
         "disabled_by": entry.disabled_by,

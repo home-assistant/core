@@ -7,14 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
@@ -26,7 +19,6 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_ORDER,
     DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SUPPORTED_ORDER_MODES,
 )
@@ -34,7 +26,6 @@ from .errors import AuthenticationError, CannotConnect, UnknownError
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
@@ -57,20 +48,16 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return TransmissionOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
         if user_input is not None:
-            for entry in self._async_current_entries():
-                if (
-                    entry.data[CONF_HOST] == user_input[CONF_HOST]
-                    and entry.data[CONF_PORT] == user_input[CONF_PORT]
-                ):
-                    return self.async_abort(reason="already_configured")
-                if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-                    errors[CONF_NAME] = "name_exists"
-                    break
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             try:
                 await get_api(self.hass, user_input)
 
@@ -82,7 +69,8 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=DEFAULT_NAME,
+                    data=user_input,
                 )
 
         return self.async_show_form(
@@ -141,18 +129,14 @@ class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize Transmission options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Transmission options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): int,
             vol.Optional(
                 CONF_LIMIT,
                 default=self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT),

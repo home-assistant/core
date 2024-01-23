@@ -36,14 +36,14 @@ from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class MotionBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[MotionSensor], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
@@ -51,14 +51,14 @@ class DeviceBaseEntityDescriptionMixin:
     extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None] | None] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboMotionSensorEntityDescription(
     SensorEntityDescription, MotionBaseEntityDescriptionMixin
 ):
     """Describes Sensibo Motion sensor entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboDeviceSensorEntityDescription(
     SensorEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
@@ -67,8 +67,8 @@ class SensiboDeviceSensorEntityDescription(
 
 FILTER_LAST_RESET_DESCRIPTION = SensiboDeviceSensorEntityDescription(
     key="filter_last_reset",
+    translation_key="filter_last_reset",
     device_class=SensorDeviceClass.TIMESTAMP,
-    name="Filter last reset",
     icon="mdi:timer",
     value_fn=lambda data: data.filter_last_reset,
     extra_fn=None,
@@ -77,22 +77,22 @@ FILTER_LAST_RESET_DESCRIPTION = SensiboDeviceSensorEntityDescription(
 MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
     SensiboMotionSensorEntityDescription(
         key="rssi",
+        translation_key="rssi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
-        name="rssi",
         icon="mdi:wifi",
         value_fn=lambda data: data.rssi,
         entity_registry_enabled_default=False,
     ),
     SensiboMotionSensorEntityDescription(
         key="battery_voltage",
+        translation_key="battery_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Battery voltage",
         icon="mdi:battery",
         value_fn=lambda data: data.battery_voltage,
     ),
@@ -101,15 +101,14 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Humidity",
         icon="mdi:water",
         value_fn=lambda data: data.humidity,
     ),
     SensiboMotionSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Temperature",
         icon="mdi:thermometer",
         value_fn=lambda data: data.temperature,
     ),
@@ -120,18 +119,16 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        name="PM2.5",
         icon="mdi:air-filter",
         value_fn=lambda data: data.pm25,
         extra_fn=None,
     ),
     SensiboDeviceSensorEntityDescription(
         key="pure_sensitivity",
-        name="Pure sensitivity",
+        translation_key="sensitivity",
         icon="mdi:air-filter",
         value_fn=lambda data: data.pure_sensitivity,
         extra_fn=None,
-        translation_key="sensitivity",
     ),
     FILTER_LAST_RESET_DESCRIPTION,
 )
@@ -139,35 +136,38 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
 DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="timer_time",
+        translation_key="timer_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Timer end time",
         icon="mdi:timer",
         value_fn=lambda data: data.timer_time,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
     ),
     SensiboDeviceSensorEntityDescription(
         key="feels_like",
+        translation_key="feels_like",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Temperature feels like",
         value_fn=lambda data: data.feelslike,
         extra_fn=None,
         entity_registry_enabled_default=False,
     ),
     SensiboDeviceSensorEntityDescription(
         key="climate_react_low",
+        translation_key="climate_react_low",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Climate React low temperature threshold",
         value_fn=lambda data: data.smart_low_temp_threshold,
         extra_fn=lambda data: data.smart_low_state,
         entity_registry_enabled_default=False,
     ),
     SensiboDeviceSensorEntityDescription(
         key="climate_react_high",
+        translation_key="climate_react_high",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Climate React high temperature threshold",
         value_fn=lambda data: data.smart_high_temp_threshold,
         extra_fn=lambda data: data.smart_high_state,
         entity_registry_enabled_default=False,
@@ -175,7 +175,6 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="climate_react_type",
         translation_key="smart_type",
-        name="Climate React type",
         value_fn=lambda data: data.smart_type,
         extra_fn=None,
         entity_registry_enabled_default=False,
@@ -186,19 +185,19 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
 AIRQ_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="airq_tvoc",
+        translation_key="airq_tvoc",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:air-filter",
-        name="AirQ TVOC",
         value_fn=lambda data: data.tvoc,
         extra_fn=None,
     ),
     SensiboDeviceSensorEntityDescription(
         key="airq_co2",
+        translation_key="airq_co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        name="AirQ CO2",
         value_fn=lambda data: data.co2,
         extra_fn=None,
     ),
@@ -210,15 +209,14 @@ ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        name="PM 2.5",
         value_fn=lambda data: data.pm25,
         extra_fn=None,
     ),
     SensiboDeviceSensorEntityDescription(
         key="tvoc",
+        translation_key="tvoc",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        name="TVOC",
         value_fn=lambda data: data.tvoc,
         extra_fn=None,
     ),
@@ -227,7 +225,6 @@ ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        name="CO2",
         value_fn=lambda data: data.co2,
         extra_fn=None,
     ),
@@ -235,7 +232,7 @@ ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="ethanol",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Ethanol",
+        translation_key="ethanol",
         value_fn=lambda data: data.etoh,
         extra_fn=None,
     ),
@@ -243,7 +240,6 @@ ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="iaq",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Air quality",
         value_fn=lambda data: data.iaq,
         extra_fn=None,
     ),
@@ -308,13 +304,6 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
         self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
 
     @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Add native unit of measurement."""
-        if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return UnitOfTemperature.CELSIUS
-        return self.entity_description.native_unit_of_measurement
-
-    @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if TYPE_CHECKING:
@@ -340,13 +329,6 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Add native unit of measurement."""
-        if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return UnitOfTemperature.CELSIUS
-        return self.entity_description.native_unit_of_measurement
 
     @property
     def native_value(self) -> StateType | datetime:

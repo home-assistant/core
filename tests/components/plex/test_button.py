@@ -6,7 +6,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.plex.const import DEBOUNCE_TIMEOUT
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -23,14 +23,14 @@ async def test_scan_clients_button_schedule(
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT),
+            dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT),
         )
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.scan_clients_plex_server_1",
+                ATTR_ENTITY_ID: "button.plex_server_1_scan_clients",
             },
             True,
         )

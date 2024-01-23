@@ -190,7 +190,7 @@ async def test_config_entry_accessory(
                                 "iid": 3,
                                 "perms": ["pr"],
                                 "type": "20",
-                                "value": "Home Assistant " "Light",
+                                "value": "Home Assistant Light",
                             },
                             {
                                 "format": "string",
@@ -319,6 +319,7 @@ async def test_config_entry_with_trigger_accessory(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test generating diagnostics for a bridge config entry with a trigger accessory."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     hk_driver.publish = MagicMock()
 
@@ -474,7 +475,7 @@ async def test_config_entry_with_trigger_accessory(
                                 "iid": 10,
                                 "perms": ["pr"],
                                 "type": "23",
-                                "value": "Ceiling Lights " "Changed States",
+                                "value": "Ceiling Lights Changed States",
                             },
                             {
                                 "format": "uint8",
@@ -520,7 +521,7 @@ async def test_config_entry_with_trigger_accessory(
                                 "iid": 16,
                                 "perms": ["pr"],
                                 "type": "23",
-                                "value": "Ceiling Lights " "Turned Off",
+                                "value": "Ceiling Lights Turned Off",
                             },
                             {
                                 "format": "uint8",
@@ -566,7 +567,7 @@ async def test_config_entry_with_trigger_accessory(
                                 "iid": 22,
                                 "perms": ["pr"],
                                 "type": "23",
-                                "value": "Ceiling Lights " "Turned On",
+                                "value": "Ceiling Lights Turned On",
                             },
                             {
                                 "format": "uint8",

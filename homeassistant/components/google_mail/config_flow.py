@@ -60,9 +60,7 @@ class OAuth2FlowHandler(
 
         def _get_profile() -> str:
             """Get profile from inside the executor."""
-            users = build(  # pylint: disable=no-member
-                "gmail", "v1", credentials=credentials
-            ).users()
+            users = build("gmail", "v1", credentials=credentials).users()
             return users.getProfile(userId="me").execute()["emailAddress"]
 
         credentials = Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN])

@@ -5,7 +5,6 @@ from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openweathermap.const import (
-    CONF_LANGUAGE,
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
     DOMAIN,
@@ -13,6 +12,7 @@ from homeassistant.components.openweathermap.const import (
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
@@ -47,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_init(

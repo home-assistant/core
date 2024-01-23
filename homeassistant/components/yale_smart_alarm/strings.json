@@ -22,7 +22,7 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "area_id": "Area ID"
+          "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]"
         }
       }
     }
@@ -31,13 +31,44 @@
     "step": {
       "init": {
         "data": {
-          "code": "Default code for locks, used if none is given",
           "lock_code_digits": "Number of digits in PIN code for locks"
         }
       }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "power_loss": {
+        "name": "Power loss"
+      },
+      "battery": {
+        "name": "Battery"
+      },
+      "tamper": {
+        "name": "Tamper"
+      },
+      "jam": {
+        "name": "Jam"
+      }
     },
-    "error": {
-      "code_format_mismatch": "The code does not match the required number of digits"
+    "button": {
+      "panic": {
+        "name": "Panic button"
+      }
+    }
+  },
+  "exceptions": {
+    "set_alarm": {
+      "message": "Could not set alarm for {name}: {error}"
+    },
+    "could_not_change_alarm": {
+      "message": "Could not change alarm, check system ready for arming"
+    },
+    "set_lock": {
+      "message": "Could not set lock for {name}: {error}"
+    },
+    "could_not_change_lock": {
+      "message": "Could not set lock, check system ready for lock"
     }
   }
 }

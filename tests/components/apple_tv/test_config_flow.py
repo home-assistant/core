@@ -1,5 +1,5 @@
 """Test config flow."""
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, ip_address
 from unittest.mock import ANY, patch
 
 from pyatv import exceptions
@@ -21,8 +21,8 @@ from .common import airplay_service, create_conf, mrp_service, raop_service
 from tests.common import MockConfigEntry
 
 DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
-    host="127.0.0.1",
-    addresses=["127.0.0.1"],
+    ip_address=ip_address("127.0.0.1"),
+    ip_addresses=[ip_address("127.0.0.1")],
     hostname="mock_hostname",
     port=None,
     type="_touch-able._tcp.local.",
@@ -32,8 +32,8 @@ DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
 
 
 RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
-    host="127.0.0.1",
-    addresses=["127.0.0.1"],
+    ip_address=ip_address("127.0.0.1"),
+    ip_addresses=[ip_address("127.0.0.1")],
     hostname="mock_hostname",
     port=None,
     type="_raop._tcp.local.",
@@ -558,8 +558,8 @@ async def test_zeroconf_unsupported_service_aborts(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -579,8 +579,8 @@ async def test_zeroconf_add_mrp_device(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.2",
-            addresses=["127.0.0.2"],
+            ip_address=ip_address("127.0.0.2"),
+            ip_addresses=[ip_address("127.0.0.2")],
             hostname="mock_hostname",
             port=None,
             name="Kitchen",
@@ -594,8 +594,8 @@ async def test_zeroconf_add_mrp_device(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             port=None,
             name="Kitchen",
@@ -691,6 +691,44 @@ async def test_zeroconf_ip_change(hass: HomeAssistant, mock_scan) -> None:
     assert unrelated_entry.data[CONF_ADDRESS] == "127.0.0.2"
 
 
+async def test_zeroconf_ip_change_after_ip_conflict_with_ignored_entry(
+    hass: HomeAssistant, mock_scan
+) -> None:
+    """Test that the config entry gets updated when the ip changes and reloads."""
+    entry = MockConfigEntry(
+        domain="apple_tv", unique_id="mrpid", data={CONF_ADDRESS: "127.0.0.2"}
+    )
+    ignored_entry = MockConfigEntry(
+        domain="apple_tv",
+        unique_id="unrelated",
+        data={CONF_ADDRESS: "127.0.0.2"},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    ignored_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
+    mock_scan.result = [
+        create_conf(
+            IPv4Address("127.0.0.1"), "Device", mrp_service(), airplay_service()
+        )
+    ]
+
+    with patch(
+        "homeassistant.components.apple_tv.async_setup_entry", return_value=True
+    ) as mock_async_setup:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=DMAP_SERVICE,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_async_setup.mock_calls) == 1
+    assert entry.data[CONF_ADDRESS] == "127.0.0.1"
+    assert ignored_entry.data[CONF_ADDRESS] == "127.0.0.2"
+
+
 async def test_zeroconf_ip_change_via_secondary_identifier(
     hass: HomeAssistant, mock_scan
 ) -> None:
@@ -730,6 +768,52 @@ async def test_zeroconf_ip_change_via_secondary_identifier(
     assert len(mock_async_setup.mock_calls) == 2
     assert entry.data[CONF_ADDRESS] == "127.0.0.1"
     assert unrelated_entry.data[CONF_ADDRESS] == "127.0.0.2"
+    assert set(entry.data[CONF_IDENTIFIERS]) == {"airplayid", "mrpid"}
+
+
+async def test_zeroconf_updates_identifiers_for_ignored_entries(
+    hass: HomeAssistant, mock_scan
+) -> None:
+    """Test that an ignored config entry gets updated when the ip changes.
+
+    Instead of checking only the unique id, all the identifiers
+    in the config entry are checked
+    """
+    entry = MockConfigEntry(
+        domain="apple_tv",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        source=config_entries.SOURCE_IGNORE,
+        data={CONF_IDENTIFIERS: ["mrpid"], CONF_ADDRESS: "127.0.0.2"},
+    )
+    unrelated_entry = MockConfigEntry(
+        domain="apple_tv", unique_id="unrelated", data={CONF_ADDRESS: "127.0.0.2"}
+    )
+    unrelated_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
+    mock_scan.result = [
+        create_conf(
+            IPv4Address("127.0.0.1"), "Device", mrp_service(), airplay_service()
+        )
+    ]
+
+    with patch(
+        "homeassistant.components.apple_tv.async_setup_entry", return_value=True
+    ) as mock_async_setup:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=DMAP_SERVICE,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert (
+        len(mock_async_setup.mock_calls) == 0
+    )  # Should not be called because entry is ignored
+    assert entry.data[CONF_ADDRESS] == "127.0.0.1"
+    assert unrelated_entry.data[CONF_ADDRESS] == "127.0.0.2"
+    assert set(entry.data[CONF_IDENTIFIERS]) == {"airplayid", "mrpid"}
 
 
 async def test_zeroconf_add_existing_aborts(hass: HomeAssistant, dmap_device) -> None:
@@ -790,8 +874,8 @@ async def test_zeroconf_abort_if_other_in_progress(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -813,8 +897,8 @@ async def test_zeroconf_abort_if_other_in_progress(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -839,8 +923,8 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -861,8 +945,8 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -897,8 +981,8 @@ async def test_zeroconf_additional_protocol_resolve_failure(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -919,8 +1003,8 @@ async def test_zeroconf_additional_protocol_resolve_failure(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -957,8 +1041,8 @@ async def test_zeroconf_pair_additionally_found_protocols(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -1000,8 +1084,8 @@ async def test_zeroconf_pair_additionally_found_protocols(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -1112,8 +1196,8 @@ async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="fd00::b27c:63bb:cc85:4ea0",
-            addresses=["fd00::b27c:63bb:cc85:4ea0"],
+            ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
+            ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
             hostname="mock_hostname",
             port=None,
             type="_touch-able._tcp.local.",

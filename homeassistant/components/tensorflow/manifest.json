@@ -8,8 +8,8 @@
   "requirements": [
     "tensorflow==2.5.0",
     "tf-models-official==2.5.0",
-    "pycocotools==2.0.1",
-    "numpy==1.23.2",
-    "pillow==9.4.0"
+    "pycocotools==2.0.6",
+    "numpy==1.26.0",
+    "Pillow==10.2.0"
   ]
 }

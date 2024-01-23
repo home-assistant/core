@@ -12,6 +12,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import assert_setup_component
@@ -317,31 +318,37 @@ async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
 
 
 async def test_unused_services(hass: HomeAssistant) -> None:
-    """Test calling unused services should not crash."""
+    """Test calling unused services raises."""
     await _register_basic_vacuum(hass)
 
     # Pause vacuum
-    await common.async_pause(hass, _TEST_VACUUM)
+    with pytest.raises(HomeAssistantError):
+        await common.async_pause(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # Stop vacuum
-    await common.async_stop(hass, _TEST_VACUUM)
+    with pytest.raises(HomeAssistantError):
+        await common.async_stop(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # Return vacuum to base
-    await common.async_return_to_base(hass, _TEST_VACUUM)
+    with pytest.raises(HomeAssistantError):
+        await common.async_return_to_base(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # Spot cleaning
-    await common.async_clean_spot(hass, _TEST_VACUUM)
+    with pytest.raises(HomeAssistantError):
+        await common.async_clean_spot(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # Locate vacuum
-    await common.async_locate(hass, _TEST_VACUUM)
+    with pytest.raises(HomeAssistantError):
+        await common.async_locate(hass, _TEST_VACUUM)
     await hass.async_block_till_done()
 
     # Set fan's speed
-    await common.async_set_fan_speed(hass, "medium", _TEST_VACUUM)
+    with pytest.raises(HomeAssistantError):
+        await common.async_set_fan_speed(hass, "medium", _TEST_VACUUM)
     await hass.async_block_till_done()
 
     _verify(hass, STATE_UNKNOWN, None)

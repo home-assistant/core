@@ -1,0 +1,167 @@
+# serializer version: 1
+# name: test_api_calendar
+  list([
+    dict({
+      'entity_id': 'calendar.henk_workouts',
+      'name': 'henk Workouts',
+    }),
+  ])
+# ---
+# name: test_api_events
+  list([
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-08-29T12:15:13-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-08-29T12:06:51-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-08-31T01:18:44-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-08-31T01:08:27-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-08-04T09:15:19-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-08-04T09:00:39-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-09-22T16:51:01-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-09-22T16:33:55-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-09-14T11:31:46-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-09-14T11:20:49-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-09-22T16:58:13-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-09-22T16:55:53-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-09-14T11:15:27-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-09-14T10:42:31-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-10-09T00:16:07-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-10-09T00:12:49-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-10-09T02:43:58-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-10-09T02:39:43-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-10-09T02:17:12-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-10-09T02:13:23-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2023-10-09T02:17:12-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2023-10-09T02:13:23-07:00',
+      }),
+      'summary': 'Walk',
+      'uid': None,
+    }),
+  ])
+# ---

@@ -14,6 +14,12 @@ from tests.components.image_processing import common
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 @pytest.fixture
 async def setup_openalpr_cloud(hass):
     """Set up openalpr cloud."""
@@ -151,7 +157,7 @@ async def test_openalpr_process_image(
     ]
     assert len(event_data) == 1
     assert event_data[0]["plate"] == "H786P0J"
-    assert event_data[0]["confidence"] == float(90.436699)
+    assert event_data[0]["confidence"] == 90.436699
     assert event_data[0]["entity_id"] == "image_processing.test_local"
 
 

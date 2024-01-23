@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any, cast
 
-import pkg_resources
+from packaging.requirements import Requirement
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
@@ -63,6 +63,13 @@ async def async_process_requirements(
     await _async_get_manager(hass).async_process_requirements(name, requirements)
 
 
+async def async_load_installed_versions(
+    hass: HomeAssistant, requirements: set[str]
+) -> None:
+    """Load the installed version of requirements."""
+    await _async_get_manager(hass).async_load_installed_versions(requirements)
+
+
 @callback
 def _async_get_manager(hass: HomeAssistant) -> RequirementsManager:
     """Get the requirements manager."""
@@ -85,11 +92,8 @@ def pip_kwargs(config_dir: str | None) -> dict[str, Any]:
     is_docker = pkg_util.is_docker_env()
     kwargs = {
         "constraints": os.path.join(os.path.dirname(__file__), CONSTRAINT_FILE),
-        "no_cache_dir": is_docker,
         "timeout": PIP_TIMEOUT,
     }
-    if "WHEELS_LINKS" in os.environ:
-        kwargs["find_links"] = os.environ["WHEELS_LINKS"]
     if not (config_dir is None or pkg_util.is_virtual_env()) and not is_docker:
         kwargs["target"] = os.path.join(config_dir, "deps")
     return kwargs
@@ -232,8 +236,7 @@ class RequirementsManager:
             skipped_requirements = [
                 req
                 for req in requirements
-                if pkg_resources.Requirement.parse(req).project_name
-                in self.hass.config.skip_pip_packages
+                if Requirement(req).name in self.hass.config.skip_pip_packages
             ]
 
             for req in skipped_requirements:
@@ -288,3 +291,15 @@ class RequirementsManager:
         self.install_failure_history |= failures
         if failures:
             raise RequirementsNotFound(name, list(failures))
+
+    async def async_load_installed_versions(
+        self,
+        requirements: set[str],
+    ) -> None:
+        """Load the installed version of requirements."""
+        if not (requirements_to_check := requirements - self.is_installed_cache):
+            return
+
+        self.is_installed_cache |= await self.hass.async_add_executor_job(
+            pkg_util.get_installed_versions, requirements_to_check
+        )

@@ -10,7 +10,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,7 +20,7 @@ from .helper import SettingDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreRequiredKeysMixin:
     """A class that describes required properties for plenticore switch entities."""
 
@@ -32,7 +32,7 @@ class PlenticoreRequiredKeysMixin:
     off_label: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreSwitchEntityDescription(
     SwitchEntityDescription, PlenticoreRequiredKeysMixin
 ):
@@ -116,7 +116,6 @@ class PlenticoreDataSwitch(
         """Create a new Switch Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.entry_id = entry_id
         self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
@@ -129,7 +128,7 @@ class PlenticoreDataSwitch(
         self.off_label = description.off_label
         self._attr_unique_id = f"{entry_id}_{description.module_id}_{description.key}"
 
-        self._device_info = device_info
+        self._attr_device_info = device_info
 
     @property
     def available(self) -> bool:
@@ -144,7 +143,9 @@ class PlenticoreDataSwitch(
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
@@ -168,11 +169,6 @@ class PlenticoreDataSwitch(
                 f"{self.platform_name} {self._name} {self.off_label}"
             )
             await self.coordinator.async_request_refresh()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
 
     @property
     def is_on(self) -> bool:

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/netdata",
   "iot_class": "local_polling",
   "loggers": ["netdata"],
-  "requirements": ["netdata==1.0.1"]
+  "requirements": ["netdata==1.1.0"]
 }

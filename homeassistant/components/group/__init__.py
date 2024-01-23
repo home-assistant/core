@@ -3,14 +3,13 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Collection, Iterable
+from collections.abc import Callable, Collection, Mapping
 from contextvars import ContextVar
 import logging
-from typing import Any, Protocol, cast
+from typing import Any, Protocol
 
 import voluptuous as vol
 
-from homeassistant import core as ha
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -20,8 +19,6 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
-    ENTITY_MATCH_ALL,
-    ENTITY_MATCH_NONE,
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
@@ -29,7 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Event,
     HomeAssistant,
     ServiceCall,
     State,
@@ -39,13 +35,19 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv, entity_registry as er, start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.group import (
+    expand_entity_ids as _expand_entity_ids,
+    get_entity_ids as _get_entity_ids,
+)
 from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import bind_hass
 
 from .const import CONF_HIDE_MEMBERS
@@ -81,6 +83,8 @@ PLATFORMS = [
 ]
 
 REG_KEY = f"{DOMAIN}_registry"
+
+ENTITY_PREFIX = f"{DOMAIN}."
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,68 +169,9 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     return False
 
 
-@bind_hass
-def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[str]:
-    """Return entity_ids with group entity ids replaced by their members.
-
-    Async friendly.
-    """
-    found_ids: list[str] = []
-    for entity_id in entity_ids:
-        if not isinstance(entity_id, str) or entity_id in (
-            ENTITY_MATCH_NONE,
-            ENTITY_MATCH_ALL,
-        ):
-            continue
-
-        entity_id = entity_id.lower()
-
-        try:
-            # If entity_id points at a group, expand it
-            domain, _ = ha.split_entity_id(entity_id)
-
-            if domain == DOMAIN:
-                child_entities = get_entity_ids(hass, entity_id)
-                if entity_id in child_entities:
-                    child_entities = list(child_entities)
-                    child_entities.remove(entity_id)
-                found_ids.extend(
-                    ent_id
-                    for ent_id in expand_entity_ids(hass, child_entities)
-                    if ent_id not in found_ids
-                )
-
-            else:
-                if entity_id not in found_ids:
-                    found_ids.append(entity_id)
-
-        except AttributeError:
-            # Raised by split_entity_id if entity_id is not a string
-            pass
-
-    return found_ids
-
-
-@bind_hass
-def get_entity_ids(
-    hass: HomeAssistant, entity_id: str, domain_filter: str | None = None
-) -> list[str]:
-    """Get members of this group.
-
-    Async friendly.
-    """
-    group = hass.states.get(entity_id)
-
-    if not group or ATTR_ENTITY_ID not in group.attributes:
-        return []
-
-    entity_ids = group.attributes[ATTR_ENTITY_ID]
-    if not domain_filter:
-        return cast(list[str], entity_ids)
-
-    domain_filter = f"{domain_filter.lower()}."
-
-    return [ent_id for ent_id in entity_ids if ent_id.startswith(domain_filter)]
+# expand_entity_ids and get_entity_ids are for backwards compatibility only
+expand_entity_ids = bind_hass(_expand_entity_ids)
+get_entity_ids = bind_hass(_get_entity_ids)
 
 
 @bind_hass
@@ -292,8 +237,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
 
-    await async_process_integration_platform_for_component(hass, DOMAIN)
-
     component: EntityComponent[Group] = hass.data[DOMAIN]
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
@@ -303,14 +246,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config)
 
     async def reload_service_handler(service: ServiceCall) -> None:
-        """Remove all user-defined groups and load new ones from config."""
-        auto = [e for e in component.entities if not e.user_defined]
+        """Group reload handler.
 
-        if (conf := await component.async_prepare_reload()) is None:
+        - Remove group.group entities not created by service calls and set them up again
+        - Reload xxx.group platforms
+        """
+        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
-        await _async_process_config(hass, conf)
 
-        await component.async_add_entities(auto)
+        # Simplified + modified version of EntityPlatform.async_reset:
+        # - group.group never retries setup
+        # - group.group never polls
+        # - We don't need to reset EntityPlatform._setup_complete
+        # - Only remove entities which were not created by service calls
+        tasks = [
+            entity.async_remove()
+            for entity in component.entities
+            if entity.entity_id.startswith("group.") and not entity.created_by_service
+        ]
+
+        if tasks:
+            await asyncio.gather(*tasks)
+
+        component.config = None
+
+        await _async_process_config(hass, conf)
 
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
 
@@ -339,20 +299,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 or None
             )
 
-            extra_arg = {
-                attr: service.data[attr]
-                for attr in (ATTR_ICON,)
-                if service.data.get(attr) is not None
-            }
-
             await Group.async_create_group(
                 hass,
                 service.data.get(ATTR_NAME, object_id),
-                object_id=object_id,
+                created_by_service=True,
                 entity_ids=entity_ids,
-                user_defined=False,
+                icon=service.data.get(ATTR_ICON),
                 mode=service.data.get(ATTR_ALL),
-                **extra_arg,
+                object_id=object_id,
+                order=None,
             )
             return
 
@@ -459,7 +414,8 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
             Group.async_create_group_entity(
                 hass,
                 name,
-                entity_ids,
+                created_by_service=False,
+                entity_ids=entity_ids,
                 icon=icon,
                 object_id=object_id,
                 mode=mode,
@@ -479,16 +435,71 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
 class GroupEntity(Entity):
     """Representation of a Group of entities."""
 
+    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID})
+
     _attr_should_poll = False
+    _entity_ids: list[str]
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+
+        for entity_id in self._entity_ids:
+            if (state := self.hass.states.get(entity_id)) is None:
+                continue
+            self.async_update_supported_features(entity_id, state)
+
+        @callback
+        def async_state_changed_listener(
+            event: EventType[EventStateChangedData] | None,
+        ) -> None:
+            """Handle child updates."""
+            self.async_update_group_state()
+            if event:
+                self.async_update_supported_features(
+                    event.data["entity_id"], event.data["new_state"]
+                )
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+
+        async_state_changed_listener(None)
+        return async_track_state_change_event(
+            self.hass, self._entity_ids, async_state_changed_listener
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
+        for entity_id in self._entity_ids:
+            if (state := self.hass.states.get(entity_id)) is None:
+                continue
+            self.async_update_supported_features(entity_id, state)
 
-        async def _update_at_start(_: HomeAssistant) -> None:
-            self.async_update_group_state()
-            self.async_write_ha_state()
+        @callback
+        def async_state_changed_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
+            """Handle child updates."""
+            self.async_set_context(event.context)
+            self.async_update_supported_features(
+                event.data["entity_id"], event.data["new_state"]
+            )
+            self.async_defer_or_update_ha_state()
 
-        self.async_on_remove(start.async_at_start(self.hass, _update_at_start))
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._entity_ids, async_state_changed_listener
+            )
+        )
+        self.async_on_remove(start.async_at_start(self.hass, self._update_at_start))
+
+    @callback
+    def _update_at_start(self, _: HomeAssistant) -> None:
+        """Update the group state at start."""
+        self.async_update_group_state()
+        self.async_write_ha_state()
 
     @callback
     def async_defer_or_update_ha_state(self) -> None:
@@ -500,12 +511,23 @@ class GroupEntity(Entity):
         self.async_write_ha_state()
 
     @abstractmethod
+    @callback
     def async_update_group_state(self) -> None:
         """Abstract method to update the entity."""
+
+    @callback
+    def async_update_supported_features(
+        self,
+        entity_id: str,
+        new_state: State | None,
+    ) -> None:
+        """Update dictionaries with supported features."""
 
 
 class Group(Entity):
     """Track a group of entity ids."""
+
+    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_ORDER, ATTR_AUTO})
 
     _attr_should_poll = False
     tracking: tuple[str, ...]
@@ -515,11 +537,12 @@ class Group(Entity):
         self,
         hass: HomeAssistant,
         name: str,
-        order: int | None = None,
-        icon: str | None = None,
-        user_defined: bool = True,
-        entity_ids: Collection[str] | None = None,
-        mode: bool | None = None,
+        *,
+        created_by_service: bool,
+        entity_ids: Collection[str] | None,
+        icon: str | None,
+        mode: bool | None,
+        order: int | None,
     ) -> None:
         """Initialize a group.
 
@@ -533,7 +556,7 @@ class Group(Entity):
         self._on_off: dict[str, bool] = {}
         self._assumed: dict[str, bool] = {}
         self._on_states: set[str] = set()
-        self.user_defined = user_defined
+        self.created_by_service = created_by_service
         self.mode = any
         if mode:
             self.mode = all
@@ -542,35 +565,17 @@ class Group(Entity):
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
 
     @staticmethod
-    def create_group(
-        hass: HomeAssistant,
-        name: str,
-        entity_ids: Collection[str] | None = None,
-        user_defined: bool = True,
-        icon: str | None = None,
-        object_id: str | None = None,
-        mode: bool | None = None,
-        order: int | None = None,
-    ) -> Group:
-        """Initialize a group."""
-        return asyncio.run_coroutine_threadsafe(
-            Group.async_create_group(
-                hass, name, entity_ids, user_defined, icon, object_id, mode, order
-            ),
-            hass.loop,
-        ).result()
-
-    @staticmethod
     @callback
     def async_create_group_entity(
         hass: HomeAssistant,
         name: str,
-        entity_ids: Collection[str] | None = None,
-        user_defined: bool = True,
-        icon: str | None = None,
-        object_id: str | None = None,
-        mode: bool | None = None,
-        order: int | None = None,
+        *,
+        created_by_service: bool,
+        entity_ids: Collection[str] | None,
+        icon: str | None,
+        mode: bool | None,
+        object_id: str | None,
+        order: int | None,
     ) -> Group:
         """Create a group entity."""
         if order is None:
@@ -584,11 +589,11 @@ class Group(Entity):
         group = Group(
             hass,
             name,
-            order=order,
-            icon=icon,
-            user_defined=user_defined,
+            created_by_service=created_by_service,
             entity_ids=entity_ids,
+            icon=icon,
             mode=mode,
+            order=order,
         )
 
         group.entity_id = async_generate_entity_id(
@@ -601,19 +606,27 @@ class Group(Entity):
     async def async_create_group(
         hass: HomeAssistant,
         name: str,
-        entity_ids: Collection[str] | None = None,
-        user_defined: bool = True,
-        icon: str | None = None,
-        object_id: str | None = None,
-        mode: bool | None = None,
-        order: int | None = None,
+        *,
+        created_by_service: bool,
+        entity_ids: Collection[str] | None,
+        icon: str | None,
+        mode: bool | None,
+        object_id: str | None,
+        order: int | None,
     ) -> Group:
         """Initialize a group.
 
         This method must be run in the event loop.
         """
         group = Group.async_create_group_entity(
-            hass, name, entity_ids, user_defined, icon, object_id, mode, order
+            hass,
+            name,
+            created_by_service=created_by_service,
+            entity_ids=entity_ids,
+            icon=icon,
+            mode=mode,
+            object_id=object_id,
+            order=order,
         )
 
         # If called before the platform async_setup is called (test cases)
@@ -649,7 +662,7 @@ class Group(Entity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes for the group."""
         data = {ATTR_ENTITY_ID: self.tracking, ATTR_ORDER: self._order}
-        if not self.user_defined:
+        if self.created_by_service:
             data[ATTR_AUTO] = True
 
         return data
@@ -746,7 +759,9 @@ class Group(Entity):
         """Handle removal from Home Assistant."""
         self._async_stop()
 
-    async def _async_state_changed_listener(self, event: Event) -> None:
+    async def _async_state_changed_listener(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Respond to a member state changing.
 
         This method must be run in the event loop.
@@ -757,7 +772,7 @@ class Group(Entity):
 
         self.async_set_context(event.context)
 
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             # The state was removed from the state machine
             self._reset_tracked_state()
 

@@ -1,13 +1,22 @@
 """Integrate with DuckDNS."""
-from collections.abc import Callable, Coroutine
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
+from aiohttp import ClientSession
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
@@ -44,11 +53,11 @@ SERVICE_TXT_SCHEMA = vol.Schema({vol.Required(ATTR_TXT): vol.Any(None, cv.string
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the DuckDNS component."""
-    domain = config[DOMAIN][CONF_DOMAIN]
-    token = config[DOMAIN][CONF_ACCESS_TOKEN]
+    domain: str = config[DOMAIN][CONF_DOMAIN]
+    token: str = config[DOMAIN][CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
-    async def update_domain_interval(_now):
+    async def update_domain_interval(_now: datetime) -> bool:
         """Update the DuckDNS entry."""
         return await _update_duckdns(session, domain, token)
 
@@ -75,7 +84,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 _SENTINEL = object()
 
 
-async def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False):
+async def _update_duckdns(
+    session: ClientSession,
+    domain: str,
+    token: str,
+    *,
+    txt: str | None | object = _SENTINEL,
+    clear: bool = False,
+) -> bool:
     """Update DuckDNS."""
     params = {"domains": domain, "token": token}
 
@@ -85,7 +101,7 @@ async def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False)
             params["txt"] = ""
             clear = True
         else:
-            params["txt"] = txt
+            params["txt"] = cast(str, txt)
 
     if clear:
         params["clear"] = "true"
@@ -105,12 +121,10 @@ async def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False)
 def async_track_time_interval_backoff(
     hass: HomeAssistant,
     action: Callable[[datetime], Coroutine[Any, Any, bool]],
-    intervals,
+    intervals: Sequence[timedelta],
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
-    if not isinstance(intervals, (list, tuple)):
-        intervals = (intervals,)
-    remove = None
+    remove: CALLBACK_TYPE | None = None
     failed = 0
 
     async def interval_listener(now: datetime) -> None:
@@ -122,13 +136,16 @@ def async_track_time_interval_backoff(
                 failed = 0
         finally:
             delay = intervals[failed] if failed < len(intervals) else intervals[-1]
-            remove = async_call_later(hass, delay.total_seconds(), interval_listener)
+            remove = async_call_later(
+                hass, delay.total_seconds(), interval_listener_job
+            )
 
+    interval_listener_job = HassJob(interval_listener, cancel_on_shutdown=True)
     hass.async_run_job(interval_listener, dt_util.utcnow())
 
     def remove_listener() -> None:
         """Remove interval listener."""
         if remove:
-            remove()  # pylint: disable=not-callable
+            remove()
 
     return remove_listener

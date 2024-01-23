@@ -1,0 +1,4 @@
+homeassistant:
+  packages:
+    pack_1:
+      test_domain:

@@ -20,7 +20,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import UTC, utcnow
 
 from .conftest import (
     CALENDAR_ID,
@@ -94,7 +94,6 @@ def add_event_call_service(
                 **params,
                 "summary": TEST_EVENT_SUMMARY,
                 "description": TEST_EVENT_DESCRIPTION,
-                "location": TEST_EVENT_LOCATION,
             },
             target=target,
             blocking=True,
@@ -486,7 +485,6 @@ async def test_add_event_date_in_x(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
-        "location": TEST_EVENT_LOCATION,
         "start": {"date": start_date.date().isoformat()},
         "end": {"date": end_date.date().isoformat()},
     }
@@ -527,7 +525,6 @@ async def test_add_event_date(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
-        "location": TEST_EVENT_LOCATION,
         "start": {"date": today.isoformat()},
         "end": {"date": end_date.isoformat()},
     }
@@ -568,7 +565,6 @@ async def test_add_event_date_time(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
-        "location": TEST_EVENT_LOCATION,
         "start": {
             "dateTime": start_datetime.isoformat(timespec="seconds"),
             "timeZone": "America/Regina",
@@ -578,6 +574,59 @@ async def test_add_event_date_time(
             "timeZone": "America/Regina",
         },
     }
+
+
+@pytest.mark.parametrize(
+    "calendars_config",
+    [
+        [
+            {
+                "cal_id": CALENDAR_ID,
+                "entities": [
+                    {
+                        "device_id": "backyard_light",
+                        "name": "Backyard Light",
+                        "search": "#Backyard",
+                    },
+                ],
+            }
+        ],
+    ],
+)
+async def test_unsupported_create_event(
+    hass: HomeAssistant,
+    mock_calendars_yaml: Mock,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test create event service call is unsupported for virtual calendars."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    start_datetime = datetime.datetime.now(tz=zoneinfo.ZoneInfo("America/Regina"))
+    delta = datetime.timedelta(days=3, hours=3)
+    end_datetime = start_datetime + delta
+
+    with pytest.raises(HomeAssistantError, match="does not support this service"):
+        await hass.services.async_call(
+            DOMAIN,
+            "create_event",
+            {
+                # **data,
+                "start_date_time": start_datetime.isoformat(),
+                "end_date_time": end_datetime.isoformat(),
+                "summary": TEST_EVENT_SUMMARY,
+                "description": TEST_EVENT_DESCRIPTION,
+            },
+            target={"entity_id": "calendar.backyard_light"},
+            blocking=True,
+        )
 
 
 async def test_add_event_failure(
@@ -606,8 +655,55 @@ async def test_add_event_failure(
         )
 
 
+async def test_add_event_location(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+    add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
+) -> None:
+    """Test service call that sets a location field."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    now = utcnow()
+    today = now.date()
+    end_date = today + datetime.timedelta(days=2)
+
+    aioclient_mock.clear_requests()
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
+
+    await add_event_call_service(
+        {
+            "start_date": today.isoformat(),
+            "end_date": end_date.isoformat(),
+            "location": TEST_EVENT_LOCATION,
+        },
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "summary": TEST_EVENT_SUMMARY,
+        "description": TEST_EVENT_DESCRIPTION,
+        "location": TEST_EVENT_LOCATION,
+        "start": {"date": today.isoformat()},
+        "end": {"date": end_date.isoformat()},
+    }
+
+
 @pytest.mark.parametrize(
-    "config_entry_token_expiry", [datetime.datetime.max.timestamp() + 1]
+    "config_entry_token_expiry",
+    [
+        (datetime.datetime.max.replace(tzinfo=UTC).timestamp() + 1),
+        (utcnow().replace(tzinfo=None).timestamp()),
+    ],
+    ids=["max_timestamp", "timestamp_naive"],
 )
 async def test_invalid_token_expiry_in_config_entry(
     hass: HomeAssistant,

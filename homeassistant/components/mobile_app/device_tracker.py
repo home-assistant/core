@@ -1,4 +1,4 @@
-"""Device tracker platform that adds support for OwnTracks over MQTT."""
+"""Device tracker for Mobile app."""
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
@@ -35,7 +35,7 @@ ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up OwnTracks based off an entry."""
+    """Set up Mobile app based off an entry."""
     entity = MobileAppEntity(entry)
     async_add_entities([entity])
 
@@ -44,7 +44,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
     def __init__(self, entry, data=None):
-        """Set up OwnTracks entity."""
+        """Set up Mobile app entity."""
         self._entry = entry
         self._data = data
         self._dispatch_unsub = None

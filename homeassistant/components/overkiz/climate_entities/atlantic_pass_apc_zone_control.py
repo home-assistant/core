@@ -8,7 +8,7 @@ from homeassistant.const import UnitOfTemperature
 
 from ..entity import OverkizEntity
 
-OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
+OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.HEATING: HVACMode.HEAT,
     OverkizCommandParam.DRYING: HVACMode.DRY,
     OverkizCommandParam.COOLING: HVACMode.COOL,
@@ -25,7 +25,7 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return OVERKIZ_TO_HVAC_MODE[
             cast(
@@ -33,7 +33,7 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
             )
         ]
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
             OverkizCommand.SET_PASS_APC_OPERATING_MODE, HVAC_MODE_TO_OVERKIZ[hvac_mode]

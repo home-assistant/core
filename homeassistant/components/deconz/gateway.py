@@ -7,7 +7,6 @@ from collections.abc import Callable
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 
-import async_timeout
 from pydeconz import DeconzSession, errors
 from pydeconz.interfaces import sensors
 from pydeconz.interfaces.api_handlers import APIHandler, GroupedAPIHandler
@@ -235,9 +234,15 @@ class DeconzGateway:
     ) -> None:
         """Handle signals of config entry being updated.
 
-        This is a static method because a class method (bound method), cannot be used with weak references.
-        Causes for this is either discovery updating host address or config entry options changing.
+        This is a static method because a class method (bound method),
+        cannot be used with weak references.
+        Causes for this is either discovery updating host address or
+        config entry options changing.
         """
+        if entry.entry_id not in hass.data[DECONZ_DOMAIN]:
+            # A race condition can occur if multiple config entries are
+            # unloaded in parallel
+            return
         gateway = get_gateway_from_config_entry(hass, entry)
 
         if gateway.api.host != gateway.host:
@@ -347,7 +352,7 @@ async def get_deconz_session(
         config[CONF_API_KEY],
     )
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             await deconz_session.refresh_state()
         return deconz_session
 

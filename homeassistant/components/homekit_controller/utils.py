@@ -1,4 +1,5 @@
 """Helper functions for the homekit_controller component."""
+from functools import lru_cache
 from typing import cast
 
 from aiohomekit import Controller
@@ -11,6 +12,7 @@ from .const import CONTROLLER
 from .storage import async_get_entity_storage
 
 
+@lru_cache
 def folded_name(name: str) -> str:
     """Return a name that is used for matching a similar string."""
     return name.casefold().replace(" ", "")

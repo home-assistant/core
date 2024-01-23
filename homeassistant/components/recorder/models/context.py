@@ -3,23 +3,34 @@ from __future__ import annotations
 
 from contextlib import suppress
 from functools import lru_cache
+import logging
 from uuid import UUID
 
 from homeassistant.util.ulid import bytes_to_ulid, ulid_to_bytes
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def ulid_to_bytes_or_none(ulid: str | None) -> bytes | None:
     """Convert an ulid to bytes."""
     if ulid is None:
         return None
-    return ulid_to_bytes(ulid)
+    try:
+        return ulid_to_bytes(ulid)
+    except ValueError as ex:
+        _LOGGER.exception("Error converting ulid %s to bytes: %s", ulid, ex)
+        return None
 
 
 def bytes_to_ulid_or_none(_bytes: bytes | None) -> str | None:
     """Convert bytes to a ulid."""
     if _bytes is None:
         return None
-    return bytes_to_ulid(_bytes)
+    try:
+        return bytes_to_ulid(_bytes)
+    except ValueError as ex:
+        _LOGGER.exception("Error converting bytes %s to ulid: %s", _bytes, ex)
+        return None
 
 
 @lru_cache(maxsize=16)

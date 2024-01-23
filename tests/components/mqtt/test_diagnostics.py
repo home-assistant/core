@@ -19,20 +19,6 @@ from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 default_config = {
     "birth_message": {},
     "broker": "mock-broker",
-    "discovery": True,
-    "discovery_prefix": "homeassistant",
-    "keepalive": 60,
-    "port": 1883,
-    "protocol": "3.1.1",
-    "transport": "tcp",
-    "ws_headers": {},
-    "ws_path": "/",
-    "will_message": {
-        "payload": "offline",
-        "qos": 0,
-        "retain": False,
-        "topic": "homeassistant/status",
-    },
 }
 
 
@@ -50,13 +36,14 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     hass_client: ClientSessionGenerator,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test config entry diagnostics."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     mqtt_mock.connected = True
 
+    await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "connected": True,
         "devices": [],
@@ -88,12 +75,12 @@ async def test_entry_diagnostics(
     )
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
 
     expected_debug_info = {
         "entities": [
             {
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.none_mqtt_sensor",
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
@@ -122,13 +109,13 @@ async def test_entry_diagnostics(
                 "disabled": False,
                 "disabled_by": None,
                 "entity_category": None,
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.none_mqtt_sensor",
                 "icon": None,
                 "original_device_class": None,
                 "original_icon": None,
                 "state": {
                     "attributes": {"friendly_name": "MQTT Sensor"},
-                    "entity_id": "sensor.mqtt_sensor",
+                    "entity_id": "sensor.none_mqtt_sensor",
                     "last_changed": ANY,
                     "last_updated": ANY,
                     "state": "unknown",
@@ -173,10 +160,10 @@ async def test_redact_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     hass_client: ClientSessionGenerator,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test redacting diagnostics."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     expected_config = dict(default_config)
     expected_config["password"] = "**REDACTED**"
     expected_config["username"] = "**REDACTED**"
@@ -203,7 +190,7 @@ async def test_redact_diagnostics(
     async_fire_mqtt_message(hass, "attributes-topic", location_data)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
 
     expected_debug_info = {
         "entities": [
@@ -267,6 +254,7 @@ async def test_redact_diagnostics(
         "name_by_user": None,
     }
 
+    await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "connected": True,
         "devices": [expected_device],

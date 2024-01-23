@@ -6,7 +6,7 @@ from typing import Any
 
 from pyhap.const import CATEGORY_SENSOR
 
-from homeassistant.core import CALLBACK_TYPE, Context
+from homeassistant.core import CALLBACK_TYPE, Context, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.trigger import async_initialize_triggers
 
@@ -47,10 +47,14 @@ class DeviceTriggerAccessory(HomeAccessory):
             type_: str = trigger["type"]
             subtype: str | None = trigger.get("subtype")
             unique_id = f'{type_}-{subtype or ""}'
-            if (entity_id := trigger.get("entity_id")) and (
-                entry := ent_reg.async_get(entity_id)
+            entity_id: str | None = None
+            if (entity_id_or_uuid := trigger.get("entity_id")) and (
+                entry := ent_reg.async_get(entity_id_or_uuid)
             ):
-                unique_id += f"-entity_unique_id:{get_system_unique_id(entry)}"
+                unique_id += (
+                    f"-entity_unique_id:{get_system_unique_id(entry, entry.unique_id)}"
+                )
+                entity_id = entry.entity_id
             trigger_name_parts = []
             if entity_id and (state := self.hass.states.get(entity_id)):
                 trigger_name_parts.append(state.name)
@@ -110,10 +114,12 @@ class DeviceTriggerAccessory(HomeAccessory):
             _LOGGER.log,
         )
 
-    async def stop(self) -> None:
+    @callback
+    def async_stop(self) -> None:
         """Handle accessory driver stop event."""
         if self._remove_triggers:
             self._remove_triggers()
+        super().async_stop()
 
     @property
     def available(self) -> bool:

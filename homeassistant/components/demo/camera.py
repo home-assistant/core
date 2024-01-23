@@ -7,22 +7,6 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Demo camera platform."""
-    async_add_entities(
-        [
-            DemoCamera("Demo camera", "image/jpg"),
-            DemoCamera("Demo camera png", "image/png"),
-        ]
-    )
 
 
 async def async_setup_entry(
@@ -31,7 +15,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
+    async_add_entities(
+        [
+            DemoCamera("Demo camera", "image/jpg"),
+            DemoCamera("Demo camera png", "image/png"),
+            DemoCameraWithoutStream("Demo camera without stream", "image/jpg"),
+        ]
+    )
 
 
 class DemoCamera(Camera):
@@ -39,7 +29,7 @@ class DemoCamera(Camera):
 
     _attr_is_streaming = True
     _attr_motion_detection_enabled = False
-    _attr_supported_features = CameraEntityFeature.ON_OFF
+    _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
 
     def __init__(self, name: str, content_type: str) -> None:
         """Initialize demo camera component."""
@@ -79,3 +69,9 @@ class DemoCamera(Camera):
         self._attr_is_streaming = True
         self._attr_is_on = True
         self.async_write_ha_state()
+
+
+class DemoCameraWithoutStream(DemoCamera):
+    """The representation of a Demo camera without stream."""
+
+    _attr_supported_features = CameraEntityFeature.ON_OFF

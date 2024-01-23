@@ -1,0 +1,80 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'now': '2023-03-13T13:05:00-06:00',
+    'store': dict({
+      'calendar#1': dict({
+        'events': list([
+          dict({
+            'attendees': '**REDACTED**',
+            'attendees_omitted': False,
+            'description': '**REDACTED**',
+            'end': dict({
+              'date': None,
+              'date_time': '2023-03-13T12:30:00-07:00',
+              'timezone': None,
+            }),
+            'event_type': 'default',
+            'ical_uuid': '**REDACTED**',
+            'id': '**REDACTED**',
+            'location': '**REDACTED**',
+            'original_start_time': None,
+            'recurrence': list([
+            ]),
+            'recurring_event_id': None,
+            'reminders': dict({
+              'overrides': list([
+              ]),
+              'use_default': True,
+            }),
+            'start': dict({
+              'date': None,
+              'date_time': '2023-03-13T12:00:00-07:00',
+              'timezone': None,
+            }),
+            'status': 'confirmed',
+            'summary': '**REDACTED**',
+            'transparency': 'transparent',
+            'visibility': 'default',
+          }),
+          dict({
+            'attendees': '**REDACTED**',
+            'attendees_omitted': False,
+            'description': '**REDACTED**',
+            'end': dict({
+              'date': '2022-10-09',
+              'date_time': None,
+              'timezone': None,
+            }),
+            'event_type': 'default',
+            'ical_uuid': '**REDACTED**',
+            'id': '**REDACTED**',
+            'location': '**REDACTED**',
+            'original_start_time': None,
+            'recurrence': list([
+              'RRULE:FREQ=WEEKLY',
+            ]),
+            'recurring_event_id': None,
+            'reminders': dict({
+              'overrides': list([
+              ]),
+              'use_default': True,
+            }),
+            'start': dict({
+              'date': '2022-10-08',
+              'date_time': None,
+              'timezone': None,
+            }),
+            'status': 'confirmed',
+            'summary': '**REDACTED**',
+            'transparency': 'transparent',
+            'visibility': 'default',
+          }),
+        ]),
+        'sync_token_version': 2,
+      }),
+    }),
+    'system_timezone': 'tzlocal()',
+    'timezone': 'America/Regina',
+  })
+# ---

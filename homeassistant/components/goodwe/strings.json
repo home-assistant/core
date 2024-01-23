@@ -18,8 +18,22 @@
     }
   },
   "entity": {
+    "button": {
+      "synchronize_clock": {
+        "name": "Synchronize inverter clock"
+      }
+    },
+    "number": {
+      "grid_export_limit": {
+        "name": "Grid export limit"
+      },
+      "battery_discharge_depth": {
+        "name": "Depth of discharge (on-grid)"
+      }
+    },
     "select": {
       "operation_mode": {
+        "name": "Inverter operation mode",
         "state": {
           "general": "General mode",
           "off_grid": "Off grid mode",

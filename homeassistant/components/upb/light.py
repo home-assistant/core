@@ -49,14 +49,15 @@ async def async_setup_entry(
 
 
 class UpbLight(UpbAttachedEntity, LightEntity):
-    """Representation of an UPB Light."""
+    """Representation of a UPB Light."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, element, unique_id, upb):
         """Initialize an UpbLight."""
         super().__init__(element, unique_id, upb)
-        self._brightness = self._element.status
+        self._attr_brightness: int = self._element.status
 
     @property
     def color_mode(self) -> ColorMode:
@@ -78,14 +79,9 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         return LightEntityFeature.FLASH
 
     @property
-    def brightness(self):
-        """Get the brightness."""
-        return self._brightness
-
-    @property
     def is_on(self) -> bool:
         """Get the current brightness."""
-        return self._brightness != 0
+        return self._attr_brightness != 0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -122,4 +118,4 @@ class UpbLight(UpbAttachedEntity, LightEntity):
 
     def _element_changed(self, element, changeset):
         status = self._element.status
-        self._brightness = round(status * 2.55) if status else 0
+        self._attr_brightness = round(status * 2.55) if status else 0

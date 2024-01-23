@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Trackables
+from . import Trackables, TractiveClient
 from .const import (
     CLIENT,
     DOMAIN,
@@ -28,7 +28,7 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][entry.entry_id][CLIENT]
     trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
-    entities = [TractiveDeviceTracker(client.user_id, item) for item in trackables]
+    entities = [TractiveDeviceTracker(client, item) for item in trackables]
 
     async_add_entities(entities)
 
@@ -36,15 +36,19 @@ async def async_setup_entry(
 class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     """Tractive device tracker."""
 
-    _attr_has_entity_name = True
     _attr_icon = "mdi:paw"
-    _attr_name = "Tracker"
+    _attr_translation_key = "tracker"
 
-    def __init__(self, user_id: str, item: Trackables) -> None:
+    def __init__(self, client: TractiveClient, item: Trackables) -> None:
         """Initialize tracker entity."""
-        super().__init__(user_id, item.trackable, item.tracker_details)
+        super().__init__(
+            client,
+            item.trackable,
+            item.tracker_details,
+            f"{TRACKER_HARDWARE_STATUS_UPDATED}-{item.tracker_details['_id']}",
+        )
 
-        self._battery_level: int = item.hw_info["battery_level"]
+        self._battery_level: int | None = item.hw_info.get("battery_level")
         self._latitude: float = item.pos_report["latlong"][0]
         self._longitude: float = item.pos_report["latlong"][1]
         self._accuracy: int = item.pos_report["pos_uncertainty"]
@@ -76,7 +80,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         return self._accuracy
 
     @property
-    def battery_level(self) -> int:
+    def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._battery_level
 
@@ -95,18 +99,16 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._attr_available = True
         self.async_write_ha_state()
 
-    @callback
-    def _handle_server_unavailable(self) -> None:
-        self._attr_available = False
-        self.async_write_ha_state()
-
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
+        if not self._client.subscribed:
+            self._client.subscribe()
 
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}",
+                self._dispatcher_signal,
                 self._handle_hardware_status_update,
             )
         )
@@ -123,6 +125,6 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                self._handle_server_unavailable,
+                self.handle_server_unavailable,
             )
         )

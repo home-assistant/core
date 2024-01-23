@@ -3,7 +3,6 @@ import asyncio
 import logging
 import os
 
-import async_timeout
 from google.cloud import texttospeech
 import voluptuous as vol
 
@@ -40,11 +39,14 @@ SUPPORTED_LANGUAGES = [
     "en-US",
     "es-ES",
     "es-US",
+    "eu-ES",
     "fi-FI",
     "fil-PH",
     "fr-CA",
     "fr-FR",
+    "gl-ES",
     "gu-IN",
+    "he-IL",
     "hi-IN",
     "hu-HU",
     "id-ID",
@@ -54,7 +56,9 @@ SUPPORTED_LANGUAGES = [
     "kn-IN",
     "ko-KR",
     "lv-LV",
+    "lt-LT",
     "ml-IN",
+    "mr-IN",
     "ms-MY",
     "nb-NO",
     "nl-BE",
@@ -236,7 +240,7 @@ class GoogleCloudTTSProvider(Provider):
             CONF_TEXT_TYPE: self._text_type,
         }
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options):
         """Load TTS from google."""
         options_schema = vol.Schema(
             {
@@ -281,7 +285,7 @@ class GoogleCloudTTSProvider(Provider):
                 "input": synthesis_input,
             }
 
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 assert self.hass
                 response = await self.hass.async_add_executor_job(
                     self._client.synthesize_speech, request

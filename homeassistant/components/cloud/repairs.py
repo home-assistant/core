@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 
+from .client import CloudClient
 from .const import DOMAIN
 from .subscription import async_migrate_paypal_agreement, async_subscription_info
 
@@ -67,7 +68,7 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
     async def async_step_change_plan(self, _: None = None) -> FlowResult:
         """Wait for the user to authorize the app installation."""
 
-        cloud: Cloud = self.hass.data[DOMAIN]
+        cloud: Cloud[CloudClient] = self.hass.data[DOMAIN]
 
         async def _async_wait_for_plan_change() -> None:
             flow_manager = repairs_flow_manager(self.hass)

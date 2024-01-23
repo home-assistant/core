@@ -63,15 +63,28 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
         entity_description=SwitchEntityDescription(
-            key="MatterPlug", device_class=SwitchDeviceClass.OUTLET
+            key="MatterPlug", device_class=SwitchDeviceClass.OUTLET, name=None
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
-        # restrict device type to prevent discovery by the wrong platform
+        device_type=(device_types.OnOffPlugInUnit,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=SwitchEntityDescription(
+            key="MatterSwitch", device_class=SwitchDeviceClass.SWITCH, name=None
+        ),
+        entity_class=MatterSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
         not_device_type=(
-            device_types.OnOffLight,
+            device_types.ColorTemperatureLight,
             device_types.DimmableLight,
+            device_types.ExtendedColorLight,
+            device_types.OnOffLight,
             device_types.DoorLock,
+            device_types.ColorDimmerSwitch,
+            device_types.DimmerSwitch,
+            device_types.Thermostat,
         ),
     ),
 ]

@@ -24,13 +24,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from . import Control4Entity, get_items_of_category
 from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, DOMAIN
-from .director_utils import director_update_data
+from .director_utils import update_variables_for_config_entry
 
 _LOGGER = logging.getLogger(__name__)
 
 CONTROL4_CATEGORY = "lights"
 CONTROL4_NON_DIMMER_VAR = "LIGHT_STATE"
-CONTROL4_DIMMER_VAR = "LIGHT_LEVEL"
+CONTROL4_DIMMER_VARS = ["LIGHT_LEVEL", "Brightness Percent"]
 
 
 async def async_setup_entry(
@@ -47,14 +47,18 @@ async def async_setup_entry(
     async def async_update_data_non_dimmer():
         """Fetch data from Control4 director for non-dimmer lights."""
         try:
-            return await director_update_data(hass, entry, CONTROL4_NON_DIMMER_VAR)
+            return await update_variables_for_config_entry(
+                hass, entry, {CONTROL4_NON_DIMMER_VAR}
+            )
         except C4Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     async def async_update_data_dimmer():
         """Fetch data from Control4 director for dimmer lights."""
         try:
-            return await director_update_data(hass, entry, CONTROL4_DIMMER_VAR)
+            return await update_variables_for_config_entry(
+                hass, entry, {*CONTROL4_DIMMER_VARS}
+            )
         except C4Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
@@ -185,13 +189,20 @@ class Control4Light(Control4Entity, LightEntity):
     @property
     def is_on(self):
         """Return whether this light is on or off."""
-        return self.coordinator.data[self._idx]["value"] > 0
+        if self._is_dimmer:
+            for var in CONTROL4_DIMMER_VARS:
+                if var in self.coordinator.data[self._idx]:
+                    return self.coordinator.data[self._idx][var] > 0
+            raise RuntimeError("Dimmer Variable Not Found")
+        return self.coordinator.data[self._idx][CONTROL4_NON_DIMMER_VAR] > 0
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self._is_dimmer:
-            return round(self.coordinator.data[self._idx]["value"] * 2.55)
+            for var in CONTROL4_DIMMER_VARS:
+                if var in self.coordinator.data[self._idx]:
+                    return round(self.coordinator.data[self._idx][var] * 2.55)
         return None
 
     @property

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.engine.row import Row
 
@@ -16,12 +16,16 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 import homeassistant.util.dt as dt_util
 
-from .state_attributes import decode_attributes_from_row
-from .time import process_timestamp
+from .state_attributes import decode_attributes_from_source
 
-# pylint: disable=invalid-name
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
+
+EMPTY_CONTEXT = Context(id=None)
 
 
 def extract_metadata_ids(
@@ -38,81 +42,50 @@ def extract_metadata_ids(
 class LazyState(State):
     """A lazy version of core State after schema 31."""
 
-    __slots__ = [
-        "_row",
-        "_attributes",
-        "_last_changed_ts",
-        "_last_updated_ts",
-        "_context",
-        "attr_cache",
-    ]
-
     def __init__(  # pylint: disable=super-init-not-called
         self,
         row: Row,
         attr_cache: dict[str, dict[str, Any]],
-        start_time: datetime | None,
-        entity_id: str | None = None,
+        start_time_ts: float | None,
+        entity_id: str,
+        state: str,
+        last_updated_ts: float | None,
+        no_attributes: bool,
     ) -> None:
         """Init the lazy state."""
         self._row = row
-        self.entity_id = entity_id or self._row.entity_id
-        self.state = self._row.state or ""
+        self.entity_id = entity_id
+        self.state = state or ""
         self._attributes: dict[str, Any] | None = None
-        self._last_updated_ts: float | None = self._row.last_updated_ts or (
-            dt_util.utc_to_timestamp(start_time) if start_time else None
-        )
-        self._last_changed_ts: float | None = (
-            self._row.last_changed_ts or self._last_updated_ts
-        )
-        self._context: Context | None = None
+        self._last_updated_ts: float | None = last_updated_ts or start_time_ts
         self.attr_cache = attr_cache
+        self.context = EMPTY_CONTEXT
 
-    @property  # type: ignore[override]
+    @cached_property  # type: ignore[override]
     def attributes(self) -> dict[str, Any]:
         """State attributes."""
-        if self._attributes is None:
-            self._attributes = decode_attributes_from_row(self._row, self.attr_cache)
-        return self._attributes
+        return decode_attributes_from_source(
+            getattr(self._row, "attributes", None), self.attr_cache
+        )
 
-    @attributes.setter
-    def attributes(self, value: dict[str, Any]) -> None:
-        """Set attributes."""
-        self._attributes = value
+    @cached_property
+    def _last_changed_ts(self) -> float | None:
+        """Last changed timestamp."""
+        return getattr(self._row, "last_changed_ts", None)
 
-    @property
-    def context(self) -> Context:
-        """State context."""
-        if self._context is None:
-            self._context = Context(id=None)
-        return self._context
-
-    @context.setter
-    def context(self, value: Context) -> None:
-        """Set context."""
-        self._context = value
-
-    @property
-    def last_changed(self) -> datetime:
+    @cached_property
+    def last_changed(self) -> datetime:  # type: ignore[override]
         """Last changed datetime."""
-        assert self._last_changed_ts is not None
-        return dt_util.utc_from_timestamp(self._last_changed_ts)
+        return dt_util.utc_from_timestamp(
+            self._last_changed_ts or self._last_updated_ts
+        )
 
-    @last_changed.setter
-    def last_changed(self, value: datetime) -> None:
-        """Set last changed datetime."""
-        self._last_changed_ts = process_timestamp(value).timestamp()
-
-    @property
-    def last_updated(self) -> datetime:
+    @cached_property
+    def last_updated(self) -> datetime:  # type: ignore[override]
         """Last updated datetime."""
-        assert self._last_updated_ts is not None
+        if TYPE_CHECKING:
+            assert self._last_updated_ts is not None
         return dt_util.utc_from_timestamp(self._last_updated_ts)
-
-    @last_updated.setter
-    def last_updated(self, value: datetime) -> None:
-        """Set last updated datetime."""
-        self._last_updated_ts = process_timestamp(value).timestamp()
 
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a dict representation of the LazyState.
@@ -138,21 +111,24 @@ class LazyState(State):
 def row_to_compressed_state(
     row: Row,
     attr_cache: dict[str, dict[str, Any]],
-    start_time: datetime | None,
-    entity_id: str | None = None,
+    start_time_ts: float | None,
+    entity_id: str,
+    state: str,
+    last_updated_ts: float | None,
+    no_attributes: bool,
 ) -> dict[str, Any]:
-    """Convert a database row to a compressed state schema 31 and later."""
-    comp_state = {
-        COMPRESSED_STATE_STATE: row.state,
-        COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
-    }
-    if start_time:
-        comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(start_time)
-    else:
-        row_last_updated_ts: float = row.last_updated_ts
-        comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
-        if (
-            row_changed_changed_ts := row.last_changed_ts
-        ) and row_last_updated_ts != row_changed_changed_ts:
-            comp_state[COMPRESSED_STATE_LAST_CHANGED] = row_changed_changed_ts
+    """Convert a database row to a compressed state schema 41 and later."""
+    comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state}
+    if not no_attributes:
+        comp_state[COMPRESSED_STATE_ATTRIBUTES] = decode_attributes_from_source(
+            getattr(row, "attributes", None), attr_cache
+        )
+    row_last_updated_ts: float = last_updated_ts or start_time_ts  # type: ignore[assignment]
+    comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
+    if (
+        (row_last_changed_ts := getattr(row, "last_changed_ts", None))
+        and row_last_changed_ts
+        and row_last_updated_ts != row_last_changed_ts
+    ):
+        comp_state[COMPRESSED_STATE_LAST_CHANGED] = row_last_changed_ts
     return comp_state

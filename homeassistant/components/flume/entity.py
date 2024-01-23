@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -57,7 +58,7 @@ class FlumeEntity(CoordinatorEntity[_FlumeCoordinatorT]):
             configuration_url="https://portal.flumewater.com",
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Request an update when added."""
         await super().async_added_to_hass()
         # We do not ask for an update with async_add_entities()

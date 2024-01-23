@@ -1,13 +1,13 @@
 """Config flow for Universal Devices ISY/IoX integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 from aiohttp import CookieJar
-import async_timeout
 from pyisy import ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.configuration import Configuration
 from pyisy.connection import Connection
@@ -97,7 +97,7 @@ async def validate_input(
     )
 
     try:
-        async with async_timeout.timeout(30):
+        async with asyncio.timeout(30):
             isy_conf_xml = await isy_conn.test_connection()
     except ISYInvalidAuthError as error:
         raise InvalidAuth from error
@@ -167,10 +167,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=_data_schema(self.discovered_conf),
             errors=errors,
         )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle import."""
-        return await self.async_step_user(user_input)
 
     async def _async_set_unique_id_or_update(
         self, isy_mac: str, ip_address: str, port: int | None
@@ -280,10 +276,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
             else:
-                cfg_entries = self.hass.config_entries
-                cfg_entries.async_update_entry(existing_entry, data=new_data)
-                await cfg_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(
+                    self._existing_entry, data=new_data
+                )
 
         self.context["title_placeholders"] = {
             CONF_NAME: existing_entry.title,

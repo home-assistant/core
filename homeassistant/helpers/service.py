@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from enum import Enum
-from functools import cache, partial, wraps
+from functools import cache, partial
 import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar, cast
@@ -26,7 +26,16 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
-from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    Context,
+    EntityServiceResponse,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import (
     HomeAssistantError,
     TemplateError,
@@ -34,7 +43,7 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import (
@@ -43,13 +52,14 @@ from . import (
     device_registry,
     entity_registry,
     template,
+    translation,
 )
+from .group import expand_entity_ids
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
 
 if TYPE_CHECKING:
     from .entity import Entity
-    from .entity_platform import EntityPlatform
 
     _EntityT = TypeVar("_EntityT", bound=Entity)
 
@@ -59,12 +69,13 @@ CONF_SERVICE_ENTITY_ID = "entity_id"
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
+ALL_SERVICE_DESCRIPTIONS_CACHE = "all_service_descriptions_cache"
 
 
 @cache
 def _base_components() -> dict[str, ModuleType]:
     """Return a cached lookup of base components."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import (
         alarm_control_panel,
         calendar,
@@ -78,6 +89,7 @@ def _base_components() -> dict[str, ModuleType]:
         media_player,
         remote,
         siren,
+        todo,
         update,
         vacuum,
         water_heater,
@@ -96,6 +108,7 @@ def _base_components() -> dict[str, ModuleType]:
         "media_player": media_player,
         "remote": remote,
         "siren": siren,
+        "todo": todo,
         "update": update,
         "vacuum": vacuum,
         "water_heater": water_heater,
@@ -164,7 +177,7 @@ _SERVICE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICES_SCHEMA = vol.Schema({cv.slug: _SERVICE_SCHEMA})
+_SERVICES_SCHEMA = vol.Schema({cv.slug: vol.Any(None, _SERVICE_SCHEMA)})
 
 
 class ServiceParams(TypedDict):
@@ -179,11 +192,14 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
+    __slots__ = ("entity_ids", "device_ids", "area_ids")
+
     def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
-        entity_ids: str | list | None = service_call.data.get(ATTR_ENTITY_ID)
-        device_ids: str | list | None = service_call.data.get(ATTR_DEVICE_ID)
-        area_ids: str | list | None = service_call.data.get(ATTR_AREA_ID)
+        service_call_data = service_call.data
+        entity_ids: str | list | None = service_call_data.get(ATTR_ENTITY_ID)
+        device_ids: str | list | None = service_call_data.get(ATTR_DEVICE_ID)
+        area_ids: str | list | None = service_call_data.get(ATTR_AREA_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
@@ -199,7 +215,7 @@ class ServiceTargetSelector:
         return bool(self.entity_ids or self.device_ids or self.area_ids)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class SelectedEntities:
     """Class to hold the selected entities."""
 
@@ -232,7 +248,7 @@ class SelectedEntities:
             return
 
         _LOGGER.warning(
-            "Unable to find referenced %s or it is/they are currently not available",
+            "Referenced %s are missing or not currently available",
             ", ".join(parts),
         )
 
@@ -448,9 +464,9 @@ def async_extract_referenced_entity_ids(
     if not selector.has_any_selector:
         return selected
 
-    entity_ids = selector.entity_ids
+    entity_ids: set[str] | list[str] = selector.entity_ids
     if expand_group:
-        entity_ids = hass.components.group.expand_entity_ids(entity_ids)
+        entity_ids = expand_entity_ids(hass, entity_ids)
 
     selected.referenced.update(entity_ids)
 
@@ -504,7 +520,7 @@ def async_extract_referenced_entity_ids(
 @bind_hass
 async def async_extract_config_entry_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
-) -> set:
+) -> set[str]:
     """Extract referenced config entry ids from a service call."""
     referenced = async_extract_referenced_entity_ids(hass, service_call, expand_group)
     ent_reg = entity_registry.async_get(hass)
@@ -532,16 +548,20 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
     try:
         return cast(
             JSON_TYPE,
-            _SERVICES_SCHEMA(load_yaml(str(integration.file_path / "services.yaml"))),
+            _SERVICES_SCHEMA(
+                load_yaml_dict(str(integration.file_path / "services.yaml"))
+            ),
         )
     except FileNotFoundError:
         _LOGGER.warning(
             "Unable to find services.yaml for the %s integration", integration.domain
         )
         return {}
-    except (HomeAssistantError, vol.Invalid):
+    except (HomeAssistantError, vol.Invalid) as ex:
         _LOGGER.warning(
-            "Unable to parse services.yaml for the %s integration", integration.domain
+            "Unable to parse services.yaml for the %s integration: %s",
+            integration.domain,
+            ex,
         )
         return {}
 
@@ -558,70 +578,130 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
-    descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
-    format_cache_key = "{}.{}".format
-    services = hass.services.async_services()
+    descriptions_cache: dict[
+        tuple[str, str], dict[str, Any] | None
+    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+
+    # We don't mutate services here so we avoid calling
+    # async_services which makes a copy of every services
+    # dict.
+    services = hass.services.async_services_internal()
 
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
-    missing = set()
-    for domain in services:
-        for service in services[domain]:
-            if format_cache_key(domain, service) not in descriptions_cache:
-                missing.add(domain)
-                break
+    domains_with_missing_services: set[str] = set()
+    all_services: set[tuple[str, str]] = set()
+    for domain, services_by_domain in services.items():
+        for service_name in services_by_domain:
+            cache_key = (domain, service_name)
+            all_services.add(cache_key)
+            if cache_key not in descriptions_cache:
+                domains_with_missing_services.add(domain)
+
+    # If we have a complete cache, check if it is still valid
+    all_cache: tuple[set[tuple[str, str]], dict[str, dict[str, Any]]] | None
+    if all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE):
+        previous_all_services, previous_descriptions_cache = all_cache
+        # If the services are the same, we can return the cache
+        if previous_all_services == all_services:
+            return previous_descriptions_cache  # type: ignore[no-any-return]
 
     # Files we loaded for missing descriptions
-    loaded = {}
+    loaded: dict[str, JSON_TYPE] = {}
 
-    if missing:
-        ints_or_excs = await async_get_integrations(hass, missing)
-        integrations = [
-            int_or_exc
-            for int_or_exc in ints_or_excs.values()
-            if isinstance(int_or_exc, Integration)
-        ]
-
+    if domains_with_missing_services:
+        ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
+        integrations: list[Integration] = []
+        for domain, int_or_exc in ints_or_excs.items():
+            if type(int_or_exc) is Integration:  # noqa: E721
+                integrations.append(int_or_exc)
+                continue
+            if TYPE_CHECKING:
+                assert isinstance(int_or_exc, Exception)
+            _LOGGER.error("Failed to load integration: %s", domain, exc_info=int_or_exc)
         contents = await hass.async_add_executor_job(
             _load_services_files, hass, integrations
         )
+        loaded = dict(zip(domains_with_missing_services, contents))
 
-        for domain, content in zip(missing, contents):
-            loaded[domain] = content
+    # Load translations for all service domains
+    translations = await translation.async_get_translations(
+        hass, "en", "services", services
+    )
 
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}
-    for domain in services:
+    for domain, services_map in services.items():
         descriptions[domain] = {}
+        domain_descriptions = descriptions[domain]
 
-        for service in services[domain]:
-            cache_key = format_cache_key(domain, service)
+        for service_name in services_map:
+            cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
+            if description is not None:
+                domain_descriptions[service_name] = description
+                continue
 
             # Cache missing descriptions
-            if description is None:
-                domain_yaml = loaded[domain]
+            domain_yaml = loaded.get(domain) or {}
+            # The YAML may be empty for dynamically defined
+            # services (ie shell_command) that never call
+            # service.async_set_service_schema for the dynamic
+            # service
 
-                yaml_description = domain_yaml.get(  # type: ignore[union-attr]
-                    service, {}
-                )
+            yaml_description = (
+                domain_yaml.get(service_name) or {}  # type: ignore[union-attr]
+            )
 
-                # Don't warn for missing services, because it triggers false
-                # positives for things like scripts, that register as a service
+            # Don't warn for missing services, because it triggers false
+            # positives for things like scripts, that register as a service
+            #
+            # When name & description are in the translations use those;
+            # otherwise fallback to backwards compatible behavior from
+            # the time when we didn't have translations for descriptions yet.
+            # This mimics the behavior of the frontend.
+            description = {
+                "name": translations.get(
+                    f"component.{domain}.services.{service_name}.name",
+                    yaml_description.get("name", ""),
+                ),
+                "description": translations.get(
+                    f"component.{domain}.services.{service_name}.description",
+                    yaml_description.get("description", ""),
+                ),
+                "fields": dict(yaml_description.get("fields", {})),
+            }
 
-                description = {
-                    "name": yaml_description.get("name", ""),
-                    "description": yaml_description.get("description", ""),
-                    "fields": yaml_description.get("fields", {}),
+            # Translate fields names & descriptions as well
+            for field_name, field_schema in description["fields"].items():
+                if name := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.name"
+                ):
+                    field_schema["name"] = name
+                if desc := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.description"
+                ):
+                    field_schema["description"] = desc
+                if example := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.example"
+                ):
+                    field_schema["example"] = example
+
+            if "target" in yaml_description:
+                description["target"] = yaml_description["target"]
+
+            if (
+                response := hass.services.supports_response(domain, service_name)
+            ) != SupportsResponse.NONE:
+                description["response"] = {
+                    "optional": response == SupportsResponse.OPTIONAL,
                 }
 
-                if "target" in yaml_description:
-                    description["target"] = yaml_description["target"]
+            descriptions_cache[cache_key] = description
 
-                descriptions_cache[cache_key] = description
+            domain_descriptions[service_name] = description
 
-            descriptions[domain][service] = description
-
+    hass.data[ALL_SERVICE_DESCRIPTIONS_CACHE] = (all_services, descriptions)
     return descriptions
 
 
@@ -641,7 +721,12 @@ def async_set_service_schema(
     hass: HomeAssistant, domain: str, service: str, schema: dict[str, Any]
 ) -> None:
     """Register a description for a service."""
-    hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    domain = domain.lower()
+    service = service.lower()
+
+    descriptions_cache: dict[
+        tuple[str, str], dict[str, Any] | None
+    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
         "name": schema.get("name", ""),
@@ -652,30 +737,85 @@ def async_set_service_schema(
     if "target" in schema:
         description["target"] = schema["target"]
 
-    hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
+    if (
+        response := hass.services.supports_response(domain, service)
+    ) != SupportsResponse.NONE:
+        description["response"] = {
+            "optional": response == SupportsResponse.OPTIONAL,
+        }
+
+    hass.data.pop(ALL_SERVICE_DESCRIPTIONS_CACHE, None)
+    descriptions_cache[(domain, service)] = description
+
+
+def _get_permissible_entity_candidates(
+    call: ServiceCall,
+    entities: dict[str, Entity],
+    entity_perms: None | (Callable[[str, str], bool]),
+    target_all_entities: bool,
+    all_referenced: set[str] | None,
+) -> list[Entity]:
+    """Get entity candidates that the user is allowed to access."""
+    if entity_perms is not None:
+        # Check the permissions since entity_perms is set
+        if target_all_entities:
+            # If we target all entities, we will select all entities the user
+            # is allowed to control.
+            return [
+                entity
+                for entity_id, entity in entities.items()
+                if entity_perms(entity_id, POLICY_CONTROL)
+            ]
+
+        assert all_referenced is not None
+        # If they reference specific entities, we will check if they are all
+        # allowed to be controlled.
+        for entity_id in all_referenced:
+            if not entity_perms(entity_id, POLICY_CONTROL):
+                raise Unauthorized(
+                    context=call.context,
+                    entity_id=entity_id,
+                    permission=POLICY_CONTROL,
+                )
+
+    elif target_all_entities:
+        return list(entities.values())
+
+    # We have already validated they have permissions to control all_referenced
+    # entities so we do not need to check again.
+    if TYPE_CHECKING:
+        assert all_referenced is not None
+    if (
+        len(all_referenced) == 1
+        and (single_entity := list(all_referenced)[0])
+        and (entity := entities.get(single_entity)) is not None
+    ):
+        return [entity]
+
+    return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
 @bind_hass
-async def entity_service_call(  # noqa: C901
+async def entity_service_call(
     hass: HomeAssistant,
-    platforms: Iterable[EntityPlatform],
-    func: str | Callable[..., Any],
+    registered_entities: dict[str, Entity],
+    func: str | HassJob,
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> None:
+) -> EntityServiceResponse | None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
     """
+    entity_perms: None | (Callable[[str, str], bool]) = None
+    return_response = call.return_response
+
     if call.context.user_id:
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
             raise UnknownUser(context=call.context)
-        entity_perms: None | (
-            Callable[[str, str], bool]
-        ) = user.permissions.check_entity
-    else:
-        entity_perms = None
+        if not user.is_admin:
+            entity_perms = user.permissions.check_entity
 
     target_all_entities = call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL
 
@@ -694,70 +834,24 @@ async def entity_service_call(  # noqa: C901
     else:
         data = call
 
-    # Check the permissions
-
     # A list with entities to call the service on.
-    entity_candidates: list[Entity] = []
-
-    if entity_perms is None:
-        for platform in platforms:
-            if target_all_entities:
-                entity_candidates.extend(platform.entities.values())
-            else:
-                assert all_referenced is not None
-                entity_candidates.extend(
-                    [
-                        entity
-                        for entity in platform.entities.values()
-                        if entity.entity_id in all_referenced
-                    ]
-                )
-
-    elif target_all_entities:
-        # If we target all entities, we will select all entities the user
-        # is allowed to control.
-        for platform in platforms:
-            entity_candidates.extend(
-                [
-                    entity
-                    for entity in platform.entities.values()
-                    if entity_perms(entity.entity_id, POLICY_CONTROL)
-                ]
-            )
-
-    else:
-        assert all_referenced is not None
-
-        for platform in platforms:
-            platform_entities = []
-            for entity in platform.entities.values():
-                if entity.entity_id not in all_referenced:
-                    continue
-
-                if not entity_perms(entity.entity_id, POLICY_CONTROL):
-                    raise Unauthorized(
-                        context=call.context,
-                        entity_id=entity.entity_id,
-                        permission=POLICY_CONTROL,
-                    )
-
-                platform_entities.append(entity)
-
-            entity_candidates.extend(platform_entities)
+    entity_candidates = _get_permissible_entity_candidates(
+        call,
+        registered_entities,
+        entity_perms,
+        target_all_entities,
+        all_referenced,
+    )
 
     if not target_all_entities:
         assert referenced is not None
-
         # Only report on explicit referenced entities
-        missing = set(referenced.referenced)
-
+        missing = referenced.referenced.copy()
         for entity in entity_candidates:
             missing.discard(entity.entity_id)
-
         referenced.log_missing(missing)
 
-    entities = []
-
+    entities: list[Entity] = []
     for entity in entity_candidates:
         if not entity.available:
             continue
@@ -781,23 +875,44 @@ async def entity_service_call(  # noqa: C901
         entities.append(entity)
 
     if not entities:
-        return
+        if return_response:
+            raise HomeAssistantError(
+                "Service call requested response data but did not match any entities"
+            )
+        return None
 
-    done, pending = await asyncio.wait(
-        [
-            asyncio.create_task(
-                entity.async_request_call(
-                    _handle_entity_call(hass, entity, func, data, call.context)
-                )
+    if len(entities) == 1:
+        # Single entity case avoids creating task
+        entity = entities[0]
+        single_response = await _handle_entity_call(
+            hass, entity, func, data, call.context
+        )
+        if entity.should_poll:
+            # Context expires if the turn on commands took a long time.
+            # Set context again so it's there when we update
+            entity.async_set_context(call.context)
+            await entity.async_update_ha_state(True)
+        return {entity.entity_id: single_response} if return_response else None
+
+    # Use asyncio.gather here to ensure the returned results
+    # are in the same order as the entities list
+    results: list[ServiceResponse | BaseException] = await asyncio.gather(
+        *[
+            entity.async_request_call(
+                _handle_entity_call(hass, entity, func, data, call.context)
             )
             for entity in entities
-        ]
+        ],
+        return_exceptions=True,
     )
-    assert not pending
-    for future in done:
-        future.result()  # pop exception if have
 
-    tasks = []
+    response_data: EntityServiceResponse = {}
+    for entity, result in zip(entities, results):
+        if isinstance(result, BaseException):
+            raise result from None
+        response_data[entity.entity_id] = result
+
+    tasks: list[asyncio.Task[None]] = []
 
     for entity in entities:
         if not entity.should_poll:
@@ -814,28 +929,32 @@ async def entity_service_call(  # noqa: C901
         for future in done:
             future.result()  # pop exception if have
 
+    return response_data if return_response and response_data else None
+
 
 async def _handle_entity_call(
     hass: HomeAssistant,
     entity: Entity,
-    func: str | Callable[..., Any],
+    func: str | HassJob,
     data: dict | ServiceCall,
     context: Context,
-) -> None:
+) -> ServiceResponse:
     """Handle calling service method."""
     entity.async_set_context(context)
 
+    task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
-        result = hass.async_run_job(
-            partial(getattr(entity, func), **data)  # type: ignore[arg-type]
+        task = hass.async_run_hass_job(
+            HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
         )
     else:
-        result = hass.async_run_job(func, entity, data)
+        task = hass.async_run_hass_job(func, entity, data)
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
-    if result is not None:
-        await result
+    result: ServiceResponse = None
+    if task is not None:
+        result = await task
 
     if asyncio.iscoroutine(result):
         _LOGGER.error(
@@ -846,6 +965,26 @@ async def _handle_entity_call(
             func,
             entity.entity_id,
         )
+        result = await result
+
+    return result
+
+
+async def _async_admin_handler(
+    hass: HomeAssistant,
+    service_job: HassJob[[None], Callable[[ServiceCall], Awaitable[None] | None]],
+    call: ServiceCall,
+) -> None:
+    """Run an admin service."""
+    if call.context.user_id:
+        user = await hass.auth.async_get_user(call.context.user_id)
+        if user is None:
+            raise UnknownUser(context=call.context)
+        if not user.is_admin:
+            raise Unauthorized(context=call.context)
+
+    result = hass.async_run_hass_job(service_job, call)
+    if result is not None:
         await result
 
 
@@ -859,21 +998,16 @@ def async_register_admin_service(
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
-
-    @wraps(service_func)
-    async def admin_handler(call: ServiceCall) -> None:
-        if call.context.user_id:
-            user = await hass.auth.async_get_user(call.context.user_id)
-            if user is None:
-                raise UnknownUser(context=call.context)
-            if not user.is_admin:
-                raise Unauthorized(context=call.context)
-
-        result = hass.async_run_job(service_func, call)
-        if result is not None:
-            await result
-
-    hass.services.async_register(domain, service, admin_handler, schema)
+    hass.services.async_register(
+        domain,
+        service,
+        partial(
+            _async_admin_handler,
+            hass,
+            HassJob(service_func, f"admin service {domain}.{service}"),
+        ),
+        schema,
+    )
 
 
 @bind_hass
@@ -884,7 +1018,7 @@ def verify_domain_control(
     """Ensure permission to access any entity under domain in service call."""
 
     def decorator(
-        service_handler: Callable[[ServiceCall], Any]
+        service_handler: Callable[[ServiceCall], Any],
     ) -> Callable[[ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):

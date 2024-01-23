@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
 
 
-@dataclass
+@dataclass(slots=True)
 class PlayMedia:
     """Represents a playable media."""
 
@@ -36,7 +36,7 @@ class BrowseMediaSource(BrowseMedia):
         self.identifier = identifier
 
 
-@dataclass
+@dataclass(slots=True)
 class MediaSourceItem:
     """A parsed media item."""
 

@@ -8,9 +8,9 @@ from homeassistant.const import Platform
 
 ATTR_DEVICES: Final = "devices"
 ATTR_GATEWAY_ID: Final = "gateway_id"
+ATTR_NODE_ID: Final = "node_id"
 
 CONF_BAUD_RATE: Final = "baud_rate"
-CONF_DEVICE: Final = "device"
 CONF_PERSISTENCE_FILE: Final = "persistence_file"
 CONF_RETAIN: Final = "retain"
 CONF_TCP_PORT: Final = "tcp_port"
@@ -26,11 +26,13 @@ CONF_GATEWAY_TYPE_MQTT: ConfGatewayType = "MQTT"
 DOMAIN: Final = "mysensors"
 MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
 MYSENSORS_GATEWAYS: Final = "mysensors_gateways"
+MYSENSORS_DISCOVERED_NODES: Final = "mysensors_discovered_nodes_{}"
 PLATFORM: Final = "platform"
 SCHEMA: Final = "schema"
 CHILD_CALLBACK: str = "mysensors_child_callback_{}_{}_{}_{}"
 NODE_CALLBACK: str = "mysensors_node_callback_{}_{}"
 MYSENSORS_DISCOVERY: str = "mysensors_discovery_{}_{}"
+MYSENSORS_NODE_DISCOVERY: str = "mysensors_node_discovery"
 MYSENSORS_ON_UNLOAD: str = "mysensors_on_unload_{}"
 TYPE: Final = "type"
 UPDATE_DELAY: float = 0.1
@@ -40,8 +42,14 @@ class DiscoveryInfo(TypedDict):
     """Represent the discovery info type for mysensors platforms."""
 
     devices: list[DevId]
-    name: str  # CONF_NAME is used in the notify base integration.
     gateway_id: GatewayId
+
+
+class NodeDiscoveryInfo(TypedDict):
+    """Represent discovered mysensors node."""
+
+    gateway_id: GatewayId
+    node_id: int
 
 
 SERVICE_SEND_IR_CODE: Final = "send_ir_code"
@@ -92,8 +100,6 @@ LIGHT_TYPES: dict[SensorType, set[ValueType]] = {
     "S_RGBW_LIGHT": {"V_RGBW"},
 }
 
-NOTIFY_TYPES: dict[SensorType, set[ValueType]] = {"S_INFO": {"V_TEXT"}}
-
 REMOTE_TYPES: dict[SensorType, set[ValueType]] = {"S_IR": {"V_IR_SEND"}}
 
 SENSOR_TYPES: dict[SensorType, set[ValueType]] = {
@@ -135,7 +141,6 @@ SWITCH_TYPES: dict[SensorType, set[ValueType]] = {
     "S_SOUND": {"V_ARMED"},
     "S_VIBRATION": {"V_ARMED"},
     "S_MOISTURE": {"V_ARMED"},
-    "S_IR": {"V_IR_SEND"},
     "S_LOCK": {"V_LOCK_STATUS"},
     "S_WATER_QUALITY": {"V_STATUS"},
 }
@@ -148,7 +153,6 @@ PLATFORM_TYPES: dict[Platform, dict[SensorType, set[ValueType]]] = {
     Platform.COVER: COVER_TYPES,
     Platform.DEVICE_TRACKER: DEVICE_TRACKER_TYPES,
     Platform.LIGHT: LIGHT_TYPES,
-    Platform.NOTIFY: NOTIFY_TYPES,
     Platform.REMOTE: REMOTE_TYPES,
     Platform.SENSOR: SENSOR_TYPES,
     Platform.SWITCH: SWITCH_TYPES,
@@ -167,6 +171,4 @@ for platform, platform_types in PLATFORM_TYPES.items():
     for s_type_name in platform_types:
         TYPE_TO_PLATFORMS[s_type_name].append(platform)
 
-PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {
-    Platform.NOTIFY,
-}
+PLATFORMS = tuple(PLATFORM_TYPES)

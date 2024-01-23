@@ -1,10 +1,10 @@
 """The Brother component."""
 from __future__ import annotations
 
+from asyncio import timeout
 from datetime import timedelta
 import logging
 
-import async_timeout
 from brother import Brother, BrotherSensors, SnmpError, UnsupportedModelError
 
 from homeassistant.config_entries import ConfigEntry
@@ -79,7 +79,7 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator[BrotherSensors]):
     async def _async_update_data(self) -> BrotherSensors:
         """Update data via library."""
         try:
-            async with async_timeout.timeout(20):
+            async with timeout(20):
                 data = await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModelError) as error:
             raise UpdateFailed(error) from error

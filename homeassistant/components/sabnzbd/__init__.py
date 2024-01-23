@@ -1,8 +1,9 @@
 """Support for monitoring an SABnzbd NZB client."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import logging
+from typing import Any
 
 from pysabnzbd import SabnzbdApiException
 import voluptuous as vol
@@ -127,7 +128,7 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
 def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry):
     """Update device identifiers to new identifiers."""
     device_registry = async_get(hass)
-    device_entry = device_registry.async_get_device({(DOMAIN, DOMAIN)})
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, DOMAIN)})
     if device_entry and entry.entry_id in device_entry.config_entries:
         new_identifiers = {(DOMAIN, entry.entry_id)}
         _LOGGER.debug(
@@ -189,7 +190,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     update_device_identifiers(hass, entry)
 
     @callback
-    def extract_api(func: Callable) -> Callable:
+    def extract_api(
+        func: Callable[[ServiceCall, SabnzbdApiData], Coroutine[Any, Any, None]],
+    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
         """Define a decorator to get the correct api for a service call."""
 
         async def wrapper(call: ServiceCall) -> None:
@@ -237,7 +240,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except SabnzbdApiException as err:
             _LOGGER.error(err)
 
-    async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
+    entry.async_on_unload(
+        async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

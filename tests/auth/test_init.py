@@ -1,7 +1,8 @@
 """Tests for the Home Assistant auth module."""
 from datetime import timedelta
+import time
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from freezegun import freeze_time
 import jwt
@@ -31,10 +32,8 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_hass(event_loop):
+def mock_hass(hass: HomeAssistant) -> HomeAssistant:
     """Home Assistant mock with minimum amount of data set to make it work with auth."""
-    hass = Mock()
-    hass.config.skip_pip = True
     return hass
 
 
@@ -344,6 +343,7 @@ async def test_saving_loading(
     await flush_store(manager._store._store)
 
     store2 = auth_store.AuthStore(hass)
+    await store2.async_load()
     users = await store2.async_get_users()
     assert len(users) == 1
     assert users[0].permissions == user.permissions
@@ -373,11 +373,15 @@ async def test_cannot_retrieve_expired_access_token(hass: HomeAssistant) -> None
     access_token = manager.async_create_access_token(refresh_token)
     assert await manager.async_validate_access_token(access_token) is refresh_token
 
+    # We patch time directly here because we want the access token to be created with
+    # an expired time, but we do not want to freeze time so that jwt will compare it
+    # to the patched time. If we freeze time for the test it will be frozen for jwt
+    # as well and the token will not be expired.
     with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow()
-        - auth_const.ACCESS_TOKEN_EXPIRATION
-        - timedelta(seconds=11),
+        "homeassistant.auth.time.time",
+        return_value=time.time()
+        - auth_const.ACCESS_TOKEN_EXPIRATION.total_seconds()
+        - 11,
     ):
         access_token = manager.async_create_access_token(refresh_token)
 
@@ -891,10 +895,7 @@ async def test_auth_module_expired_session(mock_hass) -> None:
     assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow() + MFA_SESSION_EXPIRATION,
-    ):
+    with freeze_time(dt_util.utcnow() + MFA_SESSION_EXPIRATION):
         step = await manager.login_flow.async_configure(
             step["flow_id"], {"pin": "test-pin"}
         )

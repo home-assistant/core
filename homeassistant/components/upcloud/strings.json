@@ -11,6 +11,9 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "options": {

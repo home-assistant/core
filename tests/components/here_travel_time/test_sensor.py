@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from here_routing import (
     HERERoutingError,
     HERERoutingTooManyRequestsError,
@@ -64,7 +65,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
 from .conftest import RESPONSE, TRANSIT_RESPONSE
 from .const import (
@@ -486,7 +486,7 @@ async def test_route_not_found(
 async def test_restore_state(hass: HomeAssistant) -> None:
     """Test sensor restore state."""
     # Home assistant is not running yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     last_reset = "2022-11-29T00:00:00.000000+00:00"
     mock_restore_cache_with_extra_data(
         hass,
@@ -662,7 +662,9 @@ async def test_transit_errors(
 
 
 async def test_routing_rate_limit(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that rate limiting is applied when encountering HTTP 429."""
     with patch(
@@ -689,9 +691,8 @@ async def test_routing_rate_limit(
             "Rate limit for this service has been reached"
         ),
     ):
-        async_fire_time_changed(
-            hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert hass.states.get("sensor.test_distance").state == "unavailable"
@@ -701,18 +702,17 @@ async def test_routing_rate_limit(
         "here_routing.HERERoutingApi.route",
         return_value=RESPONSE,
     ):
-        async_fire_time_changed(
-            hass,
-            utcnow()
-            + timedelta(seconds=DEFAULT_SCAN_INTERVAL * BACKOFF_MULTIPLIER + 1),
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * BACKOFF_MULTIPLIER + 1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.test_distance").state == "13.682"
         assert "Resetting update interval to" in caplog.text
 
 
 async def test_transit_rate_limit(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that rate limiting is applied when encountering HTTP 429."""
     with patch(
@@ -747,9 +747,8 @@ async def test_transit_rate_limit(
             "Rate limit for this service has been reached"
         ),
     ):
-        async_fire_time_changed(
-            hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert hass.states.get("sensor.test_distance").state == "unavailable"
@@ -759,11 +758,8 @@ async def test_transit_rate_limit(
         "here_transit.HERETransitApi.route",
         return_value=TRANSIT_RESPONSE,
     ):
-        async_fire_time_changed(
-            hass,
-            utcnow()
-            + timedelta(seconds=DEFAULT_SCAN_INTERVAL * BACKOFF_MULTIPLIER + 1),
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * BACKOFF_MULTIPLIER + 1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.test_distance").state == "1.883"
         assert "Resetting update interval to" in caplog.text

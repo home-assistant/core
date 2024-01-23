@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up your CoolMasterNet connection details.",
+        "description": "Set up your CoolMasterNet connection details.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "off": "Can be turned off",
@@ -12,12 +12,32 @@
           "dry": "Support dry mode",
           "fan_only": "Support fan only mode",
           "swing_support": "Control swing mode"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your CoolMasterNet device."
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_units": "Could not find any HVAC units in CoolMasterNet host."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "clean_filter": {
+        "name": "Clean filter"
+      }
+    },
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
+    },
+    "sensor": {
+      "error_code": {
+        "name": "Error code"
+      }
     }
   }
 }

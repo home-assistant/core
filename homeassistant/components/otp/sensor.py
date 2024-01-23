@@ -17,7 +17,6 @@ DEFAULT_NAME = "OTP Sensor"
 
 TIME_STEP = 30  # Default time step assumed by Google Authenticator
 
-ICON = "mdi:update"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -44,6 +43,7 @@ async def async_setup_platform(
 class TOTPSensor(SensorEntity):
     """Representation of a TOTP sensor."""
 
+    _attr_icon = "mdi:update"
     _attr_should_poll = False
 
     def __init__(self, name, token):
@@ -76,8 +76,3 @@ class TOTPSensor(SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON

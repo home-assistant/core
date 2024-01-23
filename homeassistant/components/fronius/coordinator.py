@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from pyfronius import BadStatusError, FroniusError
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,6 +24,7 @@ from .sensor import (
     OHMPILOT_ENTITY_DESCRIPTIONS,
     POWER_FLOW_ENTITY_DESCRIPTIONS,
     STORAGE_ENTITY_DESCRIPTIONS,
+    FroniusSensorEntityDescription,
 )
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ class FroniusCoordinatorBase(
 
     default_interval: timedelta
     error_interval: timedelta
-    valid_descriptions: list[SensorEntityDescription]
+    valid_descriptions: list[FroniusSensorEntityDescription]
 
     MAX_FAILED_UPDATES = 3
 
@@ -49,8 +49,10 @@ class FroniusCoordinatorBase(
         """Set up the FroniusCoordinatorBase class."""
         self._failed_update_count = 0
         self.solar_net = solar_net
-        # unregistered_keys are used to create entities in platform module
-        self.unregistered_keys: dict[SolarNetId, set[str]] = {}
+        # unregistered_descriptors are used to create entities in platform module
+        self.unregistered_descriptors: dict[
+            SolarNetId, list[FroniusSensorEntityDescription]
+        ] = {}
         super().__init__(*args, update_interval=self.default_interval, **kwargs)
 
     @abstractmethod
@@ -73,11 +75,11 @@ class FroniusCoordinatorBase(
                 self.update_interval = self.default_interval
 
             for solar_net_id in data:
-                if solar_net_id not in self.unregistered_keys:
+                if solar_net_id not in self.unregistered_descriptors:
                     # id seen for the first time
-                    self.unregistered_keys[solar_net_id] = {
-                        desc.key for desc in self.valid_descriptions
-                    }
+                    self.unregistered_descriptors[
+                        solar_net_id
+                    ] = self.valid_descriptions.copy()
             return data
 
     @callback
@@ -92,22 +94,34 @@ class FroniusCoordinatorBase(
         """
 
         @callback
-        def _add_entities_for_unregistered_keys() -> None:
+        def _add_entities_for_unregistered_descriptors() -> None:
             """Add entities for keys seen for the first time."""
-            new_entities: list = []
+            new_entities: list[_FroniusEntityT] = []
             for solar_net_id, device_data in self.data.items():
-                for key in self.unregistered_keys[solar_net_id].intersection(
-                    device_data
-                ):
-                    if device_data[key]["value"] is None:
+                remaining_unregistered_descriptors = []
+                for description in self.unregistered_descriptors[solar_net_id]:
+                    key = description.response_key or description.key
+                    if key not in device_data:
+                        remaining_unregistered_descriptors.append(description)
                         continue
-                    new_entities.append(entity_constructor(self, key, solar_net_id))
-                    self.unregistered_keys[solar_net_id].remove(key)
+                    if device_data[key]["value"] is None:
+                        remaining_unregistered_descriptors.append(description)
+                        continue
+                    new_entities.append(
+                        entity_constructor(
+                            coordinator=self,
+                            description=description,
+                            solar_net_id=solar_net_id,
+                        )
+                    )
+                self.unregistered_descriptors[
+                    solar_net_id
+                ] = remaining_unregistered_descriptors
             async_add_entities(new_entities)
 
-        _add_entities_for_unregistered_keys()
+        _add_entities_for_unregistered_descriptors()
         self.solar_net.cleanup_callbacks.append(
-            self.async_add_listener(_add_entities_for_unregistered_keys)
+            self.async_add_listener(_add_entities_for_unregistered_descriptors)
         )
 
 

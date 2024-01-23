@@ -29,7 +29,7 @@ from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SHCSwitchRequiredKeysMixin:
     """Mixin for SHC switch required keys."""
 
@@ -38,7 +38,7 @@ class SHCSwitchRequiredKeysMixin:
     should_poll: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class SHCSwitchEntityDescription(
     SwitchEntityDescription,
     SHCSwitchRequiredKeysMixin,
@@ -111,7 +111,7 @@ async def async_setup_entry(
             )
         )
 
-    for switch in session.device_helper.light_switches:
+    for switch in session.device_helper.light_switches_bsm:
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -200,12 +200,12 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
     """Representation of a SHC routing switch."""
 
     _attr_icon = "mdi:wifi"
+    _attr_translation_key = "routing"
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC communication quality reporting sensor."""
         super().__init__(device, parent_id, entry_id)
-        self._attr_name = f"{device.name} Routing"
         self._attr_unique_id = f"{device.serial}_routing"
 
     @property

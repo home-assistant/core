@@ -1,4 +1,5 @@
 """Test the Plugwise config flow."""
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from plugwise.exceptions import (
@@ -36,8 +37,8 @@ TEST_USERNAME = "smile"
 TEST_USERNAME2 = "stretch"
 
 TEST_DISCOVERY = ZeroconfServiceInfo(
-    host=TEST_HOST,
-    addresses=[TEST_HOST],
+    ip_address=ip_address(TEST_HOST),
+    ip_addresses=[ip_address(TEST_HOST)],
     # The added `-2` is to simulate mDNS collision
     hostname=f"{TEST_HOSTNAME}-2.local.",
     name="mock_name",
@@ -51,8 +52,8 @@ TEST_DISCOVERY = ZeroconfServiceInfo(
 )
 
 TEST_DISCOVERY2 = ZeroconfServiceInfo(
-    host=TEST_HOST,
-    addresses=[TEST_HOST],
+    ip_address=ip_address(TEST_HOST),
+    ip_addresses=[ip_address(TEST_HOST)],
     hostname=f"{TEST_HOSTNAME2}.local.",
     name="mock_name",
     port=DEFAULT_PORT,
@@ -65,8 +66,8 @@ TEST_DISCOVERY2 = ZeroconfServiceInfo(
 )
 
 TEST_DISCOVERY_ANNA = ZeroconfServiceInfo(
-    host=TEST_HOST,
-    addresses=[TEST_HOST],
+    ip_address=ip_address(TEST_HOST),
+    ip_addresses=[ip_address(TEST_HOST)],
     hostname=f"{TEST_HOSTNAME}.local.",
     name="mock_name",
     port=DEFAULT_PORT,
@@ -79,8 +80,8 @@ TEST_DISCOVERY_ANNA = ZeroconfServiceInfo(
 )
 
 TEST_DISCOVERY_ADAM = ZeroconfServiceInfo(
-    host=TEST_HOST,
-    addresses=[TEST_HOST],
+    ip_address=ip_address(TEST_HOST),
+    ip_addresses=[ip_address(TEST_HOST)],
     hostname=f"{TEST_HOSTNAME2}.local.",
     name="mock_name",
     port=DEFAULT_PORT,

@@ -1,23 +1,29 @@
 """Support to manage a shopping list."""
+from __future__ import annotations
+
+from collections.abc import Callable
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, cast
 import uuid
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import frontend, http, websocket_api
+from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import ATTR_NAME, Platform
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import JsonArrayType, load_json_array
+from homeassistant.util.json import JsonValueType, load_json_array
 
 from .const import (
+    ATTR_REVERSE,
+    DEFAULT_REVERSE,
     DOMAIN,
     EVENT_SHOPPING_LIST_UPDATED,
     SERVICE_ADD_ITEM,
@@ -27,7 +33,10 @@ from .const import (
     SERVICE_INCOMPLETE_ALL,
     SERVICE_INCOMPLETE_ITEM,
     SERVICE_REMOVE_ITEM,
+    SERVICE_SORT,
 )
+
+PLATFORMS = [Platform.TODO]
 
 ATTR_COMPLETE = "complete"
 
@@ -38,6 +47,9 @@ PERSISTENCE = ".shopping_list.json"
 
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
 SERVICE_LIST_SCHEMA = vol.Schema({})
+SERVICE_SORT_SCHEMA = vol.Schema(
+    {vol.Optional(ATTR_REVERSE, default=DEFAULT_REVERSE): bool}
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -111,6 +123,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Clear all completed items from the list."""
         await data.async_clear_completed()
 
+    async def sort_list_service(call: ServiceCall) -> None:
+        """Sort all items by name."""
+        await data.async_sort(call.data[ATTR_REVERSE])
+
     data = hass.data[DOMAIN] = ShoppingData(hass)
     await data.async_load()
 
@@ -147,15 +163,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         clear_completed_items_service,
         schema=SERVICE_LIST_SCHEMA,
     )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SORT,
+        sort_list_service,
+        schema=SERVICE_SORT_SCHEMA,
+    )
 
     hass.http.register_view(ShoppingListView)
     hass.http.register_view(CreateShoppingListItemView)
     hass.http.register_view(UpdateShoppingListItemView)
     hass.http.register_view(ClearCompletedItemsView)
-
-    frontend.async_register_built_in_panel(
-        hass, "shopping-list", "shopping_list", "mdi:cart"
-    )
 
     websocket_api.async_register_command(hass, websocket_handle_items)
     websocket_api.async_register_command(hass, websocket_handle_add)
@@ -163,6 +181,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     websocket_api.async_register_command(hass, websocket_handle_update)
     websocket_api.async_register_command(hass, websocket_handle_clear)
     websocket_api.async_register_command(hass, websocket_handle_reorder)
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -177,13 +197,21 @@ class ShoppingData:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the shopping list."""
         self.hass = hass
-        self.items: JsonArrayType = []
+        self.items: list[dict[str, JsonValueType]] = []
+        self._listeners: list[Callable[[], None]] = []
 
-    async def async_add(self, name, context=None):
+    async def async_add(
+        self, name: str | None, complete: bool = False, context: Context | None = None
+    ) -> dict[str, JsonValueType]:
         """Add a shopping list item."""
-        item = {"name": name, "id": uuid.uuid4().hex, "complete": False}
+        item: dict[str, JsonValueType] = {
+            "name": name,
+            "id": uuid.uuid4().hex,
+            "complete": complete,
+        }
         self.items.append(item)
         await self.hass.async_add_executor_job(self.save)
+        self._async_notify()
         self.hass.bus.async_fire(
             EVENT_SHOPPING_LIST_UPDATED,
             {"action": "add", "item": item},
@@ -191,23 +219,47 @@ class ShoppingData:
         )
         return item
 
-    async def async_remove(self, item_id, context=None):
+    async def async_remove(
+        self, item_id: str, context: Context | None = None
+    ) -> dict[str, JsonValueType] | None:
         """Remove a shopping list item."""
-        item = next((itm for itm in self.items if itm["id"] == item_id), None)
-
-        if item is None:
-            raise NoMatchingShoppingListItem
-
-        self.items.remove(item)
-        await self.hass.async_add_executor_job(self.save)
-        self.hass.bus.async_fire(
-            EVENT_SHOPPING_LIST_UPDATED,
-            {"action": "remove", "item": item},
-            context=context,
+        removed = await self.async_remove_items(
+            item_ids=set({item_id}), context=context
         )
-        return item
+        return next(iter(removed), None)
 
-    async def async_update(self, item_id, info, context=None):
+    async def async_remove_items(
+        self, item_ids: set[str], context: Context | None = None
+    ) -> list[dict[str, JsonValueType]]:
+        """Remove a shopping list item."""
+        items_dict: dict[str, dict[str, JsonValueType]] = {}
+        for itm in self.items:
+            item_id = cast(str, itm["id"])
+            items_dict[item_id] = itm
+        removed = []
+        for item_id in item_ids:
+            _LOGGER.debug(
+                "Removing %s",
+            )
+            if not (item := items_dict.pop(item_id, None)):
+                raise NoMatchingShoppingListItem(
+                    "Item '{item_id}' not found in shopping list"
+                )
+            removed.append(item)
+        self.items = list(items_dict.values())
+        await self.hass.async_add_executor_job(self.save)
+        self._async_notify()
+        for item in removed:
+            self.hass.bus.async_fire(
+                EVENT_SHOPPING_LIST_UPDATED,
+                {"action": "remove", "item": item},
+                context=context,
+            )
+        return removed
+
+    async def async_update(
+        self, item_id: str | None, info: dict[str, Any], context: Context | None = None
+    ) -> dict[str, JsonValueType]:
         """Update a shopping list item."""
         item = next((itm for itm in self.items if itm["id"] == item_id), None)
 
@@ -217,6 +269,7 @@ class ShoppingData:
         info = ITEM_UPDATE_SCHEMA(info)
         item.update(info)
         await self.hass.async_add_executor_job(self.save)
+        self._async_notify()
         self.hass.bus.async_fire(
             EVENT_SHOPPING_LIST_UPDATED,
             {"action": "update", "item": item},
@@ -224,21 +277,25 @@ class ShoppingData:
         )
         return item
 
-    async def async_clear_completed(self, context=None):
+    async def async_clear_completed(self, context: Context | None = None) -> None:
         """Clear completed items."""
         self.items = [itm for itm in self.items if not itm["complete"]]
         await self.hass.async_add_executor_job(self.save)
+        self._async_notify()
         self.hass.bus.async_fire(
             EVENT_SHOPPING_LIST_UPDATED,
             {"action": "clear"},
             context=context,
         )
 
-    async def async_update_list(self, info, context=None):
+    async def async_update_list(
+        self, info: dict[str, JsonValueType], context: Context | None = None
+    ) -> list[dict[str, JsonValueType]]:
         """Update all items in the list."""
         for item in self.items:
             item.update(info)
         await self.hass.async_add_executor_job(self.save)
+        self._async_notify()
         self.hass.bus.async_fire(
             EVENT_SHOPPING_LIST_UPDATED,
             {"action": "update_list"},
@@ -247,7 +304,9 @@ class ShoppingData:
         return self.items
 
     @callback
-    def async_reorder(self, item_ids, context=None):
+    def async_reorder(
+        self, item_ids: list[str], context: Context | None = None
+    ) -> None:
         """Reorder items."""
         # The array for sorted items.
         new_items = []
@@ -271,24 +330,79 @@ class ShoppingData:
             new_items.append(all_items_mapping[key])
         self.items = new_items
         self.hass.async_add_executor_job(self.save)
+        self._async_notify()
         self.hass.bus.async_fire(
             EVENT_SHOPPING_LIST_UPDATED,
             {"action": "reorder"},
             context=context,
         )
 
+    async def async_move_item(self, uid: str, previous: str | None = None) -> None:
+        """Re-order a shopping list item."""
+        if uid == previous:
+            return
+        item_idx = {cast(str, itm["id"]): idx for idx, itm in enumerate(self.items)}
+        if uid not in item_idx:
+            raise NoMatchingShoppingListItem(f"Item '{uid}' not found in shopping list")
+        if previous and previous not in item_idx:
+            raise NoMatchingShoppingListItem(
+                f"Item '{previous}' not found in shopping list"
+            )
+        dst_idx = item_idx[previous] + 1 if previous else 0
+        src_idx = item_idx[uid]
+        src_item = self.items.pop(src_idx)
+        if dst_idx > src_idx:
+            dst_idx -= 1
+        self.items.insert(dst_idx, src_item)
+        await self.hass.async_add_executor_job(self.save)
+        self._async_notify()
+        self.hass.bus.async_fire(
+            EVENT_SHOPPING_LIST_UPDATED,
+            {"action": "reorder"},
+        )
+
+    async def async_sort(
+        self, reverse: bool = False, context: Context | None = None
+    ) -> None:
+        """Sort items by name."""
+        self.items = sorted(self.items, key=lambda item: item["name"], reverse=reverse)  # type: ignore[arg-type,return-value]
+        self.hass.async_add_executor_job(self.save)
+        self._async_notify()
+        self.hass.bus.async_fire(
+            EVENT_SHOPPING_LIST_UPDATED,
+            {"action": "sorted"},
+            context=context,
+        )
+
     async def async_load(self) -> None:
         """Load items."""
 
-        def load() -> JsonArrayType:
+        def load() -> list[dict[str, JsonValueType]]:
             """Load the items synchronously."""
-            return load_json_array(self.hass.config.path(PERSISTENCE))
+            return cast(
+                list[dict[str, JsonValueType]],
+                load_json_array(self.hass.config.path(PERSISTENCE)),
+            )
 
         self.items = await self.hass.async_add_executor_job(load)
 
     def save(self) -> None:
         """Save the items."""
         save_json(self.hass.config.path(PERSISTENCE), self.items)
+
+    def async_add_listener(self, cb: Callable[[], None]) -> Callable[[], None]:
+        """Add a listener to notify when data is updated."""
+
+        def unsub() -> None:
+            self._listeners.remove(cb)
+
+        self._listeners.append(cb)
+        return unsub
+
+    def _async_notify(self) -> None:
+        """Notify all listeners that data has been updated."""
+        for listener in self._listeners:
+            listener()
 
 
 class ShoppingListView(http.HomeAssistantView):
@@ -298,7 +412,7 @@ class ShoppingListView(http.HomeAssistantView):
     name = "api:shopping_list"
 
     @callback
-    def get(self, request):
+    def get(self, request: web.Request) -> web.Response:
         """Retrieve shopping list items."""
         return self.json(request.app["hass"].data[DOMAIN].items)
 
@@ -309,12 +423,13 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
     url = "/api/shopping_list/item/{item_id}"
     name = "api:shopping_list:item:id"
 
-    async def post(self, request, item_id):
+    async def post(self, request: web.Request, item_id: str) -> web.Response:
         """Update a shopping list item."""
         data = await request.json()
+        hass: HomeAssistant = request.app["hass"]
 
         try:
-            item = await request.app["hass"].data[DOMAIN].async_update(item_id, data)
+            item = await hass.data[DOMAIN].async_update(item_id, data)
             return self.json(item)
         except NoMatchingShoppingListItem:
             return self.json_message("Item not found", HTTPStatus.NOT_FOUND)
@@ -329,9 +444,10 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     name = "api:shopping_list:item"
 
     @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Create a new shopping list item."""
-        item = await request.app["hass"].data[DOMAIN].async_add(data["name"])
+        hass: HomeAssistant = request.app["hass"]
+        item = await hass.data[DOMAIN].async_add(data["name"])
         return self.json(item)
 
 
@@ -341,9 +457,9 @@ class ClearCompletedItemsView(http.HomeAssistantView):
     url = "/api/shopping_list/clear_completed"
     name = "api:shopping_list:clear_completed"
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Retrieve if API is running."""
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
         await hass.data[DOMAIN].async_clear_completed()
         return self.json_message("Cleared completed items.")
 
@@ -371,7 +487,9 @@ async def websocket_handle_add(
     msg: dict[str, Any],
 ) -> None:
     """Handle adding item to shopping_list."""
-    item = await hass.data[DOMAIN].async_add(msg["name"], connection.context(msg))
+    item = await hass.data[DOMAIN].async_add(
+        msg["name"], context=connection.context(msg)
+    )
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
 

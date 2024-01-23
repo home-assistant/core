@@ -35,7 +35,7 @@ from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizAlarmDescriptionMixin:
     """Define an entity description mixin for switch entities."""
 
@@ -43,7 +43,7 @@ class OverkizAlarmDescriptionMixin:
     fn_state: Callable[[Callable[[str], OverkizStateType]], str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizAlarmDescription(
     AlarmControlPanelEntityDescription, OverkizAlarmDescriptionMixin
 ):
@@ -95,7 +95,7 @@ MAP_CORE_ACTIVE_ZONES: dict[str, str] = {
 
 
 def _state_stateful_alarm_controller(
-    select_state: Callable[[str], OverkizStateType]
+    select_state: Callable[[str], OverkizStateType],
 ) -> str:
     """Return the state of the device."""
     if state := cast(str, select_state(OverkizState.CORE_ACTIVE_ZONES)):
@@ -118,7 +118,7 @@ MAP_MYFOX_STATUS_STATE: dict[str, str] = {
 
 
 def _state_myfox_alarm_controller(
-    select_state: Callable[[str], OverkizStateType]
+    select_state: Callable[[str], OverkizStateType],
 ) -> str:
     """Return the state of the device."""
     if (
@@ -141,7 +141,7 @@ MAP_ARM_TYPE: dict[str, str] = {
 
 
 def _state_alarm_panel_controller(
-    select_state: Callable[[str], OverkizStateType]
+    select_state: Callable[[str], OverkizStateType],
 ) -> str:
     """Return the state of the device."""
     return MAP_ARM_TYPE[

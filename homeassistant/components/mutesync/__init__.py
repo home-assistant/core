@@ -1,9 +1,9 @@
 """The mütesync integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
-import async_timeout
 import mutesync
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def update_data():
         """Update the data."""
-        async with async_timeout.timeout(2.5):
+        async with asyncio.timeout(2.5):
             state = await client.get_state()
 
             if state["muted"] is None or state["in_meeting"] is None:

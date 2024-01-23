@@ -1,4 +1,5 @@
 {
+  "WeatherText": "Sunny",
   "WeatherIcon": 1,
   "HasPrecipitation": false,
   "PrecipitationType": null,

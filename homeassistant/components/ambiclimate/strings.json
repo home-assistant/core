@@ -18,5 +18,45 @@
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "access_token": "Unknown error generating an access token."
     }
+  },
+  "services": {
+    "set_comfort_mode": {
+      "name": "Set comfort mode",
+      "description": "Enables comfort mode on your AC.",
+      "fields": {
+        "name": {
+          "name": "Device name",
+          "description": "String with device name."
+        }
+      }
+    },
+    "send_comfort_feedback": {
+      "name": "Send comfort feedback",
+      "description": "Sends feedback for comfort mode.",
+      "fields": {
+        "name": {
+          "name": "[%key:component::ambiclimate::services::set_comfort_mode::fields::name::name%]",
+          "description": "[%key:component::ambiclimate::services::set_comfort_mode::fields::name::description%]"
+        },
+        "value": {
+          "name": "Comfort value",
+          "description": "Send any of the following comfort values: too_hot, too_warm, bit_warm, comfortable, bit_cold, too_cold, freezing\n."
+        }
+      }
+    },
+    "set_temperature_mode": {
+      "name": "Set temperature mode",
+      "description": "Enables temperature mode on your AC.",
+      "fields": {
+        "name": {
+          "name": "[%key:component::ambiclimate::services::set_comfort_mode::fields::name::name%]",
+          "description": "[%key:component::ambiclimate::services::set_comfort_mode::fields::name::description%]"
+        },
+        "value": {
+          "name": "Temperature",
+          "description": "Target value in celsius."
+        }
+      }
+    }
   }
 }

@@ -5,12 +5,12 @@ from typing import Any
 
 from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
 
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_URL
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,18 +19,17 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Nextcloud data update coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, ncm: NextcloudMonitor, config: ConfigType
+        self, hass: HomeAssistant, ncm: NextcloudMonitor, entry: ConfigEntry
     ) -> None:
         """Initialize the Nextcloud coordinator."""
-        self.config = config
         self.ncm = ncm
-        self.url = config[CONF_URL]
+        self.url = entry.data[CONF_URL]
 
         super().__init__(
             hass,
             _LOGGER,
             name=self.url,
-            update_interval=config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
     # Use recursion to create list of sensors & values based on nextcloud api data
@@ -55,8 +54,13 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     key_path += f"{key}_"
                 leaf = True
                 result.update(self._get_data_points(value, key_path, leaf))
+            elif key == "cpuload" and isinstance(value, list):
+                result[f"{key_path}{key}_1"] = value[0]
+                result[f"{key_path}{key}_5"] = value[1]
+                result[f"{key_path}{key}_15"] = value[2]
+                leaf = False
             else:
-                result[f"{DOMAIN}_{key_path}{key}"] = value
+                result[f"{key_path}{key}"] = value
                 leaf = False
         return result
 

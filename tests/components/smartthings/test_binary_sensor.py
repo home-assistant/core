@@ -51,7 +51,15 @@ async def test_entity_and_device_attributes(
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
-        "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
+        "Motion Sensor 1",
+        [Capability.motion_sensor],
+        {
+            Attribute.motion: "inactive",
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
     )
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -61,13 +69,15 @@ async def test_entity_and_device_attributes(
     entry = entity_registry.async_get("binary_sensor.motion_sensor_1_motion")
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.motion}"
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
 async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:

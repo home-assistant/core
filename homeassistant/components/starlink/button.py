@@ -31,14 +31,14 @@ async def async_setup_entry(
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlinkButtonEntityDescriptionMixin:
     """Mixin for required keys."""
 
     press_fn: Callable[[StarlinkUpdateCoordinator], Awaitable[None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlinkButtonEntityDescription(
     ButtonEntityDescription, StarlinkButtonEntityDescriptionMixin
 ):
@@ -58,7 +58,6 @@ class StarlinkButtonEntity(StarlinkEntity, ButtonEntity):
 BUTTONS = [
     StarlinkButtonEntityDescription(
         key="reboot",
-        name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_fn=lambda coordinator: coordinator.async_reboot_starlink(),

@@ -73,8 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=update_interval,
     )
 
-    hass.data[DOMAIN][conn_type][key] = data_coordinator
     await data_coordinator.async_config_entry_first_refresh()
+    hass.data[DOMAIN][conn_type][key] = data_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

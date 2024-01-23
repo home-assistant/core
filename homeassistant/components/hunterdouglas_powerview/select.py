@@ -27,7 +27,7 @@ from .entity import ShadeEntity
 from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSelectDescriptionMixin:
     """Mixin to describe a select entity."""
 
@@ -35,7 +35,7 @@ class PowerviewSelectDescriptionMixin:
     select_fn: Callable[[BaseShade, str], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSelectDescription(
     SelectEntityDescription, PowerviewSelectDescriptionMixin
 ):
@@ -47,7 +47,7 @@ class PowerviewSelectDescription(
 DROPDOWNS: Final = [
     PowerviewSelectDescription(
         key="powersource",
-        name="Power Source",
+        translation_key="power_source",
         icon="mdi:power-plug-outline",
         current_fn=lambda shade: POWER_SUPPLY_TYPE_MAP.get(
             shade.raw_data.get(ATTR_BATTERY_KIND), None
@@ -106,7 +106,6 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
         """Initialize the select entity."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self.entity_description: PowerviewSelectDescription = description
-        self._attr_name = f"{self._shade_name} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
     @property
@@ -117,5 +116,6 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self._shade, option)
-        await self._shade.refresh()  # force update data to ensure new info is in coordinator
+        # force update data to ensure new info is in coordinator
+        await self._shade.refresh()
         self.async_write_ha_state()

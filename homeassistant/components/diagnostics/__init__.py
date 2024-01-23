@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components import http, websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import integration_platform
+from homeassistant.helpers import config_validation as cv, integration_platform
 from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
@@ -33,7 +33,10 @@ __all__ = ["REDACTED", "async_redact_data"]
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+@dataclass(slots=True)
 class DiagnosticsPlatformData:
     """Diagnostic platform data."""
 
@@ -46,7 +49,7 @@ class DiagnosticsPlatformData:
     ] | None
 
 
-@dataclass
+@dataclass(slots=True)
 class DiagnosticsData:
     """Diagnostic data."""
 
@@ -194,7 +197,7 @@ async def _async_get_json_file_response(
     return web.Response(
         body=json_data,
         content_type="application/json",
-        headers={"Content-Disposition": f'attachment; filename="{filename}.json.txt"'},
+        headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
     )
 
 

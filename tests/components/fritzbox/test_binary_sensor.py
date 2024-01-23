@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceBinarySensorMock, setup_config_entry
+from . import FritzDeviceBinarySensorMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
@@ -48,7 +48,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == STATE_OFF
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{CONF_FAKE_NAME} Button Lock on Device"
+        == f"{CONF_FAKE_NAME} Button lock on device"
     )
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.LOCK
     assert ATTR_STATE_CLASS not in state.attributes
@@ -57,7 +57,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
     assert state.state == STATE_OFF
     assert (
-        state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Button Lock via UI"
+        state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Button lock via UI"
     )
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.LOCK
     assert ATTR_STATE_CLASS not in state.attributes
@@ -126,3 +126,26 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
 
     assert fritz().update_devices.call_count == 2
     assert fritz().login.call_count == 1
+
+
+async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test adding new discovered devices during runtime."""
+    device = FritzDeviceBinarySensorMock()
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(f"{ENTITY_ID}_alarm")
+    assert state
+
+    new_device = FritzDeviceBinarySensorMock()
+    new_device.ain = "7890 1234"
+    new_device.name = "new_device"
+    set_devices(fritz, devices=[device, new_device])
+
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DOMAIN}.new_device_alarm")
+    assert state

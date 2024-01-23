@@ -32,12 +32,13 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.freeze_time("2023-01-19 15:00:00")
 async def test_energy_usage_today(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test the easyEnergy - Energy usage sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     # Current usage energy price sensor
     state = hass.states.get("sensor.easyenergy_today_energy_usage_current_hour_price")
@@ -124,15 +125,35 @@ async def test_energy_usage_today(
     assert not device_entry.model
     assert not device_entry.sw_version
 
+    # Usage hours priced equal or lower sensor
+    state = hass.states.get(
+        "sensor.easyenergy_today_energy_usage_hours_priced_equal_or_lower"
+    )
+    entry = entity_registry.async_get(
+        "sensor.easyenergy_today_energy_usage_hours_priced_equal_or_lower"
+    )
+    assert entry
+    assert state
+    assert (
+        entry.unique_id == f"{entry_id}_today_energy_usage_hours_priced_equal_or_lower"
+    )
+    assert state.state == "21"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Energy market price - Usage Hours priced equal or lower than current - today"
+    )
+    assert ATTR_DEVICE_CLASS not in state.attributes
+
 
 @pytest.mark.freeze_time("2023-01-19 15:00:00")
 async def test_energy_return_today(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test the easyEnergy - Energy return sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     # Current return energy price sensor
     state = hass.states.get("sensor.easyenergy_today_energy_return_current_hour_price")
@@ -219,15 +240,36 @@ async def test_energy_return_today(
     assert not device_entry.model
     assert not device_entry.sw_version
 
+    # Return hours priced equal or higher sensor
+    state = hass.states.get(
+        "sensor.easyenergy_today_energy_return_hours_priced_equal_or_higher"
+    )
+    entry = entity_registry.async_get(
+        "sensor.easyenergy_today_energy_return_hours_priced_equal_or_higher"
+    )
+    assert entry
+    assert state
+    assert (
+        entry.unique_id
+        == f"{entry_id}_today_energy_return_hours_priced_equal_or_higher"
+    )
+    assert state.state == "3"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Energy market price - Return Hours priced equal or higher than current - today"
+    )
+    assert ATTR_DEVICE_CLASS not in state.attributes
+
 
 @pytest.mark.freeze_time("2023-01-19 10:00:00")
 async def test_gas_today(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test the easyEnergy - Gas sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     # Current gas price sensor
     state = hass.states.get("sensor.easyenergy_today_gas_current_hour_price")

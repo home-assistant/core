@@ -35,10 +35,22 @@
       }
     }
   },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Radarr YAML configuration has been removed",
-      "description": "Configuring Radarr using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "entity": {
+    "binary_sensor": {
+      "health": {
+        "name": "Health"
+      }
+    },
+    "sensor": {
+      "movies": {
+        "name": "Movies"
+      },
+      "queue": {
+        "name": "Queue"
+      },
+      "start_time": {
+        "name": "Start time"
+      }
     }
   }
 }

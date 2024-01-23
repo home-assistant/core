@@ -9,6 +9,7 @@ from ..schema import (
     correct_db_schema_precision,
     correct_db_schema_utf8,
     validate_db_schema_precision,
+    validate_table_schema_has_correct_collation,
     validate_table_schema_supports_utf8,
 )
 
@@ -26,6 +27,7 @@ def validate_db_schema(instance: Recorder) -> set[str]:
     )
     for table in (Statistics, StatisticsShortTerm):
         schema_errors |= validate_db_schema_precision(instance, table)
+        schema_errors |= validate_table_schema_has_correct_collation(instance, table)
     if schema_errors:
         _LOGGER.debug(
             "Detected statistics schema errors: %s", ", ".join(sorted(schema_errors))
@@ -41,3 +43,4 @@ def correct_db_schema(
     correct_db_schema_utf8(instance, StatisticsMeta, schema_errors)
     for table in (Statistics, StatisticsShortTerm):
         correct_db_schema_precision(instance, table, schema_errors)
+        correct_db_schema_utf8(instance, table, schema_errors)

@@ -1,6 +1,8 @@
 """The met_eireann component."""
 from datetime import timedelta
 import logging
+from types import MappingProxyType
+from typing import Any, Self
 
 import meteireann
 
@@ -31,9 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         altitude=config_entry.data[CONF_ELEVATION],
     )
 
-    weather_data = MetEireannWeatherData(hass, config_entry.data, raw_weather_data)
+    weather_data = MetEireannWeatherData(config_entry.data, raw_weather_data)
 
-    async def _async_update_data():
+    async def _async_update_data() -> MetEireannWeatherData:
         """Fetch data from Met Éireann."""
         try:
             return await weather_data.fetch_data()
@@ -69,16 +71,17 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class MetEireannWeatherData:
     """Keep data for Met Éireann weather entities."""
 
-    def __init__(self, hass, config, weather_data):
+    def __init__(
+        self, config: MappingProxyType[str, Any], weather_data: meteireann.WeatherData
+    ) -> None:
         """Initialise the weather entity data."""
-        self.hass = hass
         self._config = config
         self._weather_data = weather_data
-        self.current_weather_data = {}
-        self.daily_forecast = None
-        self.hourly_forecast = None
+        self.current_weather_data: dict[str, Any] = {}
+        self.daily_forecast: list[dict[str, Any]] = []
+        self.hourly_forecast: list[dict[str, Any]] = []
 
-    async def fetch_data(self):
+    async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
         await self._weather_data.fetching_data()
         self.current_weather_data = self._weather_data.get_current_weather()

@@ -22,7 +22,7 @@
       }
     },
     "error": {
-      "no_longer_in_range": "The lock is no longer in Bluetooth range. Move the lock or adapter and again.",
+      "no_longer_in_range": "The lock is no longer in Bluetooth range. Move the lock or adapter and try again.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
@@ -34,6 +34,23 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "device_options": {
+        "description": "If the lock does not support push updates via advertisements or you want lock operation to be more responsive, you can enable always connected mode. Always connected will cause the lock to stay connected to Home Assistant via Bluetooth, which will use more battery.",
+        "data": {
+          "always_connected": "Always connected"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      }
     }
   }
 }

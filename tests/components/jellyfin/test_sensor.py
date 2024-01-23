@@ -17,18 +17,17 @@ from tests.common import MockConfigEntry
 
 async def test_watching(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_jellyfin: MagicMock,
 ) -> None:
     """Test the Jellyfin watching sensor."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("sensor.jellyfin_server")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "JELLYFIN-SERVER"
-    assert state.attributes.get(ATTR_ICON) == "mdi:television-play"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Watching"
     assert state.state == "3"

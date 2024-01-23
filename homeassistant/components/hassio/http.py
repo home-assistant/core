@@ -6,6 +6,7 @@ from http import HTTPStatus
 import logging
 import os
 import re
+from typing import TYPE_CHECKING
 from urllib.parse import quote, unquote
 
 import aiohttp
@@ -35,7 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
-# pylint: disable=implicit-str-concat
 NO_TIMEOUT = re.compile(
     r"^(?:"
     r"|backups/.+/full"
@@ -83,8 +83,14 @@ NO_STORE = re.compile(
     r"|app/entrypoint.js"
     r")$"
 )
-# pylint: enable=implicit-str-concat
 # fmt: on
+
+RESPONSE_HEADERS_FILTER = {
+    TRANSFER_ENCODING,
+    CONTENT_LENGTH,
+    CONTENT_TYPE,
+    CONTENT_ENCODING,
+}
 
 
 class HassIOView(HomeAssistantView):
@@ -151,16 +157,18 @@ class HassIOView(HomeAssistantView):
                 # _stored_content_type is only computed once `content_type` is accessed
                 if path == "backups/new/upload":
                     # We need to reuse the full content type that includes the boundary
-                    headers[
-                        CONTENT_TYPE
-                    ] = request._stored_content_type  # pylint: disable=protected-access
+                    if TYPE_CHECKING:
+                        # pylint: disable-next=protected-access
+                        assert isinstance(request._stored_content_type, str)
+                    # pylint: disable-next=protected-access
+                    headers[CONTENT_TYPE] = request._stored_content_type
 
         try:
             client = await self._websession.request(
                 method=request.method,
                 url=f"http://{self._host}/{quote(path)}",
                 params=request.query,
-                data=request.content,
+                data=request.content if request.method != "GET" else None,
                 headers=headers,
                 timeout=_get_timeout(path),
             )
@@ -171,8 +179,13 @@ class HassIOView(HomeAssistantView):
             )
             response.content_type = client.content_type
 
+            if should_compress(response.content_type):
+                response.enable_compression()
             await response.prepare(request)
-            async for data in client.content.iter_chunked(4096):
+            # In testing iter_chunked, iter_any, and iter_chunks:
+            # iter_chunks was the best performing option since
+            # it does not have to do as much re-assembly
+            async for data, _ in client.content.iter_chunks():
                 await response.write(data)
 
             return response
@@ -191,21 +204,13 @@ class HassIOView(HomeAssistantView):
 
 def _response_header(response: aiohttp.ClientResponse, path: str) -> dict[str, str]:
     """Create response header."""
-    headers = {}
-
-    for name, value in response.headers.items():
-        if name in (
-            TRANSFER_ENCODING,
-            CONTENT_LENGTH,
-            CONTENT_TYPE,
-            CONTENT_ENCODING,
-        ):
-            continue
-        headers[name] = value
-
+    headers = {
+        name: value
+        for name, value in response.headers.items()
+        if name not in RESPONSE_HEADERS_FILTER
+    }
     if NO_STORE.match(path):
         headers[CACHE_CONTROL] = "no-store, max-age=0"
-
     return headers
 
 
@@ -214,3 +219,10 @@ def _get_timeout(path: str) -> ClientTimeout:
     if NO_TIMEOUT.match(path):
         return ClientTimeout(connect=10, total=None)
     return ClientTimeout(connect=10, total=300)
+
+
+def should_compress(content_type: str) -> bool:
+    """Return if we should compress a response."""
+    if content_type.startswith("image/"):
+        return "svg" in content_type
+    return not content_type.startswith(("video/", "audio/", "font/"))

@@ -1,11 +1,12 @@
 """Tests for the WLED config flow."""
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from wled import WLEDConnectionError
 
 from homeassistant.components import zeroconf
-from homeassistant.components.wled.const import CONF_KEEP_MASTER_LIGHT, DOMAIN
+from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -44,8 +45,8 @@ async def test_full_zeroconf_flow_implementation(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -88,8 +89,8 @@ async def test_zeroconf_during_onboarding(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -133,8 +134,8 @@ async def test_zeroconf_connection_error(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -193,8 +194,8 @@ async def test_zeroconf_without_mac_device_exists_abort(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -218,8 +219,8 @@ async def test_zeroconf_with_mac_device_exists_abort(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -243,8 +244,8 @@ async def test_zeroconf_with_cct_channel_abort(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -270,10 +271,10 @@ async def test_options_flow(
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_KEEP_MASTER_LIGHT: True},
+        user_input={CONF_KEEP_MAIN_LIGHT: True},
     )
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("data") == {
-        CONF_KEEP_MASTER_LIGHT: True,
+        CONF_KEEP_MAIN_LIGHT: True,
     }

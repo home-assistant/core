@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from homeassistant import data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.dlink.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -13,7 +13,6 @@ from .conftest import (
     CONF_DHCP_DATA,
     CONF_DHCP_FLOW,
     CONF_DHCP_FLOW_NEW_IP,
-    CONF_IMPORT_DATA,
     patch_config_flow,
 )
 
@@ -96,19 +95,6 @@ async def test_flow_user_unknown_error(
         )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
-    assert result["data"] == CONF_DATA
-
-
-async def test_import(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
-    """Test import initialized flow."""
-    with patch_config_flow(mocked_plug), _patch_setup_entry():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONF_IMPORT_DATA,
-        )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Smart Plug"
     assert result["data"] == CONF_DATA
 
 

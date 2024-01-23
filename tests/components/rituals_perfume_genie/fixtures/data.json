@@ -1,0 +1,121 @@
+{
+  "hub": {
+    "hublot": "LOT123",
+    "hash": "1234567890abcdefgghijklmnopqrstuvwxyz",
+    "status": 1,
+    "title": null,
+    "current_time": "2023-06-09T20:50",
+    "cached_time": "2023-06-09T20:48",
+    "ping_update": "25",
+    "attributes": {
+      "roomc": "4",
+      "speedc": "3",
+      "fanc": "1",
+      "roomnamec": "Living room",
+      "resetc": "",
+      "fspacenamec": "",
+      "fspacetypec": ""
+    },
+    "sensors": {
+      "wific": {
+        "id": 10,
+        "sensor_id": 1,
+        "title": "High",
+        "description": "",
+        "icon": "icon-signal.png",
+        "image": "",
+        "discover_image": "",
+        "discover_url": null,
+        "min_value": "-69.99",
+        "max_value": "-0.00",
+        "interval": "1",
+        "created_at": "2017-03-10 16:17:30",
+        "updated_at": "2020-06-17 16:57:53",
+        "default": 0
+      },
+      "fillc": {
+        "id": 38,
+        "sensor_id": 3,
+        "title": "90-100%",
+        "description": "",
+        "icon": "icon-fill.png",
+        "image": "",
+        "discover_image": "",
+        "discover_url": "",
+        "min_value": "0",
+        "max_value": "2000",
+        "interval": "",
+        "created_at": "2017-10-16 07:50:23",
+        "updated_at": "2021-02-17 13:42:16",
+        "default": 0
+      },
+      "rfidc": {
+        "id": 54,
+        "sensor_id": 4,
+        "title": "Private Collection Sweet Jasmine",
+        "description": "",
+        "icon": "icon-jasmine.png",
+        "image": "background-jasmine.png",
+        "discover_image": "discover-jasmine.png",
+        "discover_url": "sweet-jasmine-cartridge-1105402.html",
+        "min_value": "05377650",
+        "max_value": "05377650",
+        "interval": "",
+        "created_at": "2019-04-04 07:53:32",
+        "updated_at": "2021-01-26 14:17:03",
+        "default": 0
+      },
+      "versionc": "5.2-rc15",
+      "ipc": "1682963060",
+      "rpsc": {
+        "id": 48,
+        "sensor_id": 12,
+        "title": "Fan on",
+        "description": "",
+        "icon": "",
+        "image": "",
+        "discover_image": "",
+        "discover_url": null,
+        "min_value": "5",
+        "max_value": "10000",
+        "interval": "",
+        "created_at": "2018-01-23 12:05:45",
+        "updated_at": "2019-08-01 14:54:53",
+        "default": 0
+      },
+      "resetc": "External System",
+      "chipidc": "9820410",
+      "errorc": "",
+      "onlinec": {
+        "id": 31,
+        "sensor_id": 16,
+        "title": "Online",
+        "description": "",
+        "icon": "",
+        "image": "",
+        "discover_image": "",
+        "discover_url": null,
+        "min_value": "1",
+        "max_value": "1",
+        "interval": "",
+        "created_at": "2017-09-07 08:23:30",
+        "updated_at": "2017-09-07 08:23:30",
+        "default": 0
+      }
+    },
+    "settings": [
+      {
+        "schedule_id": 1835730,
+        "start": "07:30",
+        "end": "08:30",
+        "mon": 1,
+        "tue": 1,
+        "wed": 1,
+        "thu": 1,
+        "fri": 1,
+        "sat": 1,
+        "sun": 1
+      }
+    ]
+  }
+}

@@ -11,7 +11,7 @@ import logging
 import time
 from typing import Any, TypedDict, cast, overload
 
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -45,7 +45,6 @@ from homeassistant.core import Context, Event, EventOrigin, State, split_entity_
 import homeassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 Base = declarative_base()
 
 SCHEMA_VERSION = 28

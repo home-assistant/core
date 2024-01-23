@@ -19,14 +19,14 @@ from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
 from .entity import JuiceNetDevice
 
 
-@dataclass
+@dataclass(frozen=True)
 class JuiceNetNumberEntityDescriptionMixin:
     """Mixin for required keys."""
 
     setter_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class JuiceNetNumberEntityDescription(
     NumberEntityDescription, JuiceNetNumberEntityDescriptionMixin
 ):
@@ -37,7 +37,7 @@ class JuiceNetNumberEntityDescription(
 
 NUMBER_TYPES: tuple[JuiceNetNumberEntityDescription, ...] = (
     JuiceNetNumberEntityDescription(
-        name="Amperage Limit",
+        translation_key="amperage_limit",
         key="current_charging_amperage_limit",
         native_min_value=6,
         native_max_value_key="max_charging_amperage",
@@ -79,8 +79,6 @@ class JuiceNetNumber(JuiceNetDevice, NumberEntity):
         """Initialise the number."""
         super().__init__(device, description.key, coordinator)
         self.entity_description = description
-
-        self._attr_name = f"{self.device.name} {description.name}"
 
     @property
     def native_value(self) -> float | None:
