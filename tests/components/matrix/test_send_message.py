@@ -95,11 +95,7 @@ async def test_send_message(
         "message_type": "m.room.message",
         "content": {"msgtype": "m.notice", "body": data[ATTR_MESSAGE]},
     }
-    matrix_bot._handle_multi_room_send.assert_called_once_with(
-        target_rooms=expected_data["target_rooms"],
-        message_type=expected_data["message_type"],
-        content=expected_data["content"],
-    )
+    matrix_bot._handle_multi_room_send.assert_called_once_with(**expected_data)
 
     for room_alias_or_id in TEST_JOINABLE_ROOMS:
         assert f"Message delivered to room '{room_alias_or_id}'" in caplog.messages
