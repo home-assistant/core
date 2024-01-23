@@ -60,8 +60,8 @@ async def test_config_flow_client_connector_error(
     assert mock_client.get_beolink_self.call_count == 1
 
 
-async def test_config_flow_value_error(hass: HomeAssistant) -> None:
-    """Test we handle value_error."""
+async def test_config_flow_invalid_ip(hass: HomeAssistant) -> None:
+    """Test we handle invalid_ip."""
 
     result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
@@ -69,7 +69,7 @@ async def test_config_flow_value_error(hass: HomeAssistant) -> None:
         data=TEST_DATA_USER_INVALID,
     )
     assert result_user["type"] == FlowResultType.FORM
-    assert result_user["errors"] == {"base": "value_error"}
+    assert result_user["errors"] == {"base": "invalid_ip"}
 
 
 async def test_config_flow_api_exception(
@@ -123,8 +123,16 @@ async def test_config_flow_zeroconf(
         data=TEST_DATA_ZEROCONF,
     )
 
-    assert result_zeroconf["type"] == FlowResultType.CREATE_ENTRY
-    assert result_zeroconf["data"] == TEST_DATA_CREATE_ENTRY
+    assert result_zeroconf["type"] == FlowResultType.FORM
+    assert result_zeroconf["step_id"] == "zeroconf_confirm"
+
+    result_confirm = await hass.config_entries.flow.async_configure(
+        flow_id=result_zeroconf["flow_id"],
+        user_input=TEST_DATA_USER,
+    )
+
+    assert result_confirm["type"] == FlowResultType.CREATE_ENTRY
+    assert result_confirm["data"] == TEST_DATA_CREATE_ENTRY
 
     assert mock_client.get_beolink_self.call_count == 0
 
