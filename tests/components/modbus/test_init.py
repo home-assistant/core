@@ -12,7 +12,6 @@ This file is responsible for testing:
 
 It uses binary_sensors/sensors to do black box testing of the read calls.
 """
-from contextlib import suppress
 from datetime import timedelta
 import logging
 from unittest import mock
@@ -152,13 +151,11 @@ async def test_fixedRegList_validator() -> None:
     ):
         assert isinstance(hvac_fixedsize_reglist_validator(value), list)
 
-    with suppress(vol.Invalid):
+    with pytest.raises(vol.Invalid):
         hvac_fixedsize_reglist_validator([15, "ab", 17, 18, 19, 20, 21])
-    try:
+
+    with pytest.raises(vol.Invalid):
         hvac_fixedsize_reglist_validator([15, 17])
-    except vol.Invalid:
-        return
-    pytest.fail("hvac_fixedsize_reglist_validator not throwing exception")
 
 
 async def test_number_validator() -> None:
