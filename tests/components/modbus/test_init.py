@@ -12,7 +12,6 @@ This file is responsible for testing:
 
 It uses binary_sensors/sensors to do black box testing of the read calls.
 """
-from contextlib import suppress
 from datetime import timedelta
 import logging
 from unittest import mock
@@ -147,17 +146,14 @@ async def test_register_int_list_validator() -> None:
     ):
         assert isinstance(register_int_list_validator(value), vtype)
 
-    with suppress(vol.Invalid):
+    with pytest.raises(vol.Invalid):
         register_int_list_validator([15, 16])
 
-    with suppress(vol.Invalid):
+    with pytest.raises(vol.Invalid):
         register_int_list_validator(-15)
 
-    try:
+    with pytest.raises(vol.Invalid):
         register_int_list_validator(["aq"])
-    except vol.Invalid:
-        return
-    pytest.fail("register_int_list_validator not throwing exception")
 
 
 async def test_number_validator() -> None:
