@@ -234,6 +234,7 @@ ATTR_EFFECT_LIST = "effect_list"
 # Apply an effect to the light, can be EFFECT_COLORLOOP.
 ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
+EFFECT_OFF = "off"
 EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
 
@@ -1060,6 +1061,49 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
         return data
 
+    def __validate_color_mode(
+        self,
+        color_mode: ColorMode | str | None,
+        supported_color_modes: set[ColorMode] | set[str],
+        effect: str | None,
+    ) -> None:
+        """Validate the color mode."""
+        if color_mode is None:
+            # The light is turned off
+            return
+
+        if not effect or effect == EFFECT_OFF:
+            # No effect is active, the light must set color mode to one of the supported
+            # color modes
+            if color_mode in supported_color_modes:
+                return
+            # Increase severity to warning in 2024.3, reject in 2025.3
+            _LOGGER.debug(
+                "%s: set to unsupported color_mode: %s, supported_color_modes: %s",
+                self.entity_id,
+                color_mode,
+                supported_color_modes,
+            )
+            return
+
+        # When an effect is active, we allow the light to set its color mode to on_off and
+        # to brightness if the light allows adjusting brightness
+        effect_color_modes = supported_color_modes | {ColorMode.ONOFF}
+        if brightness_supported(effect_color_modes):
+            effect_color_modes.add(ColorMode.BRIGHTNESS)
+
+        if color_mode in effect_color_modes:
+            return
+
+        # Increase severity to warning in 2024.3, reject in 2025.3
+        _LOGGER.debug(
+            "%s: set to unsupported color_mode: %s, supported for effect: %s",
+            self.entity_id,
+            color_mode,
+            effect_color_modes,
+        )
+        return
+
     @final
     @property
     def state_attributes(self) -> dict[str, Any] | None:
@@ -1073,15 +1117,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         supported_features_value = supported_features.value
         _is_on = self.is_on
         color_mode = self._light_internal_color_mode if _is_on else None
+        effect = self.effect
 
-        if color_mode and color_mode not in legacy_supported_color_modes:
-            # Increase severity to warning in 2024.3, reject in 2025.3
-            _LOGGER.debug(
-                "%s: set to unsupported color_mode: %s, supported_color_modes: %s",
-                self.entity_id,
-                color_mode,
-                legacy_supported_color_modes,
-            )
+        self.__validate_color_mode(color_mode, legacy_supported_color_modes, effect)
 
         data[ATTR_COLOR_MODE] = color_mode
 
@@ -1141,7 +1179,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data.update(self._light_internal_convert_color(color_mode))
 
         if LightEntityFeature.EFFECT in supported_features:
-            data[ATTR_EFFECT] = self.effect if _is_on else None
+            data[ATTR_EFFECT] = effect if _is_on else None
 
         return data
 
