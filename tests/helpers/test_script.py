@@ -109,7 +109,7 @@ def assert_element(trace_element, expected_element, path):
     if trace_element.path == "0":
         expected_element = dict(expected_element)
         variables = expected_element.setdefault("variables", {})
-        variables = variables | ANY_CONTEXT
+        expected_element["variables"] = variables | ANY_CONTEXT
 
     if "variables" in expected_element:
         assert expected_element["variables"] == trace_element._variables
@@ -2654,7 +2654,7 @@ async def test_repeat_var_in_condition(hass: HomeAssistant, condition) -> None:
 @pytest.mark.parametrize(
     ("variables", "first_last", "inside_x"),
     [
-        (None, {"repeat": None, "x": None}, None),
+        (MappingProxyType({}), {"repeat": None, "x": None}, None),
         (MappingProxyType({"x": 1}), {"repeat": None, "x": 1}, 1),
     ],
 )
