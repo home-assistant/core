@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Check and start WebSocket connection
-    if not await client.connect_notifications():
+    if not await client.connect_notifications(remote_control=True):
         raise ConfigEntryNotReady(
             f"Unable to connect to {entry.title} WebSocket notification channel"
         )
