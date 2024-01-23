@@ -97,7 +97,12 @@ _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
-_RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
+_RESERVED_NAMES = {
+    "contextfunction",
+    "evalcontextfunction",
+    "environmentfunction",
+    "jinja_pass_arg",
+}
 
 _GROUP_DOMAIN_PREFIX = "group."
 _ZONE_DOMAIN_PREFIX = "zone."

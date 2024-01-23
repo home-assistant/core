@@ -5,7 +5,6 @@
       'duration': 60,
       'fade': True,
       'friendly_name': 'WLED RGB Light Nightlight',
-      'icon': 'mdi:weather-night',
       'target_brightness': 0,
     }),
     'context': <ANY>,
@@ -36,7 +35,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-night',
+    'original_icon': None,
     'original_name': 'Nightlight',
     'platform': 'wled',
     'previous_unique_id': None,
@@ -82,7 +81,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Reverse',
-      'icon': 'mdi:swap-horizontal-bold',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_reverse',
@@ -112,12 +110,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:swap-horizontal-bold',
+    'original_icon': None,
     'original_name': 'Reverse',
     'platform': 'wled',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'reverse',
     'unique_id': 'aabbccddeeff_reverse_0',
     'unit_of_measurement': None,
   })
@@ -158,7 +156,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Sync receive',
-      'icon': 'mdi:download-network-outline',
       'udp_port': 21324,
     }),
     'context': <ANY>,
@@ -189,7 +186,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:download-network-outline',
+    'original_icon': None,
     'original_name': 'Sync receive',
     'platform': 'wled',
     'previous_unique_id': None,
@@ -235,7 +232,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Sync send',
-      'icon': 'mdi:upload-network-outline',
       'udp_port': 21324,
     }),
     'context': <ANY>,
@@ -266,7 +262,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:upload-network-outline',
+    'original_icon': None,
     'original_name': 'Sync send',
     'platform': 'wled',
     'previous_unique_id': None,
