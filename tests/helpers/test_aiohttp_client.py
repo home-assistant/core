@@ -1,5 +1,6 @@
 """Test the aiohttp client helper."""
 import asyncio
+import ssl
 from unittest.mock import Mock, patch
 
 import aiohttp
@@ -71,6 +72,25 @@ async def test_get_clientsession_without_ssl(hass: HomeAssistant) -> None:
     assert isinstance(client_session, aiohttp.ClientSession)
     connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
     assert isinstance(connector, aiohttp.TCPConnector)
+
+
+async def test_get_clientsession_with_ssl_context(hass: HomeAssistant) -> None:
+    """Test init clientsession with ssl."""
+    verify_ssl = ssl.SSLContext()
+    family = 0
+
+    client.async_get_clientsession(hass, verify_ssl=verify_ssl)
+
+    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family)]
+    assert isinstance(client_session, aiohttp.ClientSession)
+    connectors = hass.data[client.DATA_CONNECTOR]
+    assert len(connectors) == 1
+    connector = connectors[(verify_ssl, family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
+
+    # Using the same object should reuse the key
+    client.async_get_clientsession(hass, verify_ssl=verify_ssl)
+    assert len(connectors) == 1
 
 
 @pytest.mark.parametrize(
