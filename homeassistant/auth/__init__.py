@@ -5,6 +5,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import timedelta
+from functools import partial
 import time
 from typing import Any, cast
 
@@ -157,7 +158,7 @@ class AuthManager:
         self._providers = providers
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
-        self._revoke_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
+        self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
@@ -457,27 +458,33 @@ class AuthManager:
             credential,
         )
 
-    async def async_get_refresh_token(
-        self, token_id: str
-    ) -> models.RefreshToken | None:
+    @callback
+    def async_get_refresh_token(self, token_id: str) -> models.RefreshToken | None:
         """Get refresh token by id."""
-        return await self._store.async_get_refresh_token(token_id)
+        return self._store.async_get_refresh_token(token_id)
 
-    async def async_get_refresh_token_by_token(
+    @callback
+    def async_get_refresh_token_by_token(
         self, token: str
     ) -> models.RefreshToken | None:
         """Get refresh token by token."""
-        return await self._store.async_get_refresh_token_by_token(token)
+        return self._store.async_get_refresh_token_by_token(token)
 
-    async def async_remove_refresh_token(
-        self, refresh_token: models.RefreshToken
-    ) -> None:
+    @callback
+    def async_remove_refresh_token(self, refresh_token: models.RefreshToken) -> None:
         """Delete a refresh token."""
-        await self._store.async_remove_refresh_token(refresh_token)
+        self._store.async_remove_refresh_token(refresh_token)
 
-        callbacks = self._revoke_callbacks.pop(refresh_token.id, [])
+        callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:
             revoke_callback()
+
+    @callback
+    def _async_unregister(
+        self, callbacks: set[CALLBACK_TYPE], callback_: CALLBACK_TYPE
+    ) -> None:
+        """Unregister a callback."""
+        callbacks.remove(callback_)
 
     @callback
     def async_register_revoke_token_callback(
@@ -485,17 +492,11 @@ class AuthManager:
     ) -> CALLBACK_TYPE:
         """Register a callback to be called when the refresh token id is revoked."""
         if refresh_token_id not in self._revoke_callbacks:
-            self._revoke_callbacks[refresh_token_id] = []
+            self._revoke_callbacks[refresh_token_id] = set()
 
         callbacks = self._revoke_callbacks[refresh_token_id]
-        callbacks.append(revoke_callback)
-
-        @callback
-        def unregister() -> None:
-            if revoke_callback in callbacks:
-                callbacks.remove(revoke_callback)
-
-        return unregister
+        callbacks.add(revoke_callback)
+        return partial(self._async_unregister, callbacks, revoke_callback)
 
     @callback
     def async_create_access_token(
@@ -552,16 +553,15 @@ class AuthManager:
         if provider := self._async_resolve_provider(refresh_token):
             provider.async_validate_refresh_token(refresh_token, remote_ip)
 
-    async def async_validate_access_token(
-        self, token: str
-    ) -> models.RefreshToken | None:
+    @callback
+    def async_validate_access_token(self, token: str) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
         try:
             unverif_claims = jwt_wrapper.unverified_hs256_token_decode(token)
         except jwt.InvalidTokenError:
             return None
 
-        refresh_token = await self.async_get_refresh_token(
+        refresh_token = self.async_get_refresh_token(
             cast(str, unverif_claims.get("iss"))
         )
 
