@@ -69,6 +69,7 @@ homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.analytics.*
+homeassistant.components.analytics_insights.*
 homeassistant.components.android_ip_webcam.*
 homeassistant.components.androidtv.*
 homeassistant.components.androidtv_remote.*
