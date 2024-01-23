@@ -860,6 +860,7 @@ iaqualink==0.5.0
 # homeassistant.components.ibeacon
 ibeacon-ble==1.0.1
 
+# homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 ical==6.1.1
