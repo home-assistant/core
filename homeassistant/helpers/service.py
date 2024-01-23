@@ -585,7 +585,7 @@ async def async_get_all_descriptions(
     # We don't mutate services here so we avoid calling
     # async_services which makes a copy of every services
     # dict.
-    services = hass.services._services  # pylint: disable=protected-access
+    services = hass.services.async_services_internal()
 
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
