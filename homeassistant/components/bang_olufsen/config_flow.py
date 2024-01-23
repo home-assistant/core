@@ -21,6 +21,7 @@ from .const import (
     ATTR_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
     COMPATIBLE_MODELS,
+    CONF_SERIAL_NUMBER,
     DEFAULT_MODEL,
     DOMAIN,
 )
@@ -33,6 +34,15 @@ class EntryData(TypedDict, total=False):
     jid: str
     model: str
     name: str
+
+
+# Map exception types to strings
+_exception_map = {
+    ApiException: "api_exception",
+    ClientConnectorError: "client_connector_error",
+    TimeoutError: "timeout_error",
+    AddressValueError: "invalid_ip",
+}
 
 
 class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -67,14 +77,14 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._host = user_input[CONF_HOST]
             self._model = user_input[CONF_MODEL]
 
-            # Check if the IP address is a valid address.
+            # Check if the IP address is a valid IPv4 address.
             try:
                 IPv4Address(self._host)
-            except AddressValueError:
+            except AddressValueError as error:
                 return self.async_show_form(
                     step_id="user",
                     data_schema=data_schema,
-                    errors={"base": "value_error"},
+                    errors={"base": _exception_map[type(error)]},
                 )
 
             self._client = MozartClient(self._host)
@@ -85,7 +95,6 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     beolink_self = await self._client.get_beolink_self(
                         _request_timeout=3
                     )
-
                 except (
                     ApiException,
                     ClientConnectorError,
@@ -94,17 +103,14 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     return self.async_show_form(
                         step_id="user",
                         data_schema=data_schema,
-                        errors={
-                            "base": {
-                                ApiException: "api_exception",
-                                ClientConnectorError: "client_connector_error",
-                                TimeoutError: "timeout_error",
-                            }[type(error)]
-                        },
+                        errors={"base": _exception_map[type(error)]},
                     )
 
             self._beolink_jid = beolink_self.jid
             self._serial_number = beolink_self.jid.split(".")[2].split("@")[0]
+
+            await self.async_set_unique_id(self._serial_number)
+            self._abort_if_unique_id_configured()
 
             return await self._create_entry()
 
@@ -133,13 +139,18 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._serial_number = discovery_info.properties[ATTR_SERIAL_NUMBER]
         self._beolink_jid = f"{discovery_info.properties[ATTR_TYPE_NUMBER]}.{discovery_info.properties[ATTR_ITEM_NUMBER]}.{self._serial_number}@products.bang-olufsen.com"
 
-        return await self._create_entry()
-
-    async def _create_entry(self) -> FlowResult:
-        """Create the config entry for a discovered or manually configured Bang & Olufsen device."""
         await self.async_set_unique_id(self._serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
+        # Set the discovered device title
+        self.context["title_placeholders"] = {
+            "name": discovery_info.properties[ATTR_FRIENDLY_NAME]
+        }
+
+        return await self.async_step_zeroconf_confirm()
+
+    async def _create_entry(self) -> FlowResult:
+        """Create the config entry for a discovered or manually configured Bang & Olufsen device."""
         # Ensure that created entities have a unique and easily identifiable id and not a "friendly name"
         self._name = f"{self._model}-{self._serial_number}"
 
@@ -151,4 +162,23 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 model=self._model,
                 name=self._name,
             ),
+        )
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm the configuration of the device."""
+        if user_input is not None:
+            return await self._create_entry()
+
+        self._set_confirm_only()
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={
+                CONF_HOST: self._host,
+                CONF_MODEL: self._model,
+                CONF_SERIAL_NUMBER: self._serial_number,
+            },
+            last_step=True,
         )

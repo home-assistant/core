@@ -1,10 +1,10 @@
 {
   "config": {
     "error": {
-      "api_exception": "[%key:common::config_flow::error::invalid_host%]",
-      "client_connector_error": "[%key:common::config_flow::error::invalid_host%]",
-      "timeout_error": "[%key:common::config_flow::error::timeout_connect%]",
-      "value_error": "[%key:common::config_flow::error::invalid_host%]"
+      "api_exception": "[%key:common::config_flow::error::cannot_connect%]",
+      "client_connector_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_ip": "Invalid IPv4 address"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
@@ -18,6 +18,10 @@
           "model": "[%key:common::generic::model%]"
         },
         "description": "Manually configure your Bang & Olufsen device."
+      },
+      "zeroconf_confirm": {
+        "title": "Setup Bang & Olufsen device",
+        "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
       }
     }
   }
