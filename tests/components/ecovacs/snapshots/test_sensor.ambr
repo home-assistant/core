@@ -1,4 +1,48 @@
 # serializer version: 1
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_area_cleaned:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ozmo_950_area_cleaned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Area cleaned',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'stats_area',
+    'unique_id': 'E1234567890000000001_stats_area',
+    'unit_of_measurement': 'm²',
+  })
+# ---
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_area_cleaned:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ozmo 950 Area cleaned',
+      'unit_of_measurement': 'm²',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ozmo_950_area_cleaned',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
 # name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_battery:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -44,7 +88,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_brush_lifetime:entity-registry]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -56,7 +100,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_brush_lifetime',
+    'entity_id': 'sensor.ozmo_950_brush_lifespan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -66,73 +110,26 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Brush lifetime',
+    'original_name': 'Brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'life_span_brush_lifetime',
-    'unique_id': 'E1234567890000000001_life_span_brush_lifetime',
+    'translation_key': 'lifespan_brush',
+    'unique_id': 'E1234567890000000001_lifespan_brush',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_brush_lifetime:state]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Brush lifetime',
+      'friendly_name': 'Ozmo 950 Brush lifespan',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_brush_lifetime',
+    'entity_id': 'sensor.ozmo_950_brush_lifespan',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '80',
-  })
-# ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_brush_remaining:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_brush_remaining',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Brush remaining',
-    'platform': 'ecovacs',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'life_span_brush_remaining',
-    'unique_id': 'E1234567890000000001_life_span_brush_remaining',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_brush_remaining:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Brush remaining',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_brush_remaining',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3600',
   })
 # ---
 # name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_error:entity-registry]
@@ -179,7 +176,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_filter_lifetime:entity-registry]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_filter_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -191,7 +188,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_filter_lifetime',
+    'entity_id': 'sensor.ozmo_950_filter_lifespan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -201,73 +198,26 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Filter lifetime',
+    'original_name': 'Filter lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'life_span_filter_lifetime',
-    'unique_id': 'E1234567890000000001_life_span_filter_lifetime',
+    'translation_key': 'lifespan_filter',
+    'unique_id': 'E1234567890000000001_lifespan_filter',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_filter_lifetime:state]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_filter_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Filter lifetime',
+      'friendly_name': 'Ozmo 950 Filter lifespan',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_filter_lifetime',
+    'entity_id': 'sensor.ozmo_950_filter_lifespan',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '56',
-  })
-# ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_filter_remaining:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_filter_remaining',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Filter remaining',
-    'platform': 'ecovacs',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'life_span_filter_remaining',
-    'unique_id': 'E1234567890000000001_life_span_filter_remaining',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_filter_remaining:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Filter remaining',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_filter_remaining',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2400',
   })
 # ---
 # name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_ip_address:entity-registry]
@@ -296,8 +246,8 @@
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wifi_ip',
-    'unique_id': 'E1234567890000000001_wifi_ip',
+    'translation_key': 'network_ip',
+    'unique_id': 'E1234567890000000001_network_ip',
     'unit_of_measurement': None,
   })
 # ---
@@ -313,7 +263,7 @@
     'state': '192.168.0.10',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brush_lifetime:entity-registry]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -325,7 +275,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_side_brush_lifetime',
+    'entity_id': 'sensor.ozmo_950_side_brush_lifespan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -335,29 +285,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Side brush lifetime',
+    'original_name': 'Side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'life_span_side_brush_lifetime',
-    'unique_id': 'E1234567890000000001_life_span_side_brush_lifetime',
+    'translation_key': 'lifespan_side_brush',
+    'unique_id': 'E1234567890000000001_lifespan_side_brush',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brush_lifetime:state]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Side brush lifetime',
+      'friendly_name': 'Ozmo 950 Side brush lifespan',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_side_brush_lifetime',
+    'entity_id': 'sensor.ozmo_950_side_brush_lifespan',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brush_remaining:entity-registry]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_time_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -368,8 +318,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_side_brush_remaining',
+    'entity_category': None,
+    'entity_id': 'sensor.ozmo_950_time_cleaned',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -382,98 +332,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Side brush remaining',
-    'platform': 'ecovacs',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'life_span_side_brush_remaining',
-    'unique_id': 'E1234567890000000001_life_span_side_brush_remaining',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brush_remaining:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Side brush remaining',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_side_brush_remaining',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1200',
-  })
-# ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_area:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ozmo_950_stats_area',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Stats area',
-    'platform': 'ecovacs',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'stats_area',
-    'unique_id': 'E1234567890000000001_stats_area',
-    'unit_of_measurement': 'm²',
-  })
-# ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_area:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Stats area',
-      'unit_of_measurement': 'm²',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_stats_area',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
-  })
-# ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_time:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ozmo_950_stats_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Stats time',
+    'original_name': 'Time cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -482,20 +341,20 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_time:state]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_time_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Stats time',
+      'friendly_name': 'Ozmo 950 Time cleaned',
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_stats_time',
+    'entity_id': 'sensor.ozmo_950_time_cleaned',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '300',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_total_area:entity-registry]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -509,7 +368,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ozmo_950_stats_total_area',
+    'entity_id': 'sensor.ozmo_950_total_area_cleaned',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -519,30 +378,30 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Stats total area',
+    'original_name': 'Total area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'stats_total_area',
-    'unique_id': 'E1234567890000000001_stats_total_area',
+    'translation_key': 'total_stats_area',
+    'unique_id': 'E1234567890000000001_total_stats_area',
     'unit_of_measurement': 'm²',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_total_area:state]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Stats total area',
+      'friendly_name': 'Ozmo 950 Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'm²',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_stats_total_area',
+    'entity_id': 'sensor.ozmo_950_total_area_cleaned',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_total_cleanings:entity-registry]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_cleanings:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -556,7 +415,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ozmo_950_stats_total_cleanings',
+    'entity_id': 'sensor.ozmo_950_total_cleanings',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -566,29 +425,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Stats total cleanings',
+    'original_name': 'Total cleanings',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'stats_total_cleanings',
-    'unique_id': 'E1234567890000000001_stats_total_cleanings',
+    'translation_key': 'total_stats_cleanings',
+    'unique_id': 'E1234567890000000001_total_stats_cleanings',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_total_cleanings:state]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_cleanings:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Stats total cleanings',
+      'friendly_name': 'Ozmo 950 Total cleanings',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_stats_total_cleanings',
+    'entity_id': 'sensor.ozmo_950_total_cleanings',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_total_time:entity-registry]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_time_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -602,7 +461,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ozmo_950_stats_total_time',
+    'entity_id': 'sensor.ozmo_950_total_time_cleaned',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -615,24 +474,24 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Stats total time',
+    'original_name': 'Total time cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'stats_total_time',
-    'unique_id': 'E1234567890000000001_stats_total_time',
+    'translation_key': 'total_stats_time',
+    'unique_id': 'E1234567890000000001_total_stats_time',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_total_time:state]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_time_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Stats total time',
+      'friendly_name': 'Ozmo 950 Total time cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_stats_total_time',
+    'entity_id': 'sensor.ozmo_950_total_time_cleaned',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '144000',
@@ -664,8 +523,8 @@
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wifi_rssi',
-    'unique_id': 'E1234567890000000001_wifi_rssi',
+    'translation_key': 'network_rssi',
+    'unique_id': 'E1234567890000000001_network_rssi',
     'unit_of_measurement': None,
   })
 # ---
@@ -707,8 +566,8 @@
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wifi_ssid',
-    'unique_id': 'E1234567890000000001_wifi_ssid',
+    'translation_key': 'network_ssid',
+    'unique_id': 'E1234567890000000001_network_ssid',
     'unit_of_measurement': None,
   })
 # ---

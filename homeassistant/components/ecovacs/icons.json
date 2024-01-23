@@ -12,14 +12,23 @@
       "error": {
         "default": "mdi:alert-circle"
       },
-      "life_span_brush": {
+      "lifespan_brush": {
         "default": "mdi:broom"
       },
-      "life_span_filter": {
+      "lifespan_filter": {
         "default": "mdi:air-filter"
       },
-      "life_span_side_brush": {
+      "lifespan_side_brush": {
         "default": "mdi:broom"
+      },
+      "network_ip": {
+        "default": "mdi:ip-network-outline"
+      },
+      "network_rssi": {
+        "default": "mdi:signal-variant"
+      },
+      "network_ssid": {
+        "default": "mdi:wifi"
       },
       "stats_area": {
         "default": "mdi:floor-plan"
@@ -27,26 +36,14 @@
       "stats_time": {
         "default": "mdi:timer-outline"
       },
-      "stats_total_area": {
+      "total_stats_area": {
         "default": "mdi:floor-plan"
       },
-      "stats_total_time": {
+      "total_stats_time": {
         "default": "mdi:timer-outline"
       },
-      "stats_total_cleanings": {
+      "total_stats_cleanings": {
         "default": "mdi:counter"
-      },
-      "stats_type": {
-        "default": "mdi:cog"
-      },
-      "wifi_ip": {
-        "default": "mdi:ip-network-outline"
-      },
-      "wifi_rssi": {
-        "default": "mdi:signal-variant"
-      },
-      "wifi_ssid": {
-        "default": "mdi:wifi"
       }
     }
   }

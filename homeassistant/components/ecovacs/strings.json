@@ -33,50 +33,38 @@
           }
         }
       },
-      "life_span_brush_lifetime": {
-        "name": "Brush lifetime"
+      "lifespan_brush": {
+        "name": "Brush lifespan"
       },
-      "life_span_brush_remaining": {
-        "name": "Brush remaining"
+      "lifespan_filter": {
+        "name": "Filter lifespan"
       },
-      "life_span_filter_lifetime": {
-        "name": "Filter lifetime"
+      "lifespan_side_brush": {
+        "name": "Side brush lifespan"
       },
-      "life_span_filter_remaining": {
-        "name": "Filter remaining"
-      },
-      "life_span_side_brush_lifetime": {
-        "name": "Side brush lifetime"
-      },
-      "life_span_side_brush_remaining": {
-        "name": "Side brush remaining"
-      },
-      "stats_area": {
-        "name": "Stats area"
-      },
-      "stats_time": {
-        "name": "Stats time"
-      },
-      "stats_total_area": {
-        "name": "Stats total area"
-      },
-      "stats_total_cleanings": {
-        "name": "Stats total cleanings"
-      },
-      "stats_total_time": {
-        "name": "Stats total time"
-      },
-      "stats_type": {
-        "name": "Stats type"
-      },
-      "wifi_ip": {
+      "network_ip": {
         "name": "IP address"
       },
-      "wifi_rssi": {
+      "network_rssi": {
         "name": "Wi-Fi RSSI"
       },
-      "wifi_ssid": {
+      "network_ssid": {
         "name": "Wi-Fi SSID"
+      },
+      "stats_area": {
+        "name": "Area cleaned"
+      },
+      "stats_time": {
+        "name": "Time cleaned"
+      },
+      "total_stats_area": {
+        "name": "Total area cleaned"
+      },
+      "total_stats_cleanings": {
+        "name": "Total cleanings"
+      },
+      "total_stats_time": {
+        "name": "Total time cleaned"
       }
     },
     "vacuum": {

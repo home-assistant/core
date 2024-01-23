@@ -79,16 +79,16 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     EcovacsSensorEntityDescription[TotalStatsEvent](
         capability_fn=lambda caps: caps.stats.total,
         value_fn=lambda e: e.area,
-        key="stats_total_area",
-        translation_key="stats_total_area",
+        key="total_stats_area",
+        translation_key="total_stats_area",
         native_unit_of_measurement=AREA_SQUARE_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
         capability_fn=lambda caps: caps.stats.total,
         value_fn=lambda e: e.time,
-        key="stats_total_time",
-        translation_key="stats_total_time",
+        key="total_stats_time",
+        translation_key="total_stats_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -96,8 +96,8 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     EcovacsSensorEntityDescription[TotalStatsEvent](
         capability_fn=lambda caps: caps.stats.total,
         value_fn=lambda e: e.cleanings,
-        key="stats_total_cleanings",
-        translation_key="stats_total_cleanings",
+        key="total_stats_cleanings",
+        translation_key="total_stats_cleanings",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[BatteryEvent](
@@ -111,24 +111,24 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     EcovacsSensorEntityDescription[NetworkInfoEvent](
         capability_fn=lambda caps: caps.network,
         value_fn=lambda e: e.ip,
-        key="wifi_ip",
-        translation_key="wifi_ip",
+        key="network_ip",
+        translation_key="network_ip",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcovacsSensorEntityDescription[NetworkInfoEvent](
         capability_fn=lambda caps: caps.network,
         value_fn=lambda e: e.rssi,
-        key="wifi_rssi",
-        translation_key="wifi_rssi",
+        key="network_rssi",
+        translation_key="network_rssi",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcovacsSensorEntityDescription[NetworkInfoEvent](
         capability_fn=lambda caps: caps.network,
         value_fn=lambda e: e.ssid,
-        key="wifi_ssid",
-        translation_key="wifi_ssid",
+        key="network_ssid",
+        translation_key="network_ssid",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -136,40 +136,28 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
 
 
 @dataclass(kw_only=True, frozen=True)
-class EcovacsLifeSpanSensorEntityDescription(SensorEntityDescription):
-    """Ecovacs life span sensor entity description."""
+class EcovacsLifespanSensorEntityDescription(SensorEntityDescription):
+    """Ecovacs lifespan sensor entity description."""
 
     component: LifeSpan
     value_fn: Callable[[LifeSpanEvent], int | float]
 
 
-LIFE_SPAN_ENTITY_DESCRIPTIONS = {
-    component: (
-        EcovacsLifeSpanSensorEntityDescription(
-            component=component,
-            value_fn=lambda e: e.percent,
-            key=f"life_span_{component.name.lower()}_lifetime",
-            translation_key=f"life_span_{component.name.lower()}_lifetime",
-            native_unit_of_measurement=PERCENTAGE,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-        EcovacsLifeSpanSensorEntityDescription(
-            component=component,
-            value_fn=lambda e: e.remaining,
-            key=f"life_span_{component.name.lower()}_remaining",
-            translation_key=f"life_span_{component.name.lower()}_remaining",
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            suggested_unit_of_measurement=UnitOfTime.MINUTES,
-            entity_registry_enabled_default=False,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
+LIFESPAN_ENTITY_DESCRIPTIONS = (
+    EcovacsLifespanSensorEntityDescription(
+        component=component,
+        value_fn=lambda e: e.percent,
+        key=f"lifespan_{component.name.lower()}",
+        translation_key=f"lifespan_{component.name.lower()}",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     )
     for component in (
         LifeSpan.BRUSH,
         LifeSpan.FILTER,
         LifeSpan.SIDE_BRUSH,
     )
-}
+)
 
 
 async def async_setup_entry(
@@ -185,10 +173,10 @@ async def async_setup_entry(
     )
     for device in controller.devices:
         lifespan_capability = device.capabilities.life_span
-        for component in lifespan_capability.types:
-            for description in LIFE_SPAN_ENTITY_DESCRIPTIONS.get(component, []):
+        for description in LIFESPAN_ENTITY_DESCRIPTIONS:
+            if description.component in lifespan_capability.types:
                 entities.append(
-                    EcovacsLifeSpanSensor(device, lifespan_capability, description)
+                    EcovacsLifespanSensor(device, lifespan_capability, description)
                 )
 
         if capability := device.capabilities.error:
@@ -220,13 +208,13 @@ class EcovacsSensor(
         self._subscribe(self._capability.event, on_event)
 
 
-class EcovacsLifeSpanSensor(
+class EcovacsLifespanSensor(
     EcovacsDescriptionEntity[CapabilityLifeSpan],
     SensorEntity,
 ):
-    """Life span sensor."""
+    """Lifespan sensor."""
 
-    entity_description: EcovacsLifeSpanSensorEntityDescription
+    entity_description: EcovacsLifespanSensorEntityDescription
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
