@@ -107,10 +107,9 @@ def assert_element(trace_element, expected_element, path):
 
     # Ignore the context variable in the first step
     if trace_element.path == "0":
-        if variables := expected_element.get("variables"):
-            expected_element["variables"] = variables | ANY_CONTEXT
-        else:
-            expected_element = expected_element | {"variables": ANY_CONTEXT}
+        expected_element = dict(expected_element)
+        variables = expected_element.setdefault("variables", {})
+        variables |= ANY_CONTEXT
 
     if "variables" in expected_element:
         assert expected_element["variables"] == trace_element._variables
