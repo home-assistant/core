@@ -13,7 +13,7 @@ from . import JvcProjectorDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import JvcProjectorEntity
 
-ON_STATUS = [const.ON, const.WARMING]
+ON_STATUS = (const.ON, const.WARMING)
 
 
 async def async_setup_entry(
