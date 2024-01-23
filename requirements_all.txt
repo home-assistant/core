@@ -1007,7 +1007,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.3.1
+habluetooth==2.4.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.75.1
@@ -1147,7 +1147,7 @@ jellyfin-apiclient-python==1.9.2
 jsonpath==0.82.2
 
 # homeassistant.components.justnimbus
-justnimbus==0.6.0
+justnimbus==0.7.3
 
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.0.0
