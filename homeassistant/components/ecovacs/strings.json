@@ -25,9 +25,6 @@
       }
     },
     "sensor": {
-      "battery_level": {
-        "name": "Battery level"
-      },
       "last_error": {
         "name": "Last error"
       },
@@ -62,10 +59,10 @@
         "name": "Ip"
       },
       "wifi_rssi": {
-        "name": "Wifi rssi"
+        "name": "Wi-Fi RSSI"
       },
       "wifi_ssid": {
-        "name": "Wifi ssid"
+        "name": "Wi-Fi SSID"
       }
     },
     "vacuum": {

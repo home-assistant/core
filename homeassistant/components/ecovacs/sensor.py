@@ -72,7 +72,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_time",
         capability_fn=lambda caps: caps.stats.clean,
-        value_fn=lambda e: round(e.time / 60) if e.time else None,
+        value_fn=lambda e: round(e.time / 60) if e.time is not None else None,
         translation_key="stats_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
@@ -110,7 +110,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         capability_fn=lambda caps: caps.battery,
         value_fn=lambda e: e.value,
         key=ATTR_BATTERY_LEVEL,
-        translation_key=ATTR_BATTERY_LEVEL,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -142,12 +141,10 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
 )
 
 
-_SUPPORTED_LIFE_SPAN_TYPES = frozenset(
-    {
-        LifeSpan.BRUSH,
-        LifeSpan.FILTER,
-        LifeSpan.SIDE_BRUSH,
-    }
+_SUPPORTED_LIFE_SPAN_TYPES = (
+    LifeSpan.BRUSH,
+    LifeSpan.FILTER,
+    LifeSpan.SIDE_BRUSH,
 )
 
 
@@ -163,15 +160,15 @@ async def async_setup_entry(
         controller, EcovacsSensor, ENTITY_DESCRIPTIONS
     )
     for device in controller.devices:
-        if capability := device.capabilities.error:
-            entities.append(EcovacsLastErrorSensor(device, capability))
-
         lifespan_capability = device.capabilities.life_span
         for component in _SUPPORTED_LIFE_SPAN_TYPES:
             if component in lifespan_capability.types:
                 entities.append(
                     EcovacsLifeSpanSensor(device, lifespan_capability, component)
                 )
+
+        if capability := device.capabilities.error:
+            entities.append(EcovacsLastErrorSensor(device, capability))
 
     async_add_entities(entities)
 

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_battery_level:entity-registry]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_battery:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_battery_level',
+    'entity_id': 'sensor.ozmo_950_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,24 +21,24 @@
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery level',
+    'original_name': 'Battery',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_level',
+    'translation_key': None,
     'unique_id': 'E1234567890000000001_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_battery_level:state]
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_battery:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Ozmo 950 Battery level',
+      'friendly_name': 'Ozmo 950 Battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_battery_level',
+    'entity_id': 'sensor.ozmo_950_battery',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
@@ -219,6 +219,51 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brush:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ozmo_950_side_brush',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Side brush',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'life_span_side_brush',
+    'unique_id': 'E1234567890000000001_life_span_side_brush',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brush:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ozmo 950 Side brush',
+      'remaining': 20,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ozmo_950_side_brush',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
   })
 # ---
 # name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_stats_area:entity-registry]

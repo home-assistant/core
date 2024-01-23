@@ -14,7 +14,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -52,13 +52,13 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "sensor.ozmo_950_stats_total_area",
                 "sensor.ozmo_950_stats_total_time",
                 "sensor.ozmo_950_stats_total_cleanings",
-                "sensor.ozmo_950_battery_level",
+                "sensor.ozmo_950_battery",
                 "sensor.ozmo_950_ip",
                 "sensor.ozmo_950_wifi_rssi",
                 "sensor.ozmo_950_wifi_ssid",
                 "sensor.ozmo_950_brush",
                 "sensor.ozmo_950_filter",
-                "sensor.ozmo_950_brush",
+                "sensor.ozmo_950_side_brush",
                 "sensor.ozmo_950_last_error",
             ],
         ),
@@ -72,6 +72,7 @@ async def test_sensors(
     entity_ids: list[str],
 ) -> None:
     """Test that sensor entity snapshots match."""
+    assert entity_ids == hass.states.async_entity_ids(Platform.SENSOR)
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
