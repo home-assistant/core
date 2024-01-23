@@ -546,13 +546,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If an existing config entry is updated, then this was a re-auth
         if existing_entry:
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 existing_entry, data=data, unique_id=self.unique_id
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(title=self.atv.name, data=data)
 
