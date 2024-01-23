@@ -736,6 +736,42 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
     assert result["reason"] == "cannot_connect"
 
 
+async def test_discovery_with_ip_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+    mock_connect["connect"].side_effect = SmartDeviceException()
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_RETRY
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+    # [result] = flows
+    # assert result["step_id"] == "reauth_confirm"
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_LEGACY
+
+    discovery_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_HOST: "127.0.0.2",
+            CONF_MAC: MAC_ADDRESS,
+            CONF_ALIAS: ALIAS,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+        },
+    )
+    await hass.async_block_till_done()
+    assert discovery_result["type"] is FlowResultType.ABORT
+    assert discovery_result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+
+
 async def test_reauth(
     hass: HomeAssistant,
     mock_added_config_entry: MockConfigEntry,
