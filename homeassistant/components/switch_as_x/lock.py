@@ -55,7 +55,7 @@ class LockSwitch(BaseInvertableEntity, LockEntity):
         """Lock the lock."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF if not self._invert_state else SERVICE_TURN_ON,
+            SERVICE_TURN_ON if self._invert_state else SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
@@ -65,7 +65,7 @@ class LockSwitch(BaseInvertableEntity, LockEntity):
         """Unlock the lock."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON if not self._invert_state else SERVICE_TURN_OFF,
+            SERVICE_TURN_OFF if self._invert_state else SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,

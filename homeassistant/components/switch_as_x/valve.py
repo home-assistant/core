@@ -62,7 +62,7 @@ class ValveSwitch(BaseInvertableEntity, ValveEntity):
         """Open the valve."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON if not self._invert_state else SERVICE_TURN_OFF,
+            SERVICE_TURN_OFF if self._invert_state else SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
@@ -72,7 +72,7 @@ class ValveSwitch(BaseInvertableEntity, ValveEntity):
         """Close valve."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF if not self._invert_state else SERVICE_TURN_ON,
+            SERVICE_TURN_ON if self._invert_state else SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
