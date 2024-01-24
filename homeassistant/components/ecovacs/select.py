@@ -84,7 +84,7 @@ class EcovacsSelectEntity(
     ) -> None:
         """Initialize entity."""
         super().__init__(device, capability, entity_description, **kwargs)
-        self._attr_options = self.entity_description.options_fn(capability)
+        self._attr_options = entity_description.options_fn(capability)
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
