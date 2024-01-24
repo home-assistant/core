@@ -1263,8 +1263,8 @@ class SonoffPresenceSenorIlluminationStatus(Sensor):
     def formatter(self, value: int) -> int | float | None:
         """Numeric pass-through formatter."""
         return SonoffIlluminationStates(value).name
-      
-      
+
+
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class PiHeatingDemand(Sensor):
