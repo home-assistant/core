@@ -92,6 +92,7 @@ class Metering(ClusterHandler):
         AttrReportConfig(
             attr="current_tier6_summ_delivered", config=REPORT_CONFIG_DEFAULT
         ),
+        AttrReportConfig(attr="current_summ_received", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="status", config=REPORT_CONFIG_ASAP),
     )
     ZCL_INIT_ATTRS = {
