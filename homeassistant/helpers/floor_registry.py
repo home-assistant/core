@@ -1,7 +1,8 @@
 """Provide a way to assign areas to floors in ones home."""
 from __future__ import annotations
 
-from collections.abc import Iterable, MutableMapping
+from collections import UserDict
+from collections.abc import Iterable, ValuesView
 import dataclasses
 from dataclasses import dataclass
 from typing import cast
@@ -19,7 +20,7 @@ STORAGE_VERSION_MAJOR = 1
 SAVE_DELAY = 10
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass(slots=True, kw_only=True, frozen=True)
 class FloorEntry:
     """Floor registry entry."""
 
@@ -29,38 +30,80 @@ class FloorEntry:
     icon: str | None = None
 
 
+class FloorRegistryItems(UserDict[str, FloorEntry]):
+    """Container for floor registry items, maps floor id -> entry.
+
+    Maintains an additional index:
+    - normalized name -> entry
+    """
+
+    def __init__(self) -> None:
+        """Initialize the container."""
+        super().__init__()
+        self._normalized_names: dict[str, FloorEntry] = {}
+
+    def values(self) -> ValuesView[FloorEntry]:
+        """Return the underlying values to avoid __iter__ overhead."""
+        return self.data.values()
+
+    def __setitem__(self, key: str, entry: FloorEntry) -> None:
+        """Add an item."""
+        data = self.data
+        normalized_name = _normalize_floor_name(entry.name)
+
+        if key in data:
+            old_entry = data[key]
+            if (
+                normalized_name != old_entry.normalized_name
+                and normalized_name in self._normalized_names
+            ):
+                raise ValueError(
+                    f"The name {entry.name} ({normalized_name}) is already in use"
+                )
+            del self._normalized_names[old_entry.normalized_name]
+        data[key] = entry
+        self._normalized_names[normalized_name] = entry
+
+    def __delitem__(self, key: str) -> None:
+        """Remove an item."""
+        entry = self[key]
+        normalized_name = _normalize_floor_name(entry.name)
+        del self._normalized_names[normalized_name]
+        super().__delitem__(key)
+
+    def get_floor_by_name(self, name: str) -> FloorEntry | None:
+        """Get floor by name."""
+        return self._normalized_names.get(_normalize_floor_name(name))
+
+
 class FloorRegistry:
     """Class to hold a registry of floors."""
+
+    floors: FloorRegistryItems
+    _floor_data: dict[str, FloorEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the floor registry."""
         self.hass = hass
-        self.floors: MutableMapping[str, FloorEntry] = {}
         self._store = hass.helpers.storage.Store(
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
         )
-        self._normalized_name_floor_idx: dict[str, str] = {}
-        self.children: dict[str, set[str]] = {}
 
     @callback
     def async_get_floor(self, floor_id: str) -> FloorEntry | None:
-        """Get floor by id."""
-        return self.floors.get(floor_id)
+        """Get floor by id.
 
-    @staticmethod
-    def _normalize_floor_name(floor_name: str) -> str:
-        """Normalize an floor name by removing whitespace and case folding."""
-        return floor_name.casefold().replace(" ", "")
+        We retrieve the FloorEntry from the underlying dict to avoid
+        the overhead of the UserDict __getitem__.
+        """
+        return self._floor_data.get(floor_id)
 
     @callback
     def async_get_floor_by_name(self, name: str) -> FloorEntry | None:
         """Get floor by name."""
-        normalized_name = self._normalize_floor_name(name)
-        if normalized_name not in self._normalized_name_floor_idx:
-            return None
-        return self.floors[self._normalized_name_floor_idx[normalized_name]]
+        return self.floors.get_floor_by_name(name)
 
     @callback
     def async_list_floors(self) -> Iterable[FloorEntry]:
@@ -90,7 +133,7 @@ class FloorRegistry:
                 f"The name {name} ({floor.normalized_name}) is already in use"
             )
 
-        normalized_name = self._normalize_floor_name(name)
+        normalized_name = _normalize_floor_name(name)
 
         floor = FloorEntry(
             icon=icon,
@@ -99,7 +142,6 @@ class FloorRegistry:
             normalized_name=normalized_name,
         )
         self.floors[floor.floor_id] = floor
-        self._normalized_name_floor_idx[normalized_name] = floor.floor_id
         self.async_schedule_save()
         self.hass.bus.async_fire(
             EVENT_FLOOR_REGISTRY_UPDATED,
@@ -110,13 +152,10 @@ class FloorRegistry:
     @callback
     def async_delete(self, floor_id: str) -> None:
         """Delete floor."""
-        floor = self.floors[floor_id]
-
         # Clean up any references to this floor
         ar.async_get(self.hass).async_clear_floor_id(floor_id)
 
         del self.floors[floor_id]
-        del self._normalized_name_floor_idx[floor.normalized_name]
 
         self.hass.bus.async_fire(
             EVENT_FLOOR_REGISTRY_UPDATED, {"action": "remove", "floor_id": floor_id}
@@ -138,27 +177,14 @@ class FloorRegistry:
         if icon is not UNDEFINED and old.icon != icon:
             changes["icon"] = icon
 
-        normalized_name = None
         if name is not UNDEFINED and name != old.name:
-            normalized_name = self._normalize_floor_name(name)
-            if normalized_name != old.normalized_name and self.async_get_floor_by_name(
-                name
-            ):
-                raise ValueError(
-                    f"The name {name} ({normalized_name}) is already in use"
-                )
-
             changes["name"] = name
-            changes["normalized_name"] = normalized_name
+            changes["normalized_name"] = _normalize_floor_name(name)
 
         if not changes:
             return old
 
         new = self.floors[floor_id] = dataclasses.replace(old, **changes)  # type: ignore[arg-type]
-        if normalized_name is not None:
-            self._normalized_name_floor_idx[
-                normalized_name
-            ] = self._normalized_name_floor_idx.pop(old.normalized_name)
 
         self.async_schedule_save()
         self.hass.bus.async_fire(
@@ -170,20 +196,20 @@ class FloorRegistry:
     async def async_load(self) -> None:
         """Load the floor registry."""
         data = await self._store.async_load()
-        floors: MutableMapping[str, FloorEntry] = {}
+        floors = FloorRegistryItems()
 
         if data is not None:
             for floor in data["floors"]:
-                normalized_name = self._normalize_floor_name(floor["name"])
+                normalized_name = _normalize_floor_name(floor["name"])
                 floors[floor["floor_id"]] = FloorEntry(
                     icon=floor["icon"],
                     floor_id=floor["floor_id"],
                     name=floor["name"],
                     normalized_name=normalized_name,
                 )
-                self._normalized_name_floor_idx[normalized_name] = floor["floor_id"]
 
         self.floors = floors
+        self._floor_data = floors.data
 
     @callback
     def async_schedule_save(self) -> None:
@@ -216,3 +242,8 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = FloorRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
+
+
+def _normalize_floor_name(floor_name: str) -> str:
+    """Normalize an floor name by removing whitespace and case folding."""
+    return floor_name.casefold().replace(" ", "")
