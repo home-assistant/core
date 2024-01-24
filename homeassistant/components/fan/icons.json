@@ -4,6 +4,14 @@
       "default": "mdi:fan",
       "state": {
         "off": "mdi:fan-off"
+      },
+      "state_attributes": {
+        "direction": {
+          "default": "mdi:rotate-right",
+          "state": {
+            "reverse": "mdi:rotate-left"
+          }
+        }
       }
     }
   },
