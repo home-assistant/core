@@ -40,6 +40,7 @@ async def async_setup_entry(
 class AdvantageAirLight(AdvantageAirEntity, LightEntity):
     """Representation of Advantage Air Light."""
 
+    _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_name = None
 
