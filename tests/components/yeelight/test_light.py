@@ -826,6 +826,9 @@ async def test_device_types(
         # nightlight as a setting of the main entity
         if nightlight_mode_properties is not None:
             mocked_bulb.last_properties["active_mode"] = True
+            config_entry = MockConfigEntry(
+                domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
+            )
             config_entry.add_to_hass(hass)
             await _async_setup(config_entry)
             state = hass.states.get(entity_id)

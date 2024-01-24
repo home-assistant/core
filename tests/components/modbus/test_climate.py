@@ -310,6 +310,36 @@ async def test_temperature_climate(
 
 
 @pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_SLAVE: 1,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_DATA_TYPE: DataType.INT32,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("register_words", "expected"),
+    [
+        (
+            None,
+            "unavailable",
+        ),
+    ],
+)
+async def test_temperature_error(hass: HomeAssistant, expected, mock_do_cycle) -> None:
+    """Run test for given config."""
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
     ("do_config", "result", "register_words"),
     [
         (

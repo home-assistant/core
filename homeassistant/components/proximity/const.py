@@ -1,10 +1,15 @@
 """Constants for Proximity integration."""
 
+from typing import Final
+
 from homeassistant.const import UnitOfLength
 
-ATTR_DIR_OF_TRAVEL = "dir_of_travel"
-ATTR_DIST_TO = "dist_to_zone"
-ATTR_NEAREST = "nearest"
+ATTR_DIR_OF_TRAVEL: Final = "dir_of_travel"
+ATTR_DIST_TO: Final = "dist_to_zone"
+ATTR_ENTITIES_DATA: Final = "entities_data"
+ATTR_IN_IGNORED_ZONE: Final = "is_in_ignored_zone"
+ATTR_NEAREST: Final = "nearest"
+ATTR_PROXIMITY_DATA: Final = "proximity_data"
 
 CONF_IGNORED_ZONES = "ignored_zones"
 CONF_TOLERANCE = "tolerance"

@@ -475,7 +475,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 
-UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
 }
 

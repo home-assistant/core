@@ -133,14 +133,12 @@ from .const import (  # noqa: F401
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
+    check_config,
     check_hvac_target_temp_registers,
-    duplicate_entity_validator,
     duplicate_fan_mode_validator,
-    duplicate_modbus_validator,
     hvac_fixedsize_reglist_validator,
     nan_validator,
     number_validator,
-    scan_interval_validator,
     struct_validator,
 )
 
@@ -420,12 +418,10 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
-            scan_interval_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
-            duplicate_entity_validator,
-            duplicate_modbus_validator,
+            check_config,
         ),
     },
     extra=vol.ALLOW_EXTRA,

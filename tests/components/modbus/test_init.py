@@ -59,6 +59,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
+    CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
     CONF_SLAVE_COUNT,
     CONF_STOPBITS,
@@ -737,6 +738,12 @@ async def test_climate_conflict_addresses(do_config) -> None:
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_CLOSE_COMM_ON_ERROR: True,
+        },
+        {
+            CONF_TYPE: TCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+            CONF_RETRIES: 3,
         },
         {
             CONF_TYPE: TCP,

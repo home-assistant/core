@@ -225,6 +225,23 @@ def nan_validator(value: Any) -> int:
         raise vol.Invalid(f"invalid number {value}") from err
 
 
+def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
+    """Control modbus climate fan mode values for duplicates."""
+    fan_modes: set[int] = set()
+    errors = []
+    for key, value in config[CONF_FAN_MODE_VALUES].items():
+        if value in fan_modes:
+            warn = f"Modbus fan mode {key} has a duplicate value {value}, not loaded, values must be unique!"
+            _LOGGER.warning(warn)
+            errors.append(key)
+        else:
+            fan_modes.add(value)
+
+    for key in reversed(errors):
+        del config[CONF_FAN_MODE_VALUES][key]
+    return config
+
+
 def scan_interval_validator(config: dict) -> dict:
     """Control scan_interval."""
     for hub in config:
@@ -333,7 +350,7 @@ def duplicate_entity_validator(config: dict) -> dict:
     return config
 
 
-def duplicate_modbus_validator(config: list) -> list:
+def duplicate_modbus_validator(config: dict) -> dict:
     """Control modbus connection for duplicates."""
     hosts: set[str] = set()
     names: set[str] = set()
@@ -359,24 +376,6 @@ def duplicate_modbus_validator(config: list) -> list:
     for i in reversed(errors):
         del config[i]
     return config
-
-
-def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
-    """Control modbus climate fan mode values for duplicates."""
-    fan_modes: set[int] = set()
-    errors = []
-    for key, value in config[CONF_FAN_MODE_VALUES].items():
-        if value in fan_modes:
-            wrn = f"Modbus fan mode {key} has a duplicate value {value}, not loaded, values must be unique!"
-            _LOGGER.warning(wrn)
-            errors.append(key)
-        else:
-            fan_modes.add(value)
-
-    for key in reversed(errors):
-        del config[CONF_FAN_MODE_VALUES][key]
-    return config
-
 
 def check_hvac_target_temp_registers(config: dict) -> dict:
     """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes."""
@@ -404,3 +403,11 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
         del config[CONF_FAN_MODE_REGISTER]
 
     return config
+
+def check_config(config: dict) -> dict:
+    """Do final config check."""
+    config2 = duplicate_modbus_validator(config)
+    config3 = scan_interval_validator(config2)
+    config4 = duplicate_entity_validator(config3)
+    return config4
+
