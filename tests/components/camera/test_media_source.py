@@ -43,15 +43,21 @@ async def test_browsing_mjpeg(hass: HomeAssistant, mock_camera) -> None:
     assert item.children[0].media_content_type == "image/jpg"
 
 
-async def test_browsing_filter_web_rtc(
-    hass: HomeAssistant, mock_camera_web_rtc
-) -> None:
-    """Test browsing camera media source hides non-HLS cameras."""
+async def test_browsing_web_rtc(hass: HomeAssistant, mock_camera_web_rtc) -> None:
+    """Test browsing camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
     assert item.title == "Camera"
     assert len(item.children) == 0
     assert item.not_shown == 3
+
+    # Adding stream enables HLS camera
+    hass.config.components.add("stream")
+
+    item = await media_source.async_browse_media(hass, "media-source://camera")
+    assert item.not_shown == 0
+    assert len(item.children) == 3
+    assert item.children[0].media_content_type == FORMAT_CONTENT_TYPE["hls"]
 
 
 async def test_resolving(hass: HomeAssistant, mock_camera_hls) -> None:

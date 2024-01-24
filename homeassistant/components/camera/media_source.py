@@ -1,6 +1,8 @@
 """Expose cameras as media sources."""
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
@@ -10,7 +12,8 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -81,7 +84,7 @@ class CameraMediaSource(MediaSource):
             if stream_type is None:
                 content_type = camera.content_type
 
-            elif can_stream_hls and stream_type == StreamType.HLS:
+            elif can_stream_hls and stream_type is not None:
                 content_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
 
             else:
@@ -94,7 +97,9 @@ class CameraMediaSource(MediaSource):
                     identifier=camera.entity_id,
                     media_class=MediaClass.VIDEO,
                     media_content_type=content_type,
-                    title=camera.name,
+                    title=cast(
+                        State, self.hass.states.get(camera.entity_id)
+                    ).attributes.get(ATTR_FRIENDLY_NAME, camera.name),
                     thumbnail=f"/api/camera_proxy/{camera.entity_id}",
                     can_play=True,
                     can_expand=False,
