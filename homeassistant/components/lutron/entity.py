@@ -1,4 +1,5 @@
 """Base class for Lutron devices."""
+from abc import abstractmethod
 
 from pylutron import Keypad, Lutron, LutronEntity, LutronEvent
 
@@ -22,15 +23,21 @@ class LutronBaseEntity(Entity):
         self._lutron_device = lutron_device
         self._controller = controller
         self._area_name = area_name
+        self._update_attrs()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._lutron_device.subscribe(self._update_callback, None)
 
+    @abstractmethod
+    def _update_attrs(self) -> None:
+        """Update the entity's attributes."""
+
     def _update_callback(
         self, _device: LutronEntity, _context: None, _event: LutronEvent, _params: dict
     ) -> None:
         """Run when invoked by pylutron when the device state changes."""
+        self._update_attrs()
         self.schedule_update_ha_state()
 
     @property
@@ -40,6 +47,10 @@ class LutronBaseEntity(Entity):
         if self._lutron_device.uuid is None:
             return None
         return f"{self._controller.guid}_{self._lutron_device.uuid}"
+
+    def update(self) -> None:
+        """Update the entity's state."""
+        self._update_attrs()
 
 
 class LutronDevice(LutronBaseEntity):

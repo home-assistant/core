@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pylutron import LutronEntity, LutronEvent, Output
+from pylutron import Output
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -71,15 +71,11 @@ class LutronLight(LutronDevice, LightEntity):
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
-    def _update_callback(
-        self, device: LutronEntity, context: None, event: LutronEvent, params: dict
-    ) -> None:
-        """Run when invoked by pylutron when the device state changes."""
+    def _update_attrs(self) -> None:
+        """Update the state attributes."""
         level = self._lutron_device.level
         self._attr_is_on = level > 0
         hass_level = to_hass_level(level)
         self._attr_brightness = hass_level
         if self._prev_brightness is None or hass_level != 0:
             self._prev_brightness = hass_level
-
-        super()._update_callback(device, context, event, params)

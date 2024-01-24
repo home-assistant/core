@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pylutron import Button, Keypad, Led, Lutron, LutronEntity, LutronEvent, Output
+from pylutron import Button, Keypad, Led, Lutron, Output
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -57,12 +57,9 @@ class LutronSwitch(LutronDevice, SwitchEntity):
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
-    def _update_callback(
-        self, device: LutronEntity, context: None, event: LutronEvent, params: dict
-    ) -> None:
-        """Call when the device has changed."""
+    def _update_attrs(self) -> None:
+        """Update the state attributes."""
         self._attr_is_on = self._lutron_device.level > 0
-        super()._update_callback(device, context, event, params)
 
 
 class LutronLed(LutronKeypad, SwitchEntity):
@@ -100,9 +97,6 @@ class LutronLed(LutronKeypad, SwitchEntity):
             "led": self._lutron_device.name,
         }
 
-    def _update_callback(
-        self, device: LutronEntity, context: None, event: LutronEvent, params: dict
-    ) -> None:
-        """Call when the device has changed."""
+    def _update_attrs(self) -> None:
+        """Update the state attributes."""
         self._attr_is_on = self._lutron_device.state
-        super()._update_callback(device, context, event, params)
