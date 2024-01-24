@@ -354,6 +354,7 @@ def duplicate_modbus_validator(config: dict) -> dict:
         del config[i]
     return config
 
+
 def register_int_list_validator(value: Any) -> Any:
     """Check if a register (CONF_ADRESS) is an int or a list having only 1 register."""
     if isinstance(value, int) and value >= 0:
@@ -367,10 +368,10 @@ def register_int_list_validator(value: Any) -> Any:
         f"Invalid {CONF_ADDRESS} register for fan mode. Required type: positive integer, allowed 1 or list of 1 register."
     )
 
+
 def check_config(config: dict) -> dict:
     """Do final config check."""
     config2 = duplicate_modbus_validator(config)
     config3 = scan_interval_validator(config2)
     config4 = duplicate_entity_validator(config3)
     return config4
-
