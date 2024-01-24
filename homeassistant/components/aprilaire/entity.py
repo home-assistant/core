@@ -20,9 +20,7 @@ class BaseAprilaireEntity(BaseCoordinatorEntity[AprilaireCoordinator]):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(
-        self, coordinator: AprilaireCoordinator, unique_id: str | None = None
-    ) -> None:
+    def __init__(self, coordinator: AprilaireCoordinator, unique_id: str) -> None:
         """Initialize the entity."""
 
         super().__init__(coordinator)
@@ -41,12 +39,7 @@ class BaseAprilaireEntity(BaseCoordinatorEntity[AprilaireCoordinator]):
 
         stopped: bool = self.coordinator.data.get(Attribute.STOPPED, None)
 
-        if stopped or not connected:
-            self._attr_available = False
-        else:
-            self._attr_available = (
-                self.coordinator.data.get(Attribute.MAC_ADDRESS, None) is not None
-            )
+        self._attr_available = connected and not stopped
 
     async def async_update(self) -> None:
         """Implement abstract base method."""

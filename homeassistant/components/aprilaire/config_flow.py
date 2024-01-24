@@ -43,7 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         coordinator = AprilaireCoordinator(
-            self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
+            self.hass, None, user_input[CONF_HOST], user_input[CONF_PORT]
         )
         await coordinator.start_listen()
 

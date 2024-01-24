@@ -4,7 +4,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "Port (usually 7000 or 8000)"
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },

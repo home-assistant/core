@@ -9,6 +9,7 @@ from typing import Any, Optional
 import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,10 +27,13 @@ _LOGGER = logging.getLogger(__name__)
 class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
     """Coordinator for interacting with the thermostat."""
 
-    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, host: str, port: int
+    ) -> None:
         """Initialize the coordinator."""
 
         self.hass = hass
+        self.config_entry = config_entry
         self.data: dict[str, Any] = {}
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
@@ -179,7 +183,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             return None
 
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, data[Attribute.MAC_ADDRESS])},
+            identifiers={(DOMAIN, self.config_entry.unique_id)},
             name=self.create_device_name(data),
             manufacturer="Aprilaire",
         )

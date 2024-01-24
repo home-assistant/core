@@ -1,6 +1,5 @@
 """Tests for the Aprilaire config flow."""
 
-import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 from pyaprilaire.client import AprilaireClient
@@ -11,52 +10,13 @@ from homeassistant.components.aprilaire.config_flow import (
     STEP_USER_DATA_SCHEMA,
     ConfigFlow,
 )
-from homeassistant.config_entries import ConfigEntries, ConfigEntry
-from homeassistant.core import EventBus, HomeAssistant
-from homeassistant.util import uuid as uuid_util
-
-
-@pytest.fixture
-def logger() -> logging.Logger:
-    """Return a logger."""
-    logger = logging.getLogger()
-    logger.propagate = False
-
-    return logger
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
 def client() -> AprilaireClient:
     """Return a mock client."""
     return AsyncMock(AprilaireClient)
-
-
-@pytest.fixture
-def unique_id() -> str:
-    """Return a random ID."""
-    return uuid_util.random_uuid_hex()
-
-
-@pytest.fixture
-def hass() -> HomeAssistant:
-    """Return a mock HomeAssistant instance."""
-    hass_mock = AsyncMock(HomeAssistant)
-    hass_mock.data = {}
-    hass_mock.config_entries = AsyncMock(ConfigEntries)
-    hass_mock.bus = AsyncMock(EventBus)
-
-    return hass_mock
-
-
-@pytest.fixture
-def config_entry(unique_id: str) -> ConfigEntry:
-    """Return a mock config entry."""
-
-    config_entry_mock = AsyncMock(ConfigEntry)
-    config_entry_mock.data = {"host": "test123", "port": 123}
-    config_entry_mock.unique_id = unique_id
-
-    return config_entry_mock
 
 
 async def test_user_input_step() -> None:
@@ -107,9 +67,7 @@ async def test_config_flow_invalid_data(client: AprilaireClient) -> None:
     )
 
 
-async def test_config_flow_data(
-    client: AprilaireClient, hass: HomeAssistant, unique_id: str
-) -> None:
+async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) -> None:
     """Test the config flow with valid data."""
 
     client.data = {"mac_address": "1:2:3:4:5:6"}
