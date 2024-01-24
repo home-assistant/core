@@ -67,6 +67,26 @@
         "name": "Total time cleaned"
       }
     },
+    "select": {
+      "water_amount": {
+        "name": "Water amount",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "ultrahigh": "Ultrahigh"
+        }
+      },
+      "work_mode": {
+        "name": "Work mode",
+        "state": {
+          "mop": "Mop",
+          "mop_after_vacuum": "Mop after vacuum",
+          "vacuum": "Vacuum",
+          "vacuum_and_mop": "Vacuum & mop"
+        }
+      }
+    },
     "vacuum": {
       "vacuum": {
         "state_attributes": {
