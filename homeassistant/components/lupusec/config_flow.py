@@ -9,7 +9,12 @@ import lupupy
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_FRIENDLY_NAME,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -23,7 +28,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_NAME): str,
+        vol.Optional(CONF_FRIENDLY_NAME): str,
     }
 )
 
@@ -41,7 +46,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            name = user_input.get(CONF_NAME)
+            name = user_input.get(CONF_FRIENDLY_NAME)
 
             try:
                 errors = await validate_user_input(
@@ -60,7 +65,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOST: host,
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
-                        CONF_NAME: name,
+                        CONF_FRIENDLY_NAME: name,
                     },
                 )
 
@@ -74,7 +79,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        name = user_input.get(CONF_NAME)
+        name = user_input.get(CONF_FRIENDLY_NAME)
         try:
             await validate_user_input(self.hass, host, username, password, name)
         except CannotConnect:
@@ -118,6 +123,7 @@ def is_valid_host(host):
 
 async def test_host_connection(hass, host, username, password):
     """Test if the host is reachable and is actually a Lupusec device."""
+
     try:
         await hass.async_add_executor_job(lupupy.Lupusec, username, password, host)
     except lupupy.LupusecException:

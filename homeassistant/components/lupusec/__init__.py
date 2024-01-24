@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -67,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 CONF_USERNAME: username,
                 CONF_PASSWORD: password,
                 CONF_HOST: host,
-                CONF_NAME: name,
+                CONF_FRIENDLY_NAME: name,
             },
         )
     )
