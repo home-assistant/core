@@ -110,3 +110,21 @@ async def test_devices_in_dr(
             )
         )
         assert device_entry == snapshot(name=device.device_info.did)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.parametrize(
+    ("device_fixture", "entities"),
+    [
+        ("yna5x1", 16),
+    ],
+)
+async def test_all_entities_loaded(
+    hass: HomeAssistant,
+    device_fixture: str,
+    entities: int,
+) -> None:
+    """Test that all entities are loaded together."""
+    assert (
+        hass.states.async_entity_ids_count() == entities
+    ), f"loaded entities for {device_fixture}: {hass.states.async_entity_ids()}"
