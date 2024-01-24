@@ -67,6 +67,21 @@
       },
       "today_consumption": {
         "name": "Today's consumption"
+      },
+      "current_consumption_child": {
+        "name": "{device_name} current consumption"
+      },
+      "total_consumption_child": {
+        "name": "{device_name} total consumption"
+      },
+      "today_consumption_child": {
+        "name": "{device_name} today's consumption"
+      },
+      "current_child": {
+        "name": "{device_name} current"
+      },
+      "voltage_child": {
+        "name": "{device_name} voltage"
       }
     },
     "switch": {
