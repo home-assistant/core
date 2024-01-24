@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pylutron import Output
+from pylutron import LutronEntity, LutronEvent, Output
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -34,11 +34,8 @@ async def async_setup_entry(
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        [
-            LutronCover(area_name, device, entry_data.client)
-            for area_name, device in entry_data.covers
-        ],
-        True,
+        LutronCover(area_name, device, entry_data.client)
+        for area_name, device in entry_data.covers
     )
 
 
@@ -52,16 +49,6 @@ class LutronCover(LutronDevice, CoverEntity):
     )
     _lutron_device: Output
     _attr_name = None
-
-    @property
-    def is_closed(self) -> bool:
-        """Return if the cover is closed."""
-        return self._lutron_device.last_level() < 1
-
-    @property
-    def current_cover_position(self) -> int:
-        """Return the current position of cover."""
-        return self._lutron_device.last_level()
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -77,11 +64,16 @@ class LutronCover(LutronDevice, CoverEntity):
             position = kwargs[ATTR_POSITION]
             self._lutron_device.level = position
 
-    def update(self) -> None:
-        """Call when forcing a refresh of the device."""
-        # Reading the property (rather than last_level()) fetches value
+    def _update_callback(
+        self, device: LutronEntity, context: None, event: LutronEvent, params: dict
+    ) -> None:
+        """Run when invoked by pylutron when the device state changes."""
         level = self._lutron_device.level
+        self._attr_is_closed = level < 1
+        self._attr_current_cover_position = level
         _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, level)
+
+        super()._update_callback(device, context, event, params)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pylutron import Output
+from pylutron import LutronEntity, LutronEvent, Output
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -27,11 +27,8 @@ async def async_setup_entry(
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        [
-            LutronLight(area_name, device, entry_data.client)
-            for area_name, device in entry_data.lights
-        ],
-        True,
+        LutronLight(area_name, device, entry_data.client)
+        for area_name, device in entry_data.lights
     )
 
 
@@ -54,14 +51,6 @@ class LutronLight(LutronDevice, LightEntity):
     _prev_brightness: int | None = None
     _attr_name = None
 
-    @property
-    def brightness(self) -> int:
-        """Return the brightness of the light."""
-        new_brightness = to_hass_level(self._lutron_device.last_level())
-        if new_brightness != 0:
-            self._prev_brightness = new_brightness
-        return new_brightness
-
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
@@ -82,12 +71,15 @@ class LutronLight(LutronDevice, LightEntity):
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self._lutron_device.last_level() > 0
+    def _update_callback(
+        self, device: LutronEntity, context: None, event: LutronEvent, params: dict
+    ) -> None:
+        """Run when invoked by pylutron when the device state changes."""
+        level = self._lutron_device.level
+        self._attr_is_on = level > 0
+        hass_level = to_hass_level(level)
+        self._attr_brightness = hass_level
+        if self._prev_brightness is None or hass_level != 0:
+            self._prev_brightness = hass_level
 
-    def update(self) -> None:
-        """Call when forcing a refresh of the device."""
-        if self._prev_brightness is None:
-            self._prev_brightness = to_hass_level(self._lutron_device.level)
+        super()._update_callback(device, context, event, params)
