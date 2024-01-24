@@ -39,6 +39,15 @@ class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.device.mac}_power"
 
     @property
+    def icon(self) -> str | None:
+        """Icon of the entity, based on time."""
+        if self.coordinator.data["power"] in ON_STATUS:
+            return "mdi:projector"
+        if self.coordinator.data["power"] == const.ERROR:
+            return "mdi:alert-circle"
+        return "mdi:projector-off"
+
+    @property
     def is_on(self) -> bool:
         """Return true if the JVC is on."""
         return self.coordinator.data["power"] in ON_STATUS

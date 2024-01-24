@@ -6,7 +6,10 @@ from unittest.mock import AsyncMock
 from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
 
 from homeassistant.components.jvc_projector import DOMAIN
-from homeassistant.components.jvc_projector.coordinator import INTERVAL
+from homeassistant.components.jvc_projector.coordinator import (
+    INTERVAL_FAST,
+    INTERVAL_SLOW,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
@@ -21,11 +24,13 @@ async def test_coordinator_update(
 ) -> None:
     """Test coordinator update runs."""
     mock_device.get_state.return_value = {"power": "standby"}
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=INTERVAL.seconds + 1))
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=INTERVAL_SLOW.seconds + 1)
+    )
     await hass.async_block_till_done()
     assert mock_device.get_state.call_count == 3
     coordinator = hass.data[DOMAIN][mock_integration.entry_id]
-    assert coordinator.update_interval == INTERVAL
+    assert coordinator.update_interval == INTERVAL_SLOW
 
 
 async def test_coordinator_connect_error(
@@ -65,4 +70,4 @@ async def test_coordinator_device_on(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-    assert coordinator.update_interval == INTERVAL
+    assert coordinator.update_interval == INTERVAL_FAST

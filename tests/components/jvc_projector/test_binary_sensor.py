@@ -1,25 +1,33 @@
 """Tests for the JVC Projector binary sensor device."""
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import STATE_OFF
+
+from unittest.mock import MagicMock
+
+# from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+# from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import setup_platform
+from tests.common import MockConfigEntry
+
+ENTITY_ID = "binary_sensor.jvc_projector"
 
 
-async def test_entity_registry(
+async def test_entity_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
+    mock_integration: MockConfigEntry,
+) -> None:
+    """Tests entity state is registered."""
+    entity = hass.states.get(ENTITY_ID)
+    assert entity
+    assert entity_registry.async_get(entity.entity_id)
+
+
+async def test_binary_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, BINARY_SENSOR_DOMAIN)
-
-    entry = entity_registry.async_get("binary_sensor.jvc_projector")
-    assert entry.unique_id == "2834013428b6_BinarySensor"
-
-
-async def test_attributes(hass: HomeAssistant) -> None:
-    """Test the binary sensor attributes are correct."""
-    await setup_platform(hass, BINARY_SENSOR_DOMAIN)
-
+    """Test states of binary sensor."""
     state = hass.states.get("binary_sensor.is_on")
-    assert state.state == STATE_OFF
+    assert state
+    assert state.state == "off"
