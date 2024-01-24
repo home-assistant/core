@@ -607,7 +607,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 )
 
         # If white is set to True, set it to the light's brightness
-        # Add a warning in Home Assistant Core 2023.5 if the brightness is set to an
+        # Add a warning in Home Assistant Core 2024.3 if the brightness is set to an
         # integer.
         if params.get(ATTR_WHITE) is True:
             params[ATTR_WHITE] = light.brightness
@@ -896,7 +896,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the color mode of the light with backwards compatibility."""
         if (color_mode := self.color_mode) is None:
             # Backwards compatibility for color_mode added in 2021.4
-            # Add warning in 2021.6, remove in 2021.10
+            # Add warning in 2024.3, remove in 2025.3
             supported = self._light_internal_supported_color_modes
 
             if ColorMode.HS in supported and self.hs_color is not None:
@@ -1075,7 +1075,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         color_mode = self._light_internal_color_mode if _is_on else None
 
         if color_mode and color_mode not in legacy_supported_color_modes:
-            # Increase severity to warning in 2021.6, reject in 2021.10
+            # Increase severity to warning in 2024.3, reject in 2025.3
             _LOGGER.debug(
                 "%s: set to unsupported color_mode: %s, supported_color_modes: %s",
                 self.entity_id,
@@ -1092,7 +1092,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_BRIGHTNESS] = None
         elif supported_features_value & SUPPORT_BRIGHTNESS:
             # Backwards compatibility for ambiguous / incomplete states
-            # Add warning in 2021.6, remove in 2021.10
+            # Add warning in 2024.3, remove in 2025.3
             if _is_on:
                 data[ATTR_BRIGHTNESS] = self.brightness
             else:
@@ -1113,7 +1113,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_COLOR_TEMP] = None
         elif supported_features_value & SUPPORT_COLOR_TEMP:
             # Backwards compatibility
-            # Add warning in 2021.6, remove in 2021.10
+            # Add warning in 2024.3, remove in 2025.3
             if _is_on:
                 color_temp_kelvin = self.color_temp_kelvin
                 data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
@@ -1152,7 +1152,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return _supported_color_modes
 
         # Backwards compatibility for supported_color_modes added in 2021.4
-        # Add warning in 2021.6, remove in 2021.10
+        # Add warning in 2024.3, remove in 2025.3
         supported_features = self.supported_features_compat
         supported_features_value = supported_features.value
         supported_color_modes: set[ColorMode] = set()
