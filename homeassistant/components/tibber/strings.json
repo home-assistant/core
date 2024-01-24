@@ -17,70 +17,70 @@
         "name": "Monthly net consumption"
       },
       "average_power": {
-        "name": "average power"
+        "name": "Average power"
       },
       "power": {
-        "name": "power"
+        "name": "Power"
       },
       "power_production": {
-        "name": "power production"
+        "name": "Power production"
       },
       "min_power": {
-        "name": "min power"
+        "name": "Min power"
       },
       "max_power": {
-        "name": "max power"
+        "name": "Max power"
       },
       "accumulated_consumption": {
-        "name": "accumulated consumption"
+        "name": "Accumulated consumption"
       },
       "accumulated_consumption_last_hour": {
-        "name": "accumulated consumption current hour"
+        "name": "Accumulated consumption current hour"
       },
       "estimated_hour_consumption": {
         "name": "Estimated consumption current hour"
       },
       "accumulated_production": {
-        "name": "accumulated production"
+        "name": "Accumulated production"
       },
       "accumulated_production_last_hour": {
-        "name": "accumulated production current hour"
+        "name": "Accumulated production current hour"
       },
       "last_meter_consumption": {
-        "name": "last meter consumption"
+        "name": "Last meter consumption"
       },
       "last_meter_production": {
-        "name": "last meter production"
+        "name": "Last meter production"
       },
       "voltage_phase1": {
-        "name": "voltage phase1"
+        "name": "Voltage phase1"
       },
       "voltage_phase2": {
-        "name": "voltage phase2"
+        "name": "Voltage phase2"
       },
       "voltage_phase3": {
-        "name": "voltage phase3"
+        "name": "Voltage phase3"
       },
       "current_l1": {
-        "name": "current L1"
+        "name": "Current L1"
       },
       "current_l2": {
-        "name": "current L2"
+        "name": "Current L2"
       },
       "current_l3": {
-        "name": "current L3"
+        "name": "Current L3"
       },
       "signal_strength": {
-        "name": "signal strength"
+        "name": "Signal strength"
       },
       "accumulated_reward": {
-        "name": "accumulated reward"
+        "name": "Accumulated reward"
       },
       "accumulated_cost": {
-        "name": "accumulated cost"
+        "name": "Accumulated cost"
       },
       "power_factor": {
-        "name": "power factor"
+        "name": "Power factor"
       }
     }
   },
