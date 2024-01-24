@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, TeslemetryState
+from .const import LOGGER, TeslemetryState
 
 SYNC_INTERVAL = 60
 
@@ -21,7 +21,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize Teslemetry Data Update Coordinator."""
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name="Teslemetry Vehicle",
             update_interval=timedelta(seconds=SYNC_INTERVAL),
         )

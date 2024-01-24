@@ -14,7 +14,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 
 TESLEMETRY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 DESCRIPTION_PLACEHOLDERS = {
@@ -47,7 +47,7 @@ class TeslemetryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ClientConnectionError:
                 errors["base"] = "cannot_connect"
             except TeslaFleetError as e:
-                _LOGGER.exception(e.message)
+                LOGGER.exception(e.message)
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
