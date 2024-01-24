@@ -591,8 +591,8 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
         assert ch.async_configure.call_count == 1
         assert ch.async_configure.await_count == 1
 
-    assert ch_3.warning.call_count == 2
-    assert ch_5.warning.call_count == 2
+    assert ch_3.debug.call_count == 2
+    assert ch_5.debug.call_count == 2
 
 
 async def test_poll_control_configure(poll_control_ch) -> None:
