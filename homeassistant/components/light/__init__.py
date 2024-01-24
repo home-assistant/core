@@ -1151,6 +1151,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _light_internal_supported_color_modes(self) -> set[ColorMode] | set[str]:
         """Calculate supported color modes with backwards compatibility."""
         if (_supported_color_modes := self.supported_color_modes) is not None:
+            valid_supported_color_modes(_supported_color_modes)
             return _supported_color_modes
 
         raise ValueError("Light does not set supported_color_modes")
