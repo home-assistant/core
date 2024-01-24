@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries as core_ce, data_entry_flow
 from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS, ConfigFlow
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.generated import config_flows
 from homeassistant.helpers import config_entry_flow, config_validation as cv
@@ -2022,3 +2023,45 @@ async def test_subscribe_entries_ws_filtered(
             "type": "added",
         }
     ]
+
+
+async def test_flow_with_multiple_schema_errors(hass: HomeAssistant, client) -> None:
+    """Test an config flow with multiple schema errors."""
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_LATITUDE): cv.latitude,
+                        vol.Required(CONF_LONGITUDE): cv.longitude,
+                        vol.Required(CONF_RADIUS): vol.All(int, vol.Range(min=5)),
+                    }
+                ),
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow", json={"handler": "test"}
+        )
+        assert resp.status == HTTPStatus.OK
+        flow_id = (await resp.json())["flow_id"]
+
+        resp = await client.post(
+            f"/api/config/config_entries/flow/{flow_id}",
+            json={"latitude": 30000, "longitude": 30000, "radius": 1},
+        )
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        data = await resp.json()
+        assert data == {
+            "errors": {
+                "latitude": "invalid latitude",
+                "longitude": "invalid longitude",
+                "radius": "value must be at least 5",
+            }
+        }
