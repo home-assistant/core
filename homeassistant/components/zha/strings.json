@@ -896,7 +896,6 @@
       },
       "setpoint_change_source": {
         "name": "Setpoint Change Source"
-
       }
     },
     "switch": {
