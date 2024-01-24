@@ -1,7 +1,6 @@
 """Provides device triggers for Xiaomi BLE."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 import voluptuous as vol
@@ -21,41 +20,45 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_EVENT_PROPERTIES,
+    CONF_DISCOVERED_EVENT_CLASSES,
+    CONF_SUBTYPE,
     DOMAIN,
-    EVENT_PROPERTIES,
+    EVENT_CLASS,
+    EVENT_CLASS_BUTTON,
+    EVENT_CLASS_MOTION,
     EVENT_TYPE,
     XIAOMI_BLE_EVENT,
 )
 
-MOTION_DEVICE_TRIGGERS = [
-    {CONF_TYPE: "motion_detected", CONF_EVENT_PROPERTIES: None},
-]
+TRIGGERS_BY_EVENT_CLASS = {
+    EVENT_CLASS_BUTTON: {
+        "press",
+        "double_press",
+        "triple_press",
+        "long_press",
+        "long_double_press",
+        "long_triple_press",
+    },
+    EVENT_CLASS_MOTION: {"motion_detected"},
+}
 
-MOTION_DEVICE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {
-        vol.Required(CONF_TYPE): vol.In(
-            [trigger[CONF_TYPE] for trigger in MOTION_DEVICE_TRIGGERS]
-        ),
-        vol.Optional(CONF_EVENT_PROPERTIES): vol.In(
-            [trigger[CONF_EVENT_PROPERTIES] for trigger in MOTION_DEVICE_TRIGGERS]
-        ),
-    }
-)
-
-
-@dataclass
-class TriggerModelData:
-    """Data class for trigger model data."""
-
-    triggers: list[dict[str, Any]]
-    schema: vol.Schema
-
-
-MODEL_DATA = {
-    "MUE4094RT": TriggerModelData(
-        triggers=MOTION_DEVICE_TRIGGERS, schema=MOTION_DEVICE_SCHEMA
-    )
+SCHEMA_BY_EVENT_CLASS = {
+    EVENT_CLASS_BUTTON: DEVICE_TRIGGER_BASE_SCHEMA.extend(
+        {
+            vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_BUTTON]),
+            vol.Required(CONF_SUBTYPE): vol.In(
+                TRIGGERS_BY_EVENT_CLASS[EVENT_CLASS_BUTTON]
+            ),
+        }
+    ),
+    EVENT_CLASS_MOTION: DEVICE_TRIGGER_BASE_SCHEMA.extend(
+        {
+            vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_MOTION]),
+            vol.Required(CONF_SUBTYPE): vol.In(
+                TRIGGERS_BY_EVENT_CLASS[EVENT_CLASS_MOTION]
+            ),
+        }
+    ),
 }
 
 
@@ -63,28 +66,49 @@ async def async_validate_trigger_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate trigger config."""
-    device_id = config[CONF_DEVICE_ID]
-    if model_data := _async_trigger_model_data(hass, device_id):
-        return model_data.schema(config)  # type: ignore[no-any-return]
-    return config
+    return SCHEMA_BY_EVENT_CLASS.get(config[CONF_TYPE], DEVICE_TRIGGER_BASE_SCHEMA)(  # type: ignore[no-any-return]
+        config
+    )
 
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
-    """List a list of triggers for Xiaomi BLE devices."""
-
-    # Check if device is a model supporting device triggers.
-    if not (model_data := _async_trigger_model_data(hass, device_id)):
-        return []
+    """Return a list of triggers for Xiaomi BLE devices."""
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(device_id)
+    assert device is not None
+    config_entries = [
+        hass.config_entries.async_get_entry(entry_id)
+        for entry_id in device.config_entries
+    ]
+    xiaomi_config_entry = next(
+        iter(entry for entry in config_entries if entry and entry.domain == DOMAIN),
+        None,
+    )
+    assert xiaomi_config_entry is not None
+    event_classes: list[str] = xiaomi_config_entry.data.get(
+        CONF_DISCOVERED_EVENT_CLASSES, []
+    )
     return [
         {
+            # Required fields of TRIGGER_BASE_SCHEMA
             CONF_PLATFORM: "device",
-            CONF_DOMAIN: DOMAIN,
             CONF_DEVICE_ID: device_id,
-            **trigger,
+            CONF_DOMAIN: DOMAIN,
+            # Required fields of TRIGGER_SCHEMA
+            CONF_TYPE: event_class,
+            CONF_SUBTYPE: event_type,
         }
-        for trigger in model_data.triggers
+        for event_class in event_classes
+        for event_type in TRIGGERS_BY_EVENT_CLASS.get(
+            event_class.split("_")[0],
+            # If the device has multiple buttons they will have
+            # event classes like button_1 button_2, button_3, etc
+            # but if there is only one button then it will be
+            # button without a number postfix.
+            (),
+        )
     ]
 
 
@@ -95,33 +119,20 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-
-    event_data = {
-        CONF_DEVICE_ID: config[CONF_DEVICE_ID],
-        EVENT_TYPE: config[CONF_TYPE],
-        EVENT_PROPERTIES: config[CONF_EVENT_PROPERTIES],
-    }
     return await event_trigger.async_attach_trigger(
         hass,
         event_trigger.TRIGGER_SCHEMA(
             {
                 event_trigger.CONF_PLATFORM: CONF_EVENT,
                 event_trigger.CONF_EVENT_TYPE: XIAOMI_BLE_EVENT,
-                event_trigger.CONF_EVENT_DATA: event_data,
+                event_trigger.CONF_EVENT_DATA: {
+                    CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+                    EVENT_CLASS: config[CONF_TYPE],
+                    EVENT_TYPE: config[CONF_SUBTYPE],
+                },
             }
         ),
         action,
         trigger_info,
         platform_type="device",
     )
-
-
-def _async_trigger_model_data(
-    hass: HomeAssistant, device_id: str
-) -> TriggerModelData | None:
-    """Get available triggers for a given model."""
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get(device_id)
-    if device and device.model and (model_data := MODEL_DATA.get(device.model)):
-        return model_data
-    return None
