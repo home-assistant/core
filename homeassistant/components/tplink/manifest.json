@@ -178,6 +178,10 @@
     },
     {
       "hostname": "l5*",
+      "macaddress": "3C52A1*"
+    },
+    {
+      "hostname": "l5*",
       "macaddress": "5C628B*"
     },
     {

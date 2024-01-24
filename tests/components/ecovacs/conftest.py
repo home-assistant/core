@@ -9,8 +9,10 @@ from deebot_client.exceptions import ApiError
 from deebot_client.models import Credentials
 import pytest
 
+from homeassistant.components.ecovacs import PLATFORMS
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import VALID_ENTRY_DATA
@@ -38,13 +40,13 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def device_classes() -> list[str]:
-    """Device classes, which should be returned by the get_devices api call."""
-    return ["yna5x1"]
+def device_fixture() -> str:
+    """Device class, which should be returned by the get_devices api call."""
+    return "yna5x1"
 
 
 @pytest.fixture
-def mock_authenticator(device_classes: list[str]) -> Generator[Mock, None, None]:
+def mock_authenticator(device_fixture: str) -> Generator[Mock, None, None]:
     """Mock the authenticator."""
     with patch(
         "homeassistant.components.ecovacs.controller.Authenticator",
@@ -56,11 +58,9 @@ def mock_authenticator(device_classes: list[str]) -> Generator[Mock, None, None]
         authenticator = mock.return_value
         authenticator.authenticate.return_value = Credentials("token", "user_id", 0)
 
-        devices = []
-        for device_class in device_classes:
-            devices.append(
-                load_json_object_fixture(f"devices/{device_class}/device.json", DOMAIN)
-            )
+        devices = [
+            load_json_object_fixture(f"devices/{device_fixture}/device.json", DOMAIN)
+        ]
 
         def post_authenticated(
             path: str,
@@ -106,19 +106,33 @@ def mock_device_execute() -> AsyncMock:
 
 
 @pytest.fixture
+def platforms() -> Platform | list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return PLATFORMS
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_authenticator: Mock,
     mock_mqtt_client: Mock,
     mock_device_execute: AsyncMock,
+    platforms: Platform | list[Platform],
 ) -> MockConfigEntry:
     """Set up the Ecovacs integration for testing."""
-    mock_config_entry.add_to_hass(hass)
+    if not isinstance(platforms, list):
+        platforms = [platforms]
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    return mock_config_entry
+    with patch(
+        "homeassistant.components.ecovacs.PLATFORMS",
+        platforms,
+    ):
+        mock_config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        yield mock_config_entry
 
 
 @pytest.fixture
