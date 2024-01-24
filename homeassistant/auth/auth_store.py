@@ -265,7 +265,7 @@ class AuthStore:
             )
         self._async_schedule_save()
 
-    async def async_load(self) -> None:
+    async def async_load(self) -> None:  # noqa: C901
         """Load the users."""
         if self._loaded:
             raise RuntimeError("Auth storage is already loaded")
@@ -277,6 +277,8 @@ class AuthStore:
 
         perm_lookup = PermissionLookup(ent_reg, dev_reg)
         self._perm_lookup = perm_lookup
+
+        now_ts = dt_util.utcnow().timestamp()
 
         if data is None or not isinstance(data, dict):
             self._set_defaults()
@@ -431,6 +433,14 @@ class AuthStore:
             else:
                 last_used_at = None
 
+            if (
+                expire_at := rt_dict.get("expire_at")
+            ) is None and token_type == models.TOKEN_TYPE_NORMAL:
+                if last_used_at:
+                    expire_at = last_used_at.timestamp() + REFRESH_TOKEN_EXPIRATION
+                else:
+                    expire_at = now_ts + REFRESH_TOKEN_EXPIRATION
+
             token = models.RefreshToken(
                 id=rt_dict["id"],
                 user=users[rt_dict["user_id"]],
@@ -447,7 +457,7 @@ class AuthStore:
                 jwt_key=rt_dict["jwt_key"],
                 last_used_at=last_used_at,
                 last_used_ip=rt_dict.get("last_used_ip"),
-                expire_at=rt_dict.get("expire_at"),
+                expire_at=expire_at,
                 version=rt_dict.get("version"),
             )
             if "credential_id" in rt_dict:
@@ -456,6 +466,8 @@ class AuthStore:
 
         self._groups = groups
         self._users = users
+
+        self._async_schedule_save()
 
     @callback
     def _async_schedule_save(self) -> None:

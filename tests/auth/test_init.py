@@ -407,6 +407,7 @@ async def test_generating_system_user(hass: HomeAssistant) -> None:
     assert not user.local_only
     assert token is not None
     assert token.client_id is None
+    assert token.token_type == auth.models.TOKEN_TYPE_SYSTEM
     assert token.expire_at is None
 
     await hass.async_block_till_done()
@@ -423,6 +424,7 @@ async def test_generating_system_user(hass: HomeAssistant) -> None:
     assert user.local_only
     assert token is not None
     assert token.client_id is None
+    assert token.token_type == auth.models.TOKEN_TYPE_SYSTEM
     assert token.expire_at is None
 
     await hass.async_block_till_done()
@@ -477,6 +479,7 @@ async def test_refresh_token_with_specific_access_token_expiration(
     assert token is not None
     assert token.client_id == CLIENT_ID
     assert token.access_token_expiration == timedelta(days=100)
+    assert token.token_type == auth.models.TOKEN_TYPE_NORMAL
     assert token.expire_at is not None
 
 
