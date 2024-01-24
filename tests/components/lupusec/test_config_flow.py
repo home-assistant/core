@@ -1,5 +1,7 @@
 """"Unit tests for the Lupusec config flow."""
-from unittest.mock import patch
+
+import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant import config_entries
 from homeassistant.components.lupusec.config_flow import (
@@ -17,11 +19,17 @@ async def test_form_empty_input(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "empty_input"}
+    try:
+        await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        pytest.fail("Expected error not raised")
+    except MultipleInvalid as e:
+        # Check if the error contains the expected missing key
+        assert any(
+            "required key not provided @ data['username']" in str(err)
+            for err in e.errors
+        )
 
 
 async def test_form_invalid_host(hass: HomeAssistant) -> None:
@@ -30,7 +38,7 @@ async def test_form_invalid_host(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -50,25 +58,18 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lupusec.config_flow.validate_configuration",
-        return_value={},
-    ), patch(
-        "homeassistant.components.lupusec.config_flow.LupusecConfigFlowHandler.async_create_entry",
-        return_value=True,
-    ) as mock_create_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-                "name": "test-device",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+            "name": "test-device",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
@@ -78,7 +79,6 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
         "password": "test-password",
         "name": "test-device",
     }
-    assert len(mock_create_entry.mock_calls) == 1
 
 
 async def test_validate_configuration_invalid_host() -> None:
