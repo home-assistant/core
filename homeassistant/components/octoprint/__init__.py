@@ -26,6 +26,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -246,4 +247,10 @@ def async_get_client_for_service_call(
             if data := hass.data[DOMAIN].get(entry_id):
                 return cast(OctoprintClient, data["client"])
 
-    raise ValueError(f"No client for device ID: {device_id}")
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="missing_client",
+        translation_placeholders={
+            "device_id": device_id,
+        },
+    )

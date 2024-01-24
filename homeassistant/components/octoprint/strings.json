@@ -33,6 +33,11 @@
       "get_api_key": "Open the OctoPrint UI and click 'Allow' on the Access Request for 'Home Assistant'."
     }
   },
+  "exceptions": {
+    "missing_client": {
+      "message": "No client for device ID: {device_id}"
+    }
+  },
   "services": {
     "printer_connect": {
       "name": "Connect to a printer",
