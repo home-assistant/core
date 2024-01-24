@@ -3,6 +3,7 @@
 import ipaddress
 import logging
 import socket
+from typing import Any
 
 import voluptuous as vol
 
@@ -40,7 +41,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input.get(CONF_PASSWORD)
             name = user_input.get(CONF_NAME)
 
-            errors = await validate_configuration(host, username, password, name)
+            errors = validate_configuration(host, username, password, name)
 
             if not errors:
                 return self.async_create_entry(
@@ -57,8 +58,25 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+        """Import the yaml config."""
+        self._async_abort_entries_match(user_input)
+        host = str(user_input.get(CONF_HOST))
+        username = user_input.get(CONF_USERNAME)
+        password = user_input.get(CONF_PASSWORD)
+        name = user_input.get(CONF_NAME)
+        try:
+            validate_configuration(host, username, password, name)
+        # except CannotConnect:
+        #     return self.async_abort(reason="cannot_connect")
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
 
-async def validate_configuration(host, username, password, name):
+        return self.async_create_entry(title=host, data=user_input)
+
+
+def validate_configuration(host, username, password, name):
     """Validate the provided configuration."""
     errors = {}
 
@@ -70,6 +88,9 @@ async def validate_configuration(host, username, password, name):
 
 def is_valid_host(host):
     """Check if the provided value is a valid DNS name or IP address."""
+
+    if not isinstance(host, (str, bytes)):
+        return False
     try:
         # Try to parse the host as an IP address
         ipaddress.ip_address(host)
@@ -81,9 +102,3 @@ def is_valid_host(host):
             return True
         except (socket.herror, ValueError, socket.gaierror):
             return False
-
-
-async def validate_update_interval(update_interval):
-    """Validate the provided update_interval."""
-    # Return True if the update_interval is valid, False otherwise
-    return True
