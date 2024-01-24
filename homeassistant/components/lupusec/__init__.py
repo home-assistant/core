@@ -6,7 +6,7 @@ from lupupy.exceptions import LupusecException
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
@@ -16,7 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -48,35 +48,32 @@ LUPUSEC_PLATFORMS = [
 ]
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Lupusec component."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the lupusec integration."""
+
+    if DOMAIN not in config:
+        return True
+
     conf = config[DOMAIN]
-    username = conf[CONF_USERNAME]
-    password = conf[CONF_PASSWORD]
-    ip_address = conf[CONF_IP_ADDRESS]
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
+    host = conf.get(CONF_IP_ADDRESS)
     name = conf.get(CONF_NAME)
 
-    try:
-        hass.data[DOMAIN] = LupusecSystem(username, password, ip_address, name)
-    except LupusecException as ex:
-        _LOGGER.error(ex)
-
-        persistent_notification.create(
-            hass,
-            f"Error: {ex}<br />You will need to restart hass after fixing.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
+    # Explicitly added in the config file, create a config entry.
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_HOST: host,
+                CONF_NAME: name,
+            },
         )
-        return False
+    )
 
-    for platform in LUPUSEC_PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
-
-    return True
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up this integration using YAML is not supported."""
     return True
 
 

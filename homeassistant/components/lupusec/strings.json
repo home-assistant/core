@@ -15,7 +15,8 @@
       "connection": "Failed to connect, check hostname, username and password."
     },
     "abort": {
-      "single_instance_allowed": "Only a single instance is allowed!"
+      "single_instance_allowed": "Only a single instance is allowed!",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
