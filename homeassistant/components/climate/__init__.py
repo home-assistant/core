@@ -310,15 +310,22 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if __name != "supported_features":
             return super().__getattribute__(__name)
-        return self.__getattribute__("_mod_supported_features")
+        # return self.__getattribute__("_mod_supported_features")
+        return super().__getattribute__(__name) | super().__getattribute__(
+            "_ClimateEntity__mod_supported_features"
+        )
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
         if "supported_features" in cls.__dict__:
-            cls.__mod_supported_features = getattr(cls, "supported_features")
+            cls.__mod_supported_features = (  # pylint: disable=unused-private-member
+                getattr(cls, "supported_features")
+            )
         elif "_attr_supported_features" in cls.__dict__:
-            cls.__mod_supported_features = getattr(cls, "_attr_supported_features")
+            cls.__mod_supported_features = (  # pylint: disable=unused-private-member
+                getattr(cls, "_attr_supported_features")
+            )
 
     @callback
     def add_to_platform_start(
@@ -351,12 +358,16 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self, "turn_off"
         ):
             _report_turn_on_off("TURN_OFF")
-            self.__mod_supported_features |= ClimateEntityFeature.TURN_OFF
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_OFF
+            )
         if type(self).async_turn_on is not ClimateEntity.async_turn_on or hasattr(
             self, "turn_on"
         ):
             _report_turn_on_off("TURN_ON")
-            self.__mod_supported_features |= ClimateEntityFeature.TURN_ON
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_ON
+            )
 
     @final
     @property
@@ -730,15 +741,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
-
-    @cached_property
-    def _mod_supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features.
-
-        Provided for backwards compatibility.
-        Remove this in 2024.8 or later.
-        """
-        return self.__mod_supported_features
 
     @property
     def supported_features_compat(self) -> ClimateEntityFeature:
