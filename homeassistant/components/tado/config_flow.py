@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import PyTado
 from PyTado.interface import Tado
 import requests.exceptions
 import voluptuous as vol
@@ -136,6 +137,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except exceptions.HomeAssistantError:
             return self.async_abort(reason="import_failed")
+        except PyTado.exceptions.TadoWrongCredentialsException:
+            return self.async_abort(reason="import_failed_invalid_auth")
 
         home_id = validate_result[UNIQUE_ID]
         await self.async_set_unique_id(home_id)

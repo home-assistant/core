@@ -8,7 +8,13 @@ import logging
 import re
 from typing import Any, Literal
 
-from hassil.recognize import RecognizeResult
+from aiohttp import web
+from hassil.recognize import (
+    MISSING_ENTITY,
+    RecognizeResult,
+    UnmatchedRangeEntity,
+    UnmatchedTextEntity,
+)
 import voluptuous as vol
 
 from homeassistant import core
@@ -42,6 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_TEXT = "text"
 ATTR_LANGUAGE = "language"
 ATTR_AGENT_ID = "agent_id"
+ATTR_CONVERSATION_ID = "conversation_id"
 
 DOMAIN = "conversation"
 
@@ -66,6 +73,7 @@ SERVICE_PROCESS_SCHEMA = vol.Schema(
         vol.Required(ATTR_TEXT): cv.string,
         vol.Optional(ATTR_LANGUAGE): cv.string,
         vol.Optional(ATTR_AGENT_ID): agent_id_validator,
+        vol.Optional(ATTR_CONVERSATION_ID): cv.string,
     }
 )
 
@@ -106,7 +114,7 @@ def async_set_agent(
     hass: core.HomeAssistant,
     config_entry: ConfigEntry,
     agent: AbstractConversationAgent,
-):
+) -> None:
     """Set the agent to handle the conversations."""
     _get_agent_manager(hass).async_set_agent(config_entry.entry_id, agent)
 
@@ -116,7 +124,7 @@ def async_set_agent(
 def async_unset_agent(
     hass: core.HomeAssistant,
     config_entry: ConfigEntry,
-):
+) -> None:
     """Set the agent to handle the conversations."""
     _get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
@@ -131,7 +139,7 @@ async def async_get_conversation_languages(
     all conversation agents.
     """
     agent_manager = _get_agent_manager(hass)
-    languages = set()
+    languages: set[str] = set()
 
     agent_ids: Iterable[str]
     if agent_id is None:
@@ -164,7 +172,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             result = await async_converse(
                 hass=hass,
                 text=text,
-                conversation_id=None,
+                conversation_id=service.data.get(ATTR_CONVERSATION_ID),
                 context=service.context,
                 language=service.data.get(ATTR_LANGUAGE),
                 agent_id=service.data.get(ATTR_AGENT_ID),
@@ -314,37 +322,55 @@ async def websocket_hass_agent_debug(
     ]
 
     # Return results for each sentence in the same order as the input.
-    connection.send_result(
-        msg["id"],
-        {
-            "results": [
-                {
-                    "intent": {
-                        "name": result.intent.name,
-                    },
-                    "slots": {  # direct access to values
-                        entity_key: entity.value
-                        for entity_key, entity in result.entities.items()
-                    },
-                    "details": {
-                        entity_key: {
-                            "name": entity.name,
-                            "value": entity.value,
-                            "text": entity.text,
-                        }
-                        for entity_key, entity in result.entities.items()
-                    },
-                    "targets": {
-                        state.entity_id: {"matched": is_matched}
-                        for state, is_matched in _get_debug_targets(hass, result)
-                    },
+    result_dicts: list[dict[str, Any] | None] = []
+    for result in results:
+        if result is None:
+            # Indicate that a recognition failure occurred
+            result_dicts.append(None)
+            continue
+
+        successful_match = not result.unmatched_entities
+        result_dict = {
+            # Name of the matching intent (or the closest)
+            "intent": {
+                "name": result.intent.name,
+            },
+            # Slot values that would be received by the intent
+            "slots": {  # direct access to values
+                entity_key: entity.value
+                for entity_key, entity in result.entities.items()
+            },
+            # Extra slot details, such as the originally matched text
+            "details": {
+                entity_key: {
+                    "name": entity.name,
+                    "value": entity.value,
+                    "text": entity.text,
                 }
-                if result is not None
-                else None
-                for result in results
-            ]
-        },
-    )
+                for entity_key, entity in result.entities.items()
+            },
+            # Entities/areas/etc. that would be targeted
+            "targets": {},
+            # True if match was successful
+            "match": successful_match,
+            # Text of the sentence template that matched (or was closest)
+            "sentence_template": "",
+            # When match is incomplete, this will contain the best slot guesses
+            "unmatched_slots": _get_unmatched_slots(result),
+        }
+
+        if successful_match:
+            result_dict["targets"] = {
+                state.entity_id: {"matched": is_matched}
+                for state, is_matched in _get_debug_targets(hass, result)
+            }
+
+        if result.intent_sentence is not None:
+            result_dict["sentence_template"] = result.intent_sentence.text
+
+        result_dicts.append(result_dict)
+
+    connection.send_result(msg["id"], {"results": result_dicts})
 
 
 def _get_debug_targets(
@@ -390,6 +416,25 @@ def _get_debug_targets(
         yield state, is_matched
 
 
+def _get_unmatched_slots(
+    result: RecognizeResult,
+) -> dict[str, str | int]:
+    """Return a dict of unmatched text/range slot entities."""
+    unmatched_slots: dict[str, str | int] = {}
+    for entity in result.unmatched_entities_list:
+        if isinstance(entity, UnmatchedTextEntity):
+            if entity.text == MISSING_ENTITY:
+                # Don't report <missing> since these are just missing context
+                # slots.
+                continue
+
+            unmatched_slots[entity.name] = entity.text
+        elif isinstance(entity, UnmatchedRangeEntity):
+            unmatched_slots[entity.name] = entity.value
+
+    return unmatched_slots
+
+
 class ConversationProcessView(http.HomeAssistantView):
     """View to process text."""
 
@@ -406,7 +451,7 @@ class ConversationProcessView(http.HomeAssistantView):
             }
         )
     )
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Send a request for processing."""
         hass = request.app["hass"]
 

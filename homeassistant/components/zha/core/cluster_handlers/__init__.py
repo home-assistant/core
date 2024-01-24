@@ -42,7 +42,7 @@ from ..const import (
     ZHA_CLUSTER_HANDLER_MSG_DATA,
     ZHA_CLUSTER_HANDLER_READS_PER_REQ,
 )
-from ..helpers import LogMixin, retryable_req, safe_read
+from ..helpers import LogMixin, safe_read
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -362,7 +362,6 @@ class ClusterHandler(LogMixin):
             self.debug("skipping cluster handler configuration")
         self._status = ClusterHandlerStatus.CONFIGURED
 
-    @retryable_req(delays=(1, 1, 3))
     async def async_initialize(self, from_cache: bool) -> None:
         """Initialize cluster handler."""
         if not from_cache and self._endpoint.device.skip_configuration:

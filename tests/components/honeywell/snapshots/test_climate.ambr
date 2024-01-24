@@ -24,11 +24,11 @@
     'min_humidity': 30,
     'min_temp': -13.9,
     'permanent_hold': False,
-    'preset_mode': None,
+    'preset_mode': 'none',
     'preset_modes': list([
       'none',
       'away',
-      'Hold',
+      'hold',
     ]),
     'supported_features': <ClimateEntityFeature: 95>,
     'target_temp_high': None,

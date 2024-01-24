@@ -7,12 +7,8 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-from pymodbus.client import (
-    ModbusBaseClient,
-    ModbusSerialClient,
-    ModbusTcpClient,
-    ModbusUdpClient,
-)
+from pymodbus.client import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
+from pymodbus.client.base import ModbusBaseClient
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ModbusResponse
 from pymodbus.transaction import ModbusAsciiFramer, ModbusRtuFramer, ModbusSocketFramer
@@ -278,6 +274,8 @@ class ModbusHub:
             _LOGGER.warning(
                 "`retries`: is deprecated and will be removed in version 2024.7"
             )
+        else:
+            client_config[CONF_RETRIES] = 3
         if CONF_CLOSE_COMM_ON_ERROR in client_config:
             async_create_issue(
                 hass,

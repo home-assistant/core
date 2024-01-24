@@ -38,8 +38,9 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
             configuration_url="https://my.tessie.com/",
             name=coordinator.data["display_name"],
             model=MODELS.get(car_type, car_type),
-            sw_version=coordinator.data["vehicle_state_car_version"],
+            sw_version=coordinator.data["vehicle_state_car_version"].split(" ")[0],
             hw_version=coordinator.data["vehicle_config_driver_assist"],
+            serial_number=self.vin,
         )
 
     @property
