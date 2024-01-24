@@ -5,7 +5,11 @@ from dataclasses import dataclass
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
-from zwave_js_server.const.command_class.lock import DOOR_STATUS_PROPERTY
+from zwave_js_server.const.command_class.lock import (
+    BOLT_STATUS_PROPERTY,
+    DOOR_STATUS_PROPERTY,
+    LATCH_STATUS_PROPERTY,
+)
 from zwave_js_server.const.command_class.notification import (
     CC_SPECIFIC_NOTIFICATION_TYPE,
 )
@@ -236,10 +240,20 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
 
 # Mappings for property sensors
 PROPERTY_SENSOR_MAPPINGS: dict[str, PropertyZWaveJSEntityDescription] = {
+    BOLT_STATUS_PROPERTY: PropertyZWaveJSEntityDescription(
+        key=BOLT_STATUS_PROPERTY,
+        on_states=("unlocked",),
+        device_class=BinarySensorDeviceClass.LOCK,
+    ),
     DOOR_STATUS_PROPERTY: PropertyZWaveJSEntityDescription(
         key=DOOR_STATUS_PROPERTY,
         on_states=("open",),
         device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    LATCH_STATUS_PROPERTY: PropertyZWaveJSEntityDescription(
+        key=LATCH_STATUS_PROPERTY,
+        on_states=("open",),
+        device_class=BinarySensorDeviceClass.LOCK,
     ),
 }
 

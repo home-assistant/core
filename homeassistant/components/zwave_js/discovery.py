@@ -22,8 +22,10 @@ from zwave_js_server.const.command_class.humidity_control import (
     HUMIDITY_CONTROL_MODE_PROPERTY,
 )
 from zwave_js_server.const.command_class.lock import (
+    BOLT_STATUS_PROPERTY,
     CURRENT_MODE_PROPERTY,
     DOOR_STATUS_PROPERTY,
+    LATCH_STATUS_PROPERTY,
     LOCKED_PROPERTY,
 )
 from zwave_js_server.const.command_class.meter import VALUE_PROPERTY
@@ -745,6 +747,19 @@ DISCOVERY_SCHEMAS = [
         ),
         absent_values=[DOOR_LOCK_CURRENT_MODE_SCHEMA],
     ),
+    # door lock bolt status
+    ZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        hint="property",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.LOCK,
+                CommandClass.DOOR_LOCK,
+            },
+            property={BOLT_STATUS_PROPERTY},
+            type={ValueType.ANY},
+        ),
+    ),
     # door lock door status
     ZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -755,6 +770,19 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.DOOR_LOCK,
             },
             property={DOOR_STATUS_PROPERTY},
+            type={ValueType.ANY},
+        ),
+    ),
+    # door lock latch status
+    ZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        hint="property",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.LOCK,
+                CommandClass.DOOR_LOCK,
+            },
+            property={LATCH_STATUS_PROPERTY},
             type={ValueType.ANY},
         ),
     ),
