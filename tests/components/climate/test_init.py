@@ -542,3 +542,76 @@ async def test_implicit_warning_not_implemented_turn_on_off_feature(
         " the proper ClimateEntityFeature. Please report it to the author of the 'test' custom integration"
         in caplog.text
     )
+
+
+async def test_no_warning_implemented_turn_on_off_feature(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config_flow_fixture: None
+) -> None:
+    """Test no warning when feature flags are set."""
+
+    class MockClimateEntityTest(MockClimateEntity):
+        """Mock Climate device."""
+
+        _attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        return True
+
+    async def async_setup_entry_climate_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test climate platform via config entry."""
+        async_add_entities(
+            [MockClimateEntityTest(name="test", entity_id="climate.test")]
+        )
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.climate",
+        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state is not None
+
+    assert (
+        "does not set ClimateEntityFeature.TURN_OFF but implements the turn_off method."
+        not in caplog.text
+    )
+    assert (
+        "does not set ClimateEntityFeature.TURN_ON but implements the turn_on method."
+        not in caplog.text
+    )
+    assert (
+        "implements HVACMode.off and therefore implicitly implements the off method without setting"
+        not in caplog.text
+    )
+    assert (
+        "implements HVACMode.heat and therefore implicitly implements the heat method without setting"
+        not in caplog.text
+    )
