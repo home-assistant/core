@@ -144,6 +144,6 @@ def async_unload_screenlogic_services(hass: HomeAssistant):
         EQUIPMENT_FLAG.CHLORINATOR in coordinator.gateway.equipment_flags
         for coordinator in hass.data[DOMAIN].values()
     ):
-        _LOGGER.info("Unloading ScreenLogic chlorination services")
+        _LOGGER.debug("Unloading ScreenLogic chlorination services")
         hass.services.async_remove(DOMAIN, SERVICE_START_SUPER_CHLORINATION)
         hass.services.async_remove(DOMAIN, SERVICE_STOP_SUPER_CHLORINATION)
