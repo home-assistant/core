@@ -977,7 +977,7 @@ loqedAPI==2.1.8
 luftdaten==0.7.4
 
 # homeassistant.components.lupusec
-lupupy==0.3.2
+lupupy==0.3.1
 
 # homeassistant.components.scrape
 lxml==5.1.0

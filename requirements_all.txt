@@ -1235,7 +1235,7 @@ loqedAPI==2.1.8
 luftdaten==0.7.4
 
 # homeassistant.components.lupusec
-lupupy==0.3.2
+lupupy==0.3.1
 
 # homeassistant.components.lw12wifi
 lw12==0.9.2
