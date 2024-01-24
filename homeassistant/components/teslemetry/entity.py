@@ -44,13 +44,12 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
 
     async def wake_up_if_asleep(self) -> None:
         """Wake up the vehicle if its asleep."""
-        await self._wakelock.acquire()
-        while self.coordinator.data["state"] != TeslemetryState.ONLINE:
-            state = (await self.api.wake_up())["response"]["state"]
-            self.coordinator.data["state"] = state
-            if state != TeslemetryState.ONLINE:
-                await asyncio.sleep(5)
-        self._wakelock.release()
+        async with self._wakelock:
+            while self.coordinator.data["state"] != TeslemetryState.ONLINE:
+                state = (await self.api.wake_up())["response"]["state"]
+                self.coordinator.data["state"] = state
+                if state != TeslemetryState.ONLINE:
+                    await asyncio.sleep(5)
 
     def get(self, key: str | None = None, default: Any | None = None) -> Any:
         """Return a specific value from coordinator data."""
