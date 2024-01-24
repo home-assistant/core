@@ -14,7 +14,6 @@ from homeassistant.components.automation import (
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
-    SERVICE_RELOAD_AUTOMATION,
     SERVICE_TRIGGER,
     AutomationEntity,
 )
@@ -760,7 +759,7 @@ async def test_automation_stops(hass: HomeAssistant, calls, service) -> None:
         ):
             await hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD_AUTOMATION,
+                SERVICE_RELOAD,
                 {CONF_ID: "sun"},
                 blocking=True,
             )
@@ -858,7 +857,7 @@ async def test_reload_single_unchanged_does_not_stop(
     ):
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_RELOAD_AUTOMATION,
+            SERVICE_RELOAD,
             {CONF_ID: "sun"},
             blocking=True,
         )
@@ -893,7 +892,7 @@ async def test_reload_single_add_automation(hass: HomeAssistant, calls) -> None:
     ):
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_RELOAD_AUTOMATION,
+            SERVICE_RELOAD,
             {CONF_ID: "sun"},
             blocking=True,
         )
@@ -927,7 +926,7 @@ async def test_reload_single_remove_automation(hass: HomeAssistant, calls) -> No
     ):
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_RELOAD_AUTOMATION,
+            SERVICE_RELOAD,
             {CONF_ID: "sun"},
             blocking=True,
         )

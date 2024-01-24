@@ -130,7 +130,6 @@ EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
-SERVICE_RELOAD_AUTOMATION = "reload_automation"
 SERVICE_TRIGGER = "trigger"
 
 
@@ -308,35 +307,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_get_blueprints(hass).async_reset_cache()
         if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
-        await _async_process_config(hass, conf, component)
+        if automation_id := service_call.data.get(CONF_ID):
+            await _async_process_single_config(hass, conf, component, automation_id)
+        else:
+            await _async_process_config(hass, conf, component)
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
-    async def reload_single_service_handler(service_call: ServiceCall) -> None:
-        """Remove all automations and load new ones from config."""
-        automation_id = service_call.data[CONF_ID]
+    def reload_targets(service_call: ServiceCall) -> set[str | None]:
+        if automation_id := service_call.data.get(CONF_ID):
+            return {automation_id}
+        return {automation.unique_id for automation in component.entities}
 
-        await async_get_blueprints(hass).async_reset_cache()
-        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
-            return
-        await _async_process_single_config(hass, conf, component, automation_id)
-
-        hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
-
-    reload_helper = ReloadServiceHelper(reload_all_service_handler)
+    reload_helper = ReloadServiceHelper(reload_all_service_handler, reload_targets)
 
     async_register_admin_service(
         hass,
         DOMAIN,
         SERVICE_RELOAD,
         reload_helper.execute_service,
-        schema=vol.Schema({}),
-    )
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD_AUTOMATION,
-        reload_single_service_handler,
         schema=vol.Schema({CONF_ID: str}),
     )
 
