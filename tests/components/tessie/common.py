@@ -5,10 +5,13 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from aiohttp.client import RequestInfo
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.tessie.const import DOMAIN, TessieStatus
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -46,7 +49,7 @@ ERROR_CONNECTION = ClientConnectionError()
 
 async def setup_platform(
     hass: HomeAssistant, platforms: list[Platform] = [], side_effect=None
-):
+) -> MockConfigEntry:
     """Set up the Tessie platform."""
 
     mock_entry = MockConfigEntry(
@@ -64,3 +67,21 @@ async def setup_platform(
         await hass.async_block_till_done()
 
     return mock_entry
+
+
+def test_entities(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests that all entities are correct."""
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")

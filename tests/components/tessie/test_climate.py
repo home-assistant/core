@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import ERROR_UNKNOWN, TEST_RESPONSE, setup_platform
+from .common import ERROR_UNKNOWN, TEST_RESPONSE, setup_platform, test_entities
 
 
 async def test_climate(
@@ -31,14 +31,7 @@ async def test_climate(
 
     entry = await setup_platform(hass, [Platform.CLIMATE])
 
-    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=f"{entity_entry.entity_id}-state"
-        )
+    test_entities(hass, entry, entity_registry, snapshot)
 
     entity_id = "climate.test_climate"
 

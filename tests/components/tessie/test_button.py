@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import setup_platform
+from .common import setup_platform, test_entities
 
 
 async def test_buttons(
@@ -18,14 +18,7 @@ async def test_buttons(
 
     entry = await setup_platform(hass, [Platform.BUTTON])
 
-    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=f"{entity_entry.entity_id}-state"
-        )
+    test_entities(hass, entry, entity_registry, snapshot)
 
     for entity_id, func in [
         ("button.test_wake", "wake"),
