@@ -79,8 +79,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
 
-    hass.data.setdefault(DOMAIN, {})
-
     host = entry.data.get(CONF_HOST)
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
@@ -101,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    hass.data[DOMAIN] = lupusec_system
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = lupusec_system
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
