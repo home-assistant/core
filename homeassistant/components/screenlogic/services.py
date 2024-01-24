@@ -137,7 +137,7 @@ def async_unload_screenlogic_services(hass: HomeAssistant):
     """Unload services for the ScreenLogic integration."""
 
     if not hass.data[DOMAIN]:
-        _LOGGER.info("Unloading all ScreenLogic services")
+        _LOGGER.debug("Unloading all ScreenLogic services")
         for service in hass.services.async_services_for_domain(DOMAIN):
             hass.services.async_remove(DOMAIN, service)
     elif not any(
