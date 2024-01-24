@@ -91,17 +91,26 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
 
 
 def async_emeter_from_device(
-    device: SmartDevice, description: TPLinkSensorEntityDescription
+    coordinator: TPLinkDataUpdateCoordinator, description: TPLinkSensorEntityDescription
 ) -> float | None:
     """Map a sensor key to the device attribute."""
-    if attr := description.emeter_attr:
-        if (val := getattr(device.emeter_realtime, attr)) is None:
+    if (
+        (attr := description.emeter_attr)
+        and (emeter_realtime := coordinator.emeter_realtime)
+        and (precision := description.precision)
+    ):
+        val: float | None = getattr(emeter_realtime, attr)
+        if val is None:
             return None
-        return round(cast(float, val), description.precision)
+        return round(val, precision)
 
     # ATTR_TODAY_ENERGY_KWH
-    if (emeter_today := device.emeter_today) is not None:
-        return round(cast(float, emeter_today), description.precision)
+    device = coordinator.device
+    if (emeter_today := device.emeter_today) is not None and (
+        precision := description.precision
+    ):
+        return round(cast(float, emeter_today), precision)
+
     # today's consumption not available, when device was off all the day
     # bulb's do not report this information, so filter it out
     return None if device.is_bulb else 0.0
@@ -114,7 +123,7 @@ def _async_sensors_for_device(
     return [
         SmartPlugSensor(device, coordinator, description)
         for description in ENERGY_SENSORS
-        if async_emeter_from_device(device, description) is not None
+        if async_emeter_from_device(coordinator, description) is not None
     ]
 
 
@@ -165,4 +174,4 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the sensors state."""
-        return async_emeter_from_device(self.device, self.entity_description)
+        return async_emeter_from_device(self.coordinator, self.entity_description)

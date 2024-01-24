@@ -3,13 +3,24 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
-from kasa import AuthenticationException, SmartDevice, SmartDeviceException
+from kasa import (
+    AuthenticationException,
+    EmeterStatus,
+    SmartDevice,
+    SmartDeviceException,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +38,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
+        self.has_emeter = device.has_emeter
         super().__init__(
             hass,
             _LOGGER,
@@ -41,9 +53,27 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
+        device = self.device
         try:
-            await self.device.update(update_children=False)
+            await device.update(update_children=False)
         except AuthenticationException as ex:
             raise ConfigEntryAuthFailed from ex
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex
+        if self.has_emeter:
+            try:  # noqa: SIM105 - suppress is much slower
+                del self.emeter_realtime
+            except AttributeError:
+                pass
+
+    @cached_property
+    def emeter_realtime(self) -> EmeterStatus | None:
+        """Return cached emeter_realtime.
+
+        Multiple sensors build this object every time we write state
+        to the state machine. Since its the same object until the
+        next update, we can cache it.
+        """
+        if not self.has_emeter:
+            return None
+        return self.device.emeter_realtime  # type: ignore[no-any-return]
