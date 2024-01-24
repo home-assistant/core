@@ -1,13 +1,12 @@
 """The microBees integration."""
 import logging
 
-from microbees.microbees import MicroBeesConnector
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .microbees import MicroBeesConnector
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 

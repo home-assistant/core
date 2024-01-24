@@ -2,7 +2,6 @@
 import logging
 from typing import Any
 
-from microbees.microbees import MicroBeesConnector
 from microBeesPy.exceptions import MicroBeesWrongCredentialsException
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
@@ -19,6 +18,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
+from .microbees import MicroBeesConnector
 
 _LOGGER = logging.getLogger(__name__)
 
