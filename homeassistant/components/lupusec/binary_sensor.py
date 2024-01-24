@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up a binary sensors for a Lupusec device."""
 
-    data = hass.data[DOMAIN]
+    data = hass.data[DOMAIN][config_entry.entry_id]
 
     device_types = CONST.TYPE_OPENING + CONST.TYPE_SENSOR
 

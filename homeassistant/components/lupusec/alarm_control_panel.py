@@ -13,35 +13,15 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up an alarm control panel for a Lupusec device."""
-    if discovery_info is None:
-        return
-
-    data = hass.data[LUPUSEC_DOMAIN]
-
-    alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm())]
-
-    add_entities(alarm_devices)
-
-
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up an alarm control panel for a Lupusec device."""
-    data = hass.data[LUPUSEC_DOMAIN]
+    data = hass.data[LUPUSEC_DOMAIN][config_entry.entry_id]
 
     alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm(), config_entry)]
 

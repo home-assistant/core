@@ -1,8 +1,6 @@
 """"Config flow for Lupusec integration."""
 
-import ipaddress
 import logging
-import socket
 from typing import Any
 
 import lupupy
@@ -28,7 +26,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_FRIENDLY_NAME): str,
     }
 )
 
@@ -46,11 +43,10 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            name = user_input.get(CONF_FRIENDLY_NAME)
 
             try:
                 errors = await validate_user_input(
-                    self.hass, host, username, password, name
+                    self.hass, host, username, password, ""
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -65,7 +61,6 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOST: host,
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
-                        CONF_FRIENDLY_NAME: name,
                     },
                 )
 
@@ -95,30 +90,9 @@ async def validate_user_input(hass: HomeAssistant, host, username, password, nam
     """Validate the provided configuration."""
     errors = {}
 
-    if not is_valid_host(host):
-        errors[CONF_HOST] = "invalid_host"
-
-    await test_host_connection(hass, host, username, password)
+    errors = await test_host_connection(hass, host, username, password)
 
     return errors
-
-
-def is_valid_host(host):
-    """Check if the provided value is a valid DNS name or IP address."""
-
-    if not isinstance(host, (str, bytes)):
-        return False
-    try:
-        # Try to parse the host as an IP address
-        ipaddress.ip_address(host)
-        return True
-    except ValueError:
-        # If parsing as an IP address fails, try as a DNS name
-        try:
-            ipaddress.ip_address(socket.gethostbyname(host))
-            return True
-        except (socket.herror, ValueError, socket.gaierror):
-            return False
 
 
 async def test_host_connection(hass, host, username, password):
