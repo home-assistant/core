@@ -306,11 +306,16 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Get attribute.
 
         Modify return of `supported_features` to
-        return `_mod_supported_features` instead.
+        include `_mod_supported_features` if attribute is set.
         """
         if __name != "supported_features":
             return super().__getattribute__(__name)
-        # return self.__getattribute__("_mod_supported_features")
+        _supported_features = super().__getattribute__(__name)
+
+        # Implements check for deprecated use of ClimateEntityFeature as int
+        if type(_supported_features) is int:  # noqa: E721
+            new_features = ClimateEntityFeature(_supported_features)
+            self._report_deprecated_supported_features_values(new_features)
         return super().__getattribute__(__name) | super().__getattribute__(
             "_ClimateEntity__mod_supported_features"
         )
@@ -341,7 +346,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
-        # This should be removed in 2024.8.
+        # This should be removed in 2025.1.
         if type(self).async_turn_off is not ClimateEntity.async_turn_off or hasattr(
             self, "turn_off"
         ):
@@ -381,7 +386,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
         temperature_unit = self.temperature_unit
         precision = self.precision
         hass = self.hass
@@ -414,7 +419,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
         temperature_unit = self.temperature_unit
         precision = self.precision
         hass = self.hass
@@ -729,19 +734,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
-
-    @property
-    def supported_features_compat(self) -> ClimateEntityFeature:
-        """Return the supported features as ClimateEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = ClimateEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
 
     @cached_property
     def min_temp(self) -> float:

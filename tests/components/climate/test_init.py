@@ -356,13 +356,13 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockClimateEntity()
-    assert entity.supported_features_compat is ClimateEntityFeature(1)
+    assert entity.supported_features is ClimateEntityFeature(1)
     assert "MockClimateEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text
     assert "Instead it should use" in caplog.text
     assert "ClimateEntityFeature.TARGET_TEMPERATURE" in caplog.text
     caplog.clear()
-    assert entity.supported_features_compat is ClimateEntityFeature(1)
+    assert entity.supported_features is ClimateEntityFeature(1)
     assert "is using deprecated supported features values" not in caplog.text
 
 
@@ -375,6 +375,11 @@ async def test_warning_not_implemented_turn_on_off_feature(
 
     class MockClimateEntityTest(MockClimateEntity):
         """Mock Climate device."""
+
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
 
         def turn_on(self) -> None:
             """Turn on."""
