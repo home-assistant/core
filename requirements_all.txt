@@ -1019,7 +1019,7 @@ hass-nabucasa==0.75.1
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.5.2
+hassil==1.5.3
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -1937,7 +1937,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.5.4
+pymodbus==3.6.3
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2202,7 +2202,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==4.1.0
+python-homewizard-energy==4.2.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2825,7 +2825,7 @@ wled==0.17.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==1.5.0
+wyoming==1.5.2
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
