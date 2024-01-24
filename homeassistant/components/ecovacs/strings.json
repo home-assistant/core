@@ -24,6 +24,49 @@
         "name": "Mop attached"
       }
     },
+    "sensor": {
+      "error": {
+        "name": "Error",
+        "state_attributes": {
+          "description": {
+            "name": "Description"
+          }
+        }
+      },
+      "lifespan_brush": {
+        "name": "Brush lifespan"
+      },
+      "lifespan_filter": {
+        "name": "Filter lifespan"
+      },
+      "lifespan_side_brush": {
+        "name": "Side brush lifespan"
+      },
+      "network_ip": {
+        "name": "IP address"
+      },
+      "network_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
+      "network_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "stats_area": {
+        "name": "Area cleaned"
+      },
+      "stats_time": {
+        "name": "Time cleaned"
+      },
+      "total_stats_area": {
+        "name": "Total area cleaned"
+      },
+      "total_stats_cleanings": {
+        "name": "Total cleanings"
+      },
+      "total_stats_time": {
+        "name": "Total time cleaned"
+      }
+    },
     "vacuum": {
       "vacuum": {
         "state_attributes": {

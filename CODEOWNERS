@@ -51,6 +51,8 @@ build.json @home-assistant/supervisor
 /tests/components/airthings_ble/ @vincegio @LaStrada
 /homeassistant/components/airtouch4/ @samsinnamon
 /tests/components/airtouch4/ @samsinnamon
+/homeassistant/components/airtouch5/ @danzel
+/tests/components/airtouch5/ @danzel
 /homeassistant/components/airvisual/ @bachya
 /tests/components/airvisual/ @bachya
 /homeassistant/components/airvisual_pro/ @bachya
@@ -541,8 +543,6 @@ build.json @home-assistant/supervisor
 /tests/components/holiday/ @jrieger @gjohansson-ST
 /homeassistant/components/home_connect/ @DavidMStraub
 /tests/components/home_connect/ @DavidMStraub
-/homeassistant/components/home_plus_control/ @chemaaa
-/tests/components/home_plus_control/ @chemaaa
 /homeassistant/components/homeassistant/ @home-assistant/core
 /tests/components/homeassistant/ @home-assistant/core
 /homeassistant/components/homeassistant_alerts/ @home-assistant/core
