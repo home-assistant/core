@@ -47,7 +47,7 @@ class TeslemetryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ClientConnectionError:
                 errors["base"] = "cannot_connect"
             except TeslaFleetError as e:
-                LOGGER.exception(e.message)
+                LOGGER.exception(str(e))
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
