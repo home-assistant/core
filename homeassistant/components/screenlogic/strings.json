@@ -49,7 +49,7 @@
     },
     "start_super_chlorination": {
       "name": "Start Super Chlorination",
-      "description": "Begins super chlorination, running for the specified time period or 24 hours if none specified.",
+      "description": "Begins super chlorination, running for the specified period or 24 hours if none is specified.",
       "fields": {
         "runtime": {
           "name": "Run Time",
