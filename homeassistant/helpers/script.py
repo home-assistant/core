@@ -24,6 +24,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
     CONF_ALIAS,
     CONF_CHOOSE,
     CONF_CONDITION,
@@ -1364,6 +1365,47 @@ class Script:
     def supports_max(self) -> bool:
         """Return true if the current mode support max."""
         return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
+
+    @cached_property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        if self._referenced_floors is not None:
+            return self._referenced_floors
+
+        self._referenced_floors = set()
+        Script._find_referenced_floors(self._referenced_floors, self.sequence)
+        return self._referenced_floors
+
+    @staticmethod
+    def _find_referenced_floors(
+        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    ) -> None:
+        """Find referenced floors in a sequence."""
+        for step in sequence:
+            action = cv.determine_script_action(step)
+
+            if action == cv.SCRIPT_ACTION_CALL_SERVICE:
+                for data in (
+                    step.get(CONF_TARGET),
+                    step.get(CONF_SERVICE_DATA),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
+                ):
+                    _referenced_extract_ids(data, ATTR_FLOOR_ID, referenced)
+
+            elif action == cv.SCRIPT_ACTION_CHOOSE:
+                for choice in step[CONF_CHOOSE]:
+                    Script._find_referenced_floors(referenced, choice[CONF_SEQUENCE])
+                if CONF_DEFAULT in step:
+                    Script._find_referenced_floors(referenced, step[CONF_DEFAULT])
+
+            elif action == cv.SCRIPT_ACTION_IF:
+                Script._find_referenced_floors(referenced, step[CONF_THEN])
+                if CONF_ELSE in step:
+                    Script._find_referenced_floors(referenced, step[CONF_ELSE])
+
+            elif action == cv.SCRIPT_ACTION_PARALLEL:
+                for script in step[CONF_PARALLEL]:
+                    Script._find_referenced_floors(referenced, script[CONF_SEQUENCE])
 
     @cached_property
     def referenced_areas(self) -> set[str]:

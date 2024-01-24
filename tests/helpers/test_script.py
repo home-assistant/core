@@ -4032,6 +4032,107 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
     assert script_obj.referenced_devices is script_obj.referenced_devices
 
 
+async def test_referenced_floors(hass: HomeAssistant) -> None:
+    """Test referenced floors."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {
+                    "service": "test.script",
+                    "data": {"floor_id": "floor_service_not_list"},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"floor_id": ["floor_service_list"]},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"floor_id": "{{ 'floor_service_template' }}"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"floor_id": "floor_in_target"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"floor_id": "floor_in_data_template"},
+                },
+                {"service": "test.script", "data": {"without": "floor_id"}},
+                {
+                    "choose": [
+                        {
+                            "conditions": "{{ true == false }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"floor_id": "floor_choice_1_seq"},
+                                }
+                            ],
+                        },
+                        {
+                            "conditions": "{{ true == false }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"floor_id": "floor_choice_2_seq"},
+                                }
+                            ],
+                        },
+                    ],
+                    "default": [
+                        {
+                            "service": "test.script",
+                            "data": {"floor_id": "floor_default_seq"},
+                        }
+                    ],
+                },
+                {"event": "test_event"},
+                {"delay": "{{ delay_period }}"},
+                {
+                    "if": [],
+                    "then": [
+                        {
+                            "service": "test.script",
+                            "data": {"floor_id": "floor_if_then"},
+                        }
+                    ],
+                    "else": [
+                        {
+                            "service": "test.script",
+                            "data": {"floor_id": "floor_if_else"},
+                        }
+                    ],
+                },
+                {
+                    "parallel": [
+                        {
+                            "service": "test.script",
+                            "data": {"floor_id": "floor_parallel"},
+                        }
+                    ],
+                },
+            ]
+        ),
+        "Test Name",
+        "test_domain",
+    )
+    assert script_obj.referenced_floors == {
+        "floor_choice_1_seq",
+        "floor_choice_2_seq",
+        "floor_default_seq",
+        "floor_in_data_template",
+        "floor_in_target",
+        "floor_service_list",
+        "floor_service_not_list",
+        "floor_if_then",
+        "floor_if_else",
+        "floor_parallel",
+    }
+    # Test we cache results.
+    assert script_obj.referenced_floors is script_obj.referenced_floors
+
+
 @contextmanager
 def does_not_raise():
     """Indicate no exception is expected."""
