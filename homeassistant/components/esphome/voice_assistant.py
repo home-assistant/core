@@ -265,6 +265,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                     channel=stt.AudioChannels.CHANNEL_MONO,
                 ),
                 stt_stream=self._iterate_packets(),
+                # stt_wake_word=wake_word.WakeWord("test", "test"),
                 pipeline_id=pipeline_select.get_chosen_pipeline(
                     self.hass, DOMAIN, self.device_info.mac_address
                 ),

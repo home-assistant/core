@@ -38,6 +38,14 @@ class SpeechToTextError(PipelineError):
     """Error in speech-to-text portion of pipeline."""
 
 
+class SpeechToTextAborted(WakeWordDetectionError):
+    """Speech-to-text was aborted."""
+
+    def __init__(self) -> None:
+        """Set error message."""
+        super().__init__("speech_to_text_aborted", "")
+
+
 class IntentRecognitionError(PipelineError):
     """Error in intent recognition portion of pipeline."""
 

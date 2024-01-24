@@ -695,6 +695,46 @@
 # name: test_pipeline_empty_tts_output.3
   None
 # ---
+# name: test_stt_cooldown_different_ids
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_stt_cooldown_different_ids.1
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_stt_cooldown_same_id
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_stt_cooldown_same_id.1
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
 # name: test_stt_provider_missing
   dict({
     'language': 'en',

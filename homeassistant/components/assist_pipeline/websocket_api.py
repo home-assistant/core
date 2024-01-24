@@ -12,7 +12,7 @@ from typing import Any, Final
 
 import voluptuous as vol
 
-from homeassistant.components import conversation, stt, tts, websocket_api
+from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -97,7 +97,12 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     extra=vol.ALLOW_EXTRA,
                 ),
                 PipelineStage.STT: vol.Schema(
-                    {vol.Required("input"): {vol.Required("sample_rate"): int}},
+                    {
+                        vol.Required("input"): {
+                            vol.Required("sample_rate"): int,
+                            vol.Optional("wake_word"): str,
+                        }
+                    },
                     extra=vol.ALLOW_EXTRA,
                 ),
                 PipelineStage.INTENT: vol.Schema(
@@ -149,12 +154,19 @@ async def websocket_run(
         msg_input = msg["input"]
         audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg_input["sample_rate"]
+        stt_wake_word: wake_word.WakeWord | None = None
 
         if start_stage == PipelineStage.WAKE_WORD:
             wake_word_settings = WakeWordSettings(
                 timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
                 audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
             )
+        elif start_stage == PipelineStage.STT:
+            stt_wake_word_id = msg["input"].get("wake_word")
+            if stt_wake_word_id:
+                stt_wake_word = wake_word.WakeWord(
+                    id=stt_wake_word_id, name=stt_wake_word_id
+                )
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
             state = None
@@ -189,6 +201,7 @@ async def websocket_run(
             channel=stt.AudioChannels.CHANNEL_MONO,
         )
         input_args["stt_stream"] = stt_stream()
+        input_args["stt_wake_word"] = stt_wake_word
 
         # Audio settings
         audio_settings = AudioSettings(
