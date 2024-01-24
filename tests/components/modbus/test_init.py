@@ -159,7 +159,7 @@ async def test_fixedRegList_validator() -> None:
     with pytest.raises(vol.Invalid):
         hvac_fixedsize_reglist_validator([15, 17])
 
-        
+
 async def test_register_int_list_validator() -> None:
     """Test conf address register validator."""
     for value, vtype in (
