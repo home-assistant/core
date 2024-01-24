@@ -6,7 +6,7 @@ import logging
 
 DOMAIN = "teslemetry"
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 
 MODELS = {
     "model3": "Model 3",
