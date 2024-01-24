@@ -1,9 +1,10 @@
 """Component providing HA switch support for Ring Door Bell/Chimes."""
 from datetime import timedelta
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import requests
+from ring_doorbell import RingStickUpCam
 from ring_doorbell.generic import RingGeneric
 
 from homeassistant.components.switch import SwitchEntity
@@ -78,8 +79,9 @@ class SirenSwitch(BaseRingSwitch):
         if self._no_updates_until > dt_util.utcnow():
             return
 
-        device: Optional[RingGeneric]
-        if (device := self._get_coordinator_device()) and hasattr(device, "siren"):
+        if (device := self._get_coordinator_device()) and isinstance(
+            device, RingStickUpCam
+        ):
             self._attr_is_on = device.siren > 0
         super()._handle_coordinator_update()
 

@@ -98,7 +98,7 @@ class RingBinarySensor(RingEntity, BinarySensorEntity):
     def _handle_coordinator_update(self, _=None):
         """Call update method."""
         self._update_alert()
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @callback
     def _update_alert(self):

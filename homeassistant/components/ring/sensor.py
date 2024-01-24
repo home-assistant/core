@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from ring_doorbell.generic import RingGeneric
 
@@ -100,7 +100,6 @@ class HistoryRingSensor(RingSensor):
     @callback
     def _handle_coordinator_update(self):
         """Call update method."""
-        history_data: Optional[RingGeneric]
         if not (history_data := self._get_coordinator_history()):
             return
 

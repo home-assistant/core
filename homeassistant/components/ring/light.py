@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 import requests
+from ring_doorbell import RingStickUpCam
 from ring_doorbell.generic import RingGeneric
 
 from homeassistant.components.light import ColorMode, LightEntity
@@ -68,8 +69,9 @@ class RingLight(RingEntity, LightEntity):
         """Call update method."""
         if self._no_updates_until > dt_util.utcnow():
             return
-        # device: Optional[RingGeneric]
-        if (device := self._get_coordinator_device()) and hasattr(device, "lights"):
+        if (device := self._get_coordinator_device()) and isinstance(
+            device, RingStickUpCam
+        ):
             self._attr_is_on = device.lights == ON_STATE
         super()._handle_coordinator_update()
 
