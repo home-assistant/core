@@ -199,11 +199,11 @@ class Endpoint:
         results = await gather(*tasks, return_exceptions=True)
         for cluster_handler, outcome in zip(cluster_handlers, results):
             if isinstance(outcome, Exception):
-                cluster_handler.warning(
+                cluster_handler.debug(
                     "'%s' stage failed: %s", func_name, str(outcome), exc_info=outcome
                 )
-                continue
-            cluster_handler.debug("'%s' stage succeeded", func_name)
+            else:
+                cluster_handler.debug("'%s' stage succeeded", func_name)
 
     def async_new_entity(
         self,
