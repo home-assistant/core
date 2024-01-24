@@ -37,7 +37,6 @@ class AreaEntry:
     id: str
     name: str
     normalized_name: str
-    outdoor: bool
     picture: str | None
 
 
@@ -64,10 +63,9 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
                     area["aliases"] = []
 
             if old_minor_version < 4:
-                # Version 1.4 adds icon and outdoor flag
+                # Version 1.4 adds icon
                 for area in old_data["areas"]:
                     area["icon"] = None
-                    area["outdoor"] = False
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -122,7 +120,6 @@ class AreaRegistry:
         *,
         aliases: set[str] | None = None,
         icon: str | None = None,
-        outdoor: bool = False,
         picture: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
@@ -138,7 +135,6 @@ class AreaRegistry:
             id=area_id,
             name=name,
             normalized_name=normalized_name,
-            outdoor=outdoor,
             picture=picture,
         )
         assert area.id is not None
@@ -176,7 +172,6 @@ class AreaRegistry:
         aliases: set[str] | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
-        outdoor: bool | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
@@ -185,7 +180,6 @@ class AreaRegistry:
             aliases=aliases,
             icon=icon,
             name=name,
-            outdoor=outdoor,
             picture=picture,
         )
         self.hass.bus.async_fire(
@@ -201,7 +195,6 @@ class AreaRegistry:
         aliases: set[str] | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
-        outdoor: bool | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
@@ -212,7 +205,6 @@ class AreaRegistry:
         for attr_name, value in (
             ("aliases", aliases),
             ("icon", icon),
-            ("outdoor", outdoor),
             ("picture", picture),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
@@ -261,7 +253,6 @@ class AreaRegistry:
                     id=area["id"],
                     name=area["name"],
                     normalized_name=normalized_name,
-                    outdoor=area["outdoor"],
                     picture=area["picture"],
                 )
                 self._normalized_name_area_idx[normalized_name] = area["id"]
@@ -284,7 +275,6 @@ class AreaRegistry:
                 "icon": entry.icon,
                 "id": entry.id,
                 "name": entry.name,
-                "outdoor": entry.outdoor,
                 "picture": entry.picture,
             }
             for entry in self.areas.values()

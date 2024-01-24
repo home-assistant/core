@@ -25,7 +25,6 @@ async def test_list_areas(
         "mock 2",
         aliases={"alias_1", "alias_2"},
         icon="mdi:garage",
-        outdoor=True,
         picture="/image/example.png",
     )
 
@@ -38,7 +37,6 @@ async def test_list_areas(
             "area_id": area1.id,
             "icon": None,
             "name": "mock 1",
-            "outdoor": False,
             "picture": None,
         },
         {
@@ -46,7 +44,6 @@ async def test_list_areas(
             "area_id": area2.id,
             "icon": "mdi:garage",
             "name": "mock 2",
-            "outdoor": True,
             "picture": "/image/example.png",
         },
     ]
@@ -68,7 +65,6 @@ async def test_create_area(
         "area_id": ANY,
         "icon": None,
         "name": "mock",
-        "outdoor": False,
         "picture": None,
     }
     assert len(area_registry.areas) == 1
@@ -80,7 +76,6 @@ async def test_create_area(
             "aliases": ["alias_1", "alias_2"],
             "icon": "mdi:garage",
             "name": "mock 2",
-            "outdoor": True,
             "picture": "/image/example.png",
             "type": "config/area_registry/create",
         }
@@ -93,7 +88,6 @@ async def test_create_area(
         "area_id": ANY,
         "icon": "mdi:garage",
         "name": "mock 2",
-        "outdoor": True,
         "picture": "/image/example.png",
     }
     assert len(area_registry.areas) == 2
@@ -164,7 +158,6 @@ async def test_update_area(
             "area_id": area.id,
             "icon": "mdi:garage",
             "name": "mock 2",
-            "outdoor": True,
             "picture": "/image/example.png",
             "type": "config/area_registry/update",
         }
@@ -177,7 +170,6 @@ async def test_update_area(
         "area_id": area.id,
         "icon": "mdi:garage",
         "name": "mock 2",
-        "outdoor": True,
         "picture": "/image/example.png",
     }
     assert len(area_registry.areas) == 1
@@ -188,7 +180,6 @@ async def test_update_area(
             "aliases": ["alias_1", "alias_1"],
             "area_id": area.id,
             "icon": None,
-            "outdoor": False,
             "picture": None,
             "type": "config/area_registry/update",
         }
@@ -201,7 +192,6 @@ async def test_update_area(
         "area_id": area.id,
         "icon": None,
         "name": "mock 2",
-        "outdoor": False,
         "picture": None,
     }
     assert len(area_registry.areas) == 1

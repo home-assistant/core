@@ -45,7 +45,6 @@ async def test_create_area(
         id=ANY,
         name="mock",
         normalized_name=ANY,
-        outdoor=False,
         picture=None,
     )
     assert len(area_registry.areas) == 1
@@ -67,7 +66,6 @@ async def test_create_area(
         id=ANY,
         name="mock 2",
         normalized_name=ANY,
-        outdoor=False,
         picture="/image/example.png",
     )
     assert len(area_registry.areas) == 2
@@ -149,7 +147,6 @@ async def test_update_area(
         aliases={"alias_1", "alias_2"},
         icon="mdi:garage",
         name="mock1",
-        outdoor=True,
         picture="/image/example.png",
     )
 
@@ -160,7 +157,6 @@ async def test_update_area(
         id=ANY,
         name="mock1",
         normalized_name=ANY,
-        outdoor=True,
         picture="/image/example.png",
     )
     assert len(area_registry.areas) == 1
@@ -264,7 +260,6 @@ async def test_loading_area_from_storage(
                     "id": "12345A",
                     "icon": "mdi:garage",
                     "name": "mock",
-                    "outdoor": False,
                     "picture": "blah",
                 }
             ]
@@ -307,7 +302,6 @@ async def test_migration_from_1_1(
                     "icon": None,
                     "id": "12345A",
                     "name": "mock",
-                    "outdoor": False,
                     "picture": None,
                 }
             ]
