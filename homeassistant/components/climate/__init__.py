@@ -315,18 +315,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             "_ClimateEntity__mod_supported_features"
         )
 
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Post initialisation processing."""
-        super().__init_subclass__(**kwargs)
-        if "supported_features" in cls.__dict__:
-            cls.__mod_supported_features = (  # pylint: disable=unused-private-member
-                getattr(cls, "supported_features")
-            )
-        elif "_attr_supported_features" in cls.__dict__:
-            cls.__mod_supported_features = (  # pylint: disable=unused-private-member
-                getattr(cls, "_attr_supported_features")
-            )
-
     @callback
     def add_to_platform_start(
         self,
