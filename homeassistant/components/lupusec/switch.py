@@ -50,18 +50,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     async_add_devices(switches)
 
 
-def get_unique_id(config_entry_id: str, key: str) -> str:
-    """Create a unique_id id for a lupusec entity."""
-    return f"{LUPUSEC_DOMAIN}_{config_entry_id}_{key}"
-
-
 class LupusecSwitch(LupusecDevice, SwitchEntity):
     """Representation of a Lupusec switch."""
-
-    def __init__(self, data, device, config_entry=None) -> None:
-        """Initialize a LupusecSwitch."""
-        super().__init__(data, device, config_entry)
-        self._attr_unique_id = get_unique_id(config_entry.entry_id, device.device_id)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""

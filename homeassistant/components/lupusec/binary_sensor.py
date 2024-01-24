@@ -56,18 +56,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     async_add_devices(sensors)
 
 
-def get_unique_id(config_entry_id: str, key: str) -> str:
-    """Create a unique_id id for a lupusec entity."""
-    return f"{LUPUSEC_DOMAIN}_{config_entry_id}_{key}"
-
-
 class LupusecBinarySensor(LupusecDevice, BinarySensorEntity):
     """A binary sensor implementation for Lupusec device."""
-
-    def __init__(self, data, device, config_entry=None) -> None:
-        """Initialize a Lupusec alarm control panel."""
-        super().__init__(data, device, config_entry)
-        self._attr_unique_id = get_unique_id(config_entry.entry_id, device.device_id)
 
     @property
     def is_on(self):
