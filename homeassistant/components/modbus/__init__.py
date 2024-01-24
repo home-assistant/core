@@ -133,13 +133,11 @@ from .const import (  # noqa: F401
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
-    duplicate_entity_validator,
+    check_config,
     duplicate_fan_mode_validator,
-    duplicate_modbus_validator,
     nan_validator,
     number_validator,
     register_int_list_validator,
-    scan_interval_validator,
     struct_validator,
 )
 
@@ -418,12 +416,10 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
-            scan_interval_validator,
-            duplicate_entity_validator,
-            duplicate_modbus_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
+            check_config,
         ),
     },
     extra=vol.ALLOW_EXTRA,
