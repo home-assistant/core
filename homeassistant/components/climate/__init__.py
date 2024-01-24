@@ -347,14 +347,16 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
         # This should be removed in 2024.8.
-        if HVACMode.OFF in self.hvac_modes:
+        if type(self).async_turn_off is not ClimateEntity.async_turn_off or hasattr(
+            self, "turn_off"
+        ):
             _report_turn_on_off("TURN_OFF")
             self.__mod_supported_features |= ClimateEntityFeature.TURN_OFF
-        for mode in self.hvac_modes:
-            if mode != HVACMode.OFF:
-                _report_turn_on_off("TURN_ON")
-                self.__mod_supported_features |= ClimateEntityFeature.TURN_ON
-                break
+        if type(self).async_turn_on is not ClimateEntity.async_turn_on or hasattr(
+            self, "turn_on"
+        ):
+            _report_turn_on_off("TURN_ON")
+            self.__mod_supported_features |= ClimateEntityFeature.TURN_ON
 
     @final
     @property
