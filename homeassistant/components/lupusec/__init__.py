@@ -79,14 +79,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
 
-    host = entry.data.get(CONF_HOST)
-    username = entry.data.get(CONF_USERNAME)
-    password = entry.data.get(CONF_PASSWORD)
-    name = entry.data.get(CONF_NAME)
+    host = entry.data[CONF_HOST]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
 
     try:
         lupusec_system = await hass.async_add_executor_job(
-            LupusecSystem, username, password, host, name
+            LupusecSystem, username, password, host, "Lupusec Security System"
         )
     except LupusecException:
         _LOGGER.error("Failed to connect to Lupusec device at %s", host)
