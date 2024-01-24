@@ -17,13 +17,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .controller import EcovacsController
-from .entity import EcovacsDescriptionEntity, EcovacsEntityDescription, EventT
+from .entity import EcovacsCapabilityEntityDescription, EcovacsDescriptionEntity, EventT
+from .util import get_supported_entitites
 
 
 @dataclass(kw_only=True, frozen=True)
 class EcovacsBinarySensorEntityDescription(
     BinarySensorEntityDescription,
-    EcovacsEntityDescription,
+    EcovacsCapabilityEntityDescription,
     Generic[EventT],
 ):
     """Class describing Deebot binary sensor entity."""
@@ -49,15 +50,13 @@ async def async_setup_entry(
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
-    controller.register_platform_add_entities(
-        EcovacsBinarySensor, ENTITY_DESCRIPTIONS, async_add_entities
+    async_add_entities(
+        get_supported_entitites(controller, EcovacsBinarySensor, ENTITY_DESCRIPTIONS)
     )
 
 
 class EcovacsBinarySensor(
-    EcovacsDescriptionEntity[
-        CapabilityEvent[EventT], EcovacsBinarySensorEntityDescription
-    ],
+    EcovacsDescriptionEntity[CapabilityEvent[EventT]],
     BinarySensorEntity,
 ):
     """Ecovacs binary sensor."""

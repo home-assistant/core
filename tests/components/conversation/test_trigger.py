@@ -68,6 +68,37 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
     }
 
 
+async def test_response(hass: HomeAssistant, setup_comp) -> None:
+    """Test the firing of events."""
+    response = "I'm sorry, Dave. I'm afraid I can't do that"
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["Open the pod bay door Hal"],
+                },
+                "action": {
+                    "set_conversation_response": response,
+                },
+            }
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "Open the pod bay door Hal",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert service_response["response"]["speech"]["plain"]["speech"] == response
+
+
 async def test_same_trigger_multiple_sentences(
     hass: HomeAssistant, calls, setup_comp
 ) -> None:
