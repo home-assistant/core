@@ -821,6 +821,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_toggle(self) -> None:
         """Toggle the entity."""
+        # Forward to self.toggle if it's been overridden.
         if type(self).toggle is not ClimateEntity.toggle:
             await self.hass.async_add_executor_job(self.toggle)
             return
