@@ -1,6 +1,5 @@
 """Teslemetry Data Coordinator."""
 from datetime import timedelta
-import logging
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError, VehicleOffline
@@ -10,11 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import TeslemetryState
+from .const import _LOGGER, TeslemetryState
 
 SYNC_INTERVAL = 60
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):

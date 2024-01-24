@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 from enum import StrEnum
+import logging
 
 DOMAIN = "teslemetry"
+
+_LOGGER = logging.getLogger(__name__)
 
 MODELS = {
     "model3": "Model 3",

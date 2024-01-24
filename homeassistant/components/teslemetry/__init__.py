@@ -1,6 +1,5 @@
 """Teslemetry integration."""
 import asyncio
-import logging
 from typing import Final
 
 from tesla_fleet_api import Teslemetry
@@ -12,15 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN
 from .coordinator import TeslemetryVehicleDataCoordinator
 from .models import TeslemetryVehicleData
 
 PLATFORMS: Final = [
     Platform.CLIMATE,
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
