@@ -1,4 +1,89 @@
 {
+  "entity": {
+    "sensor": {
+      "electricity_price": {
+        "name": "Electricity price"
+      },
+      "month_cost": {
+        "name": "Monthly cost"
+      },
+      "peak_hour": {
+        "name": "Monthly peak hour consumption"
+      },
+      "peak_hour_time": {
+        "name": "Time of max hour consumption"
+      },
+      "month_cons": {
+        "name": "Monthly net consumption"
+      },
+      "average_power": {
+        "name": "average power"
+      },
+      "power": {
+        "name": "power"
+      },
+      "power_production": {
+        "name": "power production"
+      },
+      "min_power": {
+        "name": "min power"
+      },
+      "max_power": {
+        "name": "max power"
+      },
+      "accumulated_consumption": {
+        "name": "accumulated consumption"
+      },
+      "accumulated_consumption_last_hour": {
+        "name": "accumulated consumption current hour"
+      },
+      "estimated_hour_consumption": {
+        "name": "Estimated consumption current hour"
+      },
+      "accumulated_production": {
+        "name": "accumulated production"
+      },
+      "accumulated_production_last_hour": {
+        "name": "accumulated production current hour"
+      },
+      "last_meter_consumption": {
+        "name": "last meter consumption"
+      },
+      "last_meter_production": {
+        "name": "last meter production"
+      },
+      "voltage_phase1": {
+        "name": "voltage phase1"
+      },
+      "voltage_phase2": {
+        "name": "voltage phase2"
+      },
+      "voltage_phase3": {
+        "name": "voltage phase3"
+      },
+      "current_l1": {
+        "name": "current L1"
+      },
+      "current_l2": {
+        "name": "current L2"
+      },
+      "current_l3": {
+        "name": "current L3"
+      },
+      "signal_strength": {
+        "name": "signal strength"
+      },
+      "accumulated_reward": {
+        "name": "accumulated reward"
+      },
+      "accumulated_cost": {
+        "name": "accumulated cost"
+      },
+      "power_factor": {
+        "name": "power factor"
+      }
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
