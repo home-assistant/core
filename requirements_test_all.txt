@@ -1724,7 +1724,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==0.39.0
+python-roborock==0.39.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
