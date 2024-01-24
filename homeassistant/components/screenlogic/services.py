@@ -3,8 +3,10 @@
 import logging
 
 from screenlogicpy import ScreenLogicError
+from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -41,32 +43,27 @@ TURN_ON_SUPER_CHLOR_SCHEMA = cv.make_entity_service_schema(
 
 
 @callback
-def async_load_screenlogic_services(hass: HomeAssistant):
+def async_load_screenlogic_services(hass: HomeAssistant, entry: ConfigEntry):
     """Set up services for the ScreenLogic integration."""
-    if hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE):
-        # Integration-level services have already been added. Return.
-        return
 
     async def extract_screenlogic_config_entry_ids(service_call: ServiceCall):
-        return [
-            entry_id
-            for entry_id in await async_extract_config_entry_ids(hass, service_call)
-            if (entry := hass.config_entries.async_get_entry(entry_id))
-            and entry.domain == DOMAIN
-        ]
-
-    async def async_set_color_mode(service_call: ServiceCall) -> None:
         if not (
-            screenlogic_entry_ids := await extract_screenlogic_config_entry_ids(
-                service_call
-            )
+            screenlogic_entry_ids := [
+                entry_id
+                for entry_id in await async_extract_config_entry_ids(hass, service_call)
+                if (entry := hass.config_entries.async_get_entry(entry_id))
+                and entry.domain == DOMAIN
+            ]
         ):
             raise HomeAssistantError(
-                f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. Config entry for"
+                f"Failed to call service '{service_call.service}'. Config entry for"
                 " target not found"
             )
+        return screenlogic_entry_ids
+
+    async def async_set_color_mode(service_call: ServiceCall) -> None:
         color_num = SUPPORTED_COLOR_MODES[service_call.data[ATTR_COLOR_MODE]]
-        for entry_id in screenlogic_entry_ids:
+        for entry_id in await extract_screenlogic_config_entry_ids(service_call):
             coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
             _LOGGER.debug(
                 "Service %s called on %s with mode %s",
@@ -76,8 +73,7 @@ def async_load_screenlogic_services(hass: HomeAssistant):
             )
             try:
                 await coordinator.gateway.async_set_color_lights(color_num)
-                # Debounced refresh to catch any secondary
-                # changes in the device
+                # Debounced refresh to catch any secondary changes in the device
                 await coordinator.async_request_refresh()
             except ScreenLogicError as error:
                 raise HomeAssistantError(error) from error
@@ -87,16 +83,7 @@ def async_load_screenlogic_services(hass: HomeAssistant):
         is_on: bool,
         runtime: int | None = None,
     ) -> None:
-        if not (
-            screenlogic_entry_ids := await extract_screenlogic_config_entry_ids(
-                service_call
-            )
-        ):
-            raise HomeAssistantError(
-                f"Failed to call service '{service_call.service}'. Config entry for"
-                " target not found"
-            )
-        for entry_id in screenlogic_entry_ids:
+        for entry_id in await extract_screenlogic_config_entry_ids(service_call):
             coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
             _LOGGER.debug(
                 "Service %s called on %s with runtime %s",
@@ -108,8 +95,7 @@ def async_load_screenlogic_services(hass: HomeAssistant):
                 await coordinator.gateway.async_set_scg_config(
                     super_chlor_timer=runtime, super_chlorinate=is_on
                 )
-                # Debounced refresh to catch any secondary
-                # changes in the device
+                # Debounced refresh to catch any secondary changes in the device
                 await coordinator.async_request_refresh()
             except ScreenLogicError as error:
                 raise HomeAssistantError(error) from error
@@ -121,33 +107,43 @@ def async_load_screenlogic_services(hass: HomeAssistant):
     async def async_stop_super_chlor(service_call: ServiceCall) -> None:
         await async_set_super_chlor(service_call, False)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_COLOR_MODE, async_set_color_mode, SET_COLOR_MODE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_START_SUPER_CHLORINATION,
-        async_start_super_chlor,
-        TURN_ON_SUPER_CHLOR_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_STOP_SUPER_CHLORINATION,
-        async_stop_super_chlor,
-    )
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE):
+        hass.services.async_register(
+            DOMAIN, SERVICE_SET_COLOR_MODE, async_set_color_mode, SET_COLOR_MODE_SCHEMA
+        )
+
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    equipment_flags = coordinator.gateway.equipment_flags
+
+    if EQUIPMENT_FLAG.CHLORINATOR in equipment_flags:
+        if not hass.services.has_service(DOMAIN, SERVICE_START_SUPER_CHLORINATION):
+            hass.services.async_register(
+                DOMAIN,
+                SERVICE_START_SUPER_CHLORINATION,
+                async_start_super_chlor,
+                TURN_ON_SUPER_CHLOR_SCHEMA,
+            )
+
+        if not hass.services.has_service(DOMAIN, SERVICE_STOP_SUPER_CHLORINATION):
+            hass.services.async_register(
+                DOMAIN,
+                SERVICE_STOP_SUPER_CHLORINATION,
+                async_stop_super_chlor,
+            )
 
 
 @callback
 def async_unload_screenlogic_services(hass: HomeAssistant):
     """Unload services for the ScreenLogic integration."""
-    if hass.data[DOMAIN]:
-        # There is still another config entry for this domain, don't remove services.
-        return
 
-    if not hass.services.async_services().get(DOMAIN):
-        return
-
-    _LOGGER.info("Unloading ScreenLogic Services")
-    hass.services.async_remove(domain=DOMAIN, service=SERVICE_SET_COLOR_MODE)
-    hass.services.async_remove(domain=DOMAIN, service=SERVICE_START_SUPER_CHLORINATION)
-    hass.services.async_remove(domain=DOMAIN, service=SERVICE_STOP_SUPER_CHLORINATION)
+    if not hass.data[DOMAIN]:
+        _LOGGER.info("Unloading all ScreenLogic services")
+        for service in hass.services.async_services_for_domain(DOMAIN):
+            hass.services.async_remove(DOMAIN, service)
+    elif not any(
+        EQUIPMENT_FLAG.CHLORINATOR in coordinator.gateway.equipment_flags
+        for coordinator in hass.data[DOMAIN].values()
+    ):
+        _LOGGER.info("Unloading ScreenLogic chlorination services")
+        hass.services.async_remove(DOMAIN, SERVICE_START_SUPER_CHLORINATION)
+        hass.services.async_remove(DOMAIN, SERVICE_STOP_SUPER_CHLORINATION)
