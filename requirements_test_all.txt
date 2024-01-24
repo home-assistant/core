@@ -943,6 +943,9 @@ laundrify-aio==1.1.2
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
 
+# homeassistant.components.leaone
+leaone-ble==0.1.0
+
 # homeassistant.components.led_ble
 led-ble==1.0.1
 
@@ -1681,7 +1684,7 @@ python-fullykiosk==0.0.12
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==4.1.0
+python-homewizard-energy==4.2.1
 
 # homeassistant.components.izone
 python-izone==1.2.9
