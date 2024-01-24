@@ -1269,13 +1269,37 @@ def test_service_call_repr() -> None:
     )
 
 
-async def test_serviceregistry_has_service(hass: HomeAssistant) -> None:
+async def test_service_registry_has_service(hass: HomeAssistant) -> None:
     """Test has_service method."""
     hass.services.async_register("test_domain", "test_service", lambda call: None)
     assert len(hass.services.async_services()) == 1
     assert hass.services.has_service("tesT_domaiN", "tesT_servicE")
     assert not hass.services.has_service("test_domain", "non_existing")
     assert not hass.services.has_service("non_existing", "test_service")
+
+
+async def test_service_registry_service_enumeration(hass: HomeAssistant) -> None:
+    """Test enumerating services methods."""
+    hass.services.async_register("test_domain", "test_service", lambda call: None)
+    services1 = hass.services.async_services()
+    services2 = hass.services.async_services()
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is not services2  # should be a copy
+
+    services1 = hass.services.async_services_internal()
+    services2 = hass.services.async_services_internal()
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is services2  # should be the same object
+
+    assert hass.services.async_services_for_domain("unknown") == {}
+
+    services1 = hass.services.async_services_for_domain("test_domain")
+    services2 = hass.services.async_services_for_domain("test_domain")
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is not services2  # should be a copy
 
 
 async def test_serviceregistry_call_with_blocking_done_in_time(
@@ -1622,11 +1646,11 @@ async def test_config_as_dict() -> None:
         CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
         "location_name": "Home",
         "time_zone": "UTC",
-        "components": set(),
+        "components": [],
         "config_dir": "/test/ha-config",
-        "whitelist_external_dirs": set(),
-        "allowlist_external_dirs": set(),
-        "allowlist_external_urls": set(),
+        "whitelist_external_dirs": [],
+        "allowlist_external_dirs": [],
+        "allowlist_external_urls": [],
         "version": __version__,
         "config_source": ha.ConfigSource.DEFAULT,
         "recovery_mode": False,

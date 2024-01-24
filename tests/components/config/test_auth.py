@@ -136,7 +136,7 @@ async def test_delete_unable_self_account(
 ) -> None:
     """Test we cannot delete our own account."""
     client = await hass_ws_client(hass, hass_access_token)
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     await client.send_json(
         {"id": 5, "type": auth_config.WS_TYPE_DELETE, "user_id": refresh_token.user.id}

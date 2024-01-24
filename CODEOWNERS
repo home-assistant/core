@@ -51,6 +51,8 @@ build.json @home-assistant/supervisor
 /tests/components/airthings_ble/ @vincegio @LaStrada
 /homeassistant/components/airtouch4/ @samsinnamon
 /tests/components/airtouch4/ @samsinnamon
+/homeassistant/components/airtouch5/ @danzel
+/tests/components/airtouch5/ @danzel
 /homeassistant/components/airvisual/ @bachya
 /tests/components/airvisual/ @bachya
 /homeassistant/components/airvisual_pro/ @bachya
@@ -76,6 +78,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/amcrest/ @flacjacket
 /homeassistant/components/analytics/ @home-assistant/core @ludeeus
 /tests/components/analytics/ @home-assistant/core @ludeeus
+/homeassistant/components/analytics_insights/ @joostlek
+/tests/components/analytics_insights/ @joostlek
 /homeassistant/components/android_ip_webcam/ @engrbm87
 /tests/components/android_ip_webcam/ @engrbm87
 /homeassistant/components/androidtv/ @JeffLIrion @ollo69
@@ -539,8 +543,6 @@ build.json @home-assistant/supervisor
 /tests/components/holiday/ @jrieger @gjohansson-ST
 /homeassistant/components/home_connect/ @DavidMStraub
 /tests/components/home_connect/ @DavidMStraub
-/homeassistant/components/home_plus_control/ @chemaaa
-/tests/components/home_plus_control/ @chemaaa
 /homeassistant/components/homeassistant/ @home-assistant/core
 /tests/components/homeassistant/ @home-assistant/core
 /homeassistant/components/homeassistant_alerts/ @home-assistant/core
@@ -708,6 +710,8 @@ build.json @home-assistant/supervisor
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/ld2410_ble/ @930913
 /tests/components/ld2410_ble/ @930913
+/homeassistant/components/leaone/ @bdraco
+/tests/components/leaone/ @bdraco
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
 /homeassistant/components/lg_netcast/ @Drafteed
@@ -1328,6 +1332,8 @@ build.json @home-assistant/supervisor
 /tests/components/tasmota/ @emontnemery
 /homeassistant/components/tautulli/ @ludeeus @tkdrob
 /tests/components/tautulli/ @ludeeus @tkdrob
+/homeassistant/components/technove/ @Moustachauve
+/tests/components/technove/ @Moustachauve
 /homeassistant/components/tedee/ @patrickhilker @zweckj
 /tests/components/tedee/ @patrickhilker @zweckj
 /homeassistant/components/tellduslive/ @fredrike
@@ -1371,8 +1377,8 @@ build.json @home-assistant/supervisor
 /tests/components/tomorrowio/ @raman325 @lymanepp
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
-/homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco
-/tests/components/tplink/ @rytilahti @thegardenmonkey @bdraco
+/homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco @sdb9696
+/tests/components/tplink/ @rytilahti @thegardenmonkey @bdraco @sdb9696
 /homeassistant/components/tplink_omada/ @MarkGodwin
 /tests/components/tplink_omada/ @MarkGodwin
 /homeassistant/components/traccar/ @ludeeus

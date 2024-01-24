@@ -46,6 +46,9 @@ omit =
     homeassistant/components/airtouch4/__init__.py
     homeassistant/components/airtouch4/climate.py
     homeassistant/components/airtouch4/coordinator.py
+    homeassistant/components/airtouch5/__init__.py
+    homeassistant/components/airtouch5/climate.py
+    homeassistant/components/airtouch5/entity.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/airvisual_pro/__init__.py
@@ -272,7 +275,8 @@ omit =
     homeassistant/components/econet/climate.py
     homeassistant/components/econet/sensor.py
     homeassistant/components/econet/water_heater.py
-    homeassistant/components/ecovacs/__init__.py
+    homeassistant/components/ecovacs/controller.py
+    homeassistant/components/ecovacs/entity.py
     homeassistant/components/ecovacs/util.py
     homeassistant/components/ecovacs/vacuum.py
     homeassistant/components/ecowitt/__init__.py
@@ -406,8 +410,6 @@ omit =
     homeassistant/components/fjaraskupan/sensor.py
     homeassistant/components/fleetgo/device_tracker.py
     homeassistant/components/flexit/climate.py
-    homeassistant/components/flexit_bacnet/__init__.py
-    homeassistant/components/flexit_bacnet/const.py
     homeassistant/components/flexit_bacnet/climate.py
     homeassistant/components/flic/binary_sensor.py
     homeassistant/components/flick_electric/__init__.py
@@ -475,6 +477,7 @@ omit =
     homeassistant/components/guardian/__init__.py
     homeassistant/components/guardian/binary_sensor.py
     homeassistant/components/guardian/button.py
+    homeassistant/components/guardian/coordinator.py
     homeassistant/components/guardian/sensor.py
     homeassistant/components/guardian/switch.py
     homeassistant/components/guardian/util.py
@@ -512,8 +515,6 @@ omit =
     homeassistant/components/home_connect/light.py
     homeassistant/components/home_connect/sensor.py
     homeassistant/components/home_connect/switch.py
-    homeassistant/components/home_plus_control/api.py
-    homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homematic/__init__.py
     homeassistant/components/homematic/binary_sensor.py
     homeassistant/components/homematic/climate.py
@@ -763,6 +764,7 @@ omit =
     homeassistant/components/motion_blinds/entity.py
     homeassistant/components/motion_blinds/sensor.py
     homeassistant/components/motionmount/__init__.py
+    homeassistant/components/motionmount/binary_sensor.py
     homeassistant/components/motionmount/entity.py
     homeassistant/components/motionmount/number.py
     homeassistant/components/motionmount/select.py
