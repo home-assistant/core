@@ -377,6 +377,7 @@ def duplicate_modbus_validator(config: dict) -> dict:
         del config[i]
     return config
 
+
 def check_hvac_target_temp_registers(config: dict) -> dict:
     """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes."""
 
@@ -404,10 +405,10 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
 
     return config
 
+
 def check_config(config: dict) -> dict:
     """Do final config check."""
     config2 = duplicate_modbus_validator(config)
     config3 = scan_interval_validator(config2)
     config4 = duplicate_entity_validator(config3)
     return config4
-
