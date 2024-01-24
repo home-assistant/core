@@ -133,12 +133,11 @@ from .const import (  # noqa: F401
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
-    duplicate_entity_validator,
+    check_config,
     duplicate_fan_mode_validator,
-    duplicate_modbus_validator,
     nan_validator,
     number_validator,
-    scan_interval_validator,
+    register_int_list_validator,
     struct_validator,
 )
 
@@ -281,7 +280,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
                 vol.All(
                     {
-                        CONF_ADDRESS: cv.positive_int,
+                        vol.Required(CONF_ADDRESS): register_int_list_validator,
                         CONF_FAN_MODE_VALUES: {
                             vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
                             vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
@@ -417,12 +416,10 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
-            scan_interval_validator,
-            duplicate_entity_validator,
-            duplicate_modbus_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
+            check_config,
         ),
     },
     extra=vol.ALLOW_EXTRA,
