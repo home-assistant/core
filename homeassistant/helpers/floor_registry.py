@@ -71,7 +71,7 @@ class FloorRegistry:
 
     @callback
     def _generate_id(self, name: str) -> str:
-        """Initialize ID."""
+        """Generate floor ID."""
         suggestion = suggestion_base = slugify(name)
         tries = 1
         while suggestion in self.floors:
@@ -87,10 +87,10 @@ class FloorRegistry:
         icon: str | None = None,
     ) -> FloorEntry:
         """Create a new floor."""
-        normalized_name = normalize_floor_name(name)
-
         if self.async_get_floor_by_name(name):
             raise ValueError(f"The name {name} ({normalized_name}) is already in use")
+
+        normalized_name = normalize_floor_name(name)
 
         floor = FloorEntry(
             icon=icon,
