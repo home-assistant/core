@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -28,9 +28,7 @@ from . import debug_info, trigger as mqtt_trigger
 from .config import MQTT_BASE_SCHEMA
 from .const import (
     ATTR_DISCOVERY_HASH,
-    CONF_CONNECTIONS,
     CONF_ENCODING,
-    CONF_IDENTIFIERS,
     CONF_PAYLOAD,
     CONF_QOS,
     CONF_TOPIC,
@@ -258,10 +256,8 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
             self.hass, discovery_hash, discovery_data
         )
         config = TRIGGER_DISCOVERY_SCHEMA(discovery_data)
-        if (
-            new_trigger_id
-            := f"{self.device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
-        ) != self.trigger_id:
+        new_trigger_id = f"{self.device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
+        if new_trigger_id != self.trigger_id:
             mqtt_data = get_mqtt_data(self.hass)
             if new_trigger_id in mqtt_data.device_triggers:
                 _LOGGER.error(
@@ -302,43 +298,30 @@ async def async_setup_trigger(
     """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
 
-    # Check if there is an existing conflicting trigger first
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, id_) for id_ in config[CONF_DEVICE][CONF_IDENTIFIERS]},
-        connections={
-            (conn_[0], conn_[1]) for conn_ in config[CONF_DEVICE][CONF_CONNECTIONS]
-        },
-    )
-    if device_entry is not None:
-        device_id = device_entry.id
-        discovery_id = discovery_data[ATTR_DISCOVERY_HASH][1]
-        trigger_type = config[CONF_TYPE]
-        trigger_subtype = config[CONF_SUBTYPE]
-        mqtt_data = get_mqtt_data(hass)
-        for _, trig in mqtt_data.device_triggers.items():
-            if (
-                trig.discovery_data is not None
-                and trig.device_id == device_id
-                and trig.type == trigger_type
-                and trig.subtype == trigger_subtype
-            ):
-                _LOGGER.error(
-                    "Config for device trigger %s conflicts with existing "
-                    "device trigger, cannot set up trigger, got: %s",
-                    discovery_id,
-                    config,
-                )
-                send_discovery_done(hass, discovery_data)
-                clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
-                return None
-
-    new_device_id = update_device(hass, config_entry, config)
+    device_id = update_device(hass, config_entry, config)
+    discovery_id = discovery_data[ATTR_DISCOVERY_HASH][1]
+    trigger_type = config[CONF_TYPE]
+    trigger_subtype = config[CONF_SUBTYPE]
+    trigger_id = f"{device_id}_{trigger_type}_{trigger_subtype}"
+    mqtt_data = get_mqtt_data(hass)
+    if (
+        trigger_id in mqtt_data.device_triggers
+        and mqtt_data.device_triggers[trigger_id].discovery_data is not None
+    ):
+        _LOGGER.error(
+            "Config for device trigger %s conflicts with existing "
+            "device trigger, cannot set up trigger, got: %s",
+            discovery_id,
+            config,
+        )
+        send_discovery_done(hass, discovery_data)
+        clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
+        return None
 
     if TYPE_CHECKING:
-        assert isinstance(new_device_id, str)
+        assert isinstance(device_id, str)
     mqtt_device_trigger = MqttDeviceTrigger(
-        hass, config, new_device_id, discovery_data, config_entry
+        hass, config, device_id, discovery_data, config_entry
     )
     await mqtt_device_trigger.async_setup()
     send_discovery_done(hass, discovery_data)
@@ -370,7 +353,7 @@ async def async_get_triggers(
     if not mqtt_data.device_triggers:
         return triggers
 
-    for _, trig in mqtt_data.device_triggers.items():
+    for trig in mqtt_data.device_triggers.values():
         if trig.device_id != device_id or trig.topic is None:
             continue
 
