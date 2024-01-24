@@ -338,6 +338,8 @@ class FlowManager(abc.ABC):
                                 current_path_schema = None
                                 break
                             current_path_schema = current_path_schema[path_part]
+                            if not isinstance(path_part, str):
+                                path_part = str(path_part)
                             current_path_errors = current_path_errors.setdefault(
                                 path_part, {}
                             )
@@ -345,11 +347,14 @@ class FlowManager(abc.ABC):
                             current_path_schema
                             and error.path[-1] in current_path_schema
                         ):
-                            current_path_errors[error.path[-1]] = error.error_message
+                            path_part = error.path[-1]
+                            if not isinstance(path_part, str):
+                                path_part = str(path_part)
+                            current_path_errors[path_part] = error.error_message
                             continue
 
                     # If we get here, we could not identify the path of the error.
-                    schema_errors.get("base", []).append(str(error))
+                    schema_errors.setdefault("base", []).append(str(error))
 
                 raise InvalidData(
                     "Schema validation failed",
