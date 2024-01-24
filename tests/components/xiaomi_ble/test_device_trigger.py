@@ -1,6 +1,4 @@
 """Test Xiaomi BLE events."""
-import logging
-
 import pytest
 
 from homeassistant.components import automation
@@ -21,8 +19,6 @@ from tests.common import (
     async_mock_service,
 )
 from tests.components.bluetooth import inject_bluetooth_service_info_bleak
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -161,12 +157,9 @@ async def test_get_triggers_for_invalid_xiami_ble_device(hass: HomeAssistant) ->
 #         connections={(CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
 #     )
 #     assert invalid_device
-#     _LOGGER.error("invalid_device %s", invalid_device)
-#     _LOGGER.error("invalid_device id %s", invalid_device.id)
 #     triggers = await async_get_device_automations(
 #         hass, DeviceAutomationType.TRIGGER, invalid_device.id
 #     )
-#     _LOGGER.error("incorrect triggers %s", triggers)
 #     assert triggers == []
 
 #     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -212,20 +205,13 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
             ]
         },
     )
-    _LOGGER.error("domain %s, dev id %s", DOMAIN, device_id)
     # Emit motion detected event
     inject_bluetooth_service_info_bleak(
         hass,
         make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
     )
     await hass.async_block_till_done()
-    triggers = await async_get_device_automations(
-        hass, DeviceAutomationType.TRIGGER, device_id
-    )
-    _LOGGER.error("triggers %s", triggers)
-    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
-    device_id = device.id
-    _LOGGER.error("domain %s, dev id %s", DOMAIN, device_id)
+
     assert len(calls) == 1
     assert calls[0].data["some"] == "test_trigger_motion_detected"
 
