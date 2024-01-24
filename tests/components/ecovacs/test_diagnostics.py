@@ -1,6 +1,7 @@
 """Tests for diagnostics data."""
 
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -16,7 +17,6 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
-        == snapshot
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, init_integration
+    ) == snapshot(exclude=props("entry_id"))
