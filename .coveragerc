@@ -46,6 +46,9 @@ omit =
     homeassistant/components/airtouch4/__init__.py
     homeassistant/components/airtouch4/climate.py
     homeassistant/components/airtouch4/coordinator.py
+    homeassistant/components/airtouch5/__init__.py
+    homeassistant/components/airtouch5/climate.py
+    homeassistant/components/airtouch5/entity.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/airvisual_pro/__init__.py
@@ -109,6 +112,12 @@ omit =
     homeassistant/components/baf/sensor.py
     homeassistant/components/baf/switch.py
     homeassistant/components/baidu/tts.py
+    homeassistant/components/bang_olufsen/__init__.py
+    homeassistant/components/bang_olufsen/const.py
+    homeassistant/components/bang_olufsen/entity.py
+    homeassistant/components/bang_olufsen/media_player.py
+    homeassistant/components/bang_olufsen/util.py
+    homeassistant/components/bang_olufsen/websocket.py
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
     homeassistant/components/beewi_smartclim/sensor.py
@@ -512,8 +521,6 @@ omit =
     homeassistant/components/home_connect/light.py
     homeassistant/components/home_connect/sensor.py
     homeassistant/components/home_connect/switch.py
-    homeassistant/components/home_plus_control/api.py
-    homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homematic/__init__.py
     homeassistant/components/homematic/binary_sensor.py
     homeassistant/components/homematic/climate.py

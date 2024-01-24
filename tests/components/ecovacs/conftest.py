@@ -38,13 +38,13 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def device_classes() -> list[str]:
-    """Device classes, which should be returned by the get_devices api call."""
-    return ["yna5x1"]
+def device_fixture() -> str:
+    """Device class, which should be returned by the get_devices api call."""
+    return "yna5x1"
 
 
 @pytest.fixture
-def mock_authenticator(device_classes: list[str]) -> Generator[Mock, None, None]:
+def mock_authenticator(device_fixture: str) -> Generator[Mock, None, None]:
     """Mock the authenticator."""
     with patch(
         "homeassistant.components.ecovacs.controller.Authenticator",
@@ -56,11 +56,9 @@ def mock_authenticator(device_classes: list[str]) -> Generator[Mock, None, None]
         authenticator = mock.return_value
         authenticator.authenticate.return_value = Credentials("token", "user_id", 0)
 
-        devices = []
-        for device_class in device_classes:
-            devices.append(
-                load_json_object_fixture(f"devices/{device_class}/device.json", DOMAIN)
-            )
+        devices = [
+            load_json_object_fixture(f"devices/{device_fixture}/device.json", DOMAIN)
+        ]
 
         def post_authenticated(
             path: str,
