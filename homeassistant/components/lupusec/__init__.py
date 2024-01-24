@@ -5,7 +5,6 @@ import lupupy
 from lupupy.exceptions import LupusecException
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -41,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LUPUSEC_PLATFORMS = [
+LUPUSEC_PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.SWITCH,
@@ -60,7 +59,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     host = conf.get(CONF_IP_ADDRESS)
     name = conf.get(CONF_NAME)
 
-    # Explicitly added in the config file, create a config entry.
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -91,22 +89,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         lupusec_system = await hass.async_add_executor_job(
             LupusecSystem, username, password, host, name
         )
-        hass.data[DOMAIN] = lupusec_system
-    except LupusecException as ex:
-        _LOGGER.error(ex)
-
-        persistent_notification.create(
-            hass,
-            f"Error: {ex}<br />You will need to restart hass after fixing.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
+    except LupusecException:
+        _LOGGER.error("Failed to connect to Lupusec device at %s", host)
+        return False
+    except Exception as ex:  # pylint: disable=broad-except
+        _LOGGER.error(
+            "Unknown error while trying to connect to Lupusec device at %s: %s",
+            host,
+            ex,
         )
         return False
 
-    for platform in LUPUSEC_PLATFORMS:
-        hass.async_add_job(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.data[DOMAIN] = lupusec_system
+
+    await hass.config_entries.async_forward_entry_setups(entry, LUPUSEC_PLATFORMS)
 
     return True
 

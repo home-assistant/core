@@ -5,11 +5,14 @@ import logging
 import socket
 from typing import Any
 
+import lupupy
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -28,20 +31,27 @@ DATA_SCHEMA = vol.Schema(
 class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Lupusec config flow."""
 
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
         if user_input is not None:
-            host = user_input.get(CONF_HOST)
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
+            host = user_input[CONF_HOST]
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
             name = user_input.get(CONF_NAME)
 
-            errors = validate_configuration(host, username, password, name)
+            try:
+                errors = await validate_user_input(
+                    self.hass, host, username, password, name
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
             if not errors:
                 return self.async_create_entry(
@@ -61,14 +71,14 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import the yaml config."""
         self._async_abort_entries_match(user_input)
-        host = str(user_input.get(CONF_HOST))
-        username = user_input.get(CONF_USERNAME)
-        password = user_input.get(CONF_PASSWORD)
+        host = user_input[CONF_HOST]
+        username = user_input[CONF_USERNAME]
+        password = user_input[CONF_PASSWORD]
         name = user_input.get(CONF_NAME)
         try:
-            validate_configuration(host, username, password, name)
-        # except CannotConnect:
-        #     return self.async_abort(reason="cannot_connect")
+            await validate_user_input(self.hass, host, username, password, name)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
@@ -76,12 +86,14 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=host, data=user_input)
 
 
-def validate_configuration(host, username, password, name):
+async def validate_user_input(hass: HomeAssistant, host, username, password, name):
     """Validate the provided configuration."""
     errors = {}
 
     if not is_valid_host(host):
         errors[CONF_HOST] = "invalid_host"
+
+    await test_host_connection(hass, host, username, password)
 
     return errors
 
@@ -102,3 +114,19 @@ def is_valid_host(host):
             return True
         except (socket.herror, ValueError, socket.gaierror):
             return False
+
+
+async def test_host_connection(hass, host, username, password):
+    """Test if the host is reachable and is actually a Lupusec device."""
+    try:
+        await hass.async_add_executor_job(lupupy.Lupusec, username, password, host)
+    except lupupy.LupusecException:
+        _LOGGER.error("Failed to connect to Lupusec device at %s", host)
+        raise CannotConnect
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.error("Failed to connect to Lupusec device at %s", host)
+        raise CannotConnect
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
