@@ -409,7 +409,7 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
 
     return config
 
-  
+
 def register_int_list_validator(value: Any) -> Any:
     """Check if a register (CONF_ADRESS) is an int or a list having only 1 register."""
     if isinstance(value, int) and value >= 0:
