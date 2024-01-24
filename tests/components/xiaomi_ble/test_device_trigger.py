@@ -171,10 +171,10 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
 
-    # Emit motion detected event so it creates the device in the registry
+    # Creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x00"),
     )
 
     # wait for the event
@@ -199,7 +199,7 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"some": "test_trigger_button_long_press"},
+                        "data_template": {"some": "test_trigger_motion_detected"},
                     },
                 },
             ]
