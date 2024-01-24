@@ -12,7 +12,7 @@ from wyoming.client import AsyncTcpClient
 from wyoming.error import Error
 from wyoming.ping import Ping, Pong
 from wyoming.pipeline import PipelineStage, RunPipeline
-from wyoming.satellite import RunSatellite
+from wyoming.satellite import PauseSatellite, RunSatellite
 from wyoming.tts import Synthesize, SynthesizeVoice
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
@@ -76,6 +76,7 @@ class WyomingSatellite:
                 try:
                     # Check if satellite has been muted
                     while self.device.is_muted:
+                        _LOGGER.debug("Satellite is muted")
                         await self.on_muted()
                         if not self.is_running:
                             # Satellite was stopped while waiting to be unmuted
@@ -86,15 +87,23 @@ class WyomingSatellite:
                 except asyncio.CancelledError:
                     raise  # don't restart
                 except Exception:  # pylint: disable=broad-exception-caught
+                    # Ensure sensor is off (before restart)
+                    self.device.set_is_active(False)
+
+                    # Wait to restart
                     await self.on_restart()
         finally:
-            # Ensure sensor is off
+            # Ensure sensor is off (before stop)
             self.device.set_is_active(False)
 
             await self.on_stopped()
 
     def stop(self) -> None:
         """Signal satellite task to stop running."""
+        # Tell satellite to stop running
+        self._send_pause()
+
+        # Stop task loop
         self.is_running = False
 
         # Unblock waiting for unmuted
@@ -103,7 +112,7 @@ class WyomingSatellite:
     async def on_restart(self) -> None:
         """Block until pipeline loop will be restarted."""
         _LOGGER.warning(
-            "Unexpected error running satellite. Restarting in %s second(s)",
+            "Satellite has been disconnected. Reconnecting in %s second(s)",
             _RECONNECT_SECONDS,
         )
         await asyncio.sleep(_RESTART_SECONDS)
@@ -126,11 +135,22 @@ class WyomingSatellite:
 
     # -------------------------------------------------------------------------
 
+    def _send_pause(self) -> None:
+        """Send a pause message to satellite."""
+        if self._client is not None:
+            self.hass.async_create_background_task(
+                self._client.write_event(PauseSatellite().event()),
+                "pause satellite",
+            )
+
     def _muted_changed(self) -> None:
         """Run when device muted status changes."""
         if self.device.is_muted:
             # Cancel any running pipeline
             self._audio_queue.put_nowait(None)
+
+            # Send pause event so satellite can react immediately
+            self._send_pause()
 
         self._muted_changed_event.set()
         self._muted_changed_event.clear()
@@ -149,16 +169,18 @@ class WyomingSatellite:
 
     async def _connect_and_loop(self) -> None:
         """Connect to satellite and run pipelines until an error occurs."""
-        self.device.set_is_active(False)
-
         while self.is_running and (not self.device.is_muted):
             try:
                 await self._connect()
                 break
             except ConnectionError:
+                self._client = None  # client is not valid
+
                 await self.on_reconnect()
 
-        assert self._client is not None
+        if self._client is None:
+            return
+
         _LOGGER.debug("Connected to satellite")
 
         if (not self.is_running) or self.device.is_muted:

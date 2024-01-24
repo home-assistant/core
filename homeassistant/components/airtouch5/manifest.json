@@ -1,0 +1,10 @@
+{
+  "domain": "airtouch5",
+  "name": "AirTouch 5",
+  "codeowners": ["@danzel"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/airtouch5",
+  "iot_class": "local_push",
+  "loggers": ["airtouch5py"],
+  "requirements": ["airtouch5py==0.2.8"]
+}

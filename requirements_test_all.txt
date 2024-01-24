@@ -10,7 +10,7 @@ AEMET-OpenData==0.4.7
 AIOAladdinConnect==0.1.58
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.24
+AIOSomecomfort==0.0.25
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -36,7 +36,7 @@ HATasmota==0.8.0
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.1.0
+Pillow==10.2.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.7
@@ -359,7 +359,7 @@ aiounifi==69
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.4.3
+aiovodafone==0.5.4
 
 # homeassistant.components.waqi
 aiowaqi==3.0.1
@@ -387,6 +387,9 @@ airthings-cloud==0.2.0
 
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
+
+# homeassistant.components.airtouch5
+airtouch5py==0.2.8
 
 # homeassistant.components.amberelectric
 amberelectric==1.0.4
@@ -427,7 +430,7 @@ arcam-fmj==1.4.0
 async-upnp-client==0.38.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.4.2
+asyncsleepiq==1.5.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
@@ -812,13 +815,13 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.2.0
+habluetooth==2.4.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.75.1
 
 # homeassistant.components.conversation
-hassil==1.5.2
+hassil==1.5.3
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -854,9 +857,6 @@ homeconnect==0.7.2
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.16
 
-# homeassistant.components.home_plus_control
-homepluscontrol==0.0.5
-
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
 
@@ -872,6 +872,7 @@ iaqualink==0.5.0
 # homeassistant.components.ibeacon
 ibeacon-ble==1.0.1
 
+# homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 ical==6.1.1
@@ -919,7 +920,7 @@ jellyfin-apiclient-python==1.9.2
 jsonpath==0.82.2
 
 # homeassistant.components.justnimbus
-justnimbus==0.6.0
+justnimbus==0.7.3
 
 # homeassistant.components.kegtron
 kegtron-ble==0.4.0
@@ -1125,7 +1126,7 @@ open-meteo==0.3.1
 openai==1.3.8
 
 # homeassistant.components.openerz
-openerz-api==0.2.0
+openerz-api==0.3.0
 
 # homeassistant.components.openhome
 openhomedevice==2.2.0
@@ -1481,7 +1482,7 @@ pymeteoclimatic==0.1.0
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.5.4
+pymodbus==3.6.3
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1673,6 +1674,9 @@ python-ecobee-api==0.2.17
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12
 
+# homeassistant.components.analytics_insights
+python-homeassistant-analytics==0.6.0
+
 # homeassistant.components.homewizard
 python-homewizard-energy==4.1.0
 
@@ -1720,7 +1724,7 @@ python-roborock==0.39.0
 python-smarttub==0.0.36
 
 # homeassistant.components.songpal
-python-songpal==0.16
+python-songpal==0.16.1
 
 # homeassistant.components.tado
 python-tado==0.17.4
@@ -2144,7 +2148,7 @@ wled==0.17.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==1.5.0
+wyoming==1.5.2
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
