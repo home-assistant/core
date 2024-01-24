@@ -270,6 +270,7 @@ FLOWS = {
         "launch_library",
         "laundrify",
         "ld2410_ble",
+        "leaone",
         "led_ble",
         "lg_soundbar",
         "lidarr",
