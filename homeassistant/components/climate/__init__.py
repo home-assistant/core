@@ -300,13 +300,25 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
 
-    __mod_supported_features: ClimateEntityFeature | None = None
+    __mod_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
+
+    def __getattribute__(self, __name: str) -> Any:
+        """Get attribute.
+
+        Modify return of `supported_features` to
+        return `_mod_supported_features` instead.
+        """
+        if __name != "supported_features":
+            return super().__getattribute__(__name)
+        return self.__getattribute__("_mod_supported_features")
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
         if "supported_features" in cls.__dict__:
             cls.__mod_supported_features = getattr(cls, "supported_features")
+        elif "_attr_supported_features" in cls.__dict__:
+            cls.__mod_supported_features = getattr(cls, "_attr_supported_features")
 
     @callback
     def add_to_platform_start(
@@ -335,22 +347,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
         # which should be removed in 2024.8.
-        features = ClimateEntityFeature(0)
         if HVACMode.OFF in self.hvac_modes:
-            features |= ClimateEntityFeature.TURN_OFF
             _report_turn_on_off("TURN_OFF")
+            self.__mod_supported_features |= ClimateEntityFeature.TURN_OFF
         for mode in self.hvac_modes:
             if mode != HVACMode.OFF:
-                features |= ClimateEntityFeature.TURN_ON
                 _report_turn_on_off("TURN_ON")
+                self.__mod_supported_features |= ClimateEntityFeature.TURN_ON
                 break
-        if self.__mod_supported_features is not None:
-            new_supported_features = self.__mod_supported_features
-            new_supported_features |= features
-        else:
-            new_supported_features = self._attr_supported_features
-            new_supported_features |= features
-        setattr(ClimateEntity, "supported_features", new_supported_features)
 
     @final
     @property
@@ -720,30 +724,19 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if HVACMode.OFF in self.hvac_modes:
             await self.async_set_hvac_mode(HVACMode.OFF)
 
-    @property
+    @cached_property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 
-    @supported_features.setter
-    def supported_features(self, new_features: ClimateEntityFeature) -> None:
+    @cached_property
+    def _mod_supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features.
 
-        For backwards compatibility for turn_on/turn_off
-        ClimateEntityFeatures
+        Provided for backwards compatibility.
+        Remove this in 2024.8 or later.
         """
-        self.__mod_supported_features = new_features
-
-    @supported_features.getter
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features.
-
-        For backwards compatibility for turn_on/turn_off
-        ClimateEntityFeatures
-        """
-        if mod_supported_features := self.__mod_supported_features:
-            return mod_supported_features
-        return ClimateEntityFeature(0)
+        return self.__mod_supported_features
 
     @property
     def supported_features_compat(self) -> ClimateEntityFeature:
