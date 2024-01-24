@@ -1056,7 +1056,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         effect: str | None,
     ) -> None:
         """Validate the color mode."""
-        if color_mode is None:
+        if color_mode is None or color_mode == ColorMode.UNKNOWN:
             # The light is turned off
             return
 
