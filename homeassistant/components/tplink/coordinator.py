@@ -1,6 +1,7 @@
 """Component to embed TP-Link smart home devices."""
 from __future__ import annotations
 
+import contextlib
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
@@ -61,10 +62,9 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex
         if self.has_emeter:
-            try:  # noqa: SIM105 - suppress is much slower
+            with contextlib.suppress(AttributeError):
+                # clear cached property on update
                 del self.emeter_realtime
-            except AttributeError:
-                pass
 
     @cached_property
     def emeter_realtime(self) -> EmeterStatus | None:
@@ -74,6 +74,4 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         to the state machine. Since its the same object until the
         next update, we can cache it.
         """
-        if not self.has_emeter:
-            return None
         return self.device.emeter_realtime  # type: ignore[no-any-return]
