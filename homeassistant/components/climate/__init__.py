@@ -330,14 +330,22 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
 
-        def _report_turn_on_off(feature: str) -> None:
+        def _report_turn_on_off(feature: str, method: str) -> None:
             """Log warning not implemented turn on/off feature."""
             report_issue = self._suggest_report_issue()
+            if feature.startswith("TURN"):
+                message = (
+                    "Entity %s (%s) does not set ClimateEntityFeature.%s"
+                    " but implements the %s method. Please %s"
+                )
+            else:
+                message = (
+                    "Entity %s (%s) implements HVACMode.%s and therefore implicitly"
+                    " implements the %s method without setting the proper"
+                    " ClimateEntityFeature. Please %s"
+                )
             _LOGGER.warning(
-                (
-                    "Entity %s (%s) has not implemented ClimateEntityFeature.%s supported feature"
-                    " but is implementing the %s method. Please %s"
-                ),
+                message,
                 self.entity_id,
                 type(self),
                 feature,
@@ -347,24 +355,38 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
         # This should be removed in 2025.1.
-        if (
-            HVACMode.OFF in self.hvac_modes
-            or type(self).async_turn_off is not ClimateEntity.async_turn_off
-            or type(self).turn_off is not ClimateEntity.turn_off
-        ):
-            _report_turn_on_off("TURN_OFF")
-            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                ClimateEntityFeature.TURN_OFF
-            )
-        if (
-            len(self.hvac_modes) > 1
-            or type(self).async_turn_on is not ClimateEntity.async_turn_on
-            or type(self).turn_on is not ClimateEntity.turn_on
-        ):
-            _report_turn_on_off("TURN_ON")
-            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                ClimateEntityFeature.TURN_ON
-            )
+        if not self.supported_features & ClimateEntityFeature.TURN_OFF:
+            if HVACMode.OFF in self.hvac_modes and (
+                type(self).async_turn_off is not ClimateEntity.async_turn_off
+                or type(self).turn_off is not ClimateEntity.turn_off
+            ):
+                _report_turn_on_off("TURN_OFF", "turn_off")
+                self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                    ClimateEntityFeature.TURN_OFF
+                )
+            elif HVACMode.OFF in self.hvac_modes:
+                _report_turn_on_off("off", "turn_off")
+                self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                    ClimateEntityFeature.TURN_OFF
+                )
+
+        if not self.supported_features & ClimateEntityFeature.TURN_ON:
+            for _mode in self.hvac_modes:
+                if _mode != HVACMode.OFF:
+                    if (
+                        type(self).async_turn_on is not ClimateEntity.async_turn_on
+                        or type(self).turn_on is not ClimateEntity.turn_on
+                    ):
+                        _report_turn_on_off("TURN_ON", "turn_on")
+                        self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                            ClimateEntityFeature.TURN_ON
+                        )
+                    else:
+                        _report_turn_on_off(_mode, "turn_on")
+                        self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                            ClimateEntityFeature.TURN_ON
+                        )
+                    break
 
     @final
     @property
