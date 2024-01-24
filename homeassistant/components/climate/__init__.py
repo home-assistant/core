@@ -310,13 +310,13 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if __name != "supported_features":
             return super().__getattribute__(__name)
-        _supported_features = super().__getattribute__(__name)
 
         # Implements check for deprecated use of ClimateEntityFeature as int
+        _supported_features = super().__getattribute__(__name)
         if type(_supported_features) is int:  # noqa: E721
             new_features = ClimateEntityFeature(_supported_features)
             self._report_deprecated_supported_features_values(new_features)
-        return super().__getattribute__(__name) | super().__getattribute__(
+        return _supported_features | super().__getattribute__(
             "_ClimateEntity__mod_supported_features"
         )
 
@@ -336,7 +336,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             _LOGGER.warning(
                 (
                     "Entity %s (%s) has not implemented ClimateEntityFeature.%s supported feature"
-                    " but is implementing the %s service call. Please %s"
+                    " but is implementing the %s method. Please %s"
                 ),
                 self.entity_id,
                 type(self),
@@ -347,15 +347,17 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
         # This should be removed in 2025.1.
-        if type(self).async_turn_off is not ClimateEntity.async_turn_off or hasattr(
-            self, "turn_off"
+        if (
+            type(self).async_turn_off is not ClimateEntity.async_turn_off
+            or type(self).turn_off is not ClimateEntity.turn_off
         ):
             _report_turn_on_off("TURN_OFF")
             self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                 ClimateEntityFeature.TURN_OFF
             )
-        if type(self).async_turn_on is not ClimateEntity.async_turn_on or hasattr(
-            self, "turn_on"
+        if (
+            type(self).async_turn_on is not ClimateEntity.async_turn_on
+            or type(self).turn_on is not ClimateEntity.turn_on
         ):
             _report_turn_on_off("TURN_ON")
             self.__mod_supported_features |= (  # pylint: disable=unused-private-member
@@ -699,9 +701,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Turn auxiliary heater off."""
         await self.hass.async_add_executor_job(self.turn_aux_heat_off)
 
+    def turn_on(self) -> None:
+        """Turn the entity on."""
+        raise NotImplementedError
+
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        if hasattr(self, "turn_on"):
+        # Forward to self.turn_on if it's been overridden.
+        if type(self).turn_on is not ClimateEntity.turn_on:
             await self.hass.async_add_executor_job(self.turn_on)
             return
 
@@ -720,9 +727,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.async_set_hvac_mode(mode)
             break
 
+    def turn_off(self) -> None:
+        """Turn the entity off."""
+        raise NotImplementedError
+
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
-        if hasattr(self, "turn_off"):
+        # Forward to self.turn_on if it's been overridden.
+        if type(self).turn_off is not ClimateEntity.turn_off:
             await self.hass.async_add_executor_job(self.turn_off)
             return
 

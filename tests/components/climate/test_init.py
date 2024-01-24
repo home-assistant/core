@@ -432,14 +432,14 @@ async def test_warning_not_implemented_turn_on_off_feature(
         "Entity climate.test (<class 'tests.components.climate.test_init."
         "test_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
         " has not implemented ClimateEntityFeature.TURN_OFF supported feature but is"
-        " implementing the turn_off service call. Please report it to the author of the"
+        " implementing the turn_off method. Please report it to the author of the"
         " 'test' custom integration" in caplog.text
     )
     assert (
         "Entity climate.test (<class 'tests.components.climate.test_init."
         "test_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
         " has not implemented ClimateEntityFeature.TURN_ON supported feature but is"
-        " implementing the turn_on service call. Please report it to the author of the"
+        " implementing the turn_on method. Please report it to the author of the"
         " 'test' custom integration" in caplog.text
     )
 
