@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareService import ViCareDeviceAccessor, readFeature
 
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -18,13 +19,15 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 class MockPyViCare:
     """Mocked PyVicare class based on a json dump."""
 
-    def __init__(self, fixtures: list[str]) -> None:
+    def __init__(self, fixtures: list[tuple[list[str], str]]) -> None:
         """Init a single device from json dump."""
         self.devices = []
         for idx, fixture in enumerate(fixtures):
             self.devices.append(
                 PyViCareDeviceConfig(
-                    MockViCareService(fixture),
+                    MockViCareService(
+                        f"installation{idx}", f"gateway{idx}", f"device{idx}", fixture
+                    ),
                     f"deviceId{idx}",
                     f"model{idx}",
                     f"online{idx}",
@@ -35,10 +38,28 @@ class MockPyViCare:
 class MockViCareService:
     """PyVicareService mock using a json dump."""
 
-    def __init__(self, fixture: str) -> None:
+    def __init__(
+        self,
+        installation_id: str,
+        gateway_id: str,
+        device_id: str,
+        fixture: tuple[list[str], str],
+    ) -> None:
         """Initialize the mock from a json dump."""
-        self._test_data = load_json_object_fixture(fixture)
+        self._test_data = load_json_object_fixture(fixture[1])
         self.fetch_all_features = Mock(return_value=self._test_data)
+        self.roles = fixture[0]
+        self.accessor = ViCareDeviceAccessor(installation_id, gateway_id, device_id)
+
+    def hasRoles(self, requested_roles: list[str]) -> bool:
+        """Return true if requested roles are assigned."""
+        return len(requested_roles) > 0 and set(requested_roles).issubset(
+            set(self.roles)
+        )
+
+    def getProperty(self, property_name: str):
+        """Read a property from json dump."""
+        return readFeature(self._test_data["data"], property_name)
 
 
 @pytest.fixture
@@ -57,7 +78,9 @@ async def mock_vicare_gas_boiler(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> AsyncGenerator[MockConfigEntry, None]:
     """Return a mocked ViCare API representing a single gas boiler device."""
-    fixtures = ["vicare/Vitodens300W.json"]
+    fixtures: list[tuple[list[str], str]] = [
+        (["type:boiler"], "vicare/Vitodens300W.json")
+    ]
     with patch(
         f"{MODULE}.vicare_login",
         return_value=MockPyViCare(fixtures),
