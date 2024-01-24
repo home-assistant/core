@@ -3,6 +3,7 @@
 import socket
 
 import aiohttp
+from yalexs.util import get_ssl_context
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -21,4 +22,6 @@ def async_create_august_clientsession(hass: HomeAssistant) -> aiohttp.ClientSess
     # When https://github.com/aio-libs/aiohttp/issues/4451 is implemented
     # we can allow IPv6 again
     #
-    return aiohttp_client.async_create_clientsession(hass, family=socket.AF_INET)
+    return aiohttp_client.async_create_clientsession(
+        hass, verify_ssl=get_ssl_context(), family=socket.AF_INET
+    )
