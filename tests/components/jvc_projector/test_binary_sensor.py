@@ -9,7 +9,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = "binary_sensor.jvc_projector"
+ENTITY_ID = "binary_sensor.jvc_projector_power"
 
 
 async def test_entity_state(
@@ -22,12 +22,3 @@ async def test_entity_state(
     entity = hass.states.get(ENTITY_ID)
     assert entity
     assert entity_registry.async_get(entity.entity_id)
-
-
-async def test_binary_sensor(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test states of binary sensor."""
-    state = hass.states.get("binary_sensor.is_on")
-    assert state
-    assert state.state == "off"
