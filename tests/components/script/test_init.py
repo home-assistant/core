@@ -683,6 +683,8 @@ async def test_extraction_functions_not_setup(hass: HomeAssistant) -> None:
     assert script.devices_in_script(hass, "script.test") == []
     assert script.scripts_with_entity(hass, "light.in_both") == []
     assert script.entities_in_script(hass, "script.test") == []
+    assert script.scripts_with_floor(hass, "floor-in-both") == []
+    assert script.floors_in_script(hass, "script.test") == []
 
 
 async def test_extraction_functions_unknown_script(hass: HomeAssistant) -> None:
@@ -711,6 +713,8 @@ async def test_extraction_functions_unavailable_script(hass: HomeAssistant) -> N
     assert script.devices_in_script(hass, entity_id) == []
     assert script.scripts_with_entity(hass, "light.in_both") == []
     assert script.entities_in_script(hass, entity_id) == []
+    assert script.scripts_with_floor(hass, "floor-in-both") == []
+    assert script.floors_in_script(hass, entity_id) == []
 
 
 async def test_extraction_functions(
@@ -754,6 +758,10 @@ async def test_extraction_functions(
                         {
                             "service": "test.test",
                             "target": {"area_id": "area-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"floor_id": "floor-in-both"},
                         },
                     ]
                 },
@@ -803,6 +811,14 @@ async def test_extraction_functions(
                             "service": "test.test",
                             "target": {"area_id": "area-in-last"},
                         },
+                        {
+                            "service": "test.test",
+                            "target": {"floor_id": "floor-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"floor_id": "floor-in-last"},
+                        },
                     ],
                 },
             }
@@ -833,6 +849,14 @@ async def test_extraction_functions(
     assert set(script.areas_in_script(hass, "script.test3")) == {
         "area-in-both",
         "area-in-last",
+    }
+    assert set(script.scripts_with_floor(hass, "floor-in-both")) == {
+        "script.test1",
+        "script.test3",
+    }
+    assert set(script.floors_in_script(hass, "script.test3")) == {
+        "floor-in-both",
+        "floor-in-last",
     }
     assert script.blueprint_in_script(hass, "script.test3") is None
 
