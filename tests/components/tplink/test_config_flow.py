@@ -10,6 +10,7 @@ from homeassistant.components.tplink import (
     DOMAIN,
     AuthenticationException,
     Credentials,
+    DeviceConfig,
     SmartDeviceException,
 )
 from homeassistant.components.tplink.const import CONF_DEVICE_CONFIG
@@ -36,6 +37,7 @@ from . import (
     MAC_ADDRESS,
     MAC_ADDRESS2,
     MODULE,
+    _mocked_bulb,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
@@ -751,9 +753,8 @@ async def test_discovery_with_ip_change(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 0
-    # [result] = flows
-    # assert result["step_id"] == "reauth_confirm"
     assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_LEGACY
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG].get(CONF_HOST) == "127.0.0.1"
 
     discovery_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -770,6 +771,22 @@ async def test_discovery_with_ip_change(
     assert discovery_result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+
+    config = DeviceConfig.from_dict(DEVICE_CONFIG_DICT_AUTH)
+
+    mock_connect["connect"].reset_mock(side_effect=True)
+    bulb = _mocked_bulb(
+        device_config=config,
+        mac=mock_config_entry.unique_id,
+    )
+    mock_connect["connect"].return_value = bulb
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == config_entries.ConfigEntryState.LOADED
+    # Check that init set the new host correctly before calling connect
+    assert config.host == "127.0.0.1"
+    config.host = "127.0.0.2"
+    mock_connect["connect"].assert_awaited_once_with(config=config)
 
 
 async def test_reauth(
