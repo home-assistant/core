@@ -257,13 +257,13 @@ async def test_load_floors(
     assert len(registry2.floors) == 2
     assert list(floor_registry.floors) == list(registry2.floors)
 
-    floor1_registry2 = registry2.async_get_or_create("First floor")
+    floor1_registry2 = registry2.async_get_floor_by_name("First floor")
     assert floor1_registry2.floor_id == floor1.floor_id
     assert floor1_registry2.name == floor1.name
     assert floor1_registry2.icon == floor1.icon
     assert floor1_registry2.normalized_name == floor1.normalized_name
 
-    floor2_registry2 = registry2.async_get_or_create("Second floor")
+    floor2_registry2 = registry2.async_get_floor_by_name("Second floor")
     assert floor2_registry2.floor_id == floor2.floor_id
     assert floor2_registry2.name == floor2.name
     assert floor2_registry2.icon == floor2.icon
@@ -298,16 +298,13 @@ async def test_getting_floor(
     hass: HomeAssistant, floor_registry: fr.FloorRegistry
 ) -> None:
     """Make sure we can get the floors by name."""
-    floor = floor_registry.async_get_or_create("First floor")
-    floor2 = floor_registry.async_get_or_create("first floor")
-    floor3 = floor_registry.async_get_or_create("first    floor")
+    floor = floor_registry.async_create("First floor")
+    floor2 = floor_registry.async_get_floor_by_name("first floor")
+    floor3 = floor_registry.async_get_floor_by_name("first    floor")
 
     assert floor == floor2
     assert floor == floor3
     assert floor2 == floor3
-
-    get_floor = floor_registry.async_get_floor_by_name("F I R S T   F L O O R")
-    assert get_floor == floor
 
     get_floor = floor_registry.async_get_floor(floor.floor_id)
     assert get_floor == floor
@@ -336,7 +333,7 @@ async def test_floor_removed_from_areas(
     floor = floor_registry.async_create("First floor")
     assert len(floor_registry.floors) == 1
 
-    entry = area_registry.async_get_or_create(name="Kitchen")
+    entry = area_registry.async_create(name="Kitchen")
     area_registry.async_update(entry.id, floor_id=floor.floor_id)
 
     entries = ar.async_entries_for_floor(area_registry, floor.floor_id)

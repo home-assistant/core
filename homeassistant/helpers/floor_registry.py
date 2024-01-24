@@ -49,10 +49,15 @@ class FloorRegistry:
         """Get floor by id."""
         return self.floors.get(floor_id)
 
+    @staticmethod
+    def _normalize_floor_name(floor_name: str) -> str:
+        """Normalize an floor name by removing whitespace and case folding."""
+        return floor_name.casefold().replace(" ", "")
+
     @callback
     def async_get_floor_by_name(self, name: str) -> FloorEntry | None:
         """Get floor by name."""
-        normalized_name = normalize_floor_name(name)
+        normalized_name = self._normalize_floor_name(name)
         if normalized_name not in self._normalized_name_floor_idx:
             return None
         return self.floors[self._normalized_name_floor_idx[normalized_name]]
@@ -61,13 +66,6 @@ class FloorRegistry:
     def async_list_floors(self) -> Iterable[FloorEntry]:
         """Get all floors."""
         return self.floors.values()
-
-    @callback
-    def async_get_or_create(self, name: str) -> FloorEntry:
-        """Get or create an floor."""
-        if floor := self.async_get_floor_by_name(name):
-            return floor
-        return self.async_create(name)
 
     @callback
     def _generate_id(self, name: str) -> str:
@@ -87,10 +85,12 @@ class FloorRegistry:
         icon: str | None = None,
     ) -> FloorEntry:
         """Create a new floor."""
-        if self.async_get_floor_by_name(name):
-            raise ValueError(f"The name {name} ({normalized_name}) is already in use")
+        if floor := self.async_get_floor_by_name(name):
+            raise ValueError(
+                f"The name {name} ({floor.normalized_name}) is already in use"
+            )
 
-        normalized_name = normalize_floor_name(name)
+        normalized_name = self._normalize_floor_name(name)
 
         floor = FloorEntry(
             icon=icon,
@@ -140,7 +140,7 @@ class FloorRegistry:
 
         normalized_name = None
         if name is not UNDEFINED and name != old.name:
-            normalized_name = normalize_floor_name(name)
+            normalized_name = self._normalize_floor_name(name)
             if normalized_name != old.normalized_name and self.async_get_floor_by_name(
                 name
             ):
@@ -174,7 +174,7 @@ class FloorRegistry:
 
         if data is not None:
             for floor in data["floors"]:
-                normalized_name = normalize_floor_name(floor["name"])
+                normalized_name = self._normalize_floor_name(floor["name"])
                 floors[floor["floor_id"]] = FloorEntry(
                     icon=floor["icon"],
                     floor_id=floor["floor_id"],
@@ -216,8 +216,3 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = FloorRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
-
-
-def normalize_floor_name(floor_name: str) -> str:
-    """Normalize an floor name by removing whitespace and case folding."""
-    return floor_name.casefold().replace(" ", "")
