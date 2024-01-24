@@ -8,12 +8,11 @@ from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
     ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
     SCAN_INTERVAL,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_fire_time_changed

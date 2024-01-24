@@ -23,7 +23,7 @@ from .const import (
     WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoCameraLight(NetatmoBase, LightEntity):
+class NetatmoCameraLight(NetatmoBaseEntity, LightEntity):
     """Representation of a Netatmo Presence camera light."""
 
     _attr_has_entity_name = True
@@ -150,7 +150,7 @@ class NetatmoCameraLight(NetatmoBase, LightEntity):
         self._is_on = bool(self._camera.floodlight == "on")
 
 
-class NetatmoLight(NetatmoBase, LightEntity):
+class NetatmoLight(NetatmoBaseEntity, LightEntity):
     """Representation of a dimmable light by Legrand/BTicino."""
 
     def __init__(

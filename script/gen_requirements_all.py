@@ -175,13 +175,12 @@ get-mac==1000000000.0.0
 # In order to do so, we need to constrain the version.
 charset-normalizer==3.2.0
 
-# lxml 5.0.0 currently does not build on alpine 3.18
-# https://bugs.launchpad.net/lxml/+bug/2047718
-lxml==4.9.4
-
 # dacite: Ensure we have a version that is able to handle type unions for
 # Roborock, NAM, Brother, and GIOS.
 dacite>=1.7.0
+
+# Musle wheels for pandas 2.2.0 cannot be build for any architecture.
+pandas==2.1.4
 """
 
 GENERATED_MESSAGE = (

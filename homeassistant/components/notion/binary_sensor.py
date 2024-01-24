@@ -30,23 +30,16 @@ from .const import (
     SENSOR_SMOKE_CO,
     SENSOR_WINDOW_HINGED,
 )
-from .model import NotionEntityDescriptionMixin
+from .model import NotionEntityDescription
 
 
-@dataclass(frozen=True)
-class NotionBinarySensorDescriptionMixin:
-    """Define an entity description mixin for binary and regular sensors."""
-
-    on_state: Literal["alarm", "leak", "low", "not_missing", "open"]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class NotionBinarySensorDescription(
-    BinarySensorEntityDescription,
-    NotionBinarySensorDescriptionMixin,
-    NotionEntityDescriptionMixin,
+    BinarySensorEntityDescription, NotionEntityDescription
 ):
     """Describe a Notion binary sensor."""
+
+    on_state: Literal["alarm", "leak", "low", "not_missing", "open"]
 
 
 BINARY_SENSOR_DESCRIPTIONS = (
