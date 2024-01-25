@@ -57,11 +57,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=host,
-                    data={
-                        CONF_HOST: host,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    },
+                    data=user_input,
                 )
 
         return self.async_show_form(
