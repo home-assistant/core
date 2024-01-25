@@ -60,10 +60,7 @@ async def test_create_floor(
 ) -> None:
     """Test create entry."""
     await client.send_json(
-        {
-            "id": 1,
-            "type": "config/floor_registry/create",
-        }
+        {"id": 1, "type": "config/floor_registry/create", "name": "First floor"}
     )
 
     msg = await client.receive_json()

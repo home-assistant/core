@@ -4968,13 +4968,13 @@ async def test_floors(
     assert info.rate_limit is None
 
     # Test one floor
-    floor1 = floor_registry.async_get_or_create("First floor")
+    floor1 = floor_registry.async_create("First floor")
     info = render_to_info(hass, "{{ floors() }}")
     assert_result_info(info, [floor1.floor_id])
     assert info.rate_limit is None
 
     # Test multiple floors
-    floor2 = floor_registry.async_get_or_create("Second floor")
+    floor2 = floor_registry.async_create("Second floor")
     info = render_to_info(hass, "{{ floors() }}")
     assert_result_info(info, [floor1.floor_id, floor2.floor_id])
     assert info.rate_limit is None
@@ -5005,7 +5005,7 @@ async def test_floor_id(
     assert info.rate_limit is None
 
     # Test with an actual floor
-    floor = floor_registry.async_get_or_create("First floor")
+    floor = floor_registry.async_create("First floor")
     info = render_to_info(hass, "{{ floor_id('First floor') }}")
     assert_result_info(info, floor.floor_id)
     assert info.rate_limit is None
@@ -5039,7 +5039,7 @@ async def test_floor_name(
     assert info.rate_limit is None
 
     # Test existing floor ID
-    floor = floor_registry.async_get_or_create("First floor")
+    floor = floor_registry.async_create("First floor")
     info = render_to_info(hass, f"{{{{ floor_name('{floor.floor_id}') }}}}")
     assert_result_info(info, floor.name)
     assert info.rate_limit is None
@@ -5074,7 +5074,7 @@ async def test_floor_areas(
     assert_result_info(info, [])
     assert info.rate_limit is None
 
-    floor = floor_registry.async_get_or_create("First floor")
+    floor = floor_registry.async_create("First floor")
     area = area_registry.async_create("Living room")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
 

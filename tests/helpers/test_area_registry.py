@@ -363,8 +363,8 @@ async def test_removing_floors(
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Make sure we can clear floors."""
-    first_floor = floor_registry.async_get_or_create("First floor")
-    second_floor = floor_registry.async_get_or_create("Second floor")
+    first_floor = floor_registry.async_create("First floor")
+    second_floor = floor_registry.async_create("Second floor")
 
     kitchen = area_registry.async_create("Kitchen")
     kitchen = area_registry.async_update(kitchen.id, floor_id=first_floor.floor_id)
@@ -386,8 +386,8 @@ async def test_entries_for_floor(
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test getting area entries by floor."""
-    first_floor = floor_registry.async_get_or_create("First floor")
-    second_floor = floor_registry.async_get_or_create("Second floor")
+    first_floor = floor_registry.async_create("First floor")
+    second_floor = floor_registry.async_create("Second floor")
 
     kitchen = area_registry.async_create("Kitchen")
     kitchen = area_registry.async_update(kitchen.id, floor_id=first_floor.floor_id)
