@@ -177,15 +177,19 @@ async def mock_dashboard(hass):
 class MockESPHomeDevice:
     """Mock an esphome device."""
 
-    def __init__(self, entry: MockConfigEntry) -> None:
+    def __init__(self, entry: MockConfigEntry, client: APIClient) -> None:
         """Init the mock."""
         self.entry = entry
+        self.client = client
         self.state_callback: Callable[[EntityState], None]
         self.service_call_callback: Callable[[HomeassistantServiceCall], None]
         self.on_disconnect: Callable[[bool], None]
         self.on_connect: Callable[[bool], None]
         self.home_assistant_state_subscription_callback: Callable[
             [str, str | None], None
+        ]
+        self.list_entities_services_callback: Callable[
+            [tuple[list[EntityInfo], list[UserService]]], None
         ]
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
@@ -197,6 +201,12 @@ class MockESPHomeDevice:
     ) -> None:
         """Set the service call callback."""
         self.service_call_callback = callback
+
+    def set_list_entities_services_callback(
+        self, callback: Callable[[tuple[list[EntityInfo], list[UserService]]], None]
+    ) -> None:
+        """Set the list_entities_services callback."""
+        self.list_entities_services_callback = callback
 
     def mock_service_call(self, service_call: HomeassistantServiceCall) -> None:
         """Mock a service call."""
@@ -258,7 +268,7 @@ async def _mock_generic_device_entry(
         )
         entry.add_to_hass(hass)
 
-    mock_device = MockESPHomeDevice(entry)
+    mock_device = MockESPHomeDevice(entry, mock_client)
 
     default_device_info = {
         "name": "test",
