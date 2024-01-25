@@ -46,6 +46,20 @@
           "description": "The ScreenLogic color mode to set."
         }
       }
+    },
+    "start_super_chlorination": {
+      "name": "Start Super Chlorination",
+      "description": "Begins super chlorination, running for the specified period or 24 hours if none is specified.",
+      "fields": {
+        "runtime": {
+          "name": "Run Time",
+          "description": "Number of hours for super chlorination to run."
+        }
+      }
+    },
+    "stop_super_chlorination": {
+      "name": "Stop Super Chlorination",
+      "description": "Stops super chlorination."
     }
   }
 }

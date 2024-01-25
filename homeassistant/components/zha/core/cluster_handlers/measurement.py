@@ -14,7 +14,7 @@ from ..const import (
     REPORT_CONFIG_MIN_INT,
 )
 from . import AttrReportConfig, ClusterHandler
-from .helpers import is_hue_motion_sensor
+from .helpers import is_hue_motion_sensor, is_sonoff_presence_sensor
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -27,7 +27,10 @@ class FlowMeasurement(ClusterHandler):
     """Flow Measurement cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=measurement.FlowMeasurement.AttributeDefs.measured_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -38,7 +41,10 @@ class IlluminanceLevelSensing(ClusterHandler):
     """Illuminance Level Sensing cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="level_status", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=measurement.IlluminanceLevelSensing.AttributeDefs.level_status.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -49,7 +55,10 @@ class IlluminanceMeasurement(ClusterHandler):
     """Illuminance Measurement cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=measurement.IlluminanceMeasurement.AttributeDefs.measured_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -60,7 +69,10 @@ class OccupancySensing(ClusterHandler):
     """Occupancy Sensing cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="occupancy", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(
+            attr=measurement.OccupancySensing.AttributeDefs.occupancy.name,
+            config=REPORT_CONFIG_IMMEDIATE,
+        ),
     )
 
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
@@ -69,6 +81,10 @@ class OccupancySensing(ClusterHandler):
         if is_hue_motion_sensor(self):
             self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
             self.ZCL_INIT_ATTRS["sensitivity"] = True
+        if is_sonoff_presence_sensor(self):
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
+            self.ZCL_INIT_ATTRS["ultrasonic_o_to_u_delay"] = True
+            self.ZCL_INIT_ATTRS["ultrasonic_u_to_o_threshold"] = True
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
@@ -78,7 +94,10 @@ class PressureMeasurement(ClusterHandler):
     """Pressure measurement cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=measurement.PressureMeasurement.AttributeDefs.measured_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -90,7 +109,7 @@ class RelativeHumidity(ClusterHandler):
 
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr="measured_value",
+            attr=measurement.RelativeHumidity.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
         ),
     )
@@ -104,7 +123,7 @@ class SoilMoisture(ClusterHandler):
 
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr="measured_value",
+            attr=measurement.SoilMoisture.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
         ),
     )
@@ -116,7 +135,7 @@ class LeafWetness(ClusterHandler):
 
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr="measured_value",
+            attr=measurement.LeafWetness.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
         ),
     )
@@ -130,7 +149,7 @@ class TemperatureMeasurement(ClusterHandler):
 
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr="measured_value",
+            attr=measurement.TemperatureMeasurement.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
         ),
     )
@@ -144,7 +163,7 @@ class CarbonMonoxideConcentration(ClusterHandler):
 
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr="measured_value",
+            attr=measurement.CarbonMonoxideConcentration.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
         ),
     )
@@ -158,7 +177,7 @@ class CarbonDioxideConcentration(ClusterHandler):
 
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr="measured_value",
+            attr=measurement.CarbonDioxideConcentration.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
         ),
     )
@@ -170,7 +189,7 @@ class PM25(ClusterHandler):
 
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr="measured_value",
+            attr=measurement.PM25.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.1),
         ),
     )
@@ -184,7 +203,7 @@ class FormaldehydeConcentration(ClusterHandler):
 
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr="measured_value",
+            attr=measurement.FormaldehydeConcentration.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
         ),
     )

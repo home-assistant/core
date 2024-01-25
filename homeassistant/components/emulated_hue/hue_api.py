@@ -386,7 +386,7 @@ class HueOneLightChangeView(HomeAssistantView):
         # Get the entity's supported features
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if entity.domain == light.DOMAIN:
-            color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+            color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) or []
 
         # Parse the request
         parsed: dict[str, Any] = {
@@ -765,7 +765,7 @@ def _entity_unique_id(entity_id: str) -> str:
 
 def state_to_json(config: Config, state: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
-    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) or []
     unique_id = _entity_unique_id(state.entity_id)
     state_dict = get_entity_state_dict(config, state)
 

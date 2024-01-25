@@ -16,25 +16,12 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN
 
-_EntityDescriptionT = TypeVar("_EntityDescriptionT", bound=EntityDescription)
 CapabilityT = TypeVar("CapabilityT")
 EventT = TypeVar("EventT", bound=Event)
 
 
-@dataclass(kw_only=True, frozen=True)
-class EcovacsEntityDescription(
-    EntityDescription,
-    Generic[CapabilityT],
-):
-    """Ecovacs entity description."""
-
-    capability_fn: Callable[[Capabilities], CapabilityT | None]
-
-
-class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
+class EcovacsEntity(Entity, Generic[CapabilityT]):
     """Ecovacs entity."""
-
-    entity_description: _EntityDescriptionT
 
     _attr_should_poll = False
     _attr_has_entity_name = True
@@ -106,16 +93,26 @@ class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
             self._device.events.request_refresh(event_type)
 
 
-class EcovacsDescriptionEntity(EcovacsEntity[CapabilityT, _EntityDescriptionT]):
+class EcovacsDescriptionEntity(EcovacsEntity[CapabilityT]):
     """Ecovacs entity."""
 
     def __init__(
         self,
         device: Device,
         capability: CapabilityT,
-        entity_description: _EntityDescriptionT,
+        entity_description: EntityDescription,
         **kwargs: Any,
     ) -> None:
         """Initialize entity."""
         self.entity_description = entity_description
         super().__init__(device, capability, **kwargs)
+
+
+@dataclass(kw_only=True, frozen=True)
+class EcovacsCapabilityEntityDescription(
+    EntityDescription,
+    Generic[CapabilityT],
+):
+    """Ecovacs entity description."""
+
+    capability_fn: Callable[[Capabilities], CapabilityT | None]
