@@ -372,7 +372,8 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_apparent_power_l1_va",
-        translation_key="active_apparent_power_l1_va",
+        translation_key="active_apparent_power_phase_va",
+        translation_placeholders={"phase": "1"},
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -382,7 +383,8 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_apparent_power_l2_va",
-        translation_key="active_apparent_power_l2_va",
+        translation_key="active_apparent_power_phase_va",
+        translation_placeholders={"phase": "2"},
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -392,7 +394,8 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_apparent_power_l3_va",
-        translation_key="active_apparent_power_l3_va",
+        translation_key="active_apparent_power_phase_va",
+        translation_placeholders={"phase": "3"},
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -412,7 +415,8 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_reactive_power_l1_var",
-        translation_key="active_reactive_power_l1_var",
+        translation_key="active_reactive_power_phase_var",
+        translation_placeholders={"phase": "1"},
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -422,7 +426,8 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_reactive_power_l2_var",
-        translation_key="active_reactive_power_l2_var",
+        translation_key="active_reactive_power_phase_var",
+        translation_placeholders={"phase": "2"},
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -432,7 +437,8 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_reactive_power_l3_var",
-        translation_key="active_reactive_power_l3_var",
+        translation_key="active_reactive_power_phase_var",
+        translation_placeholders={"phase": "3"},
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -452,7 +458,8 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_factor_l1",
-        translation_key="active_power_factor_l1",
+        translation_key="active_power_factor_phase",
+        translation_placeholders={"phase": "1"},
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -462,7 +469,8 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_factor_l2",
-        translation_key="active_power_factor_l2",
+        translation_key="active_power_factor_phase",
+        translation_placeholders={"phase": "2"},
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -472,7 +480,8 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_factor_l3",
-        translation_key="active_power_factor_l3",
+        translation_key="active_power_factor_phase",
+        translation_placeholders={"phase": "3"},
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
