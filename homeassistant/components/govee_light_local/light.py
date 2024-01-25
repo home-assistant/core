@@ -83,6 +83,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
         if len(self._attr_supported_color_modes) == 1:
+            # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
         self._attr_device_info = DeviceInfo(
@@ -120,7 +121,11 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
     def color_mode(self) -> ColorMode | str | None:
         """Return the color mode."""
         if self._fixed_color_mode:
+            # The light supports only a single color mode, return it
             return self._fixed_color_mode
+
+        # The light supports both color temperature and RGB, determine which
+        # mode the light is in
         if (
             self._device.temperature_color is not None
             and self._device.temperature_color > 0
