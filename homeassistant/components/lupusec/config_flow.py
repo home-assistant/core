@@ -66,7 +66,6 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import the yaml config."""
         self._async_abort_entries_match(user_input)
-        user_input[CONF_HOST] = user_input[CONF_IP_ADDRESS]
         host = user_input[CONF_IP_ADDRESS]
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
@@ -80,7 +79,14 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(host)
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=host, data=user_input)
+        return self.async_create_entry(
+            title=host,
+            data={
+                CONF_HOST: host,
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+            },
+        )
 
 
 async def test_host_connection(
