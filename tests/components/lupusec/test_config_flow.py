@@ -139,30 +139,30 @@ async def test_flow_user_init_data_error_and_recover(
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"] == {"base": text_error}
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": text_error}
 
-        assert len(mock_initialize_lupusec.mock_calls) == 1
+    assert len(mock_initialize_lupusec.mock_calls) == 1
 
-        # Recover
-        mock_initialize_lupusec.side_effect = None
-        mock_initialize_lupusec.return_value = None
-        with patch(
-            "homeassistant.components.lupusec.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry:
-            result3 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                MOCK_DATA_STEP,
-            )
+    # Recover
+    mock_initialize_lupusec.side_effect = None
+    mock_initialize_lupusec.return_value = None
+    with patch(
+        "homeassistant.components.lupusec.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_DATA_STEP,
+        )
 
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-            assert result3["type"] == FlowResultType.CREATE_ENTRY
-            assert result3["title"] == MOCK_DATA_STEP[CONF_HOST]
-            assert result3["data"] == MOCK_DATA_STEP
-            assert len(mock_setup_entry.mock_calls) == 1
-            assert len(mock_initialize_lupusec.mock_calls) == 2
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == MOCK_DATA_STEP[CONF_HOST]
+    assert result3["data"] == MOCK_DATA_STEP
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_initialize_lupusec.mock_calls) == 2
 
 
 async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> None:
