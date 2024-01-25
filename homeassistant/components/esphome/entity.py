@@ -37,6 +37,47 @@ _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
 
 
+@callback
+def async_static_info_updated(
+    hass: HomeAssistant,
+    entry_data: RuntimeEntryData,
+    platform: entity_platform.EntityPlatform,
+    async_add_entities: AddEntitiesCallback,
+    info_type: type[_InfoT],
+    entity_type: type[_EntityT],
+    state_type: type[_StateT],
+    infos: list[EntityInfo],
+) -> None:
+    """Update entities of this platform when entities are listed."""
+    current_infos = entry_data.info[info_type]
+    new_infos: dict[int, EntityInfo] = {}
+    add_entities: list[_EntityT] = []
+
+    for info in infos:
+        if not current_infos.pop(info.key, None):
+            # Create new entity
+            entity = entity_type(entry_data, platform.domain, info, state_type)
+            add_entities.append(entity)
+        new_infos[info.key] = info
+
+    # Anything still in current_infos is now gone
+    if current_infos:
+        mac = entry_data.device_info.mac_address
+        hass.async_create_task(
+            entry_data.async_remove_entities(current_infos.values(), mac)
+        )
+
+    # Then update the actual info
+    entry_data.info[info_type] = new_infos
+
+    if new_infos:
+        entry_data.async_update_entity_infos(new_infos.values())
+
+    if add_entities:
+        # Add entities to Home Assistant
+        async_add_entities(add_entities)
+
+
 async def platform_async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
