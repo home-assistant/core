@@ -274,34 +274,7 @@ class ClusterHandler(LogMixin):
             reports = {rec["attr"]: rec["config"] for rec in chunk}
             try:
                 res = await self.cluster.configure_reporting_multiple(reports, **kwargs)
-                self._configure_reporting_status(reports, res[0])
-                # 2.5.8.1.3 Status Field
-                # The status field specifies the status of the Configure Reporting operation attempted on this attribute, as detailed in 2.5.7.3.
-                # Note that attribute status records are not included for successfully configured attributes, in order to save bandwidth.
-                # In the case of successful configuration of all attributes, only a single attribute status record SHALL be included in the command,
-                # with the status field set to SUCCESS and the direction and attribute identifier fields omitted.
-                if len(res) == 1 and res[0].status == Status.SUCCESS:
-                    for attr_id in reports:
-                        attr_name = (
-                            self._get_attribute_name(cast(int, attr_id))
-                            if isinstance(attr_id, int)
-                            else attr_id
-                        )
-                        event_data[attr_name]["success"] = True
-                else:
-                    for response in res:
-                        # we check 3 statuses because we don't want the pairing screen
-                        # or the reconfigure dialog to show failure when attributes aren't
-                        # supported or reportable. We only want to show failure for attributes
-                        # that are supported and reportable but failed to configure.
-                        event_data[self._get_attribute_name(response.attrid)][
-                            "success"
-                        ] = response.status in (
-                            Status.SUCCESS,
-                            Status.UNSUPPORTED_ATTRIBUTE,
-                            Status.UNREPORTABLE_ATTRIBUTE,
-                        )
-
+                self._configure_reporting_status(reports, res[0], event_data)
             except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
                 self.debug(
                     "failed to set reporting on '%s' cluster for: %s",
