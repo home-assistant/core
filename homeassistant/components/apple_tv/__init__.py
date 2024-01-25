@@ -111,7 +111,7 @@ class AppleTVEntity(Entity):
         """Handle when an entity is about to be added to Home Assistant."""
 
         @callback
-        def _async_connected(atv: AppleTV) -> None:
+        def _async_connected(atv: AppleTVInterface) -> None:
             """Handle that a connection was made to a device."""
             self.atv = atv
             self.async_device_connected(atv)
@@ -141,7 +141,7 @@ class AppleTVEntity(Entity):
             )
         )
 
-    def async_device_connected(self, atv: AppleTV) -> None:
+    def async_device_connected(self, atv: AppleTVInterface) -> None:
         """Handle when connection is made to device."""
 
     def async_device_disconnected(self) -> None:
