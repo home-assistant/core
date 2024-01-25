@@ -219,8 +219,9 @@ class _TranslationCache:
                     await self._async_load(language, components_to_load)
 
         results_for_categories: dict[str, dict[str, str]] = {}
+        language_cache = self.cache.get(language, {})
         for category, components in components_for_categories.items():
-            category_cache = self.cache.get(language, {}).get(category, {})
+            category_cache = language_cache.get(category, {})
 
             # If only one component was requested, return it directly
             # to avoid merging the dictionaries and keeping additional
