@@ -22,15 +22,23 @@ class DoorLockClusterHandler(ClusterHandler):
 
     _value_attribute = 0
     REPORT_CONFIG = (
-        AttrReportConfig(attr="lock_state", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(
+            attr=closures.DoorLock.AttributeDefs.lock_state.name,
+            config=REPORT_CONFIG_IMMEDIATE,
+        ),
     )
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await self.get_attribute_value("lock_state", from_cache=True)
+        result = await self.get_attribute_value(
+            closures.DoorLock.AttributeDefs.lock_state.name, from_cache=True
+        )
         if result is not None:
             self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0, "lock_state", result
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                closures.DoorLock.AttributeDefs.lock_state.id,
+                closures.DoorLock.AttributeDefs.lock_state.name,
+                result,
             )
 
     @callback
