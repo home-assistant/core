@@ -510,12 +510,6 @@ async def async_setup_entry(
                     )
                 )
 
-                entities.append(
-                    HomeWizardExternalIdentifierSensorEntity(
-                        coordinator, device_info, unique_id
-                    )
-                )
-
     async_add_entities(entities)
 
 
@@ -606,25 +600,3 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
             return None
 
         return self._suggested_device_class
-
-
-class HomeWizardExternalIdentifierSensorEntity(HomeWizardEntity, SensorEntity):
-    """Representation of externally connected HomeWizard Sensor."""
-
-    _attr_icon = "mdi:alphabetical-variant"
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_translation_key = "meter_identifier"
-
-    _attr_name = None
-
-    def __init__(
-        self,
-        coordinator: HWEnergyDeviceUpdateCoordinator,
-        device_info: DeviceInfo,
-        device_unique_id: str,
-    ) -> None:
-        """Initialize Externally connected HomeWizard Sensors."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}_meter_identifier"
-        self._attr_native_value = device_unique_id
-        self._attr_device_info = device_info
