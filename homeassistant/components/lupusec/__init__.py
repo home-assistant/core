@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -55,21 +54,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    host = conf.get(CONF_IP_ADDRESS)
-    name = conf.get(CONF_NAME)
+    conf[CONF_HOST] = conf[CONF_IP_ADDRESS]
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-                CONF_HOST: host,
-                CONF_FRIENDLY_NAME: name,
-            },
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
     )
 
@@ -121,9 +110,6 @@ class LupusecDevice(Entity):
         """Initialize a sensor for Lupusec device."""
         self._data = data
         self._device = device
-        self._entry_id = ""
-
-        self._config_entry = config_entry
         self._entry_id = config_entry.entry_id if config_entry else "_none"
 
     def update(self):

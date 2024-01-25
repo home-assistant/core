@@ -6,8 +6,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

@@ -7,13 +7,7 @@ import lupupy
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_FRIENDLY_NAME,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
@@ -45,9 +39,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             try:
-                errors = await validate_user_input(
-                    self.hass, host, username, password, ""
-                )
+                await test_host_connection(self.hass, host, username, password)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -55,6 +47,8 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
+                await self.async_set_unique_id(host)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=host,
                     data={
@@ -74,25 +68,17 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        name = user_input.get(CONF_FRIENDLY_NAME)
         try:
-            await validate_user_input(self.hass, host, username, password, name)
+            await test_host_connection(self.hass, host, username, password)
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
+        await self.async_set_unique_id(host)
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=host, data=user_input)
-
-
-async def validate_user_input(hass: HomeAssistant, host, username, password, name):
-    """Validate the provided configuration."""
-    errors = {}
-
-    errors = await test_host_connection(hass, host, username, password)
-
-    return errors
 
 
 async def test_host_connection(hass, host, username, password):
