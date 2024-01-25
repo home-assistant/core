@@ -308,6 +308,34 @@ class FlowManager(abc.ABC):
 
         return result
 
+    def _set_error_on_path(
+        self,
+        schema_errors: dict[str, Any],
+        error_message: str,
+        error_path: list[str | vol.Marker] | None,
+        data_schema: vol.Schema,
+    ) -> dict[str, Any]:
+        """Set an error in schema_errors with the correct path in the schema."""
+        schema = data_schema.schema
+        if not error_path or (path_part := error_path[0]) not in schema:
+            raise ValueError("Could not find path in schema")
+
+        path_part_str = str(path_part)
+        result: str | dict[str, Any]
+        if len(error_path) == 1:
+            # last path
+            result = error_message
+        else:
+            result = self._set_error_on_path(
+                schema_errors.get(path_part_str, {}),
+                error_message,
+                error_path[1:],
+                schema[path_part],
+            )
+
+        schema_errors[path_part_str] = result
+        return schema_errors
+
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
     ) -> FlowResult:
@@ -330,32 +358,16 @@ class FlowManager(abc.ABC):
 
                 schema_errors: dict[str, Any] = {}
                 for error in raised_errors:
-                    if error.path:
-                        current_path_schema = data_schema.schema
-                        current_path_errors = schema_errors
-                        for path_part in error.path[:-1]:
-                            if path_part not in current_path_schema:
-                                current_path_schema = None
-                                break
-                            current_path_schema = current_path_schema[path_part]
-                            if not isinstance(path_part, str):
-                                path_part = str(path_part)
-                            current_path_errors = current_path_errors.setdefault(
-                                path_part, {}
-                            )
-                        if (
-                            current_path_schema
-                            and error.path[-1] in current_path_schema
-                        ):
-                            path_part = error.path[-1]
-                            if not isinstance(path_part, str):
-                                path_part = str(path_part)
-                            current_path_errors[path_part] = error.error_message
-                            continue
-
-                    # If we get here, we could not identify the path of the error.
-                    schema_errors.setdefault("base", []).append(str(error))
-
+                    try:
+                        self._set_error_on_path(
+                            schema_errors,
+                            error.error_message,
+                            error.path,
+                            data_schema,
+                        )
+                    except (ValueError, KeyError):
+                        # If we get here, we could not identify the path of the error.
+                        schema_errors.setdefault("base", []).append(str(error))
                 raise InvalidData(
                     "Schema validation failed",
                     path=ex.path,
