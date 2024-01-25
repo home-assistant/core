@@ -62,6 +62,7 @@ _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
 TRIGGER_CALLBACK_TYPE = Callable[[str, RecognizeResult], Awaitable[str | None]]
+METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -86,6 +87,14 @@ class TriggerData:
 
     sentences: list[str]
     callback: TRIGGER_CALLBACK_TYPE
+
+
+@dataclass(slots=True)
+class SentenceTriggerResult:
+    """Result when matching a sentence trigger in an automation."""
+
+    sentence_template: str | None
+    response: str | None
 
 
 def _get_language_variations(language: str) -> Iterable[str]:
@@ -176,9 +185,12 @@ class DefaultAgent(AbstractConversationAgent):
         )
 
     async def async_recognize(
-        self, user_input: ConversationInput
-    ) -> RecognizeResult | None:
+        self, user_input: ConversationInput, run_triggers: bool = True
+    ) -> RecognizeResult | SentenceTriggerResult | None:
         """Recognize intent from user input."""
+        if trigger_result := await self._match_triggers(user_input.text, run_triggers):
+            return trigger_result
+
         language = user_input.language or self.hass.config.language
         lang_intents = self._lang_intents.get(language)
 
@@ -208,13 +220,21 @@ class DefaultAgent(AbstractConversationAgent):
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
-        if trigger_result := await self._match_triggers(user_input.text):
-            return trigger_result
-
         language = user_input.language or self.hass.config.language
         conversation_id = None  # Not supported
 
         result = await self.async_recognize(user_input)
+
+        # Check if a trigger matched
+        if isinstance(result, SentenceTriggerResult):
+            # Convert to conversation result
+            response = intent.IntentResponse(language=language)
+            response.response_type = intent.IntentResponseType.ACTION_DONE
+            response.async_set_speech(result.response or "")
+
+            return ConversationResult(response=response)
+
+        # Intent match or failure
         lang_intents = self._lang_intents.get(language)
 
         if result is None:
@@ -561,6 +581,17 @@ class DefaultAgent(AbstractConversationAgent):
                             ),
                             dict,
                         ):
+                            # Add metadata so we can identify custom sentences in the debugger
+                            custom_intents_dict = custom_sentences_yaml.get(
+                                "intents", {}
+                            )
+                            for intent_dict in custom_intents_dict.values():
+                                intent_data_list = intent_dict.get("data", [])
+                                for intent_data in intent_data_list:
+                                    sentence_metadata = intent_data.get("metadata", {})
+                                    sentence_metadata[METADATA_CUSTOM_SENTENCE] = True
+                                    intent_data["metadata"] = sentence_metadata
+
                             merge_dict(intents_dict, custom_sentences_yaml)
                         else:
                             _LOGGER.warning(
@@ -807,11 +838,13 @@ class DefaultAgent(AbstractConversationAgent):
         # Force rebuild on next use
         self._trigger_intents = None
 
-    async def _match_triggers(self, sentence: str) -> ConversationResult | None:
+    async def _match_triggers(
+        self, sentence: str, run_triggers: bool
+    ) -> SentenceTriggerResult | None:
         """Try to match sentence against registered trigger sentences.
 
-        Calls the registered callbacks if there's a match and returns a positive
-        conversation result.
+        Calls the registered callbacks if there's a match and returns a sentence
+        trigger result.
         """
         if not self._trigger_sentences:
             # No triggers registered
@@ -824,7 +857,11 @@ class DefaultAgent(AbstractConversationAgent):
         assert self._trigger_intents is not None
 
         matched_triggers: dict[int, RecognizeResult] = {}
+        matched_template: str | None = None
         for result in recognize_all(sentence, self._trigger_intents):
+            if result.intent_sentence is not None:
+                matched_template = result.intent_sentence.text
+
             trigger_id = int(result.intent.name)
             if trigger_id in matched_triggers:
                 # Already matched a sentence from this trigger
@@ -843,6 +880,10 @@ class DefaultAgent(AbstractConversationAgent):
             list(matched_triggers),
         )
 
+        if not run_triggers:
+            # Don't run triggers for debug page
+            return SentenceTriggerResult(matched_template, None)
+
         # Gather callback responses in parallel
         trigger_responses = await asyncio.gather(
             *(
@@ -851,16 +892,12 @@ class DefaultAgent(AbstractConversationAgent):
             )
         )
 
-        # Use last non-empty result as speech response
-        speech: str | None = None
+        # Use last non-empty result as response
+        response: str | None = None
         for trigger_response in trigger_responses:
-            speech = speech or trigger_response
+            response = response or trigger_response
 
-        response = intent.IntentResponse(language=self.hass.config.language)
-        response.response_type = intent.IntentResponseType.ACTION_DONE
-        response.async_set_speech(speech or "")
-
-        return ConversationResult(response=response)
+        return SentenceTriggerResult(matched_template, response)
 
 
 def _make_error_result(
