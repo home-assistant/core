@@ -188,9 +188,6 @@ class MockESPHomeDevice:
         self.home_assistant_state_subscription_callback: Callable[
             [str, str | None], None
         ]
-        self.list_entities_services_callback: Callable[
-            [tuple[list[EntityInfo], list[UserService]]], None
-        ]
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -201,12 +198,6 @@ class MockESPHomeDevice:
     ) -> None:
         """Set the service call callback."""
         self.service_call_callback = callback
-
-    def set_list_entities_services_callback(
-        self, callback: Callable[[tuple[list[EntityInfo], list[UserService]]], None]
-    ) -> None:
-        """Set the list_entities_services callback."""
-        self.list_entities_services_callback = callback
 
     def mock_service_call(self, service_call: HomeassistantServiceCall) -> None:
         """Mock a service call."""
