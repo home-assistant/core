@@ -1096,6 +1096,6 @@
 # name: test_wake_word_cooldown_same_id.5
   dict({
     'code': 'duplicate_wake_up_detected',
-    'message': 'Duplcate wake-up detected for wake_word.test.test_ww',
+    'message': 'Duplicate wake-up detected for wake_word.test.test_ww',
   })
 # ---
