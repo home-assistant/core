@@ -94,13 +94,20 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
+# ignore misc is required as vol.Invalid is not typed
+# mypy error: Class cannot subclass "Invalid" (has type "Any")
 class InvalidData(vol.Invalid):  # type: ignore[misc]
     """Invalid data provided."""
 
     def __init__(
-        self, *args: object, schema_errors: dict[str, Any], **kwargs: Any
+        self,
+        message: str,
+        path: list[str | vol.Marker] | None,
+        error_message: str | None,
+        schema_errors: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(message, path, error_message, **kwargs)
         self.schema_errors = schema_errors
 
 
@@ -162,6 +169,29 @@ def _async_flow_handler_to_flow_result(
             result["step_id"] = flow.cur_step["step_id"]
         results.append(result)
     return results
+
+
+def _map_error_to_schema_errors(
+    schema_errors: dict[str, Any],
+    error: vol.Invalid,
+    data_schema: vol.Schema,
+) -> None:
+    """Map an error to the correct position in the schema_errors.
+
+    Raises ValueError if the error path could not be found in the schema.
+    Limitation: Nested schemas are not supported and a ValueError will be raised.
+    """
+    schema = data_schema.schema
+    error_path = error.path
+    if not error_path or (path_part := error_path[0]) not in schema:
+        raise ValueError("Could not find path in schema")
+
+    if len(error_path) > 1:
+        raise ValueError("Nested schemas are not supported")
+
+    # path_part can also be vol.Marker, but we need a string key
+    path_part_str = str(path_part)
+    schema_errors[path_part_str] = error.error_message
 
 
 class FlowManager(abc.ABC):
@@ -308,34 +338,6 @@ class FlowManager(abc.ABC):
 
         return result
 
-    def _set_error_on_path(
-        self,
-        schema_errors: dict[str, Any],
-        error_message: str,
-        error_path: list[str | vol.Marker] | None,
-        data_schema: vol.Schema,
-    ) -> dict[str, Any]:
-        """Set an error in schema_errors with the correct path in the schema."""
-        schema = data_schema.schema
-        if not error_path or (path_part := error_path[0]) not in schema:
-            raise ValueError("Could not find path in schema")
-
-        path_part_str = str(path_part)
-        result: str | dict[str, Any]
-        if len(error_path) == 1:
-            # last path
-            result = error_message
-        else:
-            result = self._set_error_on_path(
-                schema_errors.get(path_part_str, {}),
-                error_message,
-                error_path[1:],
-                schema[path_part],
-            )
-
-        schema_errors[path_part_str] = result
-        return schema_errors
-
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
     ) -> FlowResult:
@@ -359,14 +361,9 @@ class FlowManager(abc.ABC):
                 schema_errors: dict[str, Any] = {}
                 for error in raised_errors:
                     try:
-                        self._set_error_on_path(
-                            schema_errors,
-                            error.error_message,
-                            error.path,
-                            data_schema,
-                        )
-                    except (ValueError, KeyError):
-                        # If we get here, we could not identify the path of the error.
+                        _map_error_to_schema_errors(schema_errors, error, data_schema)
+                    except ValueError:
+                        # If we get here, the path in the exception does not exist in the schema.
                         schema_errors.setdefault("base", []).append(str(error))
                 raise InvalidData(
                     "Schema validation failed",
