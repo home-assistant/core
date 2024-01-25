@@ -98,21 +98,6 @@ class LutronLight(LutronDevice, LightEntity):
     _prev_brightness: int | None = None
     _attr_name = None
 
-    def __init__(
-        self, area_name: str, lutron_device: LutronEntity, controller: Lutron
-    ) -> None:
-        """Initialize the light."""
-        super().__init__(area_name, lutron_device, controller)
-        self._is_fan = lutron_device.type == "CEILING_FAN_TYPE"
-
-    @property
-    def brightness(self) -> int:
-        """Return the brightness of the light."""
-        new_brightness = to_hass_level(self._lutron_device.last_level())
-        if new_brightness != 0:
-            self._prev_brightness = new_brightness
-        return new_brightness
-
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if self._is_fan:
@@ -155,12 +140,15 @@ class LutronLight(LutronDevice, LightEntity):
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self._lutron_device.last_level() > 0
+    def _request_state(self) -> None:
+        """Request the state from the device."""
+        self._lutron_device.level  # pylint: disable=pointless-statement
 
-    def update(self) -> None:
-        """Call when forcing a refresh of the device."""
-        if self._prev_brightness is None:
-            self._prev_brightness = to_hass_level(self._lutron_device.level)
+    def _update_attrs(self) -> None:
+        """Update the state attributes."""
+        level = self._lutron_device.last_level()
+        self._attr_is_on = level > 0
+        hass_level = to_hass_level(level)
+        self._attr_brightness = hass_level
+        if self._prev_brightness is None or hass_level != 0:
+            self._prev_brightness = hass_level

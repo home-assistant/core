@@ -178,6 +178,10 @@
     },
     {
       "hostname": "l5*",
+      "macaddress": "3C52A1*"
+    },
+    {
+      "hostname": "l5*",
       "macaddress": "5C628B*"
     },
     {
@@ -201,5 +205,5 @@
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",
-  "requirements": ["python-kasa[speedups]==0.6.0.1"]
+  "requirements": ["python-kasa[speedups]==0.6.1"]
 }

@@ -5,18 +5,23 @@ import lupupy
 from lupupy.exceptions import LupusecException
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
+
+from .const import INTEGRATION_TITLE, ISSUE_PLACEHOLDER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,36 +44,91 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LUPUSEC_PLATFORMS = [
+PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.SWITCH,
 ]
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Lupusec component."""
+async def handle_async_init_result(hass: HomeAssistant, domain: str, conf: dict):
+    """Handle the result of the async_init to issue deprecated warnings."""
+    flow = hass.config_entries.flow
+    result = await flow.async_init(domain, context={"source": SOURCE_IMPORT}, data=conf)
+
+    if (
+        result["type"] == FlowResultType.CREATE_ENTRY
+        or result["reason"] == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.8.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_${result['reason']}",
+            breaks_in_ha_version="2024.8.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the lupusec integration."""
+
+    if DOMAIN not in config:
+        return True
+
     conf = config[DOMAIN]
-    username = conf[CONF_USERNAME]
-    password = conf[CONF_PASSWORD]
-    ip_address = conf[CONF_IP_ADDRESS]
-    name = conf.get(CONF_NAME)
+
+    hass.async_create_task(handle_async_init_result(hass, DOMAIN, conf))
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up this integration using UI."""
+
+    host = entry.data[CONF_HOST]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
 
     try:
-        hass.data[DOMAIN] = LupusecSystem(username, password, ip_address, name)
-    except LupusecException as ex:
-        _LOGGER.error(ex)
-
-        persistent_notification.create(
-            hass,
-            f"Error: {ex}<br />You will need to restart hass after fixing.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
+        lupusec_system = await hass.async_add_executor_job(
+            LupusecSystem,
+            username,
+            password,
+            host,
+        )
+    except LupusecException:
+        _LOGGER.error("Failed to connect to Lupusec device at %s", host)
+        return False
+    except Exception as ex:  # pylint: disable=broad-except
+        _LOGGER.error(
+            "Unknown error while trying to connect to Lupusec device at %s: %s",
+            host,
+            ex,
         )
         return False
 
-    for platform in LUPUSEC_PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = lupusec_system
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -76,16 +136,15 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class LupusecSystem:
     """Lupusec System class."""
 
-    def __init__(self, username, password, ip_address, name):
+    def __init__(self, username, password, ip_address) -> None:
         """Initialize the system."""
         self.lupusec = lupupy.Lupusec(username, password, ip_address)
-        self.name = name
 
 
 class LupusecDevice(Entity):
     """Representation of a Lupusec device."""
 
-    def __init__(self, data, device):
+    def __init__(self, data, device) -> None:
         """Initialize a sensor for Lupusec device."""
         self._data = data
         self._device = device
