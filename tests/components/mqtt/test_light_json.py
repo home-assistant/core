@@ -1547,6 +1547,7 @@ async def test_sending_rgb_color_with_scaled_brightness(
                     "schema": "json",
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
+                    "state_topic": "test_light_rgb/state",
                     "brightness": True,
                     "brightness_scale": 100,
                     "color_mode": True,
@@ -1923,7 +1924,9 @@ async def test_white_scale(
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Turn on the light
-    async_fire_mqtt_message(hass, "test_light_bright_scale", '{"state":"ON"}')
+    async_fire_mqtt_message(
+        hass, "test_light_bright_scale", '{"state":"ON","color_mode":"white"}'
+    )
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
