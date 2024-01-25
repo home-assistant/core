@@ -100,6 +100,7 @@ homeassistant.components.awair.*
 homeassistant.components.axis.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
+homeassistant.components.bang_olufsen.*
 homeassistant.components.bayesian.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
