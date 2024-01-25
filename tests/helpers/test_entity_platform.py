@@ -1815,15 +1815,15 @@ async def test_translated_entity_name_influences_entity_id(
     }
     hass.config.language = language
 
-    async def async_get_translations(
+    async def async_get_translations_for_categories(
         hass: HomeAssistant,
         language: str,
-        category: str,
+        categories: Iterable[str],
         integrations: Iterable[str] | None = None,
         config_flow: bool | None = None,
     ) -> dict[str, Any]:
         """Return all backend translations."""
-        return translations[language]
+        return {category: translations[language] for category in categories}
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
@@ -1838,8 +1838,8 @@ async def test_translated_entity_name_influences_entity_id(
     )
 
     with patch(
-        "homeassistant.helpers.entity_platform.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.entity_platform.translation.async_get_translations_for_categories",
+        side_effect=async_get_translations_for_categories,
     ):
         assert await entity_platform.async_setup_entry(config_entry)
         await hass.async_block_till_done()
@@ -1898,15 +1898,15 @@ async def test_translated_device_class_name_influences_entity_id(
     }
     hass.config.language = language
 
-    async def async_get_translations(
+    async def async_get_translations_for_categories(
         hass: HomeAssistant,
         language: str,
-        category: str,
+        categories: Iterable[str],
         integrations: Iterable[str] | None = None,
         config_flow: bool | None = None,
     ) -> dict[str, Any]:
         """Return all backend translations."""
-        return translations[language]
+        return {category: translations[language] for category in categories}
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
@@ -1921,8 +1921,8 @@ async def test_translated_device_class_name_influences_entity_id(
     )
 
     with patch(
-        "homeassistant.helpers.entity_platform.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.entity_platform.translation.async_get_translations_for_categories",
+        side_effect=async_get_translations_for_categories,
     ):
         assert await entity_platform.async_setup_entry(config_entry)
         await hass.async_block_till_done()
