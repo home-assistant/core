@@ -28,7 +28,7 @@ async def async_setup_entry(
 class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
     """The entity class for JVC Projector Binary Sensor."""
 
-    _attr_translation_key = "power"
+    _attr_translation_key = "jvc_power"
 
     def __init__(
         self,
@@ -37,15 +37,6 @@ class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
         """Initialize the JVC Projector sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.device.mac}_power"
-
-    @property
-    def icon(self) -> str | None:
-        """Icon of the entity, based on time."""
-        if self.coordinator.data["power"] in ON_STATUS:
-            return "mdi:projector"
-        if self.coordinator.data["power"] == const.ERROR:
-            return "mdi:alert-circle"
-        return "mdi:projector-off"
 
     @property
     def is_on(self) -> bool:

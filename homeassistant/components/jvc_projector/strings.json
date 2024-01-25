@@ -34,7 +34,7 @@
   },
   "entity": {
     "binary_sensor": {
-      "power": {
+      "jvc_power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       }
     }
