@@ -32,7 +32,58 @@
         'active_voltage_l3_v': 230.333,
         'active_voltage_v': None,
         'any_power_fail_count': 4,
-        'external_devices': None,
+        'external_devices': dict({
+          'G001': dict({
+            'meter_type': dict({
+              '__type': "<enum 'DeviceType'>",
+              'repr': '<DeviceType.GAS_METER: 3>',
+            }),
+            'timestamp': '2023-01-25T22:09:57',
+            'unique_id': '**REDACTED**',
+            'unit': 'm3',
+            'value': 111.111,
+          }),
+          'H001': dict({
+            'meter_type': dict({
+              '__type': "<enum 'DeviceType'>",
+              'repr': '<DeviceType.HEAT_METER: 4>',
+            }),
+            'timestamp': '2023-01-25T22:09:57',
+            'unique_id': '**REDACTED**',
+            'unit': 'GJ',
+            'value': 444.444,
+          }),
+          'IH001': dict({
+            'meter_type': dict({
+              '__type': "<enum 'DeviceType'>",
+              'repr': '<DeviceType.INLET_HEAT_METER: 12>',
+            }),
+            'timestamp': '2023-01-25T22:09:57',
+            'unique_id': '**REDACTED**',
+            'unit': 'm3',
+            'value': 555.555,
+          }),
+          'W001': dict({
+            'meter_type': dict({
+              '__type': "<enum 'DeviceType'>",
+              'repr': '<DeviceType.WATER_METER: 7>',
+            }),
+            'timestamp': '2023-01-25T22:09:57',
+            'unique_id': '**REDACTED**',
+            'unit': 'm3',
+            'value': 222.222,
+          }),
+          'WW001': dict({
+            'meter_type': dict({
+              '__type': "<enum 'DeviceType'>",
+              'repr': '<DeviceType.WARM_WATER_METER: 6>',
+            }),
+            'timestamp': '2023-01-25T22:09:57',
+            'unique_id': '**REDACTED**',
+            'unit': 'm3',
+            'value': 333.333,
+          }),
+        }),
         'gas_timestamp': '2021-03-14T11:22:33',
         'gas_unique_id': '**REDACTED**',
         'long_power_fail_count': 5,
