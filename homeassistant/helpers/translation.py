@@ -388,7 +388,9 @@ async def async_get_translations_for_categories(
     components_for_categories: dict[str, set[str]] = {}
 
     if integrations is not None:
-        components = set(integrations)
+        components = (
+            integrations if type(integrations) is set else set(integrations)  # noqa: E721
+        )
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
 
