@@ -149,6 +149,8 @@ build.json @home-assistant/supervisor
 /tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1 @natekspencer
 /tests/components/balboa/ @garbled1 @natekspencer
+/homeassistant/components/bang_olufsen/ @mj23000
+/tests/components/bang_olufsen/ @mj23000
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
 /homeassistant/components/beewi_smartclim/ @alemuro
@@ -710,6 +712,8 @@ build.json @home-assistant/supervisor
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/ld2410_ble/ @930913
 /tests/components/ld2410_ble/ @930913
+/homeassistant/components/leaone/ @bdraco
+/tests/components/leaone/ @bdraco
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
 /homeassistant/components/lg_netcast/ @Drafteed
@@ -1347,8 +1351,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/tfiac/ @fredrike @mellado
 /homeassistant/components/thermobeacon/ @bdraco
 /tests/components/thermobeacon/ @bdraco
-/homeassistant/components/thermopro/ @bdraco
-/tests/components/thermopro/ @bdraco
+/homeassistant/components/thermopro/ @bdraco @h3ss
+/tests/components/thermopro/ @bdraco @h3ss
 /homeassistant/components/thethingsnetwork/ @fabaff
 /homeassistant/components/thread/ @home-assistant/core
 /tests/components/thread/ @home-assistant/core
