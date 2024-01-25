@@ -150,19 +150,22 @@ async def test_flow_user_init_data_error_and_recover(
     with patch(
         "homeassistant.components.lupusec.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "lupupy.Lupusec.__init__",
+        return_value=None,
+    ) as mock_initialize_lupusec:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_DATA_STEP,
         )
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == MOCK_DATA_STEP[CONF_HOST]
     assert result3["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_initialize_lupusec.mock_calls) == 2
+    assert len(mock_initialize_lupusec.mock_calls) == 1
 
 
 async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> None:
