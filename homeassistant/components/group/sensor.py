@@ -319,6 +319,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self._ignore_non_numeric = ignore_non_numeric
+        self._mode = all if ignore_non_numeric is False else any
         self._state_calc: Callable[
             [list[tuple[str, float, State]]],
             tuple[dict[str, str | None], float | None],
@@ -397,13 +398,13 @@ class SensorGroup(GroupEntity, SensorEntity):
         # Set group as unavailable if all members do not have numeric values
         self._attr_available = any(numeric_state for numeric_state in valid_states)
 
-        # Get validation function
-        validate = any if self._ignore_non_numeric else all
-
-        valid_state = validate(
+        valid_state = self._mode(
             state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
-        valid_state_numeric = validate(numeric_state for numeric_state in valid_states)
+
+        valid_state_numeric = self._mode(
+            numeric_state for numeric_state in valid_states
+        )
 
         if not valid_state or not valid_state_numeric:
             self._attr_native_value = None
