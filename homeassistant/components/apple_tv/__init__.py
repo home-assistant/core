@@ -254,7 +254,10 @@ class AppleTVManager(DeviceListener):
         while self.is_on and self.atv is None:
             await self.connect_once(raise_missing_credentials=False)
             if self.atv is not None:
-                break  # type: ignore[unreachable]
+                # Calling self.connect_once may set self.atv
+                if TYPE_CHECKING:
+                    assert self.atv
+                break
             self._connection_attempts += 1
             backoff = min(
                 max(

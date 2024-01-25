@@ -39,9 +39,10 @@ async def async_setup_entry(
 ) -> None:
     """Load Apple TV remote based on a config entry."""
     name: str = config_entry.data[CONF_NAME]
-    if config_entry.unique_id is not None:
-        manager: AppleTVManager = hass.data[DOMAIN][config_entry.unique_id]
-        async_add_entities([AppleTVRemote(name, config_entry.unique_id, manager)])
+    # apple_tv config entries always have a unique id
+    assert config_entry.unique_id is not None
+    manager: AppleTVManager = hass.data[DOMAIN][config_entry.unique_id]
+    async_add_entities([AppleTVRemote(name, config_entry.unique_id, manager)])
 
 
 class AppleTVRemote(AppleTVEntity, RemoteEntity):
