@@ -43,7 +43,7 @@ USER_SCHEMA = REAUTH_SCHEMA.extend(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ViCare."""
 
-    VERSION = 1
+    VERSION = 2
     entry: config_entries.ConfigEntry | None
 
     async def async_step_user(
