@@ -29,7 +29,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.translation import (
+    async_get_translations,
+    async_get_translations_for_categories,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 
@@ -349,6 +352,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_get_panels)
     websocket_api.async_register_command(hass, websocket_get_themes)
     websocket_api.async_register_command(hass, websocket_get_translations)
+    websocket_api.async_register_command(
+        hass, websocket_get_translations_for_categories
+    )
     websocket_api.async_register_command(hass, websocket_get_version)
     hass.http.register_view(ManifestJSONView())
 
@@ -740,6 +746,32 @@ async def websocket_get_translations(
     )
     connection.send_message(
         websocket_api.result_message(msg["id"], {"resources": resources})
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "frontend/get_translations_for_categories",
+        vol.Required("language"): str,
+        vol.Required("categories"): vol.All(cv.ensure_list, [str]),
+        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
+        vol.Optional("config_flow"): bool,
+    }
+)
+@websocket_api.async_response
+async def websocket_get_translations_for_categories(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get translations command for multiple categories."""
+    resources_by_catagory = await async_get_translations_for_categories(
+        hass,
+        msg["language"],
+        msg["categories"],
+        msg.get("integration"),
+        msg.get("config_flow"),
+    )
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"resources": resources_by_catagory})
     )
 
 
