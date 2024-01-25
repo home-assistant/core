@@ -311,11 +311,15 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if __name != "supported_features":
             return super().__getattribute__(__name)
 
-        # Implements check for deprecated use of ClimateEntityFeature as int
+        # Convert the supported features to ClimateEntityFeature.
+        # Remove this compatibility shim in 2025.1 or later.
         _supported_features = super().__getattribute__(__name)
         if type(_supported_features) is int:  # noqa: E721
             new_features = ClimateEntityFeature(_supported_features)
             self._report_deprecated_supported_features_values(new_features)
+
+        # Add automatically calculated ClimateEntityFeature.TURN_OFF/TURN_ON to
+        # supported features and return it
         return _supported_features | super().__getattribute__(
             "_ClimateEntity__mod_supported_features"
         )
@@ -341,7 +345,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 message = (
                     "Entity %s (%s) implements HVACMode.%s and therefore implicitly"
-                    " implements the %s method without setting the proper"
+                    " supports the %s service without setting the proper"
                     " ClimateEntityFeature. Please %s"
                 )
             _LOGGER.warning(
@@ -356,37 +360,41 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
         # This should be removed in 2025.1.
         if not self.supported_features & ClimateEntityFeature.TURN_OFF:
-            if HVACMode.OFF in self.hvac_modes and (
+            if (
                 type(self).async_turn_off is not ClimateEntity.async_turn_off
                 or type(self).turn_off is not ClimateEntity.turn_off
             ):
+                # turn_off implicitly supported by implementing turn_off method
                 _report_turn_on_off("TURN_OFF", "turn_off")
                 self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                     ClimateEntityFeature.TURN_OFF
                 )
             elif HVACMode.OFF in self.hvac_modes:
+                # turn_off implicitly supported by including HVACMode.OFF
                 _report_turn_on_off("off", "turn_off")
                 self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                     ClimateEntityFeature.TURN_OFF
                 )
 
         if not self.supported_features & ClimateEntityFeature.TURN_ON:
-            for _mode in self.hvac_modes:
-                if _mode != HVACMode.OFF:
-                    if (
-                        type(self).async_turn_on is not ClimateEntity.async_turn_on
-                        or type(self).turn_on is not ClimateEntity.turn_on
-                    ):
-                        _report_turn_on_off("TURN_ON", "turn_on")
-                        self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                            ClimateEntityFeature.TURN_ON
-                        )
-                    else:
+            if (
+                type(self).async_turn_on is not ClimateEntity.async_turn_on
+                or type(self).turn_on is not ClimateEntity.turn_on
+            ):
+                # turn_on implicitly supported by implementing turn_on method
+                _report_turn_on_off("TURN_ON", "turn_on")
+                self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                    ClimateEntityFeature.TURN_ON
+                )
+            else:
+                for _mode in self.hvac_modes:
+                    if _mode != HVACMode.OFF:
+                        # turn_on implicitly supported by including any other HVACMode than HVACMode.OFF
                         _report_turn_on_off(_mode, "turn_on")
                         self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                             ClimateEntityFeature.TURN_ON
                         )
-                    break
+                        break
 
     @final
     @property
