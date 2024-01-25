@@ -20,6 +20,7 @@ from .const import DOMAIN
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SCENE,
     Platform.SWITCH,
