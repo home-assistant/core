@@ -142,20 +142,15 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lupusec.config_flow.test_host_connection",
-        return_value=None,
-    ) as mock_test_host_connection:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            MOCK_DATA_STEP,
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_DATA_STEP,
+    )
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.ABORT
-        assert result2["reason"] == "already_configured"
-        assert len(mock_test_host_connection.mock_calls) == 1
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
