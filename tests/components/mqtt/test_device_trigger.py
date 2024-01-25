@@ -470,7 +470,7 @@ async def test_non_unique_triggers(
     await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
-        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "device":{"identifiers":["0AFFD2"], "name": "milk"},'
         '  "payload": "short_press",'
         '  "topic": "foobar/triggers/button1",'
         '  "type": "press",'
@@ -478,16 +478,27 @@ async def test_non_unique_triggers(
     )
     data2 = (
         '{ "automation_type":"trigger",'
-        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "device":{"identifiers":["0AFFD2"], "name": "beer"},'
         '  "payload": "long_press",'
         '  "topic": "foobar/triggers/button2",'
         '  "type": "press",'
         '  "subtype": "button" }'
     )
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry.name == "milk"
+
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    # The device entry was updated, but the trigger was not unique
+    # and therefore it was not set up.
+    assert device_entry.name == "beer"
+    assert (
+        "Config for device trigger bla2 conflicts with existing device trigger, cannot set up trigger"
+        in caplog.text
+    )
 
     assert await async_setup_component(
         hass,

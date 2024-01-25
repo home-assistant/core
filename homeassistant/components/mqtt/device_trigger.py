@@ -298,6 +298,11 @@ async def async_setup_trigger(
     """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
 
+    # We update the device based on the trigger config to obtain the device_id.
+    # In all cases the setup will lead to device entry to be created or updates.
+    # There is an edge case, that the trigger seems to be a duplicate.
+    # In that case the device config was updated but the device trigger creation was
+    # canceled.
     device_id = update_device(hass, config_entry, config)
     discovery_id = discovery_data[ATTR_DISCOVERY_HASH][1]
     trigger_type = config[CONF_TYPE]
