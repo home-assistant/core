@@ -32,7 +32,7 @@ class PingUpdateCoordinator(DataUpdateCoordinator[PingResult]):
         self,
         hass: HomeAssistant,
         ping: PingDataSubProcess | PingDataICMPLib,
-        scan_interval,
+        scan_interval: int,
     ) -> None:
         """Initialize the Ping coordinator."""
         self.ping = ping
