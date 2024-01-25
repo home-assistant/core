@@ -17,7 +17,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -62,9 +62,13 @@ def async_static_info_updated(
 
     # Anything still in current_infos is now gone
     if current_infos:
-        mac = entry_data.device_info.mac_address
+        device_info = entry_data.device_info
+        if TYPE_CHECKING:
+            assert device_info is not None
         hass.async_create_task(
-            entry_data.async_remove_entities(current_infos.values(), mac)
+            entry_data.async_remove_entities(
+                hass, current_infos.values(), device_info.mac_address
+            )
         )
 
     # Then update the actual info
@@ -96,39 +100,21 @@ async def platform_async_setup_entry(
     entry_data.info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
     platform = entity_platform.async_get_current_platform()
-
-    @callback
-    def async_list_entities(infos: list[EntityInfo]) -> None:
-        """Update entities of this platform when entities are listed."""
-        current_infos = entry_data.info[info_type]
-        new_infos: dict[int, EntityInfo] = {}
-        add_entities: list[_EntityT] = []
-
-        for info in infos:
-            if not current_infos.pop(info.key, None):
-                # Create new entity
-                entity = entity_type(entry_data, platform.domain, info, state_type)
-                add_entities.append(entity)
-            new_infos[info.key] = info
-
-        # Anything still in current_infos is now gone
-        if current_infos:
-            hass.async_create_task(
-                entry_data.async_remove_entities(current_infos.values())
-            )
-
-        # Then update the actual info
-        entry_data.info[info_type] = new_infos
-
-        if new_infos:
-            entry_data.async_update_entity_infos(new_infos.values())
-
-        if add_entities:
-            # Add entities to Home Assistant
-            async_add_entities(add_entities)
-
+    on_static_info_update = functools.partial(
+        async_static_info_updated,
+        hass,
+        entry_data,
+        platform,
+        async_add_entities,
+        info_type,
+        entity_type,
+        state_type,
+    )
     entry_data.cleanup_callbacks.append(
-        entry_data.async_register_static_info_callback(info_type, async_list_entities)
+        entry_data.async_register_static_info_callback(
+            info_type,
+            on_static_info_update,
+        )
     )
 
 
@@ -217,11 +203,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._attr_has_entity_name = True
         self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
 
-    async def _async_remove_entity(self) -> None:
-        """Fully remove this entity from the state machine and registry."""
-        if self.registry_entry:
-            entity_registry = er.async_get(self.hass)
-            entity_registry.async_remove(self.entity_id)
+    async def _async_remove_forced(self) -> None:
+        """Fully remove this entity from the state machine."""
         await self.async_remove(force_remove=True)
 
     async def async_added_to_hass(self) -> None:
@@ -234,7 +217,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self.async_on_remove(
             entry_data.async_register_key_static_info_remove_callback(
                 static_info,
-                self._async_remove_entity,
+                self._async_remove_forced,
             )
         )
         self.async_on_remove(

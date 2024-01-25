@@ -244,10 +244,11 @@ class RuntimeEntryData:
         self.assist_pipeline_update_callbacks.remove(update_callback)
 
     async def async_remove_entities(
-        self, static_infos: Iterable[EntityInfo], mac: str
+        self, hass: HomeAssistant, static_infos: Iterable[EntityInfo], mac: str
     ) -> None:
         """Schedule the removal of an entity."""
-        ent_reg = er.async_get(self._hass)
+        # Remove from entity registry first so the entity is fully removed
+        ent_reg = er.async_get(hass)
         for info in static_infos:
             if entry := ent_reg.async_get_entity_id(
                 INFO_TYPE_TO_PLATFORM[type(info)], DOMAIN, build_unique_id(mac, info)
