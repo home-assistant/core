@@ -59,6 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.entry_id not in hass.data[DOMAIN]:
         hass.data[DOMAIN][entry.entry_id] = {}
 
+    vicare_path = hass.config.path(STORAGE_DIR, DOMAIN)
+    if not os.path.isdir(vicare_path):
+        _LOGGER.info("Create token dir %s", vicare_path)
+        os.mkdir(vicare_path)
+
     try:
         await hass.async_add_executor_job(setup_vicare_api, hass, entry)
     except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError) as err:
