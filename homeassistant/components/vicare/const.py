@@ -17,7 +17,6 @@ PLATFORMS = [
 VICARE_DEVICE_CONFIG = "device_conf"
 VICARE_DEVICE_CONFIG_LIST = "device_config_list"
 VICARE_API = "api"
-VICARE_NAME = "ViCare"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
