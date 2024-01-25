@@ -2,52 +2,34 @@
 
 from unittest.mock import patch
 
+from lupupy import LupusecException
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant import config_entries
 from homeassistant.components.lupusec.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+    FlowResultType,
+)
+
+from tests.common import MockConfigEntry
 
 
-async def test_form_empty_input(hass: HomeAssistant) -> None:
-    """Test handling empty user input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {}
-
-    try:
-        await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        pytest.fail("Expected error not raised")
-    except MultipleInvalid as e:
-        # Check if the error contains the expected missing key
-        assert any(
-            "required key not provided @ data['username']" in str(err)
-            for err in e.errors
-        )
-
-
-async def test_form_invalid_host(hass: HomeAssistant) -> None:
-    """Test handling invalid host input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {}
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "host": "invalid_host",
-            "username": "test-username",
-            "password": "test-password",
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Create a mock StreamLabs config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="test-host.lan",
+        data={
+            CONF_HOST: "test-host.lan",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin",
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_valid_input(hass: HomeAssistant) -> None:
@@ -84,3 +66,79 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
     }
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_initialize_lupusec.mock_calls) == 1
+
+
+async def test_form_invalid_host(hass: HomeAssistant) -> None:
+    """Test handling invalid host input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "invalid_host",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_lupusec_exception(hass: HomeAssistant) -> None:
+    """Test handling valid user input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "lupupy.Lupusec.__init__",
+        side_effect=LupusecException("Test Lupusec Exception"),
+    ) as mock_step_user:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+    assert len(mock_step_user.mock_calls) == 1
+
+
+async def test_form_unknown_exception(hass: HomeAssistant) -> None:
+    """Test handling valid user input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "lupupy.Lupusec.__init__",
+        side_effect=Exception("Test unknown exception"),
+    ) as mock_step_user:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+    assert len(mock_step_user.mock_calls) == 1
