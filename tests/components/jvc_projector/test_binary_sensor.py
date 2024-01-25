@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock
 
-# from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-# from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
