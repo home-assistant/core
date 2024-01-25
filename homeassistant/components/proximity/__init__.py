@@ -53,6 +53,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _get_proximity_entity_usage(hass: HomeAssistant, entity_id: str) -> list[str]:
+    entity_automations = automations_with_entity(hass, entity_id)
+    entity_scripts = scripts_with_entity(hass, entity_id)
+    return entity_automations + entity_scripts
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Get the zones and offsets from configuration.yaml."""
     hass.data.setdefault(DOMAIN, {})
@@ -85,16 +91,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         # deprecate proximity entity - can be removed in 2024.8
-        entity_automations = automations_with_entity(hass, f"{DOMAIN}.{friendly_name}")
-        entity_scripts = scripts_with_entity(hass, f"{DOMAIN}.{friendly_name}")
-        used_in = entity_automations + entity_scripts
-        if used_in:
+        if used_in := _get_proximity_entity_usage(hass, f"{DOMAIN}.{friendly_name}"):
             async_create_issue(
                 hass,
                 DOMAIN,
                 f"deprecated_proximity_entity_{friendly_name}",
                 breaks_in_ha_version="2024.8.0",
-                is_fixable=False,
+                is_fixable=True,
+                is_persistent=True,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_proximity_entity",
                 translation_placeholders={
