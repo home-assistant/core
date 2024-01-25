@@ -51,7 +51,6 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     _attr_name = None
 
     _attr_hvac_modes = [
-        HVACMode.OFF,
         HVACMode.FAN_ONLY,
     ]
 
