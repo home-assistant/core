@@ -9,7 +9,6 @@ from typing import Any, Optional
 import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -28,12 +27,16 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
     """Coordinator for interacting with the thermostat."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, host: str, port: int
+        self,
+        hass: HomeAssistant,
+        unique_id: str | None,
+        host: str,
+        port: int,
     ) -> None:
         """Initialize the coordinator."""
 
         self.hass = hass
-        self.config_entry = config_entry
+        self.unique_id = unique_id
         self.data: dict[str, Any] = {}
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
@@ -179,11 +182,11 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
     def create_device_info(self, data: dict[str, Any]) -> DeviceInfo | None:
         """Create the device info for the thermostat."""
 
-        if data is None or Attribute.MAC_ADDRESS not in data:
+        if data is None or Attribute.MAC_ADDRESS not in data or self.unique_id is None:
             return None
 
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.config_entry.unique_id)},
+            identifiers={(DOMAIN, self.unique_id)},
             name=self.create_device_name(data),
             manufacturer="Aprilaire",
         )
