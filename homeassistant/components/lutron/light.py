@@ -38,7 +38,7 @@ async def async_setup_entry(
     lights = []
 
     for area_name, device in entry_data.lights:
-        if device.type == "CEILING_FAN_TYPE":
+        if device.type == "CEILING_FAN_TYPE2":
             # If this is a fan check to see if this entity already exists. If not, do not create a new one.
             entity_id = ent_reg.async_get_entity_id(
                 Platform.LIGHT,
@@ -52,7 +52,7 @@ async def async_setup_entry(
                     # If the entity exists and is disabled then we want to remove the entity so that the user is using the new fan entity instead.
                     ent_reg.async_remove(entity_id)
                 else:
-                    lights.append([area_name, device, entry_data.client])
+                    lights.append(LutronLight(area_name, device, entry_data.client))
                     entity_automations = automations_with_entity(hass, entity_id)
                     entity_scripts = scripts_with_entity(hass, entity_id)
                     for item in entity_automations + entity_scripts:
@@ -61,7 +61,8 @@ async def async_setup_entry(
                             DOMAIN,
                             f"deprecated_light_fan_{entity_id}_{item}",
                             breaks_in_ha_version="2024.8.0",
-                            is_fixable=False,
+                            is_fixable=True,
+                            is_persistent=True,
                             severity=IssueSeverity.WARNING,
                             translation_key="deprecated_light_fan_entity",
                             translation_placeholders={
@@ -70,13 +71,10 @@ async def async_setup_entry(
                             },
                         )
         else:
-            lights.append([area_name, device, entry_data.client])
+            lights.append(LutronLight(area_name, device, entry_data.client))
 
     async_add_entities(
-        [
-            LutronLight(area_name, device, entry_data.client)
-            for area_name, device, entry_data.client in lights
-        ],
+        lights,
         True,
     )
 
@@ -145,7 +143,8 @@ class LutronLight(LutronDevice, LightEntity):
                 DOMAIN,
                 "deprecated_light_fan_off",
                 breaks_in_ha_version="2024.8.0",
-                is_fixable=False,
+                is_fixable=True,
+                is_persistent=True,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_light_fan_off",
             )

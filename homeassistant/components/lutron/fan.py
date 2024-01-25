@@ -40,6 +40,7 @@ async def async_setup_entry(
 class LutronFan(LutronDevice, FanEntity):
     """Representation of a Lutron fan."""
 
+    _attr_name = None
     _attr_should_poll = False
     _attr_speed_count = 3
     _attr_supported_features = FanEntityFeature.SET_SPEED
