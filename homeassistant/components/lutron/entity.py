@@ -22,7 +22,6 @@ class LutronBaseEntity(Entity):
         self._lutron_device = lutron_device
         self._controller = controller
         self._area_name = area_name
-        self._update_attrs()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

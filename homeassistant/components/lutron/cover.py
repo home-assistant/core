@@ -34,8 +34,11 @@ async def async_setup_entry(
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        LutronCover(area_name, device, entry_data.client)
-        for area_name, device in entry_data.covers
+        [
+            LutronCover(area_name, device, entry_data.client)
+            for area_name, device in entry_data.covers
+        ],
+        True,
     )
 
 

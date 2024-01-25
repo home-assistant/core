@@ -36,7 +36,7 @@ async def async_setup_entry(
     for area_name, keypad, scene, led in entry_data.scenes:
         if led is not None:
             entities.append(LutronLed(area_name, keypad, scene, led, entry_data.client))
-    async_add_entities(entities)
+    async_add_entities(entities, True)
 
 
 class LutronSwitch(LutronDevice, SwitchEntity):
