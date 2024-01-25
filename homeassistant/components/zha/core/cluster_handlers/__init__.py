@@ -7,7 +7,7 @@ import contextlib
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, ParamSpec, TypedDict, cast
+from typing import TYPE_CHECKING, Any, ParamSpec, TypedDict
 
 import zigpy.exceptions
 import zigpy.util
@@ -262,7 +262,7 @@ class ClusterHandler(LogMixin):
                 "id": attr,
                 "name": attr_name,
                 "change": config[2],
-                "success": False,
+                "status": None,
             }
 
         to_configure = [*self.REPORT_CONFIG]
@@ -328,7 +328,10 @@ class ClusterHandler(LogMixin):
         )
 
     def _configure_reporting_status(
-        self, attrs: dict[str, tuple[int, int, float | int]], res: list | tuple
+        self,
+        attrs: dict[str, tuple[int, int, float | int]],
+        res: list | tuple,
+        event_data: dict[str, dict[str, Any]],
     ) -> None:
         """Parse configure reporting result."""
         if isinstance(res, (Exception, ConfigureReportingResponseRecord)):
@@ -339,6 +342,8 @@ class ClusterHandler(LogMixin):
                 self.name,
                 res,
             )
+            for attr in attrs:
+                event_data[attr]["status"] = Status.FAILURE.name
             return
         if res[0].status == Status.SUCCESS and len(res) == 1:
             self.debug(
@@ -347,24 +352,38 @@ class ClusterHandler(LogMixin):
                 self.name,
                 res,
             )
+            # 2.5.8.1.3 Status Field
+            # The status field specifies the status of the Configure Reporting operation attempted on this attribute, as de- tailed in 2.5.7.3.
+            # Note that attribute status records are not included for successfully configured attributes, in order to save bandwidth.
+            # In the case of successful configuration of all attributes, only a single attribute status record SHALL be included in the command,
+            # with the status field set to SUCCESS and the direction and attribute identifier fields omitted.
+            for attr in attrs:
+                event_data[attr]["status"] = Status.SUCCESS.name
             return
 
+        for record in res:
+            event_data[self.cluster.find_attribute(record.attrid).name][
+                "status"
+            ] = record.status.name
         failed = [
             self.cluster.find_attribute(record.attrid).name
             for record in res
             if record.status != Status.SUCCESS
         ]
         self.debug(
-            "Successfully configured reporting for '%s' on '%s' cluster",
-            set(attrs) - set(failed),
-            self.name,
-        )
-        self.debug(
             "Failed to configure reporting for '%s' on '%s' cluster: %s",
             failed,
             self.name,
             res,
         )
+        success = set(attrs) - set(failed)
+        self.debug(
+            "Successfully configured reporting for '%s' on '%s' cluster",
+            set(attrs) - set(failed),
+            self.name,
+        )
+        for attr in success:
+            event_data[attr]["status"] = Status.SUCCESS.name
 
     async def async_configure(self) -> None:
         """Set cluster binding and attribute reporting."""
