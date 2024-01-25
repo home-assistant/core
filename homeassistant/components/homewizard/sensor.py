@@ -59,6 +59,11 @@ class HomeWizardExternalSensorEntityDescription(SensorEntityDescription):
     device_name: str
 
 
+def to_percentage(value: float | None) -> float | None:
+    """Convert 0..1 value to percentage when value is not None."""
+    return value * 100 if value is not None else None
+
+
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
         key="smr_version",
@@ -454,7 +459,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         has_fn=lambda data: data.active_power_factor is not None,
-        value_fn=lambda data: data.active_power_factor * 100,
+        value_fn=lambda data: to_percentage(data.active_power_factor),
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_factor_l1",
@@ -465,7 +470,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         has_fn=lambda data: data.active_power_factor_l1 is not None,
-        value_fn=lambda data: data.active_power_factor_l1 * 100,
+        value_fn=lambda data: to_percentage(data.active_power_factor_l1),
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_factor_l2",
@@ -476,7 +481,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         has_fn=lambda data: data.active_power_factor_l2 is not None,
-        value_fn=lambda data: data.active_power_factor_l2 * 100,
+        value_fn=lambda data: to_percentage(data.active_power_factor_l2),
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_factor_l3",
@@ -486,7 +491,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         has_fn=lambda data: data.active_power_factor_l3 is not None,
-        value_fn=lambda data: data.active_power_factor_l3 * 100,
+        value_fn=lambda data: to_percentage(data.active_power_factor_l3),
     ),
     HomeWizardSensorEntityDescription(
         key="voltage_sag_l1_count",
