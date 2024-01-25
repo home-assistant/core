@@ -382,24 +382,35 @@ async def async_get_translations_for_categories(
     Otherwise default to loaded integrations combined with config flow
     integrations if config_flow is true.
     """
-    components_for_categories: dict[str, set[str]] = {}
     all_components: set[str] = set()
+    components: set[str] | None = None
+    components_without_platforms: set[str] = set()
+    components_for_categories: dict[str, set[str]] = {}
+
+    if integrations is not None:
+        components = set(integrations)
+    elif config_flow:
+        components = (await async_get_config_flows(hass)) - hass.config.components
+
     for category in categories:
-        if integrations is not None:
-            components = set(integrations)
-        elif config_flow:
-            components = (await async_get_config_flows(hass)) - hass.config.components
+        if components is not None:
+            # If integrations or config_flow is specified, we can skip the
+            # figuring out the which components to load step.
+            components_for_category = components
         elif category in ("state", "entity_component", "services"):
-            components = hass.config.components
+            components_for_category = hass.config.components
         else:
             # Only 'state' supports merging, so remove platforms from selection
-            components = {
-                component
-                for component in hass.config.components
-                if "." not in component
-            }
-        components_for_categories[category] = components
-        all_components.update(components)
+            if not components_without_platforms:
+                components_without_platforms = {
+                    component
+                    for component in hass.config.components
+                    if "." not in component
+                }
+            components_for_category = components_without_platforms
+
+        components_for_categories[category] = components_for_category
+        all_components.update(components_for_category)
 
     if TRANSLATION_FLATTEN_CACHE in hass.data:
         cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
