@@ -28,7 +28,8 @@ async def async_setup_entry(
         device_class = info[0]
         unit = info[1]
         friendly_name_format = info[2]
-        status_sources = info[3]
+        suggested_display_precision = info[3]
+        status_sources = info[4]
 
         for source in status_sources:
             sensors.append(
@@ -39,6 +40,7 @@ async def async_setup_entry(
                     device_class,
                     unit,
                     friendly_name_format,
+                    suggested_display_precision,
                 )
             )
 
@@ -51,7 +53,16 @@ class OpenThermSensor(SensorEntity):
     _attr_should_poll = False
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, gw_dev, var, source, device_class, unit, friendly_name_format):
+    def __init__(
+        self,
+        gw_dev,
+        var,
+        source,
+        device_class,
+        unit,
+        friendly_name_format,
+        suggested_display_precision,
+    ):
         """Initialize the OpenTherm Gateway sensor."""
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, f"{var}_{source}_{gw_dev.gw_id}", hass=gw_dev.hass
@@ -68,6 +79,8 @@ class OpenThermSensor(SensorEntity):
         self._attr_name = friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
         self._attr_unique_id = f"{gw_dev.gw_id}-{source}-{var}"
+        if suggested_display_precision:
+            self._attr_suggested_display_precision = suggested_display_precision
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, gw_dev.gw_id)},
             manufacturer="Schelte Bron",
@@ -97,7 +110,5 @@ class OpenThermSensor(SensorEntity):
     def receive_report(self, status):
         """Handle status updates from the component."""
         value = status[self._source].get(self._var)
-        if isinstance(value, float):
-            value = f"{value:2.1f}"
         self._attr_native_value = value
         self.async_write_ha_state()

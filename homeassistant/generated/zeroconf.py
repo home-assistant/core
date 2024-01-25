@@ -344,6 +344,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_bangolufsen._tcp.local.": [
+        {
+            "domain": "bang_olufsen",
+        },
+    ],
     "_bbxsrv._tcp.local.": [
         {
             "domain": "blebox",
@@ -621,6 +626,11 @@ ZEROCONF = {
             "name": "brother*",
         },
     ],
+    "_rabbitair._udp.local.": [
+        {
+            "domain": "rabbitair",
+        },
+    ],
     "_raop._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -698,6 +708,11 @@ ZEROCONF = {
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
+        },
+    ],
+    "_technove-stations._tcp.local.": [
+        {
+            "domain": "technove",
         },
     ],
     "_touch-able._tcp.local.": [

@@ -58,6 +58,7 @@ from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstant,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -71,6 +72,7 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    ScriptRunResult,
     script_stack_cv,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -146,10 +148,6 @@ _DEPRECATED_AutomationTriggerData = DeprecatedConstant(
 _DEPRECATED_AutomationTriggerInfo = DeprecatedConstant(
     TriggerInfo, "TriggerInfo", "2025.1"
 )
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 @bind_hass
@@ -362,7 +360,7 @@ class BaseAutomationEntity(ToggleEntity, ABC):
         run_variables: dict[str, Any],
         context: Context | None = None,
         skip_condition: bool = False,
-    ) -> None:
+    ) -> ScriptRunResult | None:
         """Trigger automation."""
 
 
@@ -584,7 +582,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         run_variables: dict[str, Any],
         context: Context | None = None,
         skip_condition: bool = False,
-    ) -> None:
+    ) -> ScriptRunResult | None:
         """Trigger automation.
 
         This method is a coroutine.
@@ -620,7 +618,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 except TemplateError as err:
                     self._logger.error("Error rendering variables: %s", err)
                     automation_trace.set_error(err)
-                    return
+                    return None
 
             # Prepare tracing the automation
             automation_trace.set_trace(trace_get())
@@ -647,7 +645,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     trace_get(clear=False),
                 )
                 script_execution_set("failed_conditions")
-                return
+                return None
 
             self.async_set_context(trigger_context)
             event_data = {
@@ -669,7 +667,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             try:
                 with trace_path("action"):
-                    await self.action_script.async_run(
+                    return await self.action_script.async_run(
                         variables, trigger_context, started_action
                     )
             except ServiceNotFound as err:
@@ -700,6 +698,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 self._logger.exception("While executing automation %s", self.entity_id)
                 automation_trace.set_error(err)
 
+            return None
+
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
@@ -724,7 +724,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._is_enabled = True
 
         # HomeAssistant is starting up
-        if self.hass.state != CoreState.not_running:
+        if self.hass.state is not CoreState.not_running:
             self._async_detach_triggers = await self._async_attach_triggers(False)
             self.async_write_ha_state()
             return
@@ -1108,3 +1108,11 @@ def websocket_config(
             "config": automation.raw_config,
         },
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

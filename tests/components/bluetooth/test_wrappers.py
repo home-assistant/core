@@ -367,6 +367,38 @@ async def test_we_switch_adapters_on_failure(
     cancel_hci1()
 
 
+async def test_passing_subclassed_str_as_address(
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
+    install_bleak_catcher,
+) -> None:
+    """Ensure the client wrapper can handle a subclassed str as the address."""
+    _, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(hass)
+
+    class SubclassedStr(str):
+        pass
+
+    address = SubclassedStr("00:00:00:00:00:01")
+    client = bleak.BleakClient(address)
+
+    class FakeBleakClient(BaseFakeBleakClient):
+        """Fake bleak client."""
+
+        async def connect(self, *args, **kwargs):
+            """Connect."""
+            return True
+
+    with patch(
+        "habluetooth.wrappers.get_platform_client_backend_type",
+        return_value=FakeBleakClient,
+    ):
+        assert await client.connect() is True
+
+    cancel_hci0()
+    cancel_hci1()
+
+
 async def test_raise_after_shutdown(
     hass: HomeAssistant,
     two_adapters: None,

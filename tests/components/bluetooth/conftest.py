@@ -55,7 +55,7 @@ def macos_adapter():
     ), patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Darwin",
-    ):
+    ), patch("habluetooth.scanner.SYSTEM", "Darwin"):
         yield
 
 
@@ -65,7 +65,7 @@ def windows_adapter():
     with patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Windows",
-    ):
+    ), patch("habluetooth.scanner.SYSTEM", "Windows"):
         yield
 
 
@@ -81,7 +81,7 @@ def no_adapter_fixture():
     ), patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Linux",
-    ), patch(
+    ), patch("habluetooth.scanner.SYSTEM", "Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
@@ -102,7 +102,7 @@ def one_adapter_fixture():
     ), patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Linux",
-    ), patch(
+    ), patch("habluetooth.scanner.SYSTEM", "Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",

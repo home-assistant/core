@@ -252,9 +252,9 @@ class AppleTvMediaPlayer(
         if (
             self.atv
             and self._is_feature_available(FeatureName.App)
-            and self.atv.metadata.app is not None
+            and (app := self.atv.metadata.app) is not None
         ):
-            return self.atv.metadata.app.identifier
+            return app.identifier
         return None
 
     @property
@@ -263,9 +263,9 @@ class AppleTvMediaPlayer(
         if (
             self.atv
             and self._is_feature_available(FeatureName.App)
-            and self.atv.metadata.app is not None
+            and (app := self.atv.metadata.app) is not None
         ):
-            return self.atv.metadata.app.name
+            return app.name
         return None
 
     @property
@@ -533,7 +533,7 @@ class AppleTvMediaPlayer(
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         if self.atv:
-            await self.atv.remote_control.set_position(int(position))
+            await self.atv.remote_control.set_position(round(position))
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""

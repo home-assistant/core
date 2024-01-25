@@ -11,7 +11,6 @@ from itertools import chain, groupby
 import logging
 from operator import itemgetter
 import re
-from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
@@ -101,7 +100,7 @@ QUERY_STATISTICS_SHORT_TERM = (
     StatisticsShortTerm.sum,
 )
 
-QUERY_STATISTICS_SUMMARY_MEAN = (  # type: ignore[var-annotated]
+QUERY_STATISTICS_SUMMARY_MEAN = (
     StatisticsShortTerm.metadata_id,
     func.avg(StatisticsShortTerm.mean),
     func.min(StatisticsShortTerm.min),
@@ -143,6 +142,17 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
 }
 
 DATA_SHORT_TERM_STATISTICS_RUN_CACHE = "recorder_short_term_statistics_run_cache"
+
+
+def mean(values: list[float]) -> float | None:
+    """Return the mean of the values.
+
+    This is a very simple version that only works
+    with a non-empty list of floats. The built-in
+    statistics.mean is more robust but is is almost
+    an order of magnitude slower.
+    """
+    return sum(values) / len(values)
 
 
 _LOGGER = logging.getLogger(__name__)
