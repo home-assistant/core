@@ -91,6 +91,16 @@ def mock_iotty() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
+def mock_coordinator() -> Generator[None, MagicMock, None]:
+    """Mock IottyDataUpdateCoordinator."""
+    with patch(
+        "homeassistant.components.iotty.coordinator.IottyDataUpdateCoordinator",
+        autospec=True,
+    ) as coordinator_mock:
+        yield coordinator_mock
+
+
+@pytest.fixture
 def mock_iotty_command_fn() -> Generator[AsyncMock, None, None]:
     """Mock iottyProxy to simulate cmd issuing."""
 
@@ -162,4 +172,11 @@ def mock_schedule_update_ha_state() -> Generator[None, MagicMock, None]:
     with patch(
         "homeassistant.helpers.entity.Entity.schedule_update_ha_state"
     ) as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_async_add_entities() -> Generator[None, MagicMock, None]:
+    """Mock Hass add_entities."""
+    with patch("homeassistant.helpers.entity_platform.AddEntitiesCallback") as mock_fn:
         yield mock_fn

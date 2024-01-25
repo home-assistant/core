@@ -21,6 +21,7 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 class IottyProxy(CloudApi):
     """Provide iotty authentication tied to an OAuth2 based config entry."""
 
+    # We shall remove these
     _devices: list[Device]
     _entities: dict
     _coroutine: Any
@@ -37,8 +38,6 @@ class IottyProxy(CloudApi):
         if oauth_session is None:
             raise ValueError("oauth_session")
         self._oauth_session = oauth_session
-        self._devices = []
-        self._entities = {}
         self._hass = hass
 
     async def async_get_access_token(self) -> str:

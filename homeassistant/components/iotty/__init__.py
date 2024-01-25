@@ -11,8 +11,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
+from . import coordinator
 from .const import DOMAIN
-from .coordinator import IottyDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,13 +26,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
-    data_update_coordinator = IottyDataUpdateCoordinator(hass, entry, session)
+    data_update_coordinator = coordinator.IottyDataUpdateCoordinator(
+        hass, entry, session
+    )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_update_coordinator
 
     await data_update_coordinator.async_config_entry_first_refresh()
-
-    # await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
