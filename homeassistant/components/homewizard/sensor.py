@@ -496,6 +496,7 @@ async def async_setup_entry(
                     name=description.device_name,
                     manufacturer="HomeWizard",
                     model=coordinator.data.device.product_type,
+                    serial_number=unique_id,
                 )
                 if coordinator.data.device.serial is not None:
                     device_info[ATTR_VIA_DEVICE] = (
