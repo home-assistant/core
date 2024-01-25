@@ -203,10 +203,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._attr_has_entity_name = True
         self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
 
-    async def _async_remove_forced(self) -> None:
-        """Fully remove this entity from the state machine."""
-        await self.async_remove(force_remove=True)
-
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         entry_data = self._entry_data
@@ -217,7 +213,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self.async_on_remove(
             entry_data.async_register_key_static_info_remove_callback(
                 static_info,
-                self._async_remove_forced,
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
         self.async_on_remove(
