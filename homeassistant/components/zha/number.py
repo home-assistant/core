@@ -5,6 +5,8 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+from zigpy.zcl.clusters.hvac import Thermostat
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
@@ -1004,8 +1006,8 @@ class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
     _attr_icon: str = "mdi:thermostat"
     _attr_native_step: float = 0.5
 
-    _min_source = "abs_min_heat_setpoint_limit"
-    _max_source = "abs_max_heat_setpoint_limit"
+    _min_source = Thermostat.AttributeDefs.abs_min_heat_setpoint_limit.name
+    _max_source = Thermostat.AttributeDefs.abs_max_heat_setpoint_limit.name
 
     @property
     def native_min_value(self) -> float:
@@ -1033,7 +1035,7 @@ class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
     _attribute_name: str = "max_heat_setpoint_limit"
     _attr_translation_key: str = "max_heat_setpoint_limit"
 
-    _min_source = "min_heat_setpoint_limit"
+    _min_source = Thermostat.AttributeDefs.min_heat_setpoint_limit.name
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
@@ -1048,4 +1050,4 @@ class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
     _attribute_name: str = "min_heat_setpoint_limit"
     _attr_translation_key: str = "min_heat_setpoint_limit"
 
-    _max_source = "max_heat_setpoint_limit"
+    _max_source = Thermostat.AttributeDefs.max_heat_setpoint_limit.name

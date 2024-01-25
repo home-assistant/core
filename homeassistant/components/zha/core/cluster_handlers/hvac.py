@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Any
 
 from zigpy.zcl.clusters import hvac
-from zigpy.zcl.clusters.hvac import Fan, Thermostat
+from zigpy.zcl.clusters.hvac import Fan, Thermostat, UserInterface
 
 from homeassistant.core import callback
 
@@ -335,7 +335,7 @@ class ThermostatClusterHandler(ClusterHandler):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.UserInterface.cluster_id)
-class UserInterface(ClusterHandler):
+class UserInterfaceClusterHandler(ClusterHandler):
     """User interface (thermostat) cluster handler."""
 
-    ZCL_INIT_ATTRS = {"keypad_lockout": True}
+    ZCL_INIT_ATTRS = {UserInterface.AttributeDefs.keypad_lockout.name: True}
