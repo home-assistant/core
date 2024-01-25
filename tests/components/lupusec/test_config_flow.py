@@ -20,16 +20,6 @@ MOCK_DATA_STEP = {
 }
 
 
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Create a mock StreamLabs config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="test-host.lan",
-        data=MOCK_DATA_STEP,
-    )
-
-
 async def test_form_valid_input(hass: HomeAssistant) -> None:
     """Test handling valid user input."""
     result = await hass.config_entries.flow.async_init(
@@ -112,7 +102,7 @@ async def test_form_lupusec_exception(hass: HomeAssistant) -> None:
 async def test_flow_user_init_data_error_and_recover(
     hass: HomeAssistant, raise_error, text_error
 ) -> None:
-    """Test handling valid user input."""
+    """Test exceptions and recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -153,3 +143,37 @@ async def test_flow_user_init_data_error_and_recover(
             assert result3["data"] == MOCK_DATA_STEP
             assert len(mock_setup_entry.mock_calls) == 1
             assert len(mock_initialize_lupusec.mock_calls) == 2
+
+
+async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> None:
+    """Test duplicate config entry.."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_DATA_STEP[CONF_HOST],
+        data=MOCK_DATA_STEP,
+        unique_id=MOCK_DATA_STEP[CONF_HOST],
+    )
+
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.lupusec.config_flow.test_host_connection",
+        return_value=None,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_DATA_STEP,
+        )
+
+        await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "already_configured"
+        assert len(mock_setup_entry.mock_calls) == 1
