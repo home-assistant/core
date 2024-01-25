@@ -4,9 +4,9 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
-from kasa import SmartDevice, SmartDeviceException
+from kasa import AuthenticationException, SmartDevice, SmartDeviceException
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -26,6 +26,8 @@ def async_refresh_after(
     async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
+        except AuthenticationException as ex:
+            raise ConfigEntryAuthFailed from ex
         except SmartDeviceException as ex:
             raise HomeAssistantError("Unable to communicate with the device") from ex
 
