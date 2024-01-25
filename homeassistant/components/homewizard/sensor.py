@@ -491,23 +491,8 @@ async def async_setup_entry(
     if coordinator.data.data.external_devices is not None:
         for unique_id, device in coordinator.data.data.external_devices.items():
             if description := EXTERNAL_SENSORS.get(device.meter_type):
-                device_info = DeviceInfo(
-                    identifiers={(DOMAIN, unique_id)},
-                    name=description.device_name,
-                    manufacturer="HomeWizard",
-                    model=coordinator.data.device.product_type,
-                    serial_number=unique_id,
-                )
-                if coordinator.data.device.serial is not None:
-                    device_info[ATTR_VIA_DEVICE] = (
-                        DOMAIN,
-                        coordinator.data.device.serial,
-                    )
-
                 entities.append(
-                    HomeWizardExternalSensorEntity(
-                        coordinator, description, device_info, unique_id
-                    )
+                    HomeWizardExternalSensorEntity(coordinator, description, unique_id)
                 )
 
     async_add_entities(entities)
@@ -548,16 +533,26 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
         description: HomeWizardExternalSensorEntityDescription,
-        device_info: DeviceInfo,
         device_unique_id: str,
     ) -> None:
         """Initialize Externally connected HomeWizard Sensors."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"
+        self.entity_description = description
         self._device_id = device_unique_id
         self._suggested_device_class = description.suggested_device_class
-        self._attr_device_info = device_info
-        self.entity_description = description
+        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_unique_id)},
+            name=description.device_name,
+            manufacturer="HomeWizard",
+            model=coordinator.data.device.product_type,
+            serial_number=device_unique_id,
+        )
+        if coordinator.data.device.serial is not None:
+            self._attr_device_info[ATTR_VIA_DEVICE] = (
+                DOMAIN,
+                coordinator.data.device.serial,
+            )
 
     @property
     def native_value(self) -> float | int | str | None:
