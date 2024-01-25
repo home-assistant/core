@@ -429,7 +429,7 @@ def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
 
 
 def _list_events_dict_factory(
-    obj: Iterable[tuple[str, Any]]
+    obj: Iterable[tuple[str, Any]],
 ) -> dict[str, JsonValueType]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
     return {
@@ -818,7 +818,7 @@ async def handle_calendar_event_update(
 
 
 def _validate_timespan(
-    values: dict[str, Any]
+    values: dict[str, Any],
 ) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
     """Parse a create event service call and convert the args ofr a create event entity call.
 

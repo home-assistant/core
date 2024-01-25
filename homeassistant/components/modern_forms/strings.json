@@ -6,6 +6,9 @@
         "description": "Set up your Modern Forms fan to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Modern Forms fan."
         }
       },
       "zeroconf_confirm": {

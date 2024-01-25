@@ -7,6 +7,8 @@ import logging
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_PLUG_ONOFF
+from zhaquirks.xiaomi.aqara.magnet_ac01 import OppleCluster as MagnetAC01OppleCluster
+from zhaquirks.xiaomi.aqara.switch_acn047 import OppleCluster as T2RelayOppleCluster
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
@@ -23,6 +25,7 @@ from .core.const import (
     CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
+    CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
@@ -408,6 +411,66 @@ class AqaraApproachDistance(ZCLEnumSelectEntity):
     _attr_translation_key: str = "approach_distance"
 
 
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.magnet.ac01"}
+)
+class AqaraMagnetAC01DetectionDistance(ZCLEnumSelectEntity):
+    """Representation of a ZHA detection distance configuration entity."""
+
+    _unique_id_suffix = "detection_distance"
+    _attribute_name = "detection_distance"
+    _enum = MagnetAC01OppleCluster.DetectionDistance
+    _attr_translation_key: str = "detection_distance"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.switch.acn047"}
+)
+class AqaraT2RelaySwitchMode(ZCLEnumSelectEntity):
+    """Representation of a ZHA switch mode configuration entity."""
+
+    _unique_id_suffix = "switch_mode"
+    _attribute_name = "switch_mode"
+    _enum = T2RelayOppleCluster.SwitchMode
+    _attr_translation_key: str = "switch_mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.switch.acn047"}
+)
+class AqaraT2RelaySwitchType(ZCLEnumSelectEntity):
+    """Representation of a ZHA switch type configuration entity."""
+
+    _unique_id_suffix = "switch_type"
+    _attribute_name = "switch_type"
+    _enum = T2RelayOppleCluster.SwitchType
+    _attr_translation_key: str = "switch_type"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.switch.acn047"}
+)
+class AqaraT2RelayStartupOnOff(ZCLEnumSelectEntity):
+    """Representation of a ZHA startup on off configuration entity."""
+
+    _unique_id_suffix = "startup_on_off"
+    _attribute_name = "startup_on_off"
+    _enum = T2RelayOppleCluster.StartupOnOff
+    _attr_translation_key: str = "start_up_on_off"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.switch.acn047"}
+)
+class AqaraT2RelayDecoupledMode(ZCLEnumSelectEntity):
+    """Representation of a ZHA switch decoupled mode configuration entity."""
+
+    _unique_id_suffix = "decoupled_mode"
+    _attribute_name = "decoupled_mode"
+    _enum = T2RelayOppleCluster.DecoupledMode
+    _attr_translation_key: str = "decoupled_mode"
+
+
 class AqaraE1ReverseDirection(types.enum8):
     """Aqara curtain reversal."""
 
@@ -590,3 +653,23 @@ class AqaraThermostatPreset(ZCLEnumSelectEntity):
     _attribute_name = "preset"
     _enum = AqaraThermostatPresetMode
     _attr_translation_key: str = "preset"
+
+
+class SonoffPresenceDetectionSensitivityEnum(types.enum8):
+    """Enum for detection sensitivity select entity."""
+
+    Low = 0x01
+    Medium = 0x02
+    High = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY, models={"SNZB-06P"}
+)
+class SonoffPresenceDetectionSensitivity(ZCLEnumSelectEntity):
+    """Entity to set the detection sensitivity of the Sonoff SNZB-06P."""
+
+    _unique_id_suffix = "detection_sensitivity"
+    _attribute_name = "ultrasonic_u_to_o_threshold"
+    _enum = SonoffPresenceDetectionSensitivityEnum
+    _attr_translation_key: str = "detection_sensitivity"

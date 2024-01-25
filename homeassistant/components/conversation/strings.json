@@ -16,6 +16,10 @@
         "agent_id": {
           "name": "Agent",
           "description": "Conversation agent to process your request. The conversation agent is the brains of your assistant. It processes the incoming text commands."
+        },
+        "conversation_id": {
+          "name": "Conversation ID",
+          "description": "ID of the conversation, to be able to continue a previous conversation"
         }
       }
     },

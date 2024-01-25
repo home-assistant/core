@@ -23,7 +23,7 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkSirenEntityDescription(SirenEntityDescription):
     """YoLink SirenEntityDescription."""
 

@@ -344,6 +344,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_bangolufsen._tcp.local.": [
+        {
+            "domain": "bang_olufsen",
+        },
+    ],
     "_bbxsrv._tcp.local.": [
         {
             "domain": "blebox",
@@ -494,6 +499,12 @@ ZEROCONF = {
                 "vendor": "synology*",
             },
         },
+        {
+            "domain": "tailwind",
+            "properties": {
+                "vendor": "tailwind",
+            },
+        },
     ],
     "_hue._tcp.local.": [
         {
@@ -615,6 +626,11 @@ ZEROCONF = {
             "name": "brother*",
         },
     ],
+    "_rabbitair._udp.local.": [
+        {
+            "domain": "rabbitair",
+        },
+    ],
     "_raop._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -694,9 +710,19 @@ ZEROCONF = {
             "domain": "system_bridge",
         },
     ],
+    "_technove-stations._tcp.local.": [
+        {
+            "domain": "technove",
+        },
+    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_tvm._tcp.local.": [
+        {
+            "domain": "motionmount",
         },
     ],
     "_uzg-01._tcp.local.": [
@@ -713,6 +739,11 @@ ZEROCONF = {
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_wyoming._tcp.local.": [
+        {
+            "domain": "wyoming",
         },
     ],
     "_xbmc-jsonrpc-h._tcp.local.": [

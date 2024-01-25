@@ -14,6 +14,10 @@ process:
       example: homeassistant
       selector:
         conversation_agent:
+    conversation_id:
+      example: my_conversation_1
+      selector:
+        text:
 
 reload:
   fields:

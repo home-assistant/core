@@ -8,11 +8,7 @@ from unittest import mock
 from aiohomekit import AccessoryNotFoundError
 from aiohomekit.testing import FakePairing
 
-from homeassistant.components.climate import (
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
-)
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import UnitOfTemperature
@@ -108,9 +104,9 @@ async def test_ecobee3_setup(hass: HomeAssistant) -> None:
                     friendly_name="HomeW",
                     unique_id="00:00:00:00:00:00_1_16",
                     supported_features=(
-                        SUPPORT_TARGET_TEMPERATURE
-                        | SUPPORT_TARGET_TEMPERATURE_RANGE
-                        | SUPPORT_TARGET_HUMIDITY
+                        ClimateEntityFeature.TARGET_TEMPERATURE
+                        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                        | ClimateEntityFeature.TARGET_HUMIDITY
                     ),
                     capabilities={
                         "hvac_modes": ["off", "heat", "cool", "heat_cool"],

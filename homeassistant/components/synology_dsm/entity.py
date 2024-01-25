@@ -18,14 +18,14 @@ from .coordinator import (
 _CoordinatorT = TypeVar("_CoordinatorT", bound=SynologyDSMUpdateCoordinator[Any])
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMRequiredKeysMixin:
     """Mixin for required keys."""
 
     api_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMEntityDescription(EntityDescription, SynologyDSMRequiredKeysMixin):
     """Generic Synology DSM entity description."""
 

@@ -122,7 +122,7 @@ async def test_setup_and_unload_entry(
     java_mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
         return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         "homeassistant.components.minecraft_server.api.JavaServer.async_status",
@@ -138,14 +138,14 @@ async def test_setup_and_unload_entry(
     assert java_mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_entry_failure(
+async def test_setup_entry_lookup_failure(
     hass: HomeAssistant, java_mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test failed entry setup."""
+    """Test lookup failure in entry setup."""
     java_mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
         side_effect=ValueError,
     ):
         assert not await hass.config_entries.async_setup(
@@ -156,6 +156,24 @@ async def test_setup_entry_failure(
     assert java_mock_config_entry.state == ConfigEntryState.SETUP_ERROR
 
 
+async def test_setup_entry_init_failure(
+    hass: HomeAssistant, java_mock_config_entry: MockConfigEntry
+) -> None:
+    """Test init failure in entry setup."""
+    java_mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.minecraft_server.api.MinecraftServer.async_initialize",
+        side_effect=None,
+    ):
+        assert not await hass.config_entries.async_setup(
+            java_mock_config_entry.entry_id
+        )
+
+    await hass.async_block_till_done()
+    assert java_mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
 async def test_setup_entry_not_ready(
     hass: HomeAssistant, java_mock_config_entry: MockConfigEntry
 ) -> None:
@@ -163,7 +181,7 @@ async def test_setup_entry_not_ready(
     java_mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
         return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         "homeassistant.components.minecraft_server.api.JavaServer.async_status",
@@ -196,7 +214,7 @@ async def test_entry_migration(
 
     # Trigger migration.
     with patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
         side_effect=[
             ValueError,  # async_migrate_entry
             JavaServer(host=TEST_HOST, port=TEST_PORT),  # async_migrate_entry
@@ -258,7 +276,7 @@ async def test_entry_migration_host_only(
 
     # Trigger migration.
     with patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
         return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         "homeassistant.components.minecraft_server.api.JavaServer.async_status",
@@ -293,7 +311,7 @@ async def test_entry_migration_v3_failure(
 
     # Trigger migration.
     with patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
         side_effect=[
             ValueError,  # async_migrate_entry
             ValueError,  # async_migrate_entry

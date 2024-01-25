@@ -51,6 +51,14 @@ def set_time_zone(hass: HomeAssistant) -> None:
             ],
             "0",
         ),
+        (
+            [
+                make_api_task(
+                    id="12345", content="sub-task", is_completed=False, parent_id="1"
+                )
+            ],
+            "0",
+        ),
     ],
 )
 async def test_todo_item_state(
@@ -72,7 +80,7 @@ async def test_todo_item_state(
             [],
             {},
             [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
-            {"content": "Soda"},
+            {"content": "Soda", "due_string": "no date", "description": ""},
             {"uid": "task-id-1", "summary": "Soda", "status": "needs_action"},
         ),
         (
@@ -86,7 +94,7 @@ async def test_todo_item_state(
                     due=Due(is_recurring=False, date="2023-11-18", string="today"),
                 )
             ],
-            {"due": {"date": "2023-11-18"}},
+            {"description": "", "due_date": "2023-11-18"},
             {
                 "uid": "task-id-1",
                 "summary": "Soda",
@@ -111,7 +119,8 @@ async def test_todo_item_state(
                 )
             ],
             {
-                "due": {"date": "2023-11-18", "datetime": "2023-11-18T06:30:00-06:00"},
+                "description": "",
+                "due_datetime": "2023-11-18T06:30:00-06:00",
             },
             {
                 "uid": "task-id-1",
@@ -131,7 +140,7 @@ async def test_todo_item_state(
                     is_completed=False,
                 )
             ],
-            {"description": "6-pack"},
+            {"description": "6-pack", "due_string": "no date"},
             {
                 "uid": "task-id-1",
                 "summary": "Soda",
@@ -256,11 +265,35 @@ async def test_update_todo_item_status(
     ("tasks", "update_data", "tasks_after_update", "update_kwargs", "expected_item"),
     [
         (
-            [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Soda",
+                    is_completed=False,
+                    description="desc",
+                )
+            ],
             {"rename": "Milk"},
-            [make_api_task(id="task-id-1", content="Milk", is_completed=False)],
-            {"task_id": "task-id-1", "content": "Milk"},
-            {"uid": "task-id-1", "summary": "Milk", "status": "needs_action"},
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Milk",
+                    is_completed=False,
+                    description="desc",
+                )
+            ],
+            {
+                "task_id": "task-id-1",
+                "content": "Milk",
+                "description": "desc",
+                "due_string": "no date",
+            },
+            {
+                "uid": "task-id-1",
+                "summary": "Milk",
+                "status": "needs_action",
+                "description": "desc",
+            },
         ),
         (
             [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
@@ -273,7 +306,12 @@ async def test_update_todo_item_status(
                     due=Due(is_recurring=False, date="2023-11-18", string="today"),
                 )
             ],
-            {"task_id": "task-id-1", "due": {"date": "2023-11-18"}},
+            {
+                "task_id": "task-id-1",
+                "content": "Soda",
+                "due_date": "2023-11-18",
+                "description": "",
+            },
             {
                 "uid": "task-id-1",
                 "summary": "Soda",
@@ -299,7 +337,9 @@ async def test_update_todo_item_status(
             ],
             {
                 "task_id": "task-id-1",
-                "due": {"date": "2023-11-18", "datetime": "2023-11-18T06:30:00-06:00"},
+                "content": "Soda",
+                "due_datetime": "2023-11-18T06:30:00-06:00",
+                "description": "",
             },
             {
                 "uid": "task-id-1",
@@ -319,7 +359,12 @@ async def test_update_todo_item_status(
                     is_completed=False,
                 )
             ],
-            {"task_id": "task-id-1", "description": "6-pack"},
+            {
+                "task_id": "task-id-1",
+                "content": "Soda",
+                "description": "6-pack",
+                "due_string": "no date",
+            },
             {
                 "uid": "task-id-1",
                 "summary": "Soda",
@@ -327,8 +372,82 @@ async def test_update_todo_item_status(
                 "description": "6-pack",
             },
         ),
+        (
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Soda",
+                    description="6-pack",
+                    is_completed=False,
+                )
+            ],
+            {"description": None},
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Soda",
+                    is_completed=False,
+                    description="",
+                )
+            ],
+            {
+                "task_id": "task-id-1",
+                "content": "Soda",
+                "description": "",
+                "due_string": "no date",
+            },
+            {
+                "uid": "task-id-1",
+                "summary": "Soda",
+                "status": "needs_action",
+            },
+        ),
+        (
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Soda",
+                    description="6-pack",
+                    is_completed=False,
+                    # Create a mock task with a string value in the Due object and verify it
+                    # gets preserved when verifying the kwargs to update below
+                    due=Due(date="2024-01-01", is_recurring=True, string="every day"),
+                )
+            ],
+            {"due_date": "2024-02-01"},
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Soda",
+                    description="6-pack",
+                    is_completed=False,
+                    due=Due(date="2024-02-01", is_recurring=True, string="every day"),
+                )
+            ],
+            {
+                "task_id": "task-id-1",
+                "content": "Soda",
+                "description": "6-pack",
+                "due_date": "2024-02-01",
+                "due_string": "every day",
+            },
+            {
+                "uid": "task-id-1",
+                "summary": "Soda",
+                "status": "needs_action",
+                "description": "6-pack",
+                "due": "2024-02-01",
+            },
+        ),
     ],
-    ids=["rename", "due_date", "due_datetime", "description"],
+    ids=[
+        "rename",
+        "due_date",
+        "due_datetime",
+        "description",
+        "clear_description",
+        "due_date_with_recurrence",
+    ],
 )
 async def test_update_todo_items(
     hass: HomeAssistant,

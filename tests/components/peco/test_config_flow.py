@@ -78,12 +78,6 @@ async def test_meter_value_error(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "user"
-    assert result["progress_action"] == "verifying_meter"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"phone_number": "invalid_phone_number"}
@@ -107,12 +101,6 @@ async def test_incompatible_meter_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.SHOW_PROGRESS
-        assert result["step_id"] == "user"
-        assert result["progress_action"] == "verifying_meter"
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "incompatible_meter"
 
@@ -134,12 +122,6 @@ async def test_unresponsive_meter_error(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "user"
-    assert result["progress_action"] == "verifying_meter"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -164,12 +146,6 @@ async def test_meter_http_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "user"
-    assert result["progress_action"] == "verifying_meter"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"phone_number": "http_error"}
@@ -192,12 +168,6 @@ async def test_smart_meter(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "user"
-    assert result["progress_action"] == "verifying_meter"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Philadelphia - 1234567890"

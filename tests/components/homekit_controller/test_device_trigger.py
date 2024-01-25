@@ -87,7 +87,6 @@ async def test_enumerate_remote(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    utcnow,
 ) -> None:
     """Test that remote is correctly enumerated."""
     await setup_test_component(hass, create_remote)
@@ -139,7 +138,6 @@ async def test_enumerate_button(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    utcnow,
 ) -> None:
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_button)
@@ -190,7 +188,6 @@ async def test_enumerate_doorbell(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    utcnow,
 ) -> None:
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_doorbell)
@@ -241,7 +238,6 @@ async def test_handle_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    utcnow,
     calls,
 ) -> None:
     """Test that events are handled."""
@@ -362,7 +358,6 @@ async def test_handle_events_late_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    utcnow,
     calls,
 ) -> None:
     """Test that events are handled when setup happens after startup."""
