@@ -100,8 +100,6 @@ async def test_flow_user_init_data_error_and_recover(
     assert len(mock_initialize_lupusec.mock_calls) == 1
 
     # Recover
-    mock_initialize_lupusec.side_effect = None
-    mock_initialize_lupusec.return_value = None
     with patch(
         "homeassistant.components.lupusec.async_setup_entry",
         return_value=True,
