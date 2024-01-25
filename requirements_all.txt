@@ -2656,6 +2656,9 @@ temperusb==1.6.1
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0
 
+# homeassistant.components.teslemetry
+tesla-fleet-api==0.2.0
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.0
 
