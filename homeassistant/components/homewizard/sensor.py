@@ -469,17 +469,6 @@ async def async_setup_entry(
             new_unique_id=f"{DOMAIN}_{coordinator.data.data.gas_unique_id}",
         )
 
-    # Migrate original gas meter identifier sensor to ExternalDevice
-    if (
-        entity_id := ent_reg.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, f"{entry.unique_id}_gas_unique_id"
-        )
-    ) and coordinator.data.data.gas_unique_id is not None:
-        ent_reg.async_update_entity(
-            entity_id,
-            new_unique_id=f"{DOMAIN}_{coordinator.data.data.gas_unique_id}_meter_identifier",
-        )
-
     # Initialize default sensors
     entities: list = [
         HomeWizardSensorEntity(coordinator, description)
