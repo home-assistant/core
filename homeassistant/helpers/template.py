@@ -1363,6 +1363,14 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     return None
 
 
+def is_area_id(hass: HomeAssistant, entity_id: str, lookup_value: str) -> bool:
+    """Test if an entity is assigned to a specific area."""
+    ent_reg = entity_registry.async_get(hass)
+    if entity := ent_reg.async_get(entity_id):
+        return entity.area_id == lookup_value
+    return False
+
+
 def _get_area_name(area_reg: area_registry.AreaRegistry, valid_area_id: str) -> str:
     """Get area name from valid area ID."""
     area = area_reg.async_get_area(valid_area_id)
@@ -2610,6 +2618,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "closest",
                 "distance",
                 "expand",
+                "is_area_id",
                 "is_hidden_entity",
                 "is_state",
                 "is_state_attr",
@@ -2636,6 +2645,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             ]
             hass_tests = [
                 "has_value",
+                "is_area_id",
                 "is_hidden_entity",
                 "is_state",
                 "is_state_attr",
@@ -2648,6 +2658,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 self.filters[test] = unsupported(test)
             return
 
+        self.globals["is_area_id"] = hassfunction(is_area_id)
+        self.tests["is_area_id"] = hassfunction(is_area_id, pass_eval_context)
         self.globals["expand"] = hassfunction(expand)
         self.filters["expand"] = self.globals["expand"]
         self.globals["closest"] = hassfunction(closest)

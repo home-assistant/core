@@ -1748,6 +1748,60 @@ def test_render_with_possible_json_value_and_dont_parse_result(
     assert isinstance(result, str)
 
 
+def test_is_area_id(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test is_area_id method."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    # Test entity, which has no area
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+    )
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    tpl = template.Template(
+        """
+{{ is_area_id("light.hue_5678", "123abc") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    area_entry_hex = area_registry.async_get_or_create("123abc")
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_hex.id
+    )
+
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, area_entry_hex.id)
+    assert info.rate_limit is None
+
+    tpl = template.Template(
+        """
+{{ is_area_id("light.hue_5678", "123abc") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{% if "light.hue_5678" is is_area_id("123abc") %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+
 def test_if_state_exists(hass: HomeAssistant) -> None:
     """Test if state exists works."""
     hass.states.async_set("test.object", "available")
