@@ -128,7 +128,6 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
         domain=DOMAIN,
         title=MOCK_DATA_STEP[CONF_HOST],
         data=MOCK_DATA_STEP,
-        unique_id=MOCK_DATA_STEP[CONF_HOST],
     )
 
     entry.add_to_hass(hass)
@@ -218,7 +217,6 @@ async def test_flow_source_import_already_configured(hass: HomeAssistant) -> Non
         domain=DOMAIN,
         title=MOCK_DATA_STEP[CONF_HOST],
         data=MOCK_DATA_STEP,
-        unique_id=MOCK_DATA_STEP[CONF_HOST],
     )
 
     entry.add_to_hass(hass)
