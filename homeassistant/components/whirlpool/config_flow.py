@@ -13,12 +13,11 @@ from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import CONF_BRAND, CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_REGIONS_MAP, DOMAIN
-from .util import get_brand_for_region
+from .const import CONF_BRANDS_MAP, CONF_REGIONS_MAP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +27,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_REGION): vol.In(list(CONF_REGIONS_MAP)),
+        vol.Required(CONF_BRAND): vol.In(list(CONF_BRANDS_MAP)),
     }
 )
 
@@ -43,7 +43,7 @@ async def validate_input(
     """
     session = async_get_clientsession(hass)
     region = CONF_REGIONS_MAP[data[CONF_REGION]]
-    brand = get_brand_for_region(region)
+    brand = CONF_BRANDS_MAP[data[CONF_BRAND]]
     backend_selector = BackendSelector(brand, region)
     auth = Auth(backend_selector, data[CONF_USERNAME], data[CONF_PASSWORD], session)
     try:
