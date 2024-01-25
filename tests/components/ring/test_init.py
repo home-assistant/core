@@ -65,11 +65,11 @@ async def test_auth_failed_on_setup(
     [
         (
             RingTimeout,
-            "Error fetching devices data: Timeout communicating with API: ",
+            "Timeout communicating with API: ",
         ),
         (
             RingError,
-            "Error fetching devices data: Error communicating with API: ",
+            "Error communicating with API: ",
         ),
     ],
     ids=["timeout-error", "other-error"],
@@ -92,6 +92,15 @@ async def test_error_on_setup(
         await hass.async_block_till_done()
 
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+        assert [
+            record.message
+            for record in caplog.records
+            if record.levelname == "DEBUG"
+            and record.name == "homeassistant.config_entries"
+            and log_msg in record.message
+            and DOMAIN in record.message
+        ]
 
 
 async def test_auth_failure_on_global_update(
