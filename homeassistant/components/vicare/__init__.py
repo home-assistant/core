@@ -34,7 +34,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_TOKEN_FILENAME = "vicare_token.save"
 
 
 @dataclass(frozen=True)
@@ -76,7 +75,7 @@ def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare
         entry_data[CONF_USERNAME],
         entry_data[CONF_PASSWORD],
         entry_data[CONF_CLIENT_ID],
-        hass.config.path(STORAGE_DIR, _TOKEN_FILENAME),
+        hass.config.path(STORAGE_DIR, DOMAIN, entry_data[CONF_USERNAME]),
     )
     return vicare_api
 
@@ -109,7 +108,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     with suppress(FileNotFoundError):
         await hass.async_add_executor_job(
-            os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+            os.remove, hass.config.path(STORAGE_DIR, DOMAIN, entry.data[CONF_USERNAME])
         )
 
     return unload_ok
