@@ -95,7 +95,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     conf = config[DOMAIN]
-    conf[CONF_HOST] = conf[CONF_IP_ADDRESS]
 
     hass.async_create_task(handle_async_init_result(hass, DOMAIN, conf))
 

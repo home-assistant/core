@@ -7,7 +7,7 @@ import lupupy
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -66,7 +66,8 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import the yaml config."""
         self._async_abort_entries_match(user_input)
-        host = user_input[CONF_HOST]
+        user_input[CONF_HOST] = user_input[CONF_IP_ADDRESS]
+        host = user_input[CONF_IP_ADDRESS]
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         try:
