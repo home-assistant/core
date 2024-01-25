@@ -50,6 +50,26 @@ class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
     value_setter: Callable[[Device], bool]
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        _LOGGER.debug("Migrating from version %s", entry.version)
+
+        old_token_file = hass.config.path(STORAGE_DIR, "vicare_token.save")
+        if os.path.isfile(old_token_file):
+            _LOGGER.debug("Removing old token file %s", old_token_file)
+            await hass.async_add_executor_job(os.remove, old_token_file)
+
+        vicare_token_dir = hass.config.path(STORAGE_DIR, DOMAIN)
+        if not os.path.isdir(vicare_token_dir):
+            _LOGGER.info("Creating token dir %s", vicare_token_dir)
+            await hass.async_add_executor_job(os.mkdir, vicare_token_dir)
+
+        entry.version = 2
+        _LOGGER.debug("Migration to version %s successful", entry.version)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component %s", entry.title)
@@ -58,11 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN] = {}
     if entry.entry_id not in hass.data[DOMAIN]:
         hass.data[DOMAIN][entry.entry_id] = {}
-
-    vicare_path = hass.config.path(STORAGE_DIR, DOMAIN)
-    if not os.path.isdir(vicare_path):
-        _LOGGER.info("Create token dir %s", vicare_path)
-        os.mkdir(vicare_path)
 
     try:
         await hass.async_add_executor_job(setup_vicare_api, hass, entry)
