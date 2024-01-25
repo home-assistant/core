@@ -74,9 +74,13 @@ class LutronLight(LutronDevice, LightEntity):
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
+    def _request_state(self) -> None:
+        """Request the state from the device."""
+        self._lutron_device.level  # pylint: disable=pointless-statement
+
     def _update_attrs(self) -> None:
         """Update the state attributes."""
-        level = self._lutron_device.level
+        level = self._lutron_device.last_level()
         self._attr_is_on = level > 0
         hass_level = to_hass_level(level)
         self._attr_brightness = hass_level

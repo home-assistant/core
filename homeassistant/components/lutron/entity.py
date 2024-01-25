@@ -27,6 +27,9 @@ class LutronBaseEntity(Entity):
         """Register callbacks."""
         self._lutron_device.subscribe(self._update_callback, None)
 
+    def _request_state(self) -> None:
+        """Request the state."""
+
     def _update_attrs(self) -> None:
         """Update the entity's attributes."""
 
@@ -47,6 +50,7 @@ class LutronBaseEntity(Entity):
 
     def update(self) -> None:
         """Update the entity's state."""
+        self._request_state()
         self._update_attrs()
 
 

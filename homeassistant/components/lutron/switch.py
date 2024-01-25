@@ -57,9 +57,13 @@ class LutronSwitch(LutronDevice, SwitchEntity):
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
+    def _request_state(self) -> None:
+        """Request the state from the device."""
+        self._lutron_device.level  # pylint: disable=pointless-statement
+
     def _update_attrs(self) -> None:
         """Update the state attributes."""
-        self._attr_is_on = self._lutron_device.level > 0
+        self._attr_is_on = self._lutron_device.last_level() > 0
 
 
 class LutronLed(LutronKeypad, SwitchEntity):
@@ -97,6 +101,10 @@ class LutronLed(LutronKeypad, SwitchEntity):
             "led": self._lutron_device.name,
         }
 
+    def _request_state(self) -> None:
+        """Request the state from the device."""
+        self._lutron_device.state  # pylint: disable=pointless-statement
+
     def _update_attrs(self) -> None:
         """Update the state attributes."""
-        self._attr_is_on = self._lutron_device.state
+        self._attr_is_on = self._lutron_device.last_state

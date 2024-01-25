@@ -67,9 +67,13 @@ class LutronCover(LutronDevice, CoverEntity):
             position = kwargs[ATTR_POSITION]
             self._lutron_device.level = position
 
+    def _request_state(self) -> None:
+        """Request the state from the device."""
+        self._lutron_device.level  # pylint: disable=pointless-statement
+
     def _update_attrs(self) -> None:
         """Update the state attributes."""
-        level = self._lutron_device.level
+        level = self._lutron_device.last_level()
         self._attr_is_closed = level < 1
         self._attr_current_cover_position = level
         _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, level)
