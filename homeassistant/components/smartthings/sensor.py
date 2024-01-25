@@ -177,6 +177,14 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
     ],
     Capability.dust_sensor: [
         Map(
+            "veryFineDustLevel",
+            "Very Fine Dust Level",
+            None,
+            None,
+            SensorStateClass.MEASUREMENT,
+            None,
+        ),
+        Map(
             Attribute.fine_dust_level,
             "Fine Dust Level",
             None,
