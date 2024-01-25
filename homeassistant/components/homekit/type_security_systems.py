@@ -56,7 +56,6 @@ HASS_TO_HOMEKIT_TARGET = {
     STATE_ALARM_ARMED_VACATION: HK_ALARM_AWAY_ARMED,
     STATE_ALARM_ARMED_AWAY: HK_ALARM_AWAY_ARMED,
     STATE_ALARM_ARMED_NIGHT: HK_ALARM_NIGHT_ARMED,
-    STATE_ALARM_ARMING: HK_ALARM_AWAY_ARMED,
     STATE_ALARM_DISARMED: HK_ALARM_DISARMED,
 }
 
@@ -158,6 +157,8 @@ class SecuritySystem(HomeAccessory):
     def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
         hass_state = new_state.state
+        target_state = None
+
         if (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None:
             self.char_current_state.set_value(current_state)
             _LOGGER.debug(
@@ -166,5 +167,18 @@ class SecuritySystem(HomeAccessory):
                 hass_state,
                 current_state,
             )
-        if (target_state := HASS_TO_HOMEKIT_TARGET.get(hass_state)) is not None:
+
+        if hass_state == STATE_ALARM_ARMING:
+            if (hass_next_state := new_state.attributes.get("next_state")) is not None:
+                target_state = HASS_TO_HOMEKIT_TARGET.get(hass_next_state)
+        else:
+            target_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
+
+        if target_state is not None:
             self.char_target_state.set_value(target_state)
+            _LOGGER.debug(
+                "%s: Updated target state to %s (%d)",
+                self.entity_id,
+                hass_state,
+                target_state,
+            )

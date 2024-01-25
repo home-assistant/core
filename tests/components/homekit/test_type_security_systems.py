@@ -168,9 +168,22 @@ async def test_arming(hass: HomeAssistant, hk_driver, events) -> None:
     assert acc.char_target_state.value == 2
     assert acc.char_current_state.value == 2
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMING)
+    attrs = {"next_state": STATE_ALARM_ARMED_HOME}
+    hass.states.async_set(entity_id, STATE_ALARM_ARMING, attrs)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == 0
+    assert acc.char_current_state.value == 3
+
+    attrs = {"next_state": STATE_ALARM_ARMED_AWAY}
+    hass.states.async_set(entity_id, STATE_ALARM_ARMING, attrs)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 1
+    assert acc.char_current_state.value == 3
+
+    attrs = {"next_state": STATE_ALARM_ARMED_NIGHT}
+    hass.states.async_set(entity_id, STATE_ALARM_ARMING, attrs)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == 2
     assert acc.char_current_state.value == 3
 
     hass.states.async_set(entity_id, STATE_ALARM_DISARMED)
