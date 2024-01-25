@@ -17,7 +17,7 @@ from .config_flow import DEFAULT_RTSP_PORT
 from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 from .coordinator import FoscamCoordinator
 
-PLATFORMS = [Platform.CAMERA]
+PLATFORMS = [Platform.CAMERA, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
