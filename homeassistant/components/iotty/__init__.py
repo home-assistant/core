@@ -6,10 +6,13 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 
-from . import api
 from .const import DOMAIN
+from .coordinator import IottyDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,19 +23,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up iotty from a config entry."""
     _LOGGER.debug("async_setup_entry DOMAIN %s entry_id=%s", DOMAIN, entry.entry_id)
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    session = OAuth2Session(hass, entry, implementation)
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    data_update_coordinator = IottyDataUpdateCoordinator(hass, entry, session)
 
-    iotty = api.IottyProxy(hass, aiohttp_client.async_get_clientsession(hass), session)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_update_coordinator
 
-    hass.async_add_job(iotty.init, entry)
+    await data_update_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = iotty
+    # await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

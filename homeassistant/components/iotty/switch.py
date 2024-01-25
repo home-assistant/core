@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import IottyProxy
 from .const import DOMAIN
+from .coordinator import IottyDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,16 +85,15 @@ async def async_setup_entry(
 
     hass_data = hass.data[DOMAIN]
 
-    iotty = hass_data[config_entry.entry_id]
+    coordinator: IottyDataUpdateCoordinator = hass_data[config_entry.entry_id]
 
-    _ls_list = await iotty.devices(LS_DEVICE_TYPE_UID)
-
-    _LOGGER.debug("Found %d LightSwitches", len(_ls_list))
-
-    entities = []
-    for _ls in _ls_list:
-        new_entity = IottyLightSwitch(iotty, _ls)
-        iotty.store_entity(_ls.device_id, new_entity)
-        entities.append(new_entity)
+    entities = [
+        IottyLightSwitch(iotty_cloud=coordinator.iotty, iotty_device=d)
+        for d in coordinator.data.devices
+        if d.device_type == LS_DEVICE_TYPE_UID
+    ]
+    _LOGGER.debug("Found %d LightSwitches", len(entities))
+    for e in entities:
+        coordinator.store_entity(e.device_id, e)
 
     async_add_entities(entities)
