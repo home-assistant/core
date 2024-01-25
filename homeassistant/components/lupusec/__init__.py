@@ -108,11 +108,10 @@ class LupusecSystem:
 class LupusecDevice(Entity):
     """Representation of a Lupusec device."""
 
-    def __init__(self, data, device, config_entry=None) -> None:
+    def __init__(self, data, device) -> None:
         """Initialize a sensor for Lupusec device."""
         self._data = data
         self._device = device
-        self._entry_id = config_entry.entry_id if config_entry else "_none"
 
     def update(self):
         """Update automation state."""
