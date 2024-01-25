@@ -1663,7 +1663,7 @@ pytankerkoenig==0.0.6
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.11
+pytedee-async==0.2.12
 
 # homeassistant.components.motionmount
 python-MotionMount==0.3.1
