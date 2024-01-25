@@ -245,7 +245,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.second_test")
 
 
-async def test_sensor_ignore_non_numeric(
+async def test_sensor_incorrect_state_with_ignore_non_numeric(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that non numeric values are ignored in a group."""
