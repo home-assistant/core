@@ -48,7 +48,7 @@
         "name": "Wi-Fi SSID"
       },
       "active_tariff": {
-        "name": "Active tariff"
+        "name": "Tariff"
       },
       "wifi_strength": {
         "name": "Wi-Fi strength"
@@ -66,19 +66,19 @@
         "name": "Total energy export tariff {tariff}"
       },
       "active_power_w": {
-        "name": "Active power"
+        "name": "Power"
       },
       "active_power_phase_w": {
-        "name": "Active power phase {phase}"
+        "name": "Power phase {phase}"
       },
       "active_voltage_phase_v": {
-        "name": "Active voltage phase {phase}"
+        "name": "Voltage phase {phase}"
       },
       "active_current_phase_a": {
-        "name": "Active current phase {phase}"
+        "name": "Current phase {phase}"
       },
       "active_frequency_hz": {
-        "name": "Active frequency"
+        "name": "Frequency"
       },
       "voltage_sag_phase_count": {
         "name": "Voltage sags detected phase {phase}"
@@ -93,7 +93,7 @@
         "name": "Long power failures detected"
       },
       "active_power_average_w": {
-        "name": "Active average demand"
+        "name": "Average demand"
       },
       "monthly_power_peak_w": {
         "name": "Peak demand current month"
@@ -101,11 +101,8 @@
       "total_gas_m3": {
         "name": "Total gas"
       },
-      "meter_identifier": {
-        "name": "Meter identifier"
-      },
       "active_liter_lpm": {
-        "name": "Active water usage"
+        "name": "Water usage"
       },
       "total_liter_m3": {
         "name": "Total water usage"
