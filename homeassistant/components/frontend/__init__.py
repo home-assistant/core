@@ -763,7 +763,7 @@ async def websocket_get_translations_for_categories(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get translations command for multiple categories."""
-    resources_by_catagory = await async_get_translations_for_categories(
+    resources_by_category = await async_get_translations_for_categories(
         hass,
         msg["language"],
         msg["categories"],
@@ -771,7 +771,7 @@ async def websocket_get_translations_for_categories(
         msg.get("config_flow"),
     )
     connection.send_message(
-        websocket_api.result_message(msg["id"], {"resources": resources_by_catagory})
+        websocket_api.result_message(msg["id"], {"resources": resources_by_category})
     )
 
 
