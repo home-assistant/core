@@ -68,50 +68,6 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
     assert len(mock_initialize_lupusec.mock_calls) == 1
 
 
-async def test_form_invalid_host(hass: HomeAssistant) -> None:
-    """Test handling invalid host input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "host": "invalid_host",
-            "username": "test-username",
-            "password": "test-password",
-        },
-    )
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_form_lupusec_exception(hass: HomeAssistant) -> None:
-    """Test handling valid user input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with patch(
-        "lupupy.Lupusec.__init__",
-        side_effect=LupusecException("Test Lupusec Exception"),
-    ) as mock_step_user:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            MOCK_DATA_STEP,
-        )
-    await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-    assert len(mock_step_user.mock_calls) == 1
-
-
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [
