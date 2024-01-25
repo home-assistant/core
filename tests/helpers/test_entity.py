@@ -1095,15 +1095,15 @@ async def test_friendly_name_description_device_class_name(
         "en": {"component.test_domain.entity_component.test_class.name": "English cls"},
     }
 
-    async def async_get_translations(
+    async def async_get_translations_for_categories(
         hass: HomeAssistant,
         language: str,
-        category: str,
+        categories: Iterable[str],
         integrations: Iterable[str] | None = None,
         config_flow: bool | None = None,
     ) -> dict[str, Any]:
         """Return all backend translations."""
-        return translations[language]
+        return {category: translations[language] for category in categories}
 
     class DeviceClassNameMockEntity(MockEntity):
         def _default_to_device_class_name(self) -> bool:
@@ -1125,8 +1125,8 @@ async def test_friendly_name_description_device_class_name(
         name=entity_name,
     )
     with patch(
-        "homeassistant.helpers.entity_platform.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.entity_platform.translation.async_get_translations_for_categories",
+        side_effect=async_get_translations_for_categories,
     ):
         await _test_friendly_name(
             hass,
@@ -1191,15 +1191,15 @@ async def test_entity_name_translation_placeholders(
 ) -> None:
     """Test friendly name when the entity name translation has placeholders."""
 
-    async def async_get_translations(
+    async def async_get_translations_for_categories(
         hass: HomeAssistant,
         language: str,
-        category: str,
+        categories: Iterable[str],
         integrations: Iterable[str] | None = None,
         config_flow: bool | None = None,
     ) -> dict[str, Any]:
         """Return all backend translations."""
-        return translations[language]
+        return {category: translations[language] for category in categories}
 
     ent = MockEntity(
         unique_id="qwer",
@@ -1218,8 +1218,8 @@ async def test_entity_name_translation_placeholders(
     if placeholders is not None:
         ent._attr_translation_placeholders = placeholders
     with patch(
-        "homeassistant.helpers.entity_platform.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.entity_platform.translation.async_get_translations_for_categories",
+        side_effect=async_get_translations_for_categories,
     ):
         await _test_friendly_name(hass, ent, expected_friendly_name)
 
@@ -1285,15 +1285,15 @@ async def test_entity_name_translation_placeholder_errors(
 ) -> None:
     """Test entity name translation has placeholder issues."""
 
-    async def async_get_translations(
+    async def async_get_translations_for_categories(
         hass: HomeAssistant,
         language: str,
-        category: str,
+        categories: Iterable[str],
         integrations: Iterable[str] | None = None,
         config_flow: bool | None = None,
     ) -> dict[str, Any]:
         """Return all backend translations."""
-        return translations[language]
+        return {category: translations[language] for category in categories}
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
@@ -1322,8 +1322,8 @@ async def test_entity_name_translation_placeholder_errors(
     caplog.clear()
 
     with patch(
-        "homeassistant.helpers.entity_platform.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.entity_platform.translation.async_get_translations_for_categories",
+        side_effect=async_get_translations_for_categories,
     ), patch(
         "homeassistant.helpers.entity.get_release_channel", return_value=release_channel
     ):
@@ -1392,15 +1392,15 @@ async def test_friendly_name_property_device_class_name(
         "en": {"component.test_domain.entity_component.test_class.name": "English cls"},
     }
 
-    async def async_get_translations(
+    async def async_get_translations_for_categories(
         hass: HomeAssistant,
         language: str,
-        category: str,
+        categories: Iterable[str],
         integrations: Iterable[str] | None = None,
         config_flow: bool | None = None,
     ) -> dict[str, Any]:
         """Return all backend translations."""
-        return translations[language]
+        return {category: translations[language] for category in categories}
 
     class DeviceClassNameMockEntity(MockEntity):
         def _default_to_device_class_name(self) -> bool:
@@ -1419,8 +1419,8 @@ async def test_friendly_name_property_device_class_name(
         name=entity_name,
     )
     with patch(
-        "homeassistant.helpers.entity_platform.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.entity_platform.translation.async_get_translations_for_categories",
+        side_effect=async_get_translations_for_categories,
     ):
         await _test_friendly_name(
             hass,
@@ -1447,15 +1447,15 @@ async def test_friendly_name_device_class_name(
         "en": {"component.test_domain.entity_component.test_class.name": "English cls"},
     }
 
-    async def async_get_translations(
+    async def async_get_translations_for_categories(
         hass: HomeAssistant,
         language: str,
-        category: str,
+        categories: Iterable[str],
         integrations: Iterable[str] | None = None,
         config_flow: bool | None = None,
     ) -> dict[str, Any]:
         """Return all backend translations."""
-        return translations[language]
+        return {category: translations[language] for category in categories}
 
     class DeviceClassNameMockEntity(MockEntity):
         def _default_to_device_class_name(self) -> bool:
@@ -1473,8 +1473,8 @@ async def test_friendly_name_device_class_name(
         has_entity_name=has_entity_name,
     )
     with patch(
-        "homeassistant.helpers.entity_platform.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.entity_platform.translation.async_get_translations_for_categories",
+        side_effect=async_get_translations_for_categories,
     ):
         await _test_friendly_name(
             hass,
