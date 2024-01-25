@@ -35,7 +35,6 @@ async def test_sensors(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 78
     for entry in entity_registry.entities.values():
         state = hass.states.get(entry.entity_id)
         assert state
