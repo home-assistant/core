@@ -44,4 +44,9 @@ class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.session.get_product_all_info
             )
             data["product_info"] = all_info[1]
+
+            ret, is_asleep = await self.hass.async_add_executor_job(
+                self.session.is_asleep
+            )
+            data["is_asleep"] = {"supported": ret == 0, "status": is_asleep}
             return data
