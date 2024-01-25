@@ -68,38 +68,20 @@
       "active_power_phase_w": {
         "name": "Power phase {phase}"
       },
-      "active_voltage_v": {
-        "name": "Active voltage"
-      },
       "active_voltage_phase_v": {
         "name": "Voltage phase {phase}"
       },
-      "active_current_a": {
-        "name": "Active current"
-      },
       "active_current_phase_a": {
-        "name": "Active current phase {phase}"
-      },
-      "active_apparent_power_va": {
-        "name": "Active apparent power"
+        "name": "Current phase {phase}"
       },
       "active_apparent_power_phase_va": {
-        "name": "Active apparent power phase {phase}"
-      },
-      "active_reactive_power_var": {
-        "name": "Active reactive power"
+        "name": "Apparent power phase {phase}"
       },
       "active_reactive_power_phase_var": {
-        "name": "Active reactive power phase {phase}"
-      },
-      "active_power_factor": {
-        "name": "Active power factor"
+        "name": "Reactive power phase {phase}"
       },
       "active_power_factor_phase": {
-        "name": "Active power factor phase {phase}"
-      },
-      "active_frequency_hz": {
-        "name": "Active frequency"
+        "name": "Power factor phase {phase}"
       },
       "voltage_sag_phase_count": {
         "name": "Voltage sags detected phase {phase}"
