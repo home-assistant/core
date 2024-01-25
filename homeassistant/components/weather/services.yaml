@@ -34,3 +34,49 @@ get_forecasts:
             - "hourly"
             - "twice_daily"
           translation_key: forecast_type
+get_forecast_attr:
+  target:
+    entity:
+      domain: weather
+      supported_features:
+        - weather.WeatherEntityFeature.FORECAST_HOURLY
+        - weather.WeatherEntityFeature.FORECAST_TWICE_DAILY
+        - weather.WeatherEntityFeature.FORECAST_DAILY
+  fields:
+    type:
+      required: true
+      selector:
+        select:
+          options:
+            - "daily"
+            - "hourly"
+            - "twice_daily"
+          translation_key: forecast_type
+    attribute:
+      required: true
+      example: temperature
+      selector:
+        select:
+          options:
+            - "condition"
+            - "humidity"
+            - "precipitation"
+            - "precipitation_probability"
+            - "pressure"
+            - "apparent_temperature"
+            - "temperature"
+            - "templow"
+            - "wind_bearing"
+            - "wind_gust_speed"
+            - "wind_speed"
+            - "dew_point"
+            - "cloud_coverage"
+            - "uv_index"
+          translation_key: forecast_attr_attribute
+    limit:
+      required: false
+      example: 10
+      selector:
+        number:
+          min: 1
+          mode: box

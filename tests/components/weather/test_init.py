@@ -35,6 +35,7 @@ from homeassistant.components.weather import (
     DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
     ROUNDING_PRECISION,
+    SERVICE_GET_FORECAST_ATTR,
     SERVICE_GET_FORECASTS,
     Forecast,
     WeatherEntity,
@@ -1343,3 +1344,115 @@ async def test_issue_deprecated_service_weather_get_forecast(
         "This is deprecated and will stop working in Home Assistant 2024.6. "
         "Use 'weather.get_forecasts' instead which supports multiple entities"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "forecast_type",
+        "forecast_attribute",
+    ),
+    [
+        (
+            "daily",
+            ATTR_WEATHER_TEMPERATURE,
+        ),
+    ],
+)
+async def test_get_forecast_attr(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    forecast_type: str,
+    forecast_attribute: str,
+) -> None:
+    """Test get forecast service."""
+
+    class MockWeatherMockForecast(MockWeatherTest):
+        """Mock weather class with mocked new method and legacy forecast."""
+
+        @property
+        def forecast(self) -> list[Forecast] | None:
+            """Return the forecast."""
+            return self.forecast_list
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return the forecast_daily."""
+            return self.forecast_list
+
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+        "supported_features": WeatherEntityFeature.FORECAST_DAILY,
+    }
+
+    entity0 = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST_ATTR,
+        {
+            "entity_id": entity0.entity_id,
+            "type": forecast_type,
+            "attribute": forecast_attribute,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"weather.testing": {forecast_attribute: [38.0]}}
+
+
+@pytest.mark.parametrize(
+    (
+        "forecast_type",
+        "forecast_attribute",
+        "forecast_limit",
+    ),
+    [
+        (
+            "daily",
+            ATTR_WEATHER_TEMPERATURE,
+            4,
+        ),
+    ],
+)
+async def test_get_forecast_attr_limit(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    forecast_type: str,
+    forecast_attribute: str,
+    forecast_limit: int,
+) -> None:
+    """Test get forecast service."""
+
+    class MockWeatherMockForecast(MockWeatherTest):
+        """Mock weather class with mocked new method and legacy forecast."""
+
+        @property
+        def forecast(self) -> list[Forecast] | None:
+            """Return the forecast."""
+            return self.forecast_list
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return the forecast_daily."""
+            return self.forecast_list
+
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+        "supported_features": WeatherEntityFeature.FORECAST_DAILY,
+    }
+
+    entity0 = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST_ATTR,
+        {
+            "entity_id": entity0.entity_id,
+            "type": forecast_type,
+            "attribute": forecast_attribute,
+            "limit": forecast_limit,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"weather.testing": {forecast_attribute: [38.0]}}

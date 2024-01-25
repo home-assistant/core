@@ -85,6 +85,24 @@
         "hourly": "Hourly",
         "twice_daily": "Twice daily"
       }
+    },
+    "forecast_attr_attribute": {
+      "options": {
+        "condition": "Condition",
+        "humidity": "Humidity",
+        "precipitation": "Precipitation",
+        "precipitation_probability": "Precipitation probability",
+        "pressure": "Pressure",
+        "apparent_temperature": "Apparent temperature",
+        "temperature": "Temperature high",
+        "templow": "Temperature low",
+        "wind_bearing": "Wind bearing",
+        "wind_gust_speed": "Wind gust speed",
+        "wind_speed": "Wind speed",
+        "dew_point": "Dew point",
+        "cloud_coverage": "Cloud coverage",
+        "uv_index": "UV index"
+      }
     }
   },
   "services": {
@@ -105,6 +123,24 @@
         "type": {
           "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]",
           "description": "[%key:component::weather::services::get_forecasts::fields::type::description%]"
+        }
+      }
+    },
+    "get_forecast_attr": {
+      "name": "Get forecast attribute values",
+      "description": "Get a single attribute within a time limit from the weather forecast.",
+      "fields": {
+        "type": {
+          "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]",
+          "description": "[%key:component::weather::services::get_forecasts::fields::type::description%]"
+        },
+        "attribute": {
+          "name": "Weather attribute",
+          "description": "Weather attribute: temperature, humidity ..."
+        },
+        "limit": {
+          "name": "Limit values",
+          "description": "Limit number of values in output. Leave blank to get all available values."
         }
       }
     }
