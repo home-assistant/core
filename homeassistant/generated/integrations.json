@@ -128,6 +128,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "airtouch5": {
+      "name": "AirTouch 5",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "airvisual": {
       "name": "AirVisual",
       "integrations": {
@@ -253,6 +259,12 @@
       "name": "Ampio Smart Smog System",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
+    "analytics_insights": {
+      "name": "Home Assistant Analytics Insights",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "android_ip_webcam": {
@@ -566,6 +578,12 @@
     "balboa": {
       "name": "Balboa Spa Client",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "bang_olufsen": {
+      "name": "Bang & Olufsen",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -2482,9 +2500,8 @@
     },
     "home_plus_control": {
       "name": "Legrand Home+ Control",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integration_type": "virtual",
+      "supported_by": "netatmo"
     },
     "homematic": {
       "name": "Homematic",
@@ -2578,6 +2595,12 @@
       "name": "Hurrican Shutters Wholesale",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
+    },
+    "huum": {
+      "name": "Huum",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "hvv_departures": {
       "name": "HVV Departures",
@@ -3061,6 +3084,12 @@
     "ld2410_ble": {
       "name": "LD2410 BLE",
       "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "leaone": {
+      "name": "LeaOne",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5924,6 +5953,12 @@
         }
       }
     },
+    "teslemetry": {
+      "name": "Teslemetry",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "tessie": {
       "name": "Tessie",
       "integration_type": "hub",
@@ -6020,9 +6055,8 @@
       "iot_class": "local_push"
     },
     "time_date": {
-      "name": "Time & Date",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "tmb": {
@@ -6086,7 +6120,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_polling",
-          "name": "TP-Link Kasa Smart"
+          "name": "TP-Link Smart Home"
         },
         "tplink_omada": {
           "integration_type": "hub",
@@ -7045,6 +7079,7 @@
     "switch_as_x",
     "tag",
     "threshold",
+    "time_date",
     "tod",
     "uptime",
     "utility_meter",

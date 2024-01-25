@@ -25,6 +25,7 @@ from .core.const import (
     CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
+    CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
@@ -652,3 +653,23 @@ class AqaraThermostatPreset(ZCLEnumSelectEntity):
     _attribute_name = "preset"
     _enum = AqaraThermostatPresetMode
     _attr_translation_key: str = "preset"
+
+
+class SonoffPresenceDetectionSensitivityEnum(types.enum8):
+    """Enum for detection sensitivity select entity."""
+
+    Low = 0x01
+    Medium = 0x02
+    High = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY, models={"SNZB-06P"}
+)
+class SonoffPresenceDetectionSensitivity(ZCLEnumSelectEntity):
+    """Entity to set the detection sensitivity of the Sonoff SNZB-06P."""
+
+    _unique_id_suffix = "detection_sensitivity"
+    _attribute_name = "ultrasonic_u_to_o_threshold"
+    _enum = SonoffPresenceDetectionSensitivityEnum
+    _attr_translation_key: str = "detection_sensitivity"

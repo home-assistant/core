@@ -15,9 +15,20 @@ import jwt
 import pytest
 
 from homeassistant.components.cloud import CloudClient, const, prefs
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import mock_cloud, mock_cloud_prefs
+
+
+@pytest.fixture(autouse=True)
+async def load_homeassistant(hass: HomeAssistant) -> None:
+    """Load the homeassistant integration.
+
+    This is needed for the cloud integration to work.
+    """
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture(name="cloud")

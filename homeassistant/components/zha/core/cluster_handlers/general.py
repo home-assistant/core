@@ -50,7 +50,10 @@ class AnalogInput(ClusterHandler):
     """Analog Input cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=general.AnalogInput.AttributeDefs.present_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -60,61 +63,76 @@ class AnalogOutput(ClusterHandler):
     """Analog Output cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=general.AnalogOutput.AttributeDefs.present_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
     ZCL_INIT_ATTRS = {
-        "min_present_value": True,
-        "max_present_value": True,
-        "resolution": True,
-        "relinquish_default": True,
-        "description": True,
-        "engineering_units": True,
-        "application_type": True,
+        general.AnalogOutput.AttributeDefs.min_present_value.name: True,
+        general.AnalogOutput.AttributeDefs.max_present_value.name: True,
+        general.AnalogOutput.AttributeDefs.resolution.name: True,
+        general.AnalogOutput.AttributeDefs.relinquish_default.name: True,
+        general.AnalogOutput.AttributeDefs.description.name: True,
+        general.AnalogOutput.AttributeDefs.engineering_units.name: True,
+        general.AnalogOutput.AttributeDefs.application_type.name: True,
     }
 
     @property
     def present_value(self) -> float | None:
         """Return cached value of present_value."""
-        return self.cluster.get("present_value")
+        return self.cluster.get(general.AnalogOutput.AttributeDefs.present_value.name)
 
     @property
     def min_present_value(self) -> float | None:
         """Return cached value of min_present_value."""
-        return self.cluster.get("min_present_value")
+        return self.cluster.get(
+            general.AnalogOutput.AttributeDefs.min_present_value.name
+        )
 
     @property
     def max_present_value(self) -> float | None:
         """Return cached value of max_present_value."""
-        return self.cluster.get("max_present_value")
+        return self.cluster.get(
+            general.AnalogOutput.AttributeDefs.max_present_value.name
+        )
 
     @property
     def resolution(self) -> float | None:
         """Return cached value of resolution."""
-        return self.cluster.get("resolution")
+        return self.cluster.get(general.AnalogOutput.AttributeDefs.resolution.name)
 
     @property
     def relinquish_default(self) -> float | None:
         """Return cached value of relinquish_default."""
-        return self.cluster.get("relinquish_default")
+        return self.cluster.get(
+            general.AnalogOutput.AttributeDefs.relinquish_default.name
+        )
 
     @property
     def description(self) -> str | None:
         """Return cached value of description."""
-        return self.cluster.get("description")
+        return self.cluster.get(general.AnalogOutput.AttributeDefs.description.name)
 
     @property
     def engineering_units(self) -> int | None:
         """Return cached value of engineering_units."""
-        return self.cluster.get("engineering_units")
+        return self.cluster.get(
+            general.AnalogOutput.AttributeDefs.engineering_units.name
+        )
 
     @property
     def application_type(self) -> int | None:
         """Return cached value of application_type."""
-        return self.cluster.get("application_type")
+        return self.cluster.get(
+            general.AnalogOutput.AttributeDefs.application_type.name
+        )
 
     async def async_set_present_value(self, value: float) -> None:
         """Update present_value."""
-        await self.write_attributes_safe({"present_value": value})
+        await self.write_attributes_safe(
+            {general.AnalogOutput.AttributeDefs.present_value.name: value}
+        )
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(general.AnalogValue.cluster_id)
@@ -122,7 +140,10 @@ class AnalogValue(ClusterHandler):
     """Analog Value cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=general.AnalogValue.AttributeDefs.present_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -171,7 +192,10 @@ class BinaryInput(ClusterHandler):
     """Binary Input cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=general.BinaryInput.AttributeDefs.present_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -180,7 +204,10 @@ class BinaryOutput(ClusterHandler):
     """Binary Output cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=general.BinaryOutput.AttributeDefs.present_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -189,7 +216,10 @@ class BinaryValue(ClusterHandler):
     """Binary Value cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=general.BinaryValue.AttributeDefs.present_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -206,7 +236,7 @@ class DeviceTemperature(ClusterHandler):
 
     REPORT_CONFIG = (
         {
-            "attr": "current_temperature",
+            "attr": general.DeviceTemperature.AttributeDefs.current_temperature.name,
             "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
         },
     )
@@ -237,7 +267,7 @@ class Identify(ClusterHandler):
         """Handle commands received to this cluster."""
         cmd = parse_and_log_command(self, tsn, command_id, args)
 
-        if cmd == "trigger_effect":
+        if cmd == general.Identify.ServerCommandDefs.trigger_effect.name:
             self.async_send_signal(f"{self.unique_id}_{cmd}", args[0])
 
 
@@ -252,35 +282,49 @@ class LevelControlClusterHandler(ClusterHandler):
     """Cluster handler for the LevelControl Zigbee cluster."""
 
     CURRENT_LEVEL = 0
-    REPORT_CONFIG = (AttrReportConfig(attr="current_level", config=REPORT_CONFIG_ASAP),)
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr=general.LevelControl.AttributeDefs.current_level.name,
+            config=REPORT_CONFIG_ASAP,
+        ),
+    )
     ZCL_INIT_ATTRS = {
-        "on_off_transition_time": True,
-        "on_level": True,
-        "on_transition_time": True,
-        "off_transition_time": True,
-        "default_move_rate": True,
-        "start_up_current_level": True,
+        general.LevelControl.AttributeDefs.on_off_transition_time.name: True,
+        general.LevelControl.AttributeDefs.on_level.name: True,
+        general.LevelControl.AttributeDefs.on_transition_time.name: True,
+        general.LevelControl.AttributeDefs.off_transition_time.name: True,
+        general.LevelControl.AttributeDefs.default_move_rate.name: True,
+        general.LevelControl.AttributeDefs.start_up_current_level.name: True,
     }
 
     @property
     def current_level(self) -> int | None:
         """Return cached value of the current_level attribute."""
-        return self.cluster.get("current_level")
+        return self.cluster.get(general.LevelControl.AttributeDefs.current_level.name)
 
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         cmd = parse_and_log_command(self, tsn, command_id, args)
 
-        if cmd in ("move_to_level", "move_to_level_with_on_off"):
+        if cmd in (
+            general.LevelControl.ServerCommandDefs.move_to_level.name,
+            general.LevelControl.ServerCommandDefs.move_to_level_with_on_off.name,
+        ):
             self.dispatch_level_change(SIGNAL_SET_LEVEL, args[0])
-        elif cmd in ("move", "move_with_on_off"):
+        elif cmd in (
+            general.LevelControl.ServerCommandDefs.move.name,
+            general.LevelControl.ServerCommandDefs.move_with_on_off.name,
+        ):
             # We should dim slowly -- for now, just step once
             rate = args[1]
             if args[0] == 0xFF:
                 rate = 10  # Should read default move rate
             self.dispatch_level_change(SIGNAL_MOVE_LEVEL, -rate if args[0] else rate)
-        elif cmd in ("step", "step_with_on_off"):
+        elif cmd in (
+            general.LevelControl.ServerCommandDefs.step.name,
+            general.LevelControl.ServerCommandDefs.step_with_on_off.name,
+        ):
             # Step (technically may change on/off)
             self.dispatch_level_change(
                 SIGNAL_MOVE_LEVEL, -args[1] if args[0] else args[1]
@@ -303,7 +347,10 @@ class MultistateInput(ClusterHandler):
     """Multistate Input cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=general.MultistateInput.AttributeDefs.present_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -314,7 +361,10 @@ class MultistateOutput(ClusterHandler):
     """Multistate Output cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=general.MultistateOutput.AttributeDefs.present_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -323,7 +373,10 @@ class MultistateValue(ClusterHandler):
     """Multistate Value cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr=general.MultistateValue.AttributeDefs.present_value.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
     )
 
 
@@ -337,10 +390,13 @@ class OnOffClientClusterHandler(ClientClusterHandler):
 class OnOffClusterHandler(ClusterHandler):
     """Cluster handler for the OnOff Zigbee cluster."""
 
-    ON_OFF = general.OnOff.attributes_by_name["on_off"].id
-    REPORT_CONFIG = (AttrReportConfig(attr="on_off", config=REPORT_CONFIG_IMMEDIATE),)
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr=general.OnOff.AttributeDefs.on_off.name, config=REPORT_CONFIG_IMMEDIATE
+        ),
+    )
     ZCL_INIT_ATTRS = {
-        "start_up_on_off": True,
+        general.OnOff.AttributeDefs.start_up_on_off.name: True,
     }
 
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
@@ -366,32 +422,46 @@ class OnOffClusterHandler(ClusterHandler):
     @property
     def on_off(self) -> bool | None:
         """Return cached value of on/off attribute."""
-        return self.cluster.get("on_off")
+        return self.cluster.get(general.OnOff.AttributeDefs.on_off.name)
 
     async def turn_on(self) -> None:
         """Turn the on off cluster on."""
         result = await self.on()
         if result[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to turn on: {result[1]}")
-        self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
+        self.cluster.update_attribute(
+            general.OnOff.AttributeDefs.on_off.id, t.Bool.true
+        )
 
     async def turn_off(self) -> None:
         """Turn the on off cluster off."""
         result = await self.off()
         if result[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to turn off: {result[1]}")
-        self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
+        self.cluster.update_attribute(
+            general.OnOff.AttributeDefs.on_off.id, t.Bool.false
+        )
 
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         cmd = parse_and_log_command(self, tsn, command_id, args)
 
-        if cmd in ("off", "off_with_effect"):
-            self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
-        elif cmd in ("on", "on_with_recall_global_scene"):
-            self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
-        elif cmd == "on_with_timed_off":
+        if cmd in (
+            general.OnOff.ServerCommandDefs.off.name,
+            general.OnOff.ServerCommandDefs.off_with_effect.name,
+        ):
+            self.cluster.update_attribute(
+                general.OnOff.AttributeDefs.on_off.id, t.Bool.false
+            )
+        elif cmd in (
+            general.OnOff.ServerCommandDefs.on.name,
+            general.OnOff.ServerCommandDefs.on_with_recall_global_scene.name,
+        ):
+            self.cluster.update_attribute(
+                general.OnOff.AttributeDefs.on_off.id, t.Bool.true
+            )
+        elif cmd == general.OnOff.ServerCommandDefs.on_with_timed_off.name:
             should_accept = args[0]
             on_time = args[1]
             # 0 is always accept 1 is only accept when already on
@@ -399,7 +469,9 @@ class OnOffClusterHandler(ClusterHandler):
                 if self._off_listener is not None:
                     self._off_listener()
                     self._off_listener = None
-                self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
+                self.cluster.update_attribute(
+                    general.OnOff.AttributeDefs.on_off.id, t.Bool.true
+                )
                 if on_time > 0:
                     self._off_listener = async_call_later(
                         self._endpoint.device.hass,
@@ -407,20 +479,27 @@ class OnOffClusterHandler(ClusterHandler):
                         self.set_to_off,
                     )
         elif cmd == "toggle":
-            self.cluster.update_attribute(self.ON_OFF, not bool(self.on_off))
+            self.cluster.update_attribute(
+                general.OnOff.AttributeDefs.on_off.id, not bool(self.on_off)
+            )
 
     @callback
     def set_to_off(self, *_):
         """Set the state to off."""
         self._off_listener = None
-        self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
+        self.cluster.update_attribute(
+            general.OnOff.AttributeDefs.on_off.id, t.Bool.false
+        )
 
     @callback
     def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
-        if attrid == self.ON_OFF:
+        if attrid == general.OnOff.AttributeDefs.on_off.id:
             self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, "on_off", value
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                attrid,
+                general.OnOff.AttributeDefs.on_off.name,
+                value,
             )
 
     async def async_update(self):
@@ -429,7 +508,9 @@ class OnOffClusterHandler(ClusterHandler):
             return
         from_cache = not self._endpoint.device.is_mains_powered
         self.debug("attempting to update onoff state - from cache: %s", from_cache)
-        await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
+        await self.get_attribute_value(
+            general.OnOff.AttributeDefs.on_off.id, from_cache=from_cache
+        )
         await super().async_update()
 
 
@@ -482,7 +563,11 @@ class PollControl(ClusterHandler):
 
     async def async_configure_cluster_handler_specific(self) -> None:
         """Configure cluster handler: set check-in interval."""
-        await self.write_attributes_safe({"checkin_interval": self.CHECKIN_INTERVAL})
+        await self.write_attributes_safe(
+            {
+                general.PollControl.AttributeDefs.checkin_interval.name: self.CHECKIN_INTERVAL
+            }
+        )
 
     @callback
     def cluster_command(
@@ -496,7 +581,7 @@ class PollControl(ClusterHandler):
 
         self.debug("Received %s tsn command '%s': %s", tsn, cmd_name, args)
         self.zha_send_event(cmd_name, args)
-        if cmd_name == "checkin":
+        if cmd_name == general.PollControl.ClientCommandDefs.checkin.name:
             self.cluster.create_catching_task(self.check_in_response(tsn))
 
     async def check_in_response(self, tsn: int) -> None:
@@ -519,17 +604,21 @@ class PowerConfigurationClusterHandler(ClusterHandler):
     """Cluster handler for the zigbee power configuration cluster."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="battery_voltage", config=REPORT_CONFIG_BATTERY_SAVE),
         AttrReportConfig(
-            attr="battery_percentage_remaining", config=REPORT_CONFIG_BATTERY_SAVE
+            attr=general.PowerConfiguration.AttributeDefs.battery_voltage.name,
+            config=REPORT_CONFIG_BATTERY_SAVE,
+        ),
+        AttrReportConfig(
+            attr=general.PowerConfiguration.AttributeDefs.battery_percentage_remaining.name,
+            config=REPORT_CONFIG_BATTERY_SAVE,
         ),
     )
 
     def async_initialize_cluster_handler_specific(self, from_cache: bool) -> Coroutine:
         """Initialize cluster handler specific attrs."""
         attributes = [
-            "battery_size",
-            "battery_quantity",
+            general.PowerConfiguration.AttributeDefs.battery_size.name,
+            general.PowerConfiguration.AttributeDefs.battery_quantity.name,
         ]
         return self.get_attributes(
             attributes, from_cache=from_cache, only_cache=from_cache
