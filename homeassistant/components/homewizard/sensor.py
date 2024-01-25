@@ -469,6 +469,12 @@ async def async_setup_entry(
             new_unique_id=f"{DOMAIN}_{coordinator.data.data.gas_unique_id}",
         )
 
+    # Remove old gas_unique_id sensor
+    if entity_id := ent_reg.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{entry.unique_id}_gas_unique_id"
+    ):
+        ent_reg.async_remove(entity_id)
+
     # Initialize default sensors
     entities: list = [
         HomeWizardSensorEntity(coordinator, description)

@@ -464,3 +464,24 @@ async def test_gas_meter_migrated(
 
     # Make really sure this happens
     assert entity_entry.previous_unique_id == "aabbccddeeff_total_gas_m3"
+
+
+async def test_gas_unique_id_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test old gas meter id sensor is removed."""
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        "aabbccddeeff_gas_unique_id",
+    )
+
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "sensor.homewizard_aabbccddeeff_gas_unique_id"
+
+    assert not entity_registry.async_get(entity_id)
