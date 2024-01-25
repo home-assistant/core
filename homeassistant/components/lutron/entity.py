@@ -27,10 +27,17 @@ class LutronBaseEntity(Entity):
         """Register callbacks."""
         self._lutron_device.subscribe(self._update_callback, None)
 
+    def _request_state(self) -> None:
+        """Request the state."""
+
+    def _update_attrs(self) -> None:
+        """Update the entity's attributes."""
+
     def _update_callback(
         self, _device: LutronEntity, _context: None, _event: LutronEvent, _params: dict
     ) -> None:
         """Run when invoked by pylutron when the device state changes."""
+        self._update_attrs()
         self.schedule_update_ha_state()
 
     @property
@@ -40,6 +47,11 @@ class LutronBaseEntity(Entity):
         if self._lutron_device.uuid is None:
             return None
         return f"{self._controller.guid}_{self._lutron_device.uuid}"
+
+    def update(self) -> None:
+        """Update the entity's state."""
+        self._request_state()
+        self._update_attrs()
 
 
 class LutronDevice(LutronBaseEntity):

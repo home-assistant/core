@@ -863,6 +863,9 @@ httplib2==0.20.4
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.7.3
 
+# homeassistant.components.huum
+huum==0.7.9
+
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
 
@@ -1663,7 +1666,7 @@ pytankerkoenig==0.0.6
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.11
+pytedee-async==0.2.12
 
 # homeassistant.components.motionmount
 python-MotionMount==0.3.1
@@ -1693,7 +1696,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.6.0.1
+python-kasa[speedups]==0.6.1
 
 # homeassistant.components.matter
 python-matter-server==5.1.1
@@ -2015,6 +2018,9 @@ temescal==0.5
 # homeassistant.components.temper
 temperusb==1.6.1
 
+# homeassistant.components.teslemetry
+tesla-fleet-api==0.2.0
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.0
 
@@ -2028,7 +2034,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.8.0
+thermopro-ble==0.9.0
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
