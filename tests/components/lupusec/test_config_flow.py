@@ -205,7 +205,29 @@ async def test_flow_source_import_error_and_recover(
             data=MOCK_IMPORT_STEP,
         )
 
-        await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == text_error
-        assert len(mock_initialize_lupusec.mock_calls) == 1
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == text_error
+    assert len(mock_initialize_lupusec.mock_calls) == 1
+
+
+async def test_flow_source_import_already_configured(hass: HomeAssistant) -> None:
+    """Test duplicate config entry.."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_DATA_STEP[CONF_HOST],
+        data=MOCK_DATA_STEP,
+        unique_id=MOCK_DATA_STEP[CONF_HOST],
+    )
+
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=MOCK_IMPORT_STEP,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
