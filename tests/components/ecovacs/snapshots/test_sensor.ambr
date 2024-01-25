@@ -330,7 +330,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time cleaned',
     'platform': 'ecovacs',
@@ -344,6 +344,7 @@
 # name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_time_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Ozmo 950 Time cleaned',
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -472,7 +473,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total time cleaned',
     'platform': 'ecovacs',
@@ -486,9 +487,10 @@
 # name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_time_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Ozmo 950 Total time cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_time_cleaned',
