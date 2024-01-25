@@ -19,7 +19,6 @@ TO_REDACT = {
     "unique_meter_id",
     "unique_id",
     "gas_unique_id",
-    "external_devices",
 }
 
 
