@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 import time
 from typing import Any, cast
@@ -12,11 +12,19 @@ from typing import Any, cast
 import jwt
 
 from homeassistant import data_entry_flow
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util import dt as dt_util
 
 from . import auth_store, jwt_wrapper, models
-from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN
+from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 
@@ -75,7 +83,9 @@ async def auth_manager_from_config(
     for module in modules:
         module_hash[module.id] = module
 
-    return AuthManager(hass, store, provider_hash, module_hash)
+    manager = AuthManager(hass, store, provider_hash, module_hash)
+    manager.async_setup()
+    return manager
 
 
 class AuthManagerFlowManager(data_entry_flow.FlowManager):
@@ -159,6 +169,21 @@ class AuthManager:
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
         self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
+        self._expire_callback: CALLBACK_TYPE | None = None
+        self._remove_expired_job = HassJob(
+            self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
+        )
+
+    @callback
+    def async_setup(self) -> None:
+        """Set up the auth manager."""
+        hass = self.hass
+        hass.async_add_shutdown_job(
+            HassJob(
+                self._async_cancel_expiration_schedule, job_type=HassJobType.Callback
+            )
+        )
+        self._async_track_next_refresh_token_expiration()
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
@@ -424,6 +449,11 @@ class AuthManager:
             else:
                 token_type = models.TOKEN_TYPE_NORMAL
 
+        if token_type is models.TOKEN_TYPE_NORMAL:
+            expire_at = time.time() + REFRESH_TOKEN_EXPIRATION
+        else:
+            expire_at = None
+
         if user.system_generated != (token_type == models.TOKEN_TYPE_SYSTEM):
             raise ValueError(
                 "System generated users can only have system type refresh tokens"
@@ -455,6 +485,7 @@ class AuthManager:
             client_icon,
             token_type,
             access_token_expiration,
+            expire_at,
             credential,
         )
 
@@ -478,6 +509,38 @@ class AuthManager:
         callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:
             revoke_callback()
+
+    @callback
+    def _async_remove_expired_refresh_tokens(self, _: datetime | None = None) -> None:
+        """Remove expired refresh tokens."""
+        now = time.time()
+        for token in self._store.async_get_refresh_tokens()[:]:
+            if (expire_at := token.expire_at) is not None and expire_at <= now:
+                self.async_remove_refresh_token(token)
+        self._async_track_next_refresh_token_expiration()
+
+    @callback
+    def _async_track_next_refresh_token_expiration(self) -> None:
+        """Initialise all token expiration scheduled tasks."""
+        next_expiration = time.time() + REFRESH_TOKEN_EXPIRATION
+        for token in self._store.async_get_refresh_tokens():
+            if (
+                expire_at := token.expire_at
+            ) is not None and expire_at < next_expiration:
+                next_expiration = expire_at
+
+        self._expire_callback = async_track_point_in_utc_time(
+            self.hass,
+            self._remove_expired_job,
+            dt_util.utc_from_timestamp(next_expiration),
+        )
+
+    @callback
+    def _async_cancel_expiration_schedule(self) -> None:
+        """Cancel tracking of expired refresh tokens."""
+        if self._expire_callback:
+            self._expire_callback()
+            self._expire_callback = None
 
     @callback
     def _async_unregister(

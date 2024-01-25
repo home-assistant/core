@@ -359,7 +359,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.0.0
+aioshelly==8.0.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -2157,7 +2157,7 @@ pytankerkoenig==0.0.6
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.11
+pytedee-async==0.2.12
 
 # homeassistant.components.tfiac
 pytfiac==0.4
@@ -2263,7 +2263,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.39.0
+python-roborock==0.39.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2672,7 +2672,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.8.0
+thermopro-ble==0.9.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks-smoke==0.1.8

@@ -477,11 +477,12 @@ class _ScriptRun:
                 try:
                     handler = f"_async_{action}_step"
                     await getattr(self, handler)()
-                    trace_element.update_variables(self._variables)
                 except Exception as ex:  # pylint: disable=broad-except
                     self._handle_exception(
                         ex, continue_on_error, self._log_exceptions or log_exceptions
                     )
+                finally:
+                    trace_element.update_variables(self._variables)
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access
