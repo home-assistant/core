@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import zigpy.zcl
-from zigpy.zcl.clusters import closures
+from zigpy.zcl.clusters.closures import DoorLock, Shade, WindowCovering
 
 from homeassistant.core import callback
 
@@ -16,14 +16,14 @@ if TYPE_CHECKING:
     from ..endpoint import Endpoint
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(closures.DoorLock.cluster_id)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(DoorLock.cluster_id)
 class DoorLockClusterHandler(ClusterHandler):
     """Door lock cluster handler."""
 
     _value_attribute = 0
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr=closures.DoorLock.AttributeDefs.lock_state.name,
+            attr=DoorLock.AttributeDefs.lock_state.name,
             config=REPORT_CONFIG_IMMEDIATE,
         ),
     )
@@ -31,13 +31,13 @@ class DoorLockClusterHandler(ClusterHandler):
     async def async_update(self):
         """Retrieve latest state."""
         result = await self.get_attribute_value(
-            closures.DoorLock.AttributeDefs.lock_state.name, from_cache=True
+            DoorLock.AttributeDefs.lock_state.name, from_cache=True
         )
         if result is not None:
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                closures.DoorLock.AttributeDefs.lock_state.id,
-                closures.DoorLock.AttributeDefs.lock_state.name,
+                DoorLock.AttributeDefs.lock_state.id,
+                DoorLock.AttributeDefs.lock_state.name,
                 result,
             )
 
@@ -80,20 +80,20 @@ class DoorLockClusterHandler(ClusterHandler):
 
         await self.set_pin_code(
             code_slot - 1,  # start code slots at 1, Zigbee internals use 0
-            closures.DoorLock.UserStatus.Enabled,
-            closures.DoorLock.UserType.Unrestricted,
+            DoorLock.UserStatus.Enabled,
+            DoorLock.UserType.Unrestricted,
             user_code,
         )
 
     async def async_enable_user_code(self, code_slot: int) -> None:
         """Enable the code slot."""
 
-        await self.set_user_status(code_slot - 1, closures.DoorLock.UserStatus.Enabled)
+        await self.set_user_status(code_slot - 1, DoorLock.UserStatus.Enabled)
 
     async def async_disable_user_code(self, code_slot: int) -> None:
         """Disable the code slot."""
 
-        await self.set_user_status(code_slot - 1, closures.DoorLock.UserStatus.Disabled)
+        await self.set_user_status(code_slot - 1, DoorLock.UserStatus.Disabled)
 
     async def async_get_user_code(self, code_slot: int) -> int:
         """Get the user code from the code slot."""
@@ -123,26 +123,26 @@ class DoorLockClusterHandler(ClusterHandler):
         return result
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(closures.Shade.cluster_id)
-class Shade(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Shade.cluster_id)
+class ShadeClusterHandler(ClusterHandler):
     """Shade cluster handler."""
 
 
-@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(closures.WindowCovering.cluster_id)
-class WindowCoveringClient(ClientClusterHandler):
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(WindowCovering.cluster_id)
+class WindowCoveringClientClusterHandler(ClientClusterHandler):
     """Window client cluster handler."""
 
 
-@registries.BINDABLE_CLUSTERS.register(closures.WindowCovering.cluster_id)
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(closures.WindowCovering.cluster_id)
-class WindowCovering(ClusterHandler):
+@registries.BINDABLE_CLUSTERS.register(WindowCovering.cluster_id)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(WindowCovering.cluster_id)
+class WindowCoveringClusterHandler(ClusterHandler):
     """Window cluster handler."""
 
     _value_attribute_lift = (
-        closures.WindowCovering.AttributeDefs.current_position_lift_percentage.id
+        WindowCovering.AttributeDefs.current_position_lift_percentage.id
     )
     _value_attribute_tilt = (
-        closures.WindowCovering.AttributeDefs.current_position_tilt_percentage.id
+        WindowCovering.AttributeDefs.current_position_tilt_percentage.id
     )
     REPORT_CONFIG = (
         AttrReportConfig(

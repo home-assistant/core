@@ -28,7 +28,7 @@ from .core import discovery
 from .core.cluster_handlers.security import (
     SIGNAL_ALARM_TRIGGERED,
     SIGNAL_ARMED_STATE_CHANGED,
-    IasAce as AceClusterHandler,
+    IasAceClusterHandler as AceClusterHandler,
 )
 from .core.const import (
     CLUSTER_HANDLER_IAS_ACE,
