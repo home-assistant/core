@@ -38,12 +38,15 @@ class SpeechToTextError(PipelineError):
     """Error in speech-to-text portion of pipeline."""
 
 
-class SpeechToTextAborted(WakeWordDetectionError):
-    """Speech-to-text was aborted."""
+class DuplicateWakeUpDetectedError(WakeWordDetectionError):
+    """Error when multiple voice assistants wake up at the same time (same wake word)."""
 
-    def __init__(self) -> None:
+    def __init__(self, wake_up_key: str) -> None:
         """Set error message."""
-        super().__init__("speech_to_text_aborted", "")
+        super().__init__(
+            "duplicate_wake_up_detected",
+            f"Duplicate wake-up detected for {wake_up_key}",
+        )
 
 
 class IntentRecognitionError(PipelineError):

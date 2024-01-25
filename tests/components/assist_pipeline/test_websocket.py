@@ -1888,14 +1888,23 @@ async def test_wake_word_cooldown_same_id(
     await client_2.send_bytes(bytes([handler_id_2]) + b"wake word")
 
     # Get response events
+    error_data: dict[str, Any] | None = None
     msg = await client_1.receive_json()
     event_type_1 = msg["event"]["type"]
+    assert msg["event"]["data"] == snapshot
+    if event_type_1 == "error":
+        error_data = msg["event"]["data"]
 
     msg = await client_2.receive_json()
     event_type_2 = msg["event"]["type"]
+    assert msg["event"]["data"] == snapshot
+    if event_type_2 == "error":
+        error_data = msg["event"]["data"]
 
     # One should be a wake up, one should be an error
     assert {event_type_1, event_type_2} == {"wake_word-end", "error"}
+    assert error_data is not None
+    assert error_data["code"] == "duplicate_wake_up_detected"
 
 
 async def test_wake_word_cooldown_different_ids(
@@ -2542,7 +2551,7 @@ async def test_stt_cooldown_same_id(
             "end_stage": "tts",
             "input": {
                 "sample_rate": 16000,
-                "wake_word": "ok_nabu",
+                "duplicate_wake_up_key": "ok_nabu",
             },
         }
     )
@@ -2554,7 +2563,7 @@ async def test_stt_cooldown_same_id(
             "end_stage": "tts",
             "input": {
                 "sample_rate": 16000,
-                "wake_word": "ok_nabu",
+                "duplicate_wake_up_key": "ok_nabu",
             },
         }
     )
@@ -2592,7 +2601,7 @@ async def test_stt_cooldown_same_id(
     # One should be a stt start, one should be an error
     assert {event_type_1, event_type_2} == {"stt-start", "error"}
     assert error_data is not None
-    assert error_data["code"] == "speech_to_text_aborted"
+    assert error_data["code"] == "duplicate_wake_up_detected"
 
 
 async def test_stt_cooldown_different_ids(
@@ -2613,7 +2622,7 @@ async def test_stt_cooldown_different_ids(
             "end_stage": "tts",
             "input": {
                 "sample_rate": 16000,
-                "wake_word": "ok_nabu",
+                "duplicate_wake_up_key": "ok_nabu",
             },
         }
     )
@@ -2625,7 +2634,7 @@ async def test_stt_cooldown_different_ids(
             "end_stage": "tts",
             "input": {
                 "sample_rate": 16000,
-                "wake_word": "hey_jarvis",
+                "duplicate_wake_up_key": "hey_jarvis",
             },
         }
     )

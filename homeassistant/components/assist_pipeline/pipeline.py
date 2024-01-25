@@ -59,10 +59,10 @@ from .const import (
     DOMAIN,
 )
 from .error import (
+    DuplicateWakeUpDetectedError,
     IntentRecognitionError,
     PipelineError,
     PipelineNotFound,
-    SpeechToTextAborted,
     SpeechToTextError,
     TextToSpeechError,
     WakeWordDetectionAborted,
@@ -748,8 +748,10 @@ class PipelineRun:
             if last_wake_up is not None:
                 sec_since_last_wake_up = time.monotonic() - last_wake_up
                 if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
-                    _LOGGER.debug("Duplicate wake word detection occurred")
-                    raise WakeWordDetectionAborted
+                    _LOGGER.debug(
+                        "Duplicate wake word detection occurred for %s", wake_up_key
+                    )
+                    raise DuplicateWakeUpDetectedError(wake_up_key)
 
             # Record last wake up time to block duplicate detections
             self.hass.data[DATA_LAST_WAKE_UP][wake_up_key] = time.monotonic()
@@ -1309,8 +1311,8 @@ class PipelineInput:
     stt_stream: AsyncIterable[bytes] | None = None
     """Input audio for stt. Required when start_stage = stt."""
 
-    stt_wake_word: wake_word.WakeWord | None = None
-    """Optional information about local wake word when start_stage = stt."""
+    stt_wake_up_key: str | None = None
+    """Optional key used to de-duplicate wake-ups when start_stage = stt."""
 
     intent_input: str | None = None
     """Input for conversation agent. Required when start_stage = intent."""
@@ -1329,9 +1331,10 @@ class PipelineInput:
         stt_audio_buffer: list[ProcessedAudioChunk] = []
         stt_processed_stream: AsyncIterable[ProcessedAudioChunk] | None = None
 
-        # Timeout before another pipeline with the same stt_wake_word can run again
+        # Timeout before another pipeline with the same stt_wake_up_key can run again
         cooldown_seconds: float = DEFAULT_WAKE_WORD_COOLDOWN
         if self.run.wake_word_settings is not None:
+            # Use cooldown from wake settings if available
             cooldown_seconds = self.run.wake_word_settings.cooldown_seconds
 
         if self.stt_stream is not None:
@@ -1361,23 +1364,23 @@ class PipelineInput:
                 assert self.stt_metadata is not None
                 assert stt_processed_stream is not None
 
-                if self.stt_wake_word is not None:
-                    # Avoid duplicate detections by checking cooldown
-                    wake_up_key = f"{self.stt_wake_word.id}"
+                if self.stt_wake_up_key is not None:
+                    # Avoid duplicate wake-ups by checking cooldown
                     last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
-                        wake_up_key
+                        self.stt_wake_up_key
                     )
                     if last_wake_up is not None:
                         sec_since_last_wake_up = time.monotonic() - last_wake_up
                         if sec_since_last_wake_up < cooldown_seconds:
                             _LOGGER.debug(
-                                "Speech to text cancelled to avoid duplicate wake up"
+                                "Speech-to-text cancelled to avoid duplicate wake-up for %s",
+                                self.stt_wake_up_key,
                             )
-                            raise SpeechToTextAborted
+                            raise DuplicateWakeUpDetectedError(self.stt_wake_up_key)
 
                     # Record last wake up time to block duplicate detections
                     self.run.hass.data[DATA_LAST_WAKE_UP][
-                        wake_up_key
+                        self.stt_wake_up_key
                     ] = time.monotonic()
 
                 stt_input_stream = stt_processed_stream
