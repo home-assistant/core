@@ -895,10 +895,7 @@ def _deprecated_or_removed(
         """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                near = (
-                    f"near {config.__config_file__}"  # type: ignore[attr-defined]
-                    f":{config.__line__} "
-                )
+                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore[attr-defined]
             except AttributeError:
                 near = ""
             arguments: tuple[str, ...]
