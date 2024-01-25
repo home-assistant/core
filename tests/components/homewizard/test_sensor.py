@@ -68,15 +68,10 @@ pytestmark = [
                 "sensor.device_active_water_usage",
                 "sensor.device_total_water_usage",
                 "sensor.gas_meter_total_gas",
-                "sensor.gas_meter",
                 "sensor.water_meter_total_water_usage",
-                "sensor.water_meter",
                 "sensor.warm_water_meter_total_water_usage",
-                "sensor.warm_water_meter",
                 "sensor.heat_meter_total_heat_energy",
-                "sensor.heat_meter",
                 "sensor.inlet_heat_meter_total_heat_energy",
-                "sensor.inlet_heat_meter",
             ],
         ),
         (
@@ -446,30 +441,26 @@ async def test_entities_not_created_for_device(
         assert not hass.states.get(entity_id)
 
 
-@pytest.mark.parametrize(
-    "unique_id", ["aabbccddeeff_total_gas_m3", "aabbccddeeff_gas_unique_id"]
-)
 async def test_gas_meter_migrated(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    unique_id: str,
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test old gas meter sensors are migrated."""
+    """Test old gas meter sensor is migrated."""
     entity_registry.async_get_or_create(
         Platform.SENSOR,
         DOMAIN,
-        unique_id,
+        "aabbccddeeff_total_gas_m3",
     )
 
     await hass.config_entries.async_reload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = f"sensor.homewizard_{unique_id}"
+    entity_id = "sensor.homewizard_aabbccddeeff_total_gas_m3"
 
     assert (entity_entry := entity_registry.async_get(entity_id))
     assert snapshot(name=f"{entity_id}:entity-registry") == entity_entry
 
     # Make really sure this happens
-    assert entity_entry.previous_unique_id == unique_id
+    assert entity_entry.previous_unique_id == "aabbccddeeff_total_gas_m3"
