@@ -553,7 +553,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.5
+blinkpy==0.22.6
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -1072,6 +1072,9 @@ httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.7.3
+
+# homeassistant.components.huum
+huum==0.7.9
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
@@ -2223,7 +2226,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.6.0.1
+python-kasa[speedups]==0.6.1
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2655,6 +2658,9 @@ temperusb==1.6.1
 
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0
+
+# homeassistant.components.teslemetry
+tesla-fleet-api==0.2.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.0
