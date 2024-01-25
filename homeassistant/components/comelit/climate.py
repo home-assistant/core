@@ -15,12 +15,12 @@ from homeassistant.components.climate import (
     UnitOfTemperature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN
 from .coordinator import ComelitSerialBridge
 
 
@@ -29,7 +29,7 @@ class ClimaAction(StrEnum):
 
     OFF = "off"
     ON = "on"
-    MAN = "man"
+    MANUAL = "man"
     SET = "set"
     AUTO = "auto"
 
@@ -58,8 +58,8 @@ API_STATUS: dict[str, dict[str, Any]] = {
 MODE_TO_ACTION: dict[HVACMode, ClimaAction] = {
     HVACMode.OFF: ClimaAction.OFF,
     HVACMode.AUTO: ClimaAction.AUTO,
-    HVACMode.COOL: ClimaAction.MAN,
-    HVACMode.HEAT: ClimaAction.MAN,
+    HVACMode.COOL: ClimaAction.MANUAL,
+    HVACMode.HEAT: ClimaAction.MANUAL,
 }
 
 
@@ -94,7 +94,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_target_temperature_step = 0.1
+    _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_name = None
@@ -149,7 +149,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         return self._clima[0] / 10
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """HVAC current mode."""
 
         if self._api_preset == OFF:
@@ -161,10 +161,11 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         if self._api_preset in API_STATUS:
             return API_STATUS[self._api_preset]["hvac_mode"]
 
-        raise UpdateFailed(f"Unknown preset: {self._api_preset}")
+        _LOGGER.warning("Unknown preset '%s' in hvac_mode", self._api_preset)
+        return None
 
     @property
-    def hvac_action(self) -> HVACAction:
+    def hvac_action(self) -> HVACAction | None:
         """HVAC current action."""
 
         if not self._api_active:
@@ -173,7 +174,8 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         if self._api_preset in API_STATUS:
             return API_STATUS[self._api_preset]["hvac_action"]
 
-        raise UpdateFailed(f"Unknown preset: {self._api_preset}")
+        _LOGGER.warning("Unknown preset '%s' in hvac_action", self._api_preset)
+        return None
 
     @property
     def preset_mode(self) -> str | None:
@@ -189,7 +191,9 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        await self.coordinator.api.set_clima_status(self._device.index, ClimaAction.MAN)
+        await self.coordinator.api.set_clima_status(
+            self._device.index, ClimaAction.MANUAL
+        )
         await self.coordinator.api.set_clima_status(
             self._device.index, ClimaAction.SET, target_temp * 10
         )
