@@ -17,6 +17,12 @@ from homeassistant.data_entry_flow import (
 
 from tests.common import MockConfigEntry
 
+MOCK_DATA_STEP = {
+    CONF_HOST: "test-host.lan",
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+}
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -24,11 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="test-host.lan",
-        data={
-            CONF_HOST: "test-host.lan",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "admin",
-        },
+        data=MOCK_DATA_STEP,
     )
 
 
@@ -49,21 +51,13 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
     ) as mock_initialize_lupusec:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            MOCK_DATA_STEP,
         )
     await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "1.1.1.1"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
-    }
+    assert result2["title"] == MOCK_DATA_STEP[CONF_HOST]
+    assert result2["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_initialize_lupusec.mock_calls) == 1
 
@@ -102,11 +96,7 @@ async def test_form_lupusec_exception(hass: HomeAssistant) -> None:
     ) as mock_step_user:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            MOCK_DATA_STEP,
         )
     await hass.async_block_till_done()
 
@@ -139,11 +129,7 @@ async def test_flow_user_init_data_error_and_recover(
     ) as mock_step_user:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            MOCK_DATA_STEP,
         )
     await hass.async_block_till_done()
 
