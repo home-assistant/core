@@ -384,7 +384,7 @@ async def async_get_translations_for_categories(
     """
     all_components: set[str] = set()
     components: set[str] | None = None
-    components_without_platforms: set[str] = set()
+    components_without_platforms: set[str] | None = None
     components_for_categories: dict[str, set[str]] = {}
 
     if integrations is not None:
@@ -403,7 +403,7 @@ async def async_get_translations_for_categories(
             components_for_category = hass.config.components
         else:
             # Only 'state' supports merging, so remove platforms from selection
-            if not components_without_platforms:
+            if components_without_platforms is None:
                 components_without_platforms = {
                     component
                     for component in hass.config.components
