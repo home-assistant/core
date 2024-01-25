@@ -45,6 +45,14 @@
       "total_stats_cleanings": {
         "default": "mdi:counter"
       }
+    },
+    "select": {
+      "water_amount": {
+        "default": "mdi:water"
+      },
+      "work_mode": {
+        "default": "mdi:cog"
+      }
     }
   }
 }

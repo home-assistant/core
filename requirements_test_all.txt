@@ -332,7 +332,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.0.0
+aioshelly==8.0.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -472,7 +472,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.5
+blinkpy==0.22.6
 
 # homeassistant.components.blue_current
 bluecurrent-api==1.0.6
@@ -821,7 +821,7 @@ habluetooth==2.4.0
 hass-nabucasa==0.75.1
 
 # homeassistant.components.conversation
-hassil==1.5.2
+hassil==1.5.3
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -862,6 +862,9 @@ httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.7.3
+
+# homeassistant.components.huum
+huum==0.7.9
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
@@ -942,6 +945,9 @@ laundrify-aio==1.1.2
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
+
+# homeassistant.components.leaone
+leaone-ble==0.1.0
 
 # homeassistant.components.led_ble
 led-ble==1.0.1
@@ -1032,6 +1038,9 @@ motionblinds==0.6.19
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
+
+# homeassistant.components.bang_olufsen
+mozart-api==3.2.1.150.6
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1657,7 +1666,7 @@ pytankerkoenig==0.0.6
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.11
+pytedee-async==0.2.12
 
 # homeassistant.components.motionmount
 python-MotionMount==0.3.1
@@ -1678,7 +1687,7 @@ python-fullykiosk==0.0.12
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==4.1.0
+python-homewizard-energy==4.2.1
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -1687,7 +1696,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.6.0.1
+python-kasa[speedups]==0.6.1
 
 # homeassistant.components.matter
 python-matter-server==5.1.1
@@ -1718,7 +1727,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==0.39.0
+python-roborock==0.39.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -1992,7 +2001,7 @@ sunweg==2.1.0
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==1.3.0
+switchbot-api==2.0.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==3.10.0
@@ -2009,6 +2018,9 @@ temescal==0.5
 # homeassistant.components.temper
 temperusb==1.6.1
 
+# homeassistant.components.teslemetry
+tesla-fleet-api==0.2.0
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.0
 
@@ -2022,7 +2034,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.8.0
+thermopro-ble==0.9.0
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
@@ -2148,7 +2160,7 @@ wled==0.17.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==1.5.0
+wyoming==1.5.2
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
