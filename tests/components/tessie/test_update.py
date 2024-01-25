@@ -12,7 +12,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import setup_platform, test_entities
+from .common import assert_entities, setup_platform
 
 
 async def test_updates(
@@ -22,7 +22,7 @@ async def test_updates(
 
     entry = await setup_platform(hass, [Platform.UPDATE])
 
-    test_entities(hass, entry, entity_registry, snapshot)
+    assert_entities(hass, entry, entity_registry, snapshot)
 
     entity_id = "update.test_update"
 

@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .common import setup_platform, test_entities
+from .common import assert_entities, setup_platform
 
 
 async def test_locks(
@@ -25,7 +25,7 @@ async def test_locks(
 
     entry = await setup_platform(hass, [Platform.LOCK])
 
-    test_entities(hass, entry, entity_registry, snapshot)
+    assert_entities(hass, entry, entity_registry, snapshot)
 
     entity_id = "lock.test_lock"
 

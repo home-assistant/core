@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import setup_platform, test_entities
+from .common import assert_entities, setup_platform
 
 
 async def test_numbers(
@@ -19,7 +19,7 @@ async def test_numbers(
 
     entry = await setup_platform(hass, [Platform.NUMBER])
 
-    test_entities(hass, entry, entity_registry, snapshot)
+    assert_entities(hass, entry, entity_registry, snapshot)
 
     # Test number set value functions
     entity_id = "number.test_charge_current"

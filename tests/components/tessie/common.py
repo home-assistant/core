@@ -8,7 +8,6 @@ from aiohttp.client import RequestInfo
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.tessie.const import DOMAIN, TessieStatus
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -69,16 +68,14 @@ async def setup_platform(
     return mock_entry
 
 
-def test_entities(
+def assert_entities(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry_id: str,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests that all entities are correct."""
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
+    """Test that all entities match their snapshot."""
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry_id)
 
     assert entity_entries
     for entity_entry in entity_entries:
