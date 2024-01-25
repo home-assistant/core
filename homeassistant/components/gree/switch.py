@@ -21,17 +21,12 @@ from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
 from .entity import GreeEntity
 
 
-@dataclass
-class GreeRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True, frozen=True)
+class GreeSwitchEntityDescription(SwitchEntityDescription):
+    """Describes a Gree switch entity."""
 
     get_value_fn: Callable[[Device], bool]
     set_value_fn: Callable[[Device, bool], None]
-
-
-@dataclass
-class GreeSwitchEntityDescription(SwitchEntityDescription, GreeRequiredKeysMixin):
-    """Describes Gree switch entity."""
 
 
 def _set_light(device: Device, value: bool) -> None:

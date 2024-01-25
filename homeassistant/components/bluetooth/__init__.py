@@ -23,6 +23,7 @@ from bluetooth_adapters import (
 )
 from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
+    BaseHaRemoteScanner,
     BaseHaScanner,
     BluetoothScannerDevice,
     BluetoothScanningMode,
@@ -69,7 +70,6 @@ from .api import (
     async_set_fallback_availability_interval,
     async_track_unavailable,
 )
-from .base_scanner import HomeAssistantRemoteScanner
 from .const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
@@ -106,6 +106,7 @@ __all__ = [
     "async_scanner_by_source",
     "async_scanner_count",
     "async_scanner_devices_by_address",
+    "async_get_advertisement_callback",
     "BaseHaScanner",
     "HomeAssistantRemoteScanner",
     "BluetoothCallbackMatcher",
@@ -116,6 +117,7 @@ __all__ = [
     "BluetoothCallback",
     "BluetoothScannerDevice",
     "HaBluetoothConnector",
+    "BaseHaRemoteScanner",
     "SOURCE_LOCAL",
     "FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS",
     "MONOTONIC_TIME",
@@ -286,9 +288,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
-    new_info_callback = async_get_advertisement_callback(hass)
     manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
-    scanner = HaScanner(mode, adapter, address, new_info_callback)
+    scanner = HaScanner(mode, adapter, address)
     try:
         scanner.async_setup()
     except RuntimeError as err:
@@ -302,7 +303,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
     slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
-    entry.async_on_unload(async_register_scanner(hass, scanner, True, slots))
+    entry.async_on_unload(async_register_scanner(hass, scanner, connection_slots=slots))
     await async_update_device(hass, entry, adapter, details)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     entry.async_on_unload(entry.add_update_listener(async_update_listener))

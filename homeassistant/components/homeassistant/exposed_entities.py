@@ -475,7 +475,7 @@ def ws_expose_new_entities_get(
 def ws_expose_new_entities_set(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Expose new entities to an assistatant."""
+    """Expose new entities to an assistant."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities(msg["assistant"], msg["expose_new"])
     connection.send_result(msg["id"])

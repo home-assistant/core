@@ -7,20 +7,20 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
-from habluetooth.manager import FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     MONOTONIC_TIME,
+    BaseHaRemoteScanner,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
     async_ble_device_from_address,
-    async_get_advertisement_callback,
     async_get_fallback_availability_interval,
     async_get_learned_advertising_interval,
     async_scanner_count,
@@ -56,7 +56,7 @@ from tests.common import async_fire_time_changed, load_fixture
 def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci0 scanner."""
     hci0_scanner = FakeScanner("hci0", "hci0")
-    cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
+    cancel = bluetooth.async_register_scanner(hass, hci0_scanner)
     yield
     cancel()
 
@@ -65,7 +65,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
 def register_hci1_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci1 scanner."""
     hci1_scanner = FakeScanner("hci1", "hci1")
-    cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)
+    cancel = bluetooth.async_register_scanner(hass, hci1_scanner)
     yield
     cancel()
 
@@ -316,6 +316,89 @@ async def test_switching_adapters_based_on_stale(
     )
 
 
+async def test_switching_adapters_based_on_stale_with_discovered_interval(
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+) -> None:
+    """Test switching with discovered interval."""
+
+    address = "44:44:33:11:23:41"
+    start_time_monotonic = 50.0
+
+    switchbot_device_poor_signal_hci0 = generate_ble_device(
+        address, "wohand_poor_signal_hci0"
+    )
+    switchbot_adv_poor_signal_hci0 = generate_advertisement_data(
+        local_name="wohand_poor_signal_hci0", service_uuids=[], rssi=-100
+    )
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_poor_signal_hci0,
+        switchbot_adv_poor_signal_hci0,
+        start_time_monotonic,
+        "hci0",
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal_hci0
+    )
+
+    bluetooth.async_set_fallback_availability_interval(hass, address, 10)
+
+    switchbot_device_poor_signal_hci1 = generate_ble_device(
+        address, "wohand_poor_signal_hci1"
+    )
+    switchbot_adv_poor_signal_hci1 = generate_advertisement_data(
+        local_name="wohand_poor_signal_hci1", service_uuids=[], rssi=-99
+    )
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_poor_signal_hci1,
+        switchbot_adv_poor_signal_hci1,
+        start_time_monotonic,
+        "hci1",
+    )
+
+    # Should not switch adapters until the advertisement is stale
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal_hci0
+    )
+
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_poor_signal_hci1,
+        switchbot_adv_poor_signal_hci1,
+        start_time_monotonic + 10 + 1,
+        "hci1",
+    )
+
+    # Should not switch yet since we are not within the
+    # wobble period
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal_hci0
+    )
+
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_poor_signal_hci1,
+        switchbot_adv_poor_signal_hci1,
+        start_time_monotonic + 10 + TRACKER_BUFFERING_WOBBLE_SECONDS + 1,
+        "hci1",
+    )
+    # Should switch to hci1 since the previous advertisement is stale
+    # even though the signal is poor because the device is now
+    # likely unreachable via hci0
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal_hci1
+    )
+
+
 async def test_restore_history_from_dbus(
     hass: HomeAssistant, one_adapter: None, disable_new_discovery_flows
 ) -> None:
@@ -560,9 +643,7 @@ async def test_switching_adapters_when_one_goes_away(
     hass: HomeAssistant, enable_bluetooth: None, register_hci0_scanner: None
 ) -> None:
     """Test switching adapters when one goes away."""
-    cancel_hci2 = bluetooth.async_register_scanner(
-        hass, FakeScanner("hci2", "hci2"), True
-    )
+    cancel_hci2 = bluetooth.async_register_scanner(hass, FakeScanner("hci2", "hci2"))
 
     address = "44:44:33:11:23:45"
 
@@ -612,7 +693,7 @@ async def test_switching_adapters_when_one_stop_scanning(
 ) -> None:
     """Test switching adapters when stops scanning."""
     hci2_scanner = FakeScanner("hci2", "hci2")
-    cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
+    cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner)
 
     address = "44:44:33:11:23:45"
 
@@ -703,7 +784,7 @@ async def test_goes_unavailable_connectable_only_and_recovers(
         BluetoothScanningMode.ACTIVE,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -720,21 +801,18 @@ async def test_goes_unavailable_connectable_only_and_recovers(
                 MONOTONIC_TIME(),
             )
 
-    new_info_callback = async_get_advertisement_callback(hass)
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     connectable_scanner = FakeScanner(
-        hass,
         "connectable",
         "connectable",
-        new_info_callback,
         connector,
         True,
     )
     unsetup_connectable_scanner = connectable_scanner.async_setup()
     cancel_connectable_scanner = _get_manager().async_register_scanner(
-        connectable_scanner, True
+        connectable_scanner
     )
     connectable_scanner.inject_advertisement(
         switchbot_device_connectable, switchbot_device_adv
@@ -749,16 +827,14 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     )
 
     not_connectable_scanner = FakeScanner(
-        hass,
         "not_connectable",
         "not_connectable",
-        new_info_callback,
         connector,
         False,
     )
     unsetup_not_connectable_scanner = not_connectable_scanner.async_setup()
     cancel_not_connectable_scanner = _get_manager().async_register_scanner(
-        not_connectable_scanner, False
+        not_connectable_scanner
     )
     not_connectable_scanner.inject_advertisement(
         switchbot_device_non_connectable, switchbot_device_adv
@@ -800,16 +876,14 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     cancel_unavailable()
 
     connectable_scanner_2 = FakeScanner(
-        hass,
         "connectable",
         "connectable",
-        new_info_callback,
         connector,
         True,
     )
     unsetup_connectable_scanner_2 = connectable_scanner_2.async_setup()
     cancel_connectable_scanner_2 = _get_manager().async_register_scanner(
-        connectable_scanner, True
+        connectable_scanner
     )
     connectable_scanner_2.inject_advertisement(
         switchbot_device_connectable, switchbot_device_adv
@@ -876,7 +950,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         BluetoothScanningMode.ACTIVE,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -899,21 +973,18 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
             self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
-    new_info_callback = async_get_advertisement_callback(hass)
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     non_connectable_scanner = FakeScanner(
-        hass,
         "connectable",
         "connectable",
-        new_info_callback,
         connector,
         False,
     )
     unsetup_connectable_scanner = non_connectable_scanner.async_setup()
     cancel_connectable_scanner = _get_manager().async_register_scanner(
-        non_connectable_scanner, True
+        non_connectable_scanner
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         non_connectable_scanner.inject_advertisement(
@@ -925,7 +996,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
     assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
     assert async_ble_device_from_address(hass, "44:44:33:11:23:45", False) is not None
-    assert async_scanner_count(hass, connectable=True) == 1
+    assert async_scanner_count(hass, connectable=False) == 1
     assert len(callbacks) == 1
 
     assert (

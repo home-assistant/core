@@ -92,6 +92,7 @@ class Metering(ClusterHandler):
         AttrReportConfig(
             attr="current_tier6_summ_delivered", config=REPORT_CONFIG_DEFAULT
         ),
+        AttrReportConfig(attr="current_summ_received", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="status", config=REPORT_CONFIG_ASAP),
     )
     ZCL_INIT_ATTRS = {
@@ -195,9 +196,9 @@ class Metering(ClusterHandler):
         )  # 1 digit to the right, 15 digits to the left
         self._summa_format = self.get_formatting(fmting)
 
-    async def async_force_update(self) -> None:
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        self.debug("async_force_update")
+        self.debug("async_update")
 
         attrs = [
             a["attr"]

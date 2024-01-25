@@ -1,4 +1,221 @@
 # serializer version: 1
+# name: test_gas_meter_migrated[HWE-P1-unique_ids0][sensor.homewizard_aabbccddeeff_gas_unique_id:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.homewizard_aabbccddeeff_gas_unique_id',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': 'aabbccddeeff_gas_unique_id',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'homewizard_01FFEEDDCCBBAA99887766554433221100_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_gas_meter_migrated[HWE-P1-unique_ids0][sensor.homewizard_aabbccddeeff_total_gas_m3:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.homewizard_aabbccddeeff_total_gas_m3',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': 'aabbccddeeff_total_gas_m3',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'homewizard_01FFEEDDCCBBAA99887766554433221100',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_gas_meter_migrated[aabbccddeeff_gas_unique_id][sensor.homewizard_a:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.homewizard_a',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'a',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_gas_meter_migrated[aabbccddeeff_gas_unique_id][sensor.homewizard_aabbccddeeff_gas_unique_id:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.homewizard_aabbccddeeff_gas_unique_id',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': 'aabbccddeeff_gas_unique_id',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'homewizard_01FFEEDDCCBBAA99887766554433221100_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_gas_meter_migrated[aabbccddeeff_total_gas_m3][sensor.homewizard_a:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.homewizard_a',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'a',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_gas_meter_migrated[aabbccddeeff_total_gas_m3][sensor.homewizard_aabbccddeeff_total_gas_m3:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.homewizard_aabbccddeeff_total_gas_m3',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': 'aabbccddeeff_total_gas_m3',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'homewizard_01FFEEDDCCBBAA99887766554433221100',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_gas_meter_migrated[sensor.homewizard_aabbccddeeff_total_gas_m3:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.homewizard_aabbccddeeff_total_gas_m3',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': 'aabbccddeeff_total_gas_m3',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'homewizard_01FFEEDDCCBBAA99887766554433221100',
+    'unit_of_measurement': None,
+  })
+# ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_active_average_demand:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -136,7 +353,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l1_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -216,7 +433,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l2_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -296,7 +513,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l3_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -542,7 +759,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l1_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -625,7 +842,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l2_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -708,7 +925,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l3_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -788,7 +1005,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:calendar-clock',
+    'original_icon': None,
     'original_name': 'Active tariff',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -803,7 +1020,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Device Active tariff',
-      'icon': 'mdi:calendar-clock',
       'options': list([
         '1',
         '2',
@@ -878,7 +1094,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l1_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -958,7 +1174,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l2_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1038,7 +1254,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l3_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1113,7 +1329,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Active water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1127,7 +1343,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Active water usage',
-      'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'l/min',
     }),
@@ -1191,7 +1406,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:counter',
+    'original_icon': None,
     'original_name': 'DSMR version',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1205,7 +1420,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device DSMR version',
-      'icon': 'mdi:counter',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_dsmr_version',
@@ -1267,7 +1481,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alphabetical-variant',
+    'original_icon': None,
     'original_name': 'Gas meter identifier',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1281,7 +1495,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Gas meter identifier',
-      'icon': 'mdi:alphabetical-variant',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_gas_meter_identifier',
@@ -1343,7 +1556,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Long power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1357,7 +1570,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Long power failures detected',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_long_power_failures_detected',
@@ -1496,7 +1708,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1510,7 +1722,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Power failures detected',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_failures_detected',
@@ -1572,7 +1783,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alphabetical-variant',
+    'original_icon': None,
     'original_name': 'Smart meter identifier',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1586,7 +1797,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Smart meter identifier',
-      'icon': 'mdi:alphabetical-variant',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_identifier',
@@ -1648,7 +1858,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:gauge',
+    'original_icon': None,
     'original_name': 'Smart meter model',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -1662,7 +1872,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Smart meter model',
-      'icon': 'mdi:gauge',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_model',
@@ -1811,7 +2020,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t1_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1891,7 +2100,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t2_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1971,7 +2180,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t3_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2051,7 +2260,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t4_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2211,7 +2420,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t1_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2291,7 +2500,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t2_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2371,7 +2580,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t3_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2451,7 +2660,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t4_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2606,7 +2815,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
-    'original_icon': 'mdi:gauge',
+    'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -2621,7 +2830,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Device Total water usage',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
@@ -2685,12 +2893,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l1_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l1_count',
     'unit_of_measurement': None,
   })
@@ -2699,7 +2907,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 1',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_1',
@@ -2761,12 +2968,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l2_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l2_count',
     'unit_of_measurement': None,
   })
@@ -2775,7 +2982,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 2',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_2',
@@ -2837,12 +3043,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l3_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l3_count',
     'unit_of_measurement': None,
   })
@@ -2851,7 +3057,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 3',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_3',
@@ -2913,12 +3118,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l1_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l1_count',
     'unit_of_measurement': None,
   })
@@ -2927,7 +3132,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 1',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_1',
@@ -2989,12 +3193,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l2_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l2_count',
     'unit_of_measurement': None,
   })
@@ -3003,7 +3207,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 2',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_2',
@@ -3065,12 +3268,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l3_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l3_count',
     'unit_of_measurement': None,
   })
@@ -3079,7 +3282,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 3',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_3',
@@ -3141,7 +3343,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -3155,7 +3357,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -3219,7 +3420,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -3233,7 +3434,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -3242,6 +3442,745 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.gas_meter:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'G001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Gas meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.gas_meter:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gas_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_G001_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.gas_meter:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gas meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_meter',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'G001',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.gas_meter_total_gas:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'G001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Gas meter',
+    'name_by_user': None,
+    'serial_number': 'G001',
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.gas_meter_total_gas:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gas_meter_total_gas',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
+    'original_icon': None,
+    'original_name': 'Total gas',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_gas_m3',
+    'unique_id': 'homewizard_G001',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.gas_meter_total_gas:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'gas',
+      'friendly_name': 'Gas meter Total gas',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_meter_total_gas',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111.111',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.heat_meter:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'H001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Heat meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.heat_meter:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.heat_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_H001_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.heat_meter:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.heat_meter',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'H001',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.heat_meter_total_heat_energy:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'H001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Heat meter',
+    'name_by_user': None,
+    'serial_number': 'H001',
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.heat_meter_total_heat_energy:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.heat_meter_total_heat_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total heat energy',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy_gj',
+    'unique_id': 'homewizard_H001',
+    'unit_of_measurement': 'GJ',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.heat_meter_total_heat_energy:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Heat meter Total heat energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'GJ',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.heat_meter_total_heat_energy',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '444.444',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'IH001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Inlet heat meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.inlet_heat_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_IH001_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inlet heat meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inlet_heat_meter',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'IH001',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter_total_heat_energy:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'IH001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Inlet heat meter',
+    'name_by_user': None,
+    'serial_number': 'IH001',
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter_total_heat_energy:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inlet_heat_meter_total_heat_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total heat energy',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy_gj',
+    'unique_id': 'homewizard_IH001',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter_total_heat_energy:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inlet heat meter Total heat energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inlet_heat_meter_total_heat_energy',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '555.555',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.warm_water_meter:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'WW001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Warm water meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.warm_water_meter:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.warm_water_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_WW001_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.warm_water_meter:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Warm water meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.warm_water_meter',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'WW001',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.warm_water_meter_total_water_usage:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'WW001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Warm water meter',
+    'name_by_user': None,
+    'serial_number': 'WW001',
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.warm_water_meter_total_water_usage:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.warm_water_meter_total_water_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Total water usage',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_liter_m3',
+    'unique_id': 'homewizard_WW001',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.warm_water_meter_total_water_usage:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Warm water meter Total water usage',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.warm_water_meter_total_water_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '333.333',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.water_meter:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'W001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Water meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.water_meter:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.water_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_W001_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.water_meter:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Water meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_meter',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'W001',
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.water_meter_total_water_usage:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'W001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Water meter',
+    'name_by_user': None,
+    'serial_number': 'W001',
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.water_meter_total_water_usage:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.water_meter_total_water_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Total water usage',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_liter_m3',
+    'unique_id': 'homewizard_W001',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.water_meter_total_water_usage:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Water meter Total water usage',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_meter_total_water_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '222.222',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_active_average_demand:device-registry]
@@ -3381,7 +4320,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l1_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -3461,7 +4400,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l2_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -3541,7 +4480,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_current_l3_a',
+    'translation_key': 'active_current_phase_a',
     'unique_id': 'aabbccddeeff_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -3787,7 +4726,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l1_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -3870,7 +4809,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l2_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -3953,7 +4892,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l3_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -4033,7 +4972,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l1_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -4113,7 +5052,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l2_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -4193,7 +5132,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_voltage_l3_v',
+    'translation_key': 'active_voltage_phase_v',
     'unique_id': 'aabbccddeeff_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -4268,7 +5207,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Active water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -4282,7 +5221,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Active water usage',
-      'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'l/min',
     }),
@@ -4346,7 +5284,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Long power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -4360,7 +5298,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Long power failures detected',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_long_power_failures_detected',
@@ -4499,7 +5436,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -4513,7 +5450,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Power failures detected',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_failures_detected',
@@ -4662,7 +5598,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t1_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -4742,7 +5678,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t2_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -4822,7 +5758,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t3_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -4902,7 +5838,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_export_t4_kwh',
+    'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_export_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -5062,7 +5998,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t1_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -5142,7 +6078,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t2_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -5222,7 +6158,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t3_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -5302,7 +6238,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_import_t4_kwh',
+    'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'aabbccddeeff_total_power_import_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -5457,7 +6393,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
-    'original_icon': 'mdi:gauge',
+    'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -5472,7 +6408,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Device Total water usage',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
@@ -5536,12 +6471,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l1_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l1_count',
     'unit_of_measurement': None,
   })
@@ -5550,7 +6485,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 1',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_1',
@@ -5612,12 +6546,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l2_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l2_count',
     'unit_of_measurement': None,
   })
@@ -5626,7 +6560,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 2',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_2',
@@ -5688,12 +6621,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage sags detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_sag_l3_count',
+    'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'aabbccddeeff_voltage_sag_l3_count',
     'unit_of_measurement': None,
   })
@@ -5702,7 +6635,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 3',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_3',
@@ -5764,12 +6696,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l1_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l1_count',
     'unit_of_measurement': None,
   })
@@ -5778,7 +6710,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 1',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_1',
@@ -5840,12 +6771,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l2_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l2_count',
     'unit_of_measurement': None,
   })
@@ -5854,7 +6785,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 2',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_2',
@@ -5916,12 +6846,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Voltage swells detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_swell_l3_count',
+    'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'aabbccddeeff_voltage_swell_l3_count',
     'unit_of_measurement': None,
   })
@@ -5930,7 +6860,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 3',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_3',
@@ -6085,7 +7014,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l1_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -6318,7 +7247,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6332,7 +7261,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -6396,7 +7324,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6410,7 +7338,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -6476,7 +7403,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Active water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6490,7 +7417,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Active water usage',
-      'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'l/min',
     }),
@@ -6556,7 +7482,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
-    'original_icon': 'mdi:gauge',
+    'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6571,7 +7497,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Device Total water usage',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
@@ -6635,7 +7560,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6649,7 +7574,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -6713,7 +7637,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -6727,7 +7651,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -6884,7 +7807,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l1_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -7117,7 +8040,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -7131,7 +8054,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -7195,7 +8117,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -7209,7 +8131,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -7366,7 +8287,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l1_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -7449,7 +8370,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l2_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -7532,7 +8453,7 @@
     'platform': 'homewizard',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'active_power_l3_w',
+    'translation_key': 'active_power_phase_w',
     'unique_id': 'aabbccddeeff_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -7765,7 +8686,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -7779,7 +8700,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -7843,7 +8763,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
@@ -7857,7 +8777,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -7866,5 +8785,891 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '92',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'G001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Gas meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gas_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_G001_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gas meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_meter',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'G001',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter_2:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'unknown_unit',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Gas meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter_2:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gas_meter_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_unknown_unit_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter_2:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gas meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_meter_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown_unit',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter_total_gas:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'G001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Gas meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter_total_gas:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gas_meter_total_gas',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
+    'original_icon': None,
+    'original_name': 'Total gas',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_gas_m3',
+    'unique_id': 'homewizard_G001',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter_total_gas:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'gas',
+      'friendly_name': 'Gas meter Total gas',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_meter_total_gas',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111.111',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter_total_gas_2:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'unknown_unit',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Gas meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter_total_gas_2:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gas_meter_total_gas_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total gas',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_gas_m3',
+    'unique_id': 'homewizard_unknown_unit',
+    'unit_of_measurement': 'cats',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.gas_meter_total_gas_2:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gas meter Total gas',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cats',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_meter_total_gas_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '666.666',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.heat_meter:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'H001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Heat meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.heat_meter:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.heat_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_H001_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.heat_meter:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.heat_meter',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'H001',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.heat_meter_total_heat_energy:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'H001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Heat meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.heat_meter_total_heat_energy:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.heat_meter_total_heat_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total heat energy',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy_gj',
+    'unique_id': 'homewizard_H001',
+    'unit_of_measurement': 'GJ',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.heat_meter_total_heat_energy:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Heat meter Total heat energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'GJ',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.heat_meter_total_heat_energy',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '444.444',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.inlet_heat_meter:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'IH001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Inlet heat meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.inlet_heat_meter:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.inlet_heat_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_IH001_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.inlet_heat_meter:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inlet heat meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inlet_heat_meter',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'IH001',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.inlet_heat_meter_total_heat_energy:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'IH001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Inlet heat meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.inlet_heat_meter_total_heat_energy:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inlet_heat_meter_total_heat_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total heat energy',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy_gj',
+    'unique_id': 'homewizard_IH001',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.inlet_heat_meter_total_heat_energy:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inlet heat meter Total heat energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inlet_heat_meter_total_heat_energy',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '555.555',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.warm_water_meter:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'WW001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Warm water meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.warm_water_meter:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.warm_water_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_WW001_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.warm_water_meter:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Warm water meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.warm_water_meter',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'WW001',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.warm_water_meter_total_water_usage:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'WW001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Warm water meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.warm_water_meter_total_water_usage:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.warm_water_meter_total_water_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Total water usage',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_liter_m3',
+    'unique_id': 'homewizard_WW001',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.warm_water_meter_total_water_usage:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Warm water meter Total water usage',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.warm_water_meter_total_water_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '333.333',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.water_meter:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'W001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Water meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.water_meter:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.water_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alphabetical-variant',
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_identifier',
+    'unique_id': 'homewizard_W001_meter_identifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.water_meter:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Water meter',
+      'icon': 'mdi:alphabetical-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_meter',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'W001',
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.water_meter_total_water_usage:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        'W001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-P1',
+    'name': 'Water meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.water_meter_total_water_usage:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.water_meter_total_water_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Total water usage',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_liter_m3',
+    'unique_id': 'homewizard_W001',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_sensors_external_devices[HWE-P1-entity_ids0][sensor.water_meter_total_water_usage:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Water meter Total water usage',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_meter_total_water_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '222.222',
   })
 # ---

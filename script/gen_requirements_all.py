@@ -59,11 +59,6 @@ CONSTRAINT_BASE = """
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
 
-# Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
-# Temporary setting an upper bound, to prevent compat issues with urllib3>=2
-# https://github.com/home-assistant/core/issues/97248
-urllib3>=1.26.5,<2
-
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
 httplib2>=0.19.0
@@ -105,7 +100,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.1.0
 h11==0.14.0
-httpcore==0.18.0
+httpcore==1.0.2
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -179,6 +174,13 @@ get-mac==1000000000.0.0
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
 charset-normalizer==3.2.0
+
+# dacite: Ensure we have a version that is able to handle type unions for
+# Roborock, NAM, Brother, and GIOS.
+dacite>=1.7.0
+
+# Musle wheels for pandas 2.2.0 cannot be build for any architecture.
+pandas==2.1.4
 """
 
 GENERATED_MESSAGE = (

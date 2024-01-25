@@ -2,7 +2,9 @@
   "domain": "trend",
   "name": "Trend",
   "codeowners": ["@jpbede"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trend",
+  "integration_type": "helper",
   "iot_class": "calculated",
   "quality_scale": "internal",
   "requirements": ["numpy==1.26.0"]

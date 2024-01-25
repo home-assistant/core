@@ -31,12 +31,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-    template,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.typing import ConfigType
@@ -49,7 +44,6 @@ from .test_common import help_all_subscribe_calls
 from tests.common import (
     MockConfigEntry,
     MockEntity,
-    async_capture_events,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -810,6 +804,7 @@ def test_entity_device_info_schema() -> None:
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
+            "serial_number": "1234deadbeef",
             "sw_version": "0.1-beta",
             "configuration_url": "http://example.com",
         }
@@ -825,6 +820,7 @@ def test_entity_device_info_schema() -> None:
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
+            "serial_number": "1234deadbeef",
             "sw_version": "0.1-beta",
             "via_device": "test-hub",
             "configuration_url": "http://example.com",
@@ -2159,98 +2155,6 @@ async def test_setup_manual_mqtt_with_invalid_config(
     assert "required key not provided" in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("hass_config", "entity_id"),
-    [
-        (
-            {
-                mqtt.DOMAIN: {
-                    "sensor": {
-                        "name": "test",
-                        "state_topic": "test-topic",
-                        "entity_category": "config",
-                    }
-                }
-            },
-            "sensor.test",
-        ),
-        (
-            {
-                mqtt.DOMAIN: {
-                    "binary_sensor": {
-                        "name": "test",
-                        "state_topic": "test-topic",
-                        "entity_category": "config",
-                    }
-                }
-            },
-            "binary_sensor.test",
-        ),
-    ],
-)
-@patch(
-    "homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR, Platform.SENSOR]
-)
-async def test_setup_manual_mqtt_with_invalid_entity_category(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    entity_id: str,
-) -> None:
-    """Test set up a manual sensor item with an invalid entity category."""
-    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
-    assert await mqtt_mock_entry()
-    assert "Entity category `config` is invalid for sensors, ignoring" in caplog.text
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert len(events) == 1
-
-
-@pytest.mark.parametrize(
-    ("config", "entity_id"),
-    [
-        (
-            {
-                "name": "test",
-                "state_topic": "test-topic",
-                "entity_category": "config",
-            },
-            "binary_sensor.test",
-        ),
-        (
-            {
-                "name": "test",
-                "state_topic": "test-topic",
-                "entity_category": "config",
-            },
-            "sensor.test",
-        ),
-    ],
-)
-@patch(
-    "homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR, Platform.SENSOR]
-)
-async def test_setup_discovery_mqtt_with_invalid_entity_category(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    config: dict[str, Any],
-    entity_id: str,
-) -> None:
-    """Test set up a discovered sensor item with an invalid entity category."""
-    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
-    assert await mqtt_mock_entry()
-
-    domain = entity_id.split(".")[0]
-    json_config = json.dumps(config)
-    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", json_config)
-    await hass.async_block_till_done()
-    assert "Entity category `config` is invalid for sensors, ignoring" in caplog.text
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert len(events) == 0
-
-
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 @pytest.mark.parametrize(
     ("mqtt_config_entry_data", "protocol"),
@@ -2548,7 +2452,7 @@ async def test_delayed_birth_message(
     """Test sending birth message does not happen until Home Assistant starts."""
     mqtt_mock = await mqtt_mock_entry()
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     birth = asyncio.Event()
 
     await hass.async_block_till_done()

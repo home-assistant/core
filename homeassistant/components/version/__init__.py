@@ -44,6 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             image=entry.data[CONF_IMAGE],
             board=BOARD_MAP[board],
             channel=entry.data[CONF_CHANNEL].lower(),
+            timeout=30,
         ),
     )
     await coordinator.async_config_entry_first_refresh()

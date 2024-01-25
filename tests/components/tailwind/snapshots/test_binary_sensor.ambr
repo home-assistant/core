@@ -1,0 +1,147 @@
+# serializer version: 1
+# name: test_number_entities[binary_sensor.door_1_operational_problem]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Door 1 Operational problem',
+      'icon': 'mdi:garage-alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.door_1_operational_problem',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_number_entities[binary_sensor.door_1_operational_problem].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.door_1_operational_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': 'mdi:garage-alert',
+    'original_name': 'Operational problem',
+    'platform': 'tailwind',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'operational_problem',
+    'unique_id': '_3c_e9_e_6d_21_84_-door1-locked_out',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities[binary_sensor.door_1_operational_problem].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tailwind',
+        '_3c_e9_e_6d_21_84_-door1',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Tailwind',
+    'model': 'iQ3',
+    'name': 'Door 1',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '10.10',
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_number_entities[binary_sensor.door_2_operational_problem]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Door 2 Operational problem',
+      'icon': 'mdi:garage-alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.door_2_operational_problem',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_number_entities[binary_sensor.door_2_operational_problem].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.door_2_operational_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': 'mdi:garage-alert',
+    'original_name': 'Operational problem',
+    'platform': 'tailwind',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'operational_problem',
+    'unique_id': '_3c_e9_e_6d_21_84_-door2-locked_out',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities[binary_sensor.door_2_operational_problem].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tailwind',
+        '_3c_e9_e_6d_21_84_-door2',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Tailwind',
+    'model': 'iQ3',
+    'name': 'Door 2',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '10.10',
+    'via_device_id': <ANY>,
+  })
+# ---

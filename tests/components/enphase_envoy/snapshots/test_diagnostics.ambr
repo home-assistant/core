@@ -25,5 +25,6 @@
       'unique_id': '**REDACTED**',
       'version': 1,
     }),
+    'envoy_firmware': '7.1.2',
   })
 # ---

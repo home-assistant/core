@@ -12,9 +12,23 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
+from .models import TessieVehicle
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,18 +51,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientError as e:
         raise ConfigEntryNotReady from e
 
-    coordinators = [
-        TessieDataUpdateCoordinator(
-            hass,
-            api_key=api_key,
-            vin=vehicle["vin"],
-            data=vehicle["last_state"],
+    data = [
+        TessieVehicle(
+            state_coordinator=TessieStateUpdateCoordinator(
+                hass,
+                api_key=api_key,
+                vin=vehicle["vin"],
+                data=vehicle["last_state"],
+            )
         )
         for vehicle in vehicles["results"]
         if vehicle["last_state"] is not None
     ]
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

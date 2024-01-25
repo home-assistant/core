@@ -68,7 +68,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicClimateDescription(
     ClimateEntityDescription, ScreenLogicPushEntityDescription
 ):
@@ -94,6 +94,9 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
                 [HEAT_MODE.SOLAR, HEAT_MODE.SOLAR_PREFERRED]
             )
         self._configured_heat_modes.append(HEAT_MODE.HEATER)
+        self._attr_preset_modes = [
+            HEAT_MODE(mode_num).title for mode_num in self._configured_heat_modes
+        ]
 
         self._attr_min_temp = self.entity_data[ATTR.MIN_SETPOINT]
         self._attr_max_temp = self.entity_data[ATTR.MAX_SETPOINT]
@@ -139,11 +142,6 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         if self.hvac_mode == HVACMode.OFF:
             return HEAT_MODE(self._last_preset).title
         return HEAT_MODE(self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE]).title
-
-    @property
-    def preset_modes(self) -> list[str]:
-        """All available presets."""
-        return [HEAT_MODE(mode_num).title for mode_num in self._configured_heat_modes]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the heater."""

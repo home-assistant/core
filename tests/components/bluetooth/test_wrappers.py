@@ -1,7 +1,6 @@
 """Tests for the Bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import contextmanager
 from unittest.mock import patch
 
@@ -17,11 +16,9 @@ import pytest
 
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
-    BluetoothServiceInfoBleak,
+    BaseHaRemoteScanner,
     HaBluetoothConnector,
     HomeAssistantBluetoothManager,
-    HomeAssistantRemoteScanner,
-    async_get_advertisement_callback,
 )
 from homeassistant.core import HomeAssistant
 
@@ -36,22 +33,18 @@ def mock_shutdown(manager: HomeAssistantBluetoothManager) -> None:
     manager.shutdown = False
 
 
-class FakeScanner(HomeAssistantRemoteScanner):
+class FakeScanner(BaseHaRemoteScanner):
     """Fake scanner."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
         scanner_id: str,
         name: str,
-        new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
         connector: None,
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
-        super().__init__(
-            hass, scanner_id, name, new_info_callback, connector, connectable
-        )
+        super().__init__(scanner_id, name, connector, connectable)
         self._details: dict[str, str | HaBluetoothConnector] = {}
 
     def __repr__(self) -> str:
@@ -185,13 +178,8 @@ def _generate_scanners_with_fake_devices(hass):
         )
         hci1_device_advs[device.address] = (device, adv_data)
 
-    new_info_callback = async_get_advertisement_callback(hass)
-    scanner_hci0 = FakeScanner(
-        hass, "00:00:00:00:00:01", "hci0", new_info_callback, None, True
-    )
-    scanner_hci1 = FakeScanner(
-        hass, "00:00:00:00:00:02", "hci1", new_info_callback, None, True
-    )
+    scanner_hci0 = FakeScanner("00:00:00:00:00:01", "hci0", None, True)
+    scanner_hci1 = FakeScanner("00:00:00:00:00:02", "hci1", None, True)
 
     for device, adv_data in hci0_device_advs.values():
         scanner_hci0.inject_advertisement(device, adv_data)
@@ -199,8 +187,8 @@ def _generate_scanners_with_fake_devices(hass):
     for device, adv_data in hci1_device_advs.values():
         scanner_hci1.inject_advertisement(device, adv_data)
 
-    cancel_hci0 = manager.async_register_scanner(scanner_hci0, True, 2)
-    cancel_hci1 = manager.async_register_scanner(scanner_hci1, True, 1)
+    cancel_hci0 = manager.async_register_scanner(scanner_hci0, connection_slots=2)
+    cancel_hci1 = manager.async_register_scanner(scanner_hci1, connection_slots=1)
 
     return hci0_device_advs, cancel_hci0, cancel_hci1
 
@@ -375,6 +363,38 @@ async def test_we_switch_adapters_on_failure(
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is False
+    cancel_hci0()
+    cancel_hci1()
+
+
+async def test_passing_subclassed_str_as_address(
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
+    install_bleak_catcher,
+) -> None:
+    """Ensure the client wrapper can handle a subclassed str as the address."""
+    _, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(hass)
+
+    class SubclassedStr(str):
+        pass
+
+    address = SubclassedStr("00:00:00:00:00:01")
+    client = bleak.BleakClient(address)
+
+    class FakeBleakClient(BaseFakeBleakClient):
+        """Fake bleak client."""
+
+        async def connect(self, *args, **kwargs):
+            """Connect."""
+            return True
+
+    with patch(
+        "habluetooth.wrappers.get_platform_client_backend_type",
+        return_value=FakeBleakClient,
+    ):
+        assert await client.connect() is True
+
     cancel_hci0()
     cancel_hci1()
 

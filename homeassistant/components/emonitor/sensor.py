@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -27,10 +27,12 @@ from .const import DOMAIN
 SENSORS = (
     SensorEntityDescription(key="inst_power"),
     SensorEntityDescription(
-        key="avg_power", name="Average", entity_registry_enabled_default=False
+        key="avg_power",
+        translation_key="average",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="max_power", name="Max", entity_registry_enabled_default=False
+        key="max_power", translation_key="max", entity_registry_enabled_default=False
     ),
 )
 
@@ -66,6 +68,7 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.POWER
     _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -79,9 +82,9 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         mac_address = self.emonitor_status.network.mac_address
         device_name = name_short_mac(mac_address[-6:])
-        label = self.channel_data.label or f"{device_name} {channel_number}"
-        if description.name is not UNDEFINED:
-            self._attr_name = f"{label} {description.name}"
+        label = self.channel_data.label or str(channel_number)
+        if description.translation_key is not None:
+            self._attr_translation_placeholders = {"label": label}
             self._attr_unique_id = f"{mac_address}_{channel_number}_{description.key}"
         else:
             self._attr_name = label

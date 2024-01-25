@@ -29,17 +29,17 @@ async def async_setup_entry(
     # Setup is only forwarded for satellites
     assert item.satellite is not None
 
-    async_add_entities([WyomingSatelliteEnabledSwitch(item.satellite.device)])
+    async_add_entities([WyomingSatelliteMuteSwitch(item.satellite.device)])
 
 
-class WyomingSatelliteEnabledSwitch(
+class WyomingSatelliteMuteSwitch(
     WyomingSatelliteEntity, restore_state.RestoreEntity, SwitchEntity
 ):
-    """Entity to represent if satellite is enabled."""
+    """Entity to represent if satellite is muted."""
 
     entity_description = SwitchEntityDescription(
-        key="satellite_enabled",
-        translation_key="satellite_enabled",
+        key="mute",
+        translation_key="mute",
         entity_category=EntityCategory.CONFIG,
     )
 
@@ -49,17 +49,17 @@ class WyomingSatelliteEnabledSwitch(
 
         state = await self.async_get_last_state()
 
-        # Default to on
-        self._attr_is_on = (state is None) or (state.state == STATE_ON)
+        # Default to off
+        self._attr_is_on = (state is not None) and (state.state == STATE_ON)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         self._attr_is_on = True
         self.async_write_ha_state()
-        self._device.set_is_enabled(True)
+        self._device.set_is_muted(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         self._attr_is_on = False
         self.async_write_ha_state()
-        self._device.set_is_enabled(False)
+        self._device.set_is_muted(False)
