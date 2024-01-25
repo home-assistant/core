@@ -212,9 +212,7 @@ def _filter_bad_internal_external_urls(conf: dict) -> dict:
     return conf
 
 
-PACKAGES_CONFIG_SCHEMA = cv.schema_with_slug_keys(  # Package names are slugs
-    vol.Schema({cv.string: vol.Any(dict, list, None)})  # Component config
-)
+PACKAGES_CONFIG_SCHEMA = vol.Schema({cv.string: vol.Any(dict, list)})
 
 CUSTOMIZE_DICT_SCHEMA = vol.Schema(
     {
@@ -499,7 +497,17 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
         config.pop(invalid_domain)
 
     core_config = config.get(CONF_CORE, {})
-    await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
+    try:
+        await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
+    except vol.Invalid as exc:
+        suffix = ""
+        if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES] + exc.path):
+            suffix = f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
+        _LOGGER.error(
+            "Invalid package configuration '%s'%s: %s", CONF_PACKAGES, suffix, exc
+        )
+        core_config[CONF_PACKAGES] = {}
+
     return config
 
 
@@ -938,7 +946,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
 
 def _log_pkg_error(
-    hass: HomeAssistant, package: str, component: str, config: dict, message: str
+    hass: HomeAssistant, package: str, component: str | None, config: dict, message: str
 ) -> None:
     """Log an error while merging packages."""
     message_prefix = f"Setup of package '{package}'"
@@ -1023,16 +1031,38 @@ async def merge_packages_config(
     config: dict,
     packages: dict[str, Any],
     _log_pkg_error: Callable[
-        [HomeAssistant, str, str, dict, str], None
+        [HomeAssistant, str, str | None, dict, str], None
     ] = _log_pkg_error,
 ) -> dict:
-    """Merge packages into the top-level configuration. Mutate config."""
-    try:
-        PACKAGES_CONFIG_SCHEMA(packages)
-    except vol.Error as err:
-        raise HomeAssistantError(f"Error validating package config: {err}") from err
+    """Merge packages into the top-level configuration. Ignores packages that cannot be setup. Mutates config.
 
+    Raises vol.Invalid if whole package config is invalid.
+    """
+
+    package_definition_schema = vol.Schema({cv.string: vol.Any(dict, list, None)})
+
+    def _validate_package_definition(name, conf) -> None:
+        """Validate basic package definition properties."""
+        cv.slug(name)
+        package_definition_schema(conf)
+
+    PACKAGES_CONFIG_SCHEMA(packages)
+
+    invalid_packages = []
     for pack_name, pack_conf in packages.items():
+        try:
+            _validate_package_definition(pack_name, pack_conf)
+        except vol.Invalid as exc:
+            _log_pkg_error(
+                hass,
+                pack_name,
+                None,
+                config,
+                f"Invalid package definition '{pack_name}': {str(exc)}. Package will not be initialized",
+            )
+            invalid_packages.append(pack_name)
+            continue
+
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
                 continue
@@ -1126,6 +1156,9 @@ async def merge_packages_config(
                     config,
                     f"integration '{comp_name}' has duplicate key '{duplicate_key}'",
                 )
+
+    for pack_name in invalid_packages:
+        packages.pop(pack_name, {})
 
     return config
 

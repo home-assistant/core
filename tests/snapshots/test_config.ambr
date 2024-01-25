@@ -451,3 +451,38 @@
     ''',
   ])
 # ---
+# name: test_individual_packages_schema_validation_errors[packages_dict]
+  list([
+    "Setup of package 'should_be_a_dict' at configuration.yaml, line 3 failed: Invalid package definition 'should_be_a_dict': expected a dictionary. Package will not be initialized",
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_slug]
+  list([
+    "Setup of package 'this is not a slug but it should be one' at configuration.yaml, line 3 failed: Invalid package definition 'this is not a slug but it should be one': invalid slug this is not a slug but it should be one (try this_is_not_a_slug_but_it_should_be_one). Package will not be initialized",
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_include_dir_named_dict]
+  list([
+    "Setup of package 'should_be_a_dict' at packages/expected_dict.yaml, line 1 failed: Invalid package definition 'should_be_a_dict': expected a dictionary. Package will not be initialized",
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_include_dir_named_slug]
+  list([
+    "Setup of package 'this is not a slug but it should be one' at packages/expected_slug.yaml, line 1 failed: Invalid package definition 'this is not a slug but it should be one': invalid slug this is not a slug but it should be one (try this_is_not_a_slug_but_it_should_be_one). Package will not be initialized",
+  ])
+# ---
+# name: test_packages_schema_validation_error[packages_is_a_list]
+  list([
+    "Invalid package configuration 'packages' at configuration.yaml, line 2: expected a dictionary",
+  ])
+# ---
+# name: test_packages_schema_validation_error[packages_is_a_value]
+  list([
+    "Invalid package configuration 'packages' at configuration.yaml, line 2: expected a dictionary",
+  ])
+# ---
+# name: test_packages_schema_validation_error[packages_is_null]
+  list([
+    "Invalid package configuration 'packages' at configuration.yaml, line 3: expected a dictionary",
+  ])
+# ---

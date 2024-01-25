@@ -96,13 +96,13 @@ async def async_check_ha_config_file(  # noqa: C901
     def _pack_error(
         hass: HomeAssistant,
         package: str,
-        component: str,
+        component: str | None,
         config: ConfigType,
         message: str,
     ) -> None:
         """Handle errors from packages."""
         message = f"Setup of package '{package}' failed: {message}"
-        domain = f"homeassistant.packages.{package}.{component}"
+        domain = f"homeassistant.packages.{package}{'.' + component if component is not None else ''}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
         result.add_warning(message, domain, pack_config)
 
@@ -170,9 +170,16 @@ async def async_check_ha_config_file(  # noqa: C901
         core_config = {}
 
     # Merge packages
-    await merge_packages_config(
-        hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error
-    )
+    try:
+        await merge_packages_config(
+            hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error
+        )
+    except vol.Invalid as err:
+        result.add_error(
+            format_schema_error(hass, err, CONF_CORE, core_config),
+            CONF_CORE,
+            core_config,
+        )
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
