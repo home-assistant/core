@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Sequence
+from datetime import timedelta
 import json
 import logging
 import re
@@ -11,6 +12,7 @@ from typing import Any
 
 from homeassistant.components.script import BaseScriptEntity
 from homeassistant.const import (
+    CONF_DELAY,
     CONF_ENTITY_ID,
     CONF_PARALLEL,
     CONF_SEQUENCE,
@@ -34,6 +36,7 @@ CONF_ROUTINE_ID = "routine_id"
 CONF_STEP = "step"
 CONF_HASS = "hass"
 CONF_ENTITY_REGISTRY = "entity_registry"
+CONF_LOGGER = "logger"
 
 
 TIMEOUT = 3000  # millisecond
@@ -70,12 +73,14 @@ def dag_operator(
     config[CONF_STEP] = -1
     config[CONF_ROUTINE_ID] = routine_id
     config[CONF_HASS] = hass
+    config[CONF_LOGGER] = LOGGER
 
     for _, script in enumerate(action_script):
         if (
             CONF_PARALLEL not in script
             and CONF_SEQUENCE not in script
             and CONF_SERVICE not in script
+            and CONF_DELAY not in script
         ):
             config[CONF_STEP] = config[CONF_STEP] + 1
             action_id = config[CONF_ROUTINE_ID] + str(config[CONF_STEP])
@@ -86,6 +91,8 @@ def dag_operator(
                 action_id=action_id,
                 action_state=None,
                 routine_id=config[CONF_ROUTINE_ID],
+                delay=None,
+                logger=config[CONF_LOGGER],
             )
 
             for entity in next_parents:
@@ -140,6 +147,21 @@ def dfs(
                     leaf_entities = dfs(item, config, next_parents, entities)
                     next_parents = leaf_entities
 
+    elif CONF_DELAY in script:
+        hours = script["delay"]["hours"]
+        minutes = script["delay"]["minutes"]
+        seconds = script["delay"]["seconds"]
+        milliseconds = script["delay"]["milliseconds"]
+
+        delta = timedelta(
+            hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds
+        )
+
+        for entity in parents:
+            entity.delay = delta
+
+        next_parents = parents
+
     else:
         config[CONF_STEP] = config[CONF_STEP] + 1
         action_id = config[CONF_ROUTINE_ID] + str(config[CONF_STEP])
@@ -150,6 +172,8 @@ def dfs(
             action_id=action_id,
             action_state=None,
             routine_id=config[CONF_ROUTINE_ID],
+            delay=None,
+            logger=config[CONF_LOGGER],
         )
 
         for entity in parents:
@@ -343,7 +367,7 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
         await action_entity.attach_triggered(log_exceptions=False)
 
     # Listener to handle fired events
-    def handle_event(self, event: Event) -> None:
+    async def handle_event(self, event: Event) -> None:
         """Handle event.
 
         a. When the event type is complete
@@ -359,10 +383,14 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
         if entityID is not None:
             action_entity = self.get_active_routine(str(entityID))
 
-        if eventType == RASC_COMPLETE:
-            self.update_action_state(action_entity, RASC_COMPLETE)
-            # self.output_active_routines()
-            self.schedule_next(action_entity)
+        if action_entity is not None:
+            if eventType == RASC_COMPLETE:
+                if action_entity.delay is not None:
+                    await action_entity.async_delay_step()
+
+                self.update_action_state(action_entity, RASC_COMPLETE)
+                # self.output_active_routines()
+                self.schedule_next(action_entity)
 
         elif eventType == RASC_START:
             self.update_action_state(action_entity, RASC_START)

@@ -1,7 +1,9 @@
 """Helpers to execute rasc entities."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterator, MutableMapping, MutableSequence
+from datetime import timedelta
 import json
 import logging
 import time
@@ -37,6 +39,7 @@ _VT = TypeVar("_VT")
 
 
 _LOGGER = logging.getLogger(__name__)
+_LOG_EXCEPTION = logging.ERROR + 1
 
 
 def create_x_ready_queue(hass: HomeAssistant, entity_id: str) -> None:
@@ -146,6 +149,8 @@ class RoutineEntity:
                 action_id=entity.action_id,
                 action_state=None,
                 routine_id=entity.routine_id,
+                delay=entity.delay,
+                logger=entity.get_logger(),
             )
 
         for action_id, entity in self.actions.items():
@@ -189,6 +194,7 @@ class RoutineEntity:
                 "state": entity.action_state,
                 "parents": parents,
                 "children": children,
+                "delay": str(entity.delay),
             }
 
             actions.append(entity_json)
@@ -208,6 +214,8 @@ class ActionEntity:
         action_id: str,
         action_state: str | None,
         routine_id: str | None,
+        delay: timedelta | None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize a routine entity."""
         self.hass = hass
@@ -222,9 +230,42 @@ class ActionEntity:
         self.parents: list[ActionEntity] = []
         self.children: list[ActionEntity] = []
         self.routine_id = routine_id
+        self.delay = delay
         self.variables: dict[str, Any]
         self.context: Context | None
         self._log_exceptions = False
+        self._set_logger(logger)
+        self._stop = asyncio.Event()
+
+    def get_logger(self) -> logging.Logger | None:
+        """Get logger."""
+        return self._logger
+
+    def _set_logger(self, logger: logging.Logger | None = None) -> None:
+        """Set logger."""
+        self._logger = logger
+
+    def _step_log(self, default_message: Any, timeout: Any = None) -> None:
+        """Step log."""
+        _timeout = (
+            "" if timeout is None else f" (timeout: {timedelta(seconds=timeout)})"
+        )
+        self._log(
+            "Executing step %s%s", default_message, _timeout
+        )  # pylint: disable=protected-access
+
+    def _log(
+        self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
+    ) -> None:
+        """Log."""
+        msg = f"%s: {msg}"
+        args = (str(self.action_id), *args)
+
+        if self._logger is not None:
+            if level == _LOG_EXCEPTION:
+                self._logger.exception(msg, *args, **kwargs)
+            else:
+                self._logger.log(level, msg, *args, **kwargs)
 
     async def attach_triggered(self, log_exceptions: bool) -> None:
         """Trigger the function."""
@@ -245,6 +286,22 @@ class ActionEntity:
         await device_action.async_call_action_from_config(
             self.hass, self.action, self.variables, self.context
         )
+
+    async def async_delay_step(self) -> None:
+        """Handle delay."""
+        await self._async_delay_step()
+
+    async def _async_delay_step(self) -> None:
+        """Handle delay."""
+        if self.delay is not None:
+            delay = self.delay
+            self._step_log(f"delay {delay}")
+
+            try:
+                async with asyncio.timeout(delay.total_seconds()):
+                    await self._stop.wait()
+            except asyncio.TimeoutError:
+                self._step_log("delay completed")
 
     def _handle_exception(
         self, exception: Exception, continue_on_error: bool, log_exceptions: bool
