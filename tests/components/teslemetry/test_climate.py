@@ -1,11 +1,12 @@
 """Test the Teslemetry climate platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
-from tesla_fleet_api.exceptions import InvalidCommand
+from tesla_fleet_api.exceptions import InvalidCommand, VehicleOffline
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -18,12 +19,15 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
+from homeassistant.components.teslemetry.coordinator import SYNC_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import assert_entities, setup_platform
+
+from tests.common import async_fire_time_changed
 
 
 async def test_climate(
@@ -110,11 +114,18 @@ async def test_asleep_or_offline(
 
     await setup_platform(hass, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
+    mock_vehicle_data.assert_called_once()
 
-    # freezer.tick(timedelta(seconds=60))
+    # Put the vehicle alseep
+    mock_vehicle_data.reset_mock()
+    mock_vehicle_data.side_effect = VehicleOffline
+    freezer.tick(timedelta(seconds=SYNC_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_vehicle_data.assert_called_once()
+
+    # Run a command that will wake up the vehicle, but not immediately
     await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [entity_id]},
-        blocking=True,
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: [entity_id]}, blocking=True
     )
+    await hass.async_block_till_done()
