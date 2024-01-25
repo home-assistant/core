@@ -268,7 +268,6 @@ class ZHAGateway:
             delta_msg = "not known"
             if zha_device.last_seen is not None:
                 delta = round(time.time() - zha_device.last_seen)
-                zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
                 (
