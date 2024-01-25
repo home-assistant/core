@@ -55,8 +55,6 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             else:
-                await self.async_set_unique_id(host)
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=host,
                     data={
@@ -84,8 +82,6 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(host)
-        self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=user_input.get(CONF_NAME, host),
             data={

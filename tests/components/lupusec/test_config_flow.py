@@ -52,7 +52,7 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
         "homeassistant.components.lupusec.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "lupupy.Lupusec.__init__",
+        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec.__init__",
         return_value=None,
     ) as mock_initialize_lupusec:
         result2 = await hass.config_entries.flow.async_configure(
@@ -86,7 +86,7 @@ async def test_flow_user_init_data_error_and_recover(
     assert result["errors"] == {}
 
     with patch(
-        "lupupy.Lupusec.__init__",
+        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec.__init__",
         side_effect=raise_error,
     ) as mock_initialize_lupusec:
         result2 = await hass.config_entries.flow.async_configure(
@@ -107,7 +107,7 @@ async def test_flow_user_init_data_error_and_recover(
         "homeassistant.components.lupusec.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "lupupy.Lupusec.__init__",
+        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec.__init__",
         return_value=None,
     ) as mock_initialize_lupusec:
         result3 = await hass.config_entries.flow.async_configure(
@@ -168,7 +168,7 @@ async def test_flow_source_import(
         "homeassistant.components.lupusec.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "lupupy.Lupusec.__init__",
+        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec.__init__",
         return_value=None,
     ) as mock_initialize_lupusec:
         result = await hass.config_entries.flow.async_init(
