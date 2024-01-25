@@ -6,6 +6,7 @@ from lupupy import LupusecException
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.lupusec.config_flow import CannotConnect
 from homeassistant.components.lupusec.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -185,7 +186,7 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
     with patch(
         "homeassistant.components.lupusec.config_flow.test_host_connection",
         return_value=None,
-    ) as mock_setup_entry:
+    ) as mock_test_host_connection:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_DATA_STEP,
@@ -195,7 +196,7 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
 
         assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert len(mock_test_host_connection.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -205,7 +206,9 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
         (MOCK_IMPORT_STEP_NAME, MOCK_IMPORT_STEP_NAME[CONF_NAME]),
     ],
 )
-async def test_source_import(hass: HomeAssistant, mock_import_step, mock_title) -> None:
+async def test_flow_source_import(
+    hass: HomeAssistant, mock_import_step, mock_title
+) -> None:
     """Test configuration import from YAML."""
     with patch(
         "homeassistant.components.lupusec.async_setup_entry",
@@ -227,3 +230,31 @@ async def test_source_import(hass: HomeAssistant, mock_import_step, mock_title) 
     assert result["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_initialize_lupusec.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (CannotConnect("Test lupusec exception"), "cannot_connect"),
+        (Exception("Test unknown exception"), "unknown"),
+    ],
+)
+async def test_flow_source_import_error_and_recover(
+    hass: HomeAssistant, raise_error, text_error
+) -> None:
+    """Test exceptions and recovery."""
+
+    with patch(
+        "homeassistant.components.lupusec.config_flow.test_host_connection",
+        side_effect=raise_error,
+    ) as mock_test_host_connection:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=MOCK_IMPORT_STEP,
+        )
+
+        await hass.async_block_till_done()
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == text_error
+        assert len(mock_test_host_connection.mock_calls) == 1
