@@ -74,5 +74,11 @@
         "name": "Electric heater"
       }
     }
+  },
+  "services": {
+    "set_ventilation_mode_off": {
+      "name": "Set ventilation mode off",
+      "description": "Turns off the device. Danger! This should only be done in some cases i.e. when replacing the filters. Read more at the integration documentation."
+    }
   }
 }
