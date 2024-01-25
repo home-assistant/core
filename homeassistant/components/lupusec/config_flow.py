@@ -70,7 +70,13 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import the yaml config."""
-        self._async_abort_entries_match(user_input)
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: user_input[CONF_IP_ADDRESS],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+        )
         host = user_input[CONF_IP_ADDRESS]
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
