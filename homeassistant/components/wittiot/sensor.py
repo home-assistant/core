@@ -1,8 +1,5 @@
 """Platform for sensor integration."""
 import dataclasses
-from typing import Final
-
-from wittiot import MultiSensorInfo, WittiotDataTypes
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -409,45 +406,13 @@ SENSOR_DESCRIPTIONS = (
     ),
 )
 
-WITTIOT_SENSORS_MAPPING: Final = {
-    WittiotDataTypes.TEMPERATURE: WittiotSensorEntityDescription(
-        key="TEMPERATURE",
-        native_unit_of_measurement="°F",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    WittiotDataTypes.HUMIDITY: WittiotSensorEntityDescription(
-        key="HUMIDITY",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
-    ),
-    WittiotDataTypes.PM25: WittiotSensorEntityDescription(
-        key="PM25",
-        device_class=SensorDeviceClass.PM25,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    WittiotDataTypes.AQI: WittiotSensorEntityDescription(
-        key="AQI",
-        device_class=SensorDeviceClass.AQI,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    WittiotDataTypes.LEAK: WittiotSensorEntityDescription(
-        key="LEAK",
-        icon="mdi:water-alert",
-    ),
-    WittiotDataTypes.BATTERY: WittiotSensorEntityDescription(
-        key="BATTERY",
-        icon="mdi:battery",
-    ),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Wittiot sensor entities based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    sensors: list[MainDevWittiotSensor | SubDevWittiotSensor] = []
+    sensors: list[MainDevWittiotSensor] = []
     # Main Device Data
     for desc in SENSOR_DESCRIPTIONS:
         if desc.key in coordinator.data:
@@ -457,27 +422,6 @@ async def async_setup_entry(
                     entry.data[CONF_HOST],
                     entry.data[DEVICE_NAME],
                     desc,
-                )
-            )
-
-    # Subdevice Data
-    for key in coordinator.data:
-        if key in MultiSensorInfo.SENSOR_INFO:
-            mapping = WITTIOT_SENSORS_MAPPING[
-                MultiSensorInfo.SENSOR_INFO[key]["data_type"]
-            ]
-            description = dataclasses.replace(
-                mapping,
-                key=key,
-                sensor_type=MultiSensorInfo.SENSOR_INFO[key]["dev_type"],
-                name=MultiSensorInfo.SENSOR_INFO[key]["name"],
-            )
-            sensors.append(
-                SubDevWittiotSensor(
-                    coordinator,
-                    entry.data[CONF_HOST],
-                    entry.data[DEVICE_NAME],
-                    description,
                 )
             )
 
@@ -507,44 +451,6 @@ class MainDevWittiotSensor(
             name=f"{devname}_{MAIN_DATA}",
             model=self.coordinator.data["ver"],
             configuration_url=f"http://{host}",
-        )
-        self._attr_unique_id = f"{devname}_{description.key}"
-        self.entity_description = description
-
-    @property
-    def native_value(self) -> str | int | float | None:
-        """Return the state."""
-        try:
-            state = self.coordinator.data[self.entity_description.key]
-        except KeyError:
-            return None
-        return state
-
-
-class SubDevWittiotSensor(
-    CoordinatorEntity[WittiotDataUpdateCoordinator], SensorEntity
-):
-    """Define an Local sensor."""
-
-    _attr_has_entity_name = True
-    entity_description: WittiotSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: WittiotDataUpdateCoordinator,
-        host: str,
-        devname: str,
-        description: WittiotSensorEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{devname}_{description.sensor_type}")},
-            manufacturer="WittIOT",
-            name=f"{devname}_{description.sensor_type}",
-            model=self.coordinator.data["ver"],
-            configuration_url=f"http://{host}",
-            via_device=(DOMAIN, f"{devname}_{MAIN_DATA}"),
         )
         self._attr_unique_id = f"{devname}_{description.key}"
         self.entity_description = description
