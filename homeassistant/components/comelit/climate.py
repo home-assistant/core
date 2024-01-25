@@ -85,7 +85,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     """Climate device."""
 
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
-    _attr_icon = "mdi:thermostat"
     _attr_max_temp = 30
     _attr_min_temp = 5
     _attr_preset_modes = [
@@ -217,6 +216,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
                 await self.coordinator.api.set_clima_status(
                     self._device.index,
                     mode["action"],
-                    int(self.target_temperature * 10),
+                    self.target_temperature,
                 )
                 break
