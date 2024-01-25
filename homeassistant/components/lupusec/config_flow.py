@@ -92,9 +92,6 @@ async def test_host_connection(
     except lupupy.LupusecException:
         _LOGGER.error("Failed to connect to Lupusec device at %s", host)
         raise CannotConnect
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Failed to connect to Lupusec device at %s", host)
-        raise CannotConnect
 
 
 class CannotConnect(HomeAssistantError):
