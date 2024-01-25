@@ -127,7 +127,6 @@ class ZHADevice(LogMixin):
         self.hass = hass
         self._zigpy_device = zigpy_device
         self._zha_gateway = zha_gateway
-        self._available = False
         self._available_signal = f"{self.name}_{self.ieee}_{SIGNAL_AVAILABLE}"
         self._checkins_missed_count = 0
         self.unsubs: list[Callable[[], None]] = []
@@ -152,7 +151,10 @@ class ZHADevice(LogMixin):
                 CONF_CONSIDER_UNAVAILABLE_BATTERY,
                 CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
             )
-
+        self._available = self.is_coordinator or (
+            self.last_seen is not None
+            and time.time() - self.last_seen < self.consider_unavailable_time
+        )
         self._zdo_handler: ZDOClusterHandler = ZDOClusterHandler(self)
         self._power_config_ch: ClusterHandler | None = None
         self._identify_ch: ClusterHandler | None = None
