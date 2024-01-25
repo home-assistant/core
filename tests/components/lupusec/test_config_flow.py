@@ -116,7 +116,16 @@ async def test_form_lupusec_exception(hass: HomeAssistant) -> None:
     assert len(mock_step_user.mock_calls) == 1
 
 
-async def test_form_unknown_exception(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (LupusecException("Test lupusec exception"), "cannot_connect"),
+        (Exception("Test unknown exception"), "unknown"),
+    ],
+)
+async def test_flow_user_init_data_error_and_recover(
+    hass: HomeAssistant, raise_error, text_error
+) -> None:
     """Test handling valid user input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -126,7 +135,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
     with patch(
         "lupupy.Lupusec.__init__",
-        side_effect=Exception("Test unknown exception"),
+        side_effect=raise_error,
     ) as mock_step_user:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -139,6 +148,6 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": text_error}
 
     assert len(mock_step_user.mock_calls) == 1
