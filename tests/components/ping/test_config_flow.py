@@ -43,7 +43,7 @@ async def test_form(hass: HomeAssistant, host, expected_title) -> None:
         "count": 5,
         "host": host,
         "consider_home": 180,
-        "scan_interval" : DEFAULT_SCAN_INTERVAL.seconds
+        "scan_interval": DEFAULT_SCAN_INTERVAL.seconds,
     }
 
 
@@ -60,7 +60,12 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
         source=config_entries.SOURCE_USER,
         data={},
         domain=DOMAIN,
-        options={"count": count, "host": host, "consider_home": 180, "scan_interval" : 300},
+        options={
+            "count": count,
+            "host": host,
+            "consider_home": 180,
+            "scan_interval": 300,
+        },
         title=expected_title,
     )
     config_entry.add_to_hass(hass)
@@ -86,7 +91,7 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
         "count": count,
         "host": "10.10.10.1",
         "consider_home": 180,
-        "scan_interval" : 300,
+        "scan_interval": 300,
     }
 
 
@@ -108,7 +113,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
         "host": "127.0.0.1",
         "count": 1,
         "consider_home": 240,
-        "scan_interval" : 50,
+        "scan_interval": 50,
     }
 
     # test import without name

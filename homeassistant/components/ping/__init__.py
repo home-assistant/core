@@ -48,7 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     host: str = entry.options[CONF_HOST]
     count: int = int(entry.options[CONF_PING_COUNT])
-    scan_interval: int = int(entry.options.get(CONF_SCAN_INTERVAL,DEFAULT_SCAN_INTERVAL.seconds))
+    scan_interval: int = int(
+        entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.seconds)
+    )
     ping_cls: type[PingDataICMPLib | PingDataSubProcess]
     if data.privileged is None:
         ping_cls = PingDataSubProcess
@@ -56,8 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ping_cls = PingDataICMPLib
 
     coordinator = PingUpdateCoordinator(
-        hass=hass, ping=ping_cls(hass, host, count, data.privileged),
-        scan_interval=scan_interval
+        hass=hass,
+        ping=ping_cls(hass, host, count, data.privileged),
+        scan_interval=scan_interval,
     )
     await coordinator.async_config_entry_first_refresh()
 

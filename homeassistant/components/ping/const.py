@@ -9,7 +9,6 @@
 from datetime import timedelta
 from typing import Final
 
-
 PING_TIMEOUT = 3
 
 # icmplib timeout
