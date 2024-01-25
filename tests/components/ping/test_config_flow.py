@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ping import DOMAIN
-from homeassistant.components.ping.const import CONF_IMPORTED_BY
+from homeassistant.components.ping.const import CONF_IMPORTED_BY, DEFAULT_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -43,6 +43,7 @@ async def test_form(hass: HomeAssistant, host, expected_title) -> None:
         "count": 5,
         "host": host,
         "consider_home": 180,
+        "scan_interval" : DEFAULT_SCAN_INTERVAL.seconds
     }
 
 
@@ -59,7 +60,7 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
         source=config_entries.SOURCE_USER,
         data={},
         domain=DOMAIN,
-        options={"count": count, "host": host, "consider_home": 180},
+        options={"count": count, "host": host, "consider_home": 180, "scan_interval" : 300},
         title=expected_title,
     )
     config_entry.add_to_hass(hass)
@@ -85,6 +86,7 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
         "count": count,
         "host": "10.10.10.1",
         "consider_home": 180,
+        "scan_interval" : 300,
     }
 
 
@@ -106,6 +108,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
         "host": "127.0.0.1",
         "count": 1,
         "consider_home": 240,
+        "scan_interval" : 50,
     }
 
     # test import without name
@@ -123,4 +126,5 @@ async def test_step_import(hass: HomeAssistant) -> None:
         "host": "10.10.10.10",
         "count": 5,
         "consider_home": 180,
+        "scan_interval": 30,
     }

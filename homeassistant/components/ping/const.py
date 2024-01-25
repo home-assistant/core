@@ -6,6 +6,10 @@
 # time since the data was sent.
 
 # ping binary
+from datetime import timedelta
+from typing import Final
+
+
 PING_TIMEOUT = 3
 
 # icmplib timeout
@@ -18,3 +22,4 @@ DOMAIN = "ping"
 CONF_PING_COUNT = "count"
 CONF_IMPORTED_BY = "imported_by"
 DEFAULT_PING_COUNT = 5
+DEFAULT_SCAN_INTERVAL: Final = timedelta(seconds=30)

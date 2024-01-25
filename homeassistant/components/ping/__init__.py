@@ -7,12 +7,12 @@ import logging
 from icmplib import SocketPermissionError, async_ping
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PING_COUNT, DOMAIN
+from .const import CONF_PING_COUNT, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import PingUpdateCoordinator
 from .helpers import PingDataICMPLib, PingDataSubProcess
 
@@ -48,6 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     host: str = entry.options[CONF_HOST]
     count: int = int(entry.options[CONF_PING_COUNT])
+    scan_interval: int = int(entry.options.get(CONF_SCAN_INTERVAL,DEFAULT_SCAN_INTERVAL.seconds))
     ping_cls: type[PingDataICMPLib | PingDataSubProcess]
     if data.privileged is None:
         ping_cls = PingDataSubProcess
@@ -55,7 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ping_cls = PingDataICMPLib
 
     coordinator = PingUpdateCoordinator(
-        hass=hass, ping=ping_cls(hass, host, count, data.privileged)
+        hass=hass, ping=ping_cls(hass, host, count, data.privileged),
+        scan_interval=scan_interval
     )
     await coordinator.async_config_entry_first_refresh()
 

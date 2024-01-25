@@ -23,7 +23,8 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "count": "Ping count",
-          "consider_home": "Consider home interval"
+          "consider_home": "Consider home interval",
+          "scan_interval": "Scan Interval (secs)"
         },
         "data_description": {
           "consider_home": "Seconds to wait till marking a device tracker as not home after not being seen."

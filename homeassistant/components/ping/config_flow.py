@@ -12,13 +12,13 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.util.network import is_ip_address
 
-from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
+from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 **user_input,
                 CONF_PING_COUNT: DEFAULT_PING_COUNT,
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.seconds,
+                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL.seconds
             },
         )
 
@@ -65,6 +66,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_CONSIDER_HOME: import_info.get(
                 CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME
             ).seconds,
+            CONF_SCAN_INTERVAL:  import_info.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.seconds)
         }
         title = import_info.get(CONF_NAME, import_info[CONF_HOST])
 
@@ -105,6 +108,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_HOST, default=self.config_entry.options[CONF_HOST]
                     ): str,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.seconds
+                        ),
+                    ):  vol.All(vol.Coerce(int), vol.Range(min=1)),
                     vol.Optional(
                         CONF_PING_COUNT,
                         default=self.config_entry.options[CONF_PING_COUNT],
