@@ -6,7 +6,6 @@ from lupupy import LupusecException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.lupusec.config_flow import CannotConnect
 from homeassistant.components.lupusec.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -189,7 +188,7 @@ async def test_flow_source_import(
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [
-        (CannotConnect("Test lupusec exception"), "cannot_connect"),
+        (LupusecException("Test lupusec exception"), "cannot_connect"),
         (Exception("Test unknown exception"), "unknown"),
     ],
 )
@@ -199,9 +198,9 @@ async def test_flow_source_import_error_and_recover(
     """Test exceptions and recovery."""
 
     with patch(
-        "homeassistant.components.lupusec.config_flow.test_host_connection",
+        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec.__init__",
         side_effect=raise_error,
-    ) as mock_test_host_connection:
+    ) as mock_initialize_lupusec:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -211,4 +210,4 @@ async def test_flow_source_import_error_and_recover(
         await hass.async_block_till_done()
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == text_error
-        assert len(mock_test_host_connection.mock_calls) == 1
+        assert len(mock_initialize_lupusec.mock_calls) == 1
