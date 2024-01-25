@@ -837,6 +837,9 @@
       "tier6_summation_delivered": {
         "name": "Tier 6 summation delivered"
       },
+      "summation_received": {
+        "name": "Summation received"
+      },
       "device_temperature": {
         "name": "Device temperature"
       },

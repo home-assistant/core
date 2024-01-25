@@ -137,6 +137,7 @@ from .validators import (
     duplicate_fan_mode_validator,
     nan_validator,
     number_validator,
+    register_int_list_validator,
     struct_validator,
 )
 
@@ -279,7 +280,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
                 vol.All(
                     {
-                        CONF_ADDRESS: cv.positive_int,
+                        vol.Required(CONF_ADDRESS): register_int_list_validator,
                         CONF_FAN_MODE_VALUES: {
                             vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
                             vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
