@@ -1,12 +1,12 @@
 from datetime import timedelta
 import logging
+from typing import TypedDict
 
 import aiohttp
 import async_timeout
 
 from homeassistant import core
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from typing import TypedDict
 
 _LOGGER = logging.getLogger(__name__)
 
