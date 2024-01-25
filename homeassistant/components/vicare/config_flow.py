@@ -19,13 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from . import vicare_login
-from .const import (
-    CONF_HEATING_TYPE,
-    DEFAULT_HEATING_TYPE,
-    DOMAIN,
-    VICARE_NAME,
-    HeatingType,
-)
+from .const import CONF_HEATING_TYPE, DEFAULT_HEATING_TYPE, DOMAIN, HeatingType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +60,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
-                return self.async_create_entry(title=VICARE_NAME, data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
