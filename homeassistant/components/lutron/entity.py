@@ -1,5 +1,4 @@
 """Base class for Lutron devices."""
-from abc import abstractmethod
 
 from pylutron import Keypad, Lutron, LutronEntity, LutronEvent
 
@@ -29,7 +28,6 @@ class LutronBaseEntity(Entity):
         """Register callbacks."""
         self._lutron_device.subscribe(self._update_callback, None)
 
-    @abstractmethod
     def _update_attrs(self) -> None:
         """Update the entity's attributes."""
 
