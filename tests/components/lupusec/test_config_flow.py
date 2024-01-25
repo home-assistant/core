@@ -7,7 +7,13 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.lupusec.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -17,6 +23,19 @@ MOCK_DATA_STEP = {
     CONF_HOST: "test-host.lan",
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
+}
+
+MOCK_IMPORT_STEP = {
+    CONF_IP_ADDRESS: "test-host.lan",
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+}
+
+MOCK_IMPORT_STEP_NAME = {
+    CONF_IP_ADDRESS: "test-host.lan",
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+    CONF_NAME: "test-name",
 }
 
 
@@ -177,3 +196,34 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
         assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("mock_import_step", "mock_title"),
+    [
+        (MOCK_IMPORT_STEP, MOCK_IMPORT_STEP[CONF_IP_ADDRESS]),
+        (MOCK_IMPORT_STEP_NAME, MOCK_IMPORT_STEP_NAME[CONF_NAME]),
+    ],
+)
+async def test_source_import(hass: HomeAssistant, mock_import_step, mock_title) -> None:
+    """Test configuration import from YAML."""
+    with patch(
+        "homeassistant.components.lupusec.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "lupupy.Lupusec.__init__",
+        return_value=None,
+    ) as mock_initialize_lupusec:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=mock_import_step,
+        )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == mock_title
+    assert result["data"] == MOCK_DATA_STEP
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_initialize_lupusec.mock_calls) == 1
