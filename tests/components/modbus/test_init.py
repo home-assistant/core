@@ -84,6 +84,7 @@ from homeassistant.components.modbus.validators import (
     duplicate_modbus_validator,
     nan_validator,
     number_validator,
+    register_int_list_validator,
     struct_validator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -136,6 +137,24 @@ async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodb
     assert DOMAIN in hass.config.components
     assert caplog.text == ""
     return mock_pymodbus
+
+
+async def test_register_int_list_validator() -> None:
+    """Test conf address register validator."""
+    for value, vtype in (
+        (15, int),
+        ([15], list),
+    ):
+        assert isinstance(register_int_list_validator(value), vtype)
+
+    with pytest.raises(vol.Invalid):
+        register_int_list_validator([15, 16])
+
+    with pytest.raises(vol.Invalid):
+        register_int_list_validator(-15)
+
+    with pytest.raises(vol.Invalid):
+        register_int_list_validator(["aq"])
 
 
 async def test_number_validator() -> None:
@@ -584,7 +603,7 @@ async def test_duplicate_entity_validator(do_config) -> None:
                         CONF_SLAVE: 0,
                         CONF_TARGET_TEMP: 117,
                         CONF_FAN_MODE_REGISTER: {
-                            CONF_ADDRESS: 121,
+                            CONF_ADDRESS: [121],
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_ON: 0,
                                 CONF_FAN_MODE_HIGH: 1,

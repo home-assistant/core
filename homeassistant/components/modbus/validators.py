@@ -293,7 +293,11 @@ def duplicate_entity_validator(config: dict) -> dict:
                     a += "_" + str(inx)
                     entry_addrs.add(a)
                 if CONF_FAN_MODE_REGISTER in entry:
-                    a = str(entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS])
+                    a = str(
+                        entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]
+                        if isinstance(entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS], int)
+                        else entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS][0]
+                    )
                     a += "_" + str(inx)
                     entry_addrs.add(a)
 
@@ -349,6 +353,20 @@ def duplicate_modbus_validator(config: dict) -> dict:
     for i in reversed(errors):
         del config[i]
     return config
+
+
+def register_int_list_validator(value: Any) -> Any:
+    """Check if a register (CONF_ADRESS) is an int or a list having only 1 register."""
+    if isinstance(value, int) and value >= 0:
+        return value
+
+    if isinstance(value, list):
+        if (len(value) == 1) and isinstance(value[0], int) and value[0] >= 0:
+            return value
+
+    raise vol.Invalid(
+        f"Invalid {CONF_ADDRESS} register for fan mode. Required type: positive integer, allowed 1 or list of 1 register."
+    )
 
 
 def check_config(config: dict) -> dict:

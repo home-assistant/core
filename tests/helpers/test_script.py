@@ -31,7 +31,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -80,41 +80,32 @@ def compare_result_item(key, actual, expected, path):
     assert actual == expected
 
 
-ANY_CONTEXT = {"context": ANY}
+ANY_CONTEXT = {"context": Context(id=ANY)}
 
 
-def assert_element(trace_element, expected_element, path):
+def assert_element(trace_element, expected_element, path, numeric_path):
     """Assert a trace element is as expected.
 
-    Note: Unused variable 'path' is passed to get helpful errors from pytest.
+    Note: Unused variable 'numeric_path' is passed to get helpful errors from pytest.
     """
-    expected_result = expected_element.get("result", {})
-
-    # Check that every item in expected_element is present and equal in trace_element
-    # The redundant set operation gives helpful errors from pytest
-    assert not set(expected_result) - set(trace_element._result or {})
-    for result_key, result in expected_result.items():
-        compare_result_item(result_key, trace_element._result[result_key], result, path)
-        assert trace_element._result[result_key] == result
-
-    # Check for unexpected items in trace_element
-    assert not set(trace_element._result or {}) - set(expected_result)
-
-    if "error_type" in expected_element and expected_element["error_type"] is not None:
-        assert isinstance(trace_element._error, expected_element["error_type"])
-    else:
-        assert trace_element._error is None
+    expected_element = dict(expected_element)
 
     # Ignore the context variable in the first step, take care to not mutate
     if trace_element.path == "0":
-        expected_element = dict(expected_element)
         variables = expected_element.setdefault("variables", {})
         expected_element["variables"] = variables | ANY_CONTEXT
 
-    if "variables" in expected_element:
-        assert expected_element["variables"] == trace_element._variables
-    else:
-        assert not trace_element._variables
+    # Rename variables to changed_variables
+    if variables := expected_element.pop("variables", None):
+        expected_element["changed_variables"] = variables
+
+    # Set expected path
+    expected_element["path"] = str(path)
+
+    # Ignore timestamp
+    expected_element["timestamp"] = ANY
+
+    assert trace_element.as_dict() == expected_element
 
 
 def assert_action_trace(expected, expected_script_execution="finished"):
@@ -128,7 +119,7 @@ def assert_action_trace(expected, expected_script_execution="finished"):
         assert len(action_trace[key]) == len(expected[key])
         for index, element in enumerate(expected[key]):
             path = f"[{trace_key_index}][{index}]"
-            assert_element(action_trace[key][index], element, path)
+            assert_element(action_trace[key][index], element, key, path)
 
     assert script_execution == expected_script_execution
 
@@ -781,7 +772,11 @@ async def test_delay_template_invalid(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": vol.MultipleInvalid}],
+            "1": [
+                {
+                    "error": "offset  should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+                }
+            ],
         },
         expected_script_execution="aborted",
     )
@@ -844,7 +839,7 @@ async def test_delay_template_complex_invalid(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": vol.MultipleInvalid}],
+            "1": [{"error": "expected float for dictionary value @ data['seconds']"}],
         },
         expected_script_execution="aborted",
     )
@@ -935,17 +930,31 @@ async def test_wait_basic(hass: HomeAssistant, action_type) -> None:
             }
         )
     else:
+        expected_trigger = {
+            "alias": None,
+            "attribute": None,
+            "description": "state of switch.test",
+            "entity_id": "switch.test",
+            "for": None,
+            "from_state": ANY,
+            "id": "0",
+            "idx": "0",
+            "platform": "state",
+            "to_state": ANY,
+        }
         assert_action_trace(
             {
                 "0": [
                     {
                         "result": {
                             "wait": {
-                                "trigger": {"description": "state of switch.test"},
+                                "trigger": expected_trigger,
                                 "remaining": None,
                             }
                         },
-                        "variables": {"wait": {"remaining": None}},
+                        "variables": {
+                            "wait": {"remaining": None, "trigger": expected_trigger}
+                        },
                     }
                 ],
             }
@@ -1328,14 +1337,13 @@ async def test_wait_continue_on_timeout(
         result_wait = {"wait": {"trigger": None, "remaining": 0.0}}
         variable_wait = dict(result_wait)
     expected_trace = {
-        "0": [{"result": result_wait}],
+        "0": [{"result": result_wait, "variables": variable_wait}],
     }
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
-        expected_trace["0"][0]["error_type"] = asyncio.TimeoutError
+        expected_trace["0"][0]["error"] = ""
         expected_script_execution = "aborted"
     else:
-        expected_trace["0"][0]["variables"] = variable_wait
         expected_trace["1"] = [{"result": {"event": "test_event", "event_data": {}}}]
         expected_script_execution = "finished"
     assert_action_trace(expected_trace, expected_script_execution)
@@ -1639,7 +1647,14 @@ async def test_condition_warning(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [{"result": {"result": False}}],
-            "1/entity_id/0": [{"error_type": ConditionError}],
+            "1/entity_id/0": [
+                {
+                    "error": (
+                        "In 'numeric_state' condition: entity test.entity state "
+                        "'string' cannot be processed as a number"
+                    )
+                }
+            ],
         },
         expected_script_execution="aborted",
     )
@@ -1734,7 +1749,7 @@ async def test_condition_subscript(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"result": {}}],
+            "1": [{}],
             "1/repeat/sequence/0": [
                 {
                     "variables": {"repeat": {"first": True, "index": 1}},
@@ -2261,11 +2276,7 @@ async def test_repeat_for_each_non_list_template(hass: HomeAssistant) -> None:
 
     assert_action_trace(
         {
-            "0": [
-                {
-                    "error_type": script._AbortScript,
-                }
-            ],
+            "0": [{"error": "Repeat 'for_each' must be a list of items"}],
         },
         expected_script_execution="aborted",
     )
@@ -2300,7 +2311,7 @@ async def test_repeat_for_each_invalid_template(
 
     assert_action_trace(
         {
-            "0": [{"error_type": script._AbortScript}],
+            "0": [{"error": "Repeat 'for_each' must be a list of items"}],
         },
         expected_script_execution="aborted",
     )
@@ -2362,10 +2373,14 @@ async def test_repeat_condition_warning(
             "variables": {"repeat": {"first": True, "index": 1}},
         }
     ]
-    expected_trace[f"0/repeat/{condition}/0"] = [{"error_type": ConditionError}]
-    expected_trace[f"0/repeat/{condition}/0/entity_id/0"] = [
-        {"error_type": ConditionError}
+    expected_error = (
+        "In 'numeric_state' condition: entity sensor.test state '' cannot "
+        "be processed as a number"
+    )
+    expected_trace[f"0/repeat/{condition}/0"] = [
+        {"error": "In 'numeric_state':\n  " + expected_error}
     ]
+    expected_trace[f"0/repeat/{condition}/0/entity_id/0"] = [{"error": expected_error}]
     assert_action_trace(expected_trace)
 
 
@@ -2487,7 +2502,7 @@ async def test_repeat_until_condition_validation(
 
     assert_action_trace(
         {
-            "0": [{"result": {}}],
+            "0": [{}],
             "0/repeat/sequence/0": [
                 {
                     "result": {"event": "test_event", "event_data": {}},
@@ -2550,7 +2565,7 @@ async def test_repeat_while_condition_validation(
 
     assert_action_trace(
         {
-            "0": [{"result": {}}],
+            "0": [{}],
             "0/repeat": [
                 {
                     "result": {"result": False},
@@ -3011,7 +3026,7 @@ async def test_choose_condition_validation(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"result": {}}],
+            "1": [{}],
             "1/choose/0": [{"result": {"result": False}}],
             "1/choose/0/conditions/0": [{"result": {"result": False}}],
             "1/choose/0/conditions/0/entity_id/0": [
@@ -3330,20 +3345,29 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         in caplog.text
     )
 
+    expected_trigger = {
+        "alias": None,
+        "attribute": None,
+        "description": "state of switch.trigger",
+        "entity_id": "switch.trigger",
+        "for": None,
+        "from_state": ANY,
+        "id": "0",
+        "idx": "0",
+        "platform": "state",
+        "to_state": ANY,
+    }
     expected_trace = {
-        "0": [{"result": {}, "variables": {"what": "world"}}],
+        "0": [{"variables": {"what": "world"}}],
         "0/parallel/0/sequence/0": [
             {
                 "result": {
                     "wait": {
                         "remaining": None,
-                        "trigger": {
-                            "entity_id": "switch.trigger",
-                            "description": "state of switch.trigger",
-                        },
+                        "trigger": expected_trigger,
                     }
                 },
-                "variables": {"wait": {"remaining": None}},
+                "variables": {"wait": {"remaining": None, "trigger": expected_trigger}},
             }
         ],
         "0/parallel/1/sequence/0": [
@@ -3429,13 +3453,9 @@ async def test_parallel_loop(
     assert events_loop2[2].data["hello2"] == "loop2_c"
 
     expected_trace = {
-        "0": [{"result": {}, "variables": {"what": "world"}}],
-        "0/parallel/0/sequence/0": [{"result": {}}],
-        "0/parallel/1/sequence/0": [
-            {
-                "result": {},
-            }
-        ],
+        "0": [{"variables": {"what": "world"}}],
+        "0/parallel/0/sequence/0": [{}],
+        "0/parallel/1/sequence/0": [{}],
         "0/parallel/0/sequence/0/repeat/sequence/0": [
             {
                 "variables": {
@@ -3530,10 +3550,10 @@ async def test_parallel_error(
     assert len(events) == 0
 
     expected_trace = {
-        "0": [{"error_type": ServiceNotFound, "result": {}}],
+        "0": [{"error": "Service epic.failure not found."}],
         "0/parallel/0/sequence/0": [
             {
-                "error_type": ServiceNotFound,
+                "error": "Service epic.failure not found.",
                 "result": {
                     "params": {
                         "domain": "epic",
@@ -3581,7 +3601,7 @@ async def test_propagate_error_service_not_found(hass: HomeAssistant) -> None:
     expected_trace = {
         "0": [
             {
-                "error_type": ServiceNotFound,
+                "error": "Service test.script not found.",
                 "result": {
                     "params": {
                         "domain": "test",
@@ -3617,7 +3637,7 @@ async def test_propagate_error_invalid_service_data(hass: HomeAssistant) -> None
     expected_trace = {
         "0": [
             {
-                "error_type": vol.MultipleInvalid,
+                "error": "expected str for dictionary value @ data['text']",
                 "result": {
                     "params": {
                         "domain": "test",
@@ -3657,7 +3677,7 @@ async def test_propagate_error_service_exception(hass: HomeAssistant) -> None:
     expected_trace = {
         "0": [
             {
-                "error_type": ValueError,
+                "error": "BROKEN",
                 "result": {
                     "params": {
                         "domain": "test",
@@ -4995,17 +5015,17 @@ async def test_stop_action(
 
 
 @pytest.mark.parametrize(
-    ("error", "error_type", "logmsg", "script_execution"),
+    ("error", "error_dict", "logmsg", "script_execution"),
     (
-        (True, script._AbortScript, "Error", "aborted"),
-        (False, None, "Stop", "finished"),
+        (True, {"error": "In the name of love"}, "Error", "aborted"),
+        (False, {}, "Stop", "finished"),
     ),
 )
 async def test_stop_action_subscript(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     error,
-    error_type,
+    error_dict,
     logmsg,
     script_execution,
 ) -> None:
@@ -5044,14 +5064,11 @@ async def test_stop_action_subscript(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": error_type, "result": {"choice": "then"}}],
+            "1": [{"result": {"choice": "then"}} | error_dict],
             "1/if": [{"result": {"result": True}}],
             "1/if/condition/0": [{"result": {"result": True, "entities": []}}],
             "1/then/0": [
-                {
-                    "error_type": error_type,
-                    "result": {"stop": "In the name of love", "error": error},
-                }
+                {"result": {"stop": "In the name of love", "error": error}} | error_dict
             ],
         },
         expected_script_execution=script_execution,
@@ -5091,7 +5108,7 @@ async def test_stop_action_with_error(
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error_type": script._AbortScript,
+                    "error": "Epic one...",
                     "result": {"stop": "Epic one...", "error": True},
                 }
             ],
@@ -5152,7 +5169,7 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
             "2": [{"result": {"event": "test_event", "event_data": {}}}],
             "3": [
                 {
-                    "error_type": HomeAssistantError,
+                    "error": "It is not working!",
                     "result": {
                         "params": {
                             "domain": "broken",
@@ -5210,7 +5227,7 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
         {
             "0": [
                 {
-                    "error_type": ServiceNotFound,
+                    "error": "Service service.not_found not found.",
                     "result": {
                         "params": {
                             "domain": "service",
@@ -5257,7 +5274,7 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
         {
             "0": [
                 {
-                    "error_type": MyLibraryError,
+                    "error": "It is not working!",
                     "result": {
                         "params": {
                             "domain": "some",

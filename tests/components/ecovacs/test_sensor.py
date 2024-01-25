@@ -13,14 +13,21 @@ from deebot_client.events import (
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .util import block_till_done
 
 pytestmark = [pytest.mark.usefixtures("init_integration")]
+
+
+@pytest.fixture
+def platforms() -> Platform | list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return Platform.SENSOR
 
 
 async def notify_events(hass: HomeAssistant, event_bus: EventBus):
@@ -65,18 +72,20 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
 )
 async def test_sensors(
     hass: HomeAssistant,
-    controller: EcovacsController,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    controller: EcovacsController,
     entity_ids: list[str],
 ) -> None:
     """Test that sensor entity snapshots match."""
-    assert entity_ids == sorted(hass.states.async_entity_ids(Platform.SENSOR))
+    assert entity_ids == sorted(hass.states.async_entity_ids())
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
 
-    await notify_events(hass, controller.devices[0].events)
+    device = controller.devices[0]
+    await notify_events(hass, device.events)
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert snapshot(name=f"{entity_id}:state") == state
@@ -85,6 +94,8 @@ async def test_sensors(
         assert snapshot(name=f"{entity_id}:entity-registry") == entity_entry
 
         assert entity_entry.device_id
+        assert (device_entry := device_registry.async_get(entity_entry.device_id))
+        assert device_entry.identifiers == {(DOMAIN, device.device_info.did)}
 
 
 @pytest.mark.parametrize(
