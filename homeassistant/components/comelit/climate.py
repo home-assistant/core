@@ -194,7 +194,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
             self._device.index, ClimaAction.MANUAL
         )
         await self.coordinator.api.set_clima_status(
-            self._device.index, ClimaAction.SET, target_temp * 10
+            self._device.index, ClimaAction.SET, target_temp
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
