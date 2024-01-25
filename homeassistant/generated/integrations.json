@@ -5947,6 +5947,12 @@
         }
       }
     },
+    "teslemetry": {
+      "name": "Teslemetry",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "tessie": {
       "name": "Tessie",
       "integration_type": "hub",
