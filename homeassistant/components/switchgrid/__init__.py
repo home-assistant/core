@@ -1,17 +1,21 @@
 """The Switchgrid integration."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Switchgrid from a config entry."""
+    _LOGGER.warning("🟢 __init__ async_setup_entry")
 
     hass.data.setdefault(DOMAIN, {})
     # TODO 1. Create API instance

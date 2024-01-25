@@ -1265,6 +1265,7 @@ build.json @home-assistant/supervisor
 /tests/components/switcher_kis/ @thecode
 /homeassistant/components/switchgrid/ @licarth
 /tests/components/switchgrid/ @licarth
+/homeassistant/components/switchgrid2/ @licarth
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li
 /homeassistant/components/syncthing/ @zhulik
 /tests/components/syncthing/ @zhulik
