@@ -931,9 +931,19 @@ async def test_create_issue(
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    assert automations_with_entity(hass, "proximity.home")[0] == "automation.test"
-    assert scripts_with_entity(hass, "proximity.home")[0] == "script.test"
+    automation_entities = automations_with_entity(hass, "proximity.home")
+    assert len(automation_entities) == 1
+    assert automation_entities[0] == "automation.test"
+
+    script_entites = scripts_with_entity(hass, "proximity.home")
+
+    assert len(script_entites) == 1
+    assert script_entites[0] == "script.test"
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_proximity_entity_home")
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_proximity_entity_work"
+    )
 
 
 def config_zones(hass):
