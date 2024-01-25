@@ -52,10 +52,12 @@ class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from config entry."""
-    _LOGGER.debug("Setting up ViCare component")
+    _LOGGER.debug("Setting up ViCare component %s", entry.title)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = {}
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    if entry.entry_id not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][entry.entry_id] = {}
 
     try:
         await hass.async_add_executor_job(setup_vicare_api, hass, entry)
