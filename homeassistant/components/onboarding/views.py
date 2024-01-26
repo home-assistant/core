@@ -19,7 +19,7 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.translation import async_get_translations_for_categories
 
 if TYPE_CHECKING:
     from . import OnboadingStorage
@@ -154,9 +154,11 @@ class UserOnboardingView(_BaseOnboardingView):
                 await person.async_create_person(hass, data["name"], user_id=user.id)
 
             # Create default areas using the users supplied language.
-            translations = await async_get_translations(
-                hass, data["language"], "area", {DOMAIN}
-            )
+            translations = (
+                await async_get_translations_for_categories(
+                    hass, data["language"], {"area"}, {DOMAIN}
+                )
+            )["area"]
 
             area_registry = ar.async_get(hass)
 

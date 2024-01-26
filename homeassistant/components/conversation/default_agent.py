@@ -408,9 +408,11 @@ class DefaultAgent(AbstractConversationAgent):
 
         all_states = matched + unmatched
         domains = {state.domain for state in all_states}
-        translations = await translation.async_get_translations(
-            self.hass, language, "entity_component", domains
-        )
+        translations = (
+            await translation.async_get_translations_for_categories(
+                self.hass, language, {"entity_component"}, domains
+            )
+        )["entity_component"]
 
         # Use translated state names
         for state in all_states:
