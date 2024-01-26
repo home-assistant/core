@@ -8,5 +8,12 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
+  },
+  "entity": {
+    "calendar": {
+      "switchgrid_events": {
+        "name": "Effacements Switchgrid"
+      }
+    }
   }
 }

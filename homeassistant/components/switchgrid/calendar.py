@@ -22,8 +22,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the calendar platform for entity."""
-    _LOGGER.warning(hass.data[DOMAIN])
-    _LOGGER.warning("🟢 calendar async_setup_entry")
     coordinator: SwitchgridCoordinator = SwitchgridCoordinator(hass, config_entry)
     async_add_entities([SwitchgridCalendarEntity(coordinator, config_entry)])
 
@@ -32,7 +30,7 @@ class SwitchgridCalendarEntity(
     CoordinatorEntity[SwitchgridCoordinator], CalendarEntity
 ):
     _attr_has_entity_name = True
-    _attr_name = "Effacements Switchgrid"
+    _attr_translation_key = "switchgrid_events"
     _events: list[CalendarEvent] = []
 
     def __init__(

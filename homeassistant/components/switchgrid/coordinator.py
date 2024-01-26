@@ -29,7 +29,7 @@ class SwitchgridCoordinator(DataUpdateCoordinator[list[Event]]):
         super().__init__(
             hass,
             _LOGGER,
-            name="Switchgrid Events Data",
+            name="Switchgrid Events",
             update_interval=UPDATE_INTERVAL,
         )
 
@@ -37,6 +37,7 @@ class SwitchgridCoordinator(DataUpdateCoordinator[list[Event]]):
         try:
             async with async_timeout.timeout(10):
                 url = "https://licarth.eu.ngrok.io/api/homeassistant/events"
+                # url = "https://app.switchgrid.tech/api/homeassistant/events"
                 async with aiohttp.ClientSession() as session:
                     async with session.get(url) as response:
                         response.raise_for_status()
