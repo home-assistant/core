@@ -17,7 +17,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
+from . import DOMAIN as LUPUSEC_DOMAIN
+from .entity import LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
 

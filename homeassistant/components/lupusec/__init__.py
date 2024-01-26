@@ -17,7 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
@@ -139,42 +138,3 @@ class LupusecSystem:
     def __init__(self, username, password, ip_address) -> None:
         """Initialize the system."""
         self.lupusec = lupupy.Lupusec(username, password, ip_address)
-
-
-class LupusecDevice(Entity):
-    """Representation of a Lupusec device."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, data, device, config_entry) -> None:
-        """Initialize a sensor for Lupusec device."""
-        self._data = data
-        self._device = device
-        self._entry_id = config_entry.entry_id
-        self._attr_unique_id = self.get_unique_id(
-            config_entry.entry_id, device.device_id
-        )
-
-    def update(self):
-        """Update automation state."""
-        self._device.refresh()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._device.name
-
-    @property
-    def device_info(self):
-        """Return device information about the sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": f"Lupusec-XT{self._data.lupusec.model}",
-            "manufacturer": "Lupus Electronics",
-            "model": f"Lupusec-XT{self._data.lupusec.model}",
-            "via_device": (DOMAIN, "lupusec_state"),
-        }
-
-    def get_unique_id(self, config_entry_id: str, key: str) -> str:
-        """Create a unique_id id for a lupusec entity."""
-        return f"{DOMAIN}_{config_entry_id}_{key}"
