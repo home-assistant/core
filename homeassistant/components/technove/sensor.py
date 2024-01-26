@@ -58,15 +58,6 @@ SENSORS: tuple[TechnoVESensorEntityDescription, ...] = (
         value_fn=lambda station: station.info.voltage_out,
     ),
     TechnoVESensorEntityDescription(
-        key="max_current",
-        translation_key="max_current",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda station: station.info.max_current,
-    ),
-    TechnoVESensorEntityDescription(
         key="max_station_current",
         translation_key="max_station_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
