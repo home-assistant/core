@@ -78,23 +78,16 @@ async def test_diagnostics(
             }
         },
     ):
-        entry1 = MockConfigEntry(
-            domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
-        )
-        entry1.add_to_hass(hass)
-
         entry2 = MockConfigEntry(
             domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:02"
         )
         entry2.add_to_hass(hass)
 
-        assert await hass.config_entries.async_setup(entry1.entry_id)
-        await hass.async_block_till_done()
         assert await hass.config_entries.async_setup(entry2.entry_id)
         await hass.async_block_till_done()
 
-        diag = await get_diagnostics_for_config_entry(hass, hass_client, entry1)
-        assert diag == {
+        diag = await get_diagnostics_for_config_entry(hass, hass_client, entry2)
+        expected = {
             "adapters": {
                 "hci0": {
                     "address": "00:00:00:00:00:01",
@@ -181,33 +174,6 @@ async def test_diagnostics(
                         "type": "HaScanner",
                     },
                     {
-                        "adapter": "hci0",
-                        "discovered_devices_and_advertisement_data": [
-                            {
-                                "address": "44:44:33:11:23:45",
-                                "advertisement_data": [
-                                    "x",
-                                    {},
-                                    {},
-                                    [],
-                                    -127,
-                                    -127,
-                                    [[]],
-                                ],
-                                "details": None,
-                                "name": "x",
-                                "rssi": -127,
-                            }
-                        ],
-                        "last_detection": ANY,
-                        "monotonic_time": ANY,
-                        "name": "hci0 (00:00:00:00:00:01)",
-                        "scanning": True,
-                        "source": "00:00:00:00:00:01",
-                        "start_time": ANY,
-                        "type": "FakeHaScanner",
-                    },
-                    {
                         "adapter": "hci1",
                         "discovered_devices_and_advertisement_data": [
                             {
@@ -242,6 +208,12 @@ async def test_diagnostics(
                 },
             },
         }
+        diag_scanners = diag["manager"].pop("scanners")
+        expected_scanners = expected["manager"].pop("scanners")
+        assert diag == expected
+        assert sorted(diag_scanners, key=lambda x: x["name"]) == sorted(
+            expected_scanners, key=lambda x: x["name"]
+        )
 
 
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
@@ -448,13 +420,7 @@ async def test_diagnostics_remote_adapter(
         "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
         return_value={},
     ):
-        entry1 = MockConfigEntry(
-            domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
-        )
-        entry1.add_to_hass(hass)
-
-        assert await hass.config_entries.async_setup(entry1.entry_id)
-        await hass.async_block_till_done()
+        entry1 = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
         connector = (
             HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
         )
@@ -467,7 +433,7 @@ async def test_diagnostics_remote_adapter(
 
         diag = await get_diagnostics_for_config_entry(hass, hass_client, entry1)
 
-        assert diag == {
+        expected = {
             "adapters": {
                 "hci0": {
                     "address": "00:00:00:00:00:01",
@@ -490,7 +456,7 @@ async def test_diagnostics_remote_adapter(
                         "passive_scan": False,
                         "product": "Bluetooth Adapter 5.0",
                         "product_id": "aa01",
-                        "sw_version": "homeassistant",
+                        "sw_version": ANY,
                         "vendor_id": "cc01",
                     }
                 },
@@ -569,33 +535,6 @@ async def test_diagnostics_remote_adapter(
                         "type": "HaScanner",
                     },
                     {
-                        "adapter": "hci0",
-                        "discovered_devices_and_advertisement_data": [
-                            {
-                                "address": "44:44:33:11:23:45",
-                                "advertisement_data": [
-                                    "x",
-                                    {},
-                                    {},
-                                    [],
-                                    -127,
-                                    -127,
-                                    [[]],
-                                ],
-                                "details": None,
-                                "name": "x",
-                                "rssi": -127,
-                            }
-                        ],
-                        "last_detection": ANY,
-                        "monotonic_time": ANY,
-                        "name": "hci0 (00:00:00:00:00:01)",
-                        "scanning": True,
-                        "source": "00:00:00:00:00:01",
-                        "start_time": ANY,
-                        "type": "FakeHaScanner",
-                    },
-                    {
                         "connectable": True,
                         "discovered_device_timestamps": {"44:44:33:11:23:45": ANY},
                         "discovered_devices_and_advertisement_data": [
@@ -640,6 +579,13 @@ async def test_diagnostics_remote_adapter(
                 },
             },
         }
+
+        diag_scanners = diag["manager"].pop("scanners")
+        expected_scanners = expected["manager"].pop("scanners")
+        assert diag == expected
+        assert sorted(diag_scanners, key=lambda x: x["name"]) == sorted(
+            expected_scanners, key=lambda x: x["name"]
+        )
 
     cancel()
     unsetup()

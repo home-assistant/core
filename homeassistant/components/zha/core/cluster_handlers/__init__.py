@@ -553,7 +553,7 @@ class ClusterHandler(LogMixin):
 class ZDOClusterHandler(LogMixin):
     """Cluster handler for ZDO events."""
 
-    def __init__(self, device):
+    def __init__(self, device) -> None:
         """Initialize ZDOClusterHandler."""
         self.name = CLUSTER_HANDLER_ZDO
         self._cluster = device.device.endpoints[0]
