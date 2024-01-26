@@ -48,7 +48,6 @@ async def test_all_entities(
 
 async def test_update_failed(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -68,7 +67,6 @@ async def test_update_failed(
 
 async def test_update_updates_incrementally(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -253,7 +251,6 @@ async def test_sleep_sensors_created_when_existed(
     hass: HomeAssistant,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sleep sensors will be added if they existed before."""
     await setup_integration(hass, polling_config_entry, False)
@@ -301,7 +298,6 @@ async def test_workout_sensors_created_when_existed(
     hass: HomeAssistant,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test workout sensors will be added if they existed before."""
     await setup_integration(hass, polling_config_entry, False)
