@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as LUPUSEC_DOMAIN
+from . import DOMAIN
 from .entity import LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up an alarm control panel for a Lupusec device."""
-    data = hass.data[LUPUSEC_DOMAIN][config_entry.entry_id]
+    data = hass.data[DOMAIN][config_entry.entry_id]
 
     alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm(), config_entry)]
 
