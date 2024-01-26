@@ -1,6 +1,7 @@
 """Ecovacs image entities."""
 
 from deebot_client.capabilities import CapabilityMap
+from deebot_client.device import Device
 from deebot_client.events.map import CachedMapInfoEvent, MapChangedEvent
 
 from homeassistant.components.image import ImageEntity
@@ -24,7 +25,7 @@ async def async_setup_entry(
     entities = []
     for device in controller.devices:
         if caps := device.capabilities.map:
-            entities.append(EcovacsMap(device, caps, hass=hass))
+            entities.append(EcovacsMap(device, caps, hass))
 
     if entities:
         async_add_entities(entities)
@@ -37,7 +38,16 @@ class EcovacsMap(
     """Ecovacs map."""
 
     _attr_content_type = "image/svg+xml"
-    _attr_extra_state_attributes = {}
+
+    def __init__(
+        self,
+        device: Device,
+        capability: CapabilityMap,
+        hass: HomeAssistant,
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(device, capability, hass=hass)
+        self._attr_extra_state_attributes = {}
 
     entity_description = EntityDescription(
         key="map",
