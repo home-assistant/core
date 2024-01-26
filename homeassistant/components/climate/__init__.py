@@ -369,7 +369,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                     ClimateEntityFeature.TURN_OFF
                 )
-            elif HVACMode.OFF in self.hvac_modes:
+            elif self.hvac_modes and HVACMode.OFF in self.hvac_modes:
                 # turn_off implicitly supported by including HVACMode.OFF
                 _report_turn_on_off("off", "turn_off")
                 self.__mod_supported_features |= (  # pylint: disable=unused-private-member
@@ -386,7 +386,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                     ClimateEntityFeature.TURN_ON
                 )
-            elif any(
+            elif self.hvac_modes and any(
                 _mode != HVACMode.OFF and _mode is not None for _mode in self.hvac_modes
             ):
                 # turn_on implicitly supported by including any other HVACMode than HVACMode.OFF
