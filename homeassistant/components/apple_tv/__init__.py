@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from random import randrange
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pyatv import connect, exceptions, scan
 from pyatv.conf import AppleTV
