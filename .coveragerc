@@ -46,6 +46,9 @@ omit =
     homeassistant/components/airtouch4/__init__.py
     homeassistant/components/airtouch4/climate.py
     homeassistant/components/airtouch4/coordinator.py
+    homeassistant/components/airtouch5/__init__.py
+    homeassistant/components/airtouch5/climate.py
+    homeassistant/components/airtouch5/entity.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/airvisual_pro/__init__.py
@@ -109,6 +112,12 @@ omit =
     homeassistant/components/baf/sensor.py
     homeassistant/components/baf/switch.py
     homeassistant/components/baidu/tts.py
+    homeassistant/components/bang_olufsen/__init__.py
+    homeassistant/components/bang_olufsen/const.py
+    homeassistant/components/bang_olufsen/entity.py
+    homeassistant/components/bang_olufsen/media_player.py
+    homeassistant/components/bang_olufsen/util.py
+    homeassistant/components/bang_olufsen/websocket.py
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
     homeassistant/components/beewi_smartclim/sensor.py
@@ -512,8 +521,6 @@ omit =
     homeassistant/components/home_connect/light.py
     homeassistant/components/home_connect/sensor.py
     homeassistant/components/home_connect/switch.py
-    homeassistant/components/home_plus_control/api.py
-    homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homematic/__init__.py
     homeassistant/components/homematic/binary_sensor.py
     homeassistant/components/homematic/climate.py
@@ -543,6 +550,8 @@ omit =
     homeassistant/components/hunterdouglas_powerview/shade_data.py
     homeassistant/components/hunterdouglas_powerview/util.py
     homeassistant/components/hvv_departures/__init__.py
+    homeassistant/components/huum/__init__.py
+    homeassistant/components/huum/climate.py
     homeassistant/components/hvv_departures/binary_sensor.py
     homeassistant/components/hvv_departures/sensor.py
     homeassistant/components/ialarm/alarm_control_panel.py
@@ -696,7 +705,10 @@ omit =
     homeassistant/components/loqed/sensor.py
     homeassistant/components/luci/device_tracker.py
     homeassistant/components/luftdaten/sensor.py
-    homeassistant/components/lupusec/*
+    homeassistant/components/lupusec/__init__.py
+    homeassistant/components/lupusec/alarm_control_panel.py
+    homeassistant/components/lupusec/binary_sensor.py
+    homeassistant/components/lupusec/switch.py
     homeassistant/components/lutron/__init__.py
     homeassistant/components/lutron/binary_sensor.py
     homeassistant/components/lutron/cover.py
@@ -1355,6 +1367,11 @@ omit =
     homeassistant/components/telnet/switch.py
     homeassistant/components/temper/sensor.py
     homeassistant/components/tensorflow/image_processing.py
+    homeassistant/components/teslemetry/__init__.py
+    homeassistant/components/teslemetry/climate.py
+    homeassistant/components/teslemetry/coordinator.py
+    homeassistant/components/teslemetry/entity.py
+    homeassistant/components/teslemetry/context.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
     homeassistant/components/thethingsnetwork/*
