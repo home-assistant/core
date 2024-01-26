@@ -30,7 +30,7 @@ async def async_setup_entry(
     """Set up an alarm control panel for a Lupusec device."""
     data = hass.data[LUPUSEC_DOMAIN][config_entry.entry_id]
 
-    alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm())]
+    alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm(), config_entry)]
 
     async_add_devices(alarm_devices)
 
