@@ -664,8 +664,8 @@ build.json @home-assistant/supervisor
 /tests/components/juicenet/ @jesserockz
 /homeassistant/components/justnimbus/ @kvanzuijlen
 /tests/components/justnimbus/ @kvanzuijlen
-/homeassistant/components/jvc_projector/ @SteveEasley
-/tests/components/jvc_projector/ @SteveEasley
+/homeassistant/components/jvc_projector/ @SteveEasley @msavazzi
+/tests/components/jvc_projector/ @SteveEasley @msavazzi
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
@@ -757,7 +757,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/luci/ @mzdrale
 /homeassistant/components/luftdaten/ @fabaff @frenck
 /tests/components/luftdaten/ @fabaff @frenck
-/homeassistant/components/lupusec/ @majuss
+/homeassistant/components/lupusec/ @majuss @suaveolent
+/tests/components/lupusec/ @majuss @suaveolent
 /homeassistant/components/lutron/ @cdheiser @wilburCForce
 /tests/components/lutron/ @cdheiser @wilburCForce
 /homeassistant/components/lutron_caseta/ @swails @bdraco @danaues

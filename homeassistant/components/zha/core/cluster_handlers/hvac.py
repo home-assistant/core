@@ -7,8 +7,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from zigpy.zcl.clusters import hvac
-from zigpy.zcl.clusters.hvac import Fan, Thermostat, UserInterface
+
+from zigpy.zcl.clusters.hvac import (
+    Dehumidification,
+    Fan,
+    Pump,
+    Thermostat,
+    UserInterface,
+)
 
 from homeassistant.core import callback
 
@@ -26,8 +32,8 @@ REPORT_CONFIG_CLIMATE_DEMAND = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 5)
 REPORT_CONFIG_CLIMATE_DISCRETE = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1)
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.Dehumidification.cluster_id)
-class Dehumidification(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Dehumidification.cluster_id)
+class DehumidificationClusterHandler(ClusterHandler):
     """Dehumidification cluster handler."""
 
 
@@ -75,8 +81,8 @@ class FanClusterHandler(ClusterHandler):
             )
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.Pump.cluster_id)
-class Pump(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Pump.cluster_id)
+class PumpClusterHandler(ClusterHandler):
     """Pump cluster handler."""
 
 
@@ -96,7 +102,7 @@ class ThermostatClusterHandler(ClusterHandler):
         AttrReportConfig(
             attr=Thermostat.AttributeDefs.occupied_heating_setpoint.name,
             config=REPORT_CONFIG_CLIMATE,
-        ),
+        ),met 2 kleine fotos
         AttrReportConfig(
             attr=Thermostat.AttributeDefs.unoccupied_cooling_setpoint.name,
             config=REPORT_CONFIG_CLIMATE,
@@ -334,7 +340,8 @@ class ThermostatClusterHandler(ClusterHandler):
         return bool(self.occupancy)
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.UserInterface.cluster_id)
+
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(UserInterface.cluster_id)
 class UserInterfaceClusterHandler(ClusterHandler):
     """User interface (thermostat) cluster handler."""
 

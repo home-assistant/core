@@ -3,8 +3,14 @@ from __future__ import annotations
 
 import enum
 
-from zigpy.zcl.clusters import homeautomation
-from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
+from zigpy.zcl.clusters.homeautomation import (
+    ApplianceEventAlerts,
+    ApplianceIdentification,
+    ApplianceStatistics,
+    Diagnostic,
+    ElectricalMeasurement,
+    MeterIdentification,
+)
 
 from .. import registries
 from ..const import (
@@ -16,31 +22,23 @@ from ..const import (
 from . import AttrReportConfig, ClusterHandler
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    homeautomation.ApplianceEventAlerts.cluster_id
-)
-class ApplianceEventAlerts(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(ApplianceEventAlerts.cluster_id)
+class ApplianceEventAlertsClusterHandler(ClusterHandler):
     """Appliance Event Alerts cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    homeautomation.ApplianceIdentification.cluster_id
-)
-class ApplianceIdentification(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(ApplianceIdentification.cluster_id)
+class ApplianceIdentificationClusterHandler(ClusterHandler):
     """Appliance Identification cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    homeautomation.ApplianceStatistics.cluster_id
-)
-class ApplianceStatistics(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(ApplianceStatistics.cluster_id)
+class ApplianceStatisticsClusterHandler(ClusterHandler):
     """Appliance Statistics cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    homeautomation.Diagnostic.cluster_id
-)
-class Diagnostic(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Diagnostic.cluster_id)
+class DiagnosticClusterHandler(ClusterHandler):
     """Diagnostic cluster handler."""
 
 
@@ -232,8 +230,6 @@ class ElectricalMeasurementClusterHandler(ClusterHandler):
         )
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    homeautomation.MeterIdentification.cluster_id
-)
-class MeterIdentification(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(MeterIdentification.cluster_id)
+class MeterIdentificationClusterHandler(ClusterHandler):
     """Metering Identification cluster handler."""
