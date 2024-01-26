@@ -524,25 +524,46 @@ class OnOffConfigurationClusterHandler(ClusterHandler):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Ota.cluster_id)
-@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(Ota.cluster_id)
-class OtaClientClusterHandler(ClientClusterHandler):
+class OtaClusterHandler(ClusterHandler):
     """OTA cluster handler."""
 
+    BIND: bool = False
+
+    # Some devices have this cluster in the wrong collection (e.g. Third Reality)
     ZCL_INIT_ATTRS = {
-        general.Ota.AttributeDefs.current_file_version.name: True,
+        Ota.AttributeDefs.current_file_version.name: True,
     }
 
     @property
     def current_file_version(self) -> str:
         """Return cached value of current_file_version attribute."""
         current_file_version = self.cluster.get(
-            general.Ota.AttributeDefs.current_file_version.name
+            Ota.AttributeDefs.current_file_version.name
         )
         if current_file_version is not None:
             return f"0x{int(current_file_version):08x}"
         return ZHA_UNKNOWN
 
+
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(Ota.cluster_id)
+class OtaClientClusterHandler(ClientClusterHandler):
+    """OTA client cluster handler."""
+
     BIND: bool = False
+
+    ZCL_INIT_ATTRS = {
+        Ota.AttributeDefs.current_file_version.name: True,
+    }
+
+    @property
+    def current_file_version(self) -> str:
+        """Return cached value of current_file_version attribute."""
+        current_file_version = self.cluster.get(
+            Ota.AttributeDefs.current_file_version.name
+        )
+        if current_file_version is not None:
+            return f"0x{int(current_file_version):08x}"
+        return ZHA_UNKNOWN
 
     @callback
     def cluster_command(
@@ -555,17 +576,16 @@ class OtaClientClusterHandler(ClientClusterHandler):
             cmd_name = command_id
 
         signal_id = self._endpoint.unique_id.split("-")[0]
-        if cmd_name == general.Ota.ServerCommandDefs.query_next_image.name:
+        if cmd_name == Ota.ServerCommandDefs.query_next_image.name:
             assert args
             self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
 
     async def async_check_for_update(self):
         """Check for firmware availability by issuing an image notify command."""
-        if self._endpoint.device.is_mains_powered:
-            await self.cluster.image_notify(
-                payload_type=(self.cluster.ImageNotifyCommand.PayloadType.QueryJitter),
-                query_jitter=100,
-            )
+        await self.cluster.image_notify(
+            payload_type=(self.cluster.ImageNotifyCommand.PayloadType.QueryJitter),
+            query_jitter=100,
+        )
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Partition.cluster_id)
