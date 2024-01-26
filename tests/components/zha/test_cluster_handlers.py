@@ -713,7 +713,9 @@ async def test_zll_device_groups(
     """Test adding coordinator to ZLL groups."""
 
     cluster = zigpy_zll_device.endpoints[1].lightlink
-    cluster_handler = cluster_handlers.lightlink.LightLink(cluster, endpoint)
+    cluster_handler = cluster_handlers.lightlink.LightLinkClusterHandler(
+        cluster, endpoint
+    )
 
     get_group_identifiers_rsp = zigpy.zcl.clusters.lightlink.LightLink.commands_by_name[
         "get_group_identifiers_rsp"
@@ -980,3 +982,23 @@ async def test_retry_request(
     assert func.await_count == 3
     assert isinstance(exc.value, HomeAssistantError)
     assert str(exc.value) == expected_error
+
+
+async def test_cluster_handler_naming() -> None:
+    """Test that all cluster handlers are named appropriately."""
+    for client_cluster_handler in registries.CLIENT_CLUSTER_HANDLER_REGISTRY.values():
+        assert issubclass(client_cluster_handler, cluster_handlers.ClientClusterHandler)
+        assert client_cluster_handler.__name__.endswith("ClientClusterHandler")
+
+    server_cluster_handlers = []
+    for cluster_handler_dict in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.values():
+        # remove this filter in the update platform PR
+        server_cluster_handlers += [
+            cluster_handler
+            for cluster_handler in cluster_handler_dict.values()
+            if cluster_handler.__name__ != "OtaClientClusterHandler"
+        ]
+
+    for cluster_handler in server_cluster_handlers:
+        assert not issubclass(cluster_handler, cluster_handlers.ClientClusterHandler)
+        assert cluster_handler.__name__.endswith("ClusterHandler")
