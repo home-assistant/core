@@ -390,21 +390,23 @@ class EntityPlatform:
             finally:
                 warn_task.cancel()
 
-    async def _async_get_translations_for_categories(
-        self, language: str, categories: Iterable[str], integration: str
+    async def _async_get_translations(
+        self, language: str, category: str, integration: str
     ) -> dict[str, Any]:
         """Get entity translations."""
         try:
-            return await translation.async_get_translations_for_categories(
-                self.hass, language, categories, {integration}
-            )
+            return (
+                await translation.async_get_translations_for_categories(
+                    self.hass, language, (category,), {integration}
+                )
+            )[category]
         except Exception as err:  # pylint: disable=broad-exception-caught
             _LOGGER.debug(
                 "Could not load translations for %s",
                 integration,
                 exc_info=err,
             )
-        return {category: {} for category in categories}
+        return {}
 
     async def async_load_translations(self) -> None:
         """Load translations."""
@@ -414,25 +416,23 @@ class EntityPlatform:
             if hass.config.language in languages.NATIVE_ENTITY_IDS
             else languages.DEFAULT_LANGUAGE
         )
-
-        resources = await self._async_get_translations_for_categories(
-            hass.config.language,
-            ("entity_component", "entity"),
-            self.domain,
+        config_language = hass.config.language
+        self.component_translations = await self._async_get_translations(
+            config_language, "entity_component", self.domain
         )
-        self.component_translations = resources["entity_component"]
-        self.platform_translations = resources["entity"]
-        if object_id_language == hass.config.language:
+        self.platform_translations = await self._async_get_translations(
+            config_language, "entity", self.platform_name
+        )
+        if object_id_language == config_language:
             self.object_id_component_translations = self.component_translations
             self.object_id_platform_translations = self.platform_translations
         else:
-            resources = await self._async_get_translations_for_categories(
-                object_id_language,
-                ("entity_component", "entity"),
-                self.domain,
+            self.object_id_component_translations = await self._async_get_translations(
+                object_id_language, "entity_component", self.domain
             )
-            self.object_id_component_translations = resources["entity_component"]
-            self.object_id_platform_translations = resources["entity"]
+            self.object_id_platform_translations = await self._async_get_translations(
+                object_id_language, "entity", self.platform_name
+            )
 
     def _schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
