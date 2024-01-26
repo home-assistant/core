@@ -326,7 +326,7 @@ class ClusterHandler(LogMixin):
                 res,
             )
             # 2.5.8.1.3 Status Field
-            # The status field specifies the status of the Configure Reporting operation attempted on this attribute, as de- tailed in 2.5.7.3.
+            # The status field specifies the status of the Configure Reporting operation attempted on this attribute, as detailed in 2.5.7.3.
             # Note that attribute status records are not included for successfully configured attributes, in order to save bandwidth.
             # In the case of successful configuration of all attributes, only a single attribute status record SHALL be included in the command,
             # with the status field set to SUCCESS and the direction and attribute identifier fields omitted.
