@@ -906,9 +906,8 @@ class EntityPlatform:
                     # entity.
                     if entity.should_poll and entity.hass:
                         await entity.async_update_ha_state(True)
-                return
 
-            if tasks := [
+            elif tasks := [
                 entity.async_update_ha_state(True)
                 for entity in self.entities.values()
                 if entity.should_poll
