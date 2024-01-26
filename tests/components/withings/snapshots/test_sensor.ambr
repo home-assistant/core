@@ -71,9 +71,6 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -1176,9 +1173,6 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -1274,9 +1268,6 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -1750,9 +1741,6 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -1851,9 +1839,6 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -2045,9 +2030,6 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -2235,9 +2217,6 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
