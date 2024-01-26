@@ -393,7 +393,7 @@ class EntityPlatform:
     async def _async_get_translations(
         self, language: str, category: str, integration: str
     ) -> dict[str, Any]:
-        """Get entity translations."""
+        """Get translations for a language, category, and integration."""
         try:
             return await translation.async_get_translations(
                 self.hass, language, category, {integration}
