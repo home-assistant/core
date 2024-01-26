@@ -32,6 +32,7 @@ from homeassistant.util import language as language_util
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import HOME_ASSISTANT_AGENT
 from .default_agent import (
+    METADATA_CUSTOM_FILE,
     METADATA_CUSTOM_SENTENCE,
     DefaultAgent,
     SentenceTriggerResult,
@@ -384,6 +385,7 @@ async def websocket_hass_agent_debug(
                 METADATA_CUSTOM_SENTENCE
             ):
                 result_dict["source"] = "custom"
+                result_dict["file"] = result.intent_metadata.get(METADATA_CUSTOM_FILE)
             else:
                 result_dict["source"] = "builtin"
 

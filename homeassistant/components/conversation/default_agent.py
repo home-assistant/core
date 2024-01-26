@@ -63,6 +63,7 @@ _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 REGEX_TYPE = type(re.compile(""))
 TRIGGER_CALLBACK_TYPE = Callable[[str, RecognizeResult], Awaitable[str | None]]
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
+METADATA_CUSTOM_FILE = "hass_custom_file"
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -606,6 +607,11 @@ class DefaultAgent(AbstractConversationAgent):
                                 for intent_data in intent_data_list:
                                     sentence_metadata = intent_data.get("metadata", {})
                                     sentence_metadata[METADATA_CUSTOM_SENTENCE] = True
+                                    sentence_metadata[METADATA_CUSTOM_FILE] = str(
+                                        custom_sentences_path.relative_to(
+                                            custom_sentences_dir.parent
+                                        )
+                                    )
                                     intent_data["metadata"] = sentence_metadata
 
                             merge_dict(intents_dict, custom_sentences_yaml)

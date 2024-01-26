@@ -1545,6 +1545,35 @@
     }),
   })
 # ---
+# name: test_ws_hass_agent_debug_custom_sentence
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'beer_style': dict({
+            'name': 'beer_style',
+            'text': 'lager',
+            'value': 'lager',
+          }),
+        }),
+        'file': 'en/beer.yaml',
+        'intent': dict({
+          'name': 'OrderBeer',
+        }),
+        'match': True,
+        'sentence_template': "I'd like to order a {beer_style} [please]",
+        'slots': dict({
+          'beer_style': 'lager',
+        }),
+        'source': 'custom',
+        'targets': dict({
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+    ]),
+  })
+# ---
 # name: test_ws_hass_agent_debug_null_result
   dict({
     'results': list([
