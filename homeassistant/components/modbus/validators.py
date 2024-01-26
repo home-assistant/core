@@ -226,9 +226,8 @@ def check_config(config: dict) -> dict:
     ent_names: set[str] = set()
     ent_addr: set[str] = set()
 
-    def validate_modbus(hub: dict) -> bool:
+    def validate_modbus(hub: dict, hub_name_inx: int) -> bool:
         """Validate modbus entries."""
-        nonlocal hub_name_inx
         host: str = (
             hub[CONF_PORT]
             if hub[CONF_TYPE] == SERIAL
@@ -250,9 +249,14 @@ def check_config(config: dict) -> dict:
         hub_names.add(name)
         return True
 
-    def validate_entity(hub_name: str, entity: dict) -> bool:
+    def validate_entity(
+        hub_name: str,
+        entity: dict,
+        minimum_scan_interval: int,
+        ent_names: set,
+        ent_addr: set,
+    ) -> bool:
         """Validate entity."""
-        nonlocal minimum_scan_interval, ent_names, ent_addr
         name = entity[CONF_NAME]
         addr = str(entity[CONF_ADDRESS])
         scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -314,7 +318,7 @@ def check_config(config: dict) -> dict:
     hub_inx = 0
     while hub_inx < len(config):
         hub = config[hub_inx]
-        if not validate_modbus(hub):
+        if not validate_modbus(hub, hub_name_inx):
             del config[hub_inx]
             continue
         for _component, conf_key in PLATFORMS:
@@ -324,7 +328,13 @@ def check_config(config: dict) -> dict:
             entities = hub[conf_key]
             minimum_scan_interval = 9999
             while entity_inx < len(entities):
-                if not validate_entity(hub[CONF_NAME], entities[entity_inx]):
+                if not validate_entity(
+                    hub[CONF_NAME],
+                    entities[entity_inx],
+                    minimum_scan_interval,
+                    ent_names,
+                    ent_addr,
+                ):
                     del entities[entity_inx]
                 else:
                     entity_inx += 1
