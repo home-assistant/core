@@ -637,7 +637,7 @@ async def test_thermostat_srt321_hrt4_zw(
         HVACMode.HEAT,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 384
 
 
 async def test_preset_and_no_setpoint(
