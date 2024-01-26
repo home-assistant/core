@@ -59,8 +59,8 @@ async def test_load_unload_iottyproxy_called(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # __init__, get_devices and get_status shall be called
-    assert len(mock_iotty.mock_calls) == 3
+    # __init__, get_devices and 2x get_status shall be called
+    assert len(mock_iotty.mock_calls) == 4
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

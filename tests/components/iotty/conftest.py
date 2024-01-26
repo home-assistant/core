@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientSession
 from iottycloud.device import Device
+from iottycloud.lightswitch import LightSwitch
 from iottycloud.verbs import LS_DEVICE_TYPE_UID, RESULT, STATUS, STATUS_ON
 import pytest
 
@@ -23,6 +24,14 @@ REDIRECT_URI = "https://example.com/auth/external/callback"
 test_devices = [
     Device("TestDevice0", "TEST_SERIAL_0", LS_DEVICE_TYPE_UID, "[TEST] Device Name 0"),
     Device("TestDevice1", "TEST_SERIAL_1", LS_DEVICE_TYPE_UID, "[TEST] Device Name 1"),
+]
+
+
+test_ls = [
+    LightSwitch("TestLS", "TEST_SERIAL_0", LS_DEVICE_TYPE_UID, "[TEST] Light switch 0"),
+    LightSwitch(
+        "TestLS1", "TEST_SERIAL_1", LS_DEVICE_TYPE_UID, "[TEST] Light switch 1"
+    ),
 ]
 
 
@@ -101,6 +110,16 @@ def mock_coordinator() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
+def mock_coordinator_store_entity() -> Generator[AsyncMock, None, None]:
+    """Mock coordinator's store_entity fn."""
+
+    with patch(
+        "homeassistant.components.iotty.coordinator.IottyDataUpdateCoordinator.store_entity"
+    ) as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
 def mock_iotty_command_fn() -> Generator[AsyncMock, None, None]:
     """Mock iottyProxy to simulate cmd issuing."""
 
@@ -144,6 +163,15 @@ def mock_get_devices_twodevices() -> Generator[AsyncMock, None, None]:
 def mock_get_status_empty() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch("iottycloud.cloudapi.CloudApi.get_status") as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_async_first_refresh() -> Generator[AsyncMock, None, None]:
+    """Mock Coordinator's superclass first_refresh method."""
+    with patch(
+        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_config_entry_first_refresh"
+    ) as mock_fn:
         yield mock_fn
 
 

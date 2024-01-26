@@ -67,6 +67,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         """Override the first refresh to also fetch iotty devices list."""
         _LOGGER.debug("Fetching devices list from iottyCloud")
         self._devices = await self.iotty.get_devices()
+        _LOGGER.debug("There are %d devices", len(self._devices))
 
         await super().async_config_entry_first_refresh()
 
