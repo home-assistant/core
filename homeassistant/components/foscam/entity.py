@@ -2,15 +2,14 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import FoscamCoordinator
 
 
-class FoscamEntity(Entity):
+class FoscamEntity(CoordinatorEntity[FoscamCoordinator]):
     """Base entity for Foscam camera."""
 
     def __init__(
@@ -19,11 +18,7 @@ class FoscamEntity(Entity):
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the base Foscam entity."""
-
-        self._username = config_entry.data[CONF_USERNAME]
-        self._password = config_entry.data[CONF_PASSWORD]
-
-        dev_info = coordinator.data.get("dev_info", None)
+        super().__init__(coordinator)
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},

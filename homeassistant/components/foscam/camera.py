@@ -7,10 +7,10 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_RTSP_PORT,
@@ -93,7 +93,7 @@ async def async_setup_entry(
     async_add_entities([HassFoscamCamera(coordinator, config_entry)])
 
 
-class HassFoscamCamera(CoordinatorEntity[FoscamCoordinator], Camera, FoscamEntity):
+class HassFoscamCamera(FoscamEntity, Camera):
     """An implementation of a Foscam IP camera."""
 
     _attr_has_entity_name = True
@@ -105,11 +105,12 @@ class HassFoscamCamera(CoordinatorEntity[FoscamCoordinator], Camera, FoscamEntit
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize a Foscam camera."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, config_entry)
         Camera.__init__(self)
-        FoscamEntity.__init__(self, coordinator, config_entry)
 
         self._foscam_session = coordinator.session
+        self._username = config_entry.data[CONF_USERNAME]
+        self._password = config_entry.data[CONF_PASSWORD]
         self._stream = config_entry.data[CONF_STREAM]
         self._attr_unique_id = config_entry.entry_id
         self._rtsp_port = config_entry.data[CONF_RTSP_PORT]
