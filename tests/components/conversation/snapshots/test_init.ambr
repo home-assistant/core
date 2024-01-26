@@ -1647,3 +1647,14 @@
     ]),
   })
 # ---
+# name: test_ws_hass_agent_debug_sentence_trigger
+  dict({
+    'results': list([
+      dict({
+        'match': True,
+        'sentence_template': 'hello[ world]',
+        'source': 'trigger',
+      }),
+    ]),
+  })
+# ---
