@@ -7,6 +7,20 @@
           "on": "mdi:projector"
         }
       }
+    },
+    "sensor": {
+      "power_status": {
+        "default": "mdi:power-plug-off",
+        "state": {
+          "on": "mdi:power-plug",
+          "warming": "mdi:power-plug-outline",
+          "cooling": "mdi:power-plug-off-outline",
+          "error": "mdi:alert-circle-outline"
+        }
+      },
+      "input": {
+        "default": "mdi:video-input-hdmi"
+      }
     }
   }
 }

@@ -44,6 +44,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         """Get the latest state data."""
         try:
             state = await self.device.get_state()
+
         except JvcProjectorConnectError as err:
             raise UpdateFailed(f"Unable to connect to {self.device.host}") from err
         except JvcProjectorAuthError as err:

@@ -37,6 +37,14 @@
       "jvc_power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       }
+    },
+    "sensor": {
+      "power_status": {
+        "name": "Power Status"
+      },
+      "input": {
+        "name": "Input"
+      }
     }
   }
 }
