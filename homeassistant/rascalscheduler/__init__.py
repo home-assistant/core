@@ -13,10 +13,13 @@ from typing import Any
 from homeassistant.components.script import BaseScriptEntity
 from homeassistant.const import (
     CONF_DELAY,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_PARALLEL,
     CONF_SEQUENCE,
     CONF_SERVICE,
+    CONF_TARGET,
     CONF_TYPE,
     DOMAIN_RASCALSCHEDULER,
     DOMAIN_SCRIPT,
@@ -30,6 +33,7 @@ from homeassistant.helpers.rascalscheduler import (
     ActionEntity,
     QueueEntity,
     RoutineEntity,
+    async_get_device_id_from_entity_id,
 )
 
 CONF_ROUTINE_ID = "routine_id"
@@ -82,6 +86,7 @@ def dag_operator(
             and CONF_SERVICE not in script
             and CONF_DELAY not in script
         ):
+            # print("script:", script)
             config[CONF_STEP] = config[CONF_STEP] + 1
             action_id = config[CONF_ROUTINE_ID] + str(config[CONF_STEP])
 
@@ -134,18 +139,33 @@ def dfs(
             leaf_entities = dfs(item, config, next_parents, entities)
             next_parents = leaf_entities
 
-    elif CONF_SERVICE in script:
-        script_component: EntityComponent[BaseScriptEntity] = config[CONF_HASS].data[
-            DOMAIN_SCRIPT
-        ]
+    elif (
+        CONF_SERVICE in script
+    ):  # switch to the associated case based on the domain, todo
+        domain = script["service"].split(".")[0]
+        if domain == DOMAIN_SCRIPT:
+            script_component: EntityComponent[BaseScriptEntity] = config[
+                CONF_HASS
+            ].data[DOMAIN_SCRIPT]
 
-        if script_component is not None:
-            baseScript = script_component.get_entity(list(script.values())[0])
-            if baseScript is not None and baseScript.raw_config is not None:
-                next_parents = parents
-                for item in baseScript.raw_config[CONF_SEQUENCE]:
-                    leaf_entities = dfs(item, config, next_parents, entities)
-                    next_parents = leaf_entities
+            if script_component is not None:
+                baseScript = script_component.get_entity(list(script.values())[0])
+                if baseScript is not None and baseScript.raw_config is not None:
+                    next_parents = parents
+                    for item in baseScript.raw_config[CONF_SEQUENCE]:
+                        leaf_entities = dfs(item, config, next_parents, entities)
+                        next_parents = leaf_entities
+        else:  # only support for one target, todo
+            item = {}
+            item[CONF_TYPE] = script["service"].split(".")[1]
+            item[CONF_DEVICE_ID] = async_get_device_id_from_entity_id(
+                config[CONF_HASS], script[CONF_TARGET][CONF_ENTITY_ID]
+            )
+            item[CONF_ENTITY_ID] = script[CONF_TARGET][CONF_ENTITY_ID]
+            item[CONF_DOMAIN] = domain
+
+            leaf_entities = dfs(item, config, parents, entities)
+            next_parents = leaf_entities
 
     elif CONF_DELAY in script:
         hours = script["delay"]["hours"]

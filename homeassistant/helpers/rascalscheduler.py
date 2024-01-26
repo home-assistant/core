@@ -9,6 +9,7 @@ import logging
 import time
 from typing import Any, TypeVar
 
+import entity_registry as er
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -82,6 +83,20 @@ def delete_x_active_queue(hass: HomeAssistant, entity_id: str) -> None:
         _LOGGER.info("Delete queue: %s", entity_id)
     except (KeyError, ValueError):
         _LOGGER.warning("Unable to delete unknown queue %s", entity_id)
+
+
+def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> str:
+    """Get device ID from an entity ID.
+
+    Raises ValueError if entity or device ID is invalid.
+    """
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(entity_id)
+
+    if entity_entry is None or entity_entry.device_id is None:
+        raise ValueError(f"Entity {entity_id} is not a valid entity.")
+
+    return str(entity_entry.device_id)
 
 
 class RoutineEntity:
