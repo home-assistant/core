@@ -47,22 +47,14 @@ class LutronFan(LutronDevice, FanEntity):
     _lutron_device: Output
     _prev_percentage: int | None = None
 
-    @property
-    def percentage(self) -> int | None:
-        """Return the current speed."""
-        new_percentage = self._lutron_device.last_level()
-        if new_percentage != 0:
-            self._prev_percentage = new_percentage
-        return new_percentage
-
-    async def async_set_percentage(self, percentage: int) -> None:
+    def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         if percentage > 0:
             self._prev_percentage = percentage
         self._lutron_device.level = percentage
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
-    async def async_turn_on(
+    def turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
@@ -71,9 +63,6 @@ class LutronFan(LutronDevice, FanEntity):
         """Turn the fan on."""
         new_percentage: int | None = None
 
-        if preset_mode:
-            await self.async_set_preset_mode(preset_mode)
-            return
         if percentage is not None:
             new_percentage = percentage
         elif not self._prev_percentage:
@@ -81,20 +70,20 @@ class LutronFan(LutronDevice, FanEntity):
             new_percentage = 67
         else:
             new_percentage = self._prev_percentage
-        await self.async_set_percentage(new_percentage)
+        self.set_percentage(new_percentage)
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self.async_set_percentage(0)
+        self.set_percentage(0)
 
-    def update(self) -> None:
-        """Call when forcing a refresh of the device."""
+    def _request_state(self) -> None:
+        """Request the state from the device."""
+        self._lutron_device.level  # pylint: disable=pointless-statement
 
-        # Reading the property (rather than last_level()) fetches value
-        _LOGGER.debug(
-            "Lutron ID: %d updated to %f",
-            self._lutron_device.id,
-            self._lutron_device.level,
-        )
-        if self._prev_percentage is None:
-            self._prev_percentage = self._lutron_device.level
+    def _update_attrs(self) -> None:
+        """Update the state attributes."""
+        level = self._lutron_device.last_level()
+        self._attr_is_on = level > 0
+        self._attr_percentage = level
+        if self._prev_percentage is None or level != 0:
+            self._prev_percentage = level

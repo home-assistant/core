@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pylutron import Lutron, LutronEntity, Output
+from pylutron import Output
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
@@ -15,7 +15,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    create_issue,
+)
 
 from . import DOMAIN, LutronData
 from .entity import LutronDevice
@@ -98,6 +102,11 @@ class LutronLight(LutronDevice, LightEntity):
     _prev_brightness: int | None = None
     _attr_name = None
 
+    def __init__(self, area_name, lutron_device, controller) -> None:
+        """Initialize the light."""
+        super().__init__(area_name, lutron_device, controller)
+        self._is_fan = lutron_device.type == "CEILING_FAN_TYPE"
+
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if self._is_fan:
@@ -123,7 +132,7 @@ class LutronLight(LutronDevice, LightEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if self._is_fan:
-            async_create_issue(
+            create_issue(
                 self.hass,
                 DOMAIN,
                 "deprecated_light_fan_off",
