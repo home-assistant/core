@@ -153,10 +153,11 @@ async def test_device_tracker_test1_away(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNKNOWN
 
 
-async def test_device_tracker_test1_awayfurther(hass: HomeAssistant) -> None:
+async def test_device_tracker_test1_awayfurther(
+    hass: HomeAssistant, config_zones
+) -> None:
     """Test for tracker state away further."""
 
-    config_zones(hass)
     await hass.async_block_till_done()
 
     config = {
@@ -216,9 +217,10 @@ async def test_device_tracker_test1_awayfurther(hass: HomeAssistant) -> None:
     assert state.state == "away_from"
 
 
-async def test_device_tracker_test1_awaycloser(hass: HomeAssistant) -> None:
+async def test_device_tracker_test1_awaycloser(
+    hass: HomeAssistant, config_zones
+) -> None:
     """Test for tracker state away closer."""
-    config_zones(hass)
     await hass.async_block_till_done()
 
     config = {
@@ -457,10 +459,9 @@ async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
 
 
 async def test_device_tracker_test1_awayfurther_than_test2_first_test1(
-    hass: HomeAssistant,
+    hass: HomeAssistant, config_zones
 ) -> None:
     """Test for tracker ordering."""
-    config_zones(hass)
     await hass.async_block_till_done()
 
     hass.states.async_set(
@@ -545,10 +546,9 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test1(
 
 
 async def test_device_tracker_test1_awayfurther_than_test2_first_test2(
-    hass: HomeAssistant,
+    hass: HomeAssistant, config_zones
 ) -> None:
     """Test for tracker ordering."""
-    config_zones(hass)
     await hass.async_block_till_done()
 
     hass.states.async_set(
@@ -684,10 +684,9 @@ async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(
 
 
 async def test_device_tracker_test1_awayfurther_test2_first(
-    hass: HomeAssistant,
+    hass: HomeAssistant, config_zones
 ) -> None:
     """Test for tracker state."""
-    config_zones(hass)
     await hass.async_block_till_done()
 
     hass.states.async_set(
@@ -767,10 +766,9 @@ async def test_device_tracker_test1_awayfurther_test2_first(
 
 
 async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
-    hass: HomeAssistant,
+    hass: HomeAssistant, config_zones
 ) -> None:
     """Test for tracker states."""
-    config_zones(hass)
     await hass.async_block_till_done()
 
     hass.states.async_set(
@@ -943,19 +941,4 @@ async def test_create_issue(
 
     assert not issue_registry.async_get_issue(
         DOMAIN, "deprecated_proximity_entity_work"
-    )
-
-
-def config_zones(hass: HomeAssistant):
-    """Set up zones for test."""
-    hass.config.components.add("zone")
-    hass.states.async_set(
-        "zone.home",
-        "zoning",
-        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
-    )
-    hass.states.async_set(
-        "zone.work",
-        "zoning",
-        {"name": "work", "latitude": 2.3, "longitude": 1.3, "radius": 10},
     )
