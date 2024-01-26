@@ -418,21 +418,21 @@ async def async_setup_entry(
         )
     # For each production phase reported add production entities
     if envoy_data.system_production_phases:
-        for usephase in envoy_data.system_production_phases:
-            if envoy_data.system_production_phases[usephase] is not None:
+        for use_phase in envoy_data.system_production_phases:
+            if envoy_data.system_production_phases[use_phase] is not None:
                 entities.extend(
                     EnvoyProductionPhaseEntity(coordinator, description)
                     for description in PRODUCTION_PHASE_SENSORS
-                    if description.on_phase == usephase
+                    if description.on_phase == use_phase
                 )
     # For each consumption phase reported add consumption entities
     if envoy_data.system_consumption_phases:
-        for usephase in envoy_data.system_consumption_phases:
-            if envoy_data.system_consumption_phases[usephase] is not None:
+        for use_phase in envoy_data.system_consumption_phases:
+            if envoy_data.system_consumption_phases[use_phase] is not None:
                 entities.extend(
                     EnvoyConsumptionPhaseEntity(coordinator, description)
                     for description in CONSUMPTION_PHASE_SENSORS
-                    if description.on_phase == usephase
+                    if description.on_phase == use_phase
                 )
 
     if envoy_data.inverters:
@@ -485,48 +485,20 @@ class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
         """Initialize Envoy entity."""
         super().__init__(coordinator, description)
         self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
+        model: str = (
+            "Envoy"
+            if not hasattr(coordinator.envoy, "envoy_model")
+            else coordinator.envoy.envoy_model
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.envoy_serial_num)},
             manufacturer="Enphase",
-            model=self.envoy_model(),
+            model=model,
             name=coordinator.name,
             sw_version=str(coordinator.envoy.firmware),
             hw_version=coordinator.envoy.part_number,
             serial_number=self.envoy_serial_num,
         )
-
-    def envoy_model(self) -> str:
-        """Build model name for Envoy."""
-        coordinator = self.coordinator
-        ct_count = coordinator.envoy.ct_meter_count
-        ct_consumptionmeter = coordinator.envoy.consumption_meter_type
-        phase_count = coordinator.envoy.phase_count
-        phase_mode = coordinator.envoy.phase_mode
-
-        model = "Envoy"
-
-        # if CT and more then 1 phase add phase count to model
-        if phase_count > 1 or ct_count > 0:
-            model = f"{model}, phases: {phase_count}"
-
-            # if phase mode is known add to model
-            if phase_mode:
-                model = f"{model}, phase mode: {phase_mode}"
-
-        # if consumption CT type is known add to model
-        if ct_consumptionmeter:
-            model = f"{model}, {ct_consumptionmeter} CT"
-
-        # if production CT is found add to model. If only 1 ct was found use
-        # the consumption ct type as indicator if it's production or consumption
-        if (ct_count > 1) or (ct_count == 1 and ct_consumptionmeter is None):
-            model = f"{model}, production CT"
-
-        # if no ct found add to model
-        if ct_count == 0 and phase_count > 1:
-            model = f"{model}, no CT"
-
-        return model
 
 
 class EnvoyProductionEntity(EnvoySystemSensorEntity):
@@ -563,9 +535,10 @@ class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
-        if self.entity_description.on_phase is None:
-            return None
-        if self.data.system_production_phases is None:
+        if (
+            self.entity_description.on_phase is None
+            or self.data.system_production_phases is None
+        ):
             return None
         system_production = self.data.system_production_phases[
             self.entity_description.on_phase
@@ -583,9 +556,10 @@ class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
-        if self.entity_description.on_phase is None:
-            return None
-        if self.data.system_consumption_phases is None:
+        if (
+            self.entity_description.on_phase is None
+            or self.data.system_consumption_phases is None
+        ):
             return None
         system_consumption = self.data.system_consumption_phases[
             self.entity_description.on_phase
