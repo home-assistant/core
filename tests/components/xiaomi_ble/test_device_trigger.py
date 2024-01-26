@@ -7,7 +7,10 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.xiaomi_ble.const import CONF_SUBTYPE, DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_get as async_get_dev_reg,
+)
 from homeassistant.setup import async_setup_component
 
 from . import make_advertisement
@@ -136,34 +139,34 @@ async def test_get_triggers_for_invalid_xiami_ble_device(hass: HomeAssistant) ->
     await hass.async_block_till_done()
 
 
-# async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
-#     """Test that we don't get triggers when using an invalid device_id."""
-#     mac = "DE:70:E8:B2:39:0C"
-#     entry = await _async_setup_xiaomi_device(hass, mac)
+async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
+    """Test that we don't get triggers when using an invalid device_id."""
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
 
-#     # Emit motion detected event so it creates the device in the registry
-#     inject_bluetooth_service_info_bleak(
-#         hass,
-#         make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
-#     )
+    # Emit motion detected event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
+    )
 
-#     # wait for the event
-#     await hass.async_block_till_done()
+    # wait for the event
+    await hass.async_block_till_done()
 
-#     dev_reg = async_get_dev_reg(hass)
+    dev_reg = async_get_dev_reg(hass)
 
-#     invalid_device = dev_reg.async_get_or_create(
-#         config_entry_id=entry.entry_id,
-#         connections={(CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-#     )
-#     assert invalid_device
-#     triggers = await async_get_device_automations(
-#         hass, DeviceAutomationType.TRIGGER, invalid_device.id
-#     )
-#     assert triggers == []
+    invalid_device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert invalid_device
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, invalid_device.id
+    )
+    assert triggers == []
 
-#     assert await hass.config_entries.async_unload(entry.entry_id)
-#     await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
@@ -174,10 +177,10 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
     # Creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x00"),
+        make_advertisement(mac, b"@0\xdd\x03$\x0A\x10\x01\x64"),
     )
 
-    # wait for the event
+    # wait for the device being created
     await hass.async_block_till_done()
 
     dev_reg = async_get_dev_reg(hass)
@@ -268,105 +271,110 @@ async def test_automation_with_invalid_trigger_type(
     await hass.async_block_till_done()
 
 
-# async def test_automation_with_invalid_trigger_event_property(
-#     hass: HomeAssistant,
-#     caplog: pytest.LogCaptureFixture,
-# ) -> None:
-#     """Test for automation with invalid trigger event property."""
-#     mac = "DE:70:E8:B2:39:0C"
-#     entry = await _async_setup_xiaomi_device(hass, mac)
+async def test_automation_with_invalid_trigger_event_property(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test for automation with invalid trigger event property."""
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
 
-#     # Emit motion detected event so it creates the device in the registry
-#     inject_bluetooth_service_info_bleak(
-#         hass,
-#         make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
-#     )
+    # Emit motion detected event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
+    )
 
-#     # wait for the event
-#     await hass.async_block_till_done()
+    # wait for the event
+    await hass.async_block_till_done()
 
-#     dev_reg = async_get_dev_reg(hass)
-#     device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
-#     device_id = device.id
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
+    device_id = device.id
 
-#     assert await async_setup_component(
-#         hass,
-#         automation.DOMAIN,
-#         {
-#             automation.DOMAIN: [
-#                 {
-#                     "trigger": {
-#                         CONF_PLATFORM: "device",
-#                         CONF_DOMAIN: DOMAIN,
-#                         CONF_DEVICE_ID: device_id,
-#                         CONF_TYPE: "motion_detected",
-#                         CONF_SUBTYPE: "invalid_property",
-#                     },
-#                     "action": {
-#                         "service": "test.automation",
-#                         "data_template": {"some": "test_trigger_motion_motion_detected"},
-#                     },
-#                 },
-#             ]
-#         },
-#     )
-#     # Logs should return message to make sure event property is of one [None] for motion event
-#     assert str([None]) in caplog.text
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: device_id,
+                        CONF_TYPE: "motion",
+                        CONF_SUBTYPE: "invalid_subtype",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "test_trigger_motion_motion_detected"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    # Logs should return message to make sure subtype is of one 'motion_detected' for motion event
+    assert "value must be one of ['motion_detected']" in caplog.text
 
-#     assert await hass.config_entries.async_unload(entry.entry_id)
-#     await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
-# async def test_triggers_for_invalid__model(hass: HomeAssistant, calls) -> None:
-#     """Test invalid model doesn't return triggers."""
-#     mac = "DE:70:E8:B2:39:0C"
-#     entry = await _async_setup_xiaomi_device(hass, mac)
+async def test_triggers_for_invalid__model(hass: HomeAssistant, calls) -> None:
+    """Test invalid model doesn't return triggers."""
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
 
-#     # Emit motion detected event so it creates the device in the registry
-#     inject_bluetooth_service_info_bleak(
-#         hass,
-#         make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
-#     )
+    # Emit motion detected event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
+    )
 
-#     # wait for the event
-#     await hass.async_block_till_done()
+    # wait for the event
+    await hass.async_block_till_done()
 
-#     # modify model to invalid model
-#     dev_reg = async_get_dev_reg(hass)
-#     invalid_model = dev_reg.async_get_or_create(
-#         config_entry_id=entry.entry_id,
-#         identifiers={(DOMAIN, mac)},
-#         model="invalid model",
-#     )
-#     invalid_model_id = invalid_model.id
+    # modify model to invalid model
+    dev_reg = async_get_dev_reg(hass)
+    invalid_model = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, mac)},
+        model="invalid model",
+    )
+    invalid_model_id = invalid_model.id
 
-#     # setup automation to validate trigger config
-#     assert await async_setup_component(
-#         hass,
-#         automation.DOMAIN,
-#         {
-#             automation.DOMAIN: [
-#                 {
-#                     "trigger": {
-#                         CONF_PLATFORM: "device",
-#                         CONF_DOMAIN: DOMAIN,
-#                         CONF_DEVICE_ID: invalid_model_id,
-#                         CONF_TYPE: "motion_detected",
-#                         CONF_SUBTYPE: None,
-#                     },
-#                     "action": {
-#                         "service": "test.automation",
-#                         "data_template": {"some": "test_trigger_motion_motion_detected"},
-#                     },
-#                 },
-#             ]
-#         },
-#     )
+    # setup automation to validate trigger config
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: invalid_model_id,
+                        CONF_TYPE: "motion",
+                        CONF_SUBTYPE: "motion_detected",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "test_trigger_motion_motion_detected"
+                        },
+                    },
+                },
+            ]
+        },
+    )
 
-#     triggers = await async_get_device_automations(
-#         hass, DeviceAutomationType.TRIGGER, invalid_model_id
-#     )
-#     assert triggers == []
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, invalid_model_id
+    )
+    assert triggers == []
 
-#     assert await hass.config_entries.async_unload(entry.entry_id)
-#     await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
