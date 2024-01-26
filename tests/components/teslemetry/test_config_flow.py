@@ -1,6 +1,6 @@
 """Test the Teslemetry config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 import pytest
@@ -21,7 +21,7 @@ def mock_test():
     with patch(
         "tesla_fleet_api.teslemetry.Teslemetry.test",
     ) as mock_test:
-        mock_test.return_value = AsyncMock()
+        mock_test.return_value = True
         yield mock_test
 
 
