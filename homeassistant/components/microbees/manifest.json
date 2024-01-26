@@ -3,11 +3,11 @@
   "name": "microBees",
   "codeowners": ["@microBeesTech"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/microbees",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["microBeesPy==0.1.7", "aiohttp==3.9.1"],
+  "requirements": ["microBeesPy==0.1.9", "aiohttp==3.9.1"],
   "ssdp": [],
   "zeroconf": []
 }

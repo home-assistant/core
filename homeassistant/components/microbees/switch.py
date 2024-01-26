@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import BEES, CONNECTOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the microBees switch platform."""
-    microbees = hass.data[DOMAIN]["connector"]
-    bees = hass.data[DOMAIN]["bees"]
+    microbees = hass.data[DOMAIN][CONNECTOR]
+    bees = hass.data[DOMAIN][BEES]
     switches = []
     for bee in bees:
         if bee.active:
