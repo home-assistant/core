@@ -344,7 +344,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 )
             else:
                 message = (
-                    "Entity %s (%s) implements HVACMode.%s and therefore implicitly"
+                    "Entity %s (%s) implements HVACMode(s): %s and therefore implicitly"
                     " supports the %s service without setting the proper"
                     " ClimateEntityFeature. Please %s"
                 )
@@ -386,15 +386,15 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                     ClimateEntityFeature.TURN_ON
                 )
-            else:
-                for _mode in self.hvac_modes:
-                    if _mode != HVACMode.OFF:
-                        # turn_on implicitly supported by including any other HVACMode than HVACMode.OFF
-                        _report_turn_on_off(_mode, "turn_on")
-                        self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                            ClimateEntityFeature.TURN_ON
-                        )
-                        break
+            elif any(
+                _mode != HVACMode.OFF and _mode is not None for _mode in self.hvac_modes
+            ):
+                # turn_on implicitly supported by including any other HVACMode than HVACMode.OFF
+                _modes = [_mode for _mode in self.hvac_modes if _mode != HVACMode.OFF]
+                _report_turn_on_off(", ".join(_modes or []), "turn_on")
+                self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                    ClimateEntityFeature.TURN_ON
+                )
 
     @final
     @property
