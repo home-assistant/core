@@ -9,8 +9,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 import zigpy.zcl
-from zigpy.zcl.clusters import security
-from zigpy.zcl.clusters.security import IasAce as AceCluster, IasZone
+from zigpy.zcl.clusters.security import IasAce as AceCluster, IasWd, IasZone
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -34,7 +33,7 @@ SIGNAL_ALARM_TRIGGERED = "zha_armed_triggered"
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(AceCluster.cluster_id)
-class IasAce(ClusterHandler):
+class IasAceClusterHandler(ClusterHandler):
     """IAS Ancillary Control Equipment cluster handler."""
 
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
@@ -236,16 +235,16 @@ class IasAce(ClusterHandler):
         """Handle the IAS ACE zone status command."""
 
 
-@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(security.IasWd.cluster_id)
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(security.IasWd.cluster_id)
-class IasWd(ClusterHandler):
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(IasWd.cluster_id)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(IasWd.cluster_id)
+class IasWdClusterHandler(ClusterHandler):
     """IAS Warning Device cluster handler."""
 
     @staticmethod
     def set_bit(destination_value, destination_bit, source_value, source_bit):
         """Set the specified bit in the value."""
 
-        if IasWd.get_bit(source_value, source_bit):
+        if IasWdClusterHandler.get_bit(source_value, source_bit):
             return destination_value | (1 << destination_bit)
         return destination_value
 
@@ -267,15 +266,15 @@ class IasWd(ClusterHandler):
         is currently active (warning in progress).
         """
         value = 0
-        value = IasWd.set_bit(value, 0, squawk_level, 0)
-        value = IasWd.set_bit(value, 1, squawk_level, 1)
+        value = IasWdClusterHandler.set_bit(value, 0, squawk_level, 0)
+        value = IasWdClusterHandler.set_bit(value, 1, squawk_level, 1)
 
-        value = IasWd.set_bit(value, 3, strobe, 0)
+        value = IasWdClusterHandler.set_bit(value, 3, strobe, 0)
 
-        value = IasWd.set_bit(value, 4, mode, 0)
-        value = IasWd.set_bit(value, 5, mode, 1)
-        value = IasWd.set_bit(value, 6, mode, 2)
-        value = IasWd.set_bit(value, 7, mode, 3)
+        value = IasWdClusterHandler.set_bit(value, 4, mode, 0)
+        value = IasWdClusterHandler.set_bit(value, 5, mode, 1)
+        value = IasWdClusterHandler.set_bit(value, 6, mode, 2)
+        value = IasWdClusterHandler.set_bit(value, 7, mode, 3)
 
         await self.squawk(value)
 
@@ -304,15 +303,15 @@ class IasWd(ClusterHandler):
         and then turn OFF for 6/10ths of a second.
         """
         value = 0
-        value = IasWd.set_bit(value, 0, siren_level, 0)
-        value = IasWd.set_bit(value, 1, siren_level, 1)
+        value = IasWdClusterHandler.set_bit(value, 0, siren_level, 0)
+        value = IasWdClusterHandler.set_bit(value, 1, siren_level, 1)
 
-        value = IasWd.set_bit(value, 2, strobe, 0)
+        value = IasWdClusterHandler.set_bit(value, 2, strobe, 0)
 
-        value = IasWd.set_bit(value, 4, mode, 0)
-        value = IasWd.set_bit(value, 5, mode, 1)
-        value = IasWd.set_bit(value, 6, mode, 2)
-        value = IasWd.set_bit(value, 7, mode, 3)
+        value = IasWdClusterHandler.set_bit(value, 4, mode, 0)
+        value = IasWdClusterHandler.set_bit(value, 5, mode, 1)
+        value = IasWdClusterHandler.set_bit(value, 6, mode, 2)
+        value = IasWdClusterHandler.set_bit(value, 7, mode, 3)
 
         await self.start_warning(
             value, warning_duration, strobe_duty_cycle, strobe_intensity
