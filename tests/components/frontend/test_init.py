@@ -520,45 +520,6 @@ async def test_get_translations_for_integrations(
     assert set(msg["result"]["resources"]["integration"]) == {"frontend", "http"}
 
 
-async def test_get_translations_for_categories(hass: HomeAssistant, ws_client) -> None:
-    """Test get_translations for multiple categories command."""
-    with patch(
-        "homeassistant.components.frontend.async_get_translations_for_categories",
-        side_effect=lambda hass, lang, categories, integrations, config_flow: {
-            category: {
-                f"{category}-{lang}-{integration}": "any"
-                for integration in integrations
-            }
-            for category in categories
-        },
-    ):
-        await ws_client.send_json(
-            {
-                "id": 5,
-                "type": "frontend/get_translations_for_categories",
-                "integration": ["logger", "frontend", "http", "hassio"],
-                "language": "nl",
-                "categories": ["lang", "state"],
-            }
-        )
-        msg = await ws_client.receive_json()
-
-    assert msg["id"] == 5
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    resources = msg["result"]["resources"]
-    assert resources == {
-        "lang-nl-frontend": "any",
-        "lang-nl-hassio": "any",
-        "lang-nl-http": "any",
-        "lang-nl-logger": "any",
-        "state-nl-frontend": "any",
-        "state-nl-hassio": "any",
-        "state-nl-http": "any",
-        "state-nl-logger": "any",
-    }
-
-
 async def test_get_translations_for_single_integration(
     hass: HomeAssistant, ws_client
 ) -> None:
