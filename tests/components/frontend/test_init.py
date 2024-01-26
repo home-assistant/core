@@ -471,9 +471,9 @@ async def test_get_panels_non_admin(
 async def test_get_translations(hass: HomeAssistant, ws_client) -> None:
     """Test get_translations command."""
     with patch(
-        "homeassistant.components.frontend.async_get_translations",
-        side_effect=lambda hass, lang, category, integrations, config_flow: {
-            "lang": lang
+        "homeassistant.components.frontend.async_get_translations_for_categories",
+        side_effect=lambda hass, lang, categories, integrations, config_flow: {
+            category: {"lang": lang} for category in categories
         },
     ):
         await ws_client.send_json(
@@ -497,10 +497,10 @@ async def test_get_translations_for_integrations(
 ) -> None:
     """Test get_translations for integrations command."""
     with patch(
-        "homeassistant.components.frontend.async_get_translations",
-        side_effect=lambda hass, lang, category, integration, config_flow: {
-            "lang": lang,
-            "integration": integration,
+        "homeassistant.components.frontend.async_get_translations_for_categories",
+        side_effect=lambda hass, lang, categories, integration, config_flow: {
+            category: {"lang": lang, "integration": integration}
+            for category in categories
         },
     ):
         await ws_client.send_json(
@@ -525,10 +525,10 @@ async def test_get_translations_for_single_integration(
 ) -> None:
     """Test get_translations for integration command."""
     with patch(
-        "homeassistant.components.frontend.async_get_translations",
-        side_effect=lambda hass, lang, category, integrations, config_flow: {
-            "lang": lang,
-            "integration": integrations,
+        "homeassistant.components.frontend.async_get_translations_for_categories",
+        side_effect=lambda hass, lang, categories, integration, config_flow: {
+            category: {"lang": lang, "integration": integration}
+            for category in categories
         },
     ):
         await ws_client.send_json(

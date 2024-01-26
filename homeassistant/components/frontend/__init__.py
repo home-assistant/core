@@ -29,7 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.translation import async_get_translations_for_categories
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 
@@ -731,15 +731,16 @@ async def websocket_get_translations(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get translations command."""
-    resources = await async_get_translations(
+    category: str = msg["category"]
+    resources = await async_get_translations_for_categories(
         hass,
         msg["language"],
-        msg["category"],
+        {category},
         msg.get("integration"),
         msg.get("config_flow"),
     )
     connection.send_message(
-        websocket_api.result_message(msg["id"], {"resources": resources})
+        websocket_api.result_message(msg["id"], {"resources": resources[category]})
     )
 
 
