@@ -524,11 +524,10 @@ async def test_get_translations_for_categories(hass: HomeAssistant, ws_client) -
     """Test get_translations for multiple categories command."""
     with patch(
         "homeassistant.components.frontend.async_get_translations_for_categories",
-        side_effect=lambda hass, lang, categories, integration, config_flow: {
+        side_effect=lambda hass, lang, categories, integrations, config_flow: {
             category: {
-                "category": category,
-                "lang": lang,
-                "integration": integration,
+                f"{category}-{lang}-{integration}": "any"
+                for integration in integrations
             }
             for category in categories
         },
@@ -537,7 +536,7 @@ async def test_get_translations_for_categories(hass: HomeAssistant, ws_client) -
             {
                 "id": 5,
                 "type": "frontend/get_translations_for_categories",
-                "integration": ["frontend", "http"],
+                "integration": ["logger", "frontend", "http", "hassio"],
                 "language": "nl",
                 "categories": ["lang", "state"],
             }
@@ -548,13 +547,16 @@ async def test_get_translations_for_categories(hass: HomeAssistant, ws_client) -
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     resources = msg["result"]["resources"]
-    assert len(resources) == 2
-    assert "lang" in resources
-    assert resources["lang"]["category"] == "lang"
-    assert set(resources["lang"]["integration"]) == {"frontend", "http"}
-    assert "state" in resources
-    assert resources["state"]["category"] == "state"
-    assert set(resources["state"]["integration"]) == {"frontend", "http"}
+    assert resources == {
+        "lang-nl-frontend": "any",
+        "lang-nl-hassio": "any",
+        "lang-nl-http": "any",
+        "lang-nl-logger": "any",
+        "state-nl-frontend": "any",
+        "state-nl-hassio": "any",
+        "state-nl-http": "any",
+        "state-nl-logger": "any",
+    }
 
 
 async def test_get_translations_for_single_integration(
