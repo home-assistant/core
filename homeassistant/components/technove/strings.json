@@ -32,9 +32,6 @@
       "voltage_out": {
         "name": "Output voltage"
       },
-      "max_current": {
-        "name": "Max current"
-      },
       "max_station_current": {
         "name": "Max station current"
       },
