@@ -321,8 +321,7 @@ async def websocket_hass_agent_debug(
                 conversation_id=None,
                 device_id=msg.get("device_id"),
                 language=msg.get("language", hass.config.language),
-            ),
-            run_triggers=False,
+            )
         )
         for sentence in msg["sentences"]
     ]

@@ -93,8 +93,9 @@ class TriggerData:
 class SentenceTriggerResult:
     """Result when matching a sentence trigger in an automation."""
 
+    sentence: str
     sentence_template: str | None
-    response: str | None
+    matched_triggers: dict[int, RecognizeResult]
 
 
 def _get_language_variations(language: str) -> Iterable[str]:
@@ -185,10 +186,10 @@ class DefaultAgent(AbstractConversationAgent):
         )
 
     async def async_recognize(
-        self, user_input: ConversationInput, run_triggers: bool = True
+        self, user_input: ConversationInput
     ) -> RecognizeResult | SentenceTriggerResult | None:
         """Recognize intent from user input."""
-        if trigger_result := await self._match_triggers(user_input.text, run_triggers):
+        if trigger_result := await self._match_triggers(user_input.text):
             return trigger_result
 
         language = user_input.language or self.hass.config.language
@@ -227,10 +228,25 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Check if a trigger matched
         if isinstance(result, SentenceTriggerResult):
+            # Gather callback responses in parallel
+            trigger_responses = await asyncio.gather(
+                *(
+                    self._trigger_sentences[trigger_id].callback(
+                        result.sentence, trigger_result
+                    )
+                    for trigger_id, trigger_result in result.matched_triggers.items()
+                )
+            )
+
+            # Use last non-empty result as response
+            response_text: str | None = None
+            for trigger_response in trigger_responses:
+                response_text = response_text or trigger_response
+
             # Convert to conversation result
             response = intent.IntentResponse(language=language)
             response.response_type = intent.IntentResponseType.ACTION_DONE
-            response.async_set_speech(result.response or "")
+            response.async_set_speech(response_text or "")
 
             return ConversationResult(response=response)
 
@@ -838,9 +854,7 @@ class DefaultAgent(AbstractConversationAgent):
         # Force rebuild on next use
         self._trigger_intents = None
 
-    async def _match_triggers(
-        self, sentence: str, run_triggers: bool
-    ) -> SentenceTriggerResult | None:
+    async def _match_triggers(self, sentence: str) -> SentenceTriggerResult | None:
         """Try to match sentence against registered trigger sentences.
 
         Calls the registered callbacks if there's a match and returns a sentence
@@ -880,24 +894,7 @@ class DefaultAgent(AbstractConversationAgent):
             list(matched_triggers),
         )
 
-        if not run_triggers:
-            # Don't run triggers for debug page
-            return SentenceTriggerResult(matched_template, None)
-
-        # Gather callback responses in parallel
-        trigger_responses = await asyncio.gather(
-            *(
-                self._trigger_sentences[trigger_id].callback(sentence, result)
-                for trigger_id, result in matched_triggers.items()
-            )
-        )
-
-        # Use last non-empty result as response
-        response: str | None = None
-        for trigger_response in trigger_responses:
-            response = response or trigger_response
-
-        return SentenceTriggerResult(matched_template, response)
+        return SentenceTriggerResult(sentence, matched_template, matched_triggers)
 
 
 def _make_error_result(
