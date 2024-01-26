@@ -23,7 +23,6 @@ class FoscamEntity(CoordinatorEntity[FoscamCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="Foscam",
-            name=config_entry.title,
         )
         if dev_info := coordinator.data.get("dev_info"):
             self._attr_device_info["model"] = dev_info["productName"]
