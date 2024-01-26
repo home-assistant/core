@@ -1,0 +1,29 @@
+{
+  "jti": "60f14d59-bcc8-4039-bc38-25db3760d047",
+  "iss": "husqvarna",
+  "roles": [],
+  "groups": [
+    "amc",
+    "developer-portal",
+    "fd78b3a4-a7f9-4c76-bef9-aa5a50583382",
+    "gardena-myaccount",
+    "husqvarna-connect",
+    "husqvarna-mypages",
+    "smartgarden"
+  ],
+  "scopes": ["iam:read", "amc:api"],
+  "scope": "iam:read amc:api",
+  "client_id": "433e5fdf-5129-452c-xxxx-fadce3213042",
+  "customer_id": "4755997720458xxxx",
+  "user": {
+    "first_name": "John",
+    "last_name": "Doe",
+    "custom_attributes": {
+      "hc_country": "DE"
+    },
+    "customer_id": "4755997720458xxxx"
+  },
+  "iat": 1697666947,
+  "exp": 1697753347,
+  "sub": "5a93141e-55a7-479f-96e2-8a63188c054f"
+}
