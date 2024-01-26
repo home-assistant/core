@@ -390,6 +390,22 @@ class EntityPlatform:
             finally:
                 warn_task.cancel()
 
+    async def _async_get_translations(
+        self, language: str, category: str, integration: str
+    ) -> dict[str, Any]:
+        """Get entity translations."""
+        try:
+            return await translation.async_get_translations(
+                self.hass, language, category, {integration}
+            )
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            _LOGGER.debug(
+                "Could not load translations for %s",
+                integration,
+                exc_info=err,
+            )
+        return {}
+
     async def async_load_translations(self) -> None:
         """Load translations."""
         hass = self.hass
@@ -398,37 +414,21 @@ class EntityPlatform:
             if hass.config.language in languages.NATIVE_ENTITY_IDS
             else languages.DEFAULT_LANGUAGE
         )
-
-        async def get_translations(
-            language: str, category: str, integration: str
-        ) -> dict[str, Any]:
-            """Get entity translations."""
-            try:
-                return await translation.async_get_translations(
-                    hass, language, category, {integration}
-                )
-            except Exception as err:  # pylint: disable=broad-exception-caught
-                _LOGGER.debug(
-                    "Could not load translations for %s",
-                    integration,
-                    exc_info=err,
-                )
-            return {}
-
-        self.component_translations = await get_translations(
-            hass.config.language, "entity_component", self.domain
+        config_language = hass.config.language
+        self.component_translations = await self._async_get_translations(
+            config_language, "entity_component", self.domain
         )
-        self.platform_translations = await get_translations(
-            hass.config.language, "entity", self.platform_name
+        self.platform_translations = await self._async_get_translations(
+            config_language, "entity", self.platform_name
         )
-        if object_id_language == hass.config.language:
+        if object_id_language == config_language:
             self.object_id_component_translations = self.component_translations
             self.object_id_platform_translations = self.platform_translations
         else:
-            self.object_id_component_translations = await get_translations(
+            self.object_id_component_translations = await self._async_get_translations(
                 object_id_language, "entity_component", self.domain
             )
-            self.object_id_platform_translations = await get_translations(
+            self.object_id_platform_translations = await self._async_get_translations(
                 object_id_language, "entity", self.platform_name
             )
 
