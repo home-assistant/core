@@ -3,12 +3,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from wittiot import API
 from wittiot.errors import WittiotError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -20,7 +22,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-class WittiotDataUpdateCoordinator(DataUpdateCoordinator):
+class WittiotDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an object to hold WittIOT data."""
 
     config_entry: ConfigEntry
@@ -28,13 +30,13 @@ class WittiotDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        ip: str,
     ) -> None:
         """Initialize."""
-        self.ip = ip
-        self.api = API(ip, session=async_get_clientsession(hass))
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=10)
+        )
+        self.api = API(
+            self.config_entry.data[CONF_HOST], session=async_get_clientsession(hass)
         )
 
     async def _async_update_data(self) -> dict[str, str | float | int]:
