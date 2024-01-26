@@ -252,7 +252,7 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
     config = {
         SENSOR_DOMAIN: {
             "platform": GROUP_DOMAIN,
-            "name": "test_failure",
+            "name": "test_ignore_non_numeric",
             "type": "max",
             "ignore_non_numeric": True,
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
@@ -271,19 +271,23 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.test_failure")
+    state = hass.states.get("sensor.test_ignore_non_numeric")
     assert state.state == "17.0"
+    assert (
+        "Unable to use state. Only numerical states are supported, entity sensor.test_2 with value string excluded from calculation"
+        not in caplog.text
+    )
 
     # Check that the final sensor value with all numeric inputs
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.test_failure")
+    state = hass.states.get("sensor.test_ignore_non_numeric")
     assert state.state == "20.0"
 
 
-async def test_sensor_non_numeric(
+async def test_sensor_incorrect_state(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that non numeric values cause a group to be unknown."""
