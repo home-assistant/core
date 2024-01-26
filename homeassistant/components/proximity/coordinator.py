@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import logging
 
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -70,10 +71,11 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self, hass: HomeAssistant, friendly_name: str, config: ConfigType
     ) -> None:
         """Initialize the Proximity coordinator."""
-        self.ignored_zones: list[str] = config[CONF_IGNORED_ZONES]
+        self.ignored_zone_ids: list[str] = config[CONF_IGNORED_ZONES]
         self.tracked_entities: list[str] = config[CONF_TRACKED_ENTITIES]
         self.tolerance: int = config[CONF_TOLERANCE]
-        self.proximity_zone: str = config[CONF_ZONE]
+        self.proximity_zone_id: str = config[CONF_ZONE]
+        self.proximity_zone_name: str = self.proximity_zone_id.split(".")[-1]
         self.unit_of_measurement: str = config.get(
             CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
         )
@@ -116,7 +118,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         latitude: float | None,
         longitude: float | None,
     ) -> int | None:
-        if device.state.lower() == self.proximity_zone.lower():
+        if device.state.lower() == self.proximity_zone_name.lower():
             _LOGGER.debug(
                 "%s: %s in zone -> distance=0",
                 self.friendly_name,
@@ -152,7 +154,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         new_latitude: float | None,
         new_longitude: float | None,
     ) -> str | None:
-        if device.state.lower() == self.proximity_zone.lower():
+        if device.state.lower() == self.proximity_zone_name.lower():
             _LOGGER.debug(
                 "%s: %s in zone -> direction_of_travel=arrived",
                 self.friendly_name,
@@ -196,11 +198,11 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
     async def _async_update_data(self) -> ProximityData:
         """Calculate Proximity data."""
-        if (zone_state := self.hass.states.get(f"zone.{self.proximity_zone}")) is None:
+        if (zone_state := self.hass.states.get(self.proximity_zone_id)) is None:
             _LOGGER.debug(
                 "%s: zone %s does not exist -> reset",
                 self.friendly_name,
-                self.proximity_zone,
+                self.proximity_zone_id,
             )
             return DEFAULT_DATA
 
@@ -224,7 +226,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     ATTR_IN_IGNORED_ZONE: False,
                 }
             entities_data[entity_id][ATTR_IN_IGNORED_ZONE] = (
-                tracked_entity_state.state.lower() in self.ignored_zones
+                f"{ZONE_DOMAIN}.{tracked_entity_state.state.lower()}"
+                in self.ignored_zone_ids
             )
             entities_data[entity_id][ATTR_DIST_TO] = self._calc_distance_to_zone(
                 zone_state,
