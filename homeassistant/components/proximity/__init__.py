@@ -5,6 +5,8 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_NAME,
@@ -15,6 +17,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -80,6 +83,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {CONF_NAME: friendly_name, **proximity_config},
             config,
         )
+
+        # deprecate proximity entity - can be removed in 2024.8
+        used_in = automations_with_entity(hass, f"{DOMAIN}.{friendly_name}")
+        used_in += scripts_with_entity(hass, f"{DOMAIN}.{friendly_name}")
+        if used_in:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_proximity_entity_{friendly_name}",
+                breaks_in_ha_version="2024.8.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_proximity_entity",
+                translation_placeholders={
+                    "entity": f"{DOMAIN}.{friendly_name}",
+                    "used_in": "\n- ".join([f"`{x}`" for x in used_in]),
+                },
+            )
+
     return True
 
 

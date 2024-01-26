@@ -2,9 +2,13 @@
 
 import pytest
 
+from homeassistant.components import automation, script
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.proximity import DOMAIN
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
@@ -875,6 +879,71 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
     assert state.state == "1364567"
     state = hass.states.get(f"{entity_base_name}_direction_of_travel")
     assert state.state == "away_from"
+
+
+async def test_create_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create an issue for deprecated proximity entities used in automations and scripts."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": "proximity.home"},
+                "action": {
+                    "service": "automation.turn_on",
+                    "target": {"entity_id": "automation.test"},
+                },
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": "proximity.home",
+                            "state": "home",
+                        },
+                    ],
+                }
+            }
+        },
+    )
+    config = {
+        "proximity": {
+            "home": {
+                "ignored_zones": ["work"],
+                "devices": ["device_tracker.test1", "device_tracker.test2"],
+                "tolerance": "1",
+            },
+            "work": {"tolerance": "1", "zone": "work"},
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    automation_entities = automations_with_entity(hass, "proximity.home")
+    assert len(automation_entities) == 1
+    assert automation_entities[0] == "automation.test"
+
+    script_entites = scripts_with_entity(hass, "proximity.home")
+
+    assert len(script_entites) == 1
+    assert script_entites[0] == "script.test"
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_proximity_entity_home")
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_proximity_entity_work"
+    )
 
 
 def config_zones(hass):
