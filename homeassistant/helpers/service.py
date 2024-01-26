@@ -625,9 +625,11 @@ async def async_get_all_descriptions(
         loaded = dict(zip(domains_with_missing_services, contents))
 
     # Load translations for all service domains
-    translations = await translation.async_get_translations(
-        hass, "en", "services", services
-    )
+    translations = (
+        await translation.async_get_translations_for_categories(
+            hass, "en", {"services"}, services
+        )
+    )["services"]
 
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}

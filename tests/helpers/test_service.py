@@ -573,26 +573,29 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     logger = hass.components.logger
     logger_config = {logger.DOMAIN: {}}
 
-    async def async_get_translations(
+    async def async_get_translations_for_categories(
         hass: HomeAssistant,
         language: str,
-        category: str,
+        categories: Iterable[str],
         integrations: Iterable[str] | None = None,
         config_flow: bool | None = None,
     ) -> dict[str, Any]:
         """Return all backend translations."""
         translation_key_prefix = f"component.{logger.DOMAIN}.services.set_default_level"
         return {
-            f"{translation_key_prefix}.name": "Translated name",
-            f"{translation_key_prefix}.description": "Translated description",
-            f"{translation_key_prefix}.fields.level.name": "Field name",
-            f"{translation_key_prefix}.fields.level.description": "Field description",
-            f"{translation_key_prefix}.fields.level.example": "Field example",
+            category: {
+                f"{translation_key_prefix}.name": "Translated name",
+                f"{translation_key_prefix}.description": "Translated description",
+                f"{translation_key_prefix}.fields.level.name": "Field name",
+                f"{translation_key_prefix}.fields.level.description": "Field description",
+                f"{translation_key_prefix}.fields.level.example": "Field example",
+            }
+            for category in categories
         }
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.service.translation.async_get_translations_for_categories",
+        side_effect=async_get_translations_for_categories,
     ):
         await async_setup_component(hass, logger.DOMAIN, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
@@ -697,8 +700,8 @@ async def test_async_get_all_descriptions_failing_integration(
         "homeassistant.helpers.service.async_get_integrations",
         return_value={"logger": ImportError},
     ), patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
-        return_value={},
+        "homeassistant.helpers.service.translation.async_get_translations_for_categories",
+        return_value={"services": {}},
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
