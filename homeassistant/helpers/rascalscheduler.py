@@ -9,7 +9,6 @@ import logging
 import time
 from typing import Any, TypeVar
 
-import entity_registry as er
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -33,7 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util import slugify
 
-from . import config_validation as cv
+from . import config_validation as cv, entity_registry as er
 
 _KT = TypeVar("_KT")
 _VT = TypeVar("_VT")
