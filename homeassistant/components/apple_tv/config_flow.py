@@ -125,8 +125,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing config entry. If that's the case, the unique_id from that entry is
         re-used, otherwise the newly discovered identifier is used instead.
         """
-        if not self.atv:
-            return None
+        assert self.atv
         all_identifiers = set(self.atv.all_identifiers)
         if unique_id := self._entry_unique_id_from_identifers(all_identifiers):
             return unique_id
