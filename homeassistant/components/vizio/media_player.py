@@ -470,3 +470,11 @@ class VizioDevice(MediaPlayerEntity):
                 num = int(self._max_volume * (self._attr_volume_level - volume))
                 await self._device.vol_down(num=num, log_api_exception=False)
                 self._attr_volume_level = volume
+
+    async def async_media_play(self) -> None:
+        """Play whatever media is currently active."""
+        await self._device.play(log_api_exception=False)
+
+    async def async_media_pause(self) -> None:
+        """Pause whatever media is currently active."""
+        await self._device.pause(log_api_exception=False)
