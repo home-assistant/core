@@ -362,7 +362,7 @@ class ConfigEntry:
         if self._supports_options is None:
             handler = HANDLERS.get(self.domain)
             # work out if handler has support for options flow
-            self._supports_options = bool(
+            self._supports_options = (
                 handler is not None and handler.async_supports_options_flow(self)
             )
         return self._supports_options
