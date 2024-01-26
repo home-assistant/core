@@ -88,7 +88,7 @@ async def test_user_create_entry(
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ViCare"
+    assert result["title"] == VALID_CONFIG[CONF_USERNAME]
     assert result["data"] == snapshot
     mock_setup_entry.assert_called_once()
 
@@ -173,12 +173,14 @@ async def test_form_dhcp(
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ViCare"
+    assert result["title"] == VALID_CONFIG[CONF_USERNAME]
     assert result["data"] == snapshot
     mock_setup_entry.assert_called_once()
 
 
-async def test_dhcp_single_instance_allowed(hass: HomeAssistant) -> None:
+async def test_dhcp_multiple_instance_allowed(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, snapshot: SnapshotAssertion
+) -> None:
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -191,12 +193,28 @@ async def test_dhcp_single_instance_allowed(hass: HomeAssistant) -> None:
         context={"source": SOURCE_DHCP},
         data=DHCP_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+
+    # test success
+    with patch(
+        f"{MODULE}.config_flow.vicare_login",
+        return_value=None,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == VALID_CONFIG[CONF_USERNAME]
+    assert result["data"] == snapshot
+    mock_setup_entry.assert_called_once()
 
 
-async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
-    """Test that configuring more than one instance is rejected."""
+async def test_user_input_multiple_instance_allowed(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, snapshot: SnapshotAssertion
+) -> None:
+    """Test that configuring more than one instance is successful."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="ViCare",
@@ -207,5 +225,18 @@ async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    # test success
+    with patch(
+        f"{MODULE}.config_flow.vicare_login",
+        return_value=None,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == VALID_CONFIG[CONF_USERNAME]
+    assert result["data"] == snapshot
+    mock_setup_entry.assert_called_once()
