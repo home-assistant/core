@@ -287,7 +287,9 @@ async def test_webhook_update(
     assert state.state == STATE_UNLOCKED
 
     webhook_data = {"dummystate": 6}
-    mock_tedee.locks_dict[12345].state = TedeeLockState.LOCKED
+    mock_tedee.locks_dict[
+        12345
+    ].state = TedeeLockState.LOCKED  # is updated in the lib, so mock and assert in L296
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
     await client.post(urlparse(webhook_url).path, json=webhook_data)
