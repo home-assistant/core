@@ -508,7 +508,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         return referenced
 
-    @property
+    @cached_property
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         referenced = self.action_script.referenced_entities
