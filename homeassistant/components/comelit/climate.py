@@ -1,11 +1,12 @@
 """Support for climates."""
 from __future__ import annotations
 
+import asyncio
 from enum import StrEnum
 from typing import Any
 
 from aiocomelit import ComelitSerialBridgeObject
-from aiocomelit.const import CLIMATE
+from aiocomelit.const import CLIMATE, SLEEP_BETWEEN_CALLS
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -36,19 +37,16 @@ class ClimaAction(StrEnum):
 
 API_STATUS: dict[str, dict[str, Any]] = {
     "O": {
-        "preset": None,
         "action": "off",
         "hvac_mode": HVACMode.OFF,
         "hvac_action": HVACAction.OFF,
     },
     "L": {
-        "preset": "ESTATE",
         "action": "lower",
         "hvac_mode": HVACMode.COOL,
         "hvac_action": HVACAction.COOLING,
     },
     "U": {
-        "preset": "INVERNO",
         "action": "upper",
         "hvac_mode": HVACMode.HEAT,
         "hvac_action": HVACAction.HEATING,
@@ -87,12 +85,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
     _attr_max_temp = 30
     _attr_min_temp = 5
-    _attr_preset_modes = [
-        api["preset"] for api in API_STATUS.values() if api["preset"] is not None
-    ]
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
-    )
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
@@ -122,8 +115,8 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         return self.coordinator.data[CLIMATE][self._device.index].val[0]
 
     @property
-    def _api_preset(self) -> str:
-        """Return device preset."""
+    def _api_mode(self) -> str:
+        """Return device mode."""
         # Values from API: "O", "L", "U"
         return self._clima[2]
 
@@ -151,38 +144,32 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     def hvac_mode(self) -> HVACMode | None:
         """HVAC current mode."""
 
-        if self._api_preset == OFF:
+        if self._api_mode == OFF:
             return HVACMode.OFF
 
         if self._api_automatic:
             return HVACMode.AUTO
 
-        if self._api_preset in API_STATUS:
-            return API_STATUS[self._api_preset]["hvac_mode"]
+        if self._api_mode in API_STATUS:
+            return API_STATUS[self._api_mode]["hvac_mode"]
 
-        _LOGGER.warning("Unknown preset '%s' in hvac_mode", self._api_preset)
+        _LOGGER.warning("Unknown API mode '%s' in hvac_mode", self._api_mode)
         return None
 
     @property
     def hvac_action(self) -> HVACAction | None:
         """HVAC current action."""
 
+        if self._api_mode == OFF:
+            return HVACAction.OFF
+
         if not self._api_active:
             return HVACAction.IDLE
 
-        if self._api_preset in API_STATUS:
-            return API_STATUS[self._api_preset]["hvac_action"]
+        if self._api_mode in API_STATUS:
+            return API_STATUS[self._api_mode]["hvac_action"]
 
-        _LOGGER.warning("Unknown preset '%s' in hvac_action", self._api_preset)
-        return None
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return preset mode."""
-
-        if self._api_preset in API_STATUS:
-            return API_STATUS[self._api_preset]["preset"]
-
+        _LOGGER.warning("Unknown API mode '%s' in hvac_action", self._api_mode)
         return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -193,6 +180,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         await self.coordinator.api.set_clima_status(
             self._device.index, ClimaAction.MANUAL
         )
+        await asyncio.sleep(SLEEP_BETWEEN_CALLS)
         await self.coordinator.api.set_clima_status(
             self._device.index, ClimaAction.SET, target_temp
         )
@@ -204,18 +192,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
             await self.coordinator.api.set_clima_status(
                 self._device.index, ClimaAction.ON
             )
-
+        await asyncio.sleep(SLEEP_BETWEEN_CALLS)
         await self.coordinator.api.set_clima_status(
             self._device.index, MODE_TO_ACTION[hvac_mode]
         )
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new target preset mode."""
-        for mode in API_STATUS.values():
-            if mode["preset"] == preset_mode:
-                await self.coordinator.api.set_clima_status(
-                    self._device.index,
-                    mode["action"],
-                    self.target_temperature,
-                )
-                break
