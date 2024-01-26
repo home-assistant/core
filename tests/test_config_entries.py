@@ -734,6 +734,7 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "_integration_for_domain",
         "_tries",
         "_setup_again_job",
+        "_supports_options",
     }
 
     entry = MockConfigEntry(entry_id="mock-entry")
