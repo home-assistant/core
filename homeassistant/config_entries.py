@@ -359,13 +359,10 @@ class ConfigEntry:
     @property
     def supports_options(self) -> bool:
         """Return if entry supports config options."""
-        if self._supports_options is None:
-            handler = HANDLERS.get(self.domain)
+        if self._supports_options is None and (handler := HANDLERS.get(self.domain)):
             # work out if handler has support for options flow
-            self._supports_options = (
-                handler is not None and handler.async_supports_options_flow(self)
-            )
-        return self._supports_options
+            self._supports_options = handler.async_supports_options_flow(self)
+        return self._supports_options or False
 
     async def async_setup(
         self,
