@@ -265,6 +265,9 @@ aiohttp-fast-url-dispatcher==0.3.0
 # homeassistant.components.http
 aiohttp-zlib-ng==0.3.1
 
+# homeassistant.components.microbees
+aiohttp==3.9.1
+
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0
@@ -1283,7 +1286,7 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.microbees
-microBeesPy==0.1.7
+microBeesPy==0.1.9
 
 # homeassistant.components.mill
 mill-local==0.3.0

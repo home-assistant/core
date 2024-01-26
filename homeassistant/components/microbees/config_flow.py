@@ -1,95 +1,87 @@
 """Config flow for microBees integration."""
+from collections.abc import Mapping
 import logging
 from typing import Any
 
-from microbees.microbees import MicroBeesConnector
-from microBeesPy.exceptions import MicroBeesWrongCredentialsException
-from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
-
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_EMAIL,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-)
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_flow as cv,
+    config_entry_oauth2_flow,
+)
 
-from .const import DOMAIN
+from .api import get_api_scopes
+from .const import DOMAIN, VERSION
+from .microbees import MicroBeesConnector
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_CLIENT_ID): str,
-        vol.Required(CONF_CLIENT_SECRET): str,
-    }
-)
 
-
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a config flow for microBees."""
 
-    VERSION = 1
+    CONFIG_SCHEMA = cv.config_entry_only_config_schema
+    DOMAIN = DOMAIN
+    VERSION = VERSION
 
-    async def validate_input_sync(self, hass, data):
-        """Validate the user input allows us to connect."""
-        try:
-            hass.data[DOMAIN] = {}
-            hass.data[DOMAIN]["connector"] = MicroBeesConnector(
-                data[CONF_CLIENT_ID], data[CONF_CLIENT_SECRET]
-            )
-            token = await hass.data[DOMAIN]["connector"].login(
-                data[CONF_EMAIL], data[CONF_PASSWORD]
-            )
-            hass.data[DOMAIN][CONF_TOKEN] = token
-        except (ConnectTimeout, HTTPError):
-            raise CannotConnect
-        except MicroBeesWrongCredentialsException:
-            raise InvalidAuth
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
-        return {"title": data[CONF_EMAIL], "access_token": token}
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url."""
+        scopes = get_api_scopes(self.flow_impl.domain)
+        return {"scope": " ".join(scopes)}
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the initial step."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            try:
-                info = await self.validate_input_sync(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            else:
-                return self.async_create_entry(
-                    title=info["title"],
-                    data=user_input,
-                    options={CONF_TOKEN: info["access_token"]},
-                )
+    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
+        """Create an oauth config entry or update existing entry for reauth."""
+        existing_entry = await self.async_set_unique_id(DOMAIN)
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
 
-        return self.async_show_form(
-            description_placeholders={
-                CONF_EMAIL: "Email",
-                CONF_PASSWORD: "Password",
-                "client_id": "Client Id",
-                "client_secret": "Client Secret",
-            },
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors,
+        microBees = MicroBeesConnector(
+            session=aiohttp_client.async_get_clientsession(self.hass),
+            token=data["token"]["access_token"],
         )
 
+        current_user = await microBees.getMyProfile()
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+        data["id"] = current_user.id
 
+        name = current_user.firstName + " " + current_user.lastName
+        data["name"] = name
 
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+        await self.async_set_unique_id(current_user.id)
+
+        return self.async_create_entry(title=name, data=data)
+
+    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+        """Handle a flow start."""
+        await self.async_set_unique_id(DOMAIN)
+
+        if (
+            self.source != config_entries.SOURCE_REAUTH
+            and self._async_current_entries()
+        ):
+            return self.async_abort(reason="single_instance_allowed")
+
+        return await super().async_step_user(user_input)
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema={}, errors={}
+            )
+        return await self.async_step_user()
