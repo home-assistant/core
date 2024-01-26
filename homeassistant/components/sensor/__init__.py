@@ -390,6 +390,14 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if suggested_unit_of_measurement is None:
             return UNDEFINED
 
+        # Make sure we can convert the units
+        if (
+            (unit_converter := UNIT_CONVERTERS.get(self.device_class)) is None
+            or self.unit_of_measurement not in unit_converter.VALID_UNITS
+            or suggested_unit_of_measurement not in unit_converter.VALID_UNITS
+        ):
+            return UNDEFINED
+
         return suggested_unit_of_measurement
 
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
