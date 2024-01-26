@@ -7,7 +7,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -110,6 +110,12 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_automation
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -334,7 +340,7 @@ class BaseAutomationEntity(ToggleEntity, ABC):
             return {CONF_ID: self.unique_id}
         return None
 
-    @property
+    @cached_property
     @abstractmethod
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
@@ -344,12 +350,12 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
 
-    @property
+    @cached_property
     @abstractmethod
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
 
-    @property
+    @cached_property
     @abstractmethod
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
@@ -389,7 +395,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         """Return the name of the entity."""
         return self._name
 
-    @property
+    @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return set()
@@ -399,12 +405,12 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         """Return referenced blueprint or None."""
         return None
 
-    @property
+    @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         return set()
 
-    @property
+    @cached_property
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return set()
@@ -446,8 +452,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self.action_script.change_listener = self.async_write_ha_state
         self._initial_state = initial_state
         self._is_enabled = False
-        self._referenced_entities: set[str] | None = None
-        self._referenced_devices: set[str] | None = None
         self._logger = LOGGER
         self._variables = variables
         self._trigger_variables = trigger_variables
@@ -478,7 +482,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
 
-    @property
+    @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return self.action_script.referenced_areas
@@ -490,12 +494,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             return None
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
-    @property
+    @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
-        if self._referenced_devices is not None:
-            return self._referenced_devices
-
         referenced = self.action_script.referenced_devices
 
         if self._cond_func is not None:
@@ -505,15 +506,11 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         for conf in self._trigger_config:
             referenced |= set(_trigger_extract_devices(conf))
 
-        self._referenced_devices = referenced
         return referenced
 
     @property
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
-        if self._referenced_entities is not None:
-            return self._referenced_entities
-
         referenced = self.action_script.referenced_entities
 
         if self._cond_func is not None:
@@ -524,7 +521,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             for entity_id in _trigger_extract_entities(conf):
                 referenced.add(entity_id)
 
-        self._referenced_entities = referenced
         return referenced
 
     async def async_added_to_hass(self) -> None:
