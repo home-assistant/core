@@ -54,6 +54,7 @@ if TYPE_CHECKING:
     from .components.zeroconf import ZeroconfServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
 
+
 _LOGGER = logging.getLogger(__name__)
 
 SOURCE_BLUETOOTH = "bluetooth"
@@ -238,6 +239,7 @@ class ConfigEntry:
         "_integration_for_domain",
         "_tries",
         "_setup_again_job",
+        "_supports_options",
     )
 
     def __init__(
@@ -318,6 +320,9 @@ class ConfigEntry:
         # Supports remove device
         self.supports_remove_device: bool | None = None
 
+        # Supports options
+        self._supports_options: bool | None = None
+
         # Listeners to call on update
         self.update_listeners: list[UpdateListenerType] = []
 
@@ -350,6 +355,17 @@ class ConfigEntry:
             f"<ConfigEntry entry_id={self.entry_id} version={self.version} domain={self.domain} "
             f"title={self.title} state={self.state} unique_id={self.unique_id}>"
         )
+
+    @property
+    def supports_options(self) -> bool:
+        """Return if entry supports config options."""
+        if self._supports_options is None:
+            handler = HANDLERS.get(self.domain)
+            # work out if handler has support for options flow
+            self._supports_options = bool(
+                handler is not None and handler.async_supports_options_flow(self)
+            )
+        return self._supports_options
 
     async def async_setup(
         self,
