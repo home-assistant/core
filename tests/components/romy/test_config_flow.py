@@ -39,7 +39,7 @@ INPUT_CONFIG_HOST = {
 }
 
 
-async def test_show_user_form1(hass: HomeAssistant) -> None:
+async def test_show_user_form_robot_is_offline_and_locked(hass: HomeAssistant) -> None:
     """Test that the user set up form with config."""
 
     # Robot not reachable
@@ -82,7 +82,7 @@ async def test_show_user_form1(hass: HomeAssistant) -> None:
         assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_show_user_form2(hass: HomeAssistant) -> None:
+async def test_show_user_form_robot_unlock_with_password(hass: HomeAssistant) -> None:
     """Test that the user set up form with config."""
 
     with patch(
@@ -131,7 +131,7 @@ async def test_show_user_form2(hass: HomeAssistant) -> None:
         assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_show_user_form3(hass: HomeAssistant) -> None:
+async def test_show_user_form_robot_reachable_again(hass: HomeAssistant) -> None:
     """Test that the user set up form with config."""
 
     # Robot not reachable
