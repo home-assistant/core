@@ -18,7 +18,7 @@ async def test_buttons(
 
     entry = await setup_platform(hass, [Platform.BUTTON])
 
-    assert_entities(hass, entry, entity_registry, snapshot)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
     for entity_id, func in [
         ("button.test_wake", "wake"),

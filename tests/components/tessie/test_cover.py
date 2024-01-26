@@ -34,7 +34,7 @@ async def test_covers(
 
     entry = await setup_platform(hass, [Platform.COVER])
 
-    assert_entities(hass, entry, entity_registry, snapshot)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
     for entity_id, openfunc, closefunc in [
         ("cover.test_vent_windows", "vent_windows", "close_windows"),

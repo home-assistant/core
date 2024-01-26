@@ -31,7 +31,7 @@ async def test_climate(
 
     entry = await setup_platform(hass, [Platform.CLIMATE])
 
-    assert_entities(hass, entry, entity_registry, snapshot)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
     entity_id = "climate.test_climate"
 

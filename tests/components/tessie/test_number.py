@@ -19,7 +19,7 @@ async def test_numbers(
 
     entry = await setup_platform(hass, [Platform.NUMBER])
 
-    assert_entities(hass, entry, entity_registry, snapshot)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
     # Test number set value functions
     entity_id = "number.test_charge_current"

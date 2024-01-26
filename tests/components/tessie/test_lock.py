@@ -25,7 +25,7 @@ async def test_locks(
 
     entry = await setup_platform(hass, [Platform.LOCK])
 
-    assert_entities(hass, entry, entity_registry, snapshot)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
     entity_id = "lock.test_lock"
 

@@ -16,4 +16,4 @@ async def test_device_tracker(
 
     entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
 
-    assert_entities(hass, entry, entity_registry, snapshot)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)

@@ -24,7 +24,7 @@ async def test_select(
 
     entry = await setup_platform(hass, [Platform.SELECT])
 
-    assert_entities(hass, entry, entity_registry, snapshot)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
     entity_id = "select.test_seat_heater_left"
 
