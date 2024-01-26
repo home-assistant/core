@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN
 from .coordinator import SwitchgridCoordinator
 
 _LOGGER = logging.getLogger(__name__)
