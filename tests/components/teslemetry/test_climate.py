@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import assert_entities, setup_platform
+from . import assert_entities, setup_platform
 
 from tests.common import async_fire_time_changed
 
