@@ -32,7 +32,7 @@
           'none',
           'sleep',
         ]),
-        'supported_features': <ClimateEntityFeature: 57>,
+        'supported_features': <ClimateEntityFeature: 441>,
         'swing_mode': 'off',
         'swing_modes': list([
           'off',
@@ -110,7 +110,7 @@
       'original_name': None,
       'platform': 'gree',
       'previous_unique_id': None,
-      'supported_features': <ClimateEntityFeature: 57>,
+      'supported_features': <ClimateEntityFeature: 441>,
       'translation_key': None,
       'unique_id': 'aabbcc112233',
       'unit_of_measurement': None,
