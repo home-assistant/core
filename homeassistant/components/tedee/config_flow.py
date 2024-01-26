@@ -62,9 +62,9 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
                 await self.async_set_unique_id(local_bridge.serial)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=NAME, data={
-                    **user_input,
-                    CONF_WEBHOOK_ID: webhook_generate_id(),
+                return self.async_create_entry(
+                    title=NAME,
+                    data={**user_input, CONF_WEBHOOK_ID: webhook_generate_id()},
                 )
 
         return self.async_show_form(
