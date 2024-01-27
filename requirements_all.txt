@@ -2844,7 +2844,7 @@ wiffi==1.1.2
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wittiot
-wittiot==1.0.6
+wittiot==1.0.7
 
 # homeassistant.components.wled
 wled==0.17.0

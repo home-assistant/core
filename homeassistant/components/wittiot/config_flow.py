@@ -26,7 +26,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the local step."""
         errors = {}
-        data_schema = vol.Schema({vol.Required(CONF_HOST): str})
 
         if user_input is not None:
             api = API(
@@ -41,7 +40,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("New data received: %s", devices)
 
             if not devices:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "no_devices"
 
             if not errors:
                 unique_id = devices["dev_name"]
@@ -52,6 +51,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
