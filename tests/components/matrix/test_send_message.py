@@ -92,7 +92,6 @@ async def test_send_message(
     assert len(matrix_events) == 0
     await matrix_bot._login()
 
-    print(test_params)
     await hass.services.async_call(
         MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, test_params["data"], blocking=True
     )
