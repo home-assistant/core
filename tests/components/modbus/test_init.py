@@ -83,7 +83,6 @@ from homeassistant.components.modbus.validators import (
     duplicate_fan_mode_validator,
     duplicate_modbus_validator,
     nan_validator,
-    number_validator,
     register_int_list_validator,
     struct_validator,
 )
@@ -155,28 +154,6 @@ async def test_register_int_list_validator() -> None:
 
     with pytest.raises(vol.Invalid):
         register_int_list_validator(["aq"])
-
-
-async def test_number_validator() -> None:
-    """Test number validator."""
-
-    for value, value_type in (
-        (15, int),
-        (15.1, float),
-        ("15", int),
-        ("15.1", float),
-        (-15, int),
-        (-15.1, float),
-        ("-15", int),
-        ("-15.1", float),
-    ):
-        assert isinstance(number_validator(value), value_type)
-
-    try:
-        number_validator("x15.1")
-    except vol.Invalid:
-        return
-    pytest.fail("Number_validator not throwing exception")
 
 
 async def test_nan_validator() -> None:
