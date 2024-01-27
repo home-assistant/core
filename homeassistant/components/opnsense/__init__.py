@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_URL): cv.url,
                 vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_API_SECRET): cv.string,
-                vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
+                vol.Optional(CONF_VERIFY_SSL, default="False"): cv.string,
                 vol.Optional(CONF_TRACKER_INTERFACE, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -45,7 +45,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     url = conf[CONF_URL]
     api_key = conf[CONF_API_KEY]
     api_secret = conf[CONF_API_SECRET]
-    verify_ssl = conf[CONF_VERIFY_SSL]
+    if conf[CONF_VERIFY_SSL].lower() == "true":
+        verify_ssl = True
+    elif conf[CONF_VERIFY_SSL].lower() == "false":
+        verify_ssl = False
+    else:
+        verify_ssl = conf[CONF_VERIFY_SSL]
     tracker_interfaces = conf[CONF_TRACKER_INTERFACE]
 
     interfaces_client = diagnostics.InterfaceClient(
