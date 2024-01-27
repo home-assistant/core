@@ -11,21 +11,24 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
-from .common import setup_platform
+from .common import assert_entities, setup_platform
 
 
-async def test_locks(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
+async def test_locks(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that the lock entity is correct."""
 
-    assert len(hass.states.async_all("lock")) == 0
+    entry = await setup_platform(hass, [Platform.LOCK])
 
-    await setup_platform(hass)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
-    assert hass.states.async_all("lock") == snapshot
+    entity_id = "lock.test_lock"
 
     # Test lock set value functions
     entity_id = "lock.test_lock"

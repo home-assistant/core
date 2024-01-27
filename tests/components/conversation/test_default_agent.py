@@ -577,3 +577,24 @@ async def test_empty_aliases(
         names = slot_lists["name"]
         assert len(names.values) == 1
         assert names.values[0].value_out == "kitchen light"
+
+
+async def test_all_domains_loaded(
+    hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
+) -> None:
+    """Test that sentences for all domains are always loaded."""
+
+    # light domain is not loaded
+    assert "light" not in hass.config.components
+
+    result = await conversation.async_converse(
+        hass, "set brightness of test light to 100%", None, Context(), None
+    )
+
+    # Invalid target vs. no intent recognized
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "No device or entity named test light"
+    )

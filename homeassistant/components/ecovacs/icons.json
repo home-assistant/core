@@ -1,0 +1,58 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "mop_attached": {
+        "default": "mdi:water-off",
+        "state": {
+          "on": "mdi:water"
+        }
+      }
+    },
+    "sensor": {
+      "error": {
+        "default": "mdi:alert-circle"
+      },
+      "lifespan_brush": {
+        "default": "mdi:broom"
+      },
+      "lifespan_filter": {
+        "default": "mdi:air-filter"
+      },
+      "lifespan_side_brush": {
+        "default": "mdi:broom"
+      },
+      "network_ip": {
+        "default": "mdi:ip-network-outline"
+      },
+      "network_rssi": {
+        "default": "mdi:signal-variant"
+      },
+      "network_ssid": {
+        "default": "mdi:wifi"
+      },
+      "stats_area": {
+        "default": "mdi:floor-plan"
+      },
+      "stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "total_stats_area": {
+        "default": "mdi:floor-plan"
+      },
+      "total_stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "total_stats_cleanings": {
+        "default": "mdi:counter"
+      }
+    },
+    "select": {
+      "water_amount": {
+        "default": "mdi:water"
+      },
+      "work_mode": {
+        "default": "mdi:cog"
+      }
+    }
+  }
+}
