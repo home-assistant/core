@@ -430,4 +430,8 @@ class XiaomiVibrationAQ1ClusterHandler(MultistateInputClusterHandler):
 class SonoffPresenceSenorClusterHandler(ClusterHandler):
     """SonoffPresenceSensor cluster handler."""
 
-    ZCL_INIT_ATTRS = {"last_illumination_state": True}
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
+        """Initialize SonoffPresenceSensor cluster handler."""
+        super().__init__(cluster, endpoint)
+        if self.cluster.endpoint.model == "SNZB-06P":
+            self.ZCL_INIT_ATTRS = {"last_illumination_state": True}
