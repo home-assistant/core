@@ -579,7 +579,7 @@ async def test_ws_delete_all_refresh_tokens_error(
     ),
     [
         ({}, 0, 0),
-        ({"token_type": TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN}, 2, 0),
+        ({"token_type": TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN}, 3, 0),
         ({"token_type": TOKEN_TYPE_NORMAL}, 0, 1),
     ],
 )

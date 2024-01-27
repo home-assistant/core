@@ -615,6 +615,9 @@ async def websocket_delete_all_refresh_tokens(
     """Handle delete all refresh tokens request."""
     current_refresh_token: RefreshToken
     remove_failed = False
+    token_type = msg.get("token_type")
+    limit_token_types = token_type is not None
+
     for token in list(connection.user.refresh_tokens.values()):
         if token.id == connection.refresh_token_id:
             # Skip the current refresh token as it has revoke_callback,
@@ -622,7 +625,7 @@ async def websocket_delete_all_refresh_tokens(
             # It will be removed after sending the result.
             current_refresh_token = token
             continue
-        if "token_type" in msg and msg["token_type"] != token.token_type:
+        if limit_token_types and token_type != token.token_type:
             continue
         try:
             hass.auth.async_remove_refresh_token(token)
@@ -640,8 +643,9 @@ async def websocket_delete_all_refresh_tokens(
     else:
         connection.send_result(msg["id"], {})
 
-    # This will close the connection so we need to send the result first.
-    hass.loop.call_soon(hass.auth.async_remove_refresh_token, current_refresh_token)
+    if not limit_token_types or current_refresh_token.token_type == token_type:
+        # This will close the connection so we need to send the result first.
+        hass.loop.call_soon(hass.auth.async_remove_refresh_token, current_refresh_token)
 
 
 @websocket_api.websocket_command(
