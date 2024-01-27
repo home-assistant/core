@@ -57,6 +57,7 @@ BINARY_SENSORS = [
         key="is_static_ip",
         translation_key="is_static_ip",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda station: station.info.is_static_ip,
     ),
     TechnoVEBinarySensorDescription(
