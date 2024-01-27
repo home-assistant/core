@@ -138,9 +138,9 @@ iso4217!=1.10.20220401
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
 
-# pyOpenSSL 23.1.0 or later required to avoid import errors when
-# cryptography 40.0.1 is installed with botocore
-pyOpenSSL>=23.1.0
+# pyOpenSSL 24.0.0 or later required to avoid import errors when
+# cryptography 42.0.0 is installed with botocore
+pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
