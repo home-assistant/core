@@ -485,15 +485,10 @@ class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
         """Initialize Envoy entity."""
         super().__init__(coordinator, description)
         self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
-        model: str = (
-            "Envoy"
-            if not hasattr(coordinator.envoy, "envoy_model")
-            else coordinator.envoy.envoy_model
-        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.envoy_serial_num)},
             manufacturer="Enphase",
-            model=model,
+            model=coordinator.envoy.envoy_model,
             name=coordinator.name,
             sw_version=str(coordinator.envoy.firmware),
             hw_version=coordinator.envoy.part_number,
