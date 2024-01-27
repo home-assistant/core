@@ -18,6 +18,7 @@ from zwave_js_server.const.command_class.thermostat import (
 )
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
+from homeassistant.components.binary_sensor.device_trigger import TURNED_ON
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -200,6 +201,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if HVACMode.HEAT_COOL in self.hvac_modes:
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
+        if self._current_mode is None:
+            self._attr_supported_features |= ClimateEntityFeature.TURN_ON
+        else:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
         if self._fan_mode:
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
