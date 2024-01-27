@@ -209,6 +209,11 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                     if mode in OPMODES_PRESET:
                         self._attr_preset_modes.append(OPMODES_PRESET[mode])
 
+        if HVACMode.OFF in self._attr_hvac_modes:
+            self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
+        if any(_mode for _mode in self._attr_hvac_modes if _mode != HVACMode.OFF):
+            self._attr_supported_features |= ClimateEntityFeature.TURN_ON
+
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         _LOGGER.debug(
