@@ -77,7 +77,7 @@ class JvcSensor(JvcProjectorEntity, SensorEntity):
         self.entity_description = description
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
-        self._attr_unique_id = f"{coordinator.device.mac}_{entity_type}"
+        self._attr_unique_id = f"{coordinator.device.mac}_{description.key}"
 
         self._attributes: dict[str, str] = {}
 
