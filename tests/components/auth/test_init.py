@@ -574,13 +574,15 @@ async def test_ws_delete_all_refresh_tokens_error(
 @pytest.mark.parametrize(
     (
         "delete_token_type",
+        "delete_current_token",
         "expected_remaining_normal_tokens",
         "expected_remaining_long_lived_tokens",
     ),
     [
-        ({}, 0, 0),
-        ({"token_type": TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN}, 3, 0),
-        ({"token_type": TOKEN_TYPE_NORMAL}, 0, 1),
+        ({}, {}, 0, 0),
+        ({"token_type": TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN}, {}, 3, 0),
+        ({"token_type": TOKEN_TYPE_NORMAL}, {}, 0, 1),
+        ({"token_type": TOKEN_TYPE_NORMAL}, {"delete_current_token": False}, 1, 1),
     ],
 )
 async def test_ws_delete_all_refresh_tokens(
@@ -590,6 +592,7 @@ async def test_ws_delete_all_refresh_tokens(
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
     delete_token_type: dict[str:str],
+    delete_current_token: dict[str:bool],
     expected_remaining_normal_tokens: int,
     expected_remaining_long_lived_tokens: int,
 ) -> None:
@@ -622,7 +625,12 @@ async def test_ws_delete_all_refresh_tokens(
     assert result["success"], result
 
     await ws_client.send_json(
-        {"id": 6, "type": "auth/delete_all_refresh_tokens", **delete_token_type}
+        {
+            "id": 6,
+            "type": "auth/delete_all_refresh_tokens",
+            **delete_token_type,
+            **delete_current_token,
+        }
     )
 
     result = await ws_client.receive_json()
