@@ -236,7 +236,7 @@ async def test_google_entity_registry_sync(
         assert len(mock_sync.mock_calls) == 3
 
         # When hass is not started yet we wait till started
-        hass.state = CoreState.starting
+        hass.set_state(CoreState.starting)
         hass.bus.async_fire(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "create", "entity_id": entry.entity_id},
@@ -338,7 +338,7 @@ async def test_sync_google_on_home_assistant_start(
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
     )
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     with patch.object(config, "async_sync_entities_all") as mock_sync:
         await config.async_initialize()
         await config.async_connect_agent_user("mock-user-id")
@@ -498,7 +498,7 @@ async def test_google_config_migrate_expose_entity_prefs(
     google_settings_version: int,
 ) -> None:
     """Test migrating Google entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -611,7 +611,7 @@ async def test_google_config_migrate_expose_entity_prefs_v2_no_exposed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config from v2 to v3 when no entity is exposed."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -658,7 +658,7 @@ async def test_google_config_migrate_expose_entity_prefs_v2_exposed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config from v2 to v3 when an entity is exposed."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -705,7 +705,7 @@ async def test_google_config_migrate_expose_entity_prefs_default_none(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     entity_default = entity_registry.async_get_or_create(
@@ -742,7 +742,7 @@ async def test_google_config_migrate_expose_entity_prefs_default(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
 

@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aiohttp import ServerDisconnectedError
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import EventName, ExecutionState, Protocol
 from pyoverkiz.exceptions import (
@@ -79,7 +79,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             raise UpdateFailed("Server is down for maintenance.") from exception
         except InvalidEventListenerIdException as exception:
             raise UpdateFailed(exception) from exception
-        except TimeoutError as exception:
+        except (TimeoutError, ClientConnectorError) as exception:
             raise UpdateFailed("Failed to connect.") from exception
         except (ServerDisconnectedError, NotAuthenticatedException):
             self.executions = {}

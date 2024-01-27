@@ -186,6 +186,8 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = water_heater.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED
+    _attr_target_temperature_low: float | None = None
+    _attr_target_temperature_high: float | None = None
 
     @staticmethod
     def config_schema() -> vol.Schema:

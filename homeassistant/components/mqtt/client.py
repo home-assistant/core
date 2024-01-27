@@ -35,11 +35,9 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 from .const import (
@@ -94,10 +92,6 @@ SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 
-MQTT_ENTRIES_NAMING_BLOG_URL = (
-    "https://developers.home-assistant.io/blog/2023-057-21-change-naming-mqtt-entities/"
-)
-
 SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
@@ -124,7 +118,10 @@ async def async_publish(
     """Publish message to a MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
-            f"Cannot publish to topic '{topic}', MQTT is not enabled"
+            f"Cannot publish to topic '{topic}', MQTT is not enabled",
+            translation_key="mqtt_not_setup_cannot_publish",
+            translation_domain=DOMAIN,
+            translation_placeholders={"topic": topic},
         )
     mqtt_data = get_mqtt_data(hass)
     outgoing_payload = payload
@@ -174,15 +171,21 @@ async def async_subscribe(
     """
     if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
+            f"Cannot subscribe to topic '{topic}', MQTT is not enabled",
+            translation_key="mqtt_not_setup_cannot_subscribe",
+            translation_domain=DOMAIN,
+            translation_placeholders={"topic": topic},
         )
     try:
         mqtt_data = get_mqtt_data(hass)
-    except KeyError as ex:
+    except KeyError as exc:
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', "
-            "make sure MQTT is set up correctly"
-        ) from ex
+            "make sure MQTT is set up correctly",
+            translation_key="mqtt_not_setup_cannot_subscribe",
+            translation_domain=DOMAIN,
+            translation_placeholders={"topic": topic},
+        ) from exc
     async_remove = await mqtt_data.client.async_subscribe(
         topic,
         catch_log_exception(
@@ -213,7 +216,11 @@ def subscribe(
 
     def remove() -> None:
         """Remove listener convert."""
-        run_callback_threadsafe(hass.loop, async_remove).result()
+        # MQTT messages tend to be high volume,
+        # and since they come in via a thread and need to be processed in the event loop,
+        # we want to avoid hass.add_job since most of the time is spent calling
+        # inspect to figure out how to run the callback.
+        hass.loop.call_soon_threadsafe(async_remove)
 
     return remove
 
@@ -410,13 +417,12 @@ class MQTT:
         )
         self._pending_unsubscribes: set[str] = set()  # topic
 
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             self._ha_started.set()
         else:
 
             @callback
             def ha_started(_: Event) -> None:
-                self.register_naming_issues()
                 self._ha_started.set()
 
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
@@ -428,25 +434,6 @@ class MQTT:
         self._cleanup_on_unload.append(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
         )
-
-    def register_naming_issues(self) -> None:
-        """Register issues with MQTT entity naming."""
-        mqtt_data = get_mqtt_data(self.hass)
-        for issue_key, items in mqtt_data.issues.items():
-            config_list = "\n".join([f"- {item}" for item in items])
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                issue_key,
-                breaks_in_ha_version="2024.2.0",
-                is_fixable=False,
-                translation_key=issue_key,
-                translation_placeholders={
-                    "config": config_list,
-                },
-                learn_more_url=MQTT_ENTRIES_NAMING_BLOG_URL,
-                severity=IssueSeverity.WARNING,
-            )
 
     def start(
         self,
@@ -606,8 +593,8 @@ class MQTT:
                     del simple_subscriptions[topic]
             else:
                 self._wildcard_subscriptions.remove(subscription)
-        except (KeyError, ValueError) as ex:
-            raise HomeAssistantError("Can't remove subscription twice") from ex
+        except (KeyError, ValueError) as exc:
+            raise HomeAssistantError("Can't remove subscription twice") from exc
 
     @callback
     def _async_queue_subscriptions(
@@ -813,6 +800,10 @@ class MQTT:
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         """Message received callback."""
+        # MQTT messages tend to be high volume,
+        # and since they come in via a thread and need to be processed in the event loop,
+        # we want to avoid hass.add_job since most of the time is spent calling
+        # inspect to figure out how to run the callback.
         self.loop.call_soon_threadsafe(self._mqtt_handle_message, msg)
 
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none

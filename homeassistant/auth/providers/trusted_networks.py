@@ -22,6 +22,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.network import is_cloud_connection
 
 from .. import InvalidAuthError
 from ..models import Credentials, RefreshToken, UserMeta
@@ -192,11 +193,8 @@ class TrustedNetworksAuthProvider(AuthProvider):
         if any(ip_addr in trusted_proxy for trusted_proxy in self.trusted_proxies):
             raise InvalidAuthError("Can't allow access from a proxy server")
 
-        if "cloud" in self.hass.config.components:
-            from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
-
-            if remote.is_cloud_request.get():
-                raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
+        if is_cloud_connection(self.hass):
+            raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
 
     @callback
     def async_validate_refresh_token(

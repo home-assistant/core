@@ -227,7 +227,12 @@ async def test_platform_not_found(hass: HomeAssistant) -> None:
         assert res["light"] == []
 
         warning = CheckConfigError(
-            "Platform error light.beer - Integration 'beer' not found.", None, None
+            (
+                "Platform error 'light' from integration 'beer' - "
+                "Integration 'beer' not found."
+            ),
+            None,
+            None,
         )
         _assert_warnings_errors(res, [warning], [])
 
@@ -361,7 +366,7 @@ async def test_platform_import_error(hass: HomeAssistant) -> None:
 
         assert res.keys() == {"homeassistant", "light"}
         warning = CheckConfigError(
-            "Platform error light.demo - blablabla",
+            "Platform error 'light' from integration 'demo' - blablabla",
             None,
             None,
         )
@@ -416,9 +421,7 @@ automation:
       service_to_call: test.automation
 input_datetime:
 """,
-        hass.config.path(
-            "blueprints/automation/test_event_service.yaml"
-        ): """
+        hass.config.path("blueprints/automation/test_event_service.yaml"): """
 blueprint:
   name: "Call service based on event"
   domain: automation

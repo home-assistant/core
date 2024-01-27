@@ -222,10 +222,11 @@ async def test_fan(
 
     # set invalid preset_mode from HA
     cluster.write_attributes.reset_mock()
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(NotValidPresetModeError) as exc:
         await async_set_preset_mode(
             hass, entity_id, preset_mode="invalid does not exist"
         )
+    assert exc.value.translation_key == "not_valid_preset_mode"
     assert len(cluster.write_attributes.mock_calls) == 0
 
     # test adding new fan to the network and HA
@@ -624,10 +625,11 @@ async def test_fan_ikea(
 
     # set invalid preset_mode from HA
     cluster.write_attributes.reset_mock()
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(NotValidPresetModeError) as exc:
         await async_set_preset_mode(
             hass, entity_id, preset_mode="invalid does not exist"
         )
+    assert exc.value.translation_key == "not_valid_preset_mode"
     assert len(cluster.write_attributes.mock_calls) == 0
 
     # test adding new fan to the network and HA
@@ -813,8 +815,9 @@ async def test_fan_kof(
 
     # set invalid preset_mode from HA
     cluster.write_attributes.reset_mock()
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(NotValidPresetModeError) as exc:
         await async_set_preset_mode(hass, entity_id, preset_mode=PRESET_MODE_AUTO)
+    assert exc.value.translation_key == "not_valid_preset_mode"
     assert len(cluster.write_attributes.mock_calls) == 0
 
     # test adding new fan to the network and HA

@@ -141,7 +141,7 @@
     },
     "rename_node": {
       "name": "Rename Node on ISY",
-      "description": "Renames a node or group (scene) on the ISY. Note: this will not automatically change the Home Assistant Entity Name or Entity ID to match. The entity name and ID will only be updated after calling `isy994.reload` or restarting Home Assistant, and ONLY IF you have not already customized the name within Home Assistant.",
+      "description": "Renames a node or group (scene) on the ISY. Note: this will not automatically change the Home Assistant Entity Name or Entity ID to match. The entity name and ID will only be updated after reloading the integration or restarting Home Assistant, and ONLY IF you have not already customized the name within Home Assistant.",
       "fields": {
         "name": {
           "name": "New Name",

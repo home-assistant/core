@@ -6,12 +6,11 @@ from miio import AirQualityMonitor, AirQualityMonitorCGDN1, DeviceException
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     MODEL_AIRQUALITYMONITOR_B1,
     MODEL_AIRQUALITYMONITOR_CGDN1,

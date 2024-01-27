@@ -21,7 +21,7 @@ from .coordinator import EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyRelayRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -31,14 +31,14 @@ class EnvoyRelayRequiredKeysMixin:
     ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyRelaySelectEntityDescription(
     SelectEntityDescription, EnvoyRelayRequiredKeysMixin
 ):
     """Describes an Envoy Dry Contact Relay select entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyStorageSettingsRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -46,7 +46,7 @@ class EnvoyStorageSettingsRequiredKeysMixin:
     update_fn: Callable[[Envoy, str], Awaitable[dict[str, Any]]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyStorageSettingsSelectEntityDescription(
     SelectEntityDescription, EnvoyStorageSettingsRequiredKeysMixin
 ):

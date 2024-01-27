@@ -87,6 +87,7 @@ async def test_lock_popp_electric_strike_lock_control(
         hass.states.get("binary_sensor.node_62_the_current_status_of_the_door")
         is not None
     )
+    assert hass.states.get("select.node_62_current_lock_mode") is not None
 
 
 async def test_fortrez_ssa3_siren(

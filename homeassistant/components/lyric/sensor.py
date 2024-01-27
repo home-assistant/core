@@ -42,7 +42,7 @@ LYRIC_SETPOINT_STATUS_NAMES = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class LyricSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -50,7 +50,7 @@ class LyricSensorEntityDescriptionMixin:
     suitable_fn: Callable[[LyricDevice], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class LyricSensorEntityDescription(
     SensorEntityDescription, LyricSensorEntityDescriptionMixin
 ):

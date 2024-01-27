@@ -5,7 +5,6 @@ from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openweathermap.const import (
-    CONF_LANGUAGE,
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
     DOMAIN,
@@ -13,6 +12,7 @@ from homeassistant.components.openweathermap.const import (
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,

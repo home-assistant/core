@@ -14,7 +14,13 @@ from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.exceptions import ReolinkWebhookException
 from homeassistant.components.reolink.host import DEFAULT_TIMEOUT
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.dt import utcnow
@@ -68,7 +74,7 @@ async def test_config_flow_manual_success(
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
     assert result["options"] == {
-        const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
 
 
@@ -195,7 +201,7 @@ async def test_config_flow_errors(
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
     assert result["options"] == {
-        const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
 
 
@@ -212,7 +218,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) ->
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: "rtsp",
+            CONF_PROTOCOL: "rtsp",
         },
         title=TEST_NVR_NAME,
     )
@@ -228,12 +234,12 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) ->
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={const.CONF_PROTOCOL: "rtmp"},
+        user_input={CONF_PROTOCOL: "rtmp"},
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        const.CONF_PROTOCOL: "rtmp",
+        CONF_PROTOCOL: "rtmp",
     }
 
 
@@ -252,7 +258,7 @@ async def test_change_connection_settings(
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )
@@ -295,7 +301,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )
@@ -376,7 +382,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
     assert result["options"] == {
-        const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
 
 
@@ -435,7 +441,7 @@ async def test_dhcp_ip_update(
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )

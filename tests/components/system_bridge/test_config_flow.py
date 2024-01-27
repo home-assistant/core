@@ -152,7 +152,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         "systembridgeconnector.websocket_client.WebSocketClient.get_data",
         return_value=FIXTURE_DATA_RESPONSE,
     ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen"
+        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ), patch(
         "homeassistant.components.system_bridge.async_setup_entry",
         return_value=True,
@@ -450,7 +450,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         "systembridgeconnector.websocket_client.WebSocketClient.get_data",
         return_value=FIXTURE_DATA_RESPONSE,
     ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen"
+        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ), patch(
         "homeassistant.components.system_bridge.async_setup_entry",
         return_value=True,
@@ -484,7 +484,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
         "systembridgeconnector.websocket_client.WebSocketClient.get_data",
         return_value=FIXTURE_DATA_RESPONSE,
     ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen"
+        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ), patch(
         "homeassistant.components.system_bridge.async_setup_entry",
         return_value=True,

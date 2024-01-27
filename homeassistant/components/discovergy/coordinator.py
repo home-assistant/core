@@ -12,16 +12,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 
 class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
     """The Discovergy update coordinator."""
-
-    discovergy_client: Discovergy
-    meter: Meter
 
     def __init__(
         self,
@@ -36,7 +31,7 @@ class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"Discovergy meter {meter.meter_id}",
             update_interval=timedelta(seconds=30),
         )
 

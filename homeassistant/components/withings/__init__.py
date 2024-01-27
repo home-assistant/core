@@ -192,52 +192,67 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = withings_data
 
+    register_lock = asyncio.Lock()
+    webhooks_registered = False
+
     async def unregister_webhook(
         _: Any,
     ) -> None:
-        LOGGER.debug("Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID])
-        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await async_unsubscribe_webhooks(client)
-        for coordinator in withings_data.coordinators:
-            coordinator.webhook_subscription_listener(False)
+        nonlocal webhooks_registered
+        async with register_lock:
+            LOGGER.debug(
+                "Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID]
+            )
+            webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+            await async_unsubscribe_webhooks(client)
+            for coordinator in withings_data.coordinators:
+                coordinator.webhook_subscription_listener(False)
+            webhooks_registered = False
 
     async def register_webhook(
         _: Any,
     ) -> None:
-        if cloud.async_active_subscription(hass):
-            webhook_url = await _async_cloudhook_generate_url(hass, entry)
-        else:
-            webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
-        url = URL(webhook_url)
-        if url.scheme != "https" or url.port != 443:
-            LOGGER.warning(
-                "Webhook not registered - "
-                "https and port 443 is required to register the webhook"
+        nonlocal webhooks_registered
+        async with register_lock:
+            if webhooks_registered:
+                return
+            if cloud.async_active_subscription(hass):
+                webhook_url = await _async_cloudhook_generate_url(hass, entry)
+            else:
+                webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
+            url = URL(webhook_url)
+            if url.scheme != "https" or url.port != 443:
+                LOGGER.warning(
+                    "Webhook not registered - "
+                    "https and port 443 is required to register the webhook"
+                )
+                return
+
+            webhook_name = "Withings"
+            if entry.title != DEFAULT_TITLE:
+                webhook_name = f"{DEFAULT_TITLE} {entry.title}"
+
+            webhook_register(
+                hass,
+                DOMAIN,
+                webhook_name,
+                entry.data[CONF_WEBHOOK_ID],
+                get_webhook_handler(withings_data),
+                allowed_methods=[METH_POST],
             )
-            return
+            LOGGER.debug("Registered Withings webhook at hass: %s", webhook_url)
 
-        webhook_name = "Withings"
-        if entry.title != DEFAULT_TITLE:
-            webhook_name = f"{DEFAULT_TITLE} {entry.title}"
-
-        webhook_register(
-            hass,
-            DOMAIN,
-            webhook_name,
-            entry.data[CONF_WEBHOOK_ID],
-            get_webhook_handler(withings_data),
-            allowed_methods=[METH_POST],
-        )
-
-        await async_subscribe_webhooks(client, webhook_url)
-        for coordinator in withings_data.coordinators:
-            coordinator.webhook_subscription_listener(True)
-        LOGGER.debug("Register Withings webhook: %s", webhook_url)
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
-        )
+            await async_subscribe_webhooks(client, webhook_url)
+            for coordinator in withings_data.coordinators:
+                coordinator.webhook_subscription_listener(True)
+            LOGGER.debug("Registered Withings webhook at Withings: %s", webhook_url)
+            entry.async_on_unload(
+                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+            )
+            webhooks_registered = True
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
+        LOGGER.debug("Cloudconnection state changed to %s", state)
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
             await register_webhook(None)
 
