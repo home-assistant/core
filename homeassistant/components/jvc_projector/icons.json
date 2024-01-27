@@ -20,7 +20,6 @@
         }
       },
       "jvc_input": {
-        "name": "Input",
         "default": "mdi:video-input-hdmi",
         "state": {
           "hdmi1": "mdi:numeric-1-box-multiple",
