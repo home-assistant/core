@@ -14,16 +14,12 @@ from deebot_client.mqtt_client import MqttClient, MqttConfiguration
 from deebot_client.util import md5
 from sucks import EcoVacsAPI, VacBot
 
-from homeassistant.const import (
-    CONF_COUNTRY,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_COUNTRY, CONF_MODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
+from .const import InstanceMode
 from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +33,7 @@ class EcovacsController:
         self._hass = hass
         self.devices: list[Device] = []
         self.legacy_devices: list[VacBot] = []
-        verify_ssl = config.get(CONF_VERIFY_SSL, True)
+        verify_ssl = config[CONF_MODE] == InstanceMode.CLOUD
         device_id = get_client_device_id()
 
         self._config = Configuration(

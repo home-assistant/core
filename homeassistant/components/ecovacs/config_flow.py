@@ -13,14 +13,14 @@ from deebot_client.util.continents import COUNTRIES_TO_CONTINENTS, get_continent
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_COUNTRY, CONF_MODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import aiohttp_client, selector
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.loader import async_get_issue_tracker
 
-from .const import CONF_CONTINENT, DOMAIN
+from .const import CONF_CONTINENT, DOMAIN, InstanceMode
 from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ async def _validate_input(
         aiohttp_client.async_get_clientsession(hass),
         device_id=get_client_device_id(),
         country=user_input[CONF_COUNTRY],
-        continent=user_input.get(CONF_CONTINENT),
+        verify_ssl=user_input[CONF_MODE] == InstanceMode.CLOUD,
     )
 
     authenticator = Authenticator(
@@ -72,6 +72,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+            user_input.setdefault(CONF_MODE, InstanceMode.CLOUD)
 
             errors = await _validate_input(self.hass, user_input)
 
@@ -80,28 +81,34 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_USERNAME], data=user_input
                 )
 
+        schema = {
+            vol.Required(CONF_USERNAME): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
+            ),
+            vol.Required(CONF_PASSWORD): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+            ),
+            vol.Required(CONF_COUNTRY): selector.CountrySelector(),
+        }
+        if self.show_advanced_options:
+            schema[vol.Optional(CONF_MODE)] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(InstanceMode),
+                    translation_key="installation_mode",
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            )
+
+        if not user_input:
+            user_input = {
+                CONF_COUNTRY: self.hass.config.country,
+                CONF_MODE: InstanceMode.CLOUD,
+            }
+
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_USERNAME): selector.TextSelector(
-                            selector.TextSelectorConfig(
-                                type=selector.TextSelectorType.TEXT
-                            )
-                        ),
-                        vol.Required(CONF_PASSWORD): selector.TextSelector(
-                            selector.TextSelectorConfig(
-                                type=selector.TextSelectorType.PASSWORD
-                            )
-                        ),
-                        vol.Required(CONF_COUNTRY): selector.CountrySelector(),
-                    }
-                ),
-                suggested_values=user_input
-                or {
-                    CONF_COUNTRY: self.hass.config.country,
-                },
+                data_schema=vol.Schema(schema), suggested_values=user_input
             ),
             errors=errors,
         )

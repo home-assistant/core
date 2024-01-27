@@ -4,6 +4,7 @@
     'config': dict({
       'data': dict({
         'country': 'IT',
+        'mode': 'cloud',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
       }),
