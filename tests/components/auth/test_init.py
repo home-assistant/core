@@ -616,7 +616,7 @@ async def test_ws_delete_all_refresh_tokens(
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 
-    # get tokens
+    # get all tokens
     await ws_client.send_json({"id": 5, "type": "auth/refresh_tokens"})
     result = await ws_client.receive_json()
     assert result["success"], result
