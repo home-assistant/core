@@ -8,10 +8,11 @@ from typing import Any, cast
 from aioambient import OpenAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import API_LAST_DATA, CONF_MAC_ADDRESS, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import API_LAST_DATA, DOMAIN, LOGGER, SCAN_INTERVAL
 
 
 class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -28,9 +29,7 @@ class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the latest data from the Ambient Network."""
 
-        response = await self.api.get_device_details(
-            self.config_entry.data[CONF_MAC_ADDRESS]
-        )
+        response = await self.api.get_device_details(self.config_entry.data[CONF_MAC])
 
         if (last_data := response.get(API_LAST_DATA)) is None:
             # Use previous data

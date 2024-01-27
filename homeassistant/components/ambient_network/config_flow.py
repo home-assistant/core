@@ -7,7 +7,14 @@ from aioambient import OpenAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import UnitOfLength
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_MAC,
+    CONF_RADIUS,
+    UnitOfLength,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     LocationSelector,
@@ -27,23 +34,14 @@ from .const import (
     API_STATION_MAC_ADDRESS,
     API_STATION_NAME,
     API_STATION_TYPE,
-    CONF_MAC_ADDRESS,
     DOMAIN,
 )
 
-CONFIG_USER = "user"
+CONF_USER = "user"
+CONF_STATION = "station"
 
-CONFIG_LOCATION = "location"
-CONFIG_LOCATION_LATITUDE = "latitude"
-CONFIG_LOCATION_LONGITUDE = "longitude"
-CONFIG_LOCATION_RADIUS = "radius"
-CONFIG_LOCATION_RADIUS_DEFAULT = DistanceConverter.convert(
-    0.5,
-    UnitOfLength.MILES,
-    UnitOfLength.METERS,
-)
-
-CONFIG_STATION = "station"
+# Roughly half a mile
+CONF_RADIUS_DEFAULT = 800
 
 
 def get_station_name(station: dict[str, Any]) -> str:
@@ -81,10 +79,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step to select the location."""
 
         if user_input:
-            self._latitude = user_input[CONFIG_LOCATION][CONFIG_LOCATION_LATITUDE]
-            self._longitude = user_input[CONFIG_LOCATION][CONFIG_LOCATION_LONGITUDE]
+            self._latitude = user_input[CONF_LOCATION][CONF_LATITUDE]
+            self._longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]
             self._radius = DistanceConverter.convert(
-                user_input[CONFIG_LOCATION][CONFIG_LOCATION_RADIUS],
+                user_input[CONF_LOCATION][CONF_RADIUS],
                 UnitOfLength.METERS,
                 UnitOfLength.MILES,
             )
@@ -94,21 +92,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Schema(
                 {
                     vol.Required(
-                        CONFIG_LOCATION,
+                        CONF_LOCATION,
                     ): LocationSelector(LocationSelectorConfig(radius=True)),
                 }
             ),
             {
-                CONFIG_LOCATION: {
-                    CONFIG_LOCATION_LATITUDE: self.hass.config.latitude,
-                    CONFIG_LOCATION_LONGITUDE: self.hass.config.longitude,
-                    CONFIG_LOCATION_RADIUS: CONFIG_LOCATION_RADIUS_DEFAULT,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                    CONF_RADIUS: CONF_RADIUS_DEFAULT,
                 }
             },
         )
 
         return self.async_show_form(
-            step_id=CONFIG_USER,
+            step_id=CONF_USER,
             data_schema=schema,
         )
 
@@ -118,13 +116,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the second step to select the station."""
 
         if user_input:
-            mac_address, station_name = user_input[CONFIG_STATION].split(",")
+            mac_address, station_name = user_input[CONF_STATION].split(",")
             await self.async_set_unique_id(mac_address)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=station_name,
                 data={
-                    CONF_MAC_ADDRESS: mac_address,
+                    CONF_MAC: mac_address,
                 },
             )
 
@@ -148,7 +146,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         options: list[SelectOptionDict] = [
             SelectOptionDict(
-                label=f"{get_station_name(station)}",
+                label=get_station_name(station),
                 value=f"{station[API_STATION_MAC_ADDRESS]},{get_station_name(station)}",
             )
             for station in sorted(stations, key=get_station_name)
@@ -156,7 +154,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema: vol.Schema = vol.Schema(
             {
-                vol.Required(CONFIG_STATION): SelectSelector(
+                vol.Required(CONF_STATION): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         multiple=False,
@@ -166,6 +164,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id=CONFIG_STATION,
+            step_id=CONF_STATION,
             data_schema=schema,
         )

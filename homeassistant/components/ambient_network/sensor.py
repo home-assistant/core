@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_MAC,
     DEGREE,
     PERCENTAGE,
     UnitOfIrradiance,
@@ -27,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MAC_ADDRESS, DOMAIN
+from .const import DOMAIN
 from .coordinator import AmbientNetworkDataUpdateCoordinator
 from .entity import AmbientNetworkEntity
 
@@ -103,7 +104,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="daily_rain",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -237,7 +238,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPEEDMPH,
-        translation_key="wind_speed",
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
@@ -267,7 +267,7 @@ async def async_setup_entry(
             AmbientNetworkSensor(
                 coordinator,
                 description,
-                coordinator.config_entry.data[CONF_MAC_ADDRESS],
+                coordinator.config_entry.data[CONF_MAC],
             )
             for description in SENSOR_DESCRIPTIONS
             if coordinator.data.get(description.key) is not None
