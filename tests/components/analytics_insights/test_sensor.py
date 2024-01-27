@@ -60,7 +60,7 @@ async def test_connection_error(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("sensor.homeassistant_analytics_spotify").state
+        hass.states.get("sensor.homeassistant_analytics_core_integration_spotify").state
         == STATE_UNAVAILABLE
     )
 
@@ -74,7 +74,10 @@ async def test_data_not_modified(
     """Test not updating data if its not modified."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.homeassistant_analytics_spotify").state == "24388"
+    assert (
+        hass.states.get("sensor.homeassistant_analytics_core_integration_spotify").state
+        == "24388"
+    )
     mock_analytics_client.get_current_analytics.side_effect = (
         HomeassistantAnalyticsNotModifiedError
     )
@@ -83,4 +86,7 @@ async def test_data_not_modified(
     await hass.async_block_till_done()
 
     mock_analytics_client.get_current_analytics.assert_called()
-    assert hass.states.get("sensor.homeassistant_analytics_spotify").state == "24388"
+    assert (
+        hass.states.get("sensor.homeassistant_analytics_core_integration_spotify").state
+        == "24388"
+    )

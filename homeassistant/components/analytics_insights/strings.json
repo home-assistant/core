@@ -14,5 +14,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "core_integrations": {
+        "name": "Core integration {integration_name}"
+      }
+    }
   }
 }

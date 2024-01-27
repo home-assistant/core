@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.homeassistant_analytics_myq-entry]
+# name: test_all_entities[sensor.homeassistant_analytics_core_integration_myq-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.homeassistant_analytics_myq',
+    'entity_id': 'sensor.homeassistant_analytics_core_integration_myq',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,30 +23,30 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'myq',
+    'original_name': 'Core integration myq',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'core_integrations',
     'unique_id': 'core_myq_active_installations',
     'unit_of_measurement': 'active installations',
   })
 # ---
-# name: test_all_entities[sensor.homeassistant_analytics_myq-state]
+# name: test_all_entities[sensor.homeassistant_analytics_core_integration_myq-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics myq',
+      'friendly_name': 'Homeassistant Analytics Core integration myq',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'active installations',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.homeassistant_analytics_myq',
+    'entity_id': 'sensor.homeassistant_analytics_core_integration_myq',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[sensor.homeassistant_analytics_spotify-entry]
+# name: test_all_entities[sensor.homeassistant_analytics_core_integration_spotify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.homeassistant_analytics_spotify',
+    'entity_id': 'sensor.homeassistant_analytics_core_integration_spotify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -70,30 +70,30 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'spotify',
+    'original_name': 'Core integration spotify',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'core_integrations',
     'unique_id': 'core_spotify_active_installations',
     'unit_of_measurement': 'active installations',
   })
 # ---
-# name: test_all_entities[sensor.homeassistant_analytics_spotify-state]
+# name: test_all_entities[sensor.homeassistant_analytics_core_integration_spotify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics spotify',
+      'friendly_name': 'Homeassistant Analytics Core integration spotify',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'active installations',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.homeassistant_analytics_spotify',
+    'entity_id': 'sensor.homeassistant_analytics_core_integration_spotify',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '24388',
   })
 # ---
-# name: test_all_entities[sensor.homeassistant_analytics_youtube-entry]
+# name: test_all_entities[sensor.homeassistant_analytics_core_integration_youtube-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -107,7 +107,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.homeassistant_analytics_youtube',
+    'entity_id': 'sensor.homeassistant_analytics_core_integration_youtube',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -117,24 +117,24 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'YouTube',
+    'original_name': 'Core integration YouTube',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'core_integrations',
     'unique_id': 'core_youtube_active_installations',
     'unit_of_measurement': 'active installations',
   })
 # ---
-# name: test_all_entities[sensor.homeassistant_analytics_youtube-state]
+# name: test_all_entities[sensor.homeassistant_analytics_core_integration_youtube-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics YouTube',
+      'friendly_name': 'Homeassistant Analytics Core integration YouTube',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'active installations',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.homeassistant_analytics_youtube',
+    'entity_id': 'sensor.homeassistant_analytics_core_integration_youtube',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '339',
