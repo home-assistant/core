@@ -28,8 +28,6 @@ async def test_locks(
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
-    entity_id = "lock.test_lock"
-
     # Test lock set value functions
     entity_id = "lock.test_lock"
     with patch("homeassistant.components.tessie.lock.lock") as mock_run:
