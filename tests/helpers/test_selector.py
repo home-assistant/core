@@ -878,7 +878,14 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
 def test_location_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test location selector."""
 
-    _test_selector("location", schema, valid_selections, invalid_selections)
+    def location_converter(x):
+        for key in x:
+            x[key] = float(x[key])
+        return x
+
+    _test_selector(
+        "location", schema, valid_selections, invalid_selections, location_converter
+    )
 
 
 @pytest.mark.parametrize(
