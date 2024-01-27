@@ -21,7 +21,7 @@ import homeassistant.util.dt as dt_util
 
 from . import websocket_api
 from .const import DOMAIN
-from .helpers import entities_may_have_state_changes_after
+from .helpers import entities_may_have_state_changes_after, has_recorder_run_after
 
 CONF_ORDER = "use_include_order"
 
@@ -106,7 +106,8 @@ class HistoryPeriodView(HomeAssistantView):
         no_attributes = "no_attributes" in request.query
 
         if (
-            not include_start_time_state
+            (end_time and not has_recorder_run_after(hass, end_time))
+            or not include_start_time_state
             and entity_ids
             and not entities_may_have_state_changes_after(
                 hass, entity_ids, start_time, no_attributes

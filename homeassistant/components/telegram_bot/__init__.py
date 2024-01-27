@@ -55,6 +55,7 @@ ATTR_CALLBACK_QUERY_ID = "callback_query_id"
 ATTR_CAPTION = "caption"
 ATTR_CHAT_ID = "chat_id"
 ATTR_CHAT_INSTANCE = "chat_instance"
+ATTR_DATE = "date"
 ATTR_DISABLE_NOTIF = "disable_notification"
 ATTR_DISABLE_WEB_PREV = "disable_web_page_preview"
 ATTR_EDITED_MSG = "edited_message"
@@ -786,6 +787,7 @@ class TelegramNotificationService:
                         photo=file_content,
                         caption=kwargs.get(ATTR_CAPTION),
                         disable_notification=params[ATTR_DISABLE_NOTIF],
+                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
@@ -799,6 +801,7 @@ class TelegramNotificationService:
                         chat_id=chat_id,
                         sticker=file_content,
                         disable_notification=params[ATTR_DISABLE_NOTIF],
+                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                     )
@@ -812,6 +815,7 @@ class TelegramNotificationService:
                         video=file_content,
                         caption=kwargs.get(ATTR_CAPTION),
                         disable_notification=params[ATTR_DISABLE_NOTIF],
+                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
@@ -825,6 +829,7 @@ class TelegramNotificationService:
                         document=file_content,
                         caption=kwargs.get(ATTR_CAPTION),
                         disable_notification=params[ATTR_DISABLE_NOTIF],
+                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
@@ -838,6 +843,7 @@ class TelegramNotificationService:
                         voice=file_content,
                         caption=kwargs.get(ATTR_CAPTION),
                         disable_notification=params[ATTR_DISABLE_NOTIF],
+                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                     )
@@ -850,6 +856,7 @@ class TelegramNotificationService:
                         animation=file_content,
                         caption=kwargs.get(ATTR_CAPTION),
                         disable_notification=params[ATTR_DISABLE_NOTIF],
+                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
@@ -872,6 +879,7 @@ class TelegramNotificationService:
                     chat_id=chat_id,
                     sticker=stickerid,
                     disable_notification=params[ATTR_DISABLE_NOTIF],
+                    reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                     reply_markup=params[ATTR_REPLYMARKUP],
                     timeout=params[ATTR_TIMEOUT],
                 )
@@ -895,6 +903,7 @@ class TelegramNotificationService:
                 latitude=latitude,
                 longitude=longitude,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
+                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 timeout=params[ATTR_TIMEOUT],
             )
 
@@ -923,6 +932,7 @@ class TelegramNotificationService:
                 allows_multiple_answers=allows_multiple_answers,
                 open_period=openperiod,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
+                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 timeout=params[ATTR_TIMEOUT],
             )
 
@@ -982,6 +992,7 @@ class BaseTelegramBotEntity:
         event_data: dict[str, Any] = {
             ATTR_MSGID: message.message_id,
             ATTR_CHAT_ID: message.chat.id,
+            ATTR_DATE: message.date,
         }
         if Filters.command.filter(message):
             # This is a command message - set event type to command and split data into command and args

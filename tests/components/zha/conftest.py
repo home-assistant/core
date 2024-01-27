@@ -26,7 +26,9 @@ import zigpy.zdo.types as zdo_t
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.components.zha.core.helpers import get_zha_gateway
+from homeassistant.helpers import restore_state
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 from .common import patch_cluster as common_patch_cluster
 
@@ -81,8 +83,8 @@ class _FakeApp(ControllerApplication):
     async def permit_ncp(self, time_s: int = 60):
         pass
 
-    async def permit_with_key(
-        self, node: zigpy.types.EUI64, code: bytes, time_s: int = 60
+    async def permit_with_link_key(
+        self, node: zigpy.types.EUI64, link_key: zigpy.types.KeyData, time_s: int = 60
     ):
         pass
 
@@ -133,7 +135,7 @@ def _wrap_mock_instance(obj: Any) -> MagicMock:
         real_attr = getattr(obj, attr_name)
         mock_attr = getattr(mock, attr_name)
 
-        if callable(real_attr):
+        if callable(real_attr) and not hasattr(real_attr, "__aenter__"):
             mock_attr.side_effect = real_attr
         else:
             setattr(mock, attr_name, real_attr)
@@ -498,3 +500,35 @@ def network_backup() -> zigpy.backups.NetworkBackup:
             },
         }
     )
+
+
+@pytest.fixture
+def core_rs(hass_storage):
+    """Core.restore_state fixture."""
+
+    def _storage(entity_id, state, attributes={}):
+        now = dt_util.utcnow().isoformat()
+
+        hass_storage[restore_state.STORAGE_KEY] = {
+            "version": restore_state.STORAGE_VERSION,
+            "key": restore_state.STORAGE_KEY,
+            "data": [
+                {
+                    "state": {
+                        "entity_id": entity_id,
+                        "state": str(state),
+                        "attributes": attributes,
+                        "last_changed": now,
+                        "last_updated": now,
+                        "context": {
+                            "id": "3c2243ff5f30447eb12e7348cfd5b8ff",
+                            "user_id": None,
+                        },
+                    },
+                    "last_seen": now,
+                }
+            ],
+        }
+        return
+
+    return _storage

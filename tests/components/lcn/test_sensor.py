@@ -49,9 +49,10 @@ async def test_entity_state(hass: HomeAssistant, lcn_connection) -> None:
     assert state
 
 
-async def test_entity_attributes(hass: HomeAssistant, entry, lcn_connection) -> None:
+async def test_entity_attributes(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entry, lcn_connection
+) -> None:
     """Test the attributes of an entity."""
-    entity_registry = er.async_get(hass)
 
     entity_var1 = entity_registry.async_get(SENSOR_VAR1)
     assert entity_var1

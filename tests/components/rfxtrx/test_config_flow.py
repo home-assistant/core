@@ -216,7 +216,7 @@ async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
-    side_effect=serial.serialutil.SerialException,
+    side_effect=serial.SerialException,
 )
 async def test_setup_serial_fail(com_mock, connect_mock, hass: HomeAssistant) -> None:
     """Test setup serial failed connection."""

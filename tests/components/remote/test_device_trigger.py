@@ -177,12 +177,21 @@ async def test_get_trigger_capabilities_legacy(
 
 async def test_if_fires_on_state_change(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(entry.entity_id, STATE_ON)
 
@@ -195,7 +204,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turned_on",
                     },
@@ -219,7 +228,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turned_off",
                     },
@@ -243,7 +252,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "changed_states",
                     },
@@ -287,12 +296,21 @@ async def test_if_fires_on_state_change(
 
 async def test_if_fires_on_state_change_legacy(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(entry.entity_id, STATE_ON)
 
@@ -305,7 +323,7 @@ async def test_if_fires_on_state_change_legacy(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.entity_id,
                         "type": "turned_off",
                     },
@@ -341,12 +359,21 @@ async def test_if_fires_on_state_change_legacy(
 
 async def test_if_fires_on_state_change_with_for(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for triggers firing with delay."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(entry.entity_id, STATE_ON)
 
@@ -359,7 +386,7 @@ async def test_if_fires_on_state_change_with_for(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turned_off",
                         "for": {"seconds": 5},

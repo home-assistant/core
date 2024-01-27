@@ -32,6 +32,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -62,8 +63,9 @@ PRODUCT_VALUE = prod(VALUES)
         ("product", PRODUCT_VALUE, {}),
     ],
 )
-async def test_sensors(
+async def test_sensors2(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     sensor_type: str,
     result: str,
     attributes: dict[str, Any],
@@ -87,7 +89,7 @@ async def test_sensors(
             value,
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.VOLUME,
-                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_STATE_CLASS: SensorStateClass.TOTAL,
                 ATTR_UNIT_OF_MEASUREMENT: "L",
             },
         )
@@ -104,11 +106,10 @@ async def test_sensors(
         assert state.attributes.get(key) == value
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLUME
     assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "L"
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get(f"sensor.sensor_group_{sensor_type}")
+    entity = entity_registry.async_get(f"sensor.sensor_group_{sensor_type}")
     assert entity.unique_id == "very_unique_id"
 
 
@@ -146,7 +147,8 @@ async def test_sensors_attributes_defined(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.sensor_group_sum")
 
-    assert state.state == str(float(SUM_VALUE))
+    # Liter to M3 = 1:0.001
+    assert state.state == str(float(SUM_VALUE * 0.001))
     assert state.attributes.get(ATTR_ENTITY_ID) == entity_ids
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
@@ -324,9 +326,6 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
         }
     }
 
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
     entity_ids = config["sensor"]["entities"]
 
     hass.states.async_set(
@@ -334,7 +333,7 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
         VALUES[0],
         {
             "device_class": SensorDeviceClass.ENERGY,
-            "state_class": SensorStateClass.MEASUREMENT,
+            "state_class": SensorStateClass.TOTAL,
             "unit_of_measurement": "kWh",
         },
     )
@@ -343,34 +342,180 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
         VALUES[1],
         {
             "device_class": SensorDeviceClass.ENERGY,
-            "state_class": SensorStateClass.MEASUREMENT,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "kWh",
+        },
+    )
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "Wh",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(float(sum([VALUES[0], VALUES[1], VALUES[2] / 1000])))
+    assert state.attributes.get("device_class") == "energy"
+    assert state.attributes.get("state_class") == "total"
+    assert state.attributes.get("unit_of_measurement") == "kWh"
+
+    # Test that a change of source entity's unit of measurement
+    # is converted correctly by the group sensor
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL,
             "unit_of_measurement": "kWh",
         },
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == str(float(sum([VALUES[0], VALUES[1]])))
-    assert state.attributes.get("device_class") == "energy"
-    assert state.attributes.get("state_class") == "measurement"
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.state == str(float(sum(VALUES)))
 
+
+async def test_sensor_calculated_properties_not_same(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the sensor calculating device_class, state_class and unit of measurement not same."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_sum",
+            "type": "sum",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    entity_ids = config["sensor"]["entities"]
+
+    hass.states.async_set(
+        entity_ids[0],
+        VALUES[0],
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "kWh",
+        },
+    )
+    hass.states.async_set(
+        entity_ids[1],
+        VALUES[1],
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "kWh",
+        },
+    )
     hass.states.async_set(
         entity_ids[2],
         VALUES[2],
         {
-            "device_class": SensorDeviceClass.BATTERY,
-            "state_class": SensorStateClass.TOTAL,
-            "unit_of_measurement": None,
+            "device_class": SensorDeviceClass.CURRENT,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": "A",
         },
     )
     await hass.async_block_till_done()
 
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
     state = hass.states.get("sensor.test_sum")
-    assert state.state == str(sum(VALUES))
+    assert state.state == str(float(sum(VALUES)))
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("state_class") is None
     assert state.attributes.get("unit_of_measurement") is None
+
+    assert issue_registry.async_get_issue(
+        GROUP_DOMAIN, "sensor.test_sum_uoms_not_matching_no_device_class"
+    )
+    assert issue_registry.async_get_issue(
+        GROUP_DOMAIN, "sensor.test_sum_device_classes_not_matching"
+    )
+    assert issue_registry.async_get_issue(
+        GROUP_DOMAIN, "sensor.test_sum_state_classes_not_matching"
+    )
+
+
+async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> None:
+    """Test the sensor calculating fails as UoM not part of device class."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_sum",
+            "type": "sum",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    entity_ids = config["sensor"]["entities"]
+
+    hass.states.async_set(
+        entity_ids[0],
+        VALUES[0],
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "kWh",
+        },
+    )
+    hass.states.async_set(
+        entity_ids[1],
+        VALUES[1],
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "kWh",
+        },
+    )
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "kWh",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(float(sum(VALUES)))
+    assert state.attributes.get("device_class") == "energy"
+    assert state.attributes.get("state_class") == "total"
+    assert state.attributes.get("unit_of_measurement") == "kWh"
+
+    hass.states.async_set(
+        entity_ids[2],
+        12,
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL,
+        },
+        True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("device_class") == "energy"
+    assert state.attributes.get("state_class") == "total"
+    assert state.attributes.get("unit_of_measurement") == "kWh"
 
 
 async def test_last_sensor(hass: HomeAssistant) -> None:

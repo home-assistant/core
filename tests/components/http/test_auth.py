@@ -35,9 +35,10 @@ from homeassistant.components.http.request_context import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
-from . import HTTP_HEADER_HA_AUTH, mock_real_ip
+from . import HTTP_HEADER_HA_AUTH
 
 from tests.common import MockUser
+from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 API_PASSWORD = "test-password"
@@ -210,7 +211,7 @@ async def test_auth_active_access_with_access_token_in_header(
     token = hass_access_token
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     req = await client.get("/", headers={"Authorization": f"Bearer {token}"})
     assert req.status == HTTPStatus.OK
@@ -230,7 +231,7 @@ async def test_auth_active_access_with_access_token_in_header(
     req = await client.get("/", headers={"Authorization": f"BEARER {token}"})
     assert req.status == HTTPStatus.UNAUTHORIZED
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     refresh_token.user.is_active = False
     req = await client.get("/", headers={"Authorization": f"Bearer {token}"})
     assert req.status == HTTPStatus.UNAUTHORIZED
@@ -296,7 +297,7 @@ async def test_auth_access_signed_path_with_refresh_token(
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     signed_path = async_sign_path(
         hass, "/", timedelta(seconds=5), refresh_token_id=refresh_token.id
@@ -324,7 +325,7 @@ async def test_auth_access_signed_path_with_refresh_token(
     assert req.status == HTTPStatus.UNAUTHORIZED
 
     # refresh token gone should also invalidate signature
-    await hass.auth.async_remove_refresh_token(refresh_token)
+    hass.auth.async_remove_refresh_token(refresh_token)
     req = await client.get(signed_path)
     assert req.status == HTTPStatus.UNAUTHORIZED
 
@@ -341,7 +342,7 @@ async def test_auth_access_signed_path_with_query_param(
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     signed_path = async_sign_path(
         hass, "/?test=test", timedelta(seconds=5), refresh_token_id=refresh_token.id
@@ -371,7 +372,7 @@ async def test_auth_access_signed_path_with_query_param_order(
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     signed_path = async_sign_path(
         hass,
@@ -412,7 +413,7 @@ async def test_auth_access_signed_path_with_query_param_safe_param(
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     signed_path = async_sign_path(
         hass,
@@ -451,7 +452,7 @@ async def test_auth_access_signed_path_with_query_param_tamper(
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     signed_path = async_sign_path(
         hass, base_url, timedelta(seconds=5), refresh_token_id=refresh_token.id
@@ -490,9 +491,7 @@ async def test_auth_access_signed_path_via_websocket(
     assert msg["id"] == 5
     assert msg["success"]
 
-    refresh_token = await hass.auth.async_validate_access_token(
-        hass_read_only_access_token
-    )
+    refresh_token = hass.auth.async_validate_access_token(hass_read_only_access_token)
     signature = yarl.URL(msg["result"]["path"]).query["authSig"]
     claims = jwt.decode(
         signature,
@@ -522,7 +521,7 @@ async def test_auth_access_signed_path_with_http(
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     req = await client.get(
         "/hello", headers={"Authorization": f"Bearer {hass_access_token}"}
@@ -566,7 +565,7 @@ async def test_local_only_user_rejected(
     await async_setup_auth(hass, app)
     set_mock_ip = mock_real_ip(app)
     client = await aiohttp_client(app)
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     req = await client.get("/", headers={"Authorization": f"Bearer {token}"})
     assert req.status == HTTPStatus.OK

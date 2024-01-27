@@ -10,11 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    EntityCategory,
-    UnitOfTemperature,
-)
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,9 +31,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key=TYPE_WIFI_STRENGTH,
-        translation_key="wifi_rssi",
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        translation_key="wifi_strength",
+        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -48,6 +43,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Initialize a Blink sensor."""
+
     coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
     entities = [
         BlinkSensor(coordinator, camera, description)
@@ -74,14 +70,16 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
         self.entity_description = description
 
         self._camera = coordinator.api.cameras[camera]
-        self._attr_unique_id = f"{self._camera.serial}-{description.key}"
+        serial = self._camera.serial
+        self._attr_unique_id = f"{serial}-{description.key}"
         self._sensor_key = (
             "temperature_calibrated"
             if description.key == "temperature"
             else description.key
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._camera.serial)},
+            identifiers={(DOMAIN, serial)},
+            serial_number=serial,
             name=f"{DOMAIN} {camera}",
             manufacturer=DEFAULT_BRAND,
             model=self._camera.camera_type,

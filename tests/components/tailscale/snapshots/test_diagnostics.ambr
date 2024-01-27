@@ -1,0 +1,87 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'addresses': '**REDACTED**',
+        'advertised_routes': list([
+        ]),
+        'authorized': True,
+        'blocks_incoming_connections': False,
+        'client_connectivity': dict({
+          'client_supports': dict({
+            'hair_pinning': False,
+            'ipv6': False,
+            'pcp': False,
+            'pmp': False,
+            'udp': True,
+            'upnp': False,
+          }),
+          'endpoints': '**REDACTED**',
+          'mapping_varies_by_dest_ip': False,
+        }),
+        'client_version': '1.12.3-td91ea7286-ge1bbbd90c',
+        'created': '2021-08-19T09:25:22+00:00',
+        'device_id': '**REDACTED**',
+        'enabled_routes': list([
+        ]),
+        'expires': '2022-02-15T09:25:22+00:00',
+        'hostname': '**REDACTED**',
+        'is_external': False,
+        'key_expiry_disabled': False,
+        'last_seen': '2021-09-16T06:11:23+00:00',
+        'machine_key': '**REDACTED**',
+        'name': '**REDACTED**',
+        'node_key': '**REDACTED**',
+        'os': 'iOS',
+        'tags': list([
+        ]),
+        'update_available': True,
+        'user': '**REDACTED**',
+      }),
+      dict({
+        'addresses': '**REDACTED**',
+        'advertised_routes': list([
+          '0.0.0.0/0',
+          '10.10.10.0/23',
+          '::/0',
+        ]),
+        'authorized': True,
+        'blocks_incoming_connections': False,
+        'client_connectivity': dict({
+          'client_supports': dict({
+            'hair_pinning': True,
+            'ipv6': False,
+            'pcp': False,
+            'pmp': False,
+            'udp': True,
+            'upnp': False,
+          }),
+          'endpoints': '**REDACTED**',
+          'mapping_varies_by_dest_ip': False,
+        }),
+        'client_version': '1.14.0-t5cff36945-g809e87bba',
+        'created': '2021-08-29T09:49:06+00:00',
+        'device_id': '**REDACTED**',
+        'enabled_routes': list([
+          '0.0.0.0/0',
+          '10.10.10.0/23',
+          '::/0',
+        ]),
+        'expires': '2022-02-25T09:49:06+00:00',
+        'hostname': '**REDACTED**',
+        'is_external': False,
+        'key_expiry_disabled': False,
+        'last_seen': '2021-11-15T20:37:03+00:00',
+        'machine_key': '**REDACTED**',
+        'name': '**REDACTED**',
+        'node_key': '**REDACTED**',
+        'os': 'linux',
+        'tags': list([
+        ]),
+        'update_available': True,
+        'user': '**REDACTED**',
+      }),
+    ]),
+  })
+# ---

@@ -44,14 +44,16 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
         },
     )
 
-    await hass.services.async_call(
+    service_response = await hass.services.async_call(
         "conversation",
         "process",
         {
             "text": "Ha ha ha",
         },
         blocking=True,
+        return_response=True,
     )
+    assert service_response["response"]["speech"]["plain"]["speech"] == "Done"
 
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -64,6 +66,37 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
         "slots": {},
         "details": {},
     }
+
+
+async def test_response(hass: HomeAssistant, setup_comp) -> None:
+    """Test the firing of events."""
+    response = "I'm sorry, Dave. I'm afraid I can't do that"
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["Open the pod bay door Hal"],
+                },
+                "action": {
+                    "set_conversation_response": response,
+                },
+            }
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "Open the pod bay door Hal",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert service_response["response"]["speech"]["plain"]["speech"] == response
 
 
 async def test_same_trigger_multiple_sentences(
@@ -189,6 +222,42 @@ async def test_fails_on_punctuation(hass: HomeAssistant, command: str) -> None:
                     "command": [
                         command,
                     ],
+                },
+            ],
+        )
+
+
+@pytest.mark.parametrize(
+    "command",
+    [""],
+)
+async def test_fails_on_empty(hass: HomeAssistant, command: str) -> None:
+    """Test that validation fails when sentences are empty."""
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "id": "trigger1",
+                    "platform": "conversation",
+                    "command": [
+                        command,
+                    ],
+                },
+            ],
+        )
+
+
+async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
+    """Test that validation fails when no sentences are provided."""
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "id": "trigger1",
+                    "platform": "conversation",
+                    "command": [],
                 },
             ],
         )

@@ -71,6 +71,7 @@ class HomeAssistantView:
             content_type=CONTENT_TYPE_JSON,
             status=int(status_code),
             headers=headers,
+            zlib_executor_size=32768,
         )
         response.enable_compression()
         return response

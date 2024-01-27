@@ -10,10 +10,15 @@ from typing import Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareUtils import (
+    PyViCareInvalidConfigurationError,
+    PyViCareInvalidCredentialsError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
@@ -32,14 +37,14 @@ _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
 
 
-@dataclass()
+@dataclass(frozen=True)
 class ViCareRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_getter: Callable[[Device], bool]
+    value_getter: Callable[[Device], Any]
 
 
-@dataclass()
+@dataclass(frozen=True)
 class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
     """Mixin for required keys with setter."""
 
@@ -53,7 +58,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {}
 
-    await hass.async_add_executor_job(setup_vicare_api, hass, entry)
+    try:
+        await hass.async_add_executor_job(setup_vicare_api, hass, entry)
+    except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError) as err:
+        raise ConfigEntryAuthFailed("Authentication failed") from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

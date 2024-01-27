@@ -118,7 +118,7 @@ def _add_db_entries(
 
 
 def test_get_full_significant_states_with_session_entity_no_matches(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test getting states at a specific point in time for entities that never have been recorded."""
     hass = hass_recorder()
@@ -246,7 +246,7 @@ def test_state_changes_during_period(
 
 
 def test_state_changes_during_period_descending(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test state change during period descending."""
     hass = hass_recorder()
@@ -410,7 +410,7 @@ def test_get_last_state_change(hass_recorder: Callable[..., HomeAssistant]) -> N
 
 
 def test_ensure_state_can_be_copied(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Ensure a state can pass though copy().
 
@@ -455,7 +455,7 @@ def test_get_significant_states(hass_recorder: Callable[..., HomeAssistant]) -> 
 
 
 def test_get_significant_states_minimal_response(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test that only significant states are returned.
 
@@ -554,7 +554,7 @@ def test_get_significant_states_with_initial(
 
 
 def test_get_significant_states_without_initial(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test that only significant states are returned.
 
@@ -588,7 +588,7 @@ def test_get_significant_states_without_initial(
 
 
 def test_get_significant_states_entity_id(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test that only significant states are returned for one entity."""
     hass = hass_recorder()
@@ -604,7 +604,7 @@ def test_get_significant_states_entity_id(
 
 
 def test_get_significant_states_multiple_entity_ids(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test that only significant states are returned for one entity."""
     hass = hass_recorder()
@@ -626,7 +626,7 @@ def test_get_significant_states_multiple_entity_ids(
 
 
 def test_get_significant_states_are_ordered(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test order of results from get_significant_states.
 
@@ -644,7 +644,7 @@ def test_get_significant_states_are_ordered(
 
 
 def test_get_significant_states_only(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test significant states when significant_states_only is set."""
     hass = hass_recorder()
@@ -1082,7 +1082,7 @@ async def test_get_full_significant_states_handles_empty_last_changed(
 
 
 def test_state_changes_during_period_multiple_entities_single_test(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test state change during period with multiple entities in the same test.
 
@@ -1141,7 +1141,7 @@ async def test_get_full_significant_states_past_year_2038(
 
 
 def test_get_significant_states_without_entity_ids_raises(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test at least one entity id is required for get_significant_states."""
     hass = hass_recorder()
@@ -1151,7 +1151,7 @@ def test_get_significant_states_without_entity_ids_raises(
 
 
 def test_state_changes_during_period_without_entity_ids_raises(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test at least one entity id is required for state_changes_during_period."""
     hass = hass_recorder()
@@ -1161,7 +1161,7 @@ def test_state_changes_during_period_without_entity_ids_raises(
 
 
 def test_get_significant_states_with_filters_raises(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test passing filters is no longer supported."""
     hass = hass_recorder()
@@ -1173,7 +1173,7 @@ def test_get_significant_states_with_filters_raises(
 
 
 def test_get_significant_states_with_non_existent_entity_ids_returns_empty(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test get_significant_states returns an empty dict when entities not in the db."""
     hass = hass_recorder()
@@ -1182,7 +1182,7 @@ def test_get_significant_states_with_non_existent_entity_ids_returns_empty(
 
 
 def test_state_changes_during_period_with_non_existent_entity_ids_returns_empty(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test state_changes_during_period returns an empty dict when entities not in the db."""
     hass = hass_recorder()
@@ -1193,7 +1193,7 @@ def test_state_changes_during_period_with_non_existent_entity_ids_returns_empty(
 
 
 def test_get_last_state_changes_with_non_existent_entity_ids_returns_empty(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test get_last_state_changes returns an empty dict when entities not in the db."""
     hass = hass_recorder()

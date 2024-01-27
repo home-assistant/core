@@ -280,9 +280,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def _async_fallback_poll(self) -> None:
         """Retrieve latest state by polling."""
-        await self.hass.data[DATA_SONOS].favorites[
-            self.speaker.household_id
-        ].async_poll()
+        await (
+            self.hass.data[DATA_SONOS].favorites[self.speaker.household_id].async_poll()
+        )
         await self.hass.async_add_executor_job(self._update)
 
     def _update(self) -> None:

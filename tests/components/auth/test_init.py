@@ -4,6 +4,7 @@ from http import HTTPStatus
 import logging
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.auth import InvalidAuthError
@@ -91,9 +92,7 @@ async def test_login_new_user_and_trying_refresh_token(
     assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
 
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
     assert tokens["ha_auth_provider"] == "insecure_example"
 
     # Use refresh token to get more tokens.
@@ -109,9 +108,7 @@ async def test_login_new_user_and_trying_refresh_token(
     assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
     assert "refresh_token" not in tokens
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
     # Test using access token to hit API.
     resp = await client.get("/api/")
@@ -171,28 +168,25 @@ async def test_auth_code_checks_local_only_user(
     assert error["error"] == "access_denied"
 
 
-def test_auth_code_store_expiration(mock_credential) -> None:
+def test_auth_code_store_expiration(
+    mock_credential, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that the auth code store will not return expired tokens."""
     store, retrieve = auth._create_auth_code_store()
     client_id = "bla"
     now = utcnow()
 
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        code = store(client_id, mock_credential)
+    freezer.move_to(now)
+    code = store(client_id, mock_credential)
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=now + timedelta(minutes=10)
-    ):
-        assert retrieve(client_id, code) is None
+    freezer.move_to(now + timedelta(minutes=10))
+    assert retrieve(client_id, code) is None
 
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        code = store(client_id, mock_credential)
+    freezer.move_to(now)
+    code = store(client_id, mock_credential)
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=now + timedelta(minutes=9, seconds=59),
-    ):
-        assert retrieve(client_id, code) == mock_credential
+    freezer.move_to(now + timedelta(minutes=9, seconds=59))
+    assert retrieve(client_id, code) == mock_credential
 
 
 def test_auth_code_store_requires_credentials(mock_credential) -> None:
@@ -211,7 +205,7 @@ async def test_ws_current_user(
     """Test the current user command with Home Assistant creds."""
     assert await async_setup_component(hass, "auth", {})
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     user = refresh_token.user
     client = await hass_ws_client(hass, hass_access_token)
 
@@ -281,9 +275,7 @@ async def test_refresh_token_system_generated(
 
     assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
 
 async def test_refresh_token_different_client_id(
@@ -329,9 +321,7 @@ async def test_refresh_token_different_client_id(
 
     assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
 
 async def test_refresh_token_checks_local_only_user(
@@ -412,16 +402,14 @@ async def test_revoking_refresh_token(
 
     assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
     # Revoke refresh token
     resp = await client.post(url, data={**base_data, "token": refresh_token.token})
     assert resp.status == HTTPStatus.OK
 
     # Old access token should be no longer valid
-    assert await hass.auth.async_validate_access_token(tokens["access_token"]) is None
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is None
 
     # Test that we no longer can create an access token
     resp = await client.post(
@@ -460,7 +448,7 @@ async def test_ws_long_lived_access_token(
     long_lived_access_token = result["result"]
     assert long_lived_access_token is not None
 
-    refresh_token = await hass.auth.async_validate_access_token(long_lived_access_token)
+    refresh_token = hass.auth.async_validate_access_token(long_lived_access_token)
     assert refresh_token.client_id is None
     assert refresh_token.client_name == "GPS Logger"
     assert refresh_token.client_icon is None
@@ -480,7 +468,7 @@ async def test_ws_refresh_tokens(
     assert result["success"], result
     assert len(result["result"]) == 1
     token = result["result"][0]
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     assert token["id"] == refresh_token.id
     assert token["type"] == refresh_token.token_type
     assert token["client_id"] == refresh_token.client_id
@@ -520,7 +508,7 @@ async def test_ws_delete_refresh_token(
 
     result = await ws_client.receive_json()
     assert result["success"], result
-    refresh_token = await hass.auth.async_get_refresh_token(refresh_token.id)
+    refresh_token = hass.auth.async_get_refresh_token(refresh_token.id)
     assert refresh_token is None
 
 
@@ -579,7 +567,7 @@ async def test_ws_delete_all_refresh_tokens_error(
     ) in caplog.record_tuples
 
     for token in tokens:
-        refresh_token = await hass.auth.async_get_refresh_token(token["id"])
+        refresh_token = hass.auth.async_get_refresh_token(token["id"])
         assert refresh_token is None
 
 
@@ -638,7 +626,7 @@ async def test_ws_delete_all_refresh_tokens(
     assert result, result["success"]
     remaining_tokens = 0
     for token in tokens:
-        refresh_token = await hass.auth.async_get_refresh_token(token["id"])
+        refresh_token = hass.auth.async_get_refresh_token(token["id"])
         if refresh_token is not None:
             remaining_tokens += 1
 

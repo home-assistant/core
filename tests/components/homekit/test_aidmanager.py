@@ -622,9 +622,9 @@ async def test_aid_generation_no_unique_ids_handles_collision(
 
 async def test_handle_unique_id_change(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test handling unique id changes."""
-    entity_registry = er.async_get(hass)
     light = entity_registry.async_get_or_create("light", "demo", "old_unique")
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

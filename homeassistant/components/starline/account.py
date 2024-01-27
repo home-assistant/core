@@ -25,6 +25,12 @@ from .const import (
 )
 
 
+def _parse_datetime(dt_str: str | None) -> str | None:
+    if dt_str is None or (parsed := dt_util.parse_datetime(dt_str)) is None:
+        return None
+    return parsed.replace(tzinfo=dt_util.UTC).isoformat()
+
+
 class StarlineAccount:
     """StarLine Account class."""
 
@@ -136,15 +142,14 @@ class StarlineAccount:
             model=device.typename,
             name=device.name,
             sw_version=device.fw_version,
+            configuration_url="https://starline-online.ru/",
         )
 
     @staticmethod
     def gps_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for device tracker."""
         return {
-            "updated": dt_util.utc_from_timestamp(device.position["ts"])
-            .replace(tzinfo=None)
-            .isoformat(),
+            "updated": dt_util.utc_from_timestamp(device.position["ts"]).isoformat(),
             "online": device.online,
         }
 
@@ -154,7 +159,7 @@ class StarlineAccount:
         return {
             "operator": device.balance.get("operator"),
             "state": device.balance.get("state"),
-            "updated": device.balance.get("ts"),
+            "updated": _parse_datetime(device.balance.get("ts")),
         }
 
     @staticmethod

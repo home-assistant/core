@@ -139,9 +139,9 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         return self._device_information["fwVersion"]
 
     @property
-    def serial_number(self) -> str:
+    def serial_number(self) -> str | None:
         """Return the serial number for the device."""
-        return self._device_information["serialNumber"]
+        return self._device_information.get("serialNumber")
 
     @property
     def pending_info_alerts_count(self) -> int:

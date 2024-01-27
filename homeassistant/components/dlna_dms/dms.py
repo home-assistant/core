@@ -124,7 +124,7 @@ class ActionError(DlnaDmsDeviceError):
 
 
 def catch_request_errors(
-    func: Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _R]]
+    func: Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _R]],
 ) -> Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _R]]:
     """Catch UpnpError errors."""
 
@@ -332,7 +332,7 @@ class DmsDeviceSource:
     @property
     def usn(self) -> str:
         """Get the USN (Unique Service Name) for the wrapped UPnP device end-point."""
-        return self.config_entry.data[CONF_DEVICE_ID]
+        return self.config_entry.data[CONF_DEVICE_ID]  # type: ignore[no-any-return]
 
     @property
     def udn(self) -> str:
@@ -347,7 +347,7 @@ class DmsDeviceSource:
     @property
     def source_id(self) -> str:
         """Return a unique ID (slug) for this source for people to use in URLs."""
-        return self.config_entry.data[CONF_SOURCE_ID]
+        return self.config_entry.data[CONF_SOURCE_ID]  # type: ignore[no-any-return]
 
     @property
     def icon(self) -> str | None:

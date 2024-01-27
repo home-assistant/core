@@ -1,6 +1,9 @@
 """Support for Duotecno climate devices."""
+from __future__ import annotations
+
 from typing import Any, Final
 
+from duotecno.controller import PyDuotecno
 from duotecno.unit import SensUnit
 
 from homeassistant.components.climate import (
@@ -23,12 +26,7 @@ HVACMODE: Final = {
 }
 HVACMODE_REVERSE: Final = {value: key for key, value in HVACMODE.items()}
 
-PRESETMODES: Final = {
-    "sun": 0,
-    "half_sun": 1,
-    "moon": 2,
-    "half_moon": 3,
-}
+PRESETMODES: Final = {"sun": 0, "half_sun": 1, "moon": 2, "half_moon": 3}
 PRESETMODES_REVERSE: Final = {value: key for key, value in PRESETMODES.items()}
 
 
@@ -38,7 +36,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Duotecno climate based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]
+    cntrl: PyDuotecno = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         DuotecnoClimate(channel) for channel in cntrl.get_units(["SensUnit"])
     )
@@ -57,7 +55,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     _attr_translation_key = "duotecno"
 
     @property
-    def current_temperature(self) -> int | None:
+    def current_temperature(self) -> float | None:
         """Get the current temperature."""
         return self._unit.get_cur_temp()
 
@@ -88,5 +86,10 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
         """Set the preset mode."""
         await self._unit.set_preset(PRESETMODES[preset_mode])
 
+    @api_call
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Duotecno does not support setting this, we can only display it."""
+        if hvac_mode == HVACMode.OFF:
+            await self._unit.turn_off()
+        else:
+            await self._unit.turn_on()

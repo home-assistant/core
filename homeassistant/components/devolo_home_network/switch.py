@@ -23,7 +23,7 @@ from .entity import DevoloCoordinatorEntity
 _DataT = TypeVar("_DataT", bound=WifiGuestAccessGet | bool)
 
 
-@dataclass
+@dataclass(frozen=True)
 class DevoloSwitchRequiredKeysMixin(Generic[_DataT]):
     """Mixin for required keys."""
 
@@ -32,7 +32,7 @@ class DevoloSwitchRequiredKeysMixin(Generic[_DataT]):
     turn_off_func: Callable[[Device], Awaitable[bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DevoloSwitchEntityDescription(
     SwitchEntityDescription, DevoloSwitchRequiredKeysMixin[_DataT]
 ):

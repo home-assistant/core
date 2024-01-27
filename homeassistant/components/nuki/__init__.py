@@ -39,7 +39,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DEFAULT_TIMEOUT, DOMAIN, ERROR_STATES
+from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN, ERROR_STATES
 from .helpers import NukiWebhookException, parse_id
 
 _NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
@@ -188,7 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_HOST],
             entry.data[CONF_TOKEN],
             entry.data[CONF_PORT],
-            True,
+            entry.data.get(CONF_ENCRYPT_TOKEN, True),
             DEFAULT_TIMEOUT,
         )
 

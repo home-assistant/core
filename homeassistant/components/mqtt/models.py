@@ -247,15 +247,15 @@ class MqttValueTemplate:
                         payload, variables=values
                     )
                 )
-            except Exception as ex:
+            except Exception as exc:
                 _LOGGER.error(
                     "%s: %s rendering template for entity '%s', template: '%s'",
-                    type(ex).__name__,
-                    ex,
+                    type(exc).__name__,
+                    exc,
                     self._entity.entity_id if self._entity else "n/a",
                     self._value_template.template,
                 )
-                raise ex
+                raise exc
             return rendered_payload
 
         _LOGGER.debug(
@@ -339,7 +339,6 @@ class MqttData:
     )
     discovery_unsubscribe: list[CALLBACK_TYPE] = field(default_factory=list)
     integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
-    issues: dict[str, set[str]] = field(default_factory=dict)
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_handlers: dict[str, CALLBACK_TYPE] = field(default_factory=dict)

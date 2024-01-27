@@ -690,9 +690,9 @@ async def test_get_mqtt(hass: HomeAssistant) -> None:
         assert mqtt["test_2"] == ["test_2/discovery"]
 
 
-async def test_get_custom_components_safe_mode(hass: HomeAssistant) -> None:
-    """Test that we get empty custom components in safe mode."""
-    hass.config.safe_mode = True
+async def test_get_custom_components_recovery_mode(hass: HomeAssistant) -> None:
+    """Test that we get empty custom components in recovery mode."""
+    hass.config.recovery_mode = True
     assert await loader.async_get_custom_components(hass) == {}
 
 
@@ -873,3 +873,14 @@ async def test_async_suggest_report_issue(
         )
         == report_issue
     )
+
+
+async def test_config_folder_not_in_path(hass):
+    """Test that config folder is not in path."""
+
+    # Verify that we are unable to import this file from top level
+    with pytest.raises(ImportError):
+        import check_config_not_in_path  # noqa: F401
+
+    # Verify that we are able to load the file with absolute path
+    import tests.testing_config.check_config_not_in_path  # noqa: F401

@@ -85,6 +85,14 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     hass.states.async_set(entity_id, "off", {})
     await knx.assert_telegram_count(0)
 
+    # Change attribute; keep state
+    hass.states.async_set(entity_id, "on", {attribute: 1})
+    await knx.assert_write("1/1/8", (1,))
+
+    # Change state to "off"; null attribute
+    hass.states.async_set(entity_id, "off", {attribute: None})
+    await knx.assert_telegram_count(0)
+
 
 async def test_expose_attribute_with_default(
     hass: HomeAssistant, knx: KNXTestKit
@@ -130,6 +138,14 @@ async def test_expose_attribute_with_default(
 
     # Change state to "off"; no attribute
     hass.states.async_set(entity_id, "off", {})
+    await knx.assert_write("1/1/8", (0,))
+
+    # Change state and attribute
+    hass.states.async_set(entity_id, "on", {attribute: 1})
+    await knx.assert_write("1/1/8", (1,))
+
+    # Change state to "off"; null attribute
+    hass.states.async_set(entity_id, "off", {attribute: None})
     await knx.assert_write("1/1/8", (0,))
 
 

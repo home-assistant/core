@@ -7,33 +7,31 @@ from typing import Any
 import lupupy.constants as CONST
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
+from . import DOMAIN, LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up Lupusec switch devices."""
-    if discovery_info is None:
-        return
 
-    data = hass.data[LUPUSEC_DOMAIN]
+    data = hass.data[DOMAIN][config_entry.entry_id]
 
-    devices = []
+    device_types = CONST.TYPE_SWITCH
 
-    for device in data.lupusec.get_devices(generic_type=CONST.TYPE_SWITCH):
-        devices.append(LupusecSwitch(data, device))
+    switches = []
+    for device in data.lupusec.get_devices(generic_type=device_types):
+        switches.append(LupusecSwitch(data, device))
 
-    add_entities(devices)
+    async_add_devices(switches)
 
 
 class LupusecSwitch(LupusecDevice, SwitchEntity):

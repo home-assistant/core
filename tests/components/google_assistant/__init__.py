@@ -238,6 +238,26 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "media_player.browse",
+        "name": {"name": "Browse"},
+        "traits": ["action.devices.traits.MediaState", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.SETTOP",
+        "willReportState": False,
+    },
+    {
+        "id": "media_player.group",
+        "name": {"name": "Group"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Volume",
+            "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
+        ],
+        "type": "action.devices.types.SETTOP",
+        "willReportState": False,
+    },
+    {
         "id": "fan.living_room_fan",
         "name": {"name": "Living Room Fan"},
         "traits": [

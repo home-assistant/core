@@ -2,6 +2,7 @@
   "domain": "ping",
   "name": "Ping (ICMP)",
   "codeowners": ["@jpbede"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ping",
   "iot_class": "local_polling",
   "loggers": ["icmplib"],

@@ -50,7 +50,8 @@ WEBHOOK_SCHEMA = vol.Schema(
         vol.Optional(ATTR_BEARING): vol.Coerce(float),
         vol.Optional(ATTR_SPEED): vol.Coerce(float),
         vol.Optional(ATTR_TIMESTAMP): vol.Coerce(int),
-    }
+    },
+    extra=vol.REMOVE_EXTRA,
 )
 
 

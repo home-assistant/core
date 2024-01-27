@@ -68,13 +68,19 @@ LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistic
 
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     """Get the current state of all sensors for which to compile statistics."""
-    all_sensors = hass.states.all(DOMAIN)
     instance = get_instance(hass)
+    # We check for state class first before calling the filter
+    # function as the filter function is much more expensive
+    # than checking the state class
     return [
         state
-        for state in all_sensors
-        if instance.entity_filter(state.entity_id)
-        and try_parse_enum(SensorStateClass, state.attributes.get(ATTR_STATE_CLASS))
+        for state in hass.states.all(DOMAIN)
+        if (state_class := state.attributes.get(ATTR_STATE_CLASS))
+        and (
+            type(state_class) is SensorStateClass
+            or try_parse_enum(SensorStateClass, state_class)
+        )
+        and instance.entity_filter(state.entity_id)
     ]
 
 
@@ -497,19 +503,9 @@ def compile_statistics(  # noqa: C901
         # Make calculations
         stat: StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
-            stat["max"] = max(
-                *itertools.islice(
-                    zip(*valid_float_states),  # type: ignore[typeddict-item]
-                    1,
-                )
-            )
+            stat["max"] = max(*itertools.islice(zip(*valid_float_states), 1))
         if "min" in wanted_statistics[entity_id]:
-            stat["min"] = min(
-                *itertools.islice(
-                    zip(*valid_float_states),  # type: ignore[typeddict-item]
-                    1,
-                )
-            )
+            stat["min"] = min(*itertools.islice(zip(*valid_float_states), 1))
 
         if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(valid_float_states, start, end)

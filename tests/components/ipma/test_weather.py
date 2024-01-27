@@ -22,7 +22,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECAST,
+    LEGACY_SERVICE_GET_FORECAST,
+    SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -152,9 +153,17 @@ async def test_failed_get_observation_forecast(hass: HomeAssistant) -> None:
     assert state.attributes.get("friendly_name") == "HomeTown"
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECASTS,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
 async def test_forecast_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    service: str,
 ) -> None:
     """Test multiple forecast."""
 
@@ -169,7 +178,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.hometown",
             "type": "daily",
@@ -181,7 +190,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.hometown",
             "type": "hourly",

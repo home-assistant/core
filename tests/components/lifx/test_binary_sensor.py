@@ -31,7 +31,9 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_hev_cycle_state(hass: HomeAssistant) -> None:
+async def test_hev_cycle_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test HEV cycle state binary sensor."""
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
@@ -48,7 +50,6 @@ async def test_hev_cycle_state(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "binary_sensor.my_bulb_clean_cycle"
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
     assert state

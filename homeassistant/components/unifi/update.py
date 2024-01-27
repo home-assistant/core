@@ -40,7 +40,7 @@ async def async_device_control_fn(api: aiounifi.Controller, obj_id: str) -> None
     await api.request(DeviceUpgradeRequest.create(obj_id))
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiUpdateEntityDescriptionMixin(Generic[_HandlerT, _DataT]):
     """Validate and load entities from different UniFi handlers."""
 
@@ -48,7 +48,7 @@ class UnifiUpdateEntityDescriptionMixin(Generic[_HandlerT, _DataT]):
     state_fn: Callable[[aiounifi.Controller, _DataT], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiUpdateEntityDescription(
     UpdateEntityDescription,
     UnifiEntityDescription[_HandlerT, _DataT],
