@@ -628,7 +628,7 @@ async def test_ws_delete_all_refresh_tokens(
     result = await ws_client.receive_json()
     assert result, result["success"]
 
-    # We need to enumerate the user since the we may remove the token
+    # We need to enumerate the user since we may remove the token
     # that is used to authenticate the user which will prevent the websocket
     # connection from working
     remaining_tokens_by_type: dict[str, int] = {
