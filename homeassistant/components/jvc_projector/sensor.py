@@ -18,6 +18,34 @@ from . import JvcProjectorDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import JvcProjectorEntity
 
+JVC_SENSORS = (
+    SensorEntityDescription(
+        key="power",
+        translation_key="jvc_power_status",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:power",
+        options=[
+            const.OFF,
+            const.STANDBY,
+            const.ON,
+            const.WARMING,
+            const.COOLING,
+            const.ERROR,
+        ],
+    ),
+    SensorEntityDescription(
+        key="input",
+        translation_key="jvc_input",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:video-input-hdmi",
+        options=[
+            "hdmi1",
+            "hdmi2",
+            const.NOSIGNAL,
+        ],
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -25,42 +53,13 @@ async def async_setup_entry(
     """Set up the JVC Projector platform from a config entry."""
     coordinator: JvcProjectorDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = [
-        JvcSensor(
-            coordinator,
-            "power",
-            SensorEntityDescription(
-                key="power",
-                translation_key="jvc_power_status",
-                device_class=SensorDeviceClass.ENUM,
-                icon="mdi:power",
-                options=[
-                    const.OFF,
-                    const.STANDBY,
-                    const.ON,
-                    const.WARMING,
-                    const.COOLING,
-                    const.ERROR,
-                ],
-            ),
-        ),
-        JvcSensor(
-            coordinator,
-            "input",
-            SensorEntityDescription(
-                key="input",
-                translation_key="jvc_input",
-                device_class=SensorDeviceClass.ENUM,
-                icon="mdi:video-input-hdmi",
-                options=[
-                    "hdmi1",
-                    "hdmi2",
-                    const.NOSIGNAL,
-                ],
-            ),
-        ),
-    ]
-    async_add_entities(sensors)
+    sensors_descriptions: list[SensorEntityDescription] = []
+    for description in JVC_SENSORS:
+        sensors_descriptions.append(description)
+
+    async_add_entities(
+        JvcSensor(coordinator, description) for description in sensors_descriptions
+    )
 
 
 class JvcSensor(JvcProjectorEntity, SensorEntity):
@@ -69,7 +68,6 @@ class JvcSensor(JvcProjectorEntity, SensorEntity):
     def __init__(
         self,
         coordinator: JvcProjectorDataUpdateCoordinator,
-        entity_type: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the JVC Projector sensor."""
@@ -82,19 +80,6 @@ class JvcSensor(JvcProjectorEntity, SensorEntity):
         self._attributes: dict[str, str] = {}
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the state attributes of the sensor."""
-        return self._attributes
-
-    def update_callback(self) -> None:
-        """Schedule a state update."""
-        self.async_schedule_update_ha_state(True)
-
-    @property
     def native_value(self) -> str | None:
         """Return the native value."""
-        if self.entity_description.key == "power":
-            return self.coordinator.data["power"]
-        if self.entity_description.key == "input":
-            return self.coordinator.data["input"]
-        return None
+        return self.coordinator.data[self.entity_description.key]
