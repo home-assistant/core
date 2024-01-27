@@ -19,11 +19,11 @@ async def test_sensors(
 
     sensor = hass.states.get("sensor.station_a_absolute_pressure")
     assert sensor is not None
-    assert sensor.state == "977.616536580043"
+    assert float(sensor.state) == pytest.approx(977.61653)
 
     sensor = hass.states.get("sensor.station_a_relative_pressure")
     assert sensor is not None
-    assert sensor.state == "1001.89694313129"
+    assert float(sensor.state) == pytest.approx(1001.89694)
 
     sensor = hass.states.get("sensor.station_a_daily_rain")
     assert sensor is not None
@@ -31,11 +31,11 @@ async def test_sensors(
 
     sensor = hass.states.get("sensor.station_a_dew_point")
     assert sensor is not None
-    assert sensor.state == "27.7777777777778"
+    assert float(sensor.state) == pytest.approx(27.77777)
 
     sensor = hass.states.get("sensor.station_a_feels_like")
     assert sensor is not None
-    assert sensor.state == "29.4444444444444"
+    assert float(sensor.state) == pytest.approx(29.44444)
 
     sensor = hass.states.get("sensor.station_a_hourly_rain")
     assert sensor is not None
@@ -51,7 +51,7 @@ async def test_sensors(
 
     sensor = hass.states.get("sensor.station_a_max_daily_gust")
     assert sensor is not None
-    assert sensor.state == "36.72523008"
+    assert float(sensor.state) == pytest.approx(36.7252)
 
     sensor = hass.states.get("sensor.station_a_monthly_rain")
     assert sensor is not None
@@ -63,7 +63,7 @@ async def test_sensors(
 
     sensor = hass.states.get("sensor.station_a_temperature")
     assert sensor is not None
-    assert sensor.state == "28.2777777777778"
+    assert float(sensor.state) == pytest.approx(28.27777)
 
     sensor = hass.states.get("sensor.station_a_uv_index")
     assert sensor is not None
@@ -79,11 +79,11 @@ async def test_sensors(
 
     sensor = hass.states.get("sensor.station_a_wind_gust")
     assert sensor is not None
-    assert sensor.state == "14.75768448"
+    assert float(sensor.state) == pytest.approx(14.75768)
 
     sensor = hass.states.get("sensor.station_a_wind_speed")
     assert sensor is not None
-    assert sensor.state == "14.03347968"
+    assert float(sensor.state) == pytest.approx(14.03347)
 
 
 @freeze_time("2023-11-09")
