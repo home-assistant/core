@@ -5,8 +5,6 @@ import logging
 
 DOMAIN = "ambient_network"
 
-CONF_MAC_ADDRESS = "mac_address"
-
 API_LAST_DATA = "lastData"
 API_STATION_COORDS = "coords"
 API_STATION_INDOOR = "indoor"

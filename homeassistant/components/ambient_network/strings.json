@@ -2,15 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Region Selection",
-        "description": "Choose the region you want to survey in order to locate Ambient personal weather stations.",
-        "data": {
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
-        }
+        "title": "Select region",
+        "description": "Choose the region you want to survey in order to locate Ambient personal weather stations."
       },
       "station": {
-        "title": "Station Selection",
+        "title": "Select station",
         "description": "Select the weather station you want to add to Home Assistant.",
         "data": {
           "station": "Station"
@@ -80,9 +76,6 @@
       },
       "wind_gust": {
         "name": "Wind gust"
-      },
-      "wind_speed": {
-        "name": "Wind speed"
       },
       "yearly_rain": {
         "name": "Yearly rain"
