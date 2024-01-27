@@ -71,9 +71,9 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
 
         await super().async_config_entry_first_refresh()
 
-        # await self._hass.config_entries.async_forward_entry_setups(
-        #     self.config_entry, PLATFORMS
-        # )
+        await self._hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
 
     async def _async_update_data(self) -> IottyData:
         """Fetch data from iottyCloud device."""

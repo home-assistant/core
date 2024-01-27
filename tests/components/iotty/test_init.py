@@ -44,6 +44,7 @@ async def test_load_unload_iottyproxy_called(
     mock_config_entry: MockConfigEntry,
     mock_iotty: MagicMock,
     local_oauth_impl,
+    mock_config_entries_async_forward_entry_setup,
 ) -> None:
     """Test the configuration entry loading/unloading."""
 

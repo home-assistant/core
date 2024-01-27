@@ -87,6 +87,7 @@ async def test_first_refresh_call_ok(
     local_oauth_impl: ClientSession,
     mock_get_devices_twodevices,
     mock_async_first_refresh,
+    mock_config_entries_async_forward_entry_setup,
 ) -> None:
     """Store an entity twice."""
 
@@ -110,6 +111,8 @@ async def test_first_refresh_call_ok(
 
     assert len(mock_async_first_refresh.mock_calls) == 1
 
+    assert len(mock_config_entries_async_forward_entry_setup.mock_calls) == 1
+
 
 async def test_first_refresh_twodevices_ok(
     mock_config_entry: MockConfigEntry,
@@ -117,6 +120,7 @@ async def test_first_refresh_twodevices_ok(
     local_oauth_impl: ClientSession,
     mock_get_devices_twodevices,
     mock_get_status_filled,
+    mock_config_entries_async_forward_entry_setup,
 ) -> None:
     """Store an entity twice."""
 
@@ -151,6 +155,7 @@ async def test_async_update_data_twodevices_nostatus(
     # To avoid first call to update_data
     mock_async_first_refresh,
     mock_update_status,
+    mock_config_entries_async_forward_entry_setup,
 ) -> None:
     """Get status and don't store anything, because get_status returns a wrong object."""
 
@@ -188,6 +193,7 @@ async def test_async_update_data_twodevices_withstatus(
     # To avoid first call to update_data
     mock_async_first_refresh,
     mock_update_status,
+    mock_config_entries_async_forward_entry_setup,
 ) -> None:
     """Get status and store it."""
 

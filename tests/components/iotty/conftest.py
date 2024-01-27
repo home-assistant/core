@@ -82,6 +82,15 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_config_entries_async_forward_entry_setup() -> Generator[AsyncMock, None, None]:
+    """Mock async_forward_entry_setup."""
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"
+    ) as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch(
