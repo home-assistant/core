@@ -45,7 +45,7 @@ dependencies    = [
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==42.0.1",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
-    "pyOpenSSL==23.2.0",
+    "pyOpenSSL==42.0.0",
     "orjson==3.9.12",
     "packaging>=23.1",
     "pip>=21.3.1",
