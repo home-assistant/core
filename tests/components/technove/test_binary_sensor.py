@@ -5,13 +5,11 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
-from technove import TechnoVEError
+from technove import Status, TechnoVEError
 
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from . import setup_with_selected_platforms
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -24,10 +22,11 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation and values of the TechnoVE binary sensors."""
-    await setup_with_selected_platforms(
-        hass, mock_config_entry, [Platform.BINARY_SENSOR]
-    )
+    mock_config_entry.add_to_hass(hass)
 
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    entity_registry = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
@@ -57,6 +56,25 @@ async def test_disabled_by_default_binary_sensors(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_sensor_update_failure(
+    hass: HomeAssistant,
+    mock_technove: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator update failure."""
+    entity_id = "sensor.technove_station_status"
+
+    assert hass.states.get(entity_id).state == Status.PLUGGED_CHARGING.value
+
+    freezer.tick(timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    mock_technove.update.side_effect = TechnoVEError("Test error")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_binary_sensor_update_failure(
     hass: HomeAssistant,
     mock_technove: MagicMock,
@@ -67,9 +85,9 @@ async def test_binary_sensor_update_failure(
 
     assert hass.states.get(entity_id).state == STATE_ON
 
-    mock_technove.update.side_effect = TechnoVEError("Test error")
     freezer.tick(timedelta(minutes=5, seconds=1))
     async_fire_time_changed(hass)
+    mock_technove.update.side_effect = TechnoVEError("Test error")
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
