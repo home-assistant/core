@@ -7,6 +7,26 @@
           "on": "mdi:projector"
         }
       }
+    },
+    "sensor": {
+      "jvc_power_status": {
+        "default": "mdi:power-plug-off",
+        "state": {
+          "on": "mdi:power-plug",
+          "standby": "mdi:power-plug-off",
+          "warming": "mdi:power-plug-outline",
+          "cooling": "mdi:power-plug-off-outline",
+          "error": "mdi:alert-circle"
+        }
+      },
+      "jvc_input": {
+        "name": "Input",
+        "default": "mdi:video-input-hdmi",
+        "state": {
+          "hdmi1": "mdi:numeric-1-box-multiple",
+          "hdmi2": "mdi:numeric-2-box-multiple"
+        }
+      }
     }
   }
 }
