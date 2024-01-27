@@ -126,7 +126,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
             if result:
                 result_array = list(
                     map(
-                        float if self._precision and not self._value_is_int else int,
+                        float if not self._value_is_int else int,
                         result.split(","),
                     )
                 )
