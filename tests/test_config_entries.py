@@ -734,6 +734,7 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "_integration_for_domain",
         "_tries",
         "_setup_again_job",
+        "_supports_options",
     }
 
     entry = MockConfigEntry(entry_id="mock-entry")
@@ -1176,6 +1177,7 @@ async def test_create_entry_options(
 
         entries = hass.config_entries.async_entries("comp")
         assert len(entries) == 1
+        assert entries[0].supports_options is False
         assert entries[0].data == {"example": "data"}
         assert entries[0].options == {"example": "option"}
 
@@ -1202,6 +1204,10 @@ async def test_entry_options(
 
             return OptionsFlowHandler()
 
+        def async_supports_options_flow(self, entry: MockConfigEntry) -> bool:
+            """Test options flow."""
+            return True
+
     config_entries.HANDLERS["test"] = TestFlow()
     flow = await manager.options.async_create_flow(
         entry.entry_id, context={"source": "test"}, data=None
@@ -1216,6 +1222,7 @@ async def test_entry_options(
 
     assert entry.data == {"first": True}
     assert entry.options == {"second": True}
+    assert entry.supports_options is True
 
 
 async def test_entry_options_abort(

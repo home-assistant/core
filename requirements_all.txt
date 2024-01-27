@@ -215,7 +215,7 @@ aiobafi6==0.9.0
 aiobotocore==2.9.1
 
 # homeassistant.components.comelit
-aiocomelit==0.7.3
+aiocomelit==0.8.2
 
 # homeassistant.components.dhcp
 aiodiscover==1.6.0
@@ -1019,7 +1019,7 @@ hass-nabucasa==0.75.1
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.5.3
+hassil==1.6.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -1074,7 +1074,7 @@ httplib2==0.20.4
 huawei-lte-api==1.7.3
 
 # homeassistant.components.huum
-huum==0.7.9
+huum==0.7.10
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
