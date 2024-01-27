@@ -140,27 +140,23 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_LASTRAIN,
         translation_key="last_rain",
-        icon="mdi:water",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_DAY,
         translation_key="lightning_strikes_per_day",
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_HOUR,
         translation_key="lightning_strikes_per_hour",
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes/hour",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_DISTANCE,
         translation_key="lightning_distance",
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
