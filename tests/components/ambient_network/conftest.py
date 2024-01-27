@@ -74,7 +74,7 @@ def config_entry_a_fixture(request) -> MockConfigEntry:
     return MockConfigEntry(
         domain=ambient_network.DOMAIN,
         title=f"Station {request.param[0]}",
-        data={"mac_address": request.param},
+        data={"mac": request.param},
     )
 
 
