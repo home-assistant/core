@@ -224,7 +224,6 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_WINDDIR,
         translation_key="wind_direction",
-        icon="mdi:compass-outline",
         native_unit_of_measurement=DEGREE,
         suggested_display_precision=0,
     ),
