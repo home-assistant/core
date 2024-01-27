@@ -72,20 +72,40 @@ class TriggerModelData:
 
 
 MODEL_DATA = {
-    "MUE4094RT": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[MOTION_DEVICE],
-        event_class=EVENT_CLASS_MOTION,
-        triggers=TRIGGERS_BY_TYPE[MOTION_DEVICE],
-    ),
     "RTCGQ02LM": TriggerModelData(
         schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
         event_class=EVENT_CLASS_BUTTON,
         triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
     ),
+    "JTYJGD03MI": TriggerModelData(
+        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
+    ),
+    "SJWS01LM": TriggerModelData(
+        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
+    ),
+    "K9BB-1BTN": TriggerModelData(
+        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
+    ),
+    "YLAI003": TriggerModelData(
+        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
+    ),
     "XMWXKG01LM": TriggerModelData(
         schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
         event_class=EVENT_CLASS_BUTTON,
         triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
+    ),
+    "MUE4094RT": TriggerModelData(
+        schema=SCHEMA_BY_TYPE[MOTION_DEVICE],
+        event_class=EVENT_CLASS_MOTION,
+        triggers=TRIGGERS_BY_TYPE[MOTION_DEVICE],
     ),
 }
 

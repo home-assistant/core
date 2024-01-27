@@ -1,5 +1,4 @@
 """Test the Xiaomi BLE events."""
-
 import pytest
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
@@ -19,6 +18,22 @@ from tests.components.bluetooth import (
 @pytest.mark.parametrize(
     ("mac_address", "advertisement", "bind_key", "result"),
     [
+        (
+            "54:EF:44:E3:9C:BC",
+            make_advertisement(
+                "54:EF:44:E3:9C:BC",
+                b'XY\x97\td\xbc\x9c\xe3D\xefT" `'
+                b"\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3",
+            ),
+            "5b51a7c91cde6707c9ef18dfda143a58",
+            [
+                {
+                    "entity": "event.smoke_detector_9cbc_button",
+                    ATTR_FRIENDLY_NAME: "Smoke Detector 9CBC Button",
+                    ATTR_EVENT_TYPE: "press",
+                }
+            ],
+        ),
         (
             "DE:70:E8:B2:39:0C",
             make_advertisement(

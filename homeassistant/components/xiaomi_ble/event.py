@@ -31,13 +31,8 @@ DESCRIPTIONS_BY_EVENT_CLASS = {
         translation_key="button",
         event_types=[
             "press",
-            "no_press",
             "double_press",
-            "triple_press",
             "long_press",
-            "long_double_press",
-            "long_triple_press",
-            "short_press",
         ],
         device_class=EventDeviceClass.BUTTON,
     ),
