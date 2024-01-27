@@ -26,20 +26,14 @@ def mock_setup_entry(aioambient: AsyncMock) -> Generator[AsyncMock, None, None]:
 
 @pytest.fixture(name="devices_by_location", scope="package")
 def devices_by_location_fixture() -> list[dict[str, Any]]:
-    """Define data returned by the OpenAPI get_devices_by_location() call."""
+    """Return result of OpenAPI get_devices_by_location() call."""
     return json.loads(
         load_fixture("devices_by_location_response.json", "ambient_network")
     )
 
 
-@pytest.fixture(name="empty_devices_by_location", scope="package")
-def devices_by_location_empty_fixture() -> list[dict[str, Any]]:
-    """Define data returned by the OpenAPI get_devices_by_location() call if no stations are found."""
-    return json.loads("[]")
-
-
 def mock_device_details_callable(mac_address: str) -> dict[str, Any]:
-    """Define data returned by the OpenAPI get_device_details() call."""
+    """Return result of OpenAPI get_device_details() call."""
     return json.loads(
         load_fixture(
             f"device_details_response_{mac_address[0].lower()}.json", "ambient_network"
@@ -49,7 +43,7 @@ def mock_device_details_callable(mac_address: str) -> dict[str, Any]:
 
 @pytest.fixture(name="open_api")
 def mock_open_api(hass: HomeAssistant) -> OpenAPI:
-    """Define a mock OpenAPI object."""
+    """Mock OpenAPI object."""
     return Mock(
         get_device_details=AsyncMock(side_effect=mock_device_details_callable),
     )
@@ -69,8 +63,8 @@ async def mock_aioambient(open_api: OpenAPI):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_a_fixture(request) -> MockConfigEntry:
-    """Create a new config entry."""
+def config_entry_fixture(request) -> MockConfigEntry:
+    """Mock config entry."""
     return MockConfigEntry(
         domain=ambient_network.DOMAIN,
         title=f"Station {request.param[0]}",
@@ -81,13 +75,13 @@ def config_entry_a_fixture(request) -> MockConfigEntry:
 async def setup_platform(
     hass: HomeAssistant, open_api: OpenAPI, config_entry: MockConfigEntry
 ):
-    """Load the Ambient Network integration with the provided OpenAPI."""
+    """Load the Ambient Network integration with the provided OpenAPI and config entry."""
 
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, ambient_network.DOMAIN, {})
     await hass.async_block_till_done()
 
-    # Perform a coordinator refresh
+    # Perform a coordinator refresh to make sure that refresh path is covered
     coordinator = hass.data[ambient_network.DOMAIN][config_entry.entry_id]
     await coordinator.async_refresh()
     await hass.async_block_till_done()

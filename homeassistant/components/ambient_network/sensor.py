@@ -25,6 +25,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -259,9 +260,13 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Ambient Network sensor platform."""
+    """Set up the Ambient Network sensor entities."""
 
     coordinator: AmbientNetworkDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    await coordinator.async_config_entry_first_refresh()
+    if coordinator.data == {}:
+        raise PlatformNotReady("Error while connecting to Ambient Network")
+
     if coordinator.config_entry is not None:
         async_add_entities(
             AmbientNetworkSensor(
@@ -296,4 +301,5 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         if value is not None and self.device_class == SensorDeviceClass.TIMESTAMP:
             value = datetime.fromtimestamp(value / 1000, tz=dt_util.DEFAULT_TIME_ZONE)
 
+        self._attr_available = value is not None
         self._attr_native_value = value

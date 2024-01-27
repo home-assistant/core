@@ -60,7 +60,6 @@ async def test_no_station_found(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     open_api: OpenAPI,
-    empty_devices_by_location: list[dict[str, Any]],
 ) -> None:
     """Test that we abort when we cannot find a station in the area."""
 
@@ -73,7 +72,7 @@ async def test_no_station_found(
     with patch.object(
         open_api,
         "get_devices_by_location",
-        AsyncMock(return_value=empty_devices_by_location),
+        AsyncMock(return_value=[]),
     ):
         user_result = await hass.config_entries.flow.async_configure(
             setup_result["flow_id"],
