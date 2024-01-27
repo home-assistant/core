@@ -76,6 +76,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
     _attr_supported_features: ClimateEntityFeature = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_hvac_mode: HVACMode = HVACMode.OFF
 
