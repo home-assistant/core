@@ -616,13 +616,13 @@ async def websocket_delete_all_refresh_tokens(
     current_refresh_token: RefreshToken
     remove_failed = False
     for token in list(connection.user.refresh_tokens.values()):
-        if "token_type" in msg and msg["token_type"] != token.token_type:
-            continue      
         if token.id == connection.refresh_token_id:
             # Skip the current refresh token as it has revoke_callback,
             # which cancels/closes the connection.
             # It will be removed after sending the result.
             current_refresh_token = token
+            continue
+        if "token_type" in msg and msg["token_type"] != token.token_type:
             continue
         try:
             hass.auth.async_remove_refresh_token(token)

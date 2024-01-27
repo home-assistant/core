@@ -572,11 +572,15 @@ async def test_ws_delete_all_refresh_tokens_error(
 
 
 @pytest.mark.parametrize(
-    ("delete_token_type", "expected_remaining_tokens"),
+    (
+        "delete_token_type",
+        "expected_remaining_normal_tokens",
+        "expected_remaining_long_lived_tokens",
+    ),
     [
-        ({}, 0),
-        ({"token_type": TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN}, 3),
-        ({"token_type": TOKEN_TYPE_NORMAL}, 1),
+        ({}, 0, 0),
+        ({"token_type": TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN}, 2, 0),
+        ({"token_type": TOKEN_TYPE_NORMAL}, 0, 1),
     ],
 )
 async def test_ws_delete_all_refresh_tokens(
@@ -586,7 +590,8 @@ async def test_ws_delete_all_refresh_tokens(
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
     delete_token_type: dict[str:str],
-    expected_remaining_tokens: int,
+    expected_remaining_normal_tokens: int,
+    expected_remaining_long_lived_tokens: int,
 ) -> None:
     """Test deleting all or some refresh tokens."""
     assert await async_setup_component(hass, "auth", {"http": {}})
@@ -611,12 +616,10 @@ async def test_ws_delete_all_refresh_tokens(
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 
-    # get all tokens
+    # get tokens
     await ws_client.send_json({"id": 5, "type": "auth/refresh_tokens"})
     result = await ws_client.receive_json()
     assert result["success"], result
-
-    tokens = result["result"]
 
     await ws_client.send_json(
         {"id": 6, "type": "auth/delete_all_refresh_tokens", **delete_token_type}
@@ -624,21 +627,24 @@ async def test_ws_delete_all_refresh_tokens(
 
     result = await ws_client.receive_json()
     assert result, result["success"]
-    remaining_tokens = 0
-    for token in tokens:
-        refresh_token = hass.auth.async_get_refresh_token(token["id"])
-        if refresh_token is not None:
-            remaining_tokens += 1
 
-        if (
-            "token_type" not in delete_token_type
-            or token["type"] == delete_token_type["token_type"]
-        ):
-            assert refresh_token is None
-        else:
-            assert refresh_token.client_id == token["client_id"]
+    # We need to enumerate the user since the we may remove the token
+    # that is used to authenticate the user which will prevent the websocket
+    # connection from working
+    remaining_tokens_by_type: dict[str, int] = {
+        TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN: 0,
+        TOKEN_TYPE_NORMAL: 0,
+    }
+    for refresh_token in hass_admin_user.refresh_tokens.values():
+        remaining_tokens_by_type[refresh_token.token_type] += 1
 
-    assert remaining_tokens == expected_remaining_tokens
+    assert (
+        remaining_tokens_by_type[TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN]
+        == expected_remaining_long_lived_tokens
+    )
+    assert (
+        remaining_tokens_by_type[TOKEN_TYPE_NORMAL] == expected_remaining_normal_tokens
+    )
 
 
 async def test_ws_sign_path(
