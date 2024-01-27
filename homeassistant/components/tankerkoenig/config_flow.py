@@ -257,9 +257,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 tankerkoenig, self.config_entry.data
             )
         except TankerkoenigInvalidKeyError:
-            return self.async_show_form(
-                step_id="init", errors={CONF_API_KEY: "invalid_auth"}
-            )
+            return self.async_show_form(step_id="init", errors={"base": "invalid_auth"})
 
         if stations:
             for station in stations:

@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from aiotankerkoenig.exceptions import TankerkoenigInvalidKeyError
-import pytest
 
 from homeassistant.components.tankerkoenig.const import (
     CONF_FUEL_TYPES,
@@ -155,9 +154,9 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
         assert result["errors"][CONF_RADIUS] == "no_stations"
 
 
-@pytest.fixture(name="setup_integration")
 async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test starting a flow by user to re-auth."""
+    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
@@ -174,7 +173,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
         assert result["step_id"] == "reauth_confirm"
 
         # re-auth unsuccessful
-        mock_nearby_stations.return_value = {"ok": False}
+        mock_nearby_stations.side_effect = TankerkoenigInvalidKeyError("Booom!")
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -186,7 +185,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
         assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
 
         # re-auth successful
-        mock_nearby_stations.return_value = NEARBY_STATIONS
+        mock_nearby_stations.side_effect = None
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -214,24 +213,52 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
         "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
         return_value=NEARBY_STATIONS,
     ):
-        await hass.config_entries.async_setup(mock_config.entry_id)
-        await hass.async_block_till_done()
-        assert mock_setup_entry.called
-
         result = await hass.config_entries.options.async_init(mock_config.entry_id)
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_SHOW_ON_MAP: False,
-            CONF_STATIONS: MOCK_OPTIONS_DATA[CONF_STATIONS],
-        },
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_SHOW_ON_MAP: False,
+                CONF_STATIONS: MOCK_OPTIONS_DATA[CONF_STATIONS],
+            },
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert not mock_config.options[CONF_SHOW_ON_MAP]
+
+
+async def test_options_flow_error(hass: HomeAssistant) -> None:
+    """Test options flow."""
+
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_OPTIONS_DATA,
+        options={CONF_SHOW_ON_MAP: True},
+        unique_id=f"{DOMAIN}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LATITUDE]}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LONGITUDE]}",
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert not mock_config.options[CONF_SHOW_ON_MAP]
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
+        side_effect=TankerkoenigInvalidKeyError("Booom!"),
+    ) as mock_nearby_stations:
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] == {"base": "invalid_auth"}
+
+        mock_nearby_stations.return_value = NEARBY_STATIONS
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_SHOW_ON_MAP: False,
+                CONF_STATIONS: MOCK_OPTIONS_DATA[CONF_STATIONS],
+            },
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert not mock_config.options[CONF_SHOW_ON_MAP]
