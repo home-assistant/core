@@ -256,9 +256,9 @@ def _is_entity_id_filtered(
     # filter it
     if split_entity_id(entity_id)[0] in ALWAYS_CONTINUOUS_DOMAINS:
         return True
-    # If it its in the state machine we can quick check if it
-    # has a unit_of_measurement or state_class, we want it
-    # filter it
+    # If it is in the state machine we can quick check if it
+    # has a unit_of_measurement or state_class, and filter if
+    # it does
     if (state := hass.states.get(entity_id)) and (attributes := state.attributes):
         return ATTR_UNIT_OF_MEASUREMENT in attributes or ATTR_STATE_CLASS in attributes
     # If its not in the state machine, we need to check
