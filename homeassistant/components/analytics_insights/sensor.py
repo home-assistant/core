@@ -35,7 +35,7 @@ def get_core_integration_entity_description(
     return AnalyticsSensorEntityDescription(
         key=f"core_{domain}_active_installations",
         translation_key="core_integrations",
-        translation_placeholders={"integration_name": name},
+        name=name,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="active installations",
         value_fn=lambda data: data.core_integrations.get(domain),
