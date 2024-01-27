@@ -74,7 +74,6 @@ class JvcSensor(JvcProjectorEntity, SensorEntity):
     ) -> None:
         """Initialize the JVC Projector sensor."""
         super().__init__(coordinator)
-        # self._coordinator = coordinator
         self.entity_description = description
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
