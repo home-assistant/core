@@ -198,9 +198,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         )
         if self._value_is_int:
             if self._min_value:
-                self._min_value = int(round(self._min_value))
+                self._min_value = round(self._min_value)
             if self._max_value:
-                self._max_value = int(round(self._max_value))
+                self._max_value = round(self._max_value)
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""
