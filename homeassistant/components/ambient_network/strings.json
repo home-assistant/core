@@ -24,9 +24,6 @@
   },
   "entity": {
     "sensor": {
-      "pm25": {
-        "name": "PM2.5"
-      },
       "pm25_24h_average": {
         "name": "PM2.5 (24 hour average)"
       },
@@ -71,12 +68,6 @@
       },
       "monthly_rain": {
         "name": "Monthly rain"
-      },
-      "solar_radiation": {
-        "name": "Solar radiation"
-      },
-      "temperature": {
-        "name": "Temperature"
       },
       "uv_index": {
         "name": "UV index"

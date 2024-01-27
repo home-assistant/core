@@ -22,16 +22,14 @@ class AmbientNetworkEntity(CoordinatorEntity[AmbientNetworkDataUpdateCoordinator
         self,
         coordinator: AmbientNetworkDataUpdateCoordinator,
         description: EntityDescription,
-        station_name: str,
         mac_address: str,
     ) -> None:
         """Initialize the Ambient network entity."""
 
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self.entity_description = description
-        self.station_name = station_name
-        self._device_id = station_name
-        self._attr_unique_id = f"{station_name}_{description.key}"
+        self._device_id = mac_address
+        self._attr_unique_id = f"{mac_address}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac_address)},
             manufacturer="Ambient Weather",

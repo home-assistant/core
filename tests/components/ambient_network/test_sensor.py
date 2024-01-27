@@ -2,83 +2,121 @@
 
 from aioambient import OpenAPI
 from freezegun import freeze_time
+import pytest
 
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_platform
 
 
-@freeze_time("2023-11-07")
+@freeze_time("2023-11-08")
+@pytest.mark.parametrize("config_entry", ["AA:AA:AA:AA:AA:AA"], indirect=True)
 async def test_sensors(
     hass: HomeAssistant, open_api: OpenAPI, config_entry, aioambient
 ) -> None:
     """Test all sensors."""
     await setup_platform(hass, open_api, config_entry)
 
-    sensor = hass.states.get("sensor.station_a1_absolute_pressure")
+    sensor = hass.states.get("sensor.station_a_absolute_pressure")
     assert sensor is not None
-    assert sensor.state == "956.112968713878"
+    assert sensor.state == "977.616536580043"
 
-    sensor = hass.states.get("sensor.station_a1_relative_pressure")
+    sensor = hass.states.get("sensor.station_a_relative_pressure")
     assert sensor is not None
-    assert sensor.state == "1001.53798593541"
+    assert sensor.state == "1001.89694313129"
 
-    sensor = hass.states.get("sensor.station_a1_daily_rain")
-    assert sensor is not None
-    assert sensor.state == "0.0"
-
-    sensor = hass.states.get("sensor.station_a1_dew_point")
-    assert sensor is not None
-    assert sensor.state == "26.8333333333333"
-
-    sensor = hass.states.get("sensor.station_a1_feels_like")
-    assert sensor is not None
-    assert sensor.state == "30.3888888888889"
-
-    sensor = hass.states.get("sensor.station_a1_hourly_rain")
+    sensor = hass.states.get("sensor.station_a_daily_rain")
     assert sensor is not None
     assert sensor.state == "0.0"
 
-    sensor = hass.states.get("sensor.station_a1_humidity")
+    sensor = hass.states.get("sensor.station_a_dew_point")
     assert sensor is not None
-    assert sensor.state == "62"
+    assert sensor.state == "27.7777777777778"
 
-    sensor = hass.states.get("sensor.station_a1_last_rain")
+    sensor = hass.states.get("sensor.station_a_feels_like")
     assert sensor is not None
-    assert sensor.state == "2023-10-30T09:46:40+00:00"
+    assert sensor.state == "29.4444444444444"
 
-    sensor = hass.states.get("sensor.station_a1_max_daily_gust")
-    assert sensor is not None
-    assert sensor.state == "37.24022016"
-
-    sensor = hass.states.get("sensor.station_a1_monthly_rain")
+    sensor = hass.states.get("sensor.station_a_hourly_rain")
     assert sensor is not None
     assert sensor.state == "0.0"
 
-    sensor = hass.states.get("sensor.station_a1_solar_radiation")
+    sensor = hass.states.get("sensor.station_a_humidity")
     assert sensor is not None
-    assert sensor.state == "36.12"
+    assert sensor.state == "60"
 
-    sensor = hass.states.get("sensor.station_a1_temperature")
+    sensor = hass.states.get("sensor.station_a_last_rain")
     assert sensor is not None
-    assert sensor.state == "28.9444444444444"
+    assert sensor.state == "2023-10-30T09:45:00+00:00"
 
-    sensor = hass.states.get("sensor.station_a1_uv_index")
+    sensor = hass.states.get("sensor.station_a_max_daily_gust")
+    assert sensor is not None
+    assert sensor.state == "36.72523008"
+
+    sensor = hass.states.get("sensor.station_a_monthly_rain")
+    assert sensor is not None
+    assert sensor.state == "0.0"
+
+    sensor = hass.states.get("sensor.station_a_irradiance")
+    assert sensor is not None
+    assert sensor.state == "37.64"
+
+    sensor = hass.states.get("sensor.station_a_temperature")
+    assert sensor is not None
+    assert sensor.state == "28.2777777777778"
+
+    sensor = hass.states.get("sensor.station_a_uv_index")
     assert sensor is not None
     assert sensor.state == "0"
 
-    sensor = hass.states.get("sensor.station_a1_weekly_rain")
+    sensor = hass.states.get("sensor.station_a_weekly_rain")
     assert sensor is not None
     assert sensor.state == "0.0"
 
-    sensor = hass.states.get("sensor.station_a1_wind_direction")
+    sensor = hass.states.get("sensor.station_a_wind_direction")
     assert sensor is not None
-    assert sensor.state == "13"
+    assert sensor.state == "11"
 
-    sensor = hass.states.get("sensor.station_a1_wind_gust")
+    sensor = hass.states.get("sensor.station_a_wind_gust")
     assert sensor is not None
-    assert sensor.state == "19.52134272"
+    assert sensor.state == "14.75768448"
 
-    sensor = hass.states.get("sensor.station_a1_wind_speed")
+    sensor = hass.states.get("sensor.station_a_wind_speed")
     assert sensor is not None
-    assert sensor.state == "12.56897664"
+    assert sensor.state == "14.03347968"
+
+
+@freeze_time("2023-11-09")
+@pytest.mark.parametrize("config_entry", ["AA:AA:AA:AA:AA:AA"], indirect=True)
+async def test_sensors_with_outdated_data(
+    hass: HomeAssistant, open_api: OpenAPI, config_entry, aioambient
+) -> None:
+    """Test that the sensor is not populated if the last data is outdated."""
+    await setup_platform(hass, open_api, config_entry)
+
+    sensor = hass.states.get("sensor.station_a_absolute_pressure")
+    assert sensor is None
+
+
+@freeze_time("2023-11-08")
+@pytest.mark.parametrize("config_entry", ["BB:BB:BB:BB:BB:BB"], indirect=True)
+async def test_sensors_with_no_data(
+    hass: HomeAssistant, open_api: OpenAPI, config_entry, aioambient
+) -> None:
+    """Test that the sensor is not populated if the last data is absent."""
+    await setup_platform(hass, open_api, config_entry)
+
+    sensor = hass.states.get("sensor.station_b_absolute_pressure")
+    assert sensor is None
+
+
+@freeze_time("2023-11-08")
+@pytest.mark.parametrize("config_entry", ["CC:CC:CC:CC:CC:CC"], indirect=True)
+async def test_sensors_with_no_update_time(
+    hass: HomeAssistant, open_api: OpenAPI, config_entry, aioambient
+) -> None:
+    """Test that the sensor is not populated if the update time is missing."""
+    await setup_platform(hass, open_api, config_entry)
+
+    sensor = hass.states.get("sensor.station_c_absolute_pressure")
+    assert sensor is None

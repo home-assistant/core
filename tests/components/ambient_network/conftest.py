@@ -40,11 +40,11 @@ def devices_by_location_empty_fixture() -> list[dict[str, Any]]:
 
 def mock_device_details_callable(mac_address: str) -> dict[str, Any]:
     """Define data returned by the OpenAPI get_device_details() call."""
-    if mac_address == "AA:AA:AA:AA:AA:AA:AA":
-        return json.loads(
-            load_fixture("device_details_response_a.json", "ambient_network")
+    return json.loads(
+        load_fixture(
+            f"device_details_response_{mac_address[0].lower()}.json", "ambient_network"
         )
-    return json.loads(load_fixture("device_details_response_b.json", "ambient_network"))
+    )
 
 
 @pytest.fixture(name="open_api")
@@ -69,12 +69,12 @@ async def mock_aioambient(open_api: OpenAPI):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture() -> MockConfigEntry:
+def config_entry_a_fixture(request) -> MockConfigEntry:
     """Create a new config entry."""
     return MockConfigEntry(
         domain=ambient_network.DOMAIN,
-        title="Station A1",
-        data={"station_name": "Station A1", "mac_address": "AA:AA:AA:AA:AA:AA"},
+        title=f"Station {request.param[0]}",
+        data={"mac_address": request.param},
     )
 
 
