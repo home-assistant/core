@@ -239,7 +239,11 @@ def is_sensor_continuous(
         return ATTR_UNIT_OF_MEASUREMENT in attributes or ATTR_STATE_CLASS in attributes
     # If its not in the state machine, we need to check
     # the entity registry to see if its a sensor
-    # filter with a state class
+    # filter with a state class. We do not check
+    # for unit_of_measurement since the SQL query
+    # will filter out any sensors with a unit_of_measurement
+    # and we should never get here in live mode because
+    # the state machine will always have the state.
     return bool(
         (entry := ent_reg.async_get(entity_id))
         and entry.capabilities
