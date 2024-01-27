@@ -44,13 +44,6 @@ class LutronSwitch(LutronDevice, SwitchEntity):
 
     _lutron_device: Output
 
-    def __init__(
-        self, area_name: str, lutron_device: Output, controller: Lutron
-    ) -> None:
-        """Initialize the switch."""
-        self._prev_state = None
-        super().__init__(area_name, lutron_device, controller)
-
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._lutron_device.level = 100
@@ -64,15 +57,13 @@ class LutronSwitch(LutronDevice, SwitchEntity):
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self._lutron_device.last_level() > 0
+    def _request_state(self) -> None:
+        """Request the state from the device."""
+        self._lutron_device.level  # pylint: disable=pointless-statement
 
-    def update(self) -> None:
-        """Call when forcing a refresh of the device."""
-        if self._prev_state is None:
-            self._prev_state = self._lutron_device.level > 0
+    def _update_attrs(self) -> None:
+        """Update the state attributes."""
+        self._attr_is_on = self._lutron_device.last_level() > 0
 
 
 class LutronLed(LutronKeypad, SwitchEntity):
@@ -110,12 +101,10 @@ class LutronLed(LutronKeypad, SwitchEntity):
             "led": self._lutron_device.name,
         }
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self._lutron_device.last_state
-
-    def update(self) -> None:
-        """Call when forcing a refresh of the device."""
-        # The following property getter actually triggers an update in Lutron
+    def _request_state(self) -> None:
+        """Request the state from the device."""
         self._lutron_device.state  # pylint: disable=pointless-statement
+
+    def _update_attrs(self) -> None:
+        """Update the state attributes."""
+        self._attr_is_on = self._lutron_device.last_state

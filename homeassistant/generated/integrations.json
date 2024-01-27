@@ -128,6 +128,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "airtouch5": {
+      "name": "AirTouch 5",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "airvisual": {
       "name": "AirVisual",
       "integrations": {
@@ -572,6 +578,12 @@
     "balboa": {
       "name": "Balboa Spa Client",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "bang_olufsen": {
+      "name": "Bang & Olufsen",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -2488,9 +2500,8 @@
     },
     "home_plus_control": {
       "name": "Legrand Home+ Control",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integration_type": "virtual",
+      "supported_by": "netatmo"
     },
     "homematic": {
       "name": "Homematic",
@@ -2584,6 +2595,12 @@
       "name": "Hurrican Shutters Wholesale",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
+    },
+    "huum": {
+      "name": "Huum",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "hvv_departures": {
       "name": "HVV Departures",
@@ -3070,6 +3087,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "leaone": {
+      "name": "LeaOne",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "led_ble": {
       "name": "LED BLE",
       "integration_type": "hub",
@@ -3289,7 +3312,7 @@
     "lupusec": {
       "name": "Lupus Electronics LUPUSEC",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "lutron": {
@@ -5929,6 +5952,12 @@
           "name": "Tesla Wall Connector"
         }
       }
+    },
+    "teslemetry": {
+      "name": "Teslemetry",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "tessie": {
       "name": "Tessie",
