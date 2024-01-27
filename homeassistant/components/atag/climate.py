@@ -44,7 +44,9 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     _attr_hvac_modes = HVAC_MODES
     _attr_preset_modes = list(PRESET_MAP.keys())
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_ON
     )
 
     def __init__(self, coordinator, atag_id):
