@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
+@pytest.mark.parametrize("config_entry", ["AA:AA:AA:AA:AA:AA"], indirect=True)
 async def test_happy_path(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -28,7 +29,6 @@ async def test_happy_path(
     )
     assert setup_result["type"] == FlowResultType.FORM
     assert setup_result["step_id"] == "user"
-    assert setup_result["errors"] == {}
 
     with patch.object(
         open_api,
@@ -42,12 +42,11 @@ async def test_happy_path(
 
     assert user_result["type"] == FlowResultType.FORM
     assert user_result["step_id"] == "station"
-    assert user_result["errors"] == {}
 
     stations_result = await hass.config_entries.flow.async_configure(
         user_result["flow_id"],
         {
-            "station": "AA:AA:AA:AA:AA:AA,Station A1",
+            "station": "AA:AA:AA:AA:AA:AA,Station A",
         },
     )
 
@@ -70,7 +69,6 @@ async def test_no_station_found(
     )
     assert setup_result["type"] == FlowResultType.FORM
     assert setup_result["step_id"] == "user"
-    assert setup_result["errors"] == {}
 
     with patch.object(
         open_api,

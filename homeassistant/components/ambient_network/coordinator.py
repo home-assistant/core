@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import API_LAST_DATA, DOMAIN, ENTITY_MAC_ADDRESS, LOGGER, SCAN_INTERVAL
+from .const import API_LAST_DATA, CONF_MAC_ADDRESS, DOMAIN, LOGGER, SCAN_INTERVAL
 
 
 class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -29,22 +29,22 @@ class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
         """Fetch the latest data from the Ambient Network."""
 
         response = await self.api.get_device_details(
-            self.config_entry.data[ENTITY_MAC_ADDRESS]
+            self.config_entry.data[CONF_MAC_ADDRESS]
         )
 
         if (last_data := response.get(API_LAST_DATA)) is None:
             # Use previous data
-            last_data = self.data  # pragma: no cover
+            last_data = self.data
 
         # Eliminate data if the station hasn't been updated for a while.
         if (created_at := last_data.get("created_at")) is None:
-            return {}  # pragma: no cover
+            return {}
 
         # Eliminate data that has been generated more than an hour ago. The station is
         # probably offline.
         if int(created_at / 1000) < int(
             (datetime.now() - timedelta(hours=1)).timestamp()
         ):
-            return {}  # pragma: no cover
+            return {}
 
         return cast(dict[str, Any], last_data)

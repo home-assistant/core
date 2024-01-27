@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, ENTITY_MAC_ADDRESS, ENTITY_STATION_NAME
+from .const import CONF_MAC_ADDRESS, DOMAIN
 from .coordinator import AmbientNetworkDataUpdateCoordinator
 from .entity import AmbientNetworkEntity
 
@@ -149,15 +149,13 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes",
         state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_HOUR,
         translation_key="lightning_strikes_per_hour",
         icon="mdi:lightning-bolt",
-        native_unit_of_measurement="strikes",
+        native_unit_of_measurement="strikes/hour",
         state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_DISTANCE,
@@ -200,7 +198,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     SensorEntityDescription(
         key=TYPE_SOLARRADIATION,
-        translation_key="solar_radiation",
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         device_class=SensorDeviceClass.IRRADIANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -208,7 +205,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     SensorEntityDescription(
         key=TYPE_TEMPF,
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -217,7 +213,7 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_UV,
         translation_key="uv_index",
-        native_unit_of_measurement="Index",
+        native_unit_of_measurement="index",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
@@ -257,7 +253,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="yearly_rain",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
     ),
 )
@@ -276,8 +272,7 @@ async def async_setup_entry(
             AmbientNetworkSensor(
                 coordinator,
                 description,
-                coordinator.config_entry.data[ENTITY_STATION_NAME],
-                coordinator.config_entry.data[ENTITY_MAC_ADDRESS],
+                coordinator.config_entry.data[CONF_MAC_ADDRESS],
             )
             for description in SENSOR_DESCRIPTIONS
             if coordinator.data.get(description.key) is not None
@@ -291,12 +286,11 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         self,
         coordinator: AmbientNetworkDataUpdateCoordinator,
         description: SensorEntityDescription,
-        station_name: str,
         mac_address: str,
     ) -> None:
         """Initialize a sensor object."""
 
-        super().__init__(coordinator, description, station_name, mac_address)
+        super().__init__(coordinator, description, mac_address)
 
     def _update_attrs(self) -> None:
         """Update sensor attributes."""

@@ -28,7 +28,7 @@
       "tz": "America/Chicago"
     },
     "info": {
-      "name": "Station A1",
+      "name": "Station A",
       "coords": {
         "geo": {
           "coordinates": [-97.0, 32.0],
@@ -83,7 +83,7 @@
       "tz": "America/Chicago"
     },
     "info": {
-      "name": "Station B2",
+      "name": "Station B",
       "coords": {
         "coords": {
           "lat": 32.0,
@@ -108,7 +108,7 @@
     "macAddress": "CC:CC:CC:CC:CC:CC",
     "lastData": {},
     "info": {
-      "name": "Station C3",
+      "name": "Station C",
       "coords": {
         "geo": {
           "coordinates": [-97.0, 32.0],
@@ -158,7 +158,7 @@
       "tz": "America/Chicago"
     },
     "info": {
-      "name": "Station D4",
+      "name": "Station D",
       "coords": {
         "coords": {
           "lat": 32.0,
@@ -316,7 +316,7 @@
       "tz": "America/Chicago"
     },
     "info": {
-      "name": "Station E5",
+      "name": "Station E",
       "coords": {
         "coords": {
           "lat": 32.0,

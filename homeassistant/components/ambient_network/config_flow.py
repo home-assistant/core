@@ -27,9 +27,8 @@ from .const import (
     API_STATION_MAC_ADDRESS,
     API_STATION_NAME,
     API_STATION_TYPE,
+    CONF_MAC_ADDRESS,
     DOMAIN,
-    ENTITY_MAC_ADDRESS,
-    ENTITY_STATION_NAME,
 )
 
 CONFIG_USER = "user"
@@ -45,6 +44,23 @@ CONFIG_LOCATION_RADIUS_DEFAULT = DistanceConverter.convert(
 )
 
 CONFIG_STATION = "station"
+
+
+def get_station_name(station: dict[str, Any]) -> str:
+    """Pick a station name.
+
+    Station names can be empty, in which case we construct the name from
+    the location and device type.
+    """
+    if name := station.get(API_STATION_INFO, {}).get(API_STATION_NAME):
+        return str(name)
+    location = (
+        station.get(API_STATION_INFO, {})
+        .get(API_STATION_COORDS, {})
+        .get(API_STATION_LOCATION)
+    )
+    station_type = station.get(API_LAST_DATA, {}).get(API_STATION_TYPE)
+    return f"{location}{'' if location is None or station_type is None else ' '}{station_type}"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -64,8 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step to select the location."""
 
-        errors: dict[str, str] = {}
-        if user_input is not None:
+        if user_input:
             self._latitude = user_input[CONFIG_LOCATION][CONFIG_LOCATION_LATITUDE]
             self._longitude = user_input[CONFIG_LOCATION][CONFIG_LOCATION_LONGITUDE]
             self._radius = DistanceConverter.convert(
@@ -95,41 +110,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id=CONFIG_USER,
             data_schema=schema,
-            errors=errors,
         )
-
-    @staticmethod
-    def get_station_name(station: dict[str, Any]) -> str:
-        """Pick a station name.
-
-        Station names can be empty, in which case we construct the name from
-        the location and device type.
-        """
-        if name := station.get(API_STATION_INFO, {}).get(API_STATION_NAME):
-            return str(name)
-        location = (
-            station.get(API_STATION_INFO, {})
-            .get(API_STATION_COORDS, {})
-            .get(API_STATION_LOCATION)
-        )
-        station_type = station.get(API_LAST_DATA, {}).get(API_STATION_TYPE)
-        return f"{location}{'' if location is None or station_type is None else ' '}{station_type}"
 
     async def async_step_station(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the second step to select the station."""
 
-        errors: dict[str, str] = {}
-        if user_input is not None:
+        if user_input:
             mac_address, station_name = user_input[CONFIG_STATION].split(",")
             await self.async_set_unique_id(mac_address)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=station_name,
                 data={
-                    ENTITY_STATION_NAME: station_name,
-                    ENTITY_MAC_ADDRESS: mac_address,
+                    CONF_MAC_ADDRESS: mac_address,
                 },
             )
 
@@ -148,17 +143,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         )
 
-        if len(stations) == 0:
+        if not stations:
             return self.async_abort(reason="no_stations_found")
 
-        options: list[SelectOptionDict] = list[SelectOptionDict]()
-        for station in sorted(stations, key=ConfigFlow.get_station_name):
-            name: str = ConfigFlow.get_station_name(station)
-            option: SelectOptionDict = SelectOptionDict(
-                label=f"{name}",
-                value=f"{station[API_STATION_MAC_ADDRESS]},{name}",
+        options: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label=f"{get_station_name(station)}",
+                value=f"{station[API_STATION_MAC_ADDRESS]},{get_station_name(station)}",
             )
-            options.append(option)
+            for station in sorted(stations, key=get_station_name)
+        ]
 
         schema: vol.Schema = vol.Schema(
             {
@@ -174,5 +168,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id=CONFIG_STATION,
             data_schema=schema,
-            errors=errors,
         )
