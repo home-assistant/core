@@ -858,7 +858,6 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
                     "longitude": 2.0,
                     "radius": 3.0,
                 },
-                {"latitude": 1.0, "longitude": "1.0"},
                 {
                     "latitude": 1,
                     "longitude": 2,
@@ -878,18 +877,7 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
 def test_location_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test location selector."""
 
-    def location_converter(x):
-        if isinstance(x, dict):
-            converted_location: dict[str, float] = {}
-            for key in x:
-                converted_location[key] = float(x[key])
-            return converted_location
-        else:
-            return x
-
-    _test_selector(
-        "location", schema, valid_selections, invalid_selections, location_converter
-    )
+    _test_selector("location", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
