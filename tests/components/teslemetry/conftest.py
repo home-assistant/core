@@ -12,9 +12,8 @@ from .const import PRODUCTS, RESPONSE_OK, VEHICLE_DATA, WAKE_UP_ONLINE
 def mock_products():
     """Mock Tesla Fleet Api products method."""
     with patch(
-        "tesla_fleet_api.teslafleetapi.TeslaFleetApi.products",
+        "homeassistant.components.teslemetry.Teslemetry.products", return_value=PRODUCTS
     ) as mock_products:
-        mock_products.return_value = PRODUCTS
         yield mock_products
 
 
@@ -22,9 +21,9 @@ def mock_products():
 def mock_vehicle_data():
     """Mock Tesla Fleet API Vehicle Specific vehicle_data method."""
     with patch(
-        "tesla_fleet_api.vehiclespecific.VehicleSpecific.vehicle_data",
+        "homeassistant.components.teslemetry.VehicleSpecific.vehicle_data",
+        return_value=VEHICLE_DATA,
     ) as mock_vehicle_data:
-        mock_vehicle_data.return_value = VEHICLE_DATA
         yield mock_vehicle_data
 
 
@@ -32,9 +31,9 @@ def mock_vehicle_data():
 def mock_wake_up():
     """Mock Tesla Fleet API Vehicle Specific wake_up method."""
     with patch(
-        "tesla_fleet_api.vehiclespecific.VehicleSpecific.wake_up",
+        "homeassistant.components.teslemetry.VehicleSpecific.wake_up",
+        return_value=WAKE_UP_ONLINE,
     ) as mock_wake_up:
-        mock_wake_up.return_value = WAKE_UP_ONLINE
         yield mock_wake_up
 
 
@@ -42,7 +41,7 @@ def mock_wake_up():
 def mock_request():
     """Mock Tesla Fleet API Vehicle Specific class."""
     with patch(
-        "tesla_fleet_api.teslafleetapi.TeslaFleetApi._request",
+        "homeassistant.components.teslemetry.Teslemetry._request",
+        return_value=RESPONSE_OK,
     ) as mock_request:
-        mock_request.return_value = RESPONSE_OK
         yield mock_request

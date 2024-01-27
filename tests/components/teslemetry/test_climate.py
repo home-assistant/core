@@ -94,9 +94,9 @@ async def test_errors(
     entity_id = "climate.test_climate"
 
     with patch(
-        "tesla_fleet_api.vehiclespecific.VehicleSpecific.auto_conditioning_start"
+        "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+        side_effect=InvalidCommand,
     ) as mock_on, pytest.raises(HomeAssistantError) as error:
-        mock_on.side_effect = InvalidCommand
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_TURN_ON,
@@ -108,7 +108,7 @@ async def test_errors(
 
 
 async def test_asleep_or_offline(
-    hass: HomeAssistant, mock_wake_up, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
 ) -> None:
     """Tests asleep is handled."""
 
