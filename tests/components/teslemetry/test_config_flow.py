@@ -19,9 +19,8 @@ from .const import CONFIG
 def mock_test():
     """Mock Teslemetry api class."""
     with patch(
-        "tesla_fleet_api.teslemetry.Teslemetry.test",
+        "homeassistant.components.teslemetry.Teslemetry.test", return_value=True
     ) as mock_test:
-        mock_test.return_value = True
         yield mock_test
 
 
