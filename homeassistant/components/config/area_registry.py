@@ -39,8 +39,9 @@ def websocket_list_areas(
         vol.Required("type"): "config/area_registry/create",
         vol.Optional("aliases"): list,
         vol.Optional("icon"): str,
+        vol.Optional("floor_id"): str,
         vol.Required("name"): str,
-        vol.Optional("picture"): vol.Any(str, None),
+        vol.Optional("picture"): str,
     }
 )
 @websocket_api.require_admin
