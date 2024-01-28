@@ -1,16 +1,15 @@
-"""Support for SimpliSafe binary sensors."""
+"""Support for SimpliSafe cameras."""
 from __future__ import annotations
 
 from datetime import datetime
 import os
-from typing import Any
+from typing import Any, cast
 
 from simplipy.device import DeviceTypes
-from simplipy.device.camera import Camera, CameraTypes
+from simplipy.device.camera import CameraTypes
 from simplipy.errors import SimplipyError
 from simplipy.system.v3 import SystemV3
 from simplipy.websocket import EVENT_CAMERA_MOTION_DETECTED, WebsocketEvent
-
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera
@@ -38,14 +37,14 @@ SERVICE_OC_IMAGE_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Required(ATTR_FILENAME): cv.template,
-        vol.Optional(ATTR_WIDTH, default=720): vol.Coerce(int)
+        vol.Optional(ATTR_WIDTH, default=720): vol.Coerce(int),
     }
 )
 
 SERVICE_OC_CLIP_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_FILENAME): cv.template
+        vol.Required(ATTR_FILENAME): cv.template,
     }
 )
 
@@ -54,15 +53,14 @@ SERVICES = (
     SERVICE_OC_CLIP,
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up SimpliSafe cameras based on a config entry."""
     simplisafe = hass.data[DOMAIN][entry.entry_id]
 
-    cameras: list[
-        SimplisafeOutdoorCamera
-    ] = []
+    cameras: list[SimplisafeOutdoorCamera] = []
 
     for system in simplisafe.systems.values():
         if system.version == 2:
@@ -82,8 +80,10 @@ async def async_setup_entry(
 
     async_add_entities(cameras)
 
-class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
-    """Define the outdoor camera."""
+
+class SimplisafeMotionCamera(SimpliSafeEntity, Camera):
+    """A camera base class that supports motion capture media."""
+
     _device: Camera
     _attr_image_last_updated: datetime | None = None
     _attr_image_url: str | None = None
@@ -114,7 +114,7 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
     @property
     def name(self) -> str | None:
         """Return a good name for this camera."""
-        return self._device.name
+        return cast(str, self._device.name)
 
     @callback
     def async_unload(self) -> None:
@@ -122,7 +122,7 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
         for service in SERVICES:
             self._hass.services.async_remove(DOMAIN, service)
 
-    async def async_camera_image(
+    async def async_camera_motion_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
@@ -130,7 +130,7 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
             return self._attr_cached_image
 
         if self._attr_image_url is None:
-            return
+            return None
 
         self._attr_cached_image = await self._simplisafe.async_media_request(
             self._attr_image_url.replace("{&width}", "&width=" + str(width))
@@ -151,7 +151,7 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
                 return
 
             width = call.data.get(ATTR_WIDTH)
-            filename: Template = call.data.get(ATTR_FILENAME)
+            filename: Template = call.data.get(ATTR_FILENAME)  # type: ignore[assignment]
             filename.hass = self._hass
             snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: self})
 
@@ -161,8 +161,8 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
                 )
             except SimplipyError as err:
                 raise HomeAssistantError(
-                f'Error fetching motion media "{self._system.system_id}": {err}'
-            ) from err
+                    f'Error fetching motion media "{self._system.system_id}": {err}'
+                ) from err
 
             try:
                 await self._hass.async_add_executor_job(
@@ -171,12 +171,11 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
             except OSError as err:
                 LOGGER.error("Can't write image to file: %s", err)
 
-
         async def save_clip_handler(call: ServiceCall) -> None:
             if self._attr_clip_url is None:
                 return
 
-            filename: Template = call.data.get(ATTR_FILENAME)
+            filename: Template = call.data.get(ATTR_FILENAME)  # type: ignore[assignment]
             filename.hass = self._hass
             clip_file = filename.async_render(variables={ATTR_ENTITY_ID: self})
 
@@ -184,13 +183,11 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
                 clip = await self._simplisafe.async_media_request(self._attr_clip_url)
             except SimplipyError as err:
                 raise HomeAssistantError(
-                f'Error fetching motion media "{self._system.system_id}": {err}'
-            ) from err
+                    f'Error fetching motion media "{self._system.system_id}": {err}'
+                ) from err
 
             try:
-                await self._hass.async_add_executor_job(
-                    _write_image, clip_file, clip
-                )
+                await self._hass.async_add_executor_job(_write_image, clip_file, clip)
             except OSError as err:
                 LOGGER.error("Can't write image to file: %s", err)
 
@@ -208,7 +205,6 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
             schema=SERVICE_OC_CLIP_SCHEMA,
         )
 
-
     @callback
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Receive a Simplisafe WebsocketEvent aimed at me specifically, saving the media urls for later."""
@@ -216,12 +212,6 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
             return
         if event.sensor_type != DeviceTypes.OUTDOOR_CAMERA:
             return
-
-        LOGGER.debug(
-            "Outdoor Camera %s received a websocket event: %s",
-            self._device.serial,
-            event,
-        )
 
         if event.media_urls is None:
             LOGGER.error("MISSING MEDIA URLS!")
@@ -233,11 +223,21 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
         self._attr_hls_url = event.media_urls["hls_url"]
         self._attr_cached_image = None
 
+
+class SimplisafeOutdoorCamera(SimplisafeMotionCamera):
+    """Define the outdoor camera."""
+
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Outdoor camera only supports the last motion event."""
+        return await self.async_camera_motion_image(width=width, height=height)
+
     def video_url(
         self,
         width: int,
         audio_encoding: str,
         **kwargs: Any,
     ) -> str | None:
-        """The outdoor camera does not support video streaming."""
+        """Outdoor camera does not support video streaming."""
         return None
