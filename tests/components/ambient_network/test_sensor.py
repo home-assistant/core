@@ -149,7 +149,7 @@ async def test_sensors_disappearing(
 
         sensor = hass.states.get("sensor.station_a_absolute_pressure")
         assert sensor is not None
-        assert sensor.state == "unknown"
+        assert sensor.state == "unavailable"
         assert caplog.text.count("Cannot connect to Ambient Network") == 1
 
     # Network comes back. Sensor should start reporting again. Log message
@@ -160,4 +160,4 @@ async def test_sensors_disappearing(
         sensor = hass.states.get("sensor.station_a_absolute_pressure")
         assert sensor is not None
         assert float(sensor.state) == pytest.approx(977.61653)
-        assert caplog.text.count("Station 'Station A' is back online") == 1
+        assert caplog.text.count("Fetching ambient_network data recovered") == 1
