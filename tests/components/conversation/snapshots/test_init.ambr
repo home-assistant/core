@@ -539,7 +539,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named kitchen',
+          'speech': 'No device or entity named kitchen light',
         }),
       }),
     }),
@@ -679,7 +679,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named late added',
+          'speech': 'No device or entity named late added light',
         }),
       }),
     }),
@@ -759,7 +759,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named kitchen',
+          'speech': 'No device or entity named kitchen light',
         }),
       }),
     }),
@@ -779,7 +779,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named my cool',
+          'speech': 'No device or entity named my cool light',
         }),
       }),
     }),
@@ -919,7 +919,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named kitchen',
+          'speech': 'No device or entity named kitchen light',
         }),
       }),
     }),
@@ -969,7 +969,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named renamed',
+          'speech': 'No device or entity named renamed light',
         }),
       }),
     }),
@@ -1403,13 +1403,18 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'match': True,
+        'sentence_template': '<turn> on (<area> <name>|<name> [in <area>])',
         'slots': dict({
           'name': 'my cool light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
           }),
+        }),
+        'unmatched_slots': dict({
         }),
       }),
       dict({
@@ -1423,13 +1428,18 @@
         'intent': dict({
           'name': 'HassTurnOff',
         }),
+        'match': True,
+        'sentence_template': '[<turn>] (<area> <name>|<name> [in <area>]) [to] off',
         'slots': dict({
           'name': 'my cool light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
           }),
+        }),
+        'unmatched_slots': dict({
         }),
       }),
       dict({
@@ -1448,14 +1458,19 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'match': True,
+        'sentence_template': '<turn> on [all] <light> in <area>',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
           }),
+        }),
+        'unmatched_slots': dict({
         }),
       }),
       dict({
@@ -1479,15 +1494,20 @@
         'intent': dict({
           'name': 'HassGetState',
         }),
+        'match': True,
+        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [in <area>]',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'light',
           'state': 'on',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': False,
           }),
+        }),
+        'unmatched_slots': dict({
         }),
       }),
       dict({
@@ -1495,16 +1515,22 @@
           'domain': dict({
             'name': 'domain',
             'text': '',
-            'value': 'script',
+            'value': 'scene',
           }),
         }),
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'match': False,
+        'sentence_template': '[activate|<turn>] <name> [scene] [on]',
         'slots': dict({
-          'domain': 'script',
+          'domain': 'scene',
         }),
+        'source': 'builtin',
         'targets': dict({
+        }),
+        'unmatched_slots': dict({
+          'name': 'this will not match anything',
         }),
       }),
     ]),
@@ -1517,5 +1543,118 @@
       'text': 'my cool light',
       'value': 'my cool light',
     }),
+  })
+# ---
+# name: test_ws_hass_agent_debug_custom_sentence
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'beer_style': dict({
+            'name': 'beer_style',
+            'text': 'lager',
+            'value': 'lager',
+          }),
+        }),
+        'file': 'en/beer.yaml',
+        'intent': dict({
+          'name': 'OrderBeer',
+        }),
+        'match': True,
+        'sentence_template': "I'd like to order a {beer_style} [please]",
+        'slots': dict({
+          'beer_style': 'lager',
+        }),
+        'source': 'custom',
+        'targets': dict({
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_null_result
+  dict({
+    'results': list([
+      None,
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_out_of_range
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'brightness': dict({
+            'name': 'brightness',
+            'text': '100%',
+            'value': 100,
+          }),
+          'name': dict({
+            'name': 'name',
+            'text': 'test light',
+            'value': 'test light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassLightSet',
+        }),
+        'match': True,
+        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
+        'slots': dict({
+          'brightness': 100,
+          'name': 'test light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+          'light.demo_1234': dict({
+            'matched': True,
+          }),
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_out_of_range.1
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'name': dict({
+            'name': 'name',
+            'text': 'test light',
+            'value': 'test light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassLightSet',
+        }),
+        'match': False,
+        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
+        'slots': dict({
+          'name': 'test light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+        }),
+        'unmatched_slots': dict({
+          'brightness': 1001,
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_sentence_trigger
+  dict({
+    'results': list([
+      dict({
+        'match': True,
+        'sentence_template': 'hello[ world]',
+        'source': 'trigger',
+      }),
+    ]),
   })
 # ---

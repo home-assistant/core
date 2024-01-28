@@ -132,6 +132,7 @@ def _async_register_mac(
         device_entry = dev_reg.async_get(ev.data["device_id"])
 
         if device_entry is None:
+            # This should not happen, since the device was just created.
             return
 
         # Check if device has a mac
@@ -153,8 +154,7 @@ def _async_register_mac(
         if (entity_id := ent_reg.async_get_entity_id(DOMAIN, *unique_id)) is None:
             return
 
-        if (entity_entry := ent_reg.async_get(entity_id)) is None:
-            return
+        entity_entry = ent_reg.entities[entity_id]
 
         # Make sure entity has a config entry and was disabled by the
         # default disable logic in the integration and new entities
@@ -241,12 +241,12 @@ class TrackerEntity(BaseTrackerEntity):
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        raise NotImplementedError
+        return None
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        raise NotImplementedError
+        return None
 
     @property
     def state(self) -> str | None:

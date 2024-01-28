@@ -10,6 +10,10 @@
         "data_description": {
           "host": "Hostname or IP address of your TechnoVE station."
         }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the TechnoVE Station named `{name}` to Home Assistant?",
+        "title": "Discovered TechnoVE station"
       }
     },
     "error": {
@@ -27,9 +31,6 @@
       },
       "voltage_out": {
         "name": "Output voltage"
-      },
-      "max_current": {
-        "name": "Max current"
       },
       "max_station_current": {
         "name": "Max station current"
