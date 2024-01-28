@@ -26,7 +26,6 @@ async def test_sensors(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    entity_registry = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
