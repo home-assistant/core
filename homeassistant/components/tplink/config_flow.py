@@ -159,7 +159,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._discovered_device = device
                 await set_credentials(self.hass, username, password)
                 self.hass.async_create_task(self._async_reload_requires_auth_entries())
-                return await self.async_step_discovery_confirm()
+                return self._async_create_entry_from_device(self._discovered_device)
 
         placeholders = self._async_make_placeholders_from_discovery()
         self.context["title_placeholders"] = placeholders
