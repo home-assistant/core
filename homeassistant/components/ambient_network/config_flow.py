@@ -40,8 +40,8 @@ from .const import (
 CONF_USER = "user"
 CONF_STATION = "station"
 
-# Roughly half a mile
-CONF_RADIUS_DEFAULT = 800
+# One mile
+CONF_RADIUS_DEFAULT = 1609.34
 
 
 def get_station_name(station: dict[str, Any]) -> str:
@@ -74,18 +74,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._radius = 0.0
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
     ) -> FlowResult:
         """Handle the initial step to select the location."""
 
         if user_input:
             self._latitude = user_input[CONF_LOCATION][CONF_LATITUDE]
             self._longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]
-            self._radius = DistanceConverter.convert(
-                user_input[CONF_LOCATION][CONF_RADIUS],
-                UnitOfLength.METERS,
-                UnitOfLength.MILES,
-            )
+            self._radius = user_input[CONF_LOCATION][CONF_RADIUS]
             return await self.async_step_station()
 
         schema: vol.Schema = self.add_suggested_values_to_schema(
@@ -98,16 +96,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             {
                 CONF_LOCATION: {
-                    CONF_LATITUDE: self.hass.config.latitude,
-                    CONF_LONGITUDE: self.hass.config.longitude,
-                    CONF_RADIUS: CONF_RADIUS_DEFAULT,
+                    CONF_LATITUDE: self.hass.config.latitude
+                    if not errors
+                    else self._latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude
+                    if not errors
+                    else self._longitude,
+                    CONF_RADIUS: CONF_RADIUS_DEFAULT if not errors else self._radius,
                 }
             },
         )
 
         return self.async_show_form(
-            step_id=CONF_USER,
-            data_schema=schema,
+            step_id=CONF_USER, data_schema=schema, errors=errors if errors else {}
         )
 
     async def async_step_station(
@@ -128,7 +129,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         client: OpenAPI = OpenAPI()
         stations: list[dict[str, Any]] = await client.get_devices_by_location(
-            self._latitude, self._longitude, radius=self._radius
+            self._latitude,
+            self._longitude,
+            radius=DistanceConverter.convert(
+                self._radius,
+                UnitOfLength.METERS,
+                UnitOfLength.MILES,
+            ),
         )
 
         # Filter out indoor stations
@@ -142,7 +149,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if not stations:
-            return self.async_abort(reason="no_stations_found")
+            return await self.async_step_user(
+                errors={"base": "no_stations_found"},
+            )
 
         options: list[SelectOptionDict] = [
             SelectOptionDict(

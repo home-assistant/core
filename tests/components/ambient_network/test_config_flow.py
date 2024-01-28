@@ -79,5 +79,6 @@ async def test_no_station_found(
             {"location": {"latitude": 10.0, "longitude": 20.0, "radius": 1.0}},
         )
 
-    assert user_result["type"] == FlowResultType.ABORT
-    assert user_result["reason"] == "no_stations_found"
+    assert user_result["type"] == FlowResultType.FORM
+    assert user_result["step_id"] == "user"
+    assert user_result["errors"] == {"base": "no_stations_found"}
