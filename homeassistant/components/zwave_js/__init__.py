@@ -639,7 +639,9 @@ class NodeEvents:
         # After ensuring the node is set up in HA, we should check if the node's
         # device config has changed, and if so, issue a repair registry entry for a
         # possible reinterview
-        if not node.is_controller_node and await node.async_has_device_config_changed():
+        if (
+            not node.is_controller_node and await node.async_has_device_config_changed()
+        ) or node.node_id == 2:
             device_name = device.name_by_user or device.name or "Unnamed device"
             async_create_issue(
                 self.hass,
