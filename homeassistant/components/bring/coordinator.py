@@ -43,25 +43,22 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
             lists_response = await self.hass.async_add_executor_job(
                 self.bring.loadLists
             )
-            lists = lists_response["lists"]
         except BringRequestException as e:
-            _LOGGER.warning("Unable to connect and retrieve data from bring")
-            raise UpdateFailed from e
+            raise UpdateFailed("Unable to connect and retrieve data from bring") from e
         except BringParseException as e:
-            _LOGGER.warning("Unable to parse response from bring")
-            raise UpdateFailed from e
+            raise UpdateFailed("Unable to parse response from bring") from e
 
-        for lst in lists:
+        for lst in lists_response["lists"]:
             try:
                 items = await self.hass.async_add_executor_job(
                     self.bring.getItems, lst["listUuid"]
                 )
             except BringRequestException as e:
-                _LOGGER.warning("Unable to connect and retrieve data from bring")
-                raise UpdateFailed from e
+                raise UpdateFailed(
+                    "Unable to connect and retrieve data from bring"
+                ) from e
             except BringParseException as e:
-                _LOGGER.warning("Unable to parse response from bring")
-                raise UpdateFailed from e
+                raise UpdateFailed("Unable to parse response from bring") from e
             lst["items"] = items["purchase"]
 
-        return lists
+        return lists_response["lists"]

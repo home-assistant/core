@@ -84,7 +84,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == "form"
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"]["base"] == text_error
 
         # Recover

@@ -39,16 +39,16 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert unique_id
 
-    for bringList in coordinator.data:
-        async_add_entities(
-            [
-                BringTodoListEntity(
-                    coordinator,
-                    bringList=bringList,
-                    unique_id=f"{unique_id} {bringList['listUuid']}",
-                )
-            ],
-        )
+    async_add_entities(
+        [
+            BringTodoListEntity(
+                coordinator,
+                bringList=bringList,
+                unique_id=unique_id,
+            )
+            for bringList in coordinator.data
+        ],
+    )
 
 
 class BringTodoListEntity(
@@ -75,7 +75,7 @@ class BringTodoListEntity(
         super().__init__(coordinator)
         self._listUuid = bringList["listUuid"]
         self._attr_name = bringList["name"]
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = f"{unique_id} {self._listUuid}"
 
     @property
     def todo_items(self) -> list[TodoItem]:

@@ -31,12 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     bring = Bring(email, password)
 
+    def login_and_load_lists() -> None:
+        bring.login()
+        bring.loadLists()
+
     try:
-
-        def login_and_load_lists() -> None:
-            bring.login()
-            bring.loadLists()
-
         await hass.async_add_executor_job(login_and_load_lists)
     except BringRequestException as e:
         raise ConfigEntryNotReady(
