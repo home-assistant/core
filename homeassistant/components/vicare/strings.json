@@ -249,7 +249,12 @@
         "name": "Battery power"
       },
       "ess_state": {
-        "name": "Battery state"
+        "name": "Battery state",
+        "state": {
+          "charge": "Charge",
+          "discharge": "Discharge",
+          "standby": "Standby"
+        }
       },
       "pcc_current_power_exchange": {
         "name": "PCC power exchange"
@@ -267,7 +272,13 @@
         "name": "Solar energy production today"
       },
       "photovoltaic_status": {
-        "name": "Solar state"
+        "name": "Solar state",
+        "state": {
+          "nothing": "Nothing",
+          "ready": "Ready",
+          "production": "Production",
+          "unknown": "Unknown"
+        }
       },
       "supply_temperature": {
         "name": "Supply temperature"
