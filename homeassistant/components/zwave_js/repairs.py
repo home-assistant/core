@@ -22,14 +22,8 @@ class DeviceConfigFileChangedFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        return await self.async_step_menu()
-
-    async def async_step_menu(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the menu step of a fix flow."""
         return self.async_show_menu(
-            step_id="confirm",
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders={"device_name": self.device_name},
         )
