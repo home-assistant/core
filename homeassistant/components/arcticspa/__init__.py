@@ -9,7 +9,7 @@ from pyarcticspas.error import SpaHTTPException, TooManyRequestsError, Unauthori
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import ArcticSpaDataUpdateCoordinator
@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await device.async_status()
     except UnauthorizedError as ex:
-        raise ConfigEntryAuthFailed("Invalid API token") from ex
+        raise ConfigEntryError("Invalid API token") from ex
     except TooManyRequestsError as ex:
         raise ConfigEntryNotReady("API overloaded, please try later") from ex
     except SpaHTTPException as ex:
