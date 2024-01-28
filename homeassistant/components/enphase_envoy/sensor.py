@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from pyenphase import (
     EnvoyEncharge,
@@ -145,24 +146,24 @@ PRODUCTION_SENSORS = (
 
 def phase_sensor_from_production_sensor(
     sensors: list[EnvoyProductionSensorEntityDescription],
-) -> list[EnvoyProductionSensorEntityDescription]:
+) -> dict[str, list[EnvoyProductionSensorEntityDescription]]:
     """Build phase sensors from production sensors."""
-    return [
-        replace(
-            sensor,
-            key=f"{sensor.key}_l{phase + 1}",
-            translation_key=f"{sensor.translation_key}_phase",
-            on_phase=PhaseNames(PHASENAMES[phase]),
-            translation_placeholders={"phase_name": f"l{phase + 1}"},
-        )
-        for sensor in sensors
+    return {
+        (PhaseNames(PHASENAMES[phase])): [
+            replace(
+                sensor,
+                key=f"{sensor.key}_l{phase + 1}",
+                translation_key=f"{sensor.translation_key}_phase",
+                on_phase=PhaseNames(PHASENAMES[phase]),
+                translation_placeholders={"phase_name": f"l{phase + 1}"},
+            )
+            for sensor in sensors
+        ]
         for phase in range(0, 3)
-    ]
+    }
 
 
-PRODUCTION_PHASE_SENSORS = tuple(
-    phase_sensor_from_production_sensor(list(PRODUCTION_SENSORS))
-)
+PRODUCTION_PHASE_SENSORS = phase_sensor_from_production_sensor(list(PRODUCTION_SENSORS))
 
 
 @dataclass(frozen=True)
@@ -229,23 +230,25 @@ CONSUMPTION_SENSORS = (
 
 def phase_sensor_from_consumption_sensor(
     sensors: list[EnvoyConsumptionSensorEntityDescription],
-) -> list[EnvoyConsumptionSensorEntityDescription]:
-    """Build phase sensors from production sensors."""
-    return [
-        replace(
-            sensor,
-            key=f"{sensor.key}_l{phase + 1}",
-            translation_key=f"{sensor.translation_key}_phase",
-            on_phase=PhaseNames(PHASENAMES[phase]),
-            translation_placeholders={"phase_name": f"l{phase + 1}"},
-        )
-        for sensor in sensors
+) -> dict[str, list[EnvoyConsumptionSensorEntityDescription]]:
+    """Build phase sensors from consumption sensors."""
+    return {
+        (PhaseNames(PHASENAMES[phase])): [
+            replace(
+                sensor,
+                key=f"{sensor.key}_l{phase + 1}",
+                translation_key=f"{sensor.translation_key}_phase",
+                on_phase=PhaseNames(PHASENAMES[phase]),
+                translation_placeholders={"phase_name": f"l{phase + 1}"},
+            )
+            for sensor in sensors
+        ]
         for phase in range(0, 3)
-    ]
+    }
 
 
-CONSUMPTION_PHASE_SENSORS = tuple(
-    phase_sensor_from_consumption_sensor(list(CONSUMPTION_SENSORS))
+CONSUMPTION_PHASE_SENSORS = phase_sensor_from_consumption_sensor(
+    list(CONSUMPTION_SENSORS)
 )
 
 
@@ -418,22 +421,20 @@ async def async_setup_entry(
         )
     # For each production phase reported add production entities
     if envoy_data.system_production_phases:
-        for use_phase in envoy_data.system_production_phases:
-            if envoy_data.system_production_phases[use_phase] is not None:
-                entities.extend(
-                    EnvoyProductionPhaseEntity(coordinator, description)
-                    for description in PRODUCTION_PHASE_SENSORS
-                    if description.on_phase == use_phase
-                )
+        entities.extend(
+            EnvoyProductionPhaseEntity(coordinator, description)
+            for use_phase, phase in envoy_data.system_production_phases.items()
+            for description in PRODUCTION_PHASE_SENSORS[use_phase]
+            if phase is not None
+        )
     # For each consumption phase reported add consumption entities
     if envoy_data.system_consumption_phases:
-        for use_phase in envoy_data.system_consumption_phases:
-            if envoy_data.system_consumption_phases[use_phase] is not None:
-                entities.extend(
-                    EnvoyConsumptionPhaseEntity(coordinator, description)
-                    for description in CONSUMPTION_PHASE_SENSORS
-                    if description.on_phase == use_phase
-                )
+        entities.extend(
+            EnvoyConsumptionPhaseEntity(coordinator, description)
+            for use_phase, phase in envoy_data.system_consumption_phases.items()
+            for description in CONSUMPTION_PHASE_SENSORS[use_phase]
+            if phase is not None
+        )
 
     if envoy_data.inverters:
         entities.extend(
@@ -530,15 +531,15 @@ class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
+        if TYPE_CHECKING:
+            assert self.entity_description.on_phase
+            assert self.data.system_production_phases
+
         if (
-            self.entity_description.on_phase is None
-            or self.data.system_production_phases is None
-        ):
-            return None
-        system_production = self.data.system_production_phases[
-            self.entity_description.on_phase
-        ]
-        if system_production is None:
+            system_production := self.data.system_production_phases[
+                self.entity_description.on_phase
+            ]
+        ) is None:
             return None
         return self.entity_description.value_fn(system_production)
 
@@ -551,15 +552,15 @@ class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
+        if TYPE_CHECKING:
+            assert self.entity_description.on_phase
+            assert self.data.system_consumption_phases
+
         if (
-            self.entity_description.on_phase is None
-            or self.data.system_consumption_phases is None
-        ):
-            return None
-        system_consumption = self.data.system_consumption_phases[
-            self.entity_description.on_phase
-        ]
-        if system_consumption is None:
+            system_consumption := self.data.system_consumption_phases[
+                self.entity_description.on_phase
+            ]
+        ) is None:
             return None
         return self.entity_description.value_fn(system_consumption)
 
