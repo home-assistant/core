@@ -23,7 +23,6 @@ from .coordinator import BringData, BringDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=90)
 
 
 async def async_setup_entry(
