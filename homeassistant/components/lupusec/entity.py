@@ -4,7 +4,6 @@ import lupupy
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import LupusecSystem
 from .const import DOMAIN, TYPE_TRANSLATION
 
 
@@ -14,7 +13,7 @@ class LupusecDevice(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, data: LupusecSystem, device: lupupy.devices.LupusecDevice
+        self, data: lupupy.Lupusec, device: lupupy.devices.LupusecDevice
     ) -> None:
         """Initialize a sensor for Lupusec device."""
         self._data = data
@@ -30,7 +29,7 @@ class LupusecBaseSensor(LupusecDevice):
     """Lupusec Sensor base entity."""
 
     def __init__(
-        self, data: LupusecSystem, device: lupupy.devices.LupusecDevice, entry_id: str
+        self, data: lupupy.Lupusec, device: lupupy.devices.LupusecDevice, entry_id: str
     ) -> None:
         """Initialize the LupusecBaseSensor."""
         super().__init__(data, device)

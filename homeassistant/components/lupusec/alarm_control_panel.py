@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, LupusecSystem
+from . import DOMAIN
 from .entity import LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
@@ -34,9 +34,7 @@ async def async_setup_entry(
     """Set up an alarm control panel for a Lupusec device."""
     data = hass.data[DOMAIN][config_entry.entry_id]
 
-    alarm_devices = [
-        LupusecAlarm(data, data.lupusec.get_alarm(), config_entry.entry_id)
-    ]
+    alarm_devices = [LupusecAlarm(data, data.get_alarm(), config_entry.entry_id)]
 
     async_add_devices(alarm_devices)
 
@@ -52,7 +50,7 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
     )
 
     def __init__(
-        self, data: LupusecSystem, device: lupupy.devices.LupusecAlarm, entry_id: str
+        self, data: lupupy.Lupusec, device: lupupy.devices.LupusecAlarm, entry_id: str
     ) -> None:
         """Initialize the LupusecAlarm class."""
         super().__init__(data, device)
@@ -61,7 +59,7 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
             identifiers={(DOMAIN, entry_id)},
             name=device.name,
             manufacturer="Lupus Electronics",
-            model=f"Lupusec-XT{data.lupusec.model}",
+            model=f"Lupusec-XT{data.model}",
         )
 
     @property
