@@ -31,7 +31,13 @@ from homeassistant.util import language as language_util
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import HOME_ASSISTANT_AGENT
-from .default_agent import DefaultAgent, async_setup as async_setup_default_agent
+from .default_agent import (
+    METADATA_CUSTOM_FILE,
+    METADATA_CUSTOM_SENTENCE,
+    DefaultAgent,
+    SentenceTriggerResult,
+    async_setup as async_setup_default_agent,
+)
 
 __all__ = [
     "DOMAIN",
@@ -324,49 +330,64 @@ async def websocket_hass_agent_debug(
     # Return results for each sentence in the same order as the input.
     result_dicts: list[dict[str, Any] | None] = []
     for result in results:
-        if result is None:
-            # Indicate that a recognition failure occurred
-            result_dicts.append(None)
-            continue
-
-        successful_match = not result.unmatched_entities
-        result_dict = {
-            # Name of the matching intent (or the closest)
-            "intent": {
-                "name": result.intent.name,
-            },
-            # Slot values that would be received by the intent
-            "slots": {  # direct access to values
-                entity_key: entity.value
-                for entity_key, entity in result.entities.items()
-            },
-            # Extra slot details, such as the originally matched text
-            "details": {
-                entity_key: {
-                    "name": entity.name,
-                    "value": entity.value,
-                    "text": entity.text,
-                }
-                for entity_key, entity in result.entities.items()
-            },
-            # Entities/areas/etc. that would be targeted
-            "targets": {},
-            # True if match was successful
-            "match": successful_match,
-            # Text of the sentence template that matched (or was closest)
-            "sentence_template": "",
-            # When match is incomplete, this will contain the best slot guesses
-            "unmatched_slots": _get_unmatched_slots(result),
-        }
-
-        if successful_match:
-            result_dict["targets"] = {
-                state.entity_id: {"matched": is_matched}
-                for state, is_matched in _get_debug_targets(hass, result)
+        result_dict: dict[str, Any] | None = None
+        if isinstance(result, SentenceTriggerResult):
+            result_dict = {
+                # Matched a user-defined sentence trigger.
+                # We can't provide the response here without executing the
+                # trigger.
+                "match": True,
+                "source": "trigger",
+                "sentence_template": result.sentence_template or "",
+            }
+        elif isinstance(result, RecognizeResult):
+            successful_match = not result.unmatched_entities
+            result_dict = {
+                # Name of the matching intent (or the closest)
+                "intent": {
+                    "name": result.intent.name,
+                },
+                # Slot values that would be received by the intent
+                "slots": {  # direct access to values
+                    entity_key: entity.value
+                    for entity_key, entity in result.entities.items()
+                },
+                # Extra slot details, such as the originally matched text
+                "details": {
+                    entity_key: {
+                        "name": entity.name,
+                        "value": entity.value,
+                        "text": entity.text,
+                    }
+                    for entity_key, entity in result.entities.items()
+                },
+                # Entities/areas/etc. that would be targeted
+                "targets": {},
+                # True if match was successful
+                "match": successful_match,
+                # Text of the sentence template that matched (or was closest)
+                "sentence_template": "",
+                # When match is incomplete, this will contain the best slot guesses
+                "unmatched_slots": _get_unmatched_slots(result),
             }
 
-        if result.intent_sentence is not None:
-            result_dict["sentence_template"] = result.intent_sentence.text
+            if successful_match:
+                result_dict["targets"] = {
+                    state.entity_id: {"matched": is_matched}
+                    for state, is_matched in _get_debug_targets(hass, result)
+                }
+
+            if result.intent_sentence is not None:
+                result_dict["sentence_template"] = result.intent_sentence.text
+
+            # Inspect metadata to determine if this matched a custom sentence
+            if result.intent_metadata and result.intent_metadata.get(
+                METADATA_CUSTOM_SENTENCE
+            ):
+                result_dict["source"] = "custom"
+                result_dict["file"] = result.intent_metadata.get(METADATA_CUSTOM_FILE)
+            else:
+                result_dict["source"] = "builtin"
 
         result_dicts.append(result_dict)
 
@@ -401,6 +422,16 @@ def _get_debug_targets(
     if "state" in entities:
         # HassGetState only
         state_names = set(cv.ensure_list(entities["state"].value))
+
+    if (
+        (name is None)
+        and (area_name is None)
+        and (not domains)
+        and (not device_classes)
+        and (not state_names)
+    ):
+        # Avoid "matching" all entities when there is no filter
+        return
 
     states = intent.async_match_states(
         hass,

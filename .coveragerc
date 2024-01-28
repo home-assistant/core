@@ -283,6 +283,7 @@ omit =
     homeassistant/components/econet/water_heater.py
     homeassistant/components/ecovacs/controller.py
     homeassistant/components/ecovacs/entity.py
+    homeassistant/components/ecovacs/image.py
     homeassistant/components/ecovacs/util.py
     homeassistant/components/ecovacs/vacuum.py
     homeassistant/components/ecowitt/__init__.py
@@ -780,6 +781,7 @@ omit =
     homeassistant/components/motionmount/entity.py
     homeassistant/components/motionmount/number.py
     homeassistant/components/motionmount/select.py
+    homeassistant/components/motionmount/sensor.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/msteams/notify.py
