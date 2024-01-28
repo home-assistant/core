@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from heatmiserV3 import connection, heatmiser
+from heatmiserv3 import connection, heatmiser
 import voluptuous as vol
 
 from homeassistant.components.climate import (

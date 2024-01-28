@@ -1025,7 +1025,7 @@ hassil==1.6.0
 hdate==0.10.4
 
 # homeassistant.components.heatmiser
-heatmiserV3==1.1.18
+heatmiserv3==2.0.1
 
 # homeassistant.components.here_travel_time
 here-routing==0.2.0
