@@ -4,6 +4,7 @@
   "codeowners": ["@greg-szabo"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/arcticspa",
+  "integration_type": "device",
   "iot_class": "cloud_polling",
   "requirements": ["pyarcticspas==0.2.4"]
 }
