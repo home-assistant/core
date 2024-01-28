@@ -266,6 +266,84 @@ async def test_if_fires_on_change_bool(hass: HomeAssistant, start_ha, calls) -> 
             },
             [(0, "hello", False)],
         ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "to": "foo",
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (0, "bar", False),
+                (1, "foo", False),
+                (1, "foo", False),
+                (1, "True", False),
+                (2, "foo", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "to": ["foo"],
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (0, "bar", False),
+                (1, "foo", False),
+                (1, "foo", False),
+                (1, "True", False),
+                (2, "foo", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "to": ["foo", "bar"],
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (0, "baz", False),
+                (1, "foo", False),
+                (1, "foo", False),
+                (2, "bar", False),
+                (3, "foo", False),
+                (3, "baz", False),
+                (4, "foo", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "to": "*",
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (1, "bar", False),
+                (2, "foo", False),
+                (2, "foo", False),
+                (3, "True", False),
+                (4, "foo", False),
+            ],
+        ),
     ],
 )
 async def test_general(hass: HomeAssistant, call_setup, start_ha, calls) -> None:
@@ -336,6 +414,7 @@ async def test_if_not_fires_because_fail(
                                 "from_state.state",
                                 "to_state.state",
                                 "for",
+                                "value",
                             )
                         )
                     },
@@ -355,7 +434,56 @@ async def test_if_fires_on_change_with_template_advanced(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert calls[0].data["some"] == "template - test.entity - hello - world - None"
+    assert (
+        calls[0].data["some"] == "template - test.entity - hello - world - None - True"
+    )
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "template",
+                    "value_template": '{{ states("test.entity") }}',
+                    "to": "world",
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.%s }}"
+                        % "}} - {{ trigger.".join(
+                            (
+                                "platform",
+                                "entity_id",
+                                "from_state.state",
+                                "to_state.state",
+                                "for",
+                                "value",
+                            )
+                        )
+                    },
+                },
+            }
+        },
+    ],
+)
+async def test_if_fires_on_change_to_with_template_advanced(
+    hass: HomeAssistant, start_ha, calls
+) -> None:
+    """Test for firing on change with template advanced."""
+    context = Context()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "world", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].context.parent_id == context.id
+    assert (
+        calls[0].data["some"] == "template - test.entity - hello - world - None - world"
+    )
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
@@ -437,6 +565,7 @@ async def test_if_fires_on_change_with_bad_template(
                                     "from_state.state",
                                     "to_state.state",
                                     "for",
+                                    "value",
                                 )
                             )
                         },
@@ -459,7 +588,9 @@ async def test_wait_template_with_trigger(hass: HomeAssistant, start_ha, calls) 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "template - test.entity - hello - world - None"
+    assert (
+        calls[0].data["some"] == "template - test.entity - hello - world - None - True"
+    )
 
 
 async def test_if_fires_on_change_with_for(hass: HomeAssistant, calls) -> None:
@@ -509,6 +640,7 @@ async def test_if_fires_on_change_with_for(hass: HomeAssistant, calls) -> None:
                                 "from_state.state",
                                 "to_state.state",
                                 "for",
+                                "value",
                             )
                         )
                     },
@@ -531,7 +663,10 @@ async def test_if_fires_on_change_with_for_advanced(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert calls[0].data["some"] == "template - test.entity - hello - world - 0:00:05"
+    assert (
+        calls[0].data["some"]
+        == "template - test.entity - hello - world - 0:00:05 - True"
+    )
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
@@ -556,6 +691,7 @@ async def test_if_fires_on_change_with_for_advanced(
                                 "from_state.state",
                                 "to_state.state",
                                 "for",
+                                "value",
                             )
                         )
                     },
@@ -575,7 +711,10 @@ async def test_if_fires_on_change_with_for_0_advanced(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert calls[0].data["some"] == "template - test.entity - hello - world - 0:00:00"
+    assert (
+        calls[0].data["some"]
+        == "template - test.entity - hello - world - 0:00:00 - True"
+    )
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
@@ -600,6 +739,7 @@ async def test_if_fires_on_change_with_for_0_advanced(
                                 "from_state.state",
                                 "to_state.state",
                                 "for",
+                                "value",
                             )
                         )
                     },
@@ -620,7 +760,10 @@ async def test_if_fires_on_change_with_for_2(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert calls[0].data["some"] == "template - test.entity - hello - world - 0:00:05"
+    assert (
+        calls[0].data["some"]
+        == "template - test.entity - hello - world - 0:00:05 - True"
+    )
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
@@ -655,6 +798,109 @@ async def test_if_not_fires_on_change_with_for(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=6))
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "template",
+                    "value_template": "{{ states('test.entity') }}",
+                    "to": "world",
+                    "for": 5,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    ],
+)
+async def test_if_fires_on_change_with_for_and_to(
+    hass: HomeAssistant, start_ha, calls
+) -> None:
+    """Test for firing on change with for."""
+    context = Context()
+    hass.states.async_set("test.entity", "world", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "template",
+                    "value_template": "{{ states('test.entity') }}",
+                    "to": "world",
+                    "for": 5,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    ],
+)
+async def test_if_not_fires_on_change_with_for_and_to_when_changes_away_before_delay(
+    hass: HomeAssistant, start_ha, calls
+) -> None:
+    """Test for firing on change with for."""
+    context = Context()
+    hass.states.async_set("test.entity", "world", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
+    hass.states.async_set("test.entity", "hello", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+async def test_if_fires_on_second_change_only_when_changing_between_to_values_before_for(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+) -> None:
+    """Test to with multiple values for 5s, when switching between the values after 3s."""
+    context = Context()
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "template",
+                    "value_template": "{{ states('test.entity') }}",
+                    "to": ["foo", "bar"],
+                    "for": 5,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("test.entity", "foo", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    hass.states.async_set("test.entity", "bar", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])

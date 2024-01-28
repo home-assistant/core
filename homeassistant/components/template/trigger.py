@@ -1,4 +1,5 @@
 """Offer template automation rules."""
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -22,13 +23,30 @@ from homeassistant.helpers.typing import ConfigType, EventType
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_TO = "to"
+
+MATCH_ALL = "*"
+
 TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "template",
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOR): cv.positive_time_period_template,
+        vol.Optional(CONF_TO): vol.Any(str, [str], None),
     }
 )
+
+
+def _process_match(parameter: str | Iterable[str]):
+    if parameter == MATCH_ALL:
+        return lambda _: True
+
+    if isinstance(parameter, str) or not hasattr(parameter, "__iter__"):
+        return lambda value: str(value) == parameter
+
+    parameter_set = set(parameter)
+
+    return lambda value: str(value) in parameter_set
 
 
 async def async_attach_trigger(
@@ -44,16 +62,22 @@ async def async_attach_trigger(
     value_template: Template = config[CONF_VALUE_TEMPLATE]
     value_template.hass = hass
     time_delta = config.get(CONF_FOR)
+    to_value = config.get(CONF_TO)
     template.attach(hass, time_delta)
     delay_cancel = None
     job = HassJob(action)
     armed = False
 
+    if to_value is None:
+        result_matches = result_as_boolean
+        result_arms = lambda result: not result_as_boolean(result)
+    else:
+        result_matches = _process_match(to_value)
+        result_arms = lambda _: True
+
     # Arm at setup if the template is already false.
     try:
-        if not result_as_boolean(
-            value_template.async_render(trigger_info["variables"])
-        ):
+        if result_arms(value_template.async_render(trigger_info["variables"])):
             armed = True
     except exceptions.TemplateError as ex:
         _LOGGER.warning(
@@ -68,7 +92,7 @@ async def async_attach_trigger(
         updates: list[TrackTemplateResult],
     ) -> None:
         """Listen for state changes and calls action."""
-        nonlocal delay_cancel, armed
+        nonlocal delay_cancel, armed, result_matches
         result = updates.pop().result
 
         if isinstance(result, exceptions.TemplateError):
@@ -83,8 +107,8 @@ async def async_attach_trigger(
             delay_cancel()
             delay_cancel = None
 
-        if not result_as_boolean(result):
-            armed = True
+        if not result_matches(result):
+            armed = result_arms(result)
             return
 
         # Only fire when previously armed.
@@ -92,7 +116,7 @@ async def async_attach_trigger(
             return
 
         # Fire!
-        armed = False
+        armed = result_arms(result)
 
         entity_id = event and event.data["entity_id"]
         from_s = event and event.data["old_state"]
@@ -113,6 +137,7 @@ async def async_attach_trigger(
             **trigger_data,
             "for": time_delta,
             "description": description,
+            "value": result,
         }
 
         @callback
