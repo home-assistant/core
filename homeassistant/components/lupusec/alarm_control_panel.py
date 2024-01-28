@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import lupupy
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -32,9 +34,7 @@ async def async_setup_entry(
     """Set up an alarm control panel for a Lupusec device."""
     data = hass.data[DOMAIN][config_entry.entry_id]
 
-    alarm_devices = [
-        LupusecAlarm(data, data.lupusec.get_alarm(), config_entry.entry_id)
-    ]
+    alarm_devices = [LupusecAlarm(data, data.get_alarm(), config_entry.entry_id)]
 
     async_add_devices(alarm_devices)
 
@@ -49,15 +49,17 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, data, device, entry_id) -> None:
+    def __init__(
+        self, data: lupupy.Lupusec, device: lupupy.devices.LupusecAlarm, entry_id: str
+    ) -> None:
         """Initialize the LupusecAlarm class."""
-        super().__init__(data, device, entry_id)
+        super().__init__(device)
         self._attr_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
             name=device.name,
             manufacturer="Lupus Electronics",
-            model=f"Lupusec-XT{data.lupusec.model}",
+            model=f"Lupusec-XT{data.model}",
         )
 
     @property
