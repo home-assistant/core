@@ -182,6 +182,7 @@ omit =
     homeassistant/components/comed_hourly_pricing/sensor.py
     homeassistant/components/comelit/__init__.py
     homeassistant/components/comelit/alarm_control_panel.py
+    homeassistant/components/comelit/climate.py
     homeassistant/components/comelit/const.py
     homeassistant/components/comelit/cover.py
     homeassistant/components/comelit/coordinator.py
@@ -709,6 +710,7 @@ omit =
     homeassistant/components/lupusec/__init__.py
     homeassistant/components/lupusec/alarm_control_panel.py
     homeassistant/components/lupusec/binary_sensor.py
+    homeassistant/components/lupusec/entity.py
     homeassistant/components/lupusec/switch.py
     homeassistant/components/lutron/__init__.py
     homeassistant/components/lutron/binary_sensor.py
@@ -780,6 +782,7 @@ omit =
     homeassistant/components/motionmount/entity.py
     homeassistant/components/motionmount/number.py
     homeassistant/components/motionmount/select.py
+    homeassistant/components/motionmount/sensor.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/msteams/notify.py
@@ -1368,11 +1371,6 @@ omit =
     homeassistant/components/telnet/switch.py
     homeassistant/components/temper/sensor.py
     homeassistant/components/tensorflow/image_processing.py
-    homeassistant/components/teslemetry/__init__.py
-    homeassistant/components/teslemetry/climate.py
-    homeassistant/components/teslemetry/coordinator.py
-    homeassistant/components/teslemetry/entity.py
-    homeassistant/components/teslemetry/context.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
     homeassistant/components/thethingsnetwork/*
