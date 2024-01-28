@@ -1480,7 +1480,9 @@ def async_call_at(
         if isinstance(action, HassJob)
         else HassJob(action, f"call_at {loop_time}")
     )
-    return hass.loop.call_at(loop_time, _run_async_call_action, hass, job).cancel
+    handle = hass.loop.call_at(loop_time, _run_async_call_action, hass, job)
+    hass.async_track_timer_handle(handle)
+    return handle.cancel
 
 
 @callback
@@ -1503,7 +1505,9 @@ def async_call_later(
         else HassJob(action, f"call_later {delay}")
     )
     loop = hass.loop
-    return loop.call_at(loop.time() + delay, _run_async_call_action, hass, job).cancel
+    handle = loop.call_at(loop.time() + delay, _run_async_call_action, hass, job)
+    hass.async_track_timer_handle(handle)
+    return handle.cancel
 
 
 call_later = threaded_listener_factory(async_call_later)

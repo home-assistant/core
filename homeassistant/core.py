@@ -42,6 +42,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+from _weakrefset import WeakSet
 import voluptuous as vol
 import yarl
 
@@ -376,6 +377,7 @@ class HomeAssistant:
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
+        self._timers: WeakSet[asyncio.TimerHandle] = WeakSet()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -985,9 +987,7 @@ class HomeAssistant:
 
     def _cancel_cancellable_timers(self) -> None:
         """Cancel timer handles marked as cancellable."""
-        # pylint: disable-next=protected-access
-        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined]
-        for handle in handles:
+        for handle in self._timers:
             if (
                 not handle.cancelled()
                 and (args := handle._args)  # pylint: disable=protected-access
@@ -1000,6 +1000,10 @@ class HomeAssistant:
         """Log all running tasks."""
         for task in self._tasks:
             _LOGGER.warning("Shutdown stage '%s': still running: %s", stage, task)
+
+    def async_track_timer_handle(self, timer_handle: asyncio.TimerHandle) -> None:
+        """Add a timer handle to be canceled on shutdown."""
+        self._timers.add(timer_handle)
 
 
 class Context:
