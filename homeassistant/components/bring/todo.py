@@ -69,9 +69,9 @@ class BringTodoListEntity(
     ) -> None:
         """Initialize BringTodoListEntity."""
         super().__init__(coordinator)
-        self._listUuid = bringList["listUuid"]
+        self._list_uuid = bringList["listUuid"]
         self._attr_name = bringList["name"]
-        self._attr_unique_id = f"{unique_id}_{self._listUuid}"
+        self._attr_unique_id = f"{unique_id}_{self._list_uuid}"
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -89,7 +89,7 @@ class BringTodoListEntity(
     @property
     def bringList(self) -> BringData:
         """Return the bring list."""
-        return self.coordinator.data[self._listUuid]
+        return self.coordinator.data[self._list_uuid]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
