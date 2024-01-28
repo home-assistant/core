@@ -15,7 +15,7 @@
     },
     "backup_failed_out_of_resources": {
       "title": "Database backup failed due to lack of resources",
-      "description": "The database backup stated at {start_time} failed due to lack of resources. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter."
+      "description": "The database backup stated at {start_time} failed due to lack of resources. The backup cannot be trusted and must be restarted. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter."
     }
   },
   "services": {
