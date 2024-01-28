@@ -115,9 +115,12 @@ SERVICE_SET_DST_MODE = "set_dst_mode"
 SERVICE_SET_MIC_MODE = "set_mic_mode"
 SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
 
-DTGROUP_INCLUSIVE_MSG = (
-    f"{ATTR_START_DATE}, {ATTR_START_TIME}, {ATTR_END_DATE}, "
-    f"and {ATTR_END_TIME} must be specified together"
+DTGROUP_START_INCLUSIVE_MSG = (
+    f"{ATTR_START_DATE} and {ATTR_START_TIME} must be specified together"
+)
+
+DTGROUP_END_INCLUSIVE_MSG = (
+    f"{ATTR_END_DATE} and {ATTR_END_TIME} must be specified together"
 )
 
 CREATE_VACATION_SCHEMA = vol.Schema(
@@ -127,13 +130,17 @@ CREATE_VACATION_SCHEMA = vol.Schema(
         vol.Required(ATTR_COOL_TEMP): vol.Coerce(float),
         vol.Required(ATTR_HEAT_TEMP): vol.Coerce(float),
         vol.Inclusive(
-            ATTR_START_DATE, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG
+            ATTR_START_DATE, "dtgroup_start", msg=DTGROUP_START_INCLUSIVE_MSG
         ): ecobee_date,
         vol.Inclusive(
-            ATTR_START_TIME, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG
+            ATTR_START_TIME, "dtgroup_start", msg=DTGROUP_START_INCLUSIVE_MSG
         ): ecobee_time,
-        vol.Inclusive(ATTR_END_DATE, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): ecobee_date,
-        vol.Inclusive(ATTR_END_TIME, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): ecobee_time,
+        vol.Inclusive(
+            ATTR_END_DATE, "dtgroup_end", msg=DTGROUP_END_INCLUSIVE_MSG
+        ): ecobee_date,
+        vol.Inclusive(
+            ATTR_END_TIME, "dtgroup_end", msg=DTGROUP_END_INCLUSIVE_MSG
+        ): ecobee_time,
         vol.Optional(ATTR_FAN_MODE, default="auto"): vol.Any("auto", "on"),
         vol.Optional(ATTR_FAN_MIN_ON_TIME, default=0): vol.All(
             int, vol.Range(min=0, max=60)
