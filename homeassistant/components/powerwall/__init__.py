@@ -247,8 +247,6 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
     # It would have been better to use asyncio.gather in the first place instead of
     # TaskGroup but in cases where you have more than 6 tasks, the linter fails due to
     # missing typing information.
-    except ExceptionGroup as e:
-        raise e.exceptions[0] from None
     except BaseExceptionGroup as e:
         raise e.exceptions[0] from None
 
@@ -288,8 +286,6 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     # It would have been better to use asyncio.gather in the first place instead of
     # TaskGroup but in cases where you have more than 6 tasks, the linter fails due to
     # missing typing information.
-    except ExceptionGroup as e:
-        raise e.exceptions[0] from None
     except BaseExceptionGroup as e:
         raise e.exceptions[0] from None
 
