@@ -25,6 +25,15 @@ from .const import _LOGGER, DOMAIN
 from .coordinator import ComelitSerialBridge
 
 
+class ClimaMode(StrEnum):
+    """Serial Bridge clima modes."""
+
+    AUTO = "A"
+    OFF = "O"
+    LOWER = "L"
+    UPPER = "U"
+
+
 class ClimaAction(StrEnum):
     """Serial Bridge clima actions."""
 
@@ -36,17 +45,17 @@ class ClimaAction(StrEnum):
 
 
 API_STATUS: dict[str, dict[str, Any]] = {
-    "O": {
+    ClimaMode.OFF: {
         "action": "off",
         "hvac_mode": HVACMode.OFF,
         "hvac_action": HVACAction.OFF,
     },
-    "L": {
+    ClimaMode.LOWER: {
         "action": "lower",
         "hvac_mode": HVACMode.COOL,
         "hvac_action": HVACAction.COOLING,
     },
-    "U": {
+    ClimaMode.UPPER: {
         "action": "upper",
         "hvac_mode": HVACMode.HEAT,
         "hvac_action": HVACAction.HEATING,
@@ -59,9 +68,6 @@ MODE_TO_ACTION: dict[HVACMode, ClimaAction] = {
     HVACMode.COOL: ClimaAction.MANUAL,
     HVACMode.HEAT: ClimaAction.MANUAL,
 }
-
-
-OFF = "O"
 
 
 async def async_setup_entry(
@@ -128,7 +134,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     @property
     def _api_automatic(self) -> bool:
         """Return device in automatic/manual mode."""
-        return self._clima[3] == "A"
+        return self._clima[3] == ClimaMode.AUTO
 
     @property
     def target_temperature(self) -> float:
@@ -144,7 +150,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     def hvac_mode(self) -> HVACMode | None:
         """HVAC current mode."""
 
-        if self._api_mode == OFF:
+        if self._api_mode == ClimaMode.OFF:
             return HVACMode.OFF
 
         if self._api_automatic:
@@ -160,7 +166,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     def hvac_action(self) -> HVACAction | None:
         """HVAC current action."""
 
-        if self._api_mode == OFF:
+        if self._api_mode == ClimaMode.OFF:
             return HVACAction.OFF
 
         if not self._api_active:
