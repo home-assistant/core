@@ -240,6 +240,13 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
             serial_numbers=sorted(serial_numbers.result()),
             url=f"https://{host}",
         )
+
+    # Mimic the behavior of asyncio.gather by reraising the first caught exception since
+    # this is what is expected by the caller of this method
+    #
+    # It would have been better to use asyncio.gather in the first place instead of
+    # TaskGroup but in cases where you have more than 6 tasks, the linter fails due to
+    # missing typing information.
     except ExceptionGroup as e:
         raise e.exceptions[0] from None
     except BaseExceptionGroup as e:
@@ -274,6 +281,13 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
             grid_status=grid_status.result(),
             backup_reserve=backup_reserve.result(),
         )
+
+    # Mimic the behavior of asyncio.gather by reraising the first caught exception since
+    # this is what is expected by the caller of this method
+    #
+    # It would have been better to use asyncio.gather in the first place instead of
+    # TaskGroup but in cases where you have more than 6 tasks, the linter fails due to
+    # missing typing information.
     except ExceptionGroup as e:
         raise e.exceptions[0] from None
     except BaseExceptionGroup as e:
