@@ -1,7 +1,7 @@
 """Provides the Lupusec entity for Home Assistant."""
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, GENERIC_TYPE_TRANSLATION
 
 
 class LupusecDevice(Entity):
@@ -43,6 +43,10 @@ class LupusecBaseSensor(LupusecDevice):
             "name": self._device.name,
             "manufacturer": "Lupus Electronics",
             "serial_number": self._device.device_id,
-            "model": self._device.type,
+            "model": self.get_type(),
             "via_device": (DOMAIN, self._entry_id),
         }
+
+    def get_type(self):
+        """Return the type of the sensor."""
+        return GENERIC_TYPE_TRANSLATION.get(self._device.type, self._device.type)
