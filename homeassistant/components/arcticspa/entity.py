@@ -36,9 +36,9 @@ class ArcticSpaEntity(CoordinatorEntity[ArcticSpaDataUpdateCoordinator]):
         """CoordinatedEntity is a base class for Arctic Spa sensors."""
         super().__init__(coordinator)
 
-        self._attr_unique_id = self.coordinator.device.id
+        self._attr_unique_id = coordinator.device.id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.device.id)},
+            identifiers={(DOMAIN, coordinator.device.id)},
             manufacturer="Arctic Spa",
             name="Hot Tub",
         )
