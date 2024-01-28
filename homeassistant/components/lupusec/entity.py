@@ -15,15 +15,17 @@ class LupusecDevice(Entity):
         self._data = data
         self._device = device
         self._entry_id = entry_id
-        self._attr_unique_id = self.get_unique_id(entry_id, device.device_id)
+        self._attr_unique_id = self.get_unique_id(
+            device.device_id if device.device_id != "0" else entry_id
+        )
 
     def update(self):
         """Update automation state."""
         self._device.refresh()
 
-    def get_unique_id(self, entry_id: str, key: str) -> str:
+    def get_unique_id(self, device_id: str) -> str:
         """Create a unique_id id for a lupusec entity."""
-        return f"{DOMAIN}_{entry_id}_{key}"
+        return f"{DOMAIN}_{device_id}"
 
 
 class LupusecBaseSensor(LupusecDevice):
