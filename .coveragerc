@@ -709,6 +709,7 @@ omit =
     homeassistant/components/lupusec/__init__.py
     homeassistant/components/lupusec/alarm_control_panel.py
     homeassistant/components/lupusec/binary_sensor.py
+    homeassistant/components/lupusec/entity.py
     homeassistant/components/lupusec/switch.py
     homeassistant/components/lutron/__init__.py
     homeassistant/components/lutron/binary_sensor.py

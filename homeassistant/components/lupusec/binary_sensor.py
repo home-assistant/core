@@ -14,7 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, LupusecDevice
+from . import DOMAIN
+from .entity import LupusecBaseSensor
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
@@ -34,13 +35,15 @@ async def async_setup_entry(
 
     sensors = []
     for device in data.lupusec.get_devices(generic_type=device_types):
-        sensors.append(LupusecBinarySensor(data, device))
+        sensors.append(LupusecBinarySensor(data, device, config_entry.entry_id))
 
     async_add_devices(sensors)
 
 
-class LupusecBinarySensor(LupusecDevice, BinarySensorEntity):
+class LupusecBinarySensor(LupusecBaseSensor, BinarySensorEntity):
     """A binary sensor implementation for Lupusec device."""
+
+    _attr_name = None
 
     @property
     def is_on(self):

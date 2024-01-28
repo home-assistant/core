@@ -15,9 +15,11 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
+from . import DOMAIN
+from .entity import LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
@@ -28,9 +30,11 @@ async def async_setup_entry(
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up an alarm control panel for a Lupusec device."""
-    data = hass.data[LUPUSEC_DOMAIN][config_entry.entry_id]
+    data = hass.data[DOMAIN][config_entry.entry_id]
 
-    alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm())]
+    alarm_devices = [
+        LupusecAlarm(data, data.lupusec.get_alarm(), config_entry.entry_id)
+    ]
 
     async_add_devices(alarm_devices)
 
@@ -38,11 +42,23 @@ async def async_setup_entry(
 class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Lupusec."""
 
+    _attr_name = None
     _attr_icon = "mdi:security"
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+
+    def __init__(self, data, device, entry_id) -> None:
+        """Initialize the LupusecAlarm class."""
+        super().__init__(data, device, entry_id)
+        self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            name=device.name,
+            manufacturer="Lupus Electronics",
+            model=f"Lupusec-XT{data.lupusec.model}",
+        )
 
     @property
     def state(self) -> str | None:
