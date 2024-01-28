@@ -80,8 +80,3 @@ class BatteryEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
                 return battery
 
         assert False
-
-    @property
-    def data(self) -> PowerwallData:
-        """Return the coordinator data."""
-        return self.coordinator.data
