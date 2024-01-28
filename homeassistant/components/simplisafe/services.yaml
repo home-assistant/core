@@ -101,14 +101,12 @@ set_system_properties:
 capture_motion_clip:
   fields:
     entity_id:
-      description: The camera to capture from
       required: true
       selector:
         entity:
           integration: simplisafe
           domain: camera
     filename:
-      description: Name of file to save
       required: true
       example: "/tmp/clip_{{ now().strftime('%Y%m%d%H%M%S') }}.mp4"
       selector:
@@ -116,14 +114,12 @@ capture_motion_clip:
 capture_motion_image:
   fields:
     entity_id:
-      description: The camera to capture from
       required: true
       selector:
         entity:
           integration: simplisafe
           domain: camera
     width:
-      description: Width of image in pixels
       example: 720
       default: 720
       selector:
@@ -131,7 +127,6 @@ capture_motion_image:
           min: 240
           max: 1080
     filename:
-      description: Name of file to save
       required: true
       example: "/tmp/snapshot_{{ now().strftime('%Y%m%d%H%M%S') }}.jpg"
       selector:
