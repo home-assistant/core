@@ -28,7 +28,7 @@ class PowerwallBaseInfo:
     device_type: DeviceType
     serial_numbers: list[str]
     url: str
-    batteries: list[BatteryResponse]
+    batteries: dict[str, BatteryResponse]
 
 
 @dataclass
@@ -41,7 +41,7 @@ class PowerwallData:
     grid_services_active: bool
     grid_status: GridStatus
     backup_reserve: float | None
-    batteries: list[BatteryResponse]
+    batteries: dict[str, BatteryResponse]
 
 
 class PowerwallRuntimeData(TypedDict):

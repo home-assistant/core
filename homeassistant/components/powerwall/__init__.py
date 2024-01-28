@@ -11,6 +11,7 @@ from aiohttp import CookieJar
 from tesla_powerwall import (
     AccessDeniedError,
     ApiError,
+    BatteryResponse,
     MissingAttributeError,
     Powerwall,
     PowerwallUnreachableError,
@@ -240,6 +241,11 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
     except BaseExceptionGroup as e:
         raise e.exceptions[0] from None
 
+    battery_map: dict[str, BatteryResponse] = {}
+
+    for battery in batteries.result():
+        battery_map[battery.serial_number] = battery
+
     # Serial numbers MUST be sorted to ensure the unique_id is always the same
     # for backwards compatibility.
     return PowerwallBaseInfo(
@@ -249,7 +255,7 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
         device_type=device_type.result(),
         serial_numbers=sorted(serial_numbers.result()),
         url=f"https://{host}",
-        batteries=batteries,
+        batteries=battery_map,
     )
 
 
@@ -283,6 +289,11 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     except BaseExceptionGroup as e:
         raise e.exceptions[0] from None
 
+    battery_map: dict[str, BatteryResponse] = {}
+
+    for battery in batteries.result():
+        battery_map[battery.serial_number] = battery
+
     return PowerwallData(
         charge=charge.result(),
         site_master=site_master.result(),
@@ -290,7 +301,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         grid_services_active=grid_services_active.result(),
         grid_status=grid_status.result(),
         backup_reserve=backup_reserve.result(),
-        batteries=batteries.result(),
+        batteries=battery_map,
     )
 
 

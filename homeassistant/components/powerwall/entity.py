@@ -75,8 +75,4 @@ class BatteryEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
     @property
     def battery_data(self) -> BatteryResponse:
         """Return the coordinator data."""
-        for battery in self.coordinator.data.batteries:
-            if battery.serial_number == self.serial_number:
-                return battery
-
-        assert False
+        return self.coordinator.data.batteries[self.serial_number]

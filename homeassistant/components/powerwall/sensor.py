@@ -138,7 +138,7 @@ async def async_setup_entry(
             for description in POWERWALL_INSTANT_SENSORS
         )
 
-    for battery in data.batteries:
+    for battery in data.batteries.values():
         for description in BATTERY_INSTANT_SENSORS:
             entities.append(
                 PowerWallBatterySensor(powerwall_data, battery, description)
