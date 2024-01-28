@@ -63,7 +63,7 @@ async def get_data_from_library(
 
 
 @pytest.fixture(name="load_json")
-def load_json_from_raw(load_raw_json: str) -> dict[str, Any]:
+def load_json_from_raw(load_raw_json: str) -> SensiboData:
     """Load raw json string into dict."""
     return json.loads(load_raw_json)
 
