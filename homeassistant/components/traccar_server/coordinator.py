@@ -150,6 +150,10 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         for event in events:
             device = get_device(event["deviceId"], devices)
             self.hass.bus.async_fire(
+                # This goes against two of the HA core guidelines:
+                # 1. Event names should be prefixed with the domain name of the integration
+                # 2. This should be event entities
+                # However, to not break it for those who currently use the "old" integration, this is kept as is.
                 f"traccar_{EVENTS[event['type']]}",
                 {
                     "device_traccar_id": event["deviceId"],
