@@ -1,5 +1,4 @@
 """The Tesla Powerwall integration base entity."""
-from typing import Optional
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -52,22 +51,16 @@ class BatteryEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
     _attr_has_entity_name = True
 
     def __init__(
-        self, powerwall_data: PowerwallRuntimeData, serial_number: str
+        self, powerwall_data: PowerwallRuntimeData, battery: BatteryResponse
     ) -> None:
         """Initialize the entity."""
         base_info = powerwall_data[POWERWALL_BASE_INFO]
         coordinator = powerwall_data[POWERWALL_COORDINATOR]
         assert coordinator is not None
         super().__init__(coordinator)
-        self.serial_number = serial_number
+        self.serial_number = battery.serial_number
         self.power_wall = powerwall_data[POWERWALL_API]
-        self.base_unique_id = f"{base_info.gateway_din}_{serial_number}"
-
-        battery: Optional[BatteryResponse] = None
-        for b in base_info.batteries:
-            if b.serial_number == serial_number:
-                battery = b
-        assert battery is not None
+        self.base_unique_id = f"{base_info.gateway_din}_{battery.serial_number}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.base_unique_id)},

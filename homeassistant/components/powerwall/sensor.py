@@ -25,16 +25,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, POWERWALL_COORDINATOR
 from .entity import BatteryEntity, PowerWallEntity
-from .models import PowerwallRuntimeData
+from .models import BatteryResponse, PowerwallRuntimeData
 
 _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
 
 _ValueParamT = TypeVar("_ValueParamT")
-_ValueT = TypeVar("_ValueT", bound=float)
+_ValueT = TypeVar("_ValueT", bound=float | int)
 
 
 @dataclass(frozen=True)
@@ -138,20 +139,10 @@ async def async_setup_entry(
         )
 
     for battery in data.batteries:
-        entities.append(BatteryCapacitySensor(powerwall_data, battery.serial_number))
-        entities.append(BatteryVoltageSensor(powerwall_data, battery.serial_number))
-        entities.append(BatteryFrequencySensor(powerwall_data, battery.serial_number))
-        entities.append(BatteryCurrentSensor(powerwall_data, battery.serial_number))
-        entities.append(
-            BatteryInstantPowerSensor(powerwall_data, battery.serial_number)
-        )
-        entities.append(BatteryDischargedSensor(powerwall_data, battery.serial_number))
-        entities.append(BatteryChargedSensor(powerwall_data, battery.serial_number))
-        entities.append(BatteryRemainingSensor(powerwall_data, battery.serial_number))
-        entities.append(
-            BatteryStateOfChargeSensor(powerwall_data, battery.serial_number)
-        )
-        entities.append(BatteryGridStateSensor(powerwall_data, battery.serial_number))
+        for description in BATTERY_INSTANT_SENSORS:
+            entities.append(
+                PowerWallBatterySensor(powerwall_data, battery, description)
+            )
 
     async_add_entities(entities)
 
@@ -299,197 +290,117 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
         return meter.get_energy_imported()
 
 
-class BatteryCapacitySensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery capacity sensor."""
+class PowerWallBatterySensor(BatteryEntity, SensorEntity, Generic[_ValueT]):
+    """Representation of an Powerwall Battery sensor."""
 
-    _attr_translation_key = "battery_capacity"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
-    _attr_device_class = SensorDeviceClass.ENERGY_STORAGE
+    entity_description: PowerwallSensorEntityDescription[BatteryResponse, _ValueT]
 
-    @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_battery_capacity"
-
-    @property
-    def native_value(self) -> int | None:
-        """Get the current value in Wh."""
-        return self.battery_data.capacity
-
-
-class BatteryVoltageSensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery voltage sensor."""
-
-    _attr_translation_key = "battery_instant_voltage"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
-    _attr_device_class = SensorDeviceClass.VOLTAGE
+    def __init__(
+        self,
+        powerwall_data: PowerwallRuntimeData,
+        battery: BatteryResponse,
+        description: PowerwallSensorEntityDescription[BatteryResponse, _ValueT],
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(powerwall_data, battery)
+        self._attr_translation_key = description.translation_key
+        self._attr_unique_id = f"{self.base_unique_id}_{description.key}"
 
     @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_battery_instant_voltage"
-
-    @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Get the current value."""
-        return round(self.battery_data.v_out, 1)
+        return self.entity_description.value_fn(self.battery_data)
 
 
-class BatteryFrequencySensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery frequency sensor."""
-
-    _attr_translation_key = "instant_frequency"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfFrequency.HERTZ
-    _attr_device_class = SensorDeviceClass.FREQUENCY
-    _attr_entity_registry_enabled_default = False
-
-    @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_instant_frequency"
-
-    @property
-    def native_value(self) -> float | None:
-        """Get the current value."""
-        return round(self.battery_data.f_out, 1)
+def _get_battery_charge(battery_data: BatteryResponse) -> float:
+    """Get the current value in %."""
+    ratio = float(battery_data.energy_remaining) / float(battery_data.capacity)
+    return round(100 * ratio, 1)
 
 
-class BatteryCurrentSensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery current sensor."""
-
-    _attr_translation_key = "instant_current"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
-    _attr_device_class = SensorDeviceClass.CURRENT
-    _attr_entity_registry_enabled_default = False
-
-    @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_instant_current"
-
-    @property
-    def native_value(self) -> float | None:
-        """Get the current value."""
-        return round(self.battery_data.i_out, 1)
-
-
-class BatteryInstantPowerSensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery instant real power."""
-
-    _attr_translation_key = "instant_power"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfPower.WATT
-    _attr_device_class = SensorDeviceClass.POWER
-
-    @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_instant_power"
-
-    @property
-    def native_value(self) -> int | None:
-        """Get the current value."""
-        return self.battery_data.p_out
-
-
-class BatteryDischargedSensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery discharged work."""
-
-    _attr_translation_key = "battery_export"
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
-    _attr_device_class = SensorDeviceClass.ENERGY
-
-    @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_battery_export"
-
-    @property
-    def native_value(self) -> float | None:
-        """Get the current value."""
-        return self.battery_data.energy_discharged
-
-
-class BatteryChargedSensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery charged work."""
-
-    _attr_translation_key = "battery_import"
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
-    _attr_device_class = SensorDeviceClass.ENERGY
-
-    @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_battery_import"
-
-    @property
-    def native_value(self) -> int | None:
-        """Get the current value."""
-        return self.battery_data.energy_charged
-
-
-class BatteryRemainingSensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery remaining sensor."""
-
-    _attr_translation_key = "battery_remaining"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
-    _attr_device_class = SensorDeviceClass.ENERGY_STORAGE
-
-    @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_battery_remaining"
-
-    @property
-    def native_value(self) -> int | None:
-        """Get the current value in Wh."""
-        return self.battery_data.energy_remaining
-
-
-class BatteryStateOfChargeSensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery state of charge sensor."""
-
-    _attr_translation_key = "charge"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = SensorDeviceClass.BATTERY
-
-    @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_charge"
-
-    @property
-    def native_value(self) -> float | None:
-        """Get the current value in %."""
-        ratio = float(self.battery_data.energy_remaining) / float(
-            self.battery_data.capacity
-        )
-        return round(100 * ratio, 1)
-
-
-class BatteryGridStateSensor(BatteryEntity, SensorEntity):
-    """Representation of the Battery grid state sensor."""
-
-    _attr_translation_key = "grid_state"
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = [
-        member.value.lower() for name, member in GridState.__members__.items()
-    ]
-
-    @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_grid_state"
-
-    @property
-    def native_value(self) -> str | None:
-        """Get the current value."""
-        return self.battery_data.grid_state.value.lower()
+BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
+    PowerwallSensorEntityDescription[BatteryResponse, int](
+        key="battery_capacity",
+        translation_key="battery_capacity",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        value_fn=lambda battery_data: battery_data.capacity,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="battery_instant_voltage",
+        translation_key="battery_instant_voltage",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        value_fn=lambda battery_data: round(battery_data.v_out, 1),
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="instant_frequency",
+        translation_key="instant_frequency",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        entity_registry_enabled_default=False,
+        value_fn=lambda battery_data: round(battery_data.f_out, 1),
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="instant_current",
+        translation_key="instant_current",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        entity_registry_enabled_default=False,
+        value_fn=lambda battery_data: round(battery_data.i_out, 1),
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, int](
+        key="instant_power",
+        translation_key="instant_power",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda battery_data: battery_data.p_out,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="battery_export",
+        translation_key="battery_export",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        value_fn=lambda battery_data: battery_data.energy_discharged,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="battery_import",
+        translation_key="battery_import",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        value_fn=lambda battery_data: battery_data.energy_charged,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, int](
+        key="battery_remaining",
+        translation_key="battery_remaining",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        value_fn=lambda battery_data: battery_data.energy_remaining,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="charge",
+        translation_key="charge",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=_get_battery_charge,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, str](
+        key="grid_state",
+        translation_key="grid_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            member.value.lower() for name, member in GridState.__members__.items()
+        ],
+        value_fn=lambda battery_data: battery_data.grid_state.value.lower(),
+    ),
+]
