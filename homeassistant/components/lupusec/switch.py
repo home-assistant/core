@@ -30,7 +30,7 @@ async def async_setup_entry(
 
     switches = []
     for device in data.lupusec.get_devices(generic_type=device_types):
-        switches.append(LupusecSwitch(data, device, config_entry))
+        switches.append(LupusecSwitch(data, device, config_entry.entry_id))
 
     async_add_devices(switches)
 

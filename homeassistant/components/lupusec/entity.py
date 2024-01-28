@@ -10,22 +10,20 @@ class LupusecDevice(Entity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, data, device, config_entry) -> None:
+    def __init__(self, data, device, entry_id) -> None:
         """Initialize a sensor for Lupusec device."""
         self._data = data
         self._device = device
-        self._entry_id = config_entry.entry_id
-        self._attr_unique_id = self.get_unique_id(
-            config_entry.entry_id, device.device_id
-        )
+        self._entry_id = entry_id
+        self._attr_unique_id = self.get_unique_id(entry_id, device.device_id)
 
     def update(self):
         """Update automation state."""
         self._device.refresh()
 
-    def get_unique_id(self, config_entry_id: str, key: str) -> str:
+    def get_unique_id(self, entry_id: str, key: str) -> str:
         """Create a unique_id id for a lupusec entity."""
-        return f"{DOMAIN}_{config_entry_id}_{key}"
+        return f"{DOMAIN}_{entry_id}_{key}"
 
 
 class LupusecBaseSensor(LupusecDevice):

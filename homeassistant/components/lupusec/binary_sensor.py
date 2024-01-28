@@ -35,7 +35,7 @@ async def async_setup_entry(
 
     sensors = []
     for device in data.lupusec.get_devices(generic_type=device_types):
-        sensors.append(LupusecBinarySensor(data, device, config_entry))
+        sensors.append(LupusecBinarySensor(data, device, config_entry.entry_id))
 
     async_add_devices(sensors)
 
