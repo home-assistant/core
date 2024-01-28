@@ -53,7 +53,7 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
         self, data: lupupy.Lupusec, device: lupupy.devices.LupusecAlarm, entry_id: str
     ) -> None:
         """Initialize the LupusecAlarm class."""
-        super().__init__(data, device)
+        super().__init__(device)
         self._attr_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},

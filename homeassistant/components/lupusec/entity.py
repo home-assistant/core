@@ -12,11 +12,8 @@ class LupusecDevice(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self, data: lupupy.Lupusec, device: lupupy.devices.LupusecDevice
-    ) -> None:
+    def __init__(self, device: lupupy.devices.LupusecDevice) -> None:
         """Initialize a sensor for Lupusec device."""
-        self._data = data
         self._device = device
         self._attr_unique_id = device.device_id
 
@@ -28,11 +25,9 @@ class LupusecDevice(Entity):
 class LupusecBaseSensor(LupusecDevice):
     """Lupusec Sensor base entity."""
 
-    def __init__(
-        self, data: lupupy.Lupusec, device: lupupy.devices.LupusecDevice, entry_id: str
-    ) -> None:
+    def __init__(self, device: lupupy.devices.LupusecDevice, entry_id: str) -> None:
         """Initialize the LupusecBaseSensor."""
-        super().__init__(data, device)
+        super().__init__(device)
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
