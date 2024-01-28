@@ -155,7 +155,7 @@
       "title": "Device configuration file changed: {device_name}",
       "fix_flow": {
         "step": {
-          "confirm": {
+          "menu": {
             "menu_options": {
               "confirm": "Re-interview device",
               "ignore": "Ignore device config update"
