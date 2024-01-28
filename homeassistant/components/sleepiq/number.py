@@ -165,7 +165,7 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
     CORE_CLIMATE_TIMER: SleepIQNumberEntityDescription(
         key=CORE_CLIMATE_TIMER,
         native_min_value=30,
-        native_max_value=SleepIQCoreClimate.max_core_climate_time,
+        native_max_value=600,
         native_step=30,
         name=ENTITY_TYPES[CORE_CLIMATE_TIMER],
         icon="mdi:timer",
@@ -215,14 +215,16 @@ async def async_setup_entry(
                 )
             )
         for core_climate in bed.foundation.core_climates:
-            entities.append(
-                SleepIQNumberEntity(
-                    data.data_coordinator,
-                    bed,
-                    core_climate,
-                    NUMBER_DESCRIPTIONS[CORE_CLIMATE_TIMER],
-                )
+            entity = SleepIQNumberEntity(
+                data.data_coordinator,
+                bed,
+                core_climate,
+                NUMBER_DESCRIPTIONS[CORE_CLIMATE_TIMER],
             )
+
+            entity.attr_native_max_value = core_climate.max_core_climate_time
+
+            entities.append(entity)
 
     async_add_entities(entities)
 
@@ -256,8 +258,11 @@ class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Number
         """Update number attributes."""
         self._attr_native_value = float(self.entity_description.value_fn(self.device))
 
-    async def async_set_native_value(self, value: float) -> None:
-        """Set the number value."""
-        await self.entity_description.set_value_fn(self.device, int(value))
-        self._attr_native_value = value
-        self.async_write_ha_state()
+    @property
+    def attr_native_max_value(self) -> float:
+        """Return the maximum native value."""
+        return self._attr_native_max_value
+
+    @attr_native_max_value.setter
+    def attr_native_max_value(self, value: float) -> None:
+        self._attr_native_max_value = value
