@@ -22,7 +22,7 @@ INTEGRATION_TITLE = "Lupus Electronics LUPUSEC"
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=lupusec"}
 
 
-GENERIC_TYPE_TRANSLATION = {
+TYPE_TRANSLATION = {
     TYPE_WINDOW: "Fensterkontakt",
     TYPE_DOOR: "Türkontakt",
     TYPE_SMOKE: "Rauchmelder",
