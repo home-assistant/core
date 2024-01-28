@@ -14,9 +14,7 @@ class LupusecDevice(Entity):
         """Initialize a sensor for Lupusec device."""
         self._data = data
         self._device = device
-        self._attr_unique_id = self.get_unique_id(
-            device.device_id if device.device_id != "0" else entry_id
-        )
+        self._attr_unique_id = device.device_id if device.device_id != "0" else entry_id
 
     def update(self):
         """Update automation state."""
