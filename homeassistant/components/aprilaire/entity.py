@@ -18,7 +18,6 @@ class BaseAprilaireEntity(BaseCoordinatorEntity[AprilaireCoordinator]):
 
     _attr_available = False
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self, coordinator: AprilaireCoordinator, unique_id: str | None

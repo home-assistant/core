@@ -51,9 +51,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not ready:
                 _LOGGER.error("Failed to wait for ready")
 
-        ready = await coordinator.wait_for_ready(ready_callback)
-
-        coordinator.stop_listen()
+        try:
+            ready = await coordinator.wait_for_ready(ready_callback)
+        finally:
+            coordinator.stop_listen()
 
         mac_address = coordinator.data.get(Attribute.MAC_ADDRESS)
 
