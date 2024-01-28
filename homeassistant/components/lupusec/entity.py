@@ -1,4 +1,5 @@
 """Provides the Lupusec entity for Home Assistant."""
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, TYPE_TRANSLATION
@@ -31,17 +32,18 @@ class LupusecDevice(Entity):
 class LupusecBaseSensor(LupusecDevice):
     """Lupusec Sensor base entity."""
 
-    @property
-    def device_info(self):
-        """Return device information about the sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "name": self._device.name,
-            "manufacturer": "Lupus Electronics",
-            "serial_number": self._device.device_id,
-            "model": self.get_type_name(),
-            "via_device": (DOMAIN, self._entry_id),
-        }
+    def __init__(self, data, device, entry_id) -> None:
+        """Initialize the LupusecBaseSensor."""
+        super().__init__(data, device, entry_id)
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.device_id)},
+            name=self._device.name,
+            manufacturer="Lupus Electronics",
+            serial_number=self._device.device_id,
+            model=self.get_type_name(),
+            via_device=(DOMAIN, self._entry_id),
+        )
 
     def get_type_name(self):
         """Return the type of the sensor."""

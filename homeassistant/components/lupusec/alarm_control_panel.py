@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -47,6 +48,17 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
+    def __init__(self, data, device, entry_id) -> None:
+        """Initialize the LupusecAlarm class."""
+        super().__init__(data, device, entry_id)
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._entry_id)},
+            name=self._device.name,
+            manufacturer="Lupus Electronics",
+            model=f"Lupusec-XT{self._data.lupusec.model}",
+        )
+
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
@@ -73,13 +85,3 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._device.set_home()
-
-    @property
-    def device_info(self):
-        """Return device information about the sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": self._device.name,
-            "manufacturer": "Lupus Electronics",
-            "via_device": (DOMAIN, f"Lupusec-XT{self._data.lupusec.model}"),
-        }
