@@ -72,12 +72,17 @@ class TriggerModelData:
 
 
 MODEL_DATA = {
-    "RTCGQ02LM": TriggerModelData(
+    "JTYJGD03MI": TriggerModelData(
         schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
         event_class=EVENT_CLASS_BUTTON,
         triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
     ),
-    "JTYJGD03MI": TriggerModelData(
+    "MS1BB(MI)": TriggerModelData(
+        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
+    ),
+    "RTCGQ02LM": TriggerModelData(
         schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
         event_class=EVENT_CLASS_BUTTON,
         triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
@@ -86,6 +91,21 @@ MODEL_DATA = {
         schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
         event_class=EVENT_CLASS_BUTTON,
         triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
+    ),
+    "K9B-1BTN": TriggerModelData(
+        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
+    ),
+    "K9B-2BTN": TriggerModelData(
+        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
+    ),
+    "K9B-3BTN": TriggerModelData(
+        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
     ),
     "K9BB-1BTN": TriggerModelData(
         schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
@@ -98,6 +118,11 @@ MODEL_DATA = {
         triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
     ),
     "XMWXKG01LM": TriggerModelData(
+        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
+    ),
+    "XMWXKG01YL": TriggerModelData(
         schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
         event_class=EVENT_CLASS_BUTTON,
         triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],

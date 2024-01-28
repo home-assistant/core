@@ -35,6 +35,21 @@ from tests.components.bluetooth import (
             ],
         ),
         (
+            "DC:ED:83:87:12:73",
+            make_advertisement(
+                "DC:ED:83:87:12:73",
+                b"XYI\x19Os\x12\x87\x83\xed\xdc\x0b48\n\x02\x00\x00\x8dI\xae(",
+            ),
+            "b93eb3787eabda352edd94b667f5d5a9",
+            [
+                {
+                    "entity": "event.switch_double_button_1273_button_right",
+                    ATTR_FRIENDLY_NAME: "Switch (double button) 1273 Button right",
+                    ATTR_EVENT_TYPE: "press",
+                }
+            ],
+        ),
+        (
             "DE:70:E8:B2:39:0C",
             make_advertisement(
                 "DE:70:E8:B2:39:0C",

@@ -137,6 +137,46 @@ async def test_get_triggers_button(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+async def test_get_triggers_double_button(hass: HomeAssistant) -> None:
+    """Test that we get the expected triggers from a Xiaomi BLE switch with 2 buttons."""
+    mac = "DC:ED:83:87:12:73"
+    data = {"bindkey": "b93eb3787eabda352edd94b667f5d5a9"}
+    entry = await _async_setup_xiaomi_device(hass, mac, data)
+    events = async_capture_events(hass, "xiaomi_ble_event")
+
+    # Emit button press event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            mac,
+            b"XYI\x19Os\x12\x87\x83\xed\xdc\x0b48\n\x02\x00\x00\x8dI\xae(",
+        ),
+    )
+
+    # wait for the event
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
+    assert device
+    expected_trigger = {
+        CONF_PLATFORM: "device",
+        CONF_DOMAIN: DOMAIN,
+        CONF_DEVICE_ID: device.id,
+        CONF_TYPE: "button",
+        CONF_SUBTYPE: "press",
+        "metadata": {},
+    }
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
+    assert expected_trigger in triggers
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_get_triggers_motion(hass: HomeAssistant) -> None:
     """Test that we get the expected triggers from a Xiaomi BLE motion sensor."""
     mac = "DE:70:E8:B2:39:0C"
