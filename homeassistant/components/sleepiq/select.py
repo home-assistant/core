@@ -157,7 +157,7 @@ class SleepIQCoreClimateTempSelectEntity(
         temperature = CoreTemps[option.upper()]
         timer = self.core_climate.timer or 120
 
-        if temperature == 0:
+        if temperature == CoreTemps.OFF:
             await self.core_climate.turn_off()
         else:
             await self.core_climate.turn_on(temperature, timer)
