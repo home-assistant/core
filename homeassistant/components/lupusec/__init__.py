@@ -109,11 +109,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         lupusec_system = await hass.async_add_executor_job(
-            LupusecSystem,
-            username,
-            password,
-            host,
+            lupupy.Lupusec, username, password, host
         )
+
     except LupusecException:
         _LOGGER.error("Failed to connect to Lupusec device at %s", host)
         return False
@@ -130,11 +128,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-class LupusecSystem:
-    """Lupusec System class."""
-
-    def __init__(self, username, password, ip_address) -> None:
-        """Initialize the system."""
-        self.lupusec = lupupy.Lupusec(username, password, ip_address)

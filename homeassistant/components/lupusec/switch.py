@@ -29,8 +29,8 @@ async def async_setup_entry(
     device_types = CONST.TYPE_SWITCH
 
     switches = []
-    for device in data.lupusec.get_devices(generic_type=device_types):
-        switches.append(LupusecSwitch(data, device, config_entry.entry_id))
+    for device in data.get_devices(generic_type=device_types):
+        switches.append(LupusecSwitch(device, config_entry.entry_id))
 
     async_add_devices(switches)
 
@@ -49,6 +49,6 @@ class LupusecSwitch(LupusecBaseSensor, SwitchEntity):
         self._device.switch_off()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.is_on
