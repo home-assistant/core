@@ -38,6 +38,8 @@ async def async_setup_entry(
 class LupusecSwitch(LupusecBaseSensor, SwitchEntity):
     """Representation of a Lupusec switch."""
 
+    _attr_name = None
+
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         self._device.switch_on()

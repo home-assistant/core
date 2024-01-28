@@ -43,6 +43,8 @@ async def async_setup_entry(
 class LupusecBinarySensor(LupusecBaseSensor, BinarySensorEntity):
     """A binary sensor implementation for Lupusec device."""
 
+    _attr_name = None
+
     @property
     def is_on(self):
         """Return True if the binary sensor is on."""
