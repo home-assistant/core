@@ -23,7 +23,7 @@ class BringData(BringList):
     items: list[BringItemsResponse]
 
 
-class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
+class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
     """A Bring Data Update Coordinator."""
 
     config_entry: ConfigEntry
@@ -38,7 +38,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
         )
         self.bring = bring
 
-    async def _async_update_data(self) -> list[BringData]:
+    async def _async_update_data(self) -> dict[str, BringData]:
         try:
             lists_response = await self.hass.async_add_executor_job(
                 self.bring.loadLists
@@ -48,6 +48,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
         except BringParseException as e:
             raise UpdateFailed("Unable to parse response from bring") from e
 
+        list_dict = {}
         for lst in lists_response["lists"]:
             try:
                 items = await self.hass.async_add_executor_job(
@@ -60,5 +61,6 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
             except BringParseException as e:
                 raise UpdateFailed("Unable to parse response from bring") from e
             lst["items"] = items["purchase"]
+            list_dict[lst["listUuid"]] = lst
 
-        return lists_response["lists"]
+        return list_dict

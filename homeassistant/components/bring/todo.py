@@ -46,7 +46,7 @@ async def async_setup_entry(
                 bringList=bringList,
                 unique_id=unique_id,
             )
-            for bringList in coordinator.data
+            for bringList in coordinator.data.values()
         ],
     )
 
@@ -93,9 +93,7 @@ class BringTodoListEntity(
     @property
     def bringList(self) -> BringData:
         """Return the bring list."""
-        return next(
-            (lst for lst in self.coordinator.data if lst["listUuid"] == self._listUuid),
-        )
+        return self.coordinator.data[self._listUuid]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
