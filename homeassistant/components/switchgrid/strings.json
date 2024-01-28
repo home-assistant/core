@@ -12,7 +12,12 @@
   "entity": {
     "calendar": {
       "switchgrid_events": {
-        "name": "Effacements Switchgrid"
+        "name": "Switchgrid Events"
+      }
+    },
+    "sensor": {
+      "switchgrid_next_event": {
+        "name": "Next Event"
       }
     }
   }

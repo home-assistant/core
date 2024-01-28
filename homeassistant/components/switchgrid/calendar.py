@@ -6,13 +6,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+import homeassistant.util.dt as dt_util
 
+from .const import DOMAIN
 from .coordinator import SwitchgridCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-UtcTzInfo = datetime.UTC
 
 
 async def async_setup_entry(
@@ -21,7 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the calendar platform for entity."""
-    coordinator: SwitchgridCoordinator = SwitchgridCoordinator(hass, config_entry)
+    coordinator: SwitchgridCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([SwitchgridCalendarEntity(coordinator, config_entry)])
 
 
@@ -42,7 +41,7 @@ class SwitchgridCalendarEntity(
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next (first) upcoming event."""
-        now = datetime.datetime.now(tz=UtcTzInfo)
+        now = dt_util.now()
         ongoing_events = list(filter(lambda event: now <= event.start, self._events))
         return ongoing_events[0] if len(ongoing_events) > 0 else None
 
@@ -53,8 +52,8 @@ class SwitchgridCalendarEntity(
         self._events = list(
             map(
                 lambda event: CalendarEvent(
-                    start=datetime.datetime.fromisoformat(event["startUtc"]),
-                    end=datetime.datetime.fromisoformat(event["endUtc"]),
+                    start=event["startUtc"],
+                    end=event["endUtc"],
                     summary=event["summary"],
                     description=event["description"],
                 ),
