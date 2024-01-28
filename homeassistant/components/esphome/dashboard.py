@@ -28,6 +28,8 @@ KEY_DASHBOARD_MANAGER = "esphome_dashboard_manager"
 STORAGE_KEY = "esphome.dashboard"
 STORAGE_VERSION = 1
 
+MIN_VERSION_SUPPORTS_UPDATE = AwesomeVersion("2023.1.0")
+
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the ESPHome dashboard."""
@@ -177,22 +179,20 @@ class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
         self.addon_slug = addon_slug
         self.url = url
         self.api = ESPHomeDashboardAPI(url, session)
-
-    @property
-    def supports_update(self) -> bool:
-        """Return whether the dashboard supports updates."""
-        if self.data is None:
-            raise RuntimeError("Data needs to be loaded first")
-
-        if len(self.data) == 0:
-            return False
-
-        esphome_version: str = next(iter(self.data.values()))["current_version"]
-
-        # There is no January release
-        return AwesomeVersion(esphome_version) > AwesomeVersion("2023.1.0")
+        self.supports_update: bool | None = None
 
     async def _async_update_data(self) -> dict:
         """Fetch device data."""
         devices = await self.api.get_devices()
-        return {dev["name"]: dev for dev in devices["configured"]}
+        configured_devices = devices["configured"]
+
+        if (
+            self.supports_update is None
+            and configured_devices
+            and (current_version := configured_devices[0].get("current_version"))
+        ):
+            self.supports_update = (
+                AwesomeVersion(current_version) > MIN_VERSION_SUPPORTS_UPDATE
+            )
+
+        return {dev["name"]: dev for dev in configured_devices}

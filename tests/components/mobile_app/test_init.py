@@ -88,15 +88,17 @@ async def _test_create_cloud_hook(
     ), patch(
         "homeassistant.components.cloud.async_is_connected", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_create_cloudhook", autospec=True
-    ) as mock_create_cloudhook:
+        "homeassistant.components.cloud.async_get_or_create_cloudhook", autospec=True
+    ) as mock_async_get_or_create_cloudhook:
         cloud_hook = "https://hook-url"
-        mock_create_cloudhook.return_value = cloud_hook
+        mock_async_get_or_create_cloudhook.return_value = cloud_hook
 
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
-        await additional_steps(config_entry, mock_create_cloudhook, cloud_hook)
+        await additional_steps(
+            config_entry, mock_async_get_or_create_cloudhook, cloud_hook
+        )
 
 
 async def test_create_cloud_hook_on_setup(

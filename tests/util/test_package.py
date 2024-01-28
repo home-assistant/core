@@ -1,6 +1,6 @@
 """Test Home Assistant package util methods."""
 import asyncio
-from importlib.metadata import PackageNotFoundError, metadata
+from importlib.metadata import metadata
 import logging
 import os
 from subprocess import PIPE
@@ -235,21 +235,17 @@ def test_check_package_zip() -> None:
     assert not package.is_installed(TEST_ZIP_REQ)
 
 
-def test_get_distribution_falls_back_to_version() -> None:
-    """Test for get_distribution failing and fallback to version."""
+def test_get_is_installed() -> None:
+    """Test is_installed can parse complex requirements."""
     pkg = metadata("homeassistant")
     installed_package = pkg["name"]
     installed_version = pkg["version"]
 
-    with patch(
-        "homeassistant.util.package.distribution",
-        side_effect=PackageNotFoundError,
-    ):
-        assert package.is_installed(installed_package)
-        assert package.is_installed(f"{installed_package}=={installed_version}")
-        assert package.is_installed(f"{installed_package}>={installed_version}")
-        assert package.is_installed(f"{installed_package}<={installed_version}")
-        assert not package.is_installed(f"{installed_package}<{installed_version}")
+    assert package.is_installed(installed_package)
+    assert package.is_installed(f"{installed_package}=={installed_version}")
+    assert package.is_installed(f"{installed_package}>={installed_version}")
+    assert package.is_installed(f"{installed_package}<={installed_version}")
+    assert not package.is_installed(f"{installed_package}<{installed_version}")
 
 
 def test_check_package_previous_failed_install() -> None:
@@ -258,9 +254,6 @@ def test_check_package_previous_failed_install() -> None:
     installed_package = pkg["name"]
     installed_version = pkg["version"]
 
-    with patch(
-        "homeassistant.util.package.distribution",
-        side_effect=PackageNotFoundError,
-    ), patch("homeassistant.util.package.version", return_value=None):
+    with patch("homeassistant.util.package.version", return_value=None):
         assert not package.is_installed(installed_package)
         assert not package.is_installed(f"{installed_package}=={installed_version}")
