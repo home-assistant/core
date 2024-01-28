@@ -1,19 +1,19 @@
 """Todo platform for the Bring! integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
 from python_bring_api.exceptions import BringRequestException
 
-from homeassistant import config_entries, core
 from homeassistant.components.todo import (
     TodoItem,
     TodoItemStatus,
     TodoListEntity,
     TodoListEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -24,10 +24,9 @@ from .coordinator import BringData, BringDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-
 async def async_setup_entry(
-    hass: core.HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
@@ -39,14 +38,12 @@ async def async_setup_entry(
         assert unique_id
 
     async_add_entities(
-        [
-            BringTodoListEntity(
-                coordinator,
-                bringList=bringList,
-                unique_id=unique_id,
-            )
-            for bringList in coordinator.data.values()
-        ],
+        BringTodoListEntity(
+            coordinator,
+            bringList=bringList,
+            unique_id=unique_id,
+        )
+        for bringList in coordinator.data.values()
     )
 
 
@@ -74,7 +71,7 @@ class BringTodoListEntity(
         super().__init__(coordinator)
         self._listUuid = bringList["listUuid"]
         self._attr_name = bringList["name"]
-        self._attr_unique_id = f"{unique_id} {self._listUuid}"
+        self._attr_unique_id = f"{unique_id}_{self._listUuid}"
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -112,12 +109,19 @@ class BringTodoListEntity(
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list.
 
-        Bring has an internal 'recent' list which we want to use instead of a todo list status, therefore completed todo list items will directly be deleted
+        Bring has an internal 'recent' list which we want to use instead of a todo list
+        status, therefore completed todo list items will directly be deleted
 
         This results in following behaviour:
 
-        - Completed items will move to the "completed" section in home assistant todo list and get deleted in bring, which will remove them from the home assistant todo list completely after a short delay
-        - Bring items do not have unique identifiers and are using the name/summery/title. Therefore the name is not to be changed! Should a name be changed anyway, a new item will be created instead and no update for this item is performed and on the next cloud pull update, it will get cleared
+        - Completed items will move to the "completed" section in home assistant todo
+            list and get deleted in bring, which will remove them from the home
+            assistant todo list completely after a short delay
+        - Bring items do not have unique identifiers and are using the
+            name/summery/title. Therefore the name is not to be changed! Should a name
+            be changed anyway, a new item will be created instead and no update for
+            this item is performed and on the next cloud pull update, it will get
+            cleared
         """
 
         bringList = self.bringList
@@ -141,8 +145,7 @@ class BringTodoListEntity(
                     item.description or "",
                 )
             except BringRequestException as e:
-                _LOGGER.warning("Unable to update todo item for bring")
-                raise HomeAssistantError from e
+                raise HomeAssistantError("Unable to update todo item for bring") from e
         else:
             try:
                 await self.hass.async_add_executor_job(
@@ -157,8 +160,7 @@ class BringTodoListEntity(
                     item.description or "",
                 )
             except BringRequestException as e:
-                _LOGGER.warning("Unable to replace todo item for bring")
-                raise HomeAssistantError from e
+                raise HomeAssistantError("Unable to replace todo item for bring") from e
 
         await self.coordinator.async_refresh()
 
@@ -170,7 +172,6 @@ class BringTodoListEntity(
                     self.coordinator.bring.removeItem, self.bringList["listUuid"], uid
                 )
             except BringRequestException as e:
-                _LOGGER.warning("Unable to delete todo item for bring")
-                raise HomeAssistantError from e
+                raise HomeAssistantError("Unable to delete todo item for bring") from e
 
         await self.coordinator.async_refresh()
