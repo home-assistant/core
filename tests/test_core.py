@@ -2673,6 +2673,8 @@ async def test_cancellable_hassjob(hass: HomeAssistant) -> None:
     )
     timer2 = hass.loop.call_later(60, run_job, HassJob(ha.callback(job)))
 
+    hass.async_track_timer_handle(timer1)
+
     await hass.async_stop()
 
     assert timer1.cancelled()
