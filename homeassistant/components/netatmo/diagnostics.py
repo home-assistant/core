@@ -12,21 +12,23 @@ from .data_handler import ACCOUNT, NetatmoDataHandler
 
 TO_REDACT = {
     "access_token",
-    "refresh_token",
-    "restricted_access_token",
-    "restricted_refresh_token",
-    "webhook_id",
     "cloudhook_url",
+    "coordinates",
+    "email",
     "lat_ne",
     "lat_sw",
     "lon_ne",
     "lon_sw",
-    "coordinates",
     "name",
-    "timetable",
-    "zones",
     "pseudo",
+    "refresh_token",
+    "restricted_access_token",
+    "restricted_refresh_token",
+    "timetable",
     "url",
+    "vpn_url",
+    "webhook_id",
+    "zones",
 }
 
 
