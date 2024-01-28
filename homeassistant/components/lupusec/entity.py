@@ -8,6 +8,7 @@ class LupusecDevice(Entity):
     """Representation of a Lupusec device."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, data, device, config_entry) -> None:
         """Initialize a sensor for Lupusec device."""
@@ -22,11 +23,6 @@ class LupusecDevice(Entity):
         """Update automation state."""
         self._device.refresh()
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._device.name
-
     def get_unique_id(self, config_entry_id: str, key: str) -> str:
         """Create a unique_id id for a lupusec entity."""
         return f"{DOMAIN}_{config_entry_id}_{key}"
@@ -40,7 +36,7 @@ class LupusecBaseSensor(LupusecDevice):
         """Return device information about the sensor."""
         return {
             "identifiers": {(DOMAIN, self._device.device_id)},
-            "name": self.get_type_name(),
+            "name": self._device.name,
             "manufacturer": "Lupus Electronics",
             "serial_number": self._device.device_id,
             "model": self.get_type_name(),
