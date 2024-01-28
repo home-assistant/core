@@ -54,10 +54,10 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
         super().__init__(data, device, entry_id)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._entry_id)},
-            name=self._device.name,
+            identifiers={(DOMAIN, entry_id)},
+            name=device.name,
             manufacturer="Lupus Electronics",
-            model=f"Lupusec-XT{self._data.lupusec.model}",
+            model=f"Lupusec-XT{data.lupusec.model}",
         )
 
     @property
