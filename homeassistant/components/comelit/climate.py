@@ -174,7 +174,9 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+        if (
+            target_temp := kwargs.get(ATTR_TEMPERATURE)
+        ) is None or self.hvac_mode == HVACMode.OFF:
             return
 
         await self.coordinator.api.set_clima_status(
@@ -192,7 +194,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
             await self.coordinator.api.set_clima_status(
                 self._device.index, ClimaAction.ON
             )
-        await asyncio.sleep(SLEEP_BETWEEN_CALLS)
+            await asyncio.sleep(SLEEP_BETWEEN_CALLS)
         await self.coordinator.api.set_clima_status(
             self._device.index, MODE_TO_ACTION[hvac_mode]
         )
