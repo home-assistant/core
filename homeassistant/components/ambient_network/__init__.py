@@ -19,6 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = OpenAPI()
     coordinator = AmbientNetworkDataUpdateCoordinator(hass, api)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
