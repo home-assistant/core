@@ -135,6 +135,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class LupusecSystem:
     """Lupusec System class."""
 
-    def __init__(self, username, password, ip_address) -> None:
+    def __init__(self, username: str, password: str, ip_address: str) -> None:
         """Initialize the system."""
         self.lupusec = lupupy.Lupusec(username, password, ip_address)

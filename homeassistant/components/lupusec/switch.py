@@ -49,6 +49,6 @@ class LupusecSwitch(LupusecBaseSensor, SwitchEntity):
         self._device.switch_off()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.is_on

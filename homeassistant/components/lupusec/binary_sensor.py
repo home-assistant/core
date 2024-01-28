@@ -46,12 +46,12 @@ class LupusecBinarySensor(LupusecBaseSensor, BinarySensorEntity):
     _attr_name = None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self._device.is_on
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of the binary sensor."""
         if self._device.generic_type not in (
             item.value for item in BinarySensorDeviceClass

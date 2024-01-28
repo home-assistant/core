@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import lupupy
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -18,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN
+from . import DOMAIN, LupusecSystem
 from .entity import LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
@@ -49,7 +51,9 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, data, device, entry_id) -> None:
+    def __init__(
+        self, data: LupusecSystem, device: lupupy.devices.LupusecAlarm, entry_id: str
+    ) -> None:
         """Initialize the LupusecAlarm class."""
         super().__init__(data, device, entry_id)
         self._attr_unique_id = entry_id

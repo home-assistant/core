@@ -1,7 +1,10 @@
 """Provides the Lupusec entity for Home Assistant."""
+import lupupy
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
+from . import LupusecSystem
 from .const import DOMAIN, TYPE_TRANSLATION
 
 
@@ -10,7 +13,9 @@ class LupusecDevice(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, data, device, entry_id) -> None:
+    def __init__(
+        self, data: LupusecSystem, device: lupupy.devices.LupusecDevice, entry_id: str
+    ) -> None:
         """Initialize a sensor for Lupusec device."""
         self._data = data
         self._device = device
@@ -24,7 +29,9 @@ class LupusecDevice(Entity):
 class LupusecBaseSensor(LupusecDevice):
     """Lupusec Sensor base entity."""
 
-    def __init__(self, data, device, entry_id) -> None:
+    def __init__(
+        self, data: LupusecSystem, device: lupupy.devices.LupusecDevice, entry_id: str
+    ) -> None:
         """Initialize the LupusecBaseSensor."""
         super().__init__(data, device, entry_id)
 
@@ -37,6 +44,6 @@ class LupusecBaseSensor(LupusecDevice):
             via_device=(DOMAIN, entry_id),
         )
 
-    def get_type_name(self):
+    def get_type_name(self) -> str:
         """Return the type of the sensor."""
         return TYPE_TRANSLATION.get(self._device.type, self._device.type)
