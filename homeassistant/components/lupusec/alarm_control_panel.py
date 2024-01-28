@@ -71,3 +71,13 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._device.set_home()
+
+    @property
+    def device_info(self):
+        """Return device information about the sensor."""
+        return {
+            "identifiers": {(DOMAIN, self._entry_id)},
+            "name": self._device.name,
+            "manufacturer": "Lupus Electronics",
+            "via_device": (DOMAIN, f"Lupusec-XT{self._data.lupusec.model}"),
+        }

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
-from .entity import LupusecDevice
+from .entity import LupusecBaseSensor
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
@@ -35,7 +35,7 @@ async def async_setup_entry(
     async_add_devices(switches)
 
 
-class LupusecSwitch(LupusecDevice, SwitchEntity):
+class LupusecSwitch(LupusecBaseSensor, SwitchEntity):
     """Representation of a Lupusec switch."""
 
     def turn_on(self, **kwargs: Any) -> None:

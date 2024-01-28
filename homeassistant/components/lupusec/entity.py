@@ -27,17 +27,22 @@ class LupusecDevice(Entity):
         """Return the name of the sensor."""
         return self._device.name
 
+    def get_unique_id(self, config_entry_id: str, key: str) -> str:
+        """Create a unique_id id for a lupusec entity."""
+        return f"{DOMAIN}_{config_entry_id}_{key}"
+
+
+class LupusecBaseSensor(LupusecDevice):
+    """Lupusec Sensor base entity."""
+
     @property
     def device_info(self):
         """Return device information about the sensor."""
         return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": f"Lupusec-XT{self._data.lupusec.model}",
+            "identifiers": {(DOMAIN, self._device.device_id)},
+            "name": self._device.name,
             "manufacturer": "Lupus Electronics",
-            "model": f"Lupusec-XT{self._data.lupusec.model}",
-            "via_device": (DOMAIN, "lupusec_state"),
+            "serial_number": self._device.device_id,
+            "model": self._device.type,
+            "via_device": (DOMAIN, self._entry_id),
         }
-
-    def get_unique_id(self, config_entry_id: str, key: str) -> str:
-        """Create a unique_id id for a lupusec entity."""
-        return f"{DOMAIN}_{config_entry_id}_{key}"
