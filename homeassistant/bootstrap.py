@@ -11,6 +11,7 @@ import logging
 import logging.handlers
 from operator import contains, itemgetter
 import os
+import pkgutil
 import platform
 import sys
 import threading
@@ -289,6 +290,8 @@ async def async_setup_hass(
         else:
             if not is_virtual_env():
                 await async_mount_local_lib_path(runtime_config.config_dir)
+            if not runtime_config.safe_mode:
+                _mount_custom_packages_path(runtime_config.config_dir)
 
             basic_setup_success = (
                 await async_from_config_dict(config_dict, hass) is not None
@@ -624,6 +627,24 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     if (lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
         sys.path.insert(0, lib_dir)
     return deps_dir
+
+
+def _mount_custom_packages_path(config_dir: str) -> None:
+    """Add custom packages path to Python Path."""
+    custom_packages_dir = os.path.join(config_dir, "custom_packages")
+    if custom_packages_dir not in sys.path:
+        sys.path.insert(0, custom_packages_dir)
+        custom_packages = [
+            name for _, name, _ in pkgutil.iter_modules([custom_packages_dir])
+        ]
+        for custom_package in custom_packages:
+            _LOGGER.warning(
+                "Loaded custom package `%s` which has not "
+                "been tested by Home Assistant. This package might "
+                "cause stability problems, be sure to remove it if you "
+                "experience issues with Home Assistant",
+                custom_package,
+            )
 
 
 @core.callback
