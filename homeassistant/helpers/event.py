@@ -1481,7 +1481,8 @@ def async_call_at(
         else HassJob(action, f"call_at {loop_time}")
     )
     handle = hass.loop.call_at(loop_time, _run_async_call_action, hass, job)
-    hass.async_track_timer_handle(handle)
+    if job.cancel_on_shutdown:
+        hass.async_track_timer_handle(handle)
     return handle.cancel
 
 
@@ -1506,7 +1507,8 @@ def async_call_later(
     )
     loop = hass.loop
     handle = loop.call_at(loop.time() + delay, _run_async_call_action, hass, job)
-    hass.async_track_timer_handle(handle)
+    if job.cancel_on_shutdown:
+        hass.async_track_timer_handle(handle)
     return handle.cancel
 
 

@@ -988,12 +988,7 @@ class HomeAssistant:
     def _cancel_cancellable_timers(self) -> None:
         """Cancel timer handles marked as cancellable."""
         for handle in self._timers:
-            if (
-                not handle.cancelled()
-                and (args := handle._args)  # pylint: disable=protected-access
-                and type(job := args[0]) is HassJob  # noqa: E721
-                and job.cancel_on_shutdown
-            ):
+            if not handle.cancelled():
                 handle.cancel()
 
     def _async_log_running_tasks(self, stage: str) -> None:
