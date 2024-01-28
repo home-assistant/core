@@ -144,26 +144,19 @@ PRODUCTION_SENSORS = (
 )
 
 
-def phase_sensor_from_production_sensor(
-    sensors: list[EnvoyProductionSensorEntityDescription],
-) -> dict[str, list[EnvoyProductionSensorEntityDescription]]:
-    """Build phase sensors from production sensors."""
-    return {
-        (PhaseNames(PHASENAMES[phase])): [
-            replace(
-                sensor,
-                key=f"{sensor.key}_l{phase + 1}",
-                translation_key=f"{sensor.translation_key}_phase",
-                on_phase=PhaseNames(PHASENAMES[phase]),
-                translation_placeholders={"phase_name": f"l{phase + 1}"},
-            )
-            for sensor in sensors
-        ]
-        for phase in range(0, 3)
-    }
-
-
-PRODUCTION_PHASE_SENSORS = phase_sensor_from_production_sensor(list(PRODUCTION_SENSORS))
+PRODUCTION_PHASE_SENSORS = {
+    (on_phase := PhaseNames(PHASENAMES[phase])): [
+        replace(
+            sensor,
+            key=f"{sensor.key}_l{phase + 1}",
+            translation_key=f"{sensor.translation_key}_phase",
+            on_phase=on_phase,
+            translation_placeholders={"phase_name": f"l{phase + 1}"},
+        )
+        for sensor in list(PRODUCTION_SENSORS)
+    ]
+    for phase in range(0, 3)
+}
 
 
 @dataclass(frozen=True)
@@ -228,28 +221,19 @@ CONSUMPTION_SENSORS = (
 )
 
 
-def phase_sensor_from_consumption_sensor(
-    sensors: list[EnvoyConsumptionSensorEntityDescription],
-) -> dict[str, list[EnvoyConsumptionSensorEntityDescription]]:
-    """Build phase sensors from consumption sensors."""
-    return {
-        (PhaseNames(PHASENAMES[phase])): [
-            replace(
-                sensor,
-                key=f"{sensor.key}_l{phase + 1}",
-                translation_key=f"{sensor.translation_key}_phase",
-                on_phase=PhaseNames(PHASENAMES[phase]),
-                translation_placeholders={"phase_name": f"l{phase + 1}"},
-            )
-            for sensor in sensors
-        ]
-        for phase in range(0, 3)
-    }
-
-
-CONSUMPTION_PHASE_SENSORS = phase_sensor_from_consumption_sensor(
-    list(CONSUMPTION_SENSORS)
-)
+CONSUMPTION_PHASE_SENSORS = {
+    (on_phase := PhaseNames(PHASENAMES[phase])): [
+        replace(
+            sensor,
+            key=f"{sensor.key}_l{phase + 1}",
+            translation_key=f"{sensor.translation_key}_phase",
+            on_phase=on_phase,
+            translation_placeholders={"phase_name": f"l{phase + 1}"},
+        )
+        for sensor in list(CONSUMPTION_SENSORS)
+    ]
+    for phase in range(0, 3)
+}
 
 
 @dataclass(frozen=True)
@@ -424,7 +408,7 @@ async def async_setup_entry(
         entities.extend(
             EnvoyProductionPhaseEntity(coordinator, description)
             for use_phase, phase in envoy_data.system_production_phases.items()
-            for description in PRODUCTION_PHASE_SENSORS[use_phase]
+            for description in PRODUCTION_PHASE_SENSORS[PhaseNames(use_phase)]
             if phase is not None
         )
     # For each consumption phase reported add consumption entities
@@ -432,7 +416,7 @@ async def async_setup_entry(
         entities.extend(
             EnvoyConsumptionPhaseEntity(coordinator, description)
             for use_phase, phase in envoy_data.system_consumption_phases.items()
-            for description in CONSUMPTION_PHASE_SENSORS[use_phase]
+            for description in CONSUMPTION_PHASE_SENSORS[PhaseNames(use_phase)]
             if phase is not None
         )
 
