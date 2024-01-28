@@ -279,7 +279,8 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         description: BlockSwitchDescription,
     ) -> None:
         """Initialize relay switch."""
-        super().__init__(coordinator, block, attribute, description, Platform.SWITCH)
+        super().__init__(coordinator, block, attribute, description)
+        self._attr_unique_id: str = f"{super().unique_id}"
         self.control_result: dict[str, Any] | None = None
 
     @property
