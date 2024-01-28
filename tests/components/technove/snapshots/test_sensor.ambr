@@ -403,6 +403,54 @@
     'state': '12.34',
   })
 # ---
+# name: test_sensors[sensor.technove_station_max_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.technove_station_max_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Max current',
+    'platform': 'technove',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'max_current',
+    'unique_id': 'AA:AA:AA:AA:AA:BB_max_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[sensor.technove_station_max_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'TechnoVE Station Max current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.technove_station_max_current',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24',
+  })
+# ---
 # name: test_sensors[sensor.technove_station_max_station_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
