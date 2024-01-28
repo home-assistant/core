@@ -40,7 +40,7 @@ class LupusecBaseSensor(LupusecDevice):
         """Return device information about the sensor."""
         return {
             "identifiers": {(DOMAIN, self._device.device_id)},
-            "name": self._device.name,
+            "name": self.get_type_name(),
             "manufacturer": "Lupus Electronics",
             "serial_number": self._device.device_id,
             "model": self.get_type_name(),
