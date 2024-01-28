@@ -9,12 +9,22 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
+      "auth": {
         "data": {
           "country": "Country",
-          "mode": "[%key:common::config_flow::data::mode%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "override_rest_url": "REST URL",
+          "override_mqtt_url": "MQTT URL"
+        },
+        "data_description": {
+          "override_rest_url": "Insert the REST URL of your self-hosted/bumper instance including the scheme (http/https).",
+          "override_mqtt_url": "Insert the MQTT URL of your self-hosted/bumper instance including the scheme (mqtt/mqtts)."
+        }
+      },
+      "user": {
+        "data": {
+          "mode": "[%key:common::config_flow::data::mode%]"
         },
         "data_description": {
           "mode": "Select the mode you want to use to connect to Ecovacs. If you are unsure, select 'Cloud'.\n\nSelect 'Self-hosted' only if you have a working self-hosted/bumper instance."
