@@ -35,12 +35,12 @@ class LupusecBaseSensor(LupusecDevice):
         super().__init__(data, device, entry_id)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.device_id)},
-            name=self._device.name,
+            identifiers={(DOMAIN, device.device_id)},
+            name=device.name,
             manufacturer="Lupus Electronics",
-            serial_number=self._device.device_id,
-            model=self.get_type_name(),
-            via_device=(DOMAIN, self._entry_id),
+            serial_number=device.device_id,
+            model=TYPE_TRANSLATION.get(device.type, device.type),
+            via_device=(DOMAIN, entry_id),
         )
 
     def get_type_name(self):
