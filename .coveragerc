@@ -182,6 +182,7 @@ omit =
     homeassistant/components/comed_hourly_pricing/sensor.py
     homeassistant/components/comelit/__init__.py
     homeassistant/components/comelit/alarm_control_panel.py
+    homeassistant/components/comelit/climate.py
     homeassistant/components/comelit/const.py
     homeassistant/components/comelit/cover.py
     homeassistant/components/comelit/coordinator.py
