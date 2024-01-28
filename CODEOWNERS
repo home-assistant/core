@@ -1388,6 +1388,8 @@ build.json @home-assistant/supervisor
 /tests/components/tplink_omada/ @MarkGodwin
 /homeassistant/components/traccar/ @ludeeus
 /tests/components/traccar/ @ludeeus
+/homeassistant/components/traccar_server/ @ludeeus
+/tests/components/traccar_server/ @ludeeus
 /homeassistant/components/trace/ @home-assistant/core
 /tests/components/trace/ @home-assistant/core
 /homeassistant/components/tractive/ @Danielhiversen @zhulik @bieniu

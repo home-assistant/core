@@ -1754,6 +1754,7 @@ pytile==2023.04.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.traccar
+# homeassistant.components.traccar_server
 pytraccar==2.0.0
 
 # homeassistant.components.tradfri

@@ -6145,6 +6145,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "traccar_server": {
+      "name": "Traccar Server",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "tractive": {
       "name": "Tractive",
       "integration_type": "device",

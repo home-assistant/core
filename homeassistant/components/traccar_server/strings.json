@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "max_accuracy": "Max accuracy",
+          "skip_accuracy_filter_for": "Position skip filter for attributes",
+          "custom_attributes": "Custom attributes",
+          "events": "Events"
+        }
+      }
+    }
+  }
+}

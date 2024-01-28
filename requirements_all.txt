@@ -2299,6 +2299,7 @@ pytomorrowio==0.3.6
 pytouchline==0.7
 
 # homeassistant.components.traccar
+# homeassistant.components.traccar_server
 pytraccar==2.0.0
 
 # homeassistant.components.tradfri
