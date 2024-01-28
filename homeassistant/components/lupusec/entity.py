@@ -20,10 +20,6 @@ class LupusecDevice(Entity):
         """Update automation state."""
         self._device.refresh()
 
-    def get_unique_id(self, device_id: str) -> str:
-        """Create a unique_id id for a lupusec entity."""
-        return f"{DOMAIN}_{device_id}"
-
 
 class LupusecBaseSensor(LupusecDevice):
     """Lupusec Sensor base entity."""
