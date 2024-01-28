@@ -7,11 +7,19 @@ import pytest
 from syrupy import SnapshotAssertion
 from technove import Status, TechnoVEError
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_with_selected_platforms
+
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.fixture
+def platforms() -> Platform | list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return Platform.SENSOR
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")
@@ -22,10 +30,7 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation and values of the TechnoVE sensors."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
