@@ -82,5 +82,5 @@ async def test_create_entry(
         )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{MANUFACTURER.upper()}-{CONFIG[CONF_SERIAL_NO]}"
+    assert result["title"] == MANUFACTURER.upper()
     assert result["data"][CONF_TOKEN] == CONFIG[CONF_TOKEN]
