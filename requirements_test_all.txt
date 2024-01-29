@@ -1476,7 +1476,7 @@ pylitejet==0.6.2
 pylitterbot==2023.4.9
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.18.3
+pylutron-caseta==0.19.0
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -1766,7 +1766,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.9.2
+pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
 pytrydan==0.4.0
@@ -2025,7 +2025,7 @@ temescal==0.5
 temperusb==1.6.1
 
 # homeassistant.components.teslemetry
-tesla-fleet-api==0.2.0
+tesla-fleet-api==0.2.3
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.0
@@ -2202,7 +2202,7 @@ yalexs==1.10.0
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.3.4
+yolink-api==0.3.6
 
 # homeassistant.components.youless
 youless-api==1.0.1
