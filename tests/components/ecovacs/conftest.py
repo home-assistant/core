@@ -62,7 +62,7 @@ def mock_authenticator(device_fixture: str) -> Generator[Mock, None, None]:
             load_json_object_fixture(f"devices/{device_fixture}/device.json", DOMAIN)
         ]
 
-        def post_authenticated(
+        async def post_authenticated(
             path: str,
             json: dict[str, Any],
             *,
@@ -89,8 +89,11 @@ def mock_mqtt_client(mock_authenticator: Mock) -> Mock:
     with patch(
         "homeassistant.components.ecovacs.controller.MqttClient",
         autospec=True,
-    ) as mock_mqtt_client:
-        client = mock_mqtt_client.return_value
+    ) as mock, patch(
+        "homeassistant.components.ecovacs.config_flow.MqttClient",
+        new=mock,
+    ):
+        client = mock.return_value
         client._authenticator = mock_authenticator
         client.subscribe.return_value = lambda: None
         yield client

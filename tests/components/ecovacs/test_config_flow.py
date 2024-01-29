@@ -1,6 +1,6 @@
 """Test Ecovacs config flow."""
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientError
 from deebot_client.exceptions import InvalidAuthenticationError
@@ -49,6 +49,7 @@ async def test_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_authenticator_authenticate: AsyncMock,
+    mock_mqtt_client: Mock,
     show_advanced_options: bool,
     user_input: dict[str, Any],
 ) -> None:
@@ -61,6 +62,7 @@ async def test_user_flow(
     assert result["data"] == VALID_ENTRY_DATA
     mock_setup_entry.assert_called()
     mock_authenticator_authenticate.assert_called()
+    mock_mqtt_client.verify_config.assert_called()
 
 
 async def test_user_flow_self_hosted(

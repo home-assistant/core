@@ -6,12 +6,14 @@ import logging
 from typing import Any
 
 from deebot_client.api_client import ApiClient
-from deebot_client.authentication import Authenticator
-from deebot_client.configuration import create_config
+from deebot_client.authentication import (
+    Authenticator,
+    create_config as create_rest_config,
+)
 from deebot_client.device import Device
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 from deebot_client.models import DeviceInfo
-from deebot_client.mqtt_client import MqttClient
+from deebot_client.mqtt_client import MqttClient, create_config as create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
 from sucks import EcoVacsAPI, VacBot
@@ -21,7 +23,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_OVERRIDE_MQTT_URL, CONF_OVERRIDE_REST_URL
+from .const import (
+    CONF_OVERRIDE_MQTT_URL,
+    CONF_OVERRIDE_REST_URL,
+    CONF_VERIFY_MQTT_CERTIFICATE,
+)
 from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,23 +42,31 @@ class EcovacsController:
         self.devices: list[Device] = []
         self.legacy_devices: list[VacBot] = []
         self._device_id = get_client_device_id()
-        self._continent = get_continent(config[CONF_COUNTRY])
-
-        deebot_config = create_config(
-            aiohttp_client.async_get_clientsession(self._hass),
-            device_id=self._device_id,
-            country=config[CONF_COUNTRY],
-            override_rest_url=config.get(CONF_OVERRIDE_REST_URL),
-            override_mqtt_url=config.get(CONF_OVERRIDE_MQTT_URL),
-        )
+        country = config[CONF_COUNTRY]
+        self._continent = get_continent(country)
 
         self._authenticator = Authenticator(
-            deebot_config.rest,
+            create_rest_config(
+                aiohttp_client.async_get_clientsession(self._hass),
+                device_id=self._device_id,
+                country=country,
+                override_rest_url=config.get(CONF_OVERRIDE_REST_URL),
+            ),
             config[CONF_USERNAME],
             md5(config[CONF_PASSWORD]),
         )
         self._api_client = ApiClient(self._authenticator)
-        self._mqtt = MqttClient(deebot_config.mqtt, self._authenticator)
+        self._mqtt = MqttClient(
+            create_mqtt_config(
+                device_id=self._device_id,
+                country=country,
+                override_mqtt_url=config.get(CONF_OVERRIDE_MQTT_URL),
+                disable_ssl_context_validation=not config.get(
+                    CONF_VERIFY_MQTT_CERTIFICATE, True
+                ),
+            ),
+            self._authenticator,
+        )
 
     async def initialize(self) -> None:
         """Init controller."""

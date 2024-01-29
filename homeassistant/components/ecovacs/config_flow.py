@@ -6,9 +6,12 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
-from deebot_client.authentication import Authenticator
-from deebot_client.configuration import create_config
-from deebot_client.exceptions import InvalidAuthenticationError
+from deebot_client.authentication import (
+    Authenticator,
+    create_config as create_rest_config,
+)
+from deebot_client.exceptions import InvalidAuthenticationError, MqttError
+from deebot_client.mqtt_client import MqttClient, create_config as create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import COUNTRIES_TO_CONTINENTS, get_continent
 import voluptuous as vol
@@ -25,6 +28,7 @@ from .const import (
     CONF_CONTINENT,
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
+    CONF_VERIFY_MQTT_CERTIFICATE,
     DOMAIN,
     InstanceMode,
 )
@@ -67,16 +71,17 @@ async def _validate_input(
     if errors:
         return errors
 
-    deebot_config = create_config(
+    device_id = get_client_device_id()
+    country = user_input[CONF_COUNTRY]
+    rest_config = create_rest_config(
         aiohttp_client.async_get_clientsession(hass),
-        device_id=get_client_device_id(),
-        country=user_input[CONF_COUNTRY],
+        device_id=device_id,
+        country=country,
         override_rest_url=rest_url,
-        override_mqtt_url=mqtt_url,
     )
 
     authenticator = Authenticator(
-        deebot_config.rest,
+        rest_config,
         user_input[CONF_USERNAME],
         md5(user_input[CONF_PASSWORD]),
     )
@@ -86,6 +91,32 @@ async def _validate_input(
     except ClientError:
         _LOGGER.debug("Cannot connect", exc_info=True)
         errors["base"] = "cannot_connect"
+    except InvalidAuthenticationError:
+        errors["base"] = "invalid_auth"
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception during login")
+        errors["base"] = "unknown"
+
+    if errors:
+        return errors
+
+    mqtt_config = create_mqtt_config(
+        device_id=device_id,
+        country=country,
+        override_mqtt_url=mqtt_url,
+        disable_ssl_context_validation=not user_input.get(
+            CONF_VERIFY_MQTT_CERTIFICATE, True
+        ),
+    )
+
+    client = MqttClient(mqtt_config, authenticator)
+    cannot_connect_field = CONF_OVERRIDE_MQTT_URL if mqtt_url else "base"
+
+    try:
+        await client.verify_config()
+    except MqttError:
+        _LOGGER.debug("Cannot connect", exc_info=True)
+        errors[cannot_connect_field] = "cannot_connect"
     except InvalidAuthenticationError:
         errors["base"] = "invalid_auth"
     except Exception:  # pylint: disable=broad-except
@@ -173,6 +204,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_OVERRIDE_MQTT_URL): selector.TextSelector(
                         selector.TextSelectorConfig(type=selector.TextSelectorType.URL)
                     ),
+                    vol.Optional(CONF_VERIFY_MQTT_CERTIFICATE, default=True): bool,
                 }
             )
 
