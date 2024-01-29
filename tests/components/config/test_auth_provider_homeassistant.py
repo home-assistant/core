@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 
+from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
@@ -18,7 +19,9 @@ async def setup_config(hass, local_auth):
 
 
 @pytest.fixture
-async def auth_provider(local_auth):
+async def auth_provider(
+    local_auth: prov_ha.HassAuthProvider,
+) -> prov_ha.HassAuthProvider:
     """Hass auth provider."""
     return local_auth
 
@@ -434,3 +437,76 @@ async def test_admin_change_password(
     assert result["success"], result
 
     await auth_provider.async_validate_login("test-user", "new-pass")
+
+
+def _assert_username(
+    local_auth: prov_ha.HassAuthProvider, username: str, *, should_exist: bool
+) -> None:
+    if any(user["username"] == username for user in local_auth.data.users):
+        if should_exist:
+            return  # found
+
+        pytest.fail(f"Found user with username {username} when not expected")
+
+    if should_exist:
+        pytest.fail(f"Did not find user with username {username}")
+
+
+async def _test_change_username(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    local_auth: prov_ha.HassAuthProvider,
+    hass_admin_credential: Credentials,
+    new_username: str,
+) -> dict[str, Any]:
+    """Test that change username succeeds."""
+    client = await hass_ws_client(hass)
+    current_username = hass_admin_credential.data["username"]
+    _assert_username(local_auth, current_username, should_exist=True)
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/auth_provider/homeassistant/change_username",
+            "new_username": new_username,
+        }
+    )
+    return await client.receive_json()
+
+
+async def test_change_username_success(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    local_auth: prov_ha.HassAuthProvider,
+    hass_admin_credential: Credentials,
+) -> None:
+    """Test that change username succeeds."""
+    current_username = hass_admin_credential.data["username"]
+    new_username = "blabla"
+
+    result = await _test_change_username(
+        hass, hass_ws_client, local_auth, hass_admin_credential, new_username
+    )
+
+    assert result["success"], result
+    _assert_username(local_auth, current_username, should_exist=False)
+    _assert_username(local_auth, new_username, should_exist=True)
+
+
+@pytest.mark.parametrize("new_username", [" bla", "bla ", "BlA"])
+async def test_change_username_error_not_normalized(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    local_auth: prov_ha.HassAuthProvider,
+    hass_admin_credential: Credentials,
+    new_username: str,
+) -> None:
+    """Test that change username succeeds."""
+    current_username = hass_admin_credential.data["username"]
+
+    result = await _test_change_username(
+        hass, hass_ws_client, local_auth, hass_admin_credential, new_username
+    )
+    assert not result["success"], result
+    assert result["error"]["code"] == "credentials_not_found"
+    _assert_username(local_auth, current_username, expected=True)
+    _assert_username(local_auth, new_username, expected=False)

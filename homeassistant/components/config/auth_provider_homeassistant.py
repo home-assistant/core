@@ -17,6 +17,7 @@ async def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, websocket_delete)
     websocket_api.async_register_command(hass, websocket_change_password)
     websocket_api.async_register_command(hass, websocket_admin_change_password)
+    websocket_api.async_register_command(hass, websocket_change_username)
     return True
 
 
@@ -52,7 +53,7 @@ async def websocket_create(
 
     try:
         await provider.async_add_auth(msg["username"], msg["password"])
-    except auth_ha.InvalidUser:
+    except auth_ha.InvalidUsername:
         connection.send_error(msg["id"], "username_exists", "Username already exists")
         return
 
@@ -192,3 +193,42 @@ async def websocket_admin_change_password(
             msg["id"], "credentials_not_found", "Credentials not found"
         )
         return
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/auth_provider/homeassistant/change_username",
+        vol.Required("new_username"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_change_username(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Change current user password."""
+    # None check for user can skipped as it is already done in @require_admin
+    user = connection.user
+    provider = auth_ha.async_get_provider(hass)
+    username = None
+    for credential in user.credentials:
+        if credential.auth_provider_type == provider.type:
+            username = credential.data["username"]
+            break
+
+    if username is None:
+        connection.send_error(
+            msg["id"], "credentials_not_found", "Credentials not found"
+        )
+        return
+
+    try:
+        await provider.async_change_username(username, msg["new_username"])
+    except auth_ha.InvalidUser:
+        connection.send_error(
+            msg["id"], "credentials_not_found", "Credentials not found"
+        )
+    else:
+        connection.send_result(msg["id"])
