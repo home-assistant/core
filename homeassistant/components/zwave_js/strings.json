@@ -166,7 +166,7 @@
         },
         "abort": {
           "cannot_connect": "Cannot connect to {device_name}. Please try again later after confirming that your Z-Wave network is up and connected to Home Assistant.",
-          "issue_ignored": "Device config file update ignored."
+          "issue_ignored": "Device config file update for {device_name} ignored."
         }
       }
     }
