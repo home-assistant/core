@@ -1,6 +1,7 @@
 """Provides functionality to interact with fans."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
@@ -387,3 +388,39 @@ class FanEntity(ToggleEntity):
         if hasattr(self, "_attr_preset_modes"):
             return self._attr_preset_modes
         return None
+
+    async def async_get_action_target_state(
+        self, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Return expected state when action is start/complete."""
+        print(action)  # noqa: T201
+
+        def _target_start_state(
+            current: int | float | None, target_complete_state: int | float
+        ) -> Callable[[int | float], bool]:
+            def match(value: int | float) -> bool:
+                if current is None:
+                    if target_complete_state > 0:
+                        return value == 0
+                    return value == 100
+                if target_complete_state > current:
+                    return value > current
+                if target_complete_state < current:
+                    return value < current
+                return value == current
+
+            return match
+
+        def _target_complete_state(
+            target_complete_state: int | float,
+        ) -> Callable[[int | float], bool]:
+            def match(value: int | float) -> bool:
+                return value == target_complete_state
+
+            return match
+
+        target: dict[str, Any] = (
+            await super().async_get_action_completed_state(action) or {}
+        )
+
+        return target

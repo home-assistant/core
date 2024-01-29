@@ -58,9 +58,10 @@ def setup_rascal_scheduler_entity(hass: HomeAssistant) -> None:
     )
 
 
-def get_rascal_scheduler(hass: HomeAssistant) -> Any:
+def get_rascal_scheduler(hass: HomeAssistant) -> RascalSchedulerEntity:
     """Get rascal scheduler."""
-    return hass.data[DOMAIN_RASCALSCHEDULER]
+    scheduler: RascalSchedulerEntity = hass.data[DOMAIN_RASCALSCHEDULER]
+    return scheduler
 
 
 def dag_operator(

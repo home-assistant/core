@@ -1,6 +1,7 @@
 """Component to interface with locks that can be controlled remotely."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
@@ -15,6 +16,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
+    CONF_EVENT,
+    CONF_SERVICE,
+    RASC_START,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
@@ -283,11 +287,40 @@ class LockEntity(Entity):
 
         self._lock_option_default_code = ""
 
-    @classmethod
-    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+    async def async_get_action_target_state(
+        self, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Return expected state when action is complete."""
-        if action == "lock":
-            to_state = STATE_LOCKED
+
+        def _target_start_state(
+            target_complete_state: str,
+        ) -> Callable[[str], bool]:
+            def match(value: str) -> bool:
+                if target_complete_state == STATE_UNLOCKED:
+                    return value == STATE_UNLOCKING
+                if target_complete_state == STATE_LOCKED:
+                    return value == STATE_LOCKING
+                return False
+
+            return match
+
+        def _target_complete_state(
+            target_complete_state: str,
+        ) -> Callable[[str], bool]:
+            def match(value: str) -> bool:
+                return value == target_complete_state
+
+            return match
+
+        target: dict[str, Any] = {}
+
+        complete_state = (
+            STATE_UNLOCKED if action[CONF_SERVICE] == "unlock" else STATE_LOCKED
+        )
+
+        if action[CONF_EVENT] == RASC_START:
+            target["state"] = _target_start_state(complete_state)
         else:
-            to_state = STATE_UNLOCKED
-        return to_state
+            target["state"] = _target_complete_state(complete_state)
+
+        return target

@@ -13,6 +13,9 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_EVENT,
+    CONF_SERVICE,
+    RASC_START,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -441,6 +444,45 @@ class CoverEntity(Entity):
         if self._cover_is_last_toggle_direction_open:
             return fns["close"]
         return fns["open"]
+
+    async def async_get_action_target_state(
+        self, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Return expected state when action is start/complete."""
+        print(action)  # noqa: T201
+
+        def _target_start_state(
+            target_complete_state: str,
+        ) -> Callable[[str], bool]:
+            def match(value: str) -> bool:
+                if target_complete_state == STATE_OPEN:
+                    return value == STATE_OPENING
+                if target_complete_state == STATE_CLOSED:
+                    return value == STATE_CLOSING
+                return False
+
+            return match
+
+        def _target_complete_state(
+            target_complete_state: str,
+        ) -> Callable[[str], bool]:
+            def match(value: str) -> bool:
+                return value == target_complete_state
+
+            return match
+
+        target: dict[str, Any] = {}
+
+        complete_state = (
+            STATE_OPEN if action[CONF_SERVICE] == "open_cover" else STATE_CLOSED
+        )
+
+        if action[CONF_EVENT] == RASC_START:
+            target["state"] = _target_start_state(complete_state)
+        else:
+            target["state"] = _target_complete_state(complete_state)
+
+        return target
 
     @classmethod
     async def async_get_action_completed_state(cls, action: str | None) -> str | None:

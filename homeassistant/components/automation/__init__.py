@@ -261,9 +261,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Set up rascal scheduler component
     setup_rascal_scheduler_entity(hass)
 
-    # Waith until script component is loaded
+    # Wait until script component is loaded
     # Convert automation entity into DAG
-    def handle_event(event: Event) -> None:
+    def on_script_setup() -> None:
         """Handle SCRIPT_SETUP_COMPLETE event."""
         for entity in component.entities:
             if entity.unique_id is not None and entity.raw_config:
@@ -276,8 +276,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 routine_entity.output()
                 entity.routine = routine_entity
 
-    hass.bus.async_listen_once("SCRIPT_SETUP_COMPLETE", handle_event)
-
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
     await async_process_integration_platform_for_component(hass, DOMAIN)
@@ -286,6 +284,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_get_blueprints(hass)
 
     await _async_process_config(hass, config, component)
+
+    if "script" in hass.config.components:
+        on_script_setup()
+    else:
+        hass.bus.async_listen_once("SCRIPT_SETUP_COMPLETE", lambda _: on_script_setup())
 
     # Add some default blueprints to blueprints/automation, does nothing
     # if blueprints/automation already exists

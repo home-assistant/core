@@ -1376,6 +1376,7 @@ build.json @home-assistant/supervisor
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
+/homeassistant/components/virtual/ @twrecked
 /homeassistant/components/vivotek/ @HarlemSquirrel
 /homeassistant/components/vizio/ @raman325
 /tests/components/vizio/ @raman325
