@@ -234,8 +234,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
     ),
 )
 
-ENERGY_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
-    TeslemetrySensorEntityDescription(
+ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="solar_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -244,7 +244,7 @@ ENERGY_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         icon="mdi:solar-power",
     ),
-    TeslemetrySensorEntityDescription(
+    SensorEntityDescription(
         key="energy_left",
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -254,7 +254,7 @@ ENERGY_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery",
     ),
-    TeslemetrySensorEntityDescription(
+    SensorEntityDescription(
         key="total_pack_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -263,14 +263,14 @@ ENERGY_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery-high",
     ),
-    TeslemetrySensorEntityDescription(
+    SensorEntityDescription(
         key="percentage_charged",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         suggested_display_precision=2,
     ),
-    TeslemetrySensorEntityDescription(
+    SensorEntityDescription(
         key="battery_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -279,7 +279,7 @@ ENERGY_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         icon="mdi:home-battery",
     ),
-    TeslemetrySensorEntityDescription(
+    SensorEntityDescription(
         key="load_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -288,7 +288,7 @@ ENERGY_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         icon="mdi:power-plug",
     ),
-    TeslemetrySensorEntityDescription(
+    SensorEntityDescription(
         key="grid_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -297,7 +297,7 @@ ENERGY_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         icon="mdi:transmission-tower",
     ),
-    TeslemetrySensorEntityDescription(
+    SensorEntityDescription(
         key="grid_services_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -306,7 +306,7 @@ ENERGY_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         icon="mdi:transmission-tower",
     ),
-    TeslemetrySensorEntityDescription(
+    SensorEntityDescription(
         key="generator_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -317,20 +317,20 @@ ENERGY_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
     ),
 )
 
-WALL_CONNECTOR_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
-    TeslemetrySensorEntityDescription(
+WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="wall_connector_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
     ),
-    TeslemetrySensorEntityDescription(
+    SensorEntityDescription(
         key="wall_connector_fault_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
     ),
-    TeslemetrySensorEntityDescription(
+    SensorEntityDescription(
         key="wall_connector_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -392,12 +392,12 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
 class TeslemetryEnergySensorEntity(TeslemetryEnergyEntity, SensorEntity):
     """Base class for Teslemetry energy site metric sensors."""
 
-    entity_description: TeslemetrySensorEntityDescription
+    entity_description: SensorEntityDescription
 
     def __init__(
         self,
         energysite: TeslemetryEnergyData,
-        description: TeslemetrySensorEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(energysite, description.key)
@@ -412,13 +412,13 @@ class TeslemetryEnergySensorEntity(TeslemetryEnergyEntity, SensorEntity):
 class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorEntity):
     """Base class for Teslemetry energy site metric sensors."""
 
-    entity_description: TeslemetrySensorEntityDescription
+    entity_description: SensorEntityDescription
 
     def __init__(
         self,
         energysite: TeslemetryEnergyData,
         din: str,
-        description: TeslemetrySensorEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
