@@ -632,15 +632,11 @@ async def test_rpc_polling_disconnected(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == "-63"
+    assert get_entity_state(hass, entity_id) == "-63"
 
     await mock_polling_rpc_update(hass, freezer)
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_UNAVAILABLE
+    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
 
 
 async def test_rpc_update_entry_fw_ver(
