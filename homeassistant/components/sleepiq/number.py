@@ -221,6 +221,7 @@ async def async_setup_entry(
                     bed,
                     core_climate,
                     NUMBER_DESCRIPTIONS[CORE_CLIMATE_TIMER],
+                    core_climate.max_core_climate_time,
                 )
             )
 
@@ -239,6 +240,7 @@ class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Number
         bed: SleepIQBed,
         device: Any,
         description: SleepIQNumberEntityDescription,
+        native_max_value: float | None = None,
     ) -> None:
         """Initialize the number."""
         self.entity_description = description
@@ -248,6 +250,9 @@ class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Number
         self._attr_unique_id = description.get_unique_id_fn(bed, device)
         if description.icon:
             self._attr_icon = description.icon
+
+        if native_max_value:
+            self._attr_native_max_value = native_max_value
 
         super().__init__(coordinator, bed)
 
