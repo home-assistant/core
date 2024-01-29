@@ -160,6 +160,7 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
 
 def _handle_exception(err: evo.RequestFailed) -> None:
     """Return False if the exception can't be ignored."""
+
     try:
         raise err
 
@@ -471,12 +472,13 @@ class EvoBroker:
 
     async def call_client_api(
         self,
-        api_function: Awaitable[dict[str, Any] | None],
+        client_api: Awaitable[dict[str, Any] | None],
         update_state: bool = True,
     ) -> dict[str, Any] | None:
         """Call a client API and update the broker state if required."""
+
         try:
-            result = await api_function
+            result = await client_api
         except evo.RequestFailed as err:
             _handle_exception(err)
             return None
@@ -556,7 +558,6 @@ class EvoBroker:
             _handle_exception(err)
         else:
             async_dispatcher_send(self.hass, DOMAIN)
-
             _LOGGER.debug("Status = %s", status)
         finally:
             if access_token != self.client.access_token:
@@ -657,9 +658,9 @@ class EvoChild(EvoDevice):
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
-        if self._evo_broker.temps.get(self._evo_id) is not None:
+        if (temp := self._evo_broker.temps.get(self._evo_id)) is not None:
             # use high-precision temps if available
-            return self._evo_broker.temps[self._evo_id]
+            return temp
         return self._evo_device.temperature
 
     @property
