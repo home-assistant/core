@@ -29,4 +29,4 @@ class TeslemetryEnergyData:
     api: EnergySpecific
     coordinator: TeslemetryEnergyDataCoordinator
     id: int
-    # site_info: dict[str, str]
+    info: dict[str, str]
