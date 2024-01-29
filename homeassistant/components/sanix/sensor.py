@@ -85,10 +85,8 @@ async def async_setup_entry(
 
     sensors = []
     for description in SENSOR_TYPES:
-        if coordinator.data.get(description.key):
-            sensors.append(
-                SanixSensor(coordinator, entry.title, str(entry.unique_id), description)
-            )
+        if description.key in coordinator.data:
+            sensors.append(SanixSensor(coordinator, str(entry.unique_id), description))
 
     async_add_entities(sensors)
 
@@ -102,14 +100,13 @@ class SanixSensor(CoordinatorEntity[SanixCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: SanixCoordinator,
-        name: str,
         serial_no: str,
         description: SanixSensorEntityDescription,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{name}-{description.key}".lower()
-        self._attr_native_value = self.format_value(
+        self._attr_unique_id = f"{serial_no}-{description.key}".lower()
+        self._attr_native_value = _format_value(
             coordinator.data[description.key], description.key
         )
         self.entity_description = description
@@ -118,31 +115,31 @@ class SanixSensor(CoordinatorEntity[SanixCoordinator], SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, serial_no)},
             manufacturer=MANUFACTURER,
-            name=name,
             serial_number=serial_no,
         )
-
-    def format_value(self, value, key):
-        """Format the value to the native format."""
-        try:
-            if key == ATTR_API_SERVICE_DATE:
-                value = datetime.datetime.strptime(value, "%d.%m.%Y").date()
-            elif key == ATTR_API_TIME:
-                value = datetime.datetime.strptime(value, "%d.%m.%Y %H:%M:%S").replace(
-                    tzinfo=ZoneInfo("Europe/Warsaw")
-                )
-        except ValueError:
-            _LOGGER.warning(
-                "Could not format the '%s' sensor. Retrieved value: %s", key, value
-            )
-            return None
-        return value
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.format_value(
+        self._attr_native_value = _format_value(
             self.coordinator.data[self.entity_description.key],
             self.entity_description.key,
         )
         super()._handle_coordinator_update()
+
+
+def _format_value(value, key):
+    """Format the value to the native format."""
+    try:
+        if key == ATTR_API_SERVICE_DATE:
+            value = datetime.datetime.strptime(value, "%d.%m.%Y").date()
+        elif key == ATTR_API_TIME:
+            value = datetime.datetime.strptime(value, "%d.%m.%Y %H:%M:%S").replace(
+                tzinfo=ZoneInfo("Europe/Warsaw")
+            )
+    except ValueError:
+        _LOGGER.warning(
+            "Could not format the '%s' sensor. Retrieved value: %s", key, value
+        )
+        return None
+    return value

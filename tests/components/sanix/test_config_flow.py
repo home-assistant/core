@@ -4,13 +4,9 @@ from http import HTTPStatus
 from sanix.exceptions import SanixException
 
 from homeassistant import data_entry_flow
-from homeassistant.components.sanix.const import (
-    CONF_SERIAL_NO,
-    CONF_TOKEN,
-    DOMAIN,
-    MANUFACTURER,
-)
+from homeassistant.components.sanix.const import CONF_SERIAL_NO, DOMAIN, MANUFACTURER
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import API_URL

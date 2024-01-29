@@ -7,10 +7,11 @@ from sanix.exceptions import SanixException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SERIAL_NO, CONF_TOKEN, DOMAIN, MANUFACTURER
+from .const import CONF_SERIAL_NO, DOMAIN, MANUFACTURER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {

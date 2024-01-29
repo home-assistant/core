@@ -4,7 +4,7 @@
       "user": {
         "data": {
           "serial_no": "Serial number",
-          "token": "Token"
+          "token": "[%key:common::config_flow::data::access_token%]"
         }
       }
     },
@@ -32,11 +32,6 @@
       },
       "ssid": {
         "name": "SSID"
-      }
-    },
-    "binary_sensor": {
-      "status": {
-        "name": "Status"
       }
     }
   }
