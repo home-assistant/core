@@ -330,11 +330,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
                 return self.async_abort(reason="reauth_unsuccessful")
 
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 self.entry, data={**self.entry.data, **user_input}
             )
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
 
         if get_device_entry_gen(self.entry) in BLOCK_GENERATIONS:
             schema = {
