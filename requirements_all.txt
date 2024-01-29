@@ -2232,7 +2232,7 @@ python-kasa[speedups]==0.6.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==5.1.1
+python-matter-server==5.3.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
