@@ -39,7 +39,7 @@ def mock_bring_client() -> Generator[Mock, None, None]:
         client = mock_client.return_value
         client.uuid = UUID
         client.login.return_value = True
-        client.loadLists.return_value = True
+        client.loadLists.return_value = {"lists": []}
         yield client
 
 
@@ -51,24 +51,19 @@ def mock_bring_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture(name="bring")
-def mock_bring() -> Mock:
-    """Mock the Bring api."""
-    b = Mock()
-    b.login.return_value = True
-    b.loadLists.return_value = {"lists": []}
-    return b
-
-
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant,
-    bring: Mock,
+    mock_bring_client: Mock,
     bring_config_entry: MockConfigEntry,
 ) -> None:
     """Mock setup of the bring integration."""
     bring_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.bring.Bring", return_value=bring):
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        yield
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+def login_with_error(exception, mock_bring_client: Mock):
+    """Fixture to simulate error on login."""
+    mock_bring_client.login.side_effect = (exception,)

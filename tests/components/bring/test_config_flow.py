@@ -92,12 +92,13 @@ async def test_flow_user_init_data_unknown_error_and_recover(
 
 
 async def test_flow_user_init_data_already_configured(
-    hass: HomeAssistant, mock_bring_client: Mock
+    hass: HomeAssistant, mock_bring_client: Mock, bring_config_entry: MockConfigEntry
 ) -> None:
     """Test we abort user data set when entry is already configured."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA_STEP, unique_id=UUID)
-    entry.add_to_hass(hass)
+    bring_config_entry.data = MOCK_DATA_STEP
+    bring_config_entry.unique_id = UUID
+    bring_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}

@@ -1,6 +1,4 @@
 """Unit tests for the bring integration."""
-from unittest.mock import Mock
-
 import pytest
 
 from homeassistant.components.bring import (
@@ -30,12 +28,6 @@ async def test_load_unload(
     assert bring_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-@pytest.fixture
-def login_with_error(exception, bring: Mock):
-    """Fixture to simulate error on login."""
-    bring.login.side_effect = (exception,)
-
-
 @pytest.mark.parametrize(
     ("exception", "status"),
     [
@@ -49,6 +41,7 @@ async def test_init_failure(
     login_with_error,
     setup_integration: None,
     status: ConfigEntryState,
+    exception,
     bring_config_entry: MockConfigEntry | None,
 ) -> None:
     """Test an initialization error on integration load."""
