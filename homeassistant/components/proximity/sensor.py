@@ -62,7 +62,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the proximity sensors."""
 
-    coordinator: ProximityDataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id]
+    coordinator: ProximityDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[ProximitySensor | ProximityTrackedEntitySensor] = [
         ProximitySensor(description, coordinator)
@@ -93,7 +93,7 @@ class ProximitySensor(CoordinatorEntity[ProximityDataUpdateCoordinator], SensorE
 
         self.entity_description = description
 
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self._attr_device_info = _device_info(coordinator)
 
     @property
@@ -125,7 +125,9 @@ class ProximityTrackedEntitySensor(
         self.entity_description = description
         self.tracked_entity_id = tracked_entity_id
 
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{tracked_entity_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{tracked_entity_id}_{description.key}"
+        )
         self._attr_name = f"{tracked_entity_id.split('.')[-1]} {description.name}"
         self._attr_device_info = _device_info(coordinator)
 
