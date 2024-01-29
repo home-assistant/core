@@ -74,6 +74,15 @@
       "active_current_phase_a": {
         "name": "Current phase {phase}"
       },
+      "active_apparent_power_phase_va": {
+        "name": "Apparent power phase {phase}"
+      },
+      "active_reactive_power_phase_var": {
+        "name": "Reactive power phase {phase}"
+      },
+      "active_power_factor_phase": {
+        "name": "Power factor phase {phase}"
+      },
       "voltage_sag_phase_count": {
         "name": "Voltage sags detected phase {phase}"
       },
