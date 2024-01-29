@@ -544,7 +544,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
         except FirmwareUnsupported as err:
-            raise ConfigEntryNotReady(repr(err)) from err
+            raise ConfigEntryNotReady from err
 
     async def _async_disconnected(self) -> None:
         """Handle device disconnected."""

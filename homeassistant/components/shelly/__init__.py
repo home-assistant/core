@@ -38,6 +38,7 @@ from .const import (
     DATA_CONFIG_ENTRY,
     DEFAULT_COAP_PORT,
     DOMAIN,
+    FIRMWARE_UNSUPPORTED_ISSUE_ID,
     LOGGER,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
     PUSH_UPDATE_ISSUE_ID,
@@ -219,9 +220,8 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
         except FirmwareUnsupported as err:
-            error = repr(err)
             async_create_issue_unsupported_firmware(hass, entry)
-            raise ConfigEntryNotReady(error) from err
+            raise ConfigEntryNotReady from err
 
         await _async_block_device_setup()
     elif sleep_period is None or device_entry is None:
@@ -236,6 +236,9 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         LOGGER.debug("Setting up offline block device %s", entry.title)
         await _async_block_device_setup()
 
+    ir.async_delete_issue(
+        hass, DOMAIN, FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id)
+    )
     return True
 
 
@@ -303,9 +306,8 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         try:
             await device.initialize()
         except FirmwareUnsupported as err:
-            error = repr(err)
             async_create_issue_unsupported_firmware(hass, entry)
-            raise ConfigEntryNotReady(error) from err
+            raise ConfigEntryNotReady from err
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
@@ -324,6 +326,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         LOGGER.debug("Setting up offline block device %s", entry.title)
         await _async_rpc_device_setup()
 
+    ir.async_delete_issue(
+        hass, DOMAIN, FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id)
+    )
     return True
 
 

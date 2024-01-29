@@ -201,14 +201,14 @@ async def test_block_firmware_unsupported(
     )
     entry = await init_integration(hass, 1)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # Move time to generate polling
     freezer.tick(timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_block_polling_connection_error(
@@ -529,7 +529,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+    assert get_entity_state(hass, entity_id) is STATE_UNAVAILABLE
 
 
 async def test_rpc_firmware_unsupported(
@@ -550,7 +550,7 @@ async def test_rpc_firmware_unsupported(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_rpc_reconnect_auth_error(
