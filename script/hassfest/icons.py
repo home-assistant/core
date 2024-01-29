@@ -76,7 +76,7 @@ def icon_schema(integration_type: str) -> vol.Schema:
         }
     )
 
-    if integration_type in ("entity", "system"):
+    if integration_type in ("entity", "helper", "system"):
         schema = schema.extend(
             {
                 vol.Required("entity_component"): vol.All(
