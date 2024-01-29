@@ -77,7 +77,7 @@ def icon_schema(integration_type: str) -> vol.Schema:
     )
 
     if integration_type in ("entity", "system"):
-        return schema.extend(
+        schema = schema.extend(
             {
                 vol.Required("entity_component"): vol.All(
                     cv.schema_with_slug_keys(
@@ -90,7 +90,7 @@ def icon_schema(integration_type: str) -> vol.Schema:
             }
         )
     if integration_type != "entity":
-        return schema.extend(
+        schema = schema.extend(
             {
                 vol.Optional("entity"): vol.All(
                     cv.schema_with_slug_keys(
