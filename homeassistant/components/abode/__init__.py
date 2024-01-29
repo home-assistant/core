@@ -63,12 +63,12 @@ AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
-    Platform.LOCK,
-    Platform.SWITCH,
-    Platform.COVER,
     Platform.CAMERA,
+    Platform.COVER,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 

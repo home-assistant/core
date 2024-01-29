@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import date
 import ipaddress
 import logging
-from typing import Any, NamedTuple, cast
+from typing import Any, NamedTuple
 from uuid import UUID
 
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox, ValloxApiException
@@ -125,7 +125,7 @@ class ValloxState:
     @property
     def model(self) -> str | None:
         """Return the model, if any."""
-        model = cast(str, _api_get_model(self.metric_cache))
+        model = _api_get_model(self.metric_cache)
 
         if model == "Unknown":
             return None
@@ -155,7 +155,7 @@ class ValloxState:
         return next_filter_change_date
 
 
-class ValloxDataUpdateCoordinator(DataUpdateCoordinator[ValloxState]):
+class ValloxDataUpdateCoordinator(DataUpdateCoordinator[ValloxState]):  # pylint: disable=hass-enforce-coordinator-module
     """The DataUpdateCoordinator for Vallox."""
 
 

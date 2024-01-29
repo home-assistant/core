@@ -261,7 +261,7 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
-        attempts = None if self.hass.state == CoreState.running else 1
+        attempts = None if self.hass.state is CoreState.running else 1
         if (
             transport == Transport.BLE
             and pairing.accessories

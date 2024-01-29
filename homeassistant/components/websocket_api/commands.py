@@ -45,7 +45,7 @@ from homeassistant.helpers.json import (
     JSON_DUMP,
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
-    json_dumps,
+    json_bytes,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import EventType
@@ -104,7 +104,7 @@ def pong_message(iden: int) -> dict[str, Any]:
 
 @callback
 def _forward_events_check_permissions(
-    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
     user: User,
     msg_id: int,
     event: Event,
@@ -113,16 +113,18 @@ def _forward_events_check_permissions(
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
     permissions = user.permissions
-    if not permissions.access_all_entities(
-        POLICY_READ
-    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+    if (
+        not user.is_admin
+        and not permissions.access_all_entities(POLICY_READ)
+        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+    ):
         return
     send_message(messages.cached_event_message(msg_id, event))
 
 
 @callback
 def _forward_events_unconditional(
-    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
     msg_id: int,
     event: Event,
 ) -> None:
@@ -306,7 +308,8 @@ async def handle_call_service(
 def _async_get_allowed_states(
     hass: HomeAssistant, connection: ActiveConnection
 ) -> list[State]:
-    if connection.user.permissions.access_all_entities(POLICY_READ):
+    user = connection.user
+    if user.is_admin or user.permissions.access_all_entities(POLICY_READ):
         return hass.states.async_all()
     entity_perm = connection.user.permissions.check_entity
     return [
@@ -349,17 +352,17 @@ def handle_get_states(
 
 
 def _send_handle_get_states_response(
-    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
 ) -> None:
     """Send handle get states response."""
     connection.send_message(
-        construct_result_message(msg_id, f'[{",".join(serialized_states)}]')
+        construct_result_message(msg_id, b"[" + b",".join(serialized_states) + b"]")
     )
 
 
 @callback
 def _forward_entity_changes(
-    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[str | bytes | dict[str, Any] | Callable[[], str]], None],
     entity_ids: set[str],
     user: User,
     msg_id: int,
@@ -372,9 +375,11 @@ def _forward_entity_changes(
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
     permissions = user.permissions
-    if not permissions.access_all_entities(
-        POLICY_READ
-    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+    if (
+        not user.is_admin
+        and not permissions.access_all_entities(POLICY_READ)
+        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+    ):
         return
     send_message(messages.cached_state_diff_message(msg_id, event))
 
@@ -439,15 +444,23 @@ def handle_subscribe_entities(
 
 
 def _send_handle_entities_init_response(
-    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
 ) -> None:
     """Send handle entities init response."""
     connection.send_message(
-        f'{{"id":{msg_id},"type":"event","event":{{"a":{{{",".join(serialized_states)}}}}}}}'
+        b"".join(
+            (
+                b'{"id":',
+                str(msg_id).encode(),
+                b',"type":"event","event":{"a":{',
+                b",".join(serialized_states),
+                b"}}}",
+            )
+        )
     )
 
 
-async def _async_get_all_descriptions_json(hass: HomeAssistant) -> str:
+async def _async_get_all_descriptions_json(hass: HomeAssistant) -> bytes:
     """Return JSON of descriptions (i.e. user documentation) for all service calls."""
     descriptions = await async_get_all_descriptions(hass)
     if ALL_SERVICE_DESCRIPTIONS_JSON_CACHE in hass.data:
@@ -456,8 +469,8 @@ async def _async_get_all_descriptions_json(hass: HomeAssistant) -> str:
         ]
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
-            return cast(str, cached_json_payload)
-    json_payload = json_dumps(descriptions)
+            return cast(bytes, cached_json_payload)
+    json_payload = json_bytes(descriptions)
     hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
     return json_payload
 

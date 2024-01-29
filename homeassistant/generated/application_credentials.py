@@ -15,6 +15,7 @@ APPLICATION_CREDENTIALS = [
     "home_connect",
     "lametric",
     "lyric",
+    "myuplink",
     "neato",
     "nest",
     "netatmo",

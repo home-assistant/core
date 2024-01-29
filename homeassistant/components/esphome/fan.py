@@ -53,10 +53,7 @@ _FAN_DIRECTIONS: EsphomeEnumMapper[FanDirection, str] = EsphomeEnumMapper(
 class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
     """A fan implementation for ESPHome."""
 
-    @property
-    def _supports_speed_levels(self) -> bool:
-        api_version = self._api_version
-        return api_version.major == 1 and api_version.minor > 3
+    _supports_speed_levels: bool = True
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
@@ -130,13 +127,6 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         )
 
     @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        if not self._supports_speed_levels:
-            return len(ORDERED_NAMED_FAN_SPEEDS)
-        return self._static_info.supported_speed_levels
-
-    @property
     @esphome_state_property
     def oscillating(self) -> bool | None:
         """Return the oscillation state."""
@@ -154,16 +144,14 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         """Return the current fan preset mode."""
         return self._state.preset_mode
 
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return the supported fan preset modes."""
-        return self._static_info.supported_preset_modes
-
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
+        api_version = self._api_version
+        supports_speed_levels = api_version.major == 1 and api_version.minor > 3
+        self._supports_speed_levels = supports_speed_levels
         flags = FanEntityFeature(0)
         if static_info.supports_oscillation:
             flags |= FanEntityFeature.OSCILLATE
@@ -174,3 +162,8 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         if static_info.supported_preset_modes:
             flags |= FanEntityFeature.PRESET_MODE
         self._attr_supported_features = flags
+        self._attr_preset_modes = static_info.supported_preset_modes
+        if not supports_speed_levels:
+            self._attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
+        else:
+            self._attr_speed_count = static_info.supported_speed_levels

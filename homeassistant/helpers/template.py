@@ -97,7 +97,12 @@ _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
-_RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
+_RESERVED_NAMES = {
+    "contextfunction",
+    "evalcontextfunction",
+    "environmentfunction",
+    "jinja_pass_arg",
+}
 
 _GROUP_DOMAIN_PREFIX = "group."
 _ZONE_DOMAIN_PREFIX = "zone."
@@ -722,6 +727,7 @@ class Template:
         value: Any,
         error_value: Any = _SENTINEL,
         variables: dict[str, Any] | None = None,
+        parse_result: bool = False,
     ) -> Any:
         """Render template with value exposed.
 
@@ -743,7 +749,9 @@ class Template:
             variables["value_json"] = json_loads(value)
 
         try:
-            return _render_with_context(self.template, compiled, **variables).strip()
+            render_result = _render_with_context(
+                self.template, compiled, **variables
+            ).strip()
         except jinja2.TemplateError as ex:
             if error_value is _SENTINEL:
                 _LOGGER.error(
@@ -753,6 +761,11 @@ class Template:
                     self.template,
                 )
             return value if error_value is _SENTINEL else error_value
+
+        if not parse_result or self.hass and self.hass.config.legacy_templates:
+            return render_result
+
+        return self._parse_result(render_result)
 
     def _ensure_compiled(
         self,
