@@ -14,6 +14,8 @@ from tests.common import MockConfigEntry
 EMAIL = "test-email"
 PASSWORD = "test-password"
 
+UUID = "00000000-00000000-00000000-00000000"
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[Mock, None, None]:
@@ -22,6 +24,23 @@ def mock_setup_entry() -> Generator[Mock, None, None]:
         "homeassistant.components.bring.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_bring_client() -> Generator[Mock, None, None]:
+    """Mock a Bring client."""
+    with patch(
+        "homeassistant.components.bring.Bring",
+        autospec=True,
+    ) as mock_client, patch(
+        "homeassistant.components.bring.config_flow.Bring",
+        new=mock_client,
+    ):
+        client = mock_client.return_value
+        client.uuid = UUID
+        client.login.return_value = True
+        client.loadLists.return_value = True
+        yield client
 
 
 @pytest.fixture(name="bring_config_entry")
