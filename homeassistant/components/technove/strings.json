@@ -66,6 +66,11 @@
           "plugged_charging": "Plugged, charging"
         }
       }
+    },
+    "switch": {
+      "auto-charge": {
+        "name": "Auto Charge"
+      }
     }
   }
 }
