@@ -9,8 +9,8 @@
       }
     },
     "error": {
-      "invalid_auth": "Could not authorized. The provided data are invalid.",
-      "bad_request": "Something went wrong. Check the provided data."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
