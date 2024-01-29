@@ -1,6 +1,5 @@
 """Constants for the NASweb integration."""
 
-CONF_HA_ADDRESS = "ha_address"
 DOMAIN = "nasweb"
 MANUFACTURER = "chomtech.pl"
 NASWEB_CONFIG_URL = "https://[host]/page"
