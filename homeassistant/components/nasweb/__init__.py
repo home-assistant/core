@@ -9,10 +9,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN, MANUFACTURER, NASWEB_CONFIG_URL, NOTIFY_COORDINATOR
 from .coordinator import NASwebCoordinator, NotificationCoordinator
-from .helper import get_hass_address_from_entry, initialize_notification_coordinator
+from .helper import initialize_notification_coordinator
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
@@ -51,10 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
     notify_coordinator.add_coordinator(webio_serial, coordinator)
 
-    hass_address = get_hass_address_from_entry(hass, entry.data)
-    if hass_address is None:
-        _LOGGER.error("Cannot determine hass address for webio")
-        return False
+    hass_address = get_url(hass)
     if not await webio_api.status_subscription(hass_address, True):
         _LOGGER.error("Failed to subscribe for status updates from webio")
         return False
@@ -87,8 +85,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         serial = coordinator.webio_api.get_serial_number()
         if notify_coordinator is not None and serial is not None:
             notify_coordinator.remove_coordinator(serial)
-            hass_address = get_hass_address_from_entry(hass, entry.data)
-            if hass_address is not None:
-                await coordinator.webio_api.status_subscription(hass_address, False)
+            hass_address = get_url(hass)
+            await coordinator.webio_api.status_subscription(hass_address, False)
 
     return unload_ok

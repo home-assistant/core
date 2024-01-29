@@ -13,10 +13,11 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.network import get_url
 
-from .const import CONF_HA_ADDRESS, DOMAIN, NASWEB_SCHEMA_IMG_URL, NOTIFY_COORDINATOR
+from .const import DOMAIN, NASWEB_SCHEMA_IMG_URL, NOTIFY_COORDINATOR
 from .coordinator import NASwebCoordinator, NotificationCoordinator
-from .helper import get_hass_address_from_entry, initialize_notification_coordinator
+from .helper import initialize_notification_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +26,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_HA_ADDRESS): str,
     }
 )
 
@@ -53,14 +53,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     webio_serial = webio_api.get_serial_number()
     if webio_serial is None:
         raise MissingNASwebData("Device serial number is not available")
+
     coordinator = NASwebCoordinator(hass, webio_api)
-
-    hass_address = get_hass_address_from_entry(hass, data)
-    if hass_address is None:
-        raise MissingNASwebData(
-            "Cannot determine home assistant address. Try filling 'Home Assistant Address'"
-        )
-
+    hass_address = get_url(hass)
     notify_coordinator.add_coordinator(webio_serial, coordinator)
     subscription = await webio_api.status_subscription(hass_address, True)
     if not subscription:
@@ -98,9 +93,6 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                     vol.Required(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                    ): str,
-                    vol.Optional(
-                        CONF_HA_ADDRESS, default=user_input.get(CONF_HA_ADDRESS, "")
                     ): str,
                 }
             )
