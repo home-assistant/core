@@ -42,21 +42,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from e
 
     # Create array of classes
-    data = []
+    data = {"vehicles": [], "energysites": []}
     for product in products:
-        if "vin" not in product:
-            continue
-        vin = product["vin"]
-
-        api = VehicleSpecific(teslemetry.vehicle, vin)
-        coordinator = TeslemetryVehicleDataCoordinator(hass, api)
-        data.append(
-            TeslemetryVehicleData(
-                api=api,
-                coordinator=coordinator,
-                vin=vin,
+        if "vin" in product:
+            vin = product["vin"]
+            api = VehicleSpecific(teslemetry.vehicle, vin)
+            coordinator = TeslemetryVehicleDataCoordinator(hass, api)
+            data.vehicles.append(
+                TeslemetryVehicleData(
+                    api=api,
+                    coordinator=coordinator,
+                    vin=vin,
+                )
             )
-        )
+        if "site":
+            pass
 
     # Do all coordinator first refresh simultaneously
     await asyncio.gather(
