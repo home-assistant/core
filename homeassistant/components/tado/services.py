@@ -24,7 +24,7 @@ SCHEMA_ADD_METER_READING = vol.Schema(
                 "integration": DOMAIN,
             }
         ),
-        vol.Required(ATTR_READING, default=0): vol.Coerce(int),
+        vol.Required(ATTR_READING): vol.Coerce(int),
     }
 )
 
