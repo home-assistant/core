@@ -42,6 +42,11 @@ class MotionMountEntity(Entity):
                 (dr.CONNECTION_NETWORK_MAC, mac)
             }
 
+    @property
+    def available(self) -> bool:
+        """Return True if the MotionMount is available (we're connected)."""
+        return self.mm.is_connected
+
     def update_name(self) -> None:
         """Update the name of the associated device."""
         # Check whether we need to update our name
