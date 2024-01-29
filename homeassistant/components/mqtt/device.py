@@ -23,17 +23,21 @@ from .const import (
     CONF_AVAILABILITY_MODE,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
+    CONF_COMMAND_TOPIC,
     CONF_COMPONENTS,
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
     CONF_DEPRECATED_VIA_HUB,
+    CONF_ENCODING,
     CONF_HW_VERSION,
     CONF_IDENTIFIERS,
     CONF_MANUFACTURER,
     CONF_ORIGIN,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_QOS,
     CONF_SERIAL_NUMBER,
+    CONF_STATE_TOPIC,
     CONF_SUGGESTED_AREA,
     CONF_SUPPORT_URL,
     CONF_SW_VERSION,
@@ -43,7 +47,7 @@ from .const import (
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     SUPPORTED_COMPONENTS,
 )
-from .util import valid_subscribe_topic
+from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,8 +57,10 @@ SHARED_OPTIONS = [
     CONF_AVAILABILITY_MODE,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
+    CONF_COMMAND_TOPIC,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_STATE_TOPIC,
 ]
 
 
@@ -153,5 +159,9 @@ DEVICE_DISCOVERY_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Required(CONF_COMPONENTS): vol.Schema({str: COMPONENT_CONFIG_SCHEMA}),
         vol.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
+        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_QOS): valid_qos_schema,
+        vol.Optional(CONF_ENCODING): cv.string,
     }
 )
