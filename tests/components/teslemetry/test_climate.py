@@ -124,6 +124,7 @@ async def test_asleep_or_offline(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_vehicle_data.assert_called_once()
+    mock_wake_up.reset_mock()
 
     # Run a command but fail trying to wake up the vehicle
     mock_wake_up.side_effect = InvalidCommand
@@ -136,6 +137,8 @@ async def test_asleep_or_offline(
         )
         assert error
     mock_wake_up.side_effect = None
+    mock_wake_up.assert_called_once()
+    mock_wake_up.reset_mock()
 
     # Run a command but timeout trying to wake up the vehicle
     mock_wake_up.return_value = WAKE_UP_ASLEEP
@@ -149,11 +152,13 @@ async def test_asleep_or_offline(
             blocking=True,
         )
         assert error
+    mock_wake_up.assert_called()
+    mock_wake_up.reset_mock()
     mock_wake_up.return_value = WAKE_UP_ONLINE
 
     # Run a command and wake up the vehicle immediately
-
     await hass.services.async_call(
         CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: [entity_id]}, blocking=True
     )
     await hass.async_block_till_done()
+    mock_wake_up.assert_called_once()
