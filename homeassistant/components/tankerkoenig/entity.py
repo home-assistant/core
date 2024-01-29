@@ -8,11 +8,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import TankerkoenigDataUpdateCoordinator
 
 
-class TankerkoenigCoordinatorEntity(CoordinatorEntity):
+class TankerkoenigCoordinatorEntity(
+    CoordinatorEntity[TankerkoenigDataUpdateCoordinator]
+):
     """Tankerkoenig base entity."""
 
     _attr_has_entity_name = True
-    coordinator: TankerkoenigDataUpdateCoordinator
 
     def __init__(
         self, coordinator: TankerkoenigDataUpdateCoordinator, station: Station
