@@ -176,7 +176,7 @@ aio-geojson-geonetnz-quakes==0.15
 aio-geojson-geonetnz-volcano==0.8
 
 # homeassistant.components.nsw_rural_fire_service_feed
-aio-geojson-nsw-rfs-incidents==0.6
+aio-geojson-nsw-rfs-incidents==0.7
 
 # homeassistant.components.usgs_earthquakes_feed
 aio-geojson-usgs-earthquakes==0.2
@@ -215,7 +215,7 @@ aiobafi6==0.9.0
 aiobotocore==2.9.1
 
 # homeassistant.components.comelit
-aiocomelit==0.7.3
+aiocomelit==0.8.2
 
 # homeassistant.components.dhcp
 aiodiscover==1.6.0
@@ -359,7 +359,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.0.0
+aioshelly==8.0.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -553,7 +553,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.5
+blinkpy==0.22.6
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -1019,7 +1019,7 @@ hass-nabucasa==0.75.1
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.5.3
+hassil==1.6.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -1072,6 +1072,9 @@ httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.7.3
+
+# homeassistant.components.huum
+huum==0.7.10
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
@@ -1319,7 +1322,7 @@ mutagen==1.47.0
 mutesync==0.0.1
 
 # homeassistant.components.permobil
-mypermobil==0.1.6
+mypermobil==0.1.8
 
 # homeassistant.components.myuplink
 myuplink==0.0.9
@@ -1766,7 +1769,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.17.0
+pyenphase==1.19.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1916,7 +1919,7 @@ pylitejet==0.6.2
 pylitterbot==2023.4.9
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.18.3
+pylutron-caseta==0.19.0
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -2157,7 +2160,7 @@ pytankerkoenig==0.0.6
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.11
+pytedee-async==0.2.12
 
 # homeassistant.components.tfiac
 pytfiac==0.4
@@ -2173,6 +2176,9 @@ python-awair==0.2.4
 
 # homeassistant.components.blockchain
 python-blockchain-api==0.0.2
+
+# homeassistant.components.bring
+python-bring-api==2.0.0
 
 # homeassistant.components.bsblan
 python-bsblan==0.5.18
@@ -2208,7 +2214,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==4.2.1
+python-homewizard-energy==4.2.2
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2223,7 +2229,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.6.0.1
+python-kasa[speedups]==0.6.1
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2263,7 +2269,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.39.0
+python-roborock==0.39.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2305,7 +2311,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.9.2
+pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
 pytrydan==0.4.0
@@ -2656,6 +2662,9 @@ temperusb==1.6.1
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0
 
+# homeassistant.components.teslemetry
+tesla-fleet-api==0.2.3
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.0
 
@@ -2672,7 +2681,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.8.0
+thermopro-ble==0.9.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks-smoke==0.1.8
@@ -2873,7 +2882,7 @@ yeelight==0.7.14
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.3.4
+yolink-api==0.3.6
 
 # homeassistant.components.youless
 youless-api==1.0.1

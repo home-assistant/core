@@ -1337,14 +1337,13 @@ async def test_wait_continue_on_timeout(
         result_wait = {"wait": {"trigger": None, "remaining": 0.0}}
         variable_wait = dict(result_wait)
     expected_trace = {
-        "0": [{"result": result_wait}],
+        "0": [{"result": result_wait, "variables": variable_wait}],
     }
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
-        expected_trace["0"][0]["error"] = ""
+        expected_trace["0"][0]["error"] = "TimeoutError"
         expected_script_execution = "aborted"
     else:
-        expected_trace["0"][0]["variables"] = variable_wait
         expected_trace["1"] = [{"result": {"event": "test_event", "event_data": {}}}]
         expected_script_execution = "finished"
     assert_action_trace(expected_trace, expected_script_execution)

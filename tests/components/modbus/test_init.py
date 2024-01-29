@@ -83,7 +83,7 @@ from homeassistant.components.modbus.validators import (
     duplicate_fan_mode_validator,
     duplicate_modbus_validator,
     nan_validator,
-    number_validator,
+    register_int_list_validator,
     struct_validator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -138,26 +138,22 @@ async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodb
     return mock_pymodbus
 
 
-async def test_number_validator() -> None:
-    """Test number validator."""
-
-    for value, value_type in (
+async def test_register_int_list_validator() -> None:
+    """Test conf address register validator."""
+    for value, vtype in (
         (15, int),
-        (15.1, float),
-        ("15", int),
-        ("15.1", float),
-        (-15, int),
-        (-15.1, float),
-        ("-15", int),
-        ("-15.1", float),
+        ([15], list),
     ):
-        assert isinstance(number_validator(value), value_type)
+        assert isinstance(register_int_list_validator(value), vtype)
 
-    try:
-        number_validator("x15.1")
-    except vol.Invalid:
-        return
-    pytest.fail("Number_validator not throwing exception")
+    with pytest.raises(vol.Invalid):
+        register_int_list_validator([15, 16])
+
+    with pytest.raises(vol.Invalid):
+        register_int_list_validator(-15)
+
+    with pytest.raises(vol.Invalid):
+        register_int_list_validator(["aq"])
 
 
 async def test_nan_validator() -> None:
@@ -584,7 +580,7 @@ async def test_duplicate_entity_validator(do_config) -> None:
                         CONF_SLAVE: 0,
                         CONF_TARGET_TEMP: 117,
                         CONF_FAN_MODE_REGISTER: {
-                            CONF_ADDRESS: 121,
+                            CONF_ADDRESS: [121],
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_ON: 0,
                                 CONF_FAN_MODE_HIGH: 1,

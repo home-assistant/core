@@ -1,7 +1,7 @@
 {
   "domain": "jvc_projector",
   "name": "JVC Projector",
-  "codeowners": ["@SteveEasley"],
+  "codeowners": ["@SteveEasley", "@msavazzi"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/jvc_projector",
   "integration_type": "device",
