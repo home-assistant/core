@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.unique_id] = coordinator
 
     # legacy proximity entity handling, can be removed in 2024.8
