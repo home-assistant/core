@@ -51,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=f"{MANUFACTURER.upper()}-{user_input[CONF_SERIAL_NO]}",
+                    title=MANUFACTURER.upper(),
                     data=user_input,
                 )
 
