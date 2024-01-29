@@ -1,9 +1,11 @@
 # ScreenLogic Services
 set_color_mode:
-  target:
-    device:
-      integration: screenlogic
   fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: screenlogic
     color_mode:
       required: true
       selector:
@@ -32,10 +34,12 @@ set_color_mode:
             - thumper
             - white
 start_super_chlorination:
-  target:
-    device:
-      integration: screenlogic
   fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: screenlogic
     runtime:
       default: 24
       selector:
@@ -45,6 +49,9 @@ start_super_chlorination:
           unit_of_measurement: hours
           mode: slider
 stop_super_chlorination:
-  target:
-    device:
-      integration: screenlogic
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: screenlogic
