@@ -29,7 +29,7 @@ async def setup_integration(
 async def test_load_unload(
     hass: HomeAssistant,
     mock_bring_client: Mock,
-    bring_config_entry: MockConfigEntry | None,
+    bring_config_entry: MockConfigEntry,
 ) -> None:
     """Test loading and unloading of the config entry."""
     await setup_integration(hass, bring_config_entry)
