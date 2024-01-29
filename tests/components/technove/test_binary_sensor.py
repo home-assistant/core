@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
-from technove import Status, TechnoVEError
+from technove import TechnoVEError
 
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -63,25 +63,6 @@ async def test_disabled_by_default_binary_sensors(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_sensor_update_failure(
-    hass: HomeAssistant,
-    mock_technove: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test coordinator update failure."""
-    entity_id = "sensor.technove_station_status"
-
-    assert hass.states.get(entity_id).state == Status.PLUGGED_CHARGING.value
-
-    freezer.tick(timedelta(minutes=5, seconds=1))
-    async_fire_time_changed(hass)
-    mock_technove.update.side_effect = TechnoVEError("Test error")
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-
-@pytest.mark.usefixtures("init_integration")
 async def test_binary_sensor_update_failure(
     hass: HomeAssistant,
     mock_technove: MagicMock,
@@ -92,9 +73,9 @@ async def test_binary_sensor_update_failure(
 
     assert hass.states.get(entity_id).state == STATE_ON
 
+    mock_technove.update.side_effect = TechnoVEError("Test error")
     freezer.tick(timedelta(minutes=5, seconds=1))
     async_fire_time_changed(hass)
-    mock_technove.update.side_effect = TechnoVEError("Test error")
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
