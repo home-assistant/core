@@ -418,10 +418,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             state_class = self.state_class
             if state_class != SensorStateClass.TOTAL:
                 raise ValueError(
-                    f"Entity {self.entity_id} ({type(self)}) with state_class {state_class} has set last_reset."
-                    " Setting last_reset for entities with state_class other than 'total'"
-                    " is not supported. Please update your configuration if"
-                    " state_class is manually configured."
+                    f"Entity {self.entity_id} ({type(self)}) with state_class {state_class}"
+                    " has set last_reset. Setting last_reset for entities with state_class"
+                    " other than 'total' is not supported. Please update your configuration"
+                    " if state_class is manually configured."
                 )
 
             if state_class == SensorStateClass.TOTAL:
