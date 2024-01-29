@@ -2,7 +2,6 @@
 
 Based on homeassistant/components/upnp
 Based on homeassistant/components/sun/sensor.py to associate entities to devices
-Based on homeassistant/components/met/config_flow.py to define multiple config flows
 
 """
 from __future__ import annotations
@@ -60,7 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         LOGGER.debug("Created device, device_entry: %s", device_entry)
 
-    # TOD: check how many lights strips were defined in the entity registry or checking with a service
     # This will trigger async_setup_entry function for all entities defined in PLATFORMS
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
