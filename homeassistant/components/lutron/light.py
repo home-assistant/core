@@ -110,7 +110,7 @@ class LutronLight(LutronDevice, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if self._is_fan:
-            async_create_issue(
+            create_issue(
                 self.hass,
                 DOMAIN,
                 "deprecated_light_fan_on",
