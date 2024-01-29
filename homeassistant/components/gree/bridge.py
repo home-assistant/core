@@ -23,7 +23,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class DeviceDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Manages polling for state changes from the device."""
 
     def __init__(self, hass: HomeAssistant, device: Device) -> None:

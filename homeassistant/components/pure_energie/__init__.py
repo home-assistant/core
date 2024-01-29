@@ -47,7 +47,7 @@ class PureEnergieData(NamedTuple):
     smartbridge: SmartBridge
 
 
-class PureEnergieDataUpdateCoordinator(DataUpdateCoordinator[PureEnergieData]):
+class PureEnergieDataUpdateCoordinator(DataUpdateCoordinator[PureEnergieData]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching Pure Energie data from single eindpoint."""
 
     config_entry: ConfigEntry

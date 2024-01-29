@@ -103,7 +103,7 @@ jobs:
           echo "key=pre-commit-${{ env.CACHE_VERSION }}-${{
             hashFiles('.pre-commit-config.yaml') }}"  >> $GITHUB_OUTPUT
       - name: Filter for core changes
-        uses: dorny/paths-filter@v2.12.0
+        uses: dorny/paths-filter@v3.0.0
         id: core
         with:
           filters: .core_files.yaml
@@ -118,7 +118,7 @@ jobs:
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
-        uses: dorny/paths-filter@v2.12.0
+        uses: dorny/paths-filter@v3.0.0
         id: integrations
         with:
           filters: .integration_paths.yaml
@@ -597,14 +597,14 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y homeassistant
+          pylint --ignore-missing-annotations=y --ignore-wrong-coordinator-module=y homeassistant
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
+          pylint --ignore-missing-annotations=y --ignore-wrong-coordinator-module=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   mypy:
     name: Check mypy
