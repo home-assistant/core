@@ -18,10 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
-
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
+from .const import TEST_CLIENT_ID, TEST_CLIENT_SECRET
 
 
 @pytest.fixture
@@ -31,7 +28,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     await async_import_client_credential(
         hass,
         DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+        ClientCredential(TEST_CLIENT_ID, TEST_CLIENT_SECRET),
     )
 
 
@@ -41,6 +38,7 @@ async def test_full_flow(
     aioclient_mock,
     current_request_with_host,
     setup_credentials,
+    jwt,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +53,7 @@ async def test_full_flow(
     )
 
     assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={TEST_CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
     )
@@ -65,12 +63,10 @@ async def test_full_flow(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    token = load_fixture("jwt", DOMAIN)
-
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
-            "access_token": token,
+            "access_token": jwt,
             "scope": "iam:read amc:api",
             "expires_in": 86399,
             "refresh_token": "mock-refresh-token",
