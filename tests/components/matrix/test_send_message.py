@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.matrix.conftest import TEST_BAD_ROOM, TEST_JOINABLE_ROOMS
 import pytest
+import io
 
 
 @pytest.mark.parametrize(
@@ -74,12 +75,11 @@ import pytest
 async def test_send_message(
     hass: HomeAssistant,
     matrix_bot: MatrixBot,
-    image_path,
-    matrix_events,
-    caplog,
-    ids,
-    data,
-    expected_attributes,
+    matrix_events: list,
+    caplog: pytest.LogCaptureFixture,
+    ids: str,
+    data: dict,
+    expected_attributes: dict,
 ):
     """Test the send_message service."""
 
@@ -98,7 +98,11 @@ async def test_send_message(
 
 
 async def test_send_image(
-    hass: HomeAssistant, matrix_bot: MatrixBot, image_path, matrix_events, caplog
+    hass: HomeAssistant,
+    matrix_bot: MatrixBot,
+    image_path: io.BytesIO,
+    matrix_events: list,
+    caplog: pytest.LogCaptureFixture,
 ):
     """Test send a message with an attached image"""
 
@@ -120,7 +124,10 @@ async def test_send_image(
 
 
 async def test_unsendable_message(
-    hass: HomeAssistant, matrix_bot: MatrixBot, matrix_events, caplog
+    hass: HomeAssistant,
+    matrix_bot: MatrixBot,
+    matrix_events: list,
+    caplog: pytest.LogCaptureFixture,
 ):
     """Test the send_message service with an invalid room."""
     assert len(matrix_events) == 0
