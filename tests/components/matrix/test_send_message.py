@@ -1,5 +1,9 @@
 """Test the send_message service."""
 
+import io
+
+import pytest
+
 from homeassistant.components.matrix import (
     ATTR_FORMAT,
     ATTR_IMAGES,
@@ -7,21 +11,19 @@ from homeassistant.components.matrix import (
     MatrixBot,
 )
 from homeassistant.components.matrix.const import (
-    FORMAT_TEXT,
     FORMAT_HTML,
     FORMAT_NOTICE,
+    FORMAT_TEXT,
     SERVICE_SEND_MESSAGE,
 )
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.core import HomeAssistant
 
 from tests.components.matrix.conftest import TEST_BAD_ROOM, TEST_JOINABLE_ROOMS
-import pytest
-import io
 
 
 @pytest.mark.parametrize(
-    "ids, data, expected_attributes",
+    ("ids", "data", "expected_attributes"),
     [
         (
             "Text message",
@@ -104,7 +106,7 @@ async def test_send_image(
     matrix_events: list,
     caplog: pytest.LogCaptureFixture,
 ):
-    """Test send a message with an attached image"""
+    """Test send a message with an attached image."""
 
     await hass.async_start()
     assert len(matrix_events) == 0
