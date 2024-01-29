@@ -591,7 +591,7 @@ class HassIO:
             if return_text:
                 return await request.text(encoding="utf-8")
 
-            return await request.json()
+            return await request.json(encoding="utf-8")
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on %s request", command)
