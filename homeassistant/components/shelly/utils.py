@@ -383,8 +383,9 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key in keys_dict:
         return [key]
 
-    # if key == "switch" and "cover:0" in keys_dict:
-    #     key = "cover"
+    # Fix for some old firmware in coder mode
+    if key == "switch" and "cover:0" in keys_dict:
+        key = "cover"
 
     return [k for k in keys_dict if k.startswith(f"{key}:")]
 
