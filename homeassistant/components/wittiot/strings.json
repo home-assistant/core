@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Device configuration",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
@@ -22,94 +21,94 @@
   "entity": {
     "sensor": {
       "tempinf": {
-        "name": "Indoor Temperature"
+        "name": "Indoor temperature"
       },
       "humidityin": {
-        "name": "Indoor Humidity"
+        "name": "Indoor humidity"
       },
       "tempf": {
-        "name": "Outdoor Temperature"
+        "name": "Outdoor temperature"
       },
       "baromrelin": {
-        "name": "Relative Pressure"
+        "name": "Relative pressure"
       },
       "baromabsin": {
-        "name": "Absolute Pressure"
+        "name": "Absolute pressure"
       },
       "humidity": {
-        "name": "Outdoor Humidity"
+        "name": "Outdoor humidity"
       },
       "winddir": {
-        "name": "Wind Direction"
+        "name": "Wind direction"
       },
       "windspeedmph": {
-        "name": "Wind Speed"
+        "name": "Wind speed"
       },
       "windgustmph": {
-        "name": "Wind Gust"
+        "name": "Wind gust"
       },
       "solarradiation": {
-        "name": "Solar Irradiance"
+        "name": "Solar irradiance"
       },
       "uv": {
         "name": "UV-Index"
       },
       "daywindmax": {
-        "name": "Day Wind Max"
+        "name": "Day wind max"
       },
       "feellike": {
-        "name": "Feel Like"
+        "name": "Feel like"
       },
       "dewpoint": {
-        "name": "Dew Point"
+        "name": "Dew point"
       },
       "rainratein": {
-        "name": "Rain Rate"
+        "name": "Rain rate"
       },
       "eventrainin": {
-        "name": "Rain Event"
+        "name": "Rain event"
       },
       "dailyrainin": {
-        "name": "Daily Rainfall"
+        "name": "Daily rainfall"
       },
       "weeklyrainin": {
-        "name": "Weekly Rainfall"
+        "name": "Weekly rainfall"
       },
       "monthlyrainin": {
-        "name": "Monthly Rainfall"
+        "name": "Monthly rainfall"
       },
       "yearlyrainin": {
-        "name": "Yearly Rainfall"
+        "name": "Yearly rainfall"
       },
       "rrain_piezo": {
-        "name": "Piezo Rain Rate"
+        "name": "Piezo rain rate"
       },
       "erain_piezo": {
-        "name": "Piezo Rain Event"
+        "name": "Piezo rain event"
       },
       "drain_piezo": {
-        "name": "Daily Piezo Rainfall"
+        "name": "Daily piezo rainfall"
       },
       "wrain_piezo": {
-        "name": "Weekly Piezo Rainfall"
+        "name": "Weekly piezo rainfall"
       },
       "mrain_piezo": {
-        "name": "Monthly Piezo Rainfall"
+        "name": "Monthly piezo rainfall"
       },
       "yrain_piezo": {
-        "name": "Yearly Piezo Rainfall"
+        "name": "Yearly piezo rainfall"
       },
       "co2in": {
-        "name": "Indoor CO2"
+        "name": "Indoor co2"
       },
       "co2in_24h": {
-        "name": "Indoor 24H AVG CO2"
+        "name": "Indoor 24H avg co2"
       },
       "co2": {
         "name": "CO2"
       },
       "co2_24h": {
-        "name": "24H AVG CO2"
+        "name": "24H avg co2"
       },
       "pm25_co2": {
         "name": "CO2 PM2.5"
@@ -130,19 +129,19 @@
         "name": "CO2 PM2.5 AQI"
       },
       "tf_co2": {
-        "name": "CO2 Temperature"
+        "name": "CO2 temperature"
       },
       "humi_co2": {
-        "name": "CO2 Humidity"
+        "name": "CO2 humidity"
       },
       "lightning": {
-        "name": "Thunder Last Distamce"
+        "name": "Thunder last distamce"
       },
       "lightning_time": {
-        "name": "Thunder Last Timestamp"
+        "name": "Thunder last timestamp"
       },
       "lightning_num": {
-        "name": "Thunder Daily Count"
+        "name": "Thunder daily count"
       }
     }
   }
