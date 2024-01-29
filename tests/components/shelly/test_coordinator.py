@@ -3,7 +3,11 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioshelly.const import MODEL_BULB, MODEL_BUTTON1
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    FirmwareUnsupported,
+    InvalidAuthError,
+)
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -184,6 +188,27 @@ async def test_block_rest_update_auth_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == entry.entry_id
+
+
+async def test_block_firmware_unsupported(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
+) -> None:
+    """Test block device polling authentication error."""
+    monkeypatch.setattr(
+        mock_block_device,
+        "update",
+        AsyncMock(side_effect=FirmwareUnsupported),
+    )
+    entry = await init_integration(hass, 1)
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    # Move time to generate polling
+    freezer.tick(timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
 
 
 async def test_block_polling_connection_error(
@@ -505,6 +530,27 @@ async def test_rpc_sleeping_device_no_periodic_updates(
     await hass.async_block_till_done()
 
     assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+
+
+async def test_rpc_firmware_unsupported(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+) -> None:
+    """Test RPC update entry unsupported firmware."""
+    entry = await init_integration(hass, 2)
+    register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_0",
+        entry,
+    )
+
+    # Move time to generate sleep period update
+    freezer.tick(timedelta(seconds=600 * SLEEP_PERIOD_MULTIPLIER))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
 
 
 async def test_rpc_reconnect_auth_error(

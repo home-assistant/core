@@ -9,6 +9,7 @@ from aioshelly.common import ConnectionOptions
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
+    FirmwareUnsupported,
     InvalidAuthError,
     MacAddressMismatchError,
 )
@@ -50,6 +51,7 @@ from .coordinator import (
     get_entry_data,
 )
 from .utils import (
+    async_create_issue_unsupported_firmware,
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
@@ -216,6 +218,10 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
+        except FirmwareUnsupported as err:
+            error = repr(err)
+            async_create_issue_unsupported_firmware(hass, entry)
+            raise ConfigEntryNotReady(error) from err
 
         await _async_block_device_setup()
     elif sleep_period is None or device_entry is None:
@@ -296,6 +302,10 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         LOGGER.debug("Setting up online RPC device %s", entry.title)
         try:
             await device.initialize()
+        except FirmwareUnsupported as err:
+            error = repr(err)
+            async_create_issue_unsupported_firmware(hass, entry)
+            raise ConfigEntryNotReady(error) from err
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
