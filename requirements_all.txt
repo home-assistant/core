@@ -1322,7 +1322,7 @@ mutagen==1.47.0
 mutesync==0.0.1
 
 # homeassistant.components.permobil
-mypermobil==0.1.6
+mypermobil==0.1.8
 
 # homeassistant.components.myuplink
 myuplink==0.0.9
