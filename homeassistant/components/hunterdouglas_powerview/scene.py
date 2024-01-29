@@ -11,7 +11,6 @@ from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN, STATE_ATTRIBUTE_ROOM_NAME
 from .coordinator import PowerviewShadeUpdateCoordinator
@@ -56,18 +55,8 @@ class PowerViewScene(HDEntity, Scene):
         self._scene: PvScene = scene
         self._attr_name = scene.name
         self._attr_extra_state_attributes = {STATE_ATTRIBUTE_ROOM_NAME: room_name}
-        self._forced_resync: list = []
-
-    async def _async_force_resync(self, *_: Any) -> None:
-        """Force a resync after an update since the hub may have stale state."""
-        for shade_id in self._forced_resync:
-            _LOGGER.debug("Force resync of shade %s", self.name)
-            await self.data.get_shade(shade_id=shade_id).refresh()
-        self._forced_resync = []
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         shades = await self._scene.activate()
         _LOGGER.debug("Scene activated for shade(s) %s", shades)
-        self._forced_resync = shades
-        async_call_later(self.hass, RESYNC_DELAY, self._async_force_resync)
