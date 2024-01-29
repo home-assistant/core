@@ -718,6 +718,7 @@ omit =
     homeassistant/components/lutron/binary_sensor.py
     homeassistant/components/lutron/cover.py
     homeassistant/components/lutron/entity.py
+    homeassistant/components/lutron/fan.py
     homeassistant/components/lutron/light.py
     homeassistant/components/lutron/switch.py
     homeassistant/components/lutron_caseta/__init__.py
