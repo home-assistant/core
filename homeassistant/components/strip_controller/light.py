@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import PLATFORM_SCHEMA, LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 # Import the device class from the component that you want to support
@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as DEVICE_DOMAIN
+from .const import CONF_SECTIONS, DOMAIN as DEVICE_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,21 +34,30 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add all entities representing strip sections."""
-    # TOD: on the first setup section should be get from the service (sc-rpi)
-    async_add_entities([AwesomeLight(entry.entry_id)])
+    sections = entry.data[CONF_SECTIONS]
+    device_name = entry.data[CONF_NAME]
+    async_add_entities(
+        [
+            Section(entry.entry_id, device_name, index)
+            for index, _ in enumerate(sections)
+        ]
+    )
 
 
-class AwesomeLight(LightEntity):
+class Section(LightEntity):
     """Representation of an Awesome Light."""
 
-    def __init__(self, entry_id: str) -> None:
+    def __init__(self, entry_id: str, device_name: str, section_number: int) -> None:
         """Initialize an AwesomeLight.
 
         entity_id will be automatically set lower-snake-casing the name of the device
         """
+        # TOD set required section attributes in order to communicate with device to execute operations
         self._light = None  # light
-        self._name = "PEPE PEPE"  # TOD set correct name set from user for instance section 1 section 2 etc slight.name
-        self._attr_unique_id = f"{entry_id}-strip-sectionnn"  # TOD set correct entity id for example generating an unique or getting from external service (sc-rpi)
+        self._name = f"{device_name} section {section_number}"
+        # TOD set correct entity id for example generating an unique or getting from external service (sc-rpi)
+        # TOD investigate for what its needed this attribute
+        self._attr_unique_id = f"{entry_id}-strip-section-{section_number}"
         self._state = None
         self._brightness = 4
         # associate entity to device
