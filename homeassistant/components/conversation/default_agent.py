@@ -162,17 +162,17 @@ class DefaultAgent(AbstractConversationAgent):
 
         self.hass.bus.async_listen(
             ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_registry_changed,  # type: ignore[arg-type]
+            self._async_handle_area_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._async_handle_entity_registry_changed,  # type: ignore[arg-type]
+            self._async_handle_entity_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             EVENT_STATE_CHANGED,
-            self._async_handle_state_changed,  # type: ignore[arg-type]
+            self._async_handle_state_changed,
             run_immediately=True,
         )
         async_listen_entity_updates(

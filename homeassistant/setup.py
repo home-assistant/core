@@ -600,7 +600,7 @@ def _async_when_setup(
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
             _matched_event,
-            event_filter=_async_is_component_filter,  # type: ignore[arg-type]
+            event_filter=_async_is_component_filter,
         )
     )
     if start_event:
