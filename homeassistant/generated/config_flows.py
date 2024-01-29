@@ -77,6 +77,7 @@ FLOWS = {
         "bond",
         "bosch_shc",
         "braviatv",
+        "bring",
         "broadlink",
         "brother",
         "brottsplatskartan",
