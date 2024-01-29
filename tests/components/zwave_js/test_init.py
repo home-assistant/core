@@ -963,7 +963,6 @@ async def test_removed_device(
     # Make sure there are the same number of devices
     dev_reg = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
-    logging.getLogger(__name__).error(device_entries)
     assert len(device_entries) == 3
 
     # Check how many entities there are
@@ -1401,10 +1400,6 @@ async def test_replace_different_node(
     )
     response = await ws_client.receive_json()
     assert not response["success"]
-    # assert await async_remove_config_entry_device(hass, integration, hank_device)
-    # assert not await async_remove_config_entry_device(
-    #     hass, integration, multisensor_6_device
-    # )
 
 
 async def test_node_model_change(
