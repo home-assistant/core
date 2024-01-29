@@ -43,7 +43,7 @@ async def async_setup_entry(
 
     for area_name, device in entry_data.lights:
         if device.type == "CEILING_FAN_TYPE2":
-            # If this is a fan check to see if this entity already exists.
+            # If this is a fan, check to see if this entity already exists.
             # If not, do not create a new one.
             entity_id = ent_reg.async_get_entity_id(
                 Platform.LIGHT,
