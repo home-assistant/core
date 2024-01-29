@@ -6,8 +6,8 @@ import pytest
 from requests.exceptions import RequestException
 
 from homeassistant.components.tado.const import (
-    ATTR_CONFIG_ENTRY,
-    ATTR_READING,
+    CONF_CONFIG_ENTRY,
+    CONF_READING,
     DOMAIN,
     SERVICE_ADD_METER_READING,
 )
@@ -46,8 +46,8 @@ async def test_add_meter_readings(
             DOMAIN,
             SERVICE_ADD_METER_READING,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
-                ATTR_READING: 1234,
+                CONF_CONFIG_ENTRY: config_entry.entry_id,
+                CONF_READING: 1234,
             },
             blocking=True,
         )
@@ -73,8 +73,8 @@ async def test_add_meter_readings_exception(
             DOMAIN,
             SERVICE_ADD_METER_READING,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
-                ATTR_READING: 1234,
+                CONF_CONFIG_ENTRY: config_entry.entry_id,
+                CONF_READING: 1234,
             },
             blocking=True,
         )
@@ -102,8 +102,8 @@ async def test_add_meter_readings_invalid(
             DOMAIN,
             SERVICE_ADD_METER_READING,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
-                ATTR_READING: 1234,
+                CONF_CONFIG_ENTRY: config_entry.entry_id,
+                CONF_READING: 1234,
             },
             blocking=True,
         )
@@ -131,8 +131,8 @@ async def test_add_meter_readings_duplicate(
             DOMAIN,
             SERVICE_ADD_METER_READING,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
-                ATTR_READING: 1234,
+                CONF_CONFIG_ENTRY: config_entry.entry_id,
+                CONF_READING: 1234,
             },
             blocking=True,
         )

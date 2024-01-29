@@ -207,6 +207,6 @@ HA_TERMINATION_DURATION = "default_overlay_seconds"
 
 # Constants for service calls
 SERVICE_ADD_METER_READING = "add_meter_reading"
-ATTR_CONFIG_ENTRY = "config_entry"
-ATTR_READING = "reading"
+CONF_CONFIG_ENTRY = "config_entry"
+CONF_READING = "reading"
 ATTR_MESSAGE = "message"

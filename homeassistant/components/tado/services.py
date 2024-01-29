@@ -8,9 +8,9 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 
 from .const import (
-    ATTR_CONFIG_ENTRY,
     ATTR_MESSAGE,
-    ATTR_READING,
+    CONF_CONFIG_ENTRY,
+    CONF_READING,
     DATA,
     DOMAIN,
     SERVICE_ADD_METER_READING,
@@ -19,12 +19,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 SCHEMA_ADD_METER_READING = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        vol.Required(ATTR_READING): vol.Coerce(int),
+        vol.Required(CONF_READING): vol.Coerce(int),
     }
 )
 
@@ -35,13 +35,13 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def add_meter_reading(call: ServiceCall) -> None:
         """Send meter reading to Tado."""
-        entry_id: str = call.data[ATTR_CONFIG_ENTRY]
-        reading: int = call.data[ATTR_READING]
+        entry_id: str = call.data[CONF_CONFIG_ENTRY]
+        reading: int = call.data[CONF_READING]
         _LOGGER.debug("Add meter reading %s", reading)
 
         tadoconnector = hass.data[DOMAIN][entry_id][DATA]
         response: dict = await hass.async_add_executor_job(
-            tadoconnector.set_meter_reading, call.data[ATTR_READING]
+            tadoconnector.set_meter_reading, call.data[CONF_READING]
         )
 
         if ATTR_MESSAGE in response:
