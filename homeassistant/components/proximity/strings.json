@@ -5,7 +5,6 @@
     "step": {
       "user": {
         "data": {
-          "name": "Name",
           "zone": "Zone to track distance to",
           "ignored_zones": "Zones to ignore",
           "tracked_entities": "Devices or Persons to track",

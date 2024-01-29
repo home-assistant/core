@@ -4,13 +4,20 @@ import pytest
 
 from homeassistant.components import automation, script
 from homeassistant.components.automation import automations_with_entity
-from homeassistant.components.proximity import DOMAIN
+from homeassistant.components.proximity.const import (
+    CONF_IGNORED_ZONES,
+    CONF_TOLERANCE,
+    CONF_TRACKED_ENTITIES,
+    DOMAIN,
+)
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import CONF_ZONE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -18,14 +25,6 @@ from homeassistant.util import slugify
     [
         (
             "home",
-            {
-                "ignored_zones": ["work"],
-                "devices": ["device_tracker.test1", "device_tracker.test2"],
-                "tolerance": "1",
-            },
-        ),
-        (
-            "home_test2",
             {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1", "device_tracker.test2"],
@@ -73,20 +72,36 @@ async def test_proximities(
         assert state.state == STATE_UNKNOWN
 
 
-async def test_proximities_setup(hass: HomeAssistant) -> None:
-    """Test a list of proximities with missing devices."""
+async def test_legacy_setup(hass: HomeAssistant) -> None:
+    """Test legacy setup only on imported entries."""
     config = {
         "proximity": {
             "home": {
-                "ignored_zones": ["work"],
-                "devices": ["device_tracker.test1", "device_tracker.test2"],
+                "devices": ["device_tracker.test1"],
                 "tolerance": "1",
             },
-            "work": {"tolerance": "1", "zone": "work"},
         }
     }
-
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+    assert hass.states.get("proximity.home")
+
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        title="work",
+        data={
+            CONF_ZONE: "zone.work",
+            CONF_TRACKED_ENTITIES: ["device_tracker.test2"],
+            CONF_IGNORED_ZONES: [],
+            CONF_TOLERANCE: 1,
+        },
+        unique_id=f"{DOMAIN}_work",
+    )
+    mock_config.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.states.get("proximity.work")
 
 
 async def test_device_tracker_test1_in_zone(hass: HomeAssistant) -> None:
@@ -160,7 +175,7 @@ async def test_device_tracker_test1_away(hass: HomeAssistant) -> None:
 
     entity_base_name = "sensor.home_test1"
     state = hass.states.get(f"{entity_base_name}_distance")
-    assert state.state == "11912010"
+    assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_direction_of_travel")
     assert state.state == STATE_UNKNOWN
 
@@ -396,7 +411,7 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
 
     entity_base_name = "sensor.home_test1"
     state = hass.states.get(f"{entity_base_name}_distance")
-    assert state.state == "11912010"
+    assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_direction_of_travel")
     assert state.state == STATE_UNKNOWN
 
@@ -418,7 +433,7 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
 
     entity_base_name = "sensor.home_test1"
     state = hass.states.get(f"{entity_base_name}_distance")
-    assert state.state == "11912010"
+    assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_direction_of_travel")
     assert state.state == "stationary"
 
@@ -684,7 +699,7 @@ async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(
 
     entity_base_name = "sensor.home_test1"
     state = hass.states.get(f"{entity_base_name}_distance")
-    assert state.state == "11912010"
+    assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_direction_of_travel")
     assert state.state == STATE_UNKNOWN
 

@@ -59,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _asnyc_setup_legacy(
+async def _async_setup_legacy(
     hass: HomeAssistant, entry: ConfigEntry, coordinator: ProximityDataUpdateCoordinator
 ) -> None:
     """Legacy proximity entity handling, can be removed in 2024.8."""
@@ -150,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     if entry.data.get(CONF_NAME):
-        await _asnyc_setup_legacy(hass, entry, coordinator)
+        await _async_setup_legacy(hass, entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))

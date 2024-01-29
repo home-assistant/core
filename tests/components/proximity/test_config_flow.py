@@ -22,7 +22,6 @@ from tests.common import MockConfigEntry
     [
         (
             {
-                CONF_NAME: "home",
                 CONF_ZONE: "zone.home",
                 CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             },
@@ -35,7 +34,6 @@ from tests.common import MockConfigEntry
         ),
         (
             {
-                CONF_NAME: "home",
                 CONF_ZONE: "zone.home",
                 CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
                 CONF_IGNORED_ZONES: ["zone.work"],
@@ -51,7 +49,7 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_user_flow(
-    hass: HomeAssistant, user_input: dict, expected_result: dict, config_zones
+    hass: HomeAssistant, user_input: dict, expected_result: dict
 ) -> None:
     """Test starting a flow by user."""
     result = await hass.config_entries.flow.async_init(
@@ -69,6 +67,9 @@ async def test_user_flow(
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"] == expected_result
+
+        zone = hass.states.get(user_input[CONF_ZONE])
+        assert result["title"] == zone.name
 
         await hass.async_block_till_done()
 
@@ -118,7 +119,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_import_flow(hass: HomeAssistant, config_zones) -> None:
+async def test_import_flow(hass: HomeAssistant) -> None:
     """Test import of yaml configuration."""
     with patch(
         "homeassistant.components.proximity.async_setup_entry", return_value=True
@@ -138,12 +139,16 @@ async def test_import_flow(hass: HomeAssistant, config_zones) -> None:
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"] == {
+            CONF_NAME: "home",
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_IGNORED_ZONES: ["zone.work"],
             CONF_TOLERANCE: 10,
             CONF_UNIT_OF_MEASUREMENT: "km",
         }
+
+        zone = hass.states.get("zone.home")
+        assert result["title"] == zone.name
 
         await hass.async_block_till_done()
 

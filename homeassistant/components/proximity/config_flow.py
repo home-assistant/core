@@ -1,7 +1,7 @@
 """Config flow for proximity."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -9,10 +9,9 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOM
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_NAME, CONF_ZONE
-from homeassistant.core import callback
+from homeassistant.const import CONF_ZONE
+from homeassistant.core import State, callback
 from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
@@ -66,9 +65,6 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
         return vol.Schema(
             {
                 vol.Required(
-                    CONF_NAME, default=user_input.get(CONF_NAME, "")
-                ): cv.string,
-                vol.Required(
                     CONF_ZONE,
                     default=user_input.get(
                         CONF_ZONE, f"{ZONE_DOMAIN}.{DEFAULT_PROXIMITY_ZONE}"
@@ -91,11 +87,13 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            title = user_input.pop(CONF_NAME)
-
             self._async_abort_entries_match(user_input)
 
-            return self.async_create_entry(title=title, data=user_input)
+            zone = self.hass.states.get(user_input[CONF_ZONE])
+
+            return self.async_create_entry(
+                title=cast(State, zone).name, data=user_input
+            )
 
         return self.async_show_form(
             step_id="user",
