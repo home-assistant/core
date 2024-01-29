@@ -141,52 +141,52 @@
         "name": "Heating gas consumption this year"
       },
       "gas_summary_consumption_heating_currentday": {
-        "name": "Heating gas consumption current day"
+        "name": "Heating gas consumption today"
       },
       "gas_summary_consumption_heating_currentmonth": {
-        "name": "Heating gas consumption current month"
+        "name": "Heating gas consumption this month"
       },
       "gas_summary_consumption_heating_currentyear": {
-        "name": "Heating gas consumption current year"
+        "name": "Heating gas consumption this year"
       },
       "gas_summary_consumption_heating_lastsevendays": {
         "name": "Heating gas consumption last seven days"
       },
       "hotwater_gas_summary_consumption_heating_currentday": {
-        "name": "DHW gas consumption current day"
+        "name": "DHW gas consumption today"
       },
       "hotwater_gas_summary_consumption_heating_currentmonth": {
-        "name": "DHW gas consumption current month"
+        "name": "DHW gas consumption this month"
       },
       "hotwater_gas_summary_consumption_heating_currentyear": {
-        "name": "DHW gas consumption current year"
+        "name": "DHW gas consumption this year"
       },
       "hotwater_gas_summary_consumption_heating_lastsevendays": {
         "name": "DHW gas consumption last seven days"
       },
       "energy_summary_consumption_heating_currentday": {
-        "name": "Energy consumption of gas heating current day"
+        "name": "Heating energy consumption today"
       },
       "energy_summary_consumption_heating_currentmonth": {
-        "name": "Energy consumption of gas heating current month"
+        "name": "Heating energy consumption this month"
       },
       "energy_summary_consumption_heating_currentyear": {
-        "name": "Energy consumption of gas heating current year"
+        "name": "Heating energy consumption this year"
       },
       "energy_summary_consumption_heating_lastsevendays": {
-        "name": "Energy consumption of gas heating last seven days"
+        "name": "Heating energy consumption last seven days"
       },
       "energy_dhw_summary_consumption_heating_currentday": {
-        "name": "Energy consumption of hot water gas heating current day"
+        "name": "DHW energy consumption today"
       },
       "energy_dhw_summary_consumption_heating_currentmonth": {
-        "name": "Energy consumption of hot water gas heating current month"
+        "name": "DHW energy consumption this month"
       },
       "energy_dhw_summary_consumption_heating_currentyear": {
-        "name": "Energy consumption of hot water gas heating current year"
+        "name": "DHW energy consumption this year"
       },
       "energy_summary_dhw_consumption_heating_lastsevendays": {
-        "name": "Energy consumption of hot water gas heating last seven days"
+        "name": "DHW energy consumption last seven days"
       },
       "power_production_current": {
         "name": "Power production current"
