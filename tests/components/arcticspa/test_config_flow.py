@@ -1,20 +1,16 @@
 """Test the Arctic Spa config flow."""
 from unittest.mock import AsyncMock, patch
 
+from pyarcticspas import SpaResponse
+from pyarcticspas.error import SpaHTTPException, UnauthorizedError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.arcticspa.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.arcticspa.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.components.arcticspa import (
-    CONF_API_KEY,
-    CONF_API_KEY_VALUE,
-    CONF_ID,
-    CONF_NAME,
-)
+from tests.components.arcticspa import CONF_API_KEY, CONF_API_KEY_VALUE
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -28,12 +24,10 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.arcticspa.config_flow.validate_input",
-        return_value={
-            "name": CONF_NAME,
-            "id": CONF_ID,
-            CONF_API_KEY: CONF_API_KEY_VALUE,
-        },
+        "pyarcticspas.Spa.status",
+        return_value=SpaResponse(
+            connected=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -57,8 +51,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.arcticspa.config_flow.validate_input",
-        side_effect=InvalidAuth,
+        "pyarcticspas.Spa.status",
+        side_effect=UnauthorizedError(401),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -78,8 +72,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.arcticspa.config_flow.validate_input",
-        side_effect=CannotConnect,
+        "pyarcticspas.Spa.status",
+        side_effect=SpaHTTPException(500),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

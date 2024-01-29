@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
@@ -25,32 +24,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    device = Spa(data[CONF_API_KEY])
-
-    try:
-        _ = device.status()
-    except UnauthorizedError:
-        raise InvalidAuth
-    except TooManyRequestsError:
-        raise TooManyRequests
-    except SpaHTTPException as ex:
-        _LOGGER.exception("Unexpected error code %d", ex.code)
-        raise CannotConnect
-
-    # Return info that you want to store in the config entry.
-    return {
-        "name": f"API-{device.id[:8]}",
-        "id": device.id,
-        CONF_API_KEY: data[CONF_API_KEY],
-    }
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Arctic Spa."""
 
@@ -62,22 +35,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            device = Spa(user_input[CONF_API_KEY])
             try:
-                info = validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                _ = device.status()
+            except UnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except TooManyRequests:
+            except TooManyRequestsError:
                 errors["base"] = "too_many_requests"
+            except SpaHTTPException as ex:
+                _LOGGER.exception("Unexpected error code %d", ex.code)
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["id"])
+                await self.async_set_unique_id(device.id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=info["name"], data={CONF_API_KEY: info[CONF_API_KEY]}
+                    title=f"API-{device.id[:8]}",
+                    data={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
 
         return self.async_show_form(

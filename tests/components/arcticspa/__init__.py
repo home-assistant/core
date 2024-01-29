@@ -11,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 CONF_API_KEY_VALUE = "mockapikey"
-CONF_ID = "3b82ca882f2ebd283afc13c96209d6efc2e2b598ab6a9e02acb1090a55b7e643"  # id of "mockapikey"
-CONF_NAME = "API-3b82ca88"
 
 
 def _mock_spa() -> Spa:
