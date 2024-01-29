@@ -11,7 +11,6 @@ from homeassistant.components.bring import (
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +21,7 @@ async def setup_integration(
 ) -> None:
     """Mock setup of the bring integration."""
     bring_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(bring_config_entry.entry_id)
     await hass.async_block_till_done()
 
 

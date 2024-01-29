@@ -96,7 +96,6 @@ async def test_flow_user_init_data_already_configured(
 ) -> None:
     """Test we abort user data set when entry is already configured."""
 
-    bring_config_entry.data = MOCK_DATA_STEP
     bring_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
