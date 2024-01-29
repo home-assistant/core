@@ -4,6 +4,7 @@ from unittest.mock import patch
 from aiovodafone import exceptions as aiovodafone_exceptions
 import pytest
 
+from homeassistant import data_entry_flow
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.components.vodafone_station.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
@@ -217,23 +218,17 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     mock_config.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.login",
-    ), patch(
-        "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.logout",
-    ), patch(
-        "homeassistant.components.vodafone_station.async_setup_entry",
-    ):
-        result = await hass.config_entries.options.async_init(mock_config.entry_id)
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_init(mock_config.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CONSIDER_HOME: 37,
+        },
+    )
+    await hass.async_block_till_done()
 
-        result = await hass.config_entries.options.async_init(mock_config.entry_id)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_CONSIDER_HOME: 37,
-            },
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert mock_config.options[CONF_CONSIDER_HOME] == 37
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_CONSIDER_HOME: 37,
+    }
