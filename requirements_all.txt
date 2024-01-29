@@ -639,7 +639,7 @@ clx-sdk-xms==1.0.0
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.7.0
+colorlog==6.8.2
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
