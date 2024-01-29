@@ -1,5 +1,6 @@
 """Config flow for Sanix integration."""
 from http import HTTPStatus
+import logging
 from typing import Any
 
 from sanix import Sanix
@@ -12,6 +13,9 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERIAL_NO, DOMAIN, MANUFACTURER
+
+_LOGGER = logging.getLogger(__name__)
+
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -46,12 +50,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await sanix_api.fetch_data()
             except SanixException as err:
                 if err.status_code == HTTPStatus.UNAUTHORIZED:
-                    errors["base"] = "unauthorized"
+                    errors["base"] = "invalid_auth"
                 else:
+                    _LOGGER.exception("Unknown exception")
                     errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=MANUFACTURER.upper(),
+                    title=MANUFACTURER,
                     data=user_input,
                 )
 

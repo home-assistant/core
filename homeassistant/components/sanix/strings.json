@@ -9,7 +9,7 @@
       }
     },
     "error": {
-      "unauthorized": "Could not authorized. The provided data are invalid.",
+      "invalid_auth": "Could not authorized. The provided data are invalid.",
       "bad_request": "Something went wrong. Check the provided data."
     },
     "abort": {
@@ -28,7 +28,7 @@
         "name": "Fill percentage"
       },
       "device_no": {
-        "name": "Device no"
+        "name": "Device number"
       },
       "ssid": {
         "name": "SSID"

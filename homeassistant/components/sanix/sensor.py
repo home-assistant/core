@@ -72,8 +72,14 @@ SENSOR_TYPES: tuple[SanixSensorEntityDescription, ...] = (
         translation_key="fill_percentage",
         icon="mdi:water-percent",
     ),
-    SanixSensorEntityDescription(key=ATTR_API_SSID, translation_key="ssid"),
-    SanixSensorEntityDescription(key=ATTR_API_DEVICE_NO, translation_key="device_no"),
+    SanixSensorEntityDescription(
+        key=ATTR_API_SSID, translation_key="ssid", entity_registry_enabled_default=False
+    ),
+    SanixSensorEntityDescription(
+        key=ATTR_API_DEVICE_NO,
+        translation_key="device_no",
+        entity_registry_enabled_default=False,
+    ),
 )
 
 

@@ -37,7 +37,7 @@ async def test_unauthorized(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
-    assert result["errors"] == {"base": "unauthorized"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_bad_request(
@@ -82,5 +82,5 @@ async def test_create_entry(
         )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == MANUFACTURER.upper()
+    assert result["title"] == MANUFACTURER
     assert result["data"][CONF_TOKEN] == CONFIG[CONF_TOKEN]
