@@ -402,7 +402,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 report_issue = self._suggest_report_issue()
                 # This should raise in Home Assistant Core 2025.2
                 _LOGGER.warning(
-                    "%s set an invalid suggested_unit_of_measurement. Please %s",
+                    "%s sets an invalid suggested_unit_of_measurement. Please %s",
                     type(self),
                     report_issue,
                 )
