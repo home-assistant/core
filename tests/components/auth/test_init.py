@@ -8,7 +8,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.auth import InvalidAuthError
-from homeassistant.auth.models import Credentials
+from homeassistant.auth.models import (
+    TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    TOKEN_TYPE_NORMAL,
+    Credentials,
+)
 from homeassistant.components import auth
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -567,22 +571,50 @@ async def test_ws_delete_all_refresh_tokens_error(
         assert refresh_token is None
 
 
+@pytest.mark.parametrize(
+    (
+        "delete_token_type",
+        "delete_current_token",
+        "expected_remaining_normal_tokens",
+        "expected_remaining_long_lived_tokens",
+    ),
+    [
+        ({}, {}, 0, 0),
+        ({"token_type": TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN}, {}, 3, 0),
+        ({"token_type": TOKEN_TYPE_NORMAL}, {}, 0, 1),
+        ({"token_type": TOKEN_TYPE_NORMAL}, {"delete_current_token": False}, 1, 1),
+    ],
+)
 async def test_ws_delete_all_refresh_tokens(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
     hass_admin_credential: Credentials,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
+    delete_token_type: dict[str:str],
+    delete_current_token: dict[str:bool],
+    expected_remaining_normal_tokens: int,
+    expected_remaining_long_lived_tokens: int,
 ) -> None:
-    """Test deleting all refresh tokens."""
+    """Test deleting all or some refresh tokens."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
     # one token already exists
     await hass.auth.async_create_refresh_token(
         hass_admin_user, CLIENT_ID, credential=hass_admin_credential
     )
+
+    # create a long lived token
     await hass.auth.async_create_refresh_token(
-        hass_admin_user, CLIENT_ID + "_1", credential=hass_admin_credential
+        hass_admin_user,
+        f"{CLIENT_ID}_LL",
+        client_name="client_ll",
+        credential=hass_admin_credential,
+        token_type=TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+
+    await hass.auth.async_create_refresh_token(
+        hass_admin_user, f"{CLIENT_ID}_1", credential=hass_admin_credential
     )
 
     ws_client = await hass_ws_client(hass, hass_access_token)
@@ -592,20 +624,35 @@ async def test_ws_delete_all_refresh_tokens(
     result = await ws_client.receive_json()
     assert result["success"], result
 
-    tokens = result["result"]
-
     await ws_client.send_json(
         {
             "id": 6,
             "type": "auth/delete_all_refresh_tokens",
+            **delete_token_type,
+            **delete_current_token,
         }
     )
 
     result = await ws_client.receive_json()
     assert result, result["success"]
-    for token in tokens:
-        refresh_token = hass.auth.async_get_refresh_token(token["id"])
-        assert refresh_token is None
+
+    # We need to enumerate the user since we may remove the token
+    # that is used to authenticate the user which will prevent the websocket
+    # connection from working
+    remaining_tokens_by_type: dict[str, int] = {
+        TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN: 0,
+        TOKEN_TYPE_NORMAL: 0,
+    }
+    for refresh_token in hass_admin_user.refresh_tokens.values():
+        remaining_tokens_by_type[refresh_token.token_type] += 1
+
+    assert (
+        remaining_tokens_by_type[TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN]
+        == expected_remaining_long_lived_tokens
+    )
+    assert (
+        remaining_tokens_by_type[TOKEN_TYPE_NORMAL] == expected_remaining_normal_tokens
+    )
 
 
 async def test_ws_sign_path(

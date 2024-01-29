@@ -243,7 +243,7 @@ async def test_query_climate_request(
         "thermostatTemperatureAmbient": 23,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": 21,
-        "currentFanSpeedSetting": "Auto Low",
+        "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
@@ -251,7 +251,7 @@ async def test_query_climate_request(
         "thermostatTemperatureAmbient": 22,
         "thermostatMode": "cool",
         "thermostatHumidityAmbient": 54,
-        "currentFanSpeedSetting": "On High",
+        "currentFanSpeedSetting": "on_high",
     }
 
 
@@ -304,7 +304,7 @@ async def test_query_climate_request_f(
         "thermostatTemperatureAmbient": -5,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": -6.1,
-        "currentFanSpeedSetting": "Auto Low",
+        "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
@@ -312,7 +312,7 @@ async def test_query_climate_request_f(
         "thermostatTemperatureAmbient": -5.6,
         "thermostatMode": "cool",
         "thermostatHumidityAmbient": 54,
-        "currentFanSpeedSetting": "On High",
+        "currentFanSpeedSetting": "on_high",
     }
     hass_fixture.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 

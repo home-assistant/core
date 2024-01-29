@@ -27,7 +27,7 @@
     'platform': 'analytics_insights',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'core_integrations',
     'unique_id': 'core_myq_active_installations',
     'unit_of_measurement': 'active installations',
   })
@@ -74,7 +74,7 @@
     'platform': 'analytics_insights',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'core_integrations',
     'unique_id': 'core_spotify_active_installations',
     'unit_of_measurement': 'active installations',
   })
@@ -121,7 +121,7 @@
     'platform': 'analytics_insights',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'core_integrations',
     'unique_id': 'core_youtube_active_installations',
     'unit_of_measurement': 'active installations',
   })
