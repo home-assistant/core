@@ -59,6 +59,34 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def _asnyc_setup_legacy(
+    hass: HomeAssistant, entry: ConfigEntry, coordinator: ProximityDataUpdateCoordinator
+) -> None:
+    """Legacy proximity entity handling, can be removed in 2024.8."""
+    friendly_name = entry.data[CONF_NAME]
+    proximity = Proximity(hass, friendly_name, coordinator)
+    await proximity.async_added_to_hass()
+    proximity.async_write_ha_state()
+
+    used_in = automations_with_entity(hass, f"{DOMAIN}.{friendly_name}")
+    used_in += scripts_with_entity(hass, f"{DOMAIN}.{friendly_name}")
+    if used_in:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_proximity_entity_{friendly_name}",
+            breaks_in_ha_version="2024.8.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_proximity_entity",
+            translation_placeholders={
+                "entity": f"{DOMAIN}.{friendly_name}",
+                "used_in": "\n- ".join([f"`{x}`" for x in used_in]),
+            },
+        )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Get the zones and offsets from configuration.yaml."""
     if DOMAIN in config:
@@ -121,31 +149,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    async def _asnyc_setup_legacy() -> None:
-        """Legacy proximity entity handling, can be removed in 2024.8."""
-        proximity = Proximity(hass, entry.title, coordinator)
-        await proximity.async_added_to_hass()
-        proximity.async_write_ha_state()
-
-        used_in = automations_with_entity(hass, f"{DOMAIN}.{entry.title}")
-        used_in += scripts_with_entity(hass, f"{DOMAIN}.{entry.title}")
-        if used_in:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                f"deprecated_proximity_entity_{entry.title}",
-                breaks_in_ha_version="2024.8.0",
-                is_fixable=True,
-                is_persistent=True,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_proximity_entity",
-                translation_placeholders={
-                    "entity": f"{DOMAIN}.{entry.title}",
-                    "used_in": "\n- ".join([f"`{x}`" for x in used_in]),
-                },
-            )
-
-    await _asnyc_setup_legacy()
+    if entry.data.get(CONF_NAME):
+        await _asnyc_setup_legacy(hass, entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
