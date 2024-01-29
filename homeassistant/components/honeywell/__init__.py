@@ -50,17 +50,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
-    session = async_get_clientsession(hass)
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if len(entries) > 1:
-        count = 0
-        for entry in entries:
-            if entry.entry_id == config_entry.entry_id:
-                break
-            count += 1
-        if count > 0:
-            session = async_create_clientsession(hass)
+    if len(hass.config_entries.async_entries(DOMAIN)) > 1:
+        session = async_create_clientsession(hass)
+    else:
+        session = async_get_clientsession(hass)
 
     client = aiosomecomfort.AIOSomeComfort(username, password, session=session)
     try:
