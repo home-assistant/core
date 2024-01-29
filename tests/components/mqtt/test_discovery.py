@@ -400,6 +400,81 @@ async def test_discovery_availability(
 
 
 @pytest.mark.parametrize(
+    ("discovery_topic", "payload", "discovery_id"),
+    [
+        (
+            "homeassistant/device/bla/config",
+            '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+            '"avty": {"topic": "avty-topic-component"},'
+            '"name":"Beer","state_topic": "test-topic"}},'
+            '"avty": {"topic": "avty-topic-device"},'
+            '"o":{"name":"bla2mqtt","sw":"1.0"},"dev":{"identifiers":["bla"]}}',
+            "bin_sens1 bla",
+        ),
+        (
+            "homeassistant/device/bla/config",
+            '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+            '"availability_topic": "avty-topic-component",'
+            '"name":"Beer","state_topic": "test-topic"}},'
+            '"availability_topic": "avty-topic-device",'
+            '"o":{"name":"bla2mqtt","sw":"1.0"},"dev":{"identifiers":["bla"]}}',
+            "bin_sens1 bla",
+        ),
+    ],
+)
+async def test_discovery_component_availability_overridden(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    discovery_topic: str,
+    payload: str,
+    discovery_id: str,
+) -> None:
+    """Test device discovery with overridden shared availability mapping."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        payload,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+    assert state.name == "Beer"
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(
+        hass,
+        "avty-topic-device",
+        "online",
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(
+        hass,
+        "avty-topic-component",
+        "online",
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(
+        hass,
+        "test-topic",
+        "ON",
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
     ("discovery_topic", "config_message"),
     [
         (

@@ -47,6 +47,16 @@ from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+# Device discovery options that are also available at entity component level
+SHARED_OPTIONS = [
+    CONF_AVAILABILITY,
+    CONF_AVAILABILITY_MODE,
+    CONF_AVAILABILITY_TEMPLATE,
+    CONF_AVAILABILITY_TOPIC,
+    CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE,
+]
+
 
 def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
     """Validate that a device info entry has at least one identifying value."""
@@ -91,7 +101,6 @@ MQTT_ORIGIN_INFO_SCHEMA = vol.All(
         }
     ),
 )
-
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {

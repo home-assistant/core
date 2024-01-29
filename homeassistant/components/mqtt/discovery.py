@@ -226,6 +226,16 @@ def _parse_device_payload(
     return device_payload
 
 
+@callback
+def _merge_common_options(
+    component_config: MQTTDiscoveryPayload, device_config: dict[str, Any]
+) -> None:
+    """Merge common options with the component config options."""
+    for option in SHARED_OPTIONS:
+        if option in device_config and option not in component_config:
+            component_config[option] = device_config.get(option)
+
+
 async def async_start(  # noqa: C901
     hass: HomeAssistant, discovery_topic: str, config_entry: ConfigEntry
 ) -> None:
@@ -287,21 +297,21 @@ async def async_start(  # noqa: C901
                 return
             device_config: dict[str, Any] = device_payload[CONF_DEVICE]
             origin_config: dict[str, Any] | None = device_payload.get(CONF_ORIGIN)
-            availabilty_config: Any | None = device_payload.get(CONF_AVAILABILITY)
             component_configs: dict[str, Any] = device_payload[CONF_COMPONENTS]
             for component_id, config in component_configs.items():
                 component = config.pop(CONF_PLATFORM)
                 component_node_id = (
                     " ".join((component_id, node_id)) if node_id else component_id
                 )
-                discovery_payload = MQTTDiscoveryPayload(config)
                 _replace_all_abbreviations(config)
+                discovery_payload = MQTTDiscoveryPayload(config)
                 if discovery_payload:
                     discovery_payload[CONF_DEVICE] = device_config
                     if origin_config is not None:
                         discovery_payload[CONF_ORIGIN] = origin_config
-                    if availabilty_config is not None:
-                        discovery_payload[CONF_AVAILABILITY] = availabilty_config
+                    # Only assign shared config options
+                    # when they are not set at entity level
+                    _merge_common_options(discovery_payload, device_payload)
                 discovered_components.append(
                     MqttComponentConfig(
                         component, object_id, component_node_id, discovery_payload
