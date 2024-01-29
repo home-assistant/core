@@ -1836,7 +1836,7 @@ def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
             return dt_util.parse_datetime(value, raise_on_error=True)
         except (ValueError, TypeError):
             if default is _SENTINEL:
-                # Return None on string input
+                # Return None on string input to ensure backwards compatibality with HA Core 2024.1 and before
                 if isinstance(value, str):
                     return None
                 raise_no_default("as_datetime", value)
