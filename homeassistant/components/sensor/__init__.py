@@ -219,6 +219,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _last_reset_reported = False
     _sensor_option_display_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
+    _invalid_suggested_unit_of_measurement_reported = False
 
     @callback
     def add_to_platform_start(
@@ -396,6 +397,16 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             or self.unit_of_measurement not in unit_converter.VALID_UNITS
             or suggested_unit_of_measurement not in unit_converter.VALID_UNITS
         ):
+            if not self._invalid_suggested_unit_of_measurement_reported:
+                self._invalid_suggested_unit_of_measurement_reported = True
+                report_issue = self._suggest_report_issue()
+                # This should raise in Home Assistant Core 2025.2
+                _LOGGER.warning(
+                    "%s has an invalid suggested_unit_of_measurement. Please %s",
+                    type(self),
+                    report_issue,
+                )
+
             return UNDEFINED
 
         return suggested_unit_of_measurement
