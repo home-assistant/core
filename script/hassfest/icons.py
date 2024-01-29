@@ -70,14 +70,14 @@ def icon_schema(integration_type: str) -> vol.Schema:
             ),
         }
 
-    schema = vol.Schema(
+    base_schema = vol.Schema(
         {
             vol.Optional("services"): state_validator,
         }
     )
 
     if integration_type in ("entity", "helper", "system"):
-        schema = schema.extend(
+        return base_schema.extend(
             {
                 vol.Required("entity_component"): vol.All(
                     cv.schema_with_slug_keys(
@@ -89,22 +89,21 @@ def icon_schema(integration_type: str) -> vol.Schema:
                 )
             }
         )
-    if integration_type != "entity":
-        schema = schema.extend(
-            {
-                vol.Optional("entity"): vol.All(
+
+    return base_schema.extend(
+        {
+            vol.Optional("entity"): vol.All(
+                cv.schema_with_slug_keys(
                     cv.schema_with_slug_keys(
-                        cv.schema_with_slug_keys(
-                            icon_schema_slug(vol.Optional),
-                            slug_validator=translation_key_validator,
-                        ),
-                        slug_validator=cv.slug,
+                        icon_schema_slug(vol.Optional),
+                        slug_validator=translation_key_validator,
                     ),
-                    ensure_not_same_as_default,
-                )
-            }
-        )
-    return schema
+                    slug_validator=cv.slug,
+                ),
+                ensure_not_same_as_default,
+            )
+        }
+    )
 
 
 def validate_icon_file(config: Config, integration: Integration) -> None:  # noqa: C901
