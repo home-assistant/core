@@ -20,58 +20,52 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "ids, expected_attributes",
+    "ids, data, expected_attributes",
     [
         (
             "Text message",
             {
-                "data": {
-                    ATTR_MESSAGE: "Test text message",
-                    ATTR_DATA: {ATTR_FORMAT: FORMAT_TEXT},
-                    ATTR_TARGET: list(TEST_JOINABLE_ROOMS.keys()),
-                },
-                "expected_result": {
-                    "target_rooms": list(TEST_JOINABLE_ROOMS.keys()),
-                    "message_type": "m.room.message",
-                    "content": {"msgtype": "m.text", "body": "Test text message"},
-                },
+                ATTR_MESSAGE: "Test text message",
+                ATTR_DATA: {ATTR_FORMAT: FORMAT_TEXT},
+                ATTR_TARGET: list(TEST_JOINABLE_ROOMS.keys()),
+            },
+            {
+                "target_rooms": list(TEST_JOINABLE_ROOMS.keys()),
+                "message_type": "m.room.message",
+                "content": {"msgtype": "m.text", "body": "Test text message"},
             },
         ),
         (
             "HTML message",
             {
-                "data": {
-                    ATTR_MESSAGE: "Test <b>html</b> message",
-                    ATTR_DATA: {ATTR_FORMAT: FORMAT_HTML},
-                    ATTR_TARGET: list(TEST_JOINABLE_ROOMS.keys()),
-                },
-                "expected_result": {
-                    "target_rooms": list(TEST_JOINABLE_ROOMS.keys()),
-                    "message_type": "m.room.message",
-                    "content": {
-                        "msgtype": "m.text",
-                        "body": "Test <b>html</b> message",
-                        "format": "org.matrix.custom.html",
-                        "formatted_body": "Test <b>html</b> message",
-                    },
+                ATTR_MESSAGE: "Test <b>html</b> message",
+                ATTR_DATA: {ATTR_FORMAT: FORMAT_HTML},
+                ATTR_TARGET: list(TEST_JOINABLE_ROOMS.keys()),
+            },
+            {
+                "target_rooms": list(TEST_JOINABLE_ROOMS.keys()),
+                "message_type": "m.room.message",
+                "content": {
+                    "msgtype": "m.text",
+                    "body": "Test <b>html</b> message",
+                    "format": "org.matrix.custom.html",
+                    "formatted_body": "Test <b>html</b> message",
                 },
             },
         ),
         (
             "Bot (notice) message",
             {
-                "data": {
-                    ATTR_MESSAGE: "Test bot (notice) message",
-                    ATTR_DATA: {ATTR_FORMAT: FORMAT_NOTICE},
-                    ATTR_TARGET: list(TEST_JOINABLE_ROOMS.keys()),
-                },
-                "expected_result": {
-                    "target_rooms": list(TEST_JOINABLE_ROOMS.keys()),
-                    "message_type": "m.room.message",
-                    "content": {
-                        "msgtype": "m.notice",
-                        "body": "Test bot (notice) message",
-                    },
+                ATTR_MESSAGE: "Test bot (notice) message",
+                ATTR_DATA: {ATTR_FORMAT: FORMAT_NOTICE},
+                ATTR_TARGET: list(TEST_JOINABLE_ROOMS.keys()),
+            },
+            {
+                "target_rooms": list(TEST_JOINABLE_ROOMS.keys()),
+                "message_type": "m.room.message",
+                "content": {
+                    "msgtype": "m.notice",
+                    "body": "Test bot (notice) message",
                 },
             },
         ),
@@ -84,6 +78,7 @@ async def test_send_message(
     matrix_events,
     caplog,
     ids,
+    data,
     expected_attributes,
 ):
     """Test the send_message service."""
@@ -93,12 +88,10 @@ async def test_send_message(
     await matrix_bot._login()
 
     await hass.services.async_call(
-        MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, expected_attributes["data"], blocking=True
+        MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True
     )
 
-    matrix_bot._handle_multi_room_send.assert_called_once_with(
-        **expected_attributes["expected_result"]
-    )
+    matrix_bot._handle_multi_room_send.assert_called_once_with(**expected_attributes)
 
     for room_alias_or_id in TEST_JOINABLE_ROOMS:
         assert f"Message delivered to room '{room_alias_or_id}'" in caplog.messages
