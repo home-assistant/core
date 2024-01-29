@@ -21,8 +21,8 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    BUTTON_TYPE_A,
-    BUTTON_TYPE_B,
+    BUTTON_PRESS,
+    BUTTON_PRESS_DOUBLE_LONG,
     CONF_SUBTYPE,
     DOMAIN,
     EVENT_CLASS,
@@ -34,31 +34,9 @@ from .const import (
 )
 
 TRIGGERS_BY_TYPE = {
-    BUTTON_TYPE_A: ["press"],
-    BUTTON_TYPE_B: ["press", "double_press", "long_press"],
+    BUTTON_PRESS: ["press"],
+    BUTTON_PRESS_DOUBLE_LONG: ["press", "double_press", "long_press"],
     MOTION_DEVICE: ["motion_detected"],
-}
-
-
-SCHEMA_BY_TYPE = {
-    BUTTON_TYPE_A: DEVICE_TRIGGER_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_BUTTON]),
-            vol.Required(CONF_SUBTYPE): vol.In(TRIGGERS_BY_TYPE[BUTTON_TYPE_A]),
-        }
-    ),
-    BUTTON_TYPE_B: DEVICE_TRIGGER_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_BUTTON]),
-            vol.Required(CONF_SUBTYPE): vol.In(TRIGGERS_BY_TYPE[BUTTON_TYPE_B]),
-        }
-    ),
-    MOTION_DEVICE: DEVICE_TRIGGER_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_MOTION]),
-            vol.Required(CONF_SUBTYPE): vol.In(TRIGGERS_BY_TYPE[MOTION_DEVICE]),
-        }
-    ),
 }
 
 
@@ -71,67 +49,55 @@ class TriggerModelData:
     triggers: list[str]
 
 
-MODEL_DATA = {
-    "JTYJGD03MI": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
+TRIGGER_MODEL_DATA = {
+    BUTTON_PRESS: TriggerModelData(
+        schema=DEVICE_TRIGGER_BASE_SCHEMA.extend(
+            {
+                vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_BUTTON]),
+                vol.Required(CONF_SUBTYPE): vol.In(TRIGGERS_BY_TYPE[BUTTON_PRESS]),
+            }
+        ),
         event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
+        triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS],
     ),
-    "MS1BB(MI)": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
+    BUTTON_PRESS_DOUBLE_LONG: TriggerModelData(
+        schema=DEVICE_TRIGGER_BASE_SCHEMA.extend(
+            {
+                vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_BUTTON]),
+                vol.Required(CONF_SUBTYPE): vol.In(
+                    TRIGGERS_BY_TYPE[BUTTON_PRESS_DOUBLE_LONG]
+                ),
+            }
+        ),
         event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
+        triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS_DOUBLE_LONG],
     ),
-    "RTCGQ02LM": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
-        event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
-    ),
-    "SJWS01LM": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_A],
-        event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_A],
-    ),
-    "K9B-1BTN": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
-        event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
-    ),
-    "K9B-2BTN": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
-        event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
-    ),
-    "K9B-3BTN": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
-        event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
-    ),
-    "K9BB-1BTN": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
-        event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
-    ),
-    "YLAI003": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
-        event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
-    ),
-    "XMWXKG01LM": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
-        event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
-    ),
-    "XMWXKG01YL": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[BUTTON_TYPE_B],
-        event_class=EVENT_CLASS_BUTTON,
-        triggers=TRIGGERS_BY_TYPE[BUTTON_TYPE_B],
-    ),
-    "MUE4094RT": TriggerModelData(
-        schema=SCHEMA_BY_TYPE[MOTION_DEVICE],
+    MOTION_DEVICE: TriggerModelData(
+        schema=DEVICE_TRIGGER_BASE_SCHEMA.extend(
+            {
+                vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_MOTION]),
+                vol.Required(CONF_SUBTYPE): vol.In(TRIGGERS_BY_TYPE[MOTION_DEVICE]),
+            }
+        ),
         event_class=EVENT_CLASS_MOTION,
         triggers=TRIGGERS_BY_TYPE[MOTION_DEVICE],
     ),
+}
+
+
+MODEL_DATA = {
+    "JTYJGD03MI": TRIGGER_MODEL_DATA[BUTTON_PRESS],
+    "MS1BB(MI)": TRIGGER_MODEL_DATA[BUTTON_PRESS],
+    "RTCGQ02LM": TRIGGER_MODEL_DATA[BUTTON_PRESS],
+    "SJWS01LM": TRIGGER_MODEL_DATA[BUTTON_PRESS],
+    "K9B-1BTN": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "K9B-2BTN": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "K9B-3BTN": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "K9BB-1BTN": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "YLAI003": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "XMWXKG01LM": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "XMWXKG01YL": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "MUE4094RT": TRIGGER_MODEL_DATA[MOTION_DEVICE],
 }
 
 

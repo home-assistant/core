@@ -21,8 +21,8 @@ XIAOMI_BLE_EVENT: Final = "xiaomi_ble_event"
 EVENT_CLASS_BUTTON: Final = "button"
 EVENT_CLASS_MOTION: Final = "motion"
 
-BUTTON_TYPE_A: Final = "button_type_a"
-BUTTON_TYPE_B: Final = "button_type_b"
+BUTTON_PRESS: Final = "button_press"
+BUTTON_PRESS_DOUBLE_LONG: Final = "button_press_double_long"
 MOTION_DEVICE: Final = "motion_device"
 
 
