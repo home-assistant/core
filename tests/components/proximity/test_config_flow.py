@@ -148,3 +148,35 @@ async def test_import_flow(hass: HomeAssistant, config_zones) -> None:
         await hass.async_block_till_done()
 
     assert mock_setup_entry.called
+
+
+async def test_abort_duplicated_entry(hass: HomeAssistant) -> None:
+    """Test if we abort on duplicate user input data."""
+    DATA = {
+        CONF_ZONE: "zone.home",
+        CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
+        CONF_IGNORED_ZONES: ["zone.work"],
+        CONF_TOLERANCE: 10,
+    }
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        title="home",
+        data=DATA,
+        unique_id=f"{DOMAIN}_home",
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.proximity.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=DATA,
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+        await hass.async_block_till_done()

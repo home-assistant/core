@@ -13,30 +13,42 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
 
-@pytest.mark.parametrize(("friendly_name"), ["home", "home_test2", "work"])
-async def test_proximities(hass: HomeAssistant, friendly_name: str) -> None:
-    """Test a list of proximities."""
-    config = {
-        "proximity": {
-            "home": {
+@pytest.mark.parametrize(
+    ("friendly_name", "config"),
+    [
+        (
+            "home",
+            {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1", "device_tracker.test2"],
                 "tolerance": "1",
             },
-            "home_test2": {
+        ),
+        (
+            "home_test2",
+            {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1", "device_tracker.test2"],
                 "tolerance": "1",
             },
-            "work": {
+        ),
+        (
+            "work",
+            {
                 "devices": ["device_tracker.test1"],
                 "tolerance": "1",
                 "zone": "work",
             },
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
+        ),
+    ],
+)
+async def test_proximities(
+    hass: HomeAssistant, friendly_name: str, config: dict
+) -> None:
+    """Test a list of proximities."""
+    assert await async_setup_component(
+        hass, DOMAIN, {"proximity": {friendly_name: config}}
+    )
     await hass.async_block_till_done()
 
     # proximity entity
@@ -53,7 +65,7 @@ async def test_proximities(hass: HomeAssistant, friendly_name: str) -> None:
     state = hass.states.get(f"sensor.{friendly_name}_nearest_device")
     assert state.state == STATE_UNKNOWN
 
-    for device in config["proximity"][friendly_name]["devices"]:
+    for device in config["devices"]:
         entity_base_name = f"sensor.{friendly_name}_{slugify(device.split('.')[-1])}"
         state = hass.states.get(f"{entity_base_name}_distance")
         assert state.state == STATE_UNKNOWN

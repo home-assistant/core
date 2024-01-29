@@ -93,8 +93,7 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             title = user_input.pop(CONF_NAME)
 
-            await self.async_set_unique_id(f"{DOMAIN}_{title}")
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match(user_input)
 
             return self.async_create_entry(title=title, data=user_input)
 
