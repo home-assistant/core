@@ -7,6 +7,8 @@ from functools import cache
 import logging
 from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, cast
 
+from habluetooth import BluetoothScanningMode
+
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_CONNECTIONS,
@@ -33,11 +35,7 @@ if TYPE_CHECKING:
 
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .models import (
-        BluetoothChange,
-        BluetoothScanningMode,
-        BluetoothServiceInfoBleak,
-    )
+    from .models import BluetoothChange, BluetoothServiceInfoBleak
 
 STORAGE_KEY = "bluetooth.passive_update_processor"
 STORAGE_VERSION = 1
@@ -95,8 +93,11 @@ def deserialize_entity_description(
     descriptions_class: type[EntityDescription], data: dict[str, Any]
 ) -> EntityDescription:
     """Deserialize an entity description."""
+    # pylint: disable=protected-access
     result: dict[str, Any] = {}
-    for field in cached_fields(descriptions_class):  # type: ignore[arg-type]
+    if hasattr(descriptions_class, "_dataclass"):
+        descriptions_class = descriptions_class._dataclass
+    for field in cached_fields(descriptions_class):
         field_name = field.name
         # It would be nice if field.type returned the actual
         # type instead of a str so we could avoid writing this
@@ -116,7 +117,7 @@ def serialize_entity_description(description: EntityDescription) -> dict[str, An
     as_dict = dataclasses.asdict(description)
     return {
         field.name: as_dict[field.name]
-        for field in cached_fields(type(description))  # type: ignore[arg-type]
+        for field in cached_fields(type(description))
         if field.default != as_dict.get(field.name)
     }
 

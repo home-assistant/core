@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Status light brightness',
-      'icon': 'mdi:lightbulb-on',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -14,7 +13,7 @@
     'entity_id': 'number.device_status_light_brightness',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '100.0',
   })
 # ---
 # name: test_number_entities[HWE-SKT].1
@@ -43,7 +42,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:lightbulb-on',
+    'original_icon': None,
     'original_name': 'Status light brightness',
     'platform': 'homewizard',
     'previous_unique_id': None,

@@ -42,14 +42,14 @@ PRECIPITATION_TYPE = [
 ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrafikverketRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[WeatherStationInfo], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrafikverketSensorEntityDescription(
     SensorEntityDescription, TrafikverketRequiredKeysMixin
 ):

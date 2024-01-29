@@ -278,12 +278,12 @@ async def test_set_fan_mode(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_FAN_MODE: "On Low"},
+        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_FAN_MODE: "on_low"},
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_FAN_MODE) == "On Low"
+    assert state.attributes.get(ATTR_FAN_MODE) == "on_low"
 
 
 async def test_set_swing_mode_bad_attr(hass: HomeAssistant) -> None:
@@ -311,12 +311,12 @@ async def test_set_swing(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_SWING_MODE: "Auto"},
+        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_SWING_MODE: "auto"},
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_SWING_MODE) == "Auto"
+    assert state.attributes.get(ATTR_SWING_MODE) == "auto"
 
 
 async def test_set_hvac_bad_attr_and_state(hass: HomeAssistant) -> None:

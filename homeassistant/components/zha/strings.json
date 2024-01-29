@@ -328,7 +328,7 @@
         },
         "manufacturer": {
           "name": "Manufacturer",
-          "description": "Manufacturer code."
+          "description": "Manufacturer code. Use a value of \"-1\" to force no code to be set."
         }
       }
     },
@@ -724,6 +724,12 @@
       },
       "quick_start_time": {
         "name": "Quick start time"
+      },
+      "local_temperature_calibration": {
+        "name": "Local temperature offset"
+      },
+      "presence_detection_timeout": {
+        "name": "Presence detection timeout"
       }
     },
     "select": {
@@ -780,6 +786,18 @@
       },
       "preset": {
         "name": "Preset"
+      },
+      "detection_distance": {
+        "name": "Detection distance"
+      },
+      "switch_mode": {
+        "name": "Switch mode"
+      },
+      "decoupled_mode": {
+        "name": "Decoupled mode"
+      },
+      "detection_sensitivity": {
+        "name": "Detection Sensitivity"
       }
     },
     "sensor": {
@@ -819,6 +837,9 @@
       "tier6_summation_delivered": {
         "name": "Tier 6 summation delivered"
       },
+      "summation_received": {
+        "name": "Summation received"
+      },
       "device_temperature": {
         "name": "Device temperature"
       },
@@ -857,6 +878,9 @@
       },
       "smoke_density": {
         "name": "Smoke density"
+      },
+      "last_illumination_state": {
+        "name": "Last illumination state"
       }
     },
     "switch": {

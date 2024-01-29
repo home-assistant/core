@@ -97,22 +97,23 @@ class MatterAdapter:
 
         self.config_entry.async_on_unload(
             self.matter_client.subscribe_events(
-                endpoint_added_callback, EventType.ENDPOINT_ADDED
+                callback=endpoint_added_callback, event_filter=EventType.ENDPOINT_ADDED
             )
         )
         self.config_entry.async_on_unload(
             self.matter_client.subscribe_events(
-                endpoint_removed_callback, EventType.ENDPOINT_REMOVED
+                callback=endpoint_removed_callback,
+                event_filter=EventType.ENDPOINT_REMOVED,
             )
         )
         self.config_entry.async_on_unload(
             self.matter_client.subscribe_events(
-                node_removed_callback, EventType.NODE_REMOVED
+                callback=node_removed_callback, event_filter=EventType.NODE_REMOVED
             )
         )
         self.config_entry.async_on_unload(
             self.matter_client.subscribe_events(
-                node_added_callback, EventType.NODE_ADDED
+                callback=node_added_callback, event_filter=EventType.NODE_ADDED
             )
         )
 

@@ -1,10 +1,9 @@
 """Component to allow setting date/time as platforms."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 import logging
-from typing import final
+from typing import TYPE_CHECKING, final
 
 import voluptuous as vol
 
@@ -21,6 +20,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DATETIME, DOMAIN, SERVICE_SET_VALUE
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -71,12 +75,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class DateTimeEntityDescription(EntityDescription):
+class DateTimeEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes date/time entities."""
 
 
-class DateTimeEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "native_value",
+}
+
+
+class DateTimeEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Date/time entity."""
 
     entity_description: DateTimeEntityDescription
@@ -84,13 +92,13 @@ class DateTimeEntity(Entity):
     _attr_state: None = None
     _attr_native_value: datetime | None
 
-    @property
+    @cached_property
     @final
     def device_class(self) -> None:
         """Return entity device class."""
         return None
 
-    @property
+    @cached_property
     @final
     def state_attributes(self) -> None:
         """Return the state attributes."""
@@ -110,7 +118,7 @@ class DateTimeEntity(Entity):
 
         return value.astimezone(UTC).isoformat(timespec="seconds")
 
-    @property
+    @cached_property
     def native_value(self) -> datetime | None:
         """Return the value reported by the datetime."""
         return self._attr_native_value

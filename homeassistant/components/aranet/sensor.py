@@ -39,7 +39,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class AranetSensorEntityDescription(SensorEntityDescription):
     """Class to describe an Aranet sensor entity."""
 

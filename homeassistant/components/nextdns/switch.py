@@ -24,14 +24,14 @@ from .const import ATTR_SETTINGS, DOMAIN
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextDnsSwitchRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Class for NextDNS entity required keys."""
 
     state: Callable[[CoordinatorDataT], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextDnsSwitchEntityDescription(
     SwitchEntityDescription, NextDnsSwitchRequiredKeysMixin[CoordinatorDataT]
 ):

@@ -25,6 +25,7 @@ import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
+from homeassistant.components.zha.core.gateway import ZHAGateway
 from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.helpers import restore_state
 from homeassistant.setup import async_setup_component
@@ -46,7 +47,7 @@ def disable_request_retry_delay():
     with patch(
         "homeassistant.components.zha.core.cluster_handlers.RETRYABLE_REQUEST_DECORATOR",
         zigpy.util.retryable_request(tries=3, delay=0),
-    ), patch("homeassistant.components.zha.STARTUP_FAILURE_DELAY_S", 0.01):
+    ):
         yield
 
 
@@ -135,7 +136,7 @@ def _wrap_mock_instance(obj: Any) -> MagicMock:
         real_attr = getattr(obj, attr_name)
         mock_attr = getattr(mock, attr_name)
 
-        if callable(real_attr):
+        if callable(real_attr) and not hasattr(real_attr, "__aenter__"):
             mock_attr.side_effect = real_attr
         else:
             setattr(mock, attr_name, real_attr)
@@ -381,7 +382,7 @@ def zha_device_joined_restored(request):
 
 @pytest.fixture
 def zha_device_mock(
-    hass, zigpy_device_mock
+    hass, config_entry, zigpy_device_mock
 ) -> Callable[..., zha_core_device.ZHADevice]:
     """Return a ZHA Device factory."""
 
@@ -409,7 +410,11 @@ def zha_device_mock(
         zigpy_device = zigpy_device_mock(
             endpoints, ieee, manufacturer, model, node_desc, patch_cluster=patch_cluster
         )
-        zha_device = zha_core_device.ZHADevice(hass, zigpy_device, MagicMock())
+        zha_device = zha_core_device.ZHADevice(
+            hass,
+            zigpy_device,
+            ZHAGateway(hass, {}, config_entry),
+        )
         return zha_device
 
     return _zha_device

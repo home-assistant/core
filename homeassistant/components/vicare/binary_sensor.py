@@ -1,6 +1,7 @@
 """Viessmann ViCare sensor device."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
@@ -34,11 +35,13 @@ from .utils import get_burners, get_circuits, get_compressors, is_supported
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ViCareBinarySensorEntityDescription(
     BinarySensorEntityDescription, ViCareRequiredKeysMixin
 ):
     """Describes ViCare binary sensor entity."""
+
+    value_getter: Callable[[PyViCareDevice], bool]
 
 
 CIRCUIT_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (

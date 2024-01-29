@@ -20,6 +20,8 @@ from .core.const import (
     CLUSTER_HANDLER_COLOR,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_LEVEL,
+    CLUSTER_HANDLER_OCCUPANCY,
+    CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -947,3 +949,39 @@ class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
     _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_icon: str = ICONS[0]
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
+    """Local temperature calibration."""
+
+    _unique_id_suffix = "local_temperature_calibration"
+    _attr_native_min_value: float = -2.5
+    _attr_native_max_value: float = 2.5
+    _attr_native_step: float = 0.1
+    _attr_multiplier: float = 0.1
+    _attribute_name = "local_temperature_calibration"
+    _attr_translation_key: str = "local_temperature_calibration"
+
+    _attr_mode: NumberMode = NumberMode.SLIDER
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+    _attr_icon: str = ICONS[0]
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY, models={"SNZB-06P"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SonoffPresenceSenorTimeout(ZHANumberConfigurationEntity):
+    """Configuration of Sonoff sensor presence detection timeout."""
+
+    _unique_id_suffix = "presence_detection_timeout"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: int = 15
+    _attr_native_max_value: int = 60
+    _attribute_name = "ultrasonic_o_to_u_delay"
+    _attr_translation_key: str = "presence_detection_timeout"
+
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:timer-edit"

@@ -1,0 +1,78 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "device_id": "[%key:common::config_flow::data::device%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "air_filter_polluted": {
+        "name": "Air filter polluted"
+      }
+    },
+    "sensor": {
+      "outside_air_temperature": {
+        "name": "Outside air temperature"
+      },
+      "supply_air_temperature": {
+        "name": "Supply air temperature"
+      },
+      "exhaust_air_temperature": {
+        "name": "Exhaust air temperature"
+      },
+      "extract_air_temperature": {
+        "name": "Extract air temperature"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "fireplace_ventilation_remaining_duration": {
+        "name": "Fireplace ventilation remaining duration"
+      },
+      "rapid_ventilation_remaining_duration": {
+        "name": "Rapid ventilation remaining duration"
+      },
+      "supply_air_fan_control_signal": {
+        "name": "Supply air fan control signal"
+      },
+      "supply_air_fan_rpm": {
+        "name": "Supply air fan"
+      },
+      "exhaust_air_fan_control_signal": {
+        "name": "Exhaust air fan control signal"
+      },
+      "exhaust_air_fan_rpm": {
+        "name": "Exhaust air fan"
+      },
+      "electric_heater_power": {
+        "name": "Electric heater power"
+      },
+      "air_filter_operating_time": {
+        "name": "Air filter operating time"
+      },
+      "heat_exchanger_efficiency": {
+        "name": "Heat exchanger efficiency"
+      },
+      "heat_exchanger_speed": {
+        "name": "Heat exchanger speed"
+      }
+    },
+    "switch": {
+      "electric_heater": {
+        "name": "Electric heater"
+      }
+    }
+  }
+}

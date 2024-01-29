@@ -1,8 +1,11 @@
 """Support for Enigma2 media players."""
 from __future__ import annotations
 
-from openwebif.api import CreateDevice
+from aiohttp.client_exceptions import ClientConnectorError
+from openwebif.api import OpenWebIfDevice
+from openwebif.enums import RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -19,30 +22,33 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import (
+    CONF_DEEP_STANDBY,
+    CONF_MAC_ADDRESS,
+    CONF_SOURCE_BOUQUET,
+    CONF_USE_CHANNEL_ICON,
+    DEFAULT_DEEP_STANDBY,
+    DEFAULT_MAC_ADDRESS,
+    DEFAULT_NAME,
+    DEFAULT_PASSWORD,
+    DEFAULT_PORT,
+    DEFAULT_SOURCE_BOUQUET,
+    DEFAULT_SSL,
+    DEFAULT_USE_CHANNEL_ICON,
+    DEFAULT_USERNAME,
+)
+
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
 ATTR_MEDIA_END_TIME = "media_end_time"
 ATTR_MEDIA_START_TIME = "media_start_time"
-
-CONF_USE_CHANNEL_ICON = "use_channel_icon"
-CONF_DEEP_STANDBY = "deep_standby"
-CONF_MAC_ADDRESS = "mac_address"
-CONF_SOURCE_BOUQUET = "source_bouquet"
-
-DEFAULT_NAME = "Enigma2 Media Player"
-DEFAULT_PORT = 80
-DEFAULT_SSL = False
-DEFAULT_USE_CHANNEL_ICON = False
-DEFAULT_USERNAME = "root"
-DEFAULT_PASSWORD = "dreambox"
-DEFAULT_DEEP_STANDBY = False
-DEFAULT_MAC_ADDRESS = ""
-DEFAULT_SOURCE_BOUQUET = ""
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -62,10 +68,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up of an enigma2 media player."""
@@ -84,23 +90,34 @@ def setup_platform(
         config[CONF_DEEP_STANDBY] = DEFAULT_DEEP_STANDBY
         config[CONF_SOURCE_BOUQUET] = DEFAULT_SOURCE_BOUQUET
 
-    device = CreateDevice(
+    base_url = URL.build(
+        scheme="https" if config[CONF_SSL] else "http",
         host=config[CONF_HOST],
         port=config.get(CONF_PORT),
-        username=config.get(CONF_USERNAME),
+        user=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
-        is_https=config[CONF_SSL],
-        prefer_picon=config.get(CONF_USE_CHANNEL_ICON),
-        mac_address=config.get(CONF_MAC_ADDRESS),
+    )
+
+    session = async_create_clientsession(hass, verify_ssl=False, base_url=base_url)
+
+    device = OpenWebIfDevice(
+        host=session,
         turn_off_to_deep=config.get(CONF_DEEP_STANDBY),
         source_bouquet=config.get(CONF_SOURCE_BOUQUET),
     )
 
-    add_devices([Enigma2Device(config[CONF_NAME], device)], True)
+    try:
+        about = await device.get_about()
+    except ClientConnectorError as err:
+        raise PlatformNotReady from err
+
+    async_add_entities([Enigma2Device(config[CONF_NAME], device, about)])
 
 
 class Enigma2Device(MediaPlayerEntity):
     """Representation of an Enigma2 box."""
+
+    _attr_has_entity_name = True
 
     _attr_media_content_type = MediaType.TVSHOW
     _attr_supported_features = (
@@ -116,146 +133,92 @@ class Enigma2Device(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, name, device):
+    def __init__(self, name: str, device: OpenWebIfDevice, about: dict) -> None:
         """Initialize the Enigma2 device."""
-        self._name = name
-        self.e2_box = device
+        self._device: OpenWebIfDevice = device
+        self._device.mac_address = about["info"]["ifaces"][0]["mac"]
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
+        self._attr_name = name
+        self._attr_unique_id = device.mac_address
 
-    @property
-    def unique_id(self):
-        """Return the unique ID for this entity."""
-        return self.e2_box.mac_address
-
-    @property
-    def state(self) -> MediaPlayerState:
-        """Return the state of the device."""
-        if self.e2_box.is_recording_playback:
-            return MediaPlayerState.PLAYING
-        return MediaPlayerState.OFF if self.e2_box.in_standby else MediaPlayerState.ON
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return not self.e2_box.is_offline
-
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off media player."""
-        self.e2_box.turn_off()
+        await self._device.turn_off()
 
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        self.e2_box.turn_on()
+        await self._device.turn_on()
 
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        return self.e2_box.current_service_channel_name
-
-    @property
-    def media_series_title(self):
-        """Return the title of current episode of TV show."""
-        return self.e2_box.current_programme_name
-
-    @property
-    def media_channel(self):
-        """Channel of current playing media."""
-        return self.e2_box.current_service_channel_name
-
-    @property
-    def media_content_id(self):
-        """Service Ref of current playing media."""
-        return self.e2_box.current_service_ref
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self.e2_box.muted
-
-    @property
-    def media_image_url(self):
-        """Picon url for the channel."""
-        return self.e2_box.picon_url
-
-    def set_volume_level(self, volume: float) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self.e2_box.set_volume(int(volume * 100))
+        await self._device.set_volume(int(volume * 100))
 
-    def volume_up(self) -> None:
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        self.e2_box.set_volume(int(self.e2_box.volume * 100) + 5)
+        await self._device.set_volume(SetVolumeOption.UP)
 
-    def volume_down(self) -> None:
+    async def async_volume_down(self) -> None:
         """Volume down media player."""
-        self.e2_box.set_volume(int(self.e2_box.volume * 100) - 5)
+        await self._device.set_volume(SetVolumeOption.DOWN)
 
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self.e2_box.volume
-
-    def media_stop(self) -> None:
+    async def async_media_stop(self) -> None:
         """Send stop command."""
-        self.e2_box.set_stop()
+        await self._device.send_remote_control_action(RemoteControlCodes.STOP)
 
-    def media_play(self) -> None:
+    async def async_media_play(self) -> None:
         """Play media."""
-        self.e2_box.toggle_play_pause()
+        await self._device.send_remote_control_action(RemoteControlCodes.PLAY)
 
-    def media_pause(self) -> None:
+    async def async_media_pause(self) -> None:
         """Pause the media player."""
-        self.e2_box.toggle_play_pause()
+        await self._device.send_remote_control_action(RemoteControlCodes.PAUSE)
 
-    def media_next_track(self) -> None:
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
-        self.e2_box.set_channel_up()
+        await self._device.send_remote_control_action(RemoteControlCodes.CHANNEL_UP)
 
-    def media_previous_track(self) -> None:
-        """Send next track command."""
-        self.e2_box.set_channel_down()
+    async def async_media_previous_track(self) -> None:
+        """Send previous track command."""
+        await self._device.send_remote_control_action(RemoteControlCodes.CHANNEL_DOWN)
 
-    def mute_volume(self, mute: bool) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""
-        self.e2_box.mute_volume()
+        await self._device.toggle_mute()
 
-    @property
-    def source(self):
-        """Return the current input source."""
-        return self.e2_box.current_service_channel_name
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self.e2_box.source_list
-
-    def select_source(self, source: str) -> None:
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        self.e2_box.select_source(self.e2_box.sources[source])
+        await self._device.zap(self._device.sources[source])
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update state of the media_player."""
-        self.e2_box.update()
+        await self._device.update()
+        self._attr_available = not self._device.is_offline
 
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes.
+        if not self._device.status.in_standby:
+            self._attr_extra_state_attributes = {
+                ATTR_MEDIA_CURRENTLY_RECORDING: self._device.status.is_recording,
+                ATTR_MEDIA_DESCRIPTION: self._device.status.currservice.fulldescription,
+                ATTR_MEDIA_START_TIME: self._device.status.currservice.begin,
+                ATTR_MEDIA_END_TIME: self._device.status.currservice.end,
+            }
+        else:
+            self._attr_extra_state_attributes = {}
 
-        isRecording:        Is the box currently recording.
-        currservice_fulldescription: Full program description.
-        currservice_begin:  is in the format '21:00'.
-        currservice_end:    is in the format '21:00'.
-        """
-        if self.e2_box.in_standby:
-            return {}
-        return {
-            ATTR_MEDIA_CURRENTLY_RECORDING: self.e2_box.status_info["isRecording"],
-            ATTR_MEDIA_DESCRIPTION: self.e2_box.status_info[
-                "currservice_fulldescription"
-            ],
-            ATTR_MEDIA_START_TIME: self.e2_box.status_info["currservice_begin"],
-            ATTR_MEDIA_END_TIME: self.e2_box.status_info["currservice_end"],
-        }
+        self._attr_media_title = self._device.status.currservice.station
+        self._attr_media_series_title = self._device.status.currservice.name
+        self._attr_media_channel = self._device.status.currservice.station
+        self._attr_is_volume_muted = self._device.status.muted
+        self._attr_media_content_id = self._device.status.currservice.serviceref
+        self._attr_media_image_url = self._device.picon_url
+        self._attr_source = self._device.status.currservice.station
+        self._attr_source_list = self._device.source_list
+
+        if self._device.status.in_standby:
+            self._attr_state = MediaPlayerState.OFF
+        else:
+            self._attr_state = MediaPlayerState.ON
+
+        if (volume_level := self._device.status.volume) is not None:
+            self._attr_volume_level = volume_level / 100
+        else:
+            self._attr_volume_level = None

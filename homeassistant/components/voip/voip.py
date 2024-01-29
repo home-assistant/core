@@ -389,11 +389,16 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             self._conversation_id = event.data["intent_output"]["conversation_id"]
         elif event.type == PipelineEventType.TTS_END:
             # Send TTS audio to caller over RTP
-            media_id = event.data["tts_output"]["media_id"]
-            self.hass.async_create_background_task(
-                self._send_tts(media_id),
-                "voip_pipeline_tts",
-            )
+            tts_output = event.data["tts_output"]
+            if tts_output:
+                media_id = tts_output["media_id"]
+                self.hass.async_create_background_task(
+                    self._send_tts(media_id),
+                    "voip_pipeline_tts",
+                )
+            else:
+                # Empty TTS response
+                self._tts_done.set()
         elif event.type == PipelineEventType.ERROR:
             # Play error tone instead of wait for TTS
             self._pipeline_error = True

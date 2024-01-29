@@ -7,6 +7,9 @@
           "port": "[%key:common::config_flow::data::port%]",
           "token": "[%key:common::config_flow::data::access_token%]",
           "encrypt_token": "Use an encrypted token for authentication."
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Nuki bridge. For example: 192.168.1.25."
         }
       },
       "reauth_confirm": {
@@ -35,6 +38,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "ring_action": {
+        "name": "Ring Action"
+      }
+    },
     "lock": {
       "nuki_lock": {
         "state_attributes": {

@@ -1,6 +1,6 @@
 """Tests for the tag component."""
-from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.tag import DOMAIN, EVENT_TAG_SCANNED, async_scan_tag
@@ -40,7 +40,10 @@ def storage_setup_named_tag(
 
 
 async def test_named_tag_scanned_event(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup_named_tag
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    storage_setup_named_tag,
 ) -> None:
     """Test scanning named tag triggering event."""
     assert await storage_setup_named_tag()
@@ -50,8 +53,8 @@ async def test_named_tag_scanned_event(
     events = async_capture_events(hass, EVENT_TAG_SCANNED)
 
     now = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await async_scan_tag(hass, TEST_TAG_ID, TEST_DEVICE_ID)
+    freezer.move_to(now)
+    await async_scan_tag(hass, TEST_TAG_ID, TEST_DEVICE_ID)
 
     assert len(events) == 1
 
@@ -83,7 +86,10 @@ def storage_setup_unnamed_tag(hass, hass_storage):
 
 
 async def test_unnamed_tag_scanned_event(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup_unnamed_tag
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    storage_setup_unnamed_tag,
 ) -> None:
     """Test scanning named tag triggering event."""
     assert await storage_setup_unnamed_tag()
@@ -93,8 +99,8 @@ async def test_unnamed_tag_scanned_event(
     events = async_capture_events(hass, EVENT_TAG_SCANNED)
 
     now = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await async_scan_tag(hass, TEST_TAG_ID, TEST_DEVICE_ID)
+    freezer.move_to(now)
+    await async_scan_tag(hass, TEST_TAG_ID, TEST_DEVICE_ID)
 
     assert len(events) == 1
 

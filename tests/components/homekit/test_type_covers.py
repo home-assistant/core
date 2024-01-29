@@ -368,22 +368,22 @@ async def test_windowcovering_cover_set_tilt(
     assert acc.char_current_tilt.value == 0
     assert acc.char_target_tilt.value == 0
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {ATTR_CURRENT_TILT_POSITION: None})
+    hass.states.async_set(entity_id, STATE_CLOSING, {ATTR_CURRENT_TILT_POSITION: None})
     await hass.async_block_till_done()
     assert acc.char_current_tilt.value == 0
     assert acc.char_target_tilt.value == 0
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {ATTR_CURRENT_TILT_POSITION: 100})
+    hass.states.async_set(entity_id, STATE_CLOSING, {ATTR_CURRENT_TILT_POSITION: 100})
     await hass.async_block_till_done()
     assert acc.char_current_tilt.value == 90
     assert acc.char_target_tilt.value == 90
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {ATTR_CURRENT_TILT_POSITION: 50})
+    hass.states.async_set(entity_id, STATE_CLOSING, {ATTR_CURRENT_TILT_POSITION: 50})
     await hass.async_block_till_done()
     assert acc.char_current_tilt.value == 0
     assert acc.char_target_tilt.value == 0
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {ATTR_CURRENT_TILT_POSITION: 0})
+    hass.states.async_set(entity_id, STATE_CLOSING, {ATTR_CURRENT_TILT_POSITION: 0})
     await hass.async_block_till_done()
     assert acc.char_current_tilt.value == -90
     assert acc.char_target_tilt.value == -90
@@ -610,7 +610,7 @@ async def test_windowcovering_basic_restore(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
 ) -> None:
     """Test setting up an entity from state in the event registry."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "cover",
@@ -648,7 +648,7 @@ async def test_windowcovering_restore(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
 ) -> None:
     """Test setting up an entity from state in the event entity_registry."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "cover",
