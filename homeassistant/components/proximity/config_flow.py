@@ -34,7 +34,7 @@ RESULT_SUCCESS = "success"
 
 def _base_schema(user_input: dict[str, Any]) -> vol.Schema:
     return {
-        vol.Optional(
+        vol.Required(
             CONF_TRACKED_ENTITIES, default=user_input.get(CONF_TRACKED_ENTITIES, [])
         ): EntitySelector(
             EntitySelectorConfig(
