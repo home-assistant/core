@@ -1286,3 +1286,89 @@ async def test_ws_hass_agent_debug_out_of_range(
     # Name matched, but brightness didn't
     assert results[0]["slots"] == {"name": "test light"}
     assert results[0]["unmatched_slots"] == {"brightness": 1001}
+
+
+async def test_ws_hass_agent_debug_custom_sentence(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test homeassistant agent debug websocket command with a custom sentence."""
+    # Expecting testing_config/custom_sentences/en/beer.yaml
+    intent.async_register(hass, OrderBeerIntentHandler())
+
+    client = await hass_ws_client(hass)
+
+    # Brightness is in range (0-100)
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": [
+                "I'd like to order a lager, please.",
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    debug_results = msg["result"].get("results", [])
+    assert len(debug_results) == 1
+    assert debug_results[0].get("match")
+    assert debug_results[0].get("source") == "custom"
+    assert debug_results[0].get("file") == "en/beer.yaml"
+
+
+async def test_ws_hass_agent_debug_sentence_trigger(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test homeassistant agent debug websocket command with a sentence trigger."""
+    calls = async_mock_service(hass, "test", "automation")
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["hello", "hello[ world]"],
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"data": "{{ trigger }}"},
+                },
+            }
+        },
+    )
+
+    client = await hass_ws_client(hass)
+
+    # Use trigger sentence
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": ["hello world"],
+        }
+    )
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    debug_results = msg["result"].get("results", [])
+    assert len(debug_results) == 1
+    assert debug_results[0].get("match")
+    assert debug_results[0].get("source") == "trigger"
+    assert debug_results[0].get("sentence_template") == "hello[ world]"
+
+    # Trigger should not have been executed
+    assert len(calls) == 0
