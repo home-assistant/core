@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the Homeassistant Analytics integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 
 from python_homeassistant_analytics import (
@@ -16,9 +17,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN, LOGGER
 
 
-class HomeassistantAnalyticsDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, int]]
-):
+@dataclass(frozen=True, kw_only=True)
+class AnalyticsData:
+    """Analytics data class."""
+
+    core_integrations: dict[str, int]
+
+
+class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[AnalyticsData]):
     """A Homeassistant Analytics Data Update Coordinator."""
 
     config_entry: ConfigEntry
@@ -38,7 +44,7 @@ class HomeassistantAnalyticsDataUpdateCoordinator(
             CONF_TRACKED_INTEGRATIONS
         ]
 
-    async def _async_update_data(self) -> dict[str, int]:
+    async def _async_update_data(self) -> AnalyticsData:
         try:
             data = await self._client.get_current_analytics()
         except HomeassistantAnalyticsConnectionError as err:
@@ -47,7 +53,8 @@ class HomeassistantAnalyticsDataUpdateCoordinator(
             ) from err
         except HomeassistantAnalyticsNotModifiedError:
             return self.data
-        return {
+        core_integrations = {
             integration: data.integrations.get(integration, 0)
             for integration in self._tracked_integrations
         }
+        return AnalyticsData(core_integrations=core_integrations)
