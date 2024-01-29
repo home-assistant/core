@@ -3,6 +3,9 @@
 import asyncio
 from typing import Any
 
+from tesla_fleet_api.exceptions import TeslaFleetError
+
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -45,11 +48,18 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
     async def wake_up_if_asleep(self) -> None:
         """Wake up the vehicle if its asleep."""
         async with self._wakelock:
+            wait = 0
             while self.coordinator.data["state"] != TeslemetryState.ONLINE:
-                state = (await self.api.wake_up())["response"]["state"]
+                try:
+                    state = (await self.api.wake_up())["response"]["state"]
+                except TeslaFleetError as err:
+                    raise HomeAssistantError(str(err)) from err
                 self.coordinator.data["state"] = state
                 if state != TeslemetryState.ONLINE:
-                    await asyncio.sleep(5)
+                    wait += 5
+                    if wait >= 15:  # Give up after 30 seconds total
+                        raise HomeAssistantError("Could not wake up vehicle")
+                    await asyncio.sleep(wait)
 
     def get(self, key: str | None = None, default: Any | None = None) -> Any:
         """Return a specific value from coordinator data."""

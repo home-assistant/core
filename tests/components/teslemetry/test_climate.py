@@ -26,6 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
+from .const import WAKE_UP_ASLEEP, WAKE_UP_ONLINE
 
 from tests.common import async_fire_time_changed
 
@@ -108,7 +109,7 @@ async def test_errors(
 
 
 async def test_asleep_or_offline(
-    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_vehicle_data, mock_wake_up, freezer: FrozenDateTimeFactory
 ) -> None:
     """Tests asleep is handled."""
 
@@ -124,7 +125,34 @@ async def test_asleep_or_offline(
     await hass.async_block_till_done()
     mock_vehicle_data.assert_called_once()
 
-    # Run a command that will wake up the vehicle, but not immediately
+    # Run a command but fail trying to wake up the vehicle
+    mock_wake_up.side_effect = InvalidCommand
+    with pytest.raises(HomeAssistantError) as error:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        assert error
+    mock_wake_up.side_effect = None
+
+    # Run a command but timeout trying to wake up the vehicle
+    mock_wake_up.return_value = WAKE_UP_ASLEEP
+    with patch(
+        "homeassistant.components.teslemetry.entity.asyncio.sleep"
+    ), pytest.raises(HomeAssistantError) as error:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        assert error
+    mock_wake_up.return_value = WAKE_UP_ONLINE
+
+    # Run a command and wake up the vehicle immediately
+
     await hass.services.async_call(
         CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: [entity_id]}, blocking=True
     )
