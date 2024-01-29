@@ -1201,8 +1201,8 @@ def test_as_datetime_from_timestamp(
             "2024-01-01 16:00:00-08:00",
         ),
         (
-            "{% set dt = as_datetime('2024-01-01').date() %}",
-            "2024-01-01 00:00:00",
+            "{% set dt = as_datetime('2024-01-29').date() %}",
+            "2024-01-29 00:00:00",
         ),
     ],
 )
