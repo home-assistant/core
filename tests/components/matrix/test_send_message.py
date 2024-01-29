@@ -20,7 +20,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "test_name, test_params",
+    "ids, expected_attributes",
     [
         (
             "Text message",
@@ -83,8 +83,8 @@ async def test_send_message(
     image_path,
     matrix_events,
     caplog,
-    test_name,
-    test_params,
+    ids,
+    expected_attributes,
 ):
     """Test the send_message service."""
 
@@ -93,11 +93,11 @@ async def test_send_message(
     await matrix_bot._login()
 
     await hass.services.async_call(
-        MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, test_params["data"], blocking=True
+        MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, expected_attributes["data"], blocking=True
     )
 
     matrix_bot._handle_multi_room_send.assert_called_once_with(
-        **test_params["expected_result"]
+        **expected_attributes["expected_result"]
     )
 
     for room_alias_or_id in TEST_JOINABLE_ROOMS:
