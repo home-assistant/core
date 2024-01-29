@@ -1194,6 +1194,35 @@ def test_as_datetime_from_timestamp(
 
 
 @pytest.mark.parametrize(
+    ("input", "output"),
+    [
+        (
+            "{% set dt = as_datetime('2024-01-01 16:00:00-08:00') %}",
+            "2024-01-01 16:00:00-08:00",
+        ),
+        (
+            "{% set dt = as_datetime('2024-01-01').date() %}",
+            "2024-01-01 00:00:00",
+        ),
+    ],
+)
+def test_as_datetime_from_datetime(
+    hass: HomeAssistant, input: str, output: str
+) -> None:
+    """Test using datetime.datetime or datetime.date objects as input."""
+
+    assert (
+        template.Template(f"{input}{{{{ dt | as_datetime }}}}", hass).async_render()
+        == output
+    )
+
+    assert (
+        template.Template(f"{input}{{{{ as_datetime(dt) }}}}", hass).async_render()
+        == output
+    )
+
+
+@pytest.mark.parametrize(
     ("input", "default", "output"),
     [
         (1469119144, 123, "2016-07-21 16:39:04+00:00"),

@@ -8,7 +8,7 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
-from datetime import datetime, timedelta
+from datetime import date as date_object, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
 import json
 import logging
@@ -1838,6 +1838,12 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
 
 def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
     """Filter and to convert a time string or UNIX timestamp to datetime object."""
+    # Return datetime.datetime object without changes
+    if type(value) is datetime:
+        return value
+    # Add midnight to datetime.date object
+    if type(value) is date_object:
+        return datetime.combine(value, time(0, 0, 0))
     try:
         # Check for a valid UNIX timestamp string, int or float
         timestamp = float(value)
