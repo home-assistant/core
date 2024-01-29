@@ -100,7 +100,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     {
                         vol.Required("input"): {
                             vol.Required("sample_rate"): int,
-                            vol.Optional("duplicate_wake_up_key"): str,
+                            vol.Optional("wake_word_phrase"): str,
                         }
                     },
                     extra=vol.ALLOW_EXTRA,
@@ -154,7 +154,7 @@ async def websocket_run(
         msg_input = msg["input"]
         audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg_input["sample_rate"]
-        stt_wake_up_key: str | None = None
+        wake_word_phrase: str | None = None
 
         if start_stage == PipelineStage.WAKE_WORD:
             wake_word_settings = WakeWordSettings(
@@ -162,7 +162,7 @@ async def websocket_run(
                 audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
             )
         elif start_stage == PipelineStage.STT:
-            stt_wake_up_key = msg["input"].get("duplicate_wake_up_key")
+            wake_word_phrase = msg["input"].get("wake_word_phrase")
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
             state = None
@@ -197,7 +197,7 @@ async def websocket_run(
             channel=stt.AudioChannels.CHANNEL_MONO,
         )
         input_args["stt_stream"] = stt_stream()
-        input_args["stt_wake_up_key"] = stt_wake_up_key
+        input_args["wake_word_phrase"] = wake_word_phrase
 
         # Audio settings
         audio_settings = AudioSettings(

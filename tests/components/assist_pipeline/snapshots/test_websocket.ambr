@@ -971,10 +971,8 @@
 # ---
 # name: test_wake_word_cooldown_different_entities.5
   dict({
-    'wake_word_output': dict({
-      'timestamp': 0,
-      'wake_word_id': 'test_ww',
-    }),
+    'code': 'duplicate_wake_up_detected',
+    'message': 'Duplicate wake-up detected for test ww',
   })
 # ---
 # name: test_wake_word_cooldown_different_ids
@@ -1096,6 +1094,6 @@
 # name: test_wake_word_cooldown_same_id.5
   dict({
     'code': 'duplicate_wake_up_detected',
-    'message': 'Duplicate wake-up detected for wake_word.test.test_ww',
+    'message': 'Duplicate wake-up detected for test ww',
   })
 # ---

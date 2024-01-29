@@ -13,6 +13,7 @@ from queue import Empty, Queue
 from threading import Thread
 import time
 from typing import TYPE_CHECKING, Any, Final, cast
+import unicodedata
 import wave
 
 import voluptuous as vol
@@ -743,18 +744,19 @@ class PipelineRun:
             wake_word_output: dict[str, Any] = {}
         else:
             # Avoid duplicate detections by checking cooldown
-            wake_up_key = f"{self.wake_word_entity_id}.{result.wake_word_id}"
-            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(wake_up_key)
+            wake_word_phrase = _normalize_wake_word_phrase(result.wake_word_id)
+            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(wake_word_phrase)
             if last_wake_up is not None:
                 sec_since_last_wake_up = time.monotonic() - last_wake_up
                 if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
                     _LOGGER.debug(
-                        "Duplicate wake word detection occurred for %s", wake_up_key
+                        "Duplicate wake word detection occurred for %s",
+                        wake_word_phrase,
                     )
-                    raise DuplicateWakeUpDetectedError(wake_up_key)
+                    raise DuplicateWakeUpDetectedError(wake_word_phrase)
 
             # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][wake_up_key] = time.monotonic()
+            self.hass.data[DATA_LAST_WAKE_UP][wake_word_phrase] = time.monotonic()
 
             if result.queued_audio:
                 # Add audio that was pending at detection.
@@ -1259,6 +1261,22 @@ def _multiply_volume(chunk: bytes, volume_multiplier: float) -> bytes:
     ).tobytes()
 
 
+def _normalize_wake_word_phrase(wake_word_phrase: str) -> str:
+    """Normalize a wake word phrase for matching between wake word systems."""
+    # Lower case
+    wake_word_phrase = wake_word_phrase.strip().casefold()
+
+    # Replace everything except numbers/letters with whitespace
+    wake_word_phrase = "".join(
+        c if unicodedata.category(c) in ("Ll", "Nd") else " " for c in wake_word_phrase
+    )
+
+    # Noramlize whitespace
+    wake_word_phrase = " ".join(wake_word_phrase.strip().split())
+
+    return wake_word_phrase
+
+
 def _pipeline_debug_recording_thread_proc(
     run_recording_dir: Path,
     queue: Queue[str | bytes | None],
@@ -1311,8 +1329,8 @@ class PipelineInput:
     stt_stream: AsyncIterable[bytes] | None = None
     """Input audio for stt. Required when start_stage = stt."""
 
-    stt_wake_up_key: str | None = None
-    """Optional key used to de-duplicate wake-ups when start_stage = stt."""
+    wake_word_phrase: str | None = None
+    """Optional key used to de-duplicate wake-ups for local wake word detection."""
 
     intent_input: str | None = None
     """Input for conversation agent. Required when start_stage = intent."""
@@ -1324,6 +1342,11 @@ class PipelineInput:
 
     device_id: str | None = None
 
+    def __post_init__(self) -> None:
+        """Post initialization."""
+        if self.wake_word_phrase:
+            self.wake_word_phrase = _normalize_wake_word_phrase(self.wake_word_phrase)
+
     async def execute(self) -> None:
         """Run pipeline."""
         self.run.start(device_id=self.device_id)
@@ -1331,7 +1354,7 @@ class PipelineInput:
         stt_audio_buffer: list[ProcessedAudioChunk] = []
         stt_processed_stream: AsyncIterable[ProcessedAudioChunk] | None = None
 
-        # Timeout before another pipeline with the same stt_wake_up_key can run again
+        # Timeout before another pipeline with the same wake word phrase can run again
         cooldown_seconds: float = DEFAULT_WAKE_WORD_COOLDOWN
         if self.run.wake_word_settings is not None:
             # Use cooldown from wake settings if available
@@ -1364,23 +1387,23 @@ class PipelineInput:
                 assert self.stt_metadata is not None
                 assert stt_processed_stream is not None
 
-                if self.stt_wake_up_key is not None:
+                if self.wake_word_phrase is not None:
                     # Avoid duplicate wake-ups by checking cooldown
                     last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
-                        self.stt_wake_up_key
+                        self.wake_word_phrase
                     )
                     if last_wake_up is not None:
                         sec_since_last_wake_up = time.monotonic() - last_wake_up
                         if sec_since_last_wake_up < cooldown_seconds:
                             _LOGGER.debug(
                                 "Speech-to-text cancelled to avoid duplicate wake-up for %s",
-                                self.stt_wake_up_key,
+                                self.wake_word_phrase,
                             )
-                            raise DuplicateWakeUpDetectedError(self.stt_wake_up_key)
+                            raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
 
                     # Record last wake up time to block duplicate detections
                     self.run.hass.data[DATA_LAST_WAKE_UP][
-                        self.stt_wake_up_key
+                        self.wake_word_phrase
                     ] = time.monotonic()
 
                 stt_input_stream = stt_processed_stream

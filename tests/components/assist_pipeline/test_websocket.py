@@ -1999,7 +1999,7 @@ async def test_wake_word_cooldown_different_entities(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that duplicate wake word detections are allowed with different entities."""
+    """Test that duplicate wake word detections are blocked even with different wake word entities."""
     client_pipeline = await hass_ws_client(hass)
     await client_pipeline.send_json_auto_id(
         {
@@ -2059,7 +2059,7 @@ async def test_wake_word_cooldown_different_entities(
         }
     )
 
-    # Use different wake word entity
+    # Use different wake word entity (but same wake word)
     await client_2.send_json_auto_id(
         {
             "type": "assist_pipeline/run",
@@ -2109,18 +2109,23 @@ async def test_wake_word_cooldown_different_entities(
     await client_2.send_bytes(bytes([handler_id_2]) + b"wake word")
 
     # Get response events
+    error_data: dict[str, Any] | None = None
     msg = await client_1.receive_json()
-    assert msg["event"]["type"] == "wake_word-end", msg
-    ww_id_1 = msg["event"]["data"]["wake_word_output"]["wake_word_id"]
+    event_type_1 = msg["event"]["type"]
     assert msg["event"]["data"] == snapshot
+    if event_type_1 == "error":
+        error_data = msg["event"]["data"]
 
     msg = await client_2.receive_json()
-    assert msg["event"]["type"] == "wake_word-end", msg
-    ww_id_2 = msg["event"]["data"]["wake_word_output"]["wake_word_id"]
+    event_type_2 = msg["event"]["type"]
     assert msg["event"]["data"] == snapshot
+    if event_type_2 == "error":
+        error_data = msg["event"]["data"]
 
-    # Wake words should be the same
-    assert ww_id_1 == ww_id_2
+    # One should be a wake up, one should be an error
+    assert {event_type_1, event_type_2} == {"wake_word-end", "error"}
+    assert error_data is not None
+    assert error_data["code"] == "duplicate_wake_up_detected"
 
 
 async def test_device_capture(
@@ -2551,7 +2556,7 @@ async def test_stt_cooldown_same_id(
             "end_stage": "tts",
             "input": {
                 "sample_rate": 16000,
-                "duplicate_wake_up_key": "ok_nabu",
+                "wake_word_phrase": "ok_nabu",
             },
         }
     )
@@ -2563,7 +2568,8 @@ async def test_stt_cooldown_same_id(
             "end_stage": "tts",
             "input": {
                 "sample_rate": 16000,
-                "duplicate_wake_up_key": "ok_nabu",
+                # Normalization will make this match "ok_nabu"
+                "wake_word_phrase": "OK, Nabu!",
             },
         }
     )
@@ -2622,7 +2628,7 @@ async def test_stt_cooldown_different_ids(
             "end_stage": "tts",
             "input": {
                 "sample_rate": 16000,
-                "duplicate_wake_up_key": "ok_nabu",
+                "wake_word_phrase": "ok_nabu",
             },
         }
     )
@@ -2634,7 +2640,7 @@ async def test_stt_cooldown_different_ids(
             "end_stage": "tts",
             "input": {
                 "sample_rate": 16000,
-                "duplicate_wake_up_key": "hey_jarvis",
+                "wake_word_phrase": "hey_jarvis",
             },
         }
     )
