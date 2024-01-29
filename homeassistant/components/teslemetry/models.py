@@ -13,6 +13,14 @@ from .coordinator import (
 
 
 @dataclass
+class TeslemetryData:
+    """Data for the Teslemetry integration."""
+
+    vehicles: list[TeslemetryVehicleData]
+    energysites: list[TeslemetryEnergyData]
+
+
+@dataclass
 class TeslemetryVehicleData:
     """Data for a vehicle in the Teslemetry integration."""
 

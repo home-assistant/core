@@ -16,11 +16,9 @@ from .coordinator import (
     TeslemetryEnergyDataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
-PLATFORMS: Final = [
-    Platform.CLIMATE,
-]
+PLATFORMS: Final = [Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -59,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     vin=vin,
                 )
             )
-        if "energy_site_id" in product:
+        elif "energy_site_id" in product:
             site_id = product["energy_site_id"]
             api = EnergySpecific(teslemetry.energy, site_id)
             energysites.append(
@@ -71,19 +69,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             )
 
-    # Do all coordinator first refresh simultaneously
+    # Do all coordinator first refreshes simultaneously
     await asyncio.gather(
         *(
             vehicle.coordinator.async_config_entry_first_refresh()
             for vehicle in vehicles
-        )
+        ),
+        *(
+            energysite.coordinator.async_config_entry_first_refresh()
+            for energysite in energysites
+        ),
     )
 
     # Setup Platforms
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "vehicles": vehicles,
-        "energysites": energysites,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = TeslemetryData(
+        vehicles, energysites
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

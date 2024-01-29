@@ -18,7 +18,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
     def __init__(self, hass: HomeAssistant, api: VehicleSpecific) -> None:
-        """Initialize Teslemetry Data Update Coordinator."""
+        """Initialize Teslemetry Vehicle Update Coordinator."""
         super().__init__(
             hass,
             LOGGER,
@@ -71,7 +71,7 @@ class TeslemetryEnergyDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
     def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
-        """Initialize Teslemetry Data Update Coordinator."""
+        """Initialize Teslemetry Energy Update Coordinator."""
         super().__init__(
             hass,
             LOGGER,
@@ -85,24 +85,12 @@ class TeslemetryEnergyDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             data = await self.api.live_status()
-        except VehicleOffline:
-            self.data["state"] = TeslemetryState.OFFLINE
-            return self.data
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        return self._flatten(data["response"])
+        # Convert Wall Connectors from array to dict
+        data["response"]["wall_connectors"] = {
+            wc["din"]: wc for wc in data["response"]["wall_connectors"]
+        }
 
-    def _flatten(
-        self, data: dict[str, Any], parent: str | None = None
-    ) -> dict[str, Any]:
-        """Flatten the data structure."""
-        result = {}
-        for key, value in data.items():
-            if parent:
-                key = f"{parent}_{key}"
-            if isinstance(value, dict):
-                result.update(self._flatten(value, key))
-            else:
-                result[key] = value
-        return result
+        return data["response"]

@@ -1,7 +1,7 @@
 {
   "response": {
     "id": "1233-abcd",
-    "site_name": "Gateway",
+    "site_name": "Site",
     "backup_reserve_percent": 0,
     "default_real_mode": "self_consumption",
     "installation_date": "2022-01-01T00:00:00+00:00",
