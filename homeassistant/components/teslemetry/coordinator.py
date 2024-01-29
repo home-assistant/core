@@ -90,7 +90,7 @@ class TeslemetryEnergyDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Convert Wall Connectors from array to dict
         data["response"]["wall_connectors"] = {
-            wc["din"]: wc for wc in data["response"]["wall_connectors"]
+            wc["din"]: wc for wc in data["response"].get("wall_connectors", {})
         }
 
         return data["response"]
