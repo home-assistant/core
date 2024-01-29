@@ -38,10 +38,10 @@ async def async_setup_entry(
     for station in coordinator.stations.values():
         for fuel in (GasType.E10, GasType.E5, GasType.DIESEL):
             if getattr(station, fuel) is None:
-                name = f"{station.brand} {station.name}"
                 _LOGGER.debug(
-                    "Station %s (%s) does not offer %s fuel, skipping",
-                    name,
+                    "Station %s %s (%s) does not offer %s fuel, skipping",
+                    station.brand,
+                    station.name,
                     station.id,
                     fuel,
                 )
