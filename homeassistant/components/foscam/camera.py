@@ -105,7 +105,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize a Foscam camera."""
-        super().__init__(coordinator, config_entry)
+        super().__init__(coordinator, config_entry.entry_id)
         Camera.__init__(self)
 
         self._foscam_session = coordinator.session
