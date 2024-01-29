@@ -14,13 +14,13 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import UUID
+from .conftest import EMAIL, PASSWORD
 
 from tests.common import MockConfigEntry
 
 MOCK_DATA_STEP = {
-    CONF_EMAIL: "email@server",
-    CONF_PASSWORD: "password",
+    CONF_EMAIL: EMAIL,
+    CONF_PASSWORD: PASSWORD,
 }
 
 
@@ -97,7 +97,6 @@ async def test_flow_user_init_data_already_configured(
     """Test we abort user data set when entry is already configured."""
 
     bring_config_entry.data = MOCK_DATA_STEP
-    bring_config_entry.unique_id = UUID
     bring_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

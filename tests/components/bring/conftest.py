@@ -6,8 +6,6 @@ import pytest
 
 from homeassistant.components.bring import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -45,25 +43,7 @@ def mock_bring_client() -> Generator[Mock, None, None]:
 
 @pytest.fixture(name="bring_config_entry")
 def mock_bring_config_entry() -> MockConfigEntry:
-    """Mock bring configuration."""
+    """Mock bring configuration entry."""
     return MockConfigEntry(
-        domain=DOMAIN, data={CONF_EMAIL: EMAIL, CONF_PASSWORD: PASSWORD}
+        domain=DOMAIN, data={CONF_EMAIL: EMAIL, CONF_PASSWORD: PASSWORD}, unique_id=UUID
     )
-
-
-@pytest.fixture(name="setup_integration")
-async def mock_setup_integration(
-    hass: HomeAssistant,
-    mock_bring_client: Mock,
-    bring_config_entry: MockConfigEntry,
-) -> None:
-    """Mock setup of the bring integration."""
-    bring_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-
-@pytest.fixture
-def login_with_error(exception, mock_bring_client: Mock):
-    """Fixture to simulate error on login."""
-    mock_bring_client.login.side_effect = (exception,)

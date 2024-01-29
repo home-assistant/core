@@ -1,4 +1,6 @@
 """Unit tests for the bring integration."""
+from unittest.mock import Mock
+
 import pytest
 
 from homeassistant.components.bring import (
@@ -9,16 +11,29 @@ from homeassistant.components.bring import (
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
+async def setup_integration(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+) -> None:
+    """Mock setup of the bring integration."""
+    bring_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+
 async def test_load_unload(
     hass: HomeAssistant,
-    setup_integration: None,
+    mock_bring_client: Mock,
     bring_config_entry: MockConfigEntry | None,
 ) -> None:
     """Test loading and unloading of the config entry."""
+    await setup_integration(hass, bring_config_entry)
+
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
@@ -38,11 +53,12 @@ async def test_load_unload(
 )
 async def test_init_failure(
     hass: HomeAssistant,
-    login_with_error,
-    setup_integration: None,
+    mock_bring_client: Mock,
     status: ConfigEntryState,
-    exception,
+    exception: Exception,
     bring_config_entry: MockConfigEntry | None,
 ) -> None:
     """Test an initialization error on integration load."""
+    mock_bring_client.login.side_effect = exception
+    await setup_integration(hass, bring_config_entry)
     assert bring_config_entry.state == status
