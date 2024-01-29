@@ -1055,16 +1055,7 @@ _DEPRECATED_VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = DeprecatedConstantEn
     "2025.1",
 )
 """Deprecated: please use UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE"""
-_DEPRECATED_VOLUME_FLOW_RATE_LITERS_PER_MINUTE: Final = DeprecatedConstantEnum(
-    UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
-    "2025.1",
-)
-"""Deprecated: please use UnitOfVolumeFlowRate.LITERS_PER_MINUTE"""
-_DEPRECATED_VOLUME_FLOW_RATE_GALLONS_PER_MINUTE: Final = DeprecatedConstantEnum(
-    UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
-    "2025.1",
-)
-"""Deprecated: please use UnitOfVolumeFlowRate.GALLONS_PER_MINUTE"""
+
 # Area units
 AREA_SQUARE_METERS: Final = "m²"
 
