@@ -2647,7 +2647,7 @@ async def test_suggested_unit_guard(
         "homeassistant.components.sensor",
         logging.WARNING,
         (
-            "<class 'custom_components.test.sensor.MockSensor'> has an"
+            "<class 'custom_components.test.sensor.MockSensor'> sets an"
             " invalid suggested_unit_of_measurement. Please report it to the author"
             " of the 'test' custom integration"
         ),
