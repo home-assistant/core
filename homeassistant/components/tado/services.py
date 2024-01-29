@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .const import (
@@ -45,7 +45,7 @@ def setup_services(hass: HomeAssistant) -> None:
         )
 
         if ATTR_MESSAGE in response:
-            raise ServiceValidationError(response[ATTR_MESSAGE])
+            raise HomeAssistantError(response[ATTR_MESSAGE])
 
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_METER_READING, add_meter_reading, SCHEMA_ADD_METER_READING
