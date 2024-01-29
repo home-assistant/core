@@ -79,7 +79,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self.unit_of_measurement: str = config.get(
             CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
         )
-        self.friendly_name = friendly_name
 
         super().__init__(
             hass,
@@ -121,7 +120,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         if device.state.lower() == self.proximity_zone_name.lower():
             _LOGGER.debug(
                 "%s: %s in zone -> distance=0",
-                self.friendly_name,
+                self.name,
                 device.entity_id,
             )
             return 0
@@ -129,7 +128,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         if latitude is None or longitude is None:
             _LOGGER.debug(
                 "%s: %s has no coordinates -> distance=None",
-                self.friendly_name,
+                self.name,
                 device.entity_id,
             )
             return None
@@ -157,7 +156,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         if device.state.lower() == self.proximity_zone_name.lower():
             _LOGGER.debug(
                 "%s: %s in zone -> direction_of_travel=arrived",
-                self.friendly_name,
+                self.name,
                 device.entity_id,
             )
             return "arrived"
@@ -201,7 +200,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         if (zone_state := self.hass.states.get(self.proximity_zone_id)) is None:
             _LOGGER.debug(
                 "%s: zone %s does not exist -> reset",
-                self.friendly_name,
+                self.name,
                 self.proximity_zone_id,
             )
             return DEFAULT_DATA
@@ -213,12 +212,12 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             if (tracked_entity_state := self.hass.states.get(entity_id)) is None:
                 if entities_data.pop(entity_id, None) is not None:
                     _LOGGER.debug(
-                        "%s: %s does not exist -> remove", self.friendly_name, entity_id
+                        "%s: %s does not exist -> remove", self.name, entity_id
                     )
                 continue
 
             if entity_id not in entities_data:
-                _LOGGER.debug("%s: %s is new -> add", self.friendly_name, entity_id)
+                _LOGGER.debug("%s: %s is new -> add", self.name, entity_id)
                 entities_data[entity_id] = {
                     ATTR_DIST_TO: None,
                     ATTR_DIR_OF_TRAVEL: None,
@@ -238,7 +237,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             if entities_data[entity_id][ATTR_DIST_TO] is None:
                 _LOGGER.debug(
                     "%s: %s has unknown distance got -> direction_of_travel=None",
-                    self.friendly_name,
+                    self.name,
                     entity_id,
                 )
                 entities_data[entity_id][ATTR_DIR_OF_TRAVEL] = None
@@ -249,7 +248,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         ) is not None:
             _LOGGER.debug(
                 "%s: calculate direction of travel for %s",
-                self.friendly_name,
+                self.name,
                 state_change_data.entity_id,
             )
 
