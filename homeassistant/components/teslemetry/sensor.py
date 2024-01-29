@@ -31,8 +31,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import TeslemetryStateUpdateCoordinator
-from .entity import TeslemetryEntity
+from .entity import TeslemetryVehicleEntity
+from .model import TeslemetryVehicleData
 
 
 @callback
@@ -244,18 +244,18 @@ async def async_setup_entry(
     )
 
 
-class TeslemetrySensorEntity(TeslemetryEntity, SensorEntity):
+class TeslemetrySensorEntity(TeslemetryVehicleEntity, SensorEntity):
     """Base class for Teslemetry metric sensors."""
 
     entity_description: TeslemetrySensorEntityDescription
 
     def __init__(
         self,
-        coordinator: TeslemetryStateUpdateCoordinator,
+        vehicle: TeslemetryVehicleData,
         description: TeslemetrySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, description.key)
+        super().__init__(vehicle, description.key)
         self.entity_description = description
 
     @property

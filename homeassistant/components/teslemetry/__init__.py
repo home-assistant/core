@@ -2,7 +2,7 @@
 import asyncio
 from typing import Final
 
-from tesla_fleet_api import Teslemetry, VehicleSpecific
+from tesla_fleet_api import EnergySpecific, Teslemetry, VehicleSpecific
 from tesla_fleet_api.exceptions import InvalidToken, PaymentRequired, TeslaFleetError
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,8 +12,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
-from .coordinator import TeslemetryVehicleDataCoordinator
-from .models import TeslemetryVehicleData
+from .coordinator import (
+    TeslemetryEnergyDataCoordinator,
+    TeslemetryVehicleDataCoordinator,
+)
+from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PLATFORMS: Final = [
     Platform.CLIMATE,
@@ -42,29 +45,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from e
 
     # Create array of classes
-    data = {"vehicles": [], "energysites": []}
+    vehicles: list[TeslemetryVehicleData] = []
+    energysites: list[TeslemetryEnergyData] = []
     for product in products:
         if "vin" in product:
             vin = product["vin"]
             api = VehicleSpecific(teslemetry.vehicle, vin)
             coordinator = TeslemetryVehicleDataCoordinator(hass, api)
-            data.vehicles.append(
+            vehicles.append(
                 TeslemetryVehicleData(
                     api=api,
                     coordinator=coordinator,
                     vin=vin,
                 )
             )
-        if "site":
-            pass
+        if "energy_site_id" in product:
+            site_id = product["energy_site_id"]
+            api = EnergySpecific(teslemetry.energy, site_id)
+            energysites.append(
+                TeslemetryEnergyData(
+                    api=api,
+                    coordinator=TeslemetryEnergyDataCoordinator(hass, api),
+                    id=site_id,
+                )
+            )
 
     # Do all coordinator first refresh simultaneously
     await asyncio.gather(
-        *(vehicle.coordinator.async_config_entry_first_refresh() for vehicle in data)
+        *(
+            vehicle.coordinator.async_config_entry_first_refresh()
+            for vehicle in vehicles
+        )
     )
 
     # Setup Platforms
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "vehicles": vehicles,
+        "energysites": energysites,
+    }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
