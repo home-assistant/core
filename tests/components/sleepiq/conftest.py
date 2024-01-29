@@ -196,10 +196,12 @@ def mock_asyncsleepiq(mock_bed: MagicMock) -> Generator[MagicMock, None, None]:
         core_climate_l.side = Side.LEFT
         core_climate_l.timer = CORE_CLIMATE_TIME
         core_climate_l.temperature = CoreTemps.HEATING_PUSH_LOW
+        core_climate_l.max_core_climate_time = 600
 
         core_climate_r.side = Side.RIGHT
         core_climate_r.timer = CORE_CLIMATE_TIME
         core_climate_r.temperature = CoreTemps.OFF
+        core_climate_r.max_core_climate_time = 600
 
         yield client
 
