@@ -43,7 +43,8 @@ async def async_setup_entry(
 
     for area_name, device in entry_data.lights:
         if device.type == "CEILING_FAN_TYPE2":
-            # If this is a fan check to see if this entity already exists. If not, do not create a new one.
+            # If this is a fan check to see if this entity already exists.
+            # If not, do not create a new one.
             entity_id = ent_reg.async_get_entity_id(
                 Platform.LIGHT,
                 DOMAIN,
@@ -53,7 +54,8 @@ async def async_setup_entry(
                 entity_entry = ent_reg.async_get(entity_id)
                 assert entity_entry
                 if entity_entry.disabled:
-                    # If the entity exists and is disabled then we want to remove the entity so that the user is using the new fan entity instead.
+                    # If the entity exists and is disabled then we want to remove
+                    # the entity so that the user is using the new fan entity instead.
                     ent_reg.async_remove(entity_id)
                 else:
                     lights.append(LutronLight(area_name, device, entry_data.client))
