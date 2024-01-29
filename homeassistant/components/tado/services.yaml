@@ -76,4 +76,3 @@ add_meter_reading:
           mode: box
           min: 0
           step: 1
-          unit_of_measurement: "m³ or kWh"
