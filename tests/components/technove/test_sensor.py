@@ -87,9 +87,9 @@ async def test_sensor_update_failure(
 
     assert hass.states.get(entity_id).state == Status.PLUGGED_CHARGING.value
 
+    mock_technove.update.side_effect = TechnoVEError("Test error")
     freezer.tick(timedelta(minutes=5, seconds=1))
     async_fire_time_changed(hass)
-    mock_technove.update.side_effect = TechnoVEError("Test error")
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
