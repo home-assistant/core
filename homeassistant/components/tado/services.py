@@ -37,7 +37,7 @@ def setup_services(hass: HomeAssistant) -> None:
         """Send meter reading to Tado."""
         entry_id: str = call.data[ATTR_CONFIG_ENTRY]
         reading: int = call.data[ATTR_READING]
-        _LOGGER.info("Add meter reading %s", reading)
+        _LOGGER.debug("Add meter reading %s", reading)
 
         tadoconnector = hass.data[DOMAIN][entry_id][DATA]
         response: dict = await hass.async_add_executor_job(
