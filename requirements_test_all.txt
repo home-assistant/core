@@ -410,7 +410,7 @@ anthemav==1.4.1
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.7.1
+apprise==1.7.2
 
 # homeassistant.components.aprs
 aprslib==0.7.0
