@@ -1,13 +1,14 @@
 """Common fixtures for Hunter Douglas Powerview tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from aiopvapi.resources.shade import ShadePosition
 import pytest
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 
-from tests.common import load_json_object_fixture
+from tests.common import load_json_object_fixture, load_json_value_fixture
 
 
 @pytest.fixture
@@ -49,6 +50,9 @@ async def mock_hunterdouglas_full(
     device_json: str,
     home_json: str,
     firmware_json: str,
+    rooms_json: str,
+    scenes_json: str,
+    shades_json: str,
 ) -> Generator[MagicMock, None, None]:
     """Return a mocked Powerview Hub with all data populated."""
     with patch(
@@ -60,6 +64,21 @@ async def mock_hunterdouglas_full(
     ), patch(
         "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_firmware",
         return_value=load_json_object_fixture(firmware_json, DOMAIN),
+    ), patch(
+        "homeassistant.components.hunterdouglas_powerview.Rooms.get_resources",
+        return_value=load_json_value_fixture(rooms_json, DOMAIN),
+    ), patch(
+        "homeassistant.components.hunterdouglas_powerview.Scenes.get_resources",
+        return_value=load_json_value_fixture(scenes_json, DOMAIN),
+    ), patch(
+        "homeassistant.components.hunterdouglas_powerview.Shades.get_resources",
+        return_value=load_json_value_fixture(shades_json, DOMAIN),
+    ), patch(
+        "homeassistant.components.hunterdouglas_powerview.cover.BaseShade.refresh",
+    ), patch(
+        "homeassistant.components.hunterdouglas_powerview.cover.BaseShade.current_position",
+        new_callable=PropertyMock,
+        return_value=ShadePosition(primary=0, secondary=0, tilt=0, velocity=0),
     ):
         yield
 
@@ -99,5 +118,44 @@ def firmware_json(api_version: int) -> str:
         return "gen2/fwversion.json"
     if api_version == 3:
         return "gen3/gateway/info.json"
+    # Add more conditions for different api_versions if needed
+    raise ValueError(f"Unsupported api_version: {api_version}")
+
+
+@pytest.fixture
+def rooms_json(api_version: int) -> str:
+    """Return the get_resources fixture for a specific device."""
+    if api_version == 1:
+        return "gen2/rooms.json"
+    if api_version == 2:
+        return "gen2/rooms.json"
+    if api_version == 3:
+        return "gen3/home/rooms.json"
+    # Add more conditions for different api_versions if needed
+    raise ValueError(f"Unsupported api_version: {api_version}")
+
+
+@pytest.fixture
+def scenes_json(api_version: int) -> str:
+    """Return the get_resources fixture for a specific device."""
+    if api_version == 1:
+        return "gen2/scenes.json"
+    if api_version == 2:
+        return "gen2/scenes.json"
+    if api_version == 3:
+        return "gen3/home/scenes.json"
+    # Add more conditions for different api_versions if needed
+    raise ValueError(f"Unsupported api_version: {api_version}")
+
+
+@pytest.fixture
+def shades_json(api_version: int) -> str:
+    """Return the get_resources fixture for a specific device."""
+    if api_version == 1:
+        return "gen2/shades.json"
+    if api_version == 2:
+        return "gen2/shades.json"
+    if api_version == 3:
+        return "gen3/home/shades.json"
     # Add more conditions for different api_versions if needed
     raise ValueError(f"Unsupported api_version: {api_version}")

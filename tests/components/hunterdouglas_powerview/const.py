@@ -5,13 +5,15 @@ from ipaddress import IPv4Address
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 
+MOCK_MAC = "AA::BB::CC::DD::EE::FF"
+
 HOMEKIT_DISCOVERY_GEN2 = zeroconf.ZeroconfServiceInfo(
     ip_address="1.2.3.4",
     ip_addresses=[IPv4Address("1.2.3.4")],
     hostname="mock_hostname",
     name="Powerview Generation 2._hap._tcp.local.",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: "AA::BB::CC::DD::EE::FF"},
+    properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC},
     type="mock_type",
 )
 
@@ -21,7 +23,7 @@ HOMEKIT_DISCOVERY_GEN3 = zeroconf.ZeroconfServiceInfo(
     hostname="mock_hostname",
     name="Powerview Generation 3._hap._tcp.local.",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: "AA::BB::CC::DD::EE::FF"},
+    properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC},
     type="mock_type",
 )
 
