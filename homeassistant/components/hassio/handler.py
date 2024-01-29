@@ -329,7 +329,7 @@ class HassIO:
         """Initialize Hass.io API."""
         self.loop = loop
         self.websession = websession
-        self._ip = ip
+        self._base_url = URL(f"http://{ip}")
 
     @_api_bool
     def is_connected(self) -> Coroutine:
@@ -558,15 +558,22 @@ class HassIO:
 
         This method is a coroutine.
         """
-        url = f"http://{self._ip}{command}"
-        if url != str(URL(url)):
+        url = f"{self._base_url}{command}"
+        joined_url = self._base_url.join(URL(command))
+        normalized_url_str = str(joined_url)
+        # This check is to make sure the normalized URL string
+        # is the same as the URL string that was passed in. If
+        # they are different, then the passed in command URL
+        # contained characters that were removed by the normalization
+        # such as ../../../../etc/passwd
+        if url != normalized_url_str:
             _LOGGER.error("Invalid request %s", command)
             raise HassioAPIError()
 
         try:
             request = await self.websession.request(
                 method,
-                f"http://{self._ip}{command}",
+                joined_url,
                 json=payload,
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (
