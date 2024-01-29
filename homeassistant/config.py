@@ -1041,7 +1041,7 @@ async def merge_packages_config(
 
     package_definition_schema = vol.Schema({cv.string: vol.Any(dict, list, None)})
 
-    def _validate_package_definition(name, conf) -> None:
+    def _validate_package_definition(name: str, conf: Any) -> None:
         """Validate basic package definition properties."""
         cv.slug(name)
         package_definition_schema(conf)

@@ -4,4 +4,4 @@ homeassistant:
       switch:
         - platform: template
     this_works:
-      iot_domain: [{"some": "yay"}]
+      iot_domain: [{ "some": "yay" }]
