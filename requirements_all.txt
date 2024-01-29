@@ -681,7 +681,7 @@ debugpy==1.8.0
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==4.3.0
+deebot-client==5.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
