@@ -35,7 +35,7 @@ from homeassistant.components.weather import (
     DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
     ROUNDING_PRECISION,
-    SERVICE_GET_FORECAST_ATTR,
+    SERVICE_GET_FORECAST_ATTRIBUTE,
     SERVICE_GET_FORECASTS,
     Forecast,
     WeatherEntity,
@@ -1358,7 +1358,7 @@ async def test_issue_deprecated_service_weather_get_forecast(
         ),
     ],
 )
-async def test_get_forecast_attr(
+async def test_get_forecast_attribute(
     hass: HomeAssistant,
     config_flow_fixture: None,
     forecast_type: str,
@@ -1388,7 +1388,7 @@ async def test_get_forecast_attr(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECAST_ATTR,
+        SERVICE_GET_FORECAST_ATTRIBUTE,
         {
             "entity_id": entity0.entity_id,
             "type": forecast_type,
@@ -1414,7 +1414,7 @@ async def test_get_forecast_attr(
         ),
     ],
 )
-async def test_get_forecast_attr_limit(
+async def test_get_forecast_attribute_limit(
     hass: HomeAssistant,
     config_flow_fixture: None,
     forecast_type: str,
@@ -1445,7 +1445,7 @@ async def test_get_forecast_attr_limit(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECAST_ATTR,
+        SERVICE_GET_FORECAST_ATTRIBUTE,
         {
             "entity_id": entity0.entity_id,
             "type": forecast_type,

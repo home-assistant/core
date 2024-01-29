@@ -89,19 +89,19 @@
     "forecast_attr_attribute": {
       "options": {
         "condition": "Condition",
-        "humidity": "Humidity",
+        "humidity": "[%key:component::weather::entity_component::_::state_attributes::humidity::name%]",
         "precipitation": "Precipitation",
         "precipitation_probability": "Precipitation probability",
-        "pressure": "Pressure",
-        "apparent_temperature": "Apparent temperature",
-        "temperature": "Temperature high",
+        "pressure": "[%key:component::weather::entity_component::_::state_attributes::pressure::name%]",
+        "apparent_temperature": "[%key:component::weather::entity_component::_::state_attributes::apparent_temperature::name%]",
+        "temperature": "[%key:component::weather::entity_component::_::state_attributes::temperature::name%]",
         "templow": "Temperature low",
-        "wind_bearing": "Wind bearing",
-        "wind_gust_speed": "Wind gust speed",
-        "wind_speed": "Wind speed",
-        "dew_point": "Dew point",
-        "cloud_coverage": "Cloud coverage",
-        "uv_index": "UV index"
+        "wind_bearing": "[%key:component::weather::entity_component::_::state_attributes::wind_bearing::name%]",
+        "wind_gust_speed": "[%key:component::weather::entity_component::_::state_attributes::wind_gust_speed::name%]",
+        "wind_speed": "[%key:component::weather::entity_component::_::state_attributes::wind_speed::name%]",
+        "dew_point": "[%key:component::weather::entity_component::_::state_attributes::dew_point::name%]",
+        "cloud_coverage": "[%key:component::weather::entity_component::_::state_attributes::cloud_coverage::name%]",
+        "uv_index": "[%key:component::weather::entity_component::_::state_attributes::uv_index::name%]"
       }
     }
   },
@@ -126,9 +126,9 @@
         }
       }
     },
-    "get_forecast_attr": {
+    "get_forecast_attribute": {
       "name": "Get forecast attribute values",
-      "description": "Get a single attribute within a time limit from the weather forecast.",
+      "description": "Get a single attribute from the weather forecast and specify the number of records to return.",
       "fields": {
         "type": {
           "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]",
@@ -164,6 +164,11 @@
           }
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_attribute": {
+      "message": "Forecast attribute {forecast_attribute} does not exist in forecast"
     }
   }
 }

@@ -34,7 +34,7 @@ get_forecasts:
             - "hourly"
             - "twice_daily"
           translation_key: forecast_type
-get_forecast_attr:
+get_forecast_attribute:
   target:
     entity:
       domain: weather

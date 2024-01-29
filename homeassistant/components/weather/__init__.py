@@ -41,7 +41,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -146,7 +146,7 @@ ROUNDING_PRECISION = 2
 LEGACY_SERVICE_GET_FORECAST: Final = "get_forecast"
 """Deprecated: please use SERVICE_GET_FORECASTS."""
 SERVICE_GET_FORECASTS: Final = "get_forecasts"
-SERVICE_GET_FORECAST_ATTR: Final = "get_forecast_attr"
+SERVICE_GET_FORECAST_ATTRIBUTE: Final = "get_forecast_attribute"
 
 _ObservationUpdateCoordinatorT = TypeVar(
     "_ObservationUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
@@ -244,7 +244,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
-        SERVICE_GET_FORECAST_ATTR,
+        SERVICE_GET_FORECAST_ATTRIBUTE,
         {
             vol.Required("type"): vol.In(("daily", "hourly", "twice_daily")),
             vol.Required("attribute"): vol.In(
@@ -267,7 +267,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             vol.Optional("limit"): vol.Range(1),
         },
-        async_get_forecast_attr_service,
+        async_get_forecast_attribute_service,
         required_features=[
             WeatherEntityFeature.FORECAST_HOURLY,
             WeatherEntityFeature.FORECAST_TWICE_DAILY,
@@ -1213,7 +1213,7 @@ async def async_get_forecasts_service(
     }
 
 
-async def async_get_forecast_attr_service(
+async def async_get_forecast_attribute_service(
     weather: WeatherEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """Get weather forecast values for specified attribute."""
@@ -1240,19 +1240,19 @@ async def async_get_forecast_attr_service(
         # pylint: disable-next=protected-access
         converted_forecast_list = weather._convert_forecast(native_forecast_list)
 
-    if forecast_limit is not None:
-        # Should not be greater than the length of the list
-        if forecast_limit > len(converted_forecast_list):
-            # Cut list length according to forecast_limit_hours
-            converted_forecast_list = converted_forecast_list[:forecast_limit]
+    if forecast_limit and forecast_limit > len(converted_forecast_list):
+        # Cut list length according to forecast_limit
+        converted_forecast_list = converted_forecast_list[:forecast_limit]
 
-    # Check if key forecast_attribute is in list
     if forecast_attribute not in converted_forecast_list[0]:  # type: ignore[operator]
-        raise HomeAssistantError(
-            f"Forecast attribute '{forecast_attribute}' does not exist in forecast"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_attribute",
+            translation_placeholders={
+                "forecast_attribute": forecast_attribute,
+            },
         )
 
-    # Extract the specified forecast_attribute values from the list
     forecast_values = [
         forecast[forecast_attribute]  # type: ignore[index]
         for forecast in converted_forecast_list
