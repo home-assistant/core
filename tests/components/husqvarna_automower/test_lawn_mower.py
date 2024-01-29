@@ -22,27 +22,12 @@ _LOGGER = logging.getLogger(__name__)
     ],
 )
 async def test_lawn_mower_states(
-    hass: HomeAssistant, setup_entity, activity, state, target_state
+    hass: HomeAssistant, setup_entity, target_state
 ) -> None:
     """Test lawn_mower state."""
     state = hass.states.get("lawn_mower.test_mower_1")
     assert state is not None
     assert state.state == target_state
-
-
-# @patch("homeassistant.components.husqvarna_automower.coordinator.AutomowerDataUpdateCoordinator.callback")
-# @pytest.mark.parametrize(
-#     ("activity", "state", "target_state"),
-#     [
-#         ("PARKED_IN_CS", "RESTRICTED", LawnMowerActivity.DOCKED),
-#     ],
-# )
-# async def test_update(hass: HomeAssistant, setup_entity, activity, state, target_state) -> None:
-#     """Test load and unload."""
-
-#     state = hass.states.get("lawn_mower.test_mower_1")
-#     print ("xxxxxxxxxxxxxxx", state.state)
-#     assert state is None
 
 
 @pytest.mark.parametrize(
@@ -54,7 +39,7 @@ async def test_lawn_mower_states(
     ],
 )
 async def test_lawn_mower_commands(
-    hass: HomeAssistant, setup_entity, activity, state, aioautomower_command, service
+    hass: HomeAssistant, setup_entity, aioautomower_command, service
 ) -> None:
     """Test lawn_mower commands."""
 

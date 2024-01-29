@@ -1,9 +1,9 @@
 """Test helpers for Husqvarna Automower."""
-from collections.abc import Generator
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 from aioautomower.model import MowerAttributes, MowerList
+from aioautomower.utils import mower_list_to_dictionary_dataclass
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -19,12 +19,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from .const import TEST_CLIENT_ID, TEST_CLIENT_SECRET
+
 from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
+TEST_MOWERLIST = load_json_value_fixture("mower.json", DOMAIN)
 TEST_MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 USER_ID = "123"
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
 
 
 @pytest.fixture(scope="session")
@@ -87,13 +88,19 @@ def mower_list_fixture(load_mower_fixture) -> MowerList:
     return mowers
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def mower_data() -> dict[str, MowerAttributes]:
+    """Generate a mower fixture object."""
+    return mower_list_to_dictionary_dataclass(TEST_MOWERLIST)
+
+
+@pytest.fixture(name="activity")
 def activity() -> str:
     """Defaults value for activity."""
     return "PARKED_IN_CS"
 
 
-@pytest.fixture
+@pytest.fixture(name="state")
 def state() -> str:
     """Defaults value for state."""
     return "RESTRICTED"
@@ -106,7 +113,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     await async_import_client_credential(
         hass,
         DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+        ClientCredential(TEST_CLIENT_ID, TEST_CLIENT_SECRET),
     )
 
 
@@ -126,8 +133,8 @@ async def setup_entity(
         config_entry_oauth2_flow.LocalOAuth2Implementation(
             hass,
             DOMAIN,
-            CLIENT_ID,
-            CLIENT_SECRET,
+            TEST_CLIENT_ID,
+            TEST_CLIENT_SECRET,
             OAUTH2_AUTHORIZE,
             OAUTH2_TOKEN,
         ),
@@ -147,19 +154,3 @@ async def setup_entity(
         await hass.async_block_till_done()
 
     return mock_config_entry
-
-
-@pytest.fixture
-def mock_wled(
-    mower_list_fixture: MowerList,
-) -> Generator[MagicMock, None, None]:
-    """Return a mocked WLED client."""
-    mower_data = mower_list_fixture
-
-    with patch(
-        "homeassistant.components.husqvarna_automower.coordinator.AutomowerDataUpdateCoordinator",
-        autospec=True,
-    ) as wled_mock:
-        wled_mock.return_value._async_update_data.return_value = mower_data
-        wled_mock.listen = AsyncMock()
-        yield wled_mock

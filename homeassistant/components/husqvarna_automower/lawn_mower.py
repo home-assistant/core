@@ -59,6 +59,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up lawn mower platform."""
     coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    _LOGGER.debug("coordinator.data: %s", coordinator.data)
     async_add_entities(
         AutomowerLawnMowerEntity(mower_id, coordinator) for mower_id in coordinator.data
     )
