@@ -379,7 +379,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def _is_valid_suggested_unit(self, suggested_unit_of_measurement: str) -> bool:
         """Validate the suggested unit.
-        
+
         Validate that a unit converter exists for the sensor's device class and that the
         unit converter supports both the native and the suggested units of measurement.
         """
