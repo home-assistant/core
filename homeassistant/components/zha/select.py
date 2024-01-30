@@ -687,7 +687,7 @@ class KeypadLockoutEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="thermostat_ui")
 class KeypadLockout(ZCLEnumSelectEntity):
-    """Mandatory Attribute for thermostat_ui cluster.
+    """Mandatory attribute for thermostat_ui cluster.
 
     Often only the first two are implemented, and Lock2 to Lock4 should map to Lock1 in the firmware.
     This however covers all bases.
