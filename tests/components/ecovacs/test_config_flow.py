@@ -1,15 +1,19 @@
 """Test Ecovacs config flow."""
 from collections.abc import Callable
+import ssl
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
 from deebot_client.exceptions import InvalidAuthenticationError, MqttError
+from deebot_client.mqtt_client import create_mqtt_config
 import pytest
 
 from homeassistant.components.ecovacs.const import (
     CONF_CONTINENT,
     CONF_OVERRIDE_MQTT_URL,
+    CONF_OVERRIDE_REST_URL,
+    CONF_VERIFY_MQTT_CERTIFICATE,
     DOMAIN,
     InstanceMode,
 )
@@ -138,7 +142,7 @@ def _cannot_connect_error(user_input: dict[str, Any]) -> str:
     ],
     ids=["advanced_cloud", "advanced_self_hosted", "cloud"],
 )
-async def test_user_flow_error(
+async def test_user_flow_raise_error(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_authenticator_authenticate: AsyncMock,
@@ -152,7 +156,7 @@ async def test_user_flow_error(
     user_input_user: dict[str, Any] | None,
     entry_data: dict[str, Any] | None,
 ) -> None:
-    """Test handling invalid connection."""
+    """Test handling error on library calls."""
 
     # Authenticator raises error
     mock_authenticator_authenticate.side_effect = side_effect_rest
@@ -195,6 +199,61 @@ async def test_user_flow_error(
     entry_data = entry_data or user_input_auth
     assert result["title"] == entry_data[CONF_USERNAME]
     assert result["data"] == entry_data
+    mock_setup_entry.assert_called()
+    mock_authenticator_authenticate.assert_called()
+    mock_mqtt_client.verify_config.assert_called()
+
+
+async def test_user_flow_self_hosted_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_authenticator_authenticate: AsyncMock,
+    mock_mqtt_client: Mock,
+) -> None:
+    """Test handling selfhosted errors and custom ssl context."""
+
+    result = await _test_user_flow(
+        hass,
+        user_input_auth=VALID_ENTRY_DATA_SELF_HOSTED
+        | {
+            CONF_OVERRIDE_REST_URL: "bla://localhost:8000",
+            CONF_OVERRIDE_MQTT_URL: "mqtt://",
+        },
+        user_input_user=USER_STEP_SELF_HOSTED,
+        show_advanced_options=True,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {
+        CONF_OVERRIDE_REST_URL: "invalid_url_schema_override_rest_url",
+        CONF_OVERRIDE_MQTT_URL: "invalid_url",
+    }
+    mock_authenticator_authenticate.assert_not_called()
+    mock_mqtt_client.verify_config.assert_not_called()
+    mock_setup_entry.assert_not_called()
+
+    # Check that the schema includes select box to disable ssl verification of mqtt
+    assert CONF_VERIFY_MQTT_CERTIFICATE in result["data_schema"].schema
+
+    data = VALID_ENTRY_DATA_SELF_HOSTED | {CONF_VERIFY_MQTT_CERTIFICATE: False}
+    with patch(
+        "homeassistant.components.ecovacs.config_flow.create_mqtt_config",
+        wraps=create_mqtt_config,
+    ) as mock_create_mqtt_config:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
+        )
+        mock_create_mqtt_config.assert_called_once()
+        ssl_context = mock_create_mqtt_config.call_args[1]["ssl_context"]
+        assert isinstance(ssl_context, ssl.SSLContext)
+        assert ssl_context.verify_mode == ssl.CERT_NONE
+        assert ssl_context.check_hostname is False
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == data[CONF_USERNAME]
+    assert result["data"] == data
     mock_setup_entry.assert_called()
     mock_authenticator_authenticate.assert_called()
     mock_mqtt_client.verify_config.assert_called()

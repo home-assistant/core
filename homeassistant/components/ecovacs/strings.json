@@ -6,6 +6,9 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "Invalid URL",
+      "invalid_url_schema_override_rest_url": "Invalid REST URL scheme.\nExpected that the URL starts with `http://` or `https://`.",
+      "invalid_url_schema_override_mqtt_url": "Invalid MQTT URL scheme.\nExpected that the URL starts with `mqtt://` or `mqtts://`.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

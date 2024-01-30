@@ -36,6 +36,16 @@ def mock_config_entry_data() -> dict[str, Any]:
 
 
 @pytest.fixture
+def mock_config_entry(mock_config_entry_data: dict[str, Any]) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title=mock_config_entry_data[CONF_USERNAME],
+        domain=DOMAIN,
+        data=mock_config_entry_data,
+    )
+
+
+@pytest.fixture
 def device_fixture() -> str:
     """Device class, which should be returned by the get_devices api call."""
     return "yna5x1"
@@ -113,11 +123,11 @@ def platforms() -> Platform | list[Platform]:
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_authenticator: Mock,
     mock_mqtt_client: Mock,
     mock_device_execute: AsyncMock,
     platforms: Platform | list[Platform],
-    mock_config_entry_data: dict[str, Any],
 ) -> MockConfigEntry:
     """Set up the Ecovacs integration for testing."""
     if not isinstance(platforms, list):
@@ -127,16 +137,11 @@ async def init_integration(
         "homeassistant.components.ecovacs.PLATFORMS",
         platforms,
     ):
-        config_entry = MockConfigEntry(
-            title=mock_config_entry_data[CONF_USERNAME],
-            domain=DOMAIN,
-            data=mock_config_entry_data,
-        )
-        config_entry.add_to_hass(hass)
+        mock_config_entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        yield config_entry
+        yield mock_config_entry
 
 
 @pytest.fixture
