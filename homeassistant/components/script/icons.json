@@ -8,7 +8,7 @@
     }
   },
   "services": {
-    "reload": "mdi:script-text",
+    "reload": "mdi:reload",
     "turn_on": "mdi:script-text-play",
     "turn_off": "mdi:script-text",
     "toggle": "mdi:script-text"
