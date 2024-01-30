@@ -53,9 +53,7 @@ class MockViCareService:
 
     def hasRoles(self, requested_roles: list[str]) -> bool:
         """Return true if requested roles are assigned."""
-        return len(requested_roles) > 0 and set(requested_roles).issubset(
-            set(self.roles)
-        )
+        return requested_roles and set(requested_roles) in self.roles
 
     def getProperty(self, property_name: str):
         """Read a property from json dump."""
@@ -79,7 +77,7 @@ async def mock_vicare_gas_boiler(
 ) -> AsyncGenerator[MockConfigEntry, None]:
     """Return a mocked ViCare API representing a single gas boiler device."""
     fixtures: list[tuple[list[str], str]] = [
-        (["type:boiler"], "vicare/Vitodens300W.json")
+        ({"type:boiler"}, "vicare/Vitodens300W.json")
     ]
     with patch(
         f"{MODULE}.vicare_login",
