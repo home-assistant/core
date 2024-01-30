@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "core_integrations": {
+        "default": "mdi:puzzle"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
 import asyncio
 from typing import Final
 
-from tesla_fleet_api import Teslemetry
+from tesla_fleet_api import Teslemetry, VehicleSpecific
 from tesla_fleet_api.exceptions import InvalidToken, PaymentRequired, TeslaFleetError
 
 from homeassistant.config_entries import ConfigEntry
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             continue
         vin = product["vin"]
 
-        api = teslemetry.vehicle.specific(vin)
+        api = VehicleSpecific(teslemetry.vehicle, vin)
         coordinator = TeslemetryVehicleDataCoordinator(hass, api)
         data.append(
             TeslemetryVehicleData(
