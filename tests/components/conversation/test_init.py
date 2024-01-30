@@ -581,6 +581,7 @@ async def test_http_api_no_match(
 
     assert data == snapshot
     assert data["response"]["response_type"] == "error"
+    assert data["response"]["data"]["code"] == "no_intent_match"
 
 
 async def test_http_api_handle_failure(
@@ -738,6 +739,7 @@ async def test_ws_api(
 
     assert msg["success"]
     assert msg["result"] == snapshot
+    assert msg["result"]["response"]["data"]["code"] == "no_intent_match"
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
@@ -1180,7 +1182,7 @@ async def test_ws_hass_agent_debug(
                 "turn my cool light off",
                 "turn on all lights in the kitchen",
                 "how many lights are on in the kitchen?",
-                "this will not match anything",  # unmatched in results
+                "this will not match anything",  # None in results
             ],
         }
     )
@@ -1189,6 +1191,9 @@ async def test_ws_hass_agent_debug(
 
     assert msg["success"]
     assert msg["result"] == snapshot
+
+    # Last sentence should be a failed match
+    assert msg["result"]["results"][-1] is None
 
     # Light state should not have been changed
     assert len(on_calls) == 0
