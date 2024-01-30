@@ -13,7 +13,6 @@
         "default": "mdi:power-plug-off",
         "state": {
           "on": "mdi:power-plug",
-          "standby": "mdi:power-plug-off",
           "warming": "mdi:power-plug-outline",
           "cooling": "mdi:power-plug-off-outline",
           "error": "mdi:alert-circle"
