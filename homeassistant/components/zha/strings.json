@@ -732,10 +732,10 @@
         "name": "Presence detection timeout"
       },
       "max_heat_setpoint_limit": {
-        "name": "Max Heat Setpoint Limit"
+        "name": "Max heat setpoint limit"
       },
       "min_heat_setpoint_limit": {
-        "name": "Min Heat Setpoint Limit"
+        "name": "Min heat setpoint limit"
       }
     },
     "select": {
@@ -806,7 +806,7 @@
         "name": "Detection Sensitivity"
       },
       "keypad_lockout": {
-        "name": "Keypad Lockout"
+        "name": "Keypad lockout"
       }
     },
     "sensor": {
@@ -892,10 +892,10 @@
         "name": "Last illumination state"
       },
       "pi_heating_demand": {
-        "name": "Pi Heating Demand"
+        "name": "Pi heating demand"
       },
       "setpoint_change_source": {
-        "name": "Setpoint Change Source"
+        "name": "Setpoint change source"
       }
     },
     "switch": {

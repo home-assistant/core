@@ -993,7 +993,7 @@ class SonoffPresenceSenorTimeout(ZHANumberConfigurationEntity):
 class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
     """Common Entity Class for ZCL Temperature input."""
 
-    _attr_native_unit_of_measurement: str = "°C"
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_native_step: float = 0.01
     _attr_multiplier: float = 0.01
@@ -1034,6 +1034,7 @@ class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
     _unique_id_suffix = "max_heat_setpoint_limit"
     _attribute_name: str = "max_heat_setpoint_limit"
     _attr_translation_key: str = "max_heat_setpoint_limit"
+    _attr_entity_category = EntityCategory.CONFIG
 
     _min_source = Thermostat.AttributeDefs.min_heat_setpoint_limit.name
 
@@ -1049,5 +1050,6 @@ class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
     _unique_id_suffix = "min_heat_setpoint_limit"
     _attribute_name: str = "min_heat_setpoint_limit"
     _attr_translation_key: str = "min_heat_setpoint_limit"
+    _attr_entity_category = EntityCategory.CONFIG
 
     _max_source = Thermostat.AttributeDefs.max_heat_setpoint_limit.name
