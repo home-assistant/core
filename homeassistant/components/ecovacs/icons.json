@@ -1,7 +1,7 @@
 {
   "entity": {
     "binary_sensor": {
-      "mop_attached": {
+      "water_mop_attached": {
         "default": "mdi:water-off",
         "state": {
           "on": "mdi:water"

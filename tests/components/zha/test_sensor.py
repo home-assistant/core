@@ -155,9 +155,33 @@ async def async_test_metering(hass: HomeAssistant, cluster, entity_id):
     )
 
     await send_attributes_report(
-        hass, cluster, {"status": 32, "metering_device_type": 1}
+        hass, cluster, {"status": 64 + 8, "metering_device_type": 1}
     )
-    # currently only statuses for electric meters are supported
+    assert hass.states.get(entity_id).attributes["status"] in (
+        "SERVICE_DISCONNECT|NOT_DEFINED",
+        "NOT_DEFINED|SERVICE_DISCONNECT",
+    )
+
+    await send_attributes_report(
+        hass, cluster, {"status": 64 + 8, "metering_device_type": 2}
+    )
+    assert hass.states.get(entity_id).attributes["status"] in (
+        "SERVICE_DISCONNECT|PIPE_EMPTY",
+        "PIPE_EMPTY|SERVICE_DISCONNECT",
+    )
+
+    await send_attributes_report(
+        hass, cluster, {"status": 64 + 8, "metering_device_type": 5}
+    )
+    assert hass.states.get(entity_id).attributes["status"] in (
+        "SERVICE_DISCONNECT|TEMPERATURE_SENSOR",
+        "TEMPERATURE_SENSOR|SERVICE_DISCONNECT",
+    )
+
+    # Status for other meter types
+    await send_attributes_report(
+        hass, cluster, {"status": 32, "metering_device_type": 4}
+    )
     assert hass.states.get(entity_id).attributes["status"] in ("<bitmap8.32: 32>", "32")
 
 
