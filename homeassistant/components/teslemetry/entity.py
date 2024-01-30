@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any
 
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODELS, TeslemetryState
@@ -87,7 +87,6 @@ class TeslemetryEnergyEntity(CoordinatorEntity[TeslemetryEnergyDataCoordinator])
             manufacturer="Tesla",
             configuration_url="https://teslemetry.com/console",
             name=self.coordinator.data.get("site_name", "Energy Site"),
-            entry_type=DeviceEntryType.SERVICE,
         )
 
     def get(self, key: str | None = None, default: Any | None = None) -> Any:
@@ -119,6 +118,7 @@ class TeslemetryWallConnectorEntity(CoordinatorEntity[TeslemetryEnergyDataCoordi
             configuration_url="https://teslemetry.com/console",
             name="Wall Connector",
             via_device=(DOMAIN, str(energysite.id)),
+            serial_number=din,
         )
 
     @property
