@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[switch.technove_station_auto_charge-entry]
+# name: test_switches[switch.technove_station_auto_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30,7 +30,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[switch.technove_station_auto_charge-state]
+# name: test_switches[switch.technove_station_auto_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TechnoVE Station Auto Charge',
