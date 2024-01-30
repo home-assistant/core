@@ -129,7 +129,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
 
         return data
 
-    async def import_events(self, devices: list[DeviceModel]):
+    async def import_events(self, devices: list[DeviceModel]) -> None:
         """Import events from Traccar."""
         start_time = dt_util.utcnow().replace(tzinfo=None)
         end_time = None
