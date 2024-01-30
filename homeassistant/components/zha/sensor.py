@@ -95,6 +95,9 @@ CLUSTER_HANDLER_ST_HUMIDITY_CLUSTER = (
 )
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SENSOR)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.SENSOR
+)
 
 
 async def async_setup_entry(
@@ -1289,7 +1292,7 @@ class SetpointChangeSourceEnum(types.enum8):
     External = 0x02
 
 
-@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SetpointChangeSource(EnumSensor):
     """Sensor that displays the source of the setpoint change.
