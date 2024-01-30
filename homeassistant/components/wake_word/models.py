@@ -17,6 +17,9 @@ class DetectionResult:
     wake_word_id: str
     """Id of detected wake word"""
 
+    wake_word_phrase: str
+    """Normalized phrase for the detected wake word"""
+
     timestamp: int | None
     """Timestamp of audio chunk with detected wake word"""
 

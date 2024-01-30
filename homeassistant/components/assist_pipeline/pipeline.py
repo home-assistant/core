@@ -13,7 +13,6 @@ from queue import Empty, Queue
 from threading import Thread
 import time
 from typing import TYPE_CHECKING, Any, Final, cast
-import unicodedata
 import wave
 
 import voluptuous as vol
@@ -744,19 +743,22 @@ class PipelineRun:
             wake_word_output: dict[str, Any] = {}
         else:
             # Avoid duplicate detections by checking cooldown
-            wake_word_phrase = _normalize_wake_word_phrase(result.wake_word_id)
-            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(wake_word_phrase)
+            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(
+                result.wake_word_phrase
+            )
             if last_wake_up is not None:
                 sec_since_last_wake_up = time.monotonic() - last_wake_up
                 if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
                     _LOGGER.debug(
                         "Duplicate wake word detection occurred for %s",
-                        wake_word_phrase,
+                        result.wake_word_phrase,
                     )
-                    raise DuplicateWakeUpDetectedError(wake_word_phrase)
+                    raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
 
             # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][wake_word_phrase] = time.monotonic()
+            self.hass.data[DATA_LAST_WAKE_UP][
+                result.wake_word_phrase
+            ] = time.monotonic()
 
             if result.queued_audio:
                 # Add audio that was pending at detection.
@@ -1261,22 +1263,6 @@ def _multiply_volume(chunk: bytes, volume_multiplier: float) -> bytes:
     ).tobytes()
 
 
-def _normalize_wake_word_phrase(wake_word_phrase: str) -> str:
-    """Normalize a wake word phrase for matching between wake word systems."""
-    # Lower case
-    wake_word_phrase = wake_word_phrase.strip().casefold()
-
-    # Replace everything except numbers/letters with whitespace
-    wake_word_phrase = "".join(
-        c if unicodedata.category(c) in ("Ll", "Nd") else " " for c in wake_word_phrase
-    )
-
-    # Noramlize whitespace
-    wake_word_phrase = " ".join(wake_word_phrase.strip().split())
-
-    return wake_word_phrase
-
-
 def _pipeline_debug_recording_thread_proc(
     run_recording_dir: Path,
     queue: Queue[str | bytes | None],
@@ -1341,11 +1327,6 @@ class PipelineInput:
     conversation_id: str | None = None
 
     device_id: str | None = None
-
-    def __post_init__(self) -> None:
-        """Post initialization."""
-        if self.wake_word_phrase:
-            self.wake_word_phrase = _normalize_wake_word_phrase(self.wake_word_phrase)
 
     async def execute(self) -> None:
         """Run pipeline."""

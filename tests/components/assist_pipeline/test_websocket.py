@@ -2568,8 +2568,7 @@ async def test_stt_cooldown_same_id(
             "end_stage": "tts",
             "input": {
                 "sample_rate": 16000,
-                # Normalization will make this match "ok_nabu"
-                "wake_word_phrase": "OK, Nabu!",
+                "wake_word_phrase": "ok_nabu",
             },
         }
     )

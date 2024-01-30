@@ -48,7 +48,7 @@ async def test_streaming_audio(
 
     client_events = [
         Transcript("not a wake word event").event(),
-        Detection(name="Test Model", timestamp=0).event(),
+        Detection(name="TEST_MODEL_v1.0", timestamp=0).event(),
     ]
 
     with patch(
@@ -59,6 +59,8 @@ async def test_streaming_audio(
 
     assert result is not None
     assert result == snapshot
+    assert result.wake_word_id == "TEST_MODEL_v1.0"
+    assert result.wake_word_phrase == "test model"
 
 
 async def test_streaming_audio_connection_lost(

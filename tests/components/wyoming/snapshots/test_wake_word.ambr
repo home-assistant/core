@@ -8,6 +8,7 @@
       ),
     ]),
     'timestamp': 0,
-    'wake_word_id': 'Test Model',
+    'wake_word_id': 'TEST_MODEL_v1.0',
+    'wake_word_phrase': 'test model',
   })
 # ---

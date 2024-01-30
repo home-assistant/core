@@ -1,7 +1,10 @@
 """Support for Wyoming wake-word-detection services."""
 import asyncio
 from collections.abc import AsyncIterable
+from functools import lru_cache
 import logging
+import re
+import unicodedata
 
 from wyoming.audio import AudioChunk, AudioStart
 from wyoming.client import AsyncTcpClient
@@ -140,6 +143,9 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
                                 return wake_word.DetectionResult(
                                     wake_word_id=detection.name,
+                                    wake_word_phrase=_normalize_wake_word_phrase(
+                                        detection.name
+                                    ),
                                     timestamp=detection.timestamp,
                                     queued_audio=queued_audio,
                                 )
@@ -183,3 +189,23 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
             _LOGGER.exception("Error processing audio stream: %s", err)
 
         return None
+
+
+@lru_cache
+def _normalize_wake_word_phrase(wake_word_phrase: str) -> str:
+    """Normalize a wake word phrase for matching between wake word systems."""
+    # Lower case
+    wake_word_phrase = wake_word_phrase.strip().casefold()
+
+    # Remove version numbers like v1.0
+    wake_word_phrase = re.sub(r"v[0-9]+(\.[0-9])+", "", wake_word_phrase)
+
+    # Replace everything except numbers/letters with whitespace
+    wake_word_phrase = "".join(
+        c if unicodedata.category(c) in ("Ll", "Nd") else " " for c in wake_word_phrase
+    )
+
+    # Noramlize whitespace
+    wake_word_phrase = " ".join(wake_word_phrase.strip().split())
+
+    return wake_word_phrase
