@@ -21,6 +21,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -39,6 +40,7 @@ _NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
 
 # Duration conversion constants
 _HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
+_HRS_TO_MINUTES = 60  # 1 hr = 60 minutes
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Mass conversion constants
@@ -515,4 +517,27 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CENTUM_CUBIC_FEET,
+    }
+
+
+class VolumeFlowRateConverter(BaseUnitConverter):
+    """Utility to convert volume values."""
+
+    UNIT_CLASS = "volume_flow_rate"
+    NORMALIZED_UNIT = UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
+    # Units in terms of m³/h
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 1,
+        UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: 1
+        / (_HRS_TO_MINUTES * _CUBIC_FOOT_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 1
+        / (_HRS_TO_MINUTES * _L_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
+        / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
+    }
+    VALID_UNITS = {
+        UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
     }

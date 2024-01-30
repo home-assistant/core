@@ -320,6 +320,8 @@ async def test_air_conditioner_entity_state(
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVACMode.COOL,
