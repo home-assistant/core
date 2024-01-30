@@ -1,4 +1,5 @@
 """Support for Google Calendar event device sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -12,6 +13,7 @@ from typing import Any, Final, cast, final
 
 from aiohttp import web
 from dateutil.rrule import rrulestr
+from icalendar import Calendar as iCalCalendar, Event as iCalEvent
 import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
@@ -635,6 +637,61 @@ class CalendarEventView(http.HomeAssistantView):
             entity, CalendarEntity
         ):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
+
+        ics = request.query.get("ics")
+        if ics is not None:
+            try:
+                calendar_event_list = await entity.async_get_events(
+                    request.app["hass"],
+                    dt_util.as_local(datetime.datetime.now()),
+                    dt_util.as_local(
+                        datetime.datetime.now() + datetime.timedelta(days=365 * 10)
+                    ),
+                )
+            except HomeAssistantError as err:
+                _LOGGER.debug("Error reading events: %s", err)
+                return self.json_message(
+                    f"Error reading events: {err}", HTTPStatus.INTERNAL_SERVER_ERROR
+                )
+
+            iCal = iCalCalendar()
+            iCal.add("prodid", "-//Home Assistant//calendar//EN")
+            iCal.add("version", "2.0")
+            iCal.add("calscale", "gregorian")
+            iCal.add("method", "publish")
+
+            for event in [
+                dataclasses.asdict(event, dict_factory=_api_event_dict_factory)
+                for event in calendar_event_list
+            ]:
+                if dt_util.parse_datetime(event["start"]["date"]) is None:
+                    continue
+
+                calEvent = iCalEvent()
+                calEvent.add("summary", event["summary"])
+                calEvent.add("dtstamp", dt_util.parse_datetime(event["start"]["date"]))
+                calEvent.add("dtstart", dt_util.parse_datetime(event["start"]["date"]))
+                calEvent.add("dtend", dt_util.parse_datetime(event["end"]["date"]))
+
+                if event["uid"] is not None:
+                    calEvent.add("uid", event["uid"])
+                else:
+                    calEvent.add(
+                        "uid",
+                        f"{event['summary']}-{dt_util.parse_datetime(event['start']['date'])}",
+                    )
+
+                if event["description"] is not None:
+                    calEvent.add("description", event["description"])
+
+                if event["location"] is not None:
+                    calEvent.add("location", event["location"])
+
+                iCal.add_component(calEvent)
+
+            return web.Response(
+                body=iCal.to_ical().decode("utf-8"), content_type="text/calendar"
+            )
 
         start = request.query.get("start")
         end = request.query.get("end")
