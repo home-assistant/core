@@ -39,8 +39,8 @@ JVC_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[
-            "hdmi1",
-            "hdmi2",
+            const.HDMI1,
+            const.HDMI2,
             const.NOSIGNAL,
         ],
     ),
