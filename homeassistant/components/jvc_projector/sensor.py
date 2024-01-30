@@ -23,7 +23,7 @@ JVC_SENSORS = (
         key="power",
         translation_key="jvc_power_status",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:power",
+        _attr_entity_category=EntityCategory.DIAGNOSTIC,
         options=[
             const.OFF,
             const.STANDBY,
@@ -37,7 +37,7 @@ JVC_SENSORS = (
         key="input",
         translation_key="jvc_input",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:video-input-hdmi",
+        _attr_entity_category=EntityCategory.DIAGNOSTIC,
         options=[
             "hdmi1",
             "hdmi2",
@@ -73,11 +73,7 @@ class JvcSensor(JvcProjectorEntity, SensorEntity):
         """Initialize the JVC Projector sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-
         self._attr_unique_id = f"{coordinator.device.mac}_{description.key}"
-
-        self._attributes: dict[str, str] = {}
 
     @property
     def native_value(self) -> str | None:
