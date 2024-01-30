@@ -31,7 +31,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
-from .core.cluster_handlers.closures import WindowCovering
+from .core.cluster_handlers.closures import WindowCoveringClusterHandler
 from .core.const import (
     CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_LEVEL,
@@ -108,8 +108,8 @@ class ZhaCover(ZhaEntity, CoverEntity):
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         cluster_handler = self.cluster_handlers.get(CLUSTER_HANDLER_COVER)
         assert cluster_handler
-        self._cover_cluster_handler: WindowCovering = cast(
-            WindowCovering, cluster_handler
+        self._cover_cluster_handler: WindowCoveringClusterHandler = cast(
+            WindowCoveringClusterHandler, cluster_handler
         )
         if self._cover_cluster_handler.window_covering_type:
             self._attr_device_class: CoverDeviceClass | None = (
