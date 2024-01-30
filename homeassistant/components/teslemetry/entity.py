@@ -118,7 +118,7 @@ class TeslemetryWallConnectorEntity(CoordinatorEntity[TeslemetryEnergyDataCoordi
             configuration_url="https://teslemetry.com/console",
             name="Wall Connector",
             via_device=(DOMAIN, str(energysite.id)),
-            serial_number=din.split(":")[-1],
+            serial_number=din.split("-")[-1],
         )
 
     @property
