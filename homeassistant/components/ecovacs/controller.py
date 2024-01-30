@@ -6,14 +6,11 @@ import logging
 from typing import Any
 
 from deebot_client.api_client import ApiClient
-from deebot_client.authentication import (
-    Authenticator,
-    create_config as create_rest_config,
-)
+from deebot_client.authentication import Authenticator, create_rest_config
 from deebot_client.device import Device
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 from deebot_client.models import DeviceInfo
-from deebot_client.mqtt_client import MqttClient, create_config as create_mqtt_config
+from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
 from sucks import EcoVacsAPI, VacBot
@@ -41,6 +38,9 @@ class EcovacsController:
         self._hass = hass
         self.devices: list[Device] = []
         self.legacy_devices: list[VacBot] = []
+        self._device_id = get_client_device_id()
+        country = config[CONF_COUNTRY]
+        self._continent = get_continent(country)
         self._device_id = get_client_device_id()
         country = config[CONF_COUNTRY]
         self._continent = get_continent(country)
@@ -84,8 +84,10 @@ class EcovacsController:
                         credentials.user_id,
                         EcoVacsAPI.REALM,
                         self._device_id[0:8],
+                        self._device_id[0:8],
                         credentials.token,
                         device_config,
+                        self._continent,
                         self._continent,
                         monitor=True,
                     )

@@ -6,12 +6,9 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
-from deebot_client.authentication import (
-    Authenticator,
-    create_config as create_rest_config,
-)
+from deebot_client.authentication import Authenticator, create_rest_config
 from deebot_client.exceptions import InvalidAuthenticationError, MqttError
-from deebot_client.mqtt_client import MqttClient, create_config as create_mqtt_config
+from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import COUNTRIES_TO_CONTINENTS, get_continent
 import voluptuous as vol
@@ -81,6 +78,7 @@ async def _validate_input(
     )
 
     authenticator = Authenticator(
+        rest_config,
         rest_config,
         user_input[CONF_USERNAME],
         md5(user_input[CONF_PASSWORD]),
