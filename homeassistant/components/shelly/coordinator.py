@@ -303,8 +303,6 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
-        except FirmwareUnsupported as err:
-            raise ConfigEntryNotReady(repr(err)) from err
 
     @callback
     def _async_handle_update(
