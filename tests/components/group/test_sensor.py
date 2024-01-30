@@ -274,7 +274,7 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
     state = hass.states.get("sensor.test_ignore_non_numeric")
     assert state.state == "17.0"
     assert (
-        "Unable to use state. Only numerical states are supported, entity sensor.test_2 with value string excluded from calculation"
+        "Unable to use state. Only numerical states are supported,"
         not in caplog.text
     )
 
@@ -287,7 +287,7 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
     assert state.state == "20.0"
 
 
-async def test_sensor_incorrect_state(
+async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that non numeric values cause a group to be unknown."""
@@ -316,7 +316,7 @@ async def test_sensor_incorrect_state(
     state = hass.states.get("sensor.test_failure")
     assert state.state == "unknown"
     assert (
-        "Unable to use state. Only numerical states are supported, entity sensor.test_2 with value string excluded from calculation"
+        "Unable to use state. Only numerical states are supported"
         in caplog.text
     )
 
