@@ -129,11 +129,35 @@ class MeteringClusterHandler(ClusterHandler):
         Metering.AttributeDefs.unit_of_measure.name: True,
     }
 
+    METERING_DEVICE_TYPES_ELECTRIC = {
+        0,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        127,
+        134,
+        135,
+        136,
+        137,
+        138,
+        140,
+        141,
+        142,
+    }
+    METERING_DEVICE_TYPES_GAS = {1, 128}
+    METERING_DEVICE_TYPES_WATER = {2, 129}
+    METERING_DEVICE_TYPES_HEATING_COOLING = {3, 5, 6, 130, 132, 133}
+
     metering_device_type = {
         0: "Electric Metering",
         1: "Gas Metering",
         2: "Water Metering",
-        3: "Thermal Metering",
+        3: "Thermal Metering",  # depreciated
         4: "Pressure Metering",
         5: "Heat Metering",
         6: "Cooling Metering",
@@ -149,7 +173,7 @@ class MeteringClusterHandler(ClusterHandler):
         127: "Mirrored Electric Metering",
         128: "Mirrored Gas Metering",
         129: "Mirrored Water Metering",
-        130: "Mirrored Thermal Metering",
+        130: "Mirrored Thermal Metering",  # depreciated
         131: "Mirrored Pressure Metering",
         132: "Mirrored Heat Metering",
         133: "Mirrored Cooling Metering",
@@ -165,7 +189,7 @@ class MeteringClusterHandler(ClusterHandler):
     }
 
     class DeviceStatusElectric(enum.IntFlag):
-        """Metering Device Status."""
+        """Electric Metering Device Status."""
 
         NO_ALARMS = 0
         CHECK_METER = 1
@@ -176,6 +200,45 @@ class MeteringClusterHandler(ClusterHandler):
         LEAK_DETECT = 32  # Really?
         SERVICE_DISCONNECT = 64
         RESERVED = 128
+
+    class DeviceStatusGas(enum.IntFlag):
+        """Gas Metering Device Status."""
+
+        NO_ALARMS = 0
+        CHECK_METER = 1
+        LOW_BATTERY = 2
+        TAMPER_DETECT = 4
+        NOT_DEFINED = 8
+        LOW_PRESSURE = 16
+        LEAK_DETECT = 32
+        SERVICE_DISCONNECT = 64
+        REVERSE_FLOW = 128
+
+    class DeviceStatusWater(enum.IntFlag):
+        """Water Metering Device Status."""
+
+        NO_ALARMS = 0
+        CHECK_METER = 1
+        LOW_BATTERY = 2
+        TAMPER_DETECT = 4
+        PIPE_EMPTY = 8
+        LOW_PRESSURE = 16
+        LEAK_DETECT = 32
+        SERVICE_DISCONNECT = 64
+        REVERSE_FLOW = 128
+
+    class DeviceStatusHeatingCooling(enum.IntFlag):
+        """Heating and Cooling Metering Device Status."""
+
+        NO_ALARMS = 0
+        CHECK_METER = 1
+        LOW_BATTERY = 2
+        TAMPER_DETECT = 4
+        TEMPERATURE_SENSOR = 8
+        BURST_DETECT = 16
+        LEAK_DETECT = 32
+        SERVICE_DISCONNECT = 64
+        REVERSE_FLOW = 128
 
     class DeviceStatusDefault(enum.IntFlag):
         """Metering Device Status."""
@@ -217,28 +280,18 @@ class MeteringClusterHandler(ClusterHandler):
         """Return metering device status."""
         if (status := self.cluster.get(Metering.AttributeDefs.status.name)) is None:
             return None
-        if self.cluster.get(Metering.AttributeDefs.metering_device_type.name) in (
-            0,
-            7,
-            8,
-            9,
-            10,
-            11,
-            13,
-            14,
-            15,
-            127,
-            134,
-            135,
-            136,
-            137,
-            138,
-            140,
-            141,
-            142,
-        ):
-            # Electric metering device type
+
+        metering_device_type = self.cluster.get(
+            Metering.AttributeDefs.metering_device_type.name
+        )
+        if metering_device_type in self.METERING_DEVICE_TYPES_ELECTRIC:
             return self.DeviceStatusElectric(status)
+        if metering_device_type in self.METERING_DEVICE_TYPES_GAS:
+            return self.DeviceStatusGas(status)
+        if metering_device_type in self.METERING_DEVICE_TYPES_WATER:
+            return self.DeviceStatusWater(status)
+        if metering_device_type in self.METERING_DEVICE_TYPES_HEATING_COOLING:
+            return self.DeviceStatusHeatingCooling(status)
         return self.DeviceStatusDefault(status)
 
     @property
