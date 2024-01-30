@@ -1839,7 +1839,8 @@ async def test_database_lock_and_overflow(
     assert "start_time" in issue.translation_placeholders
     start_time = issue.translation_placeholders["start_time"]
     assert start_time is not None
-    assert dt_util.parse_datetime(start_time) is not None
+    # Should be in H:M:S format
+    assert start_time.count(":") == 2
 
 
 async def test_database_lock_and_overflow_checks_available_memory(
@@ -1925,7 +1926,8 @@ async def test_database_lock_and_overflow_checks_available_memory(
     assert "start_time" in issue.translation_placeholders
     start_time = issue.translation_placeholders["start_time"]
     assert start_time is not None
-    assert dt_util.parse_datetime(start_time) is not None
+    # Should be in H:M:S format
+    assert start_time.count(":") == 2
 
 
 async def test_database_lock_timeout(
