@@ -44,13 +44,9 @@ TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
 
 TUYA_RESPONSE_CODE = "code"
 TUYA_RESPONSE_MSG = "msg"
-TUYA_RESPONSE_PLATFORM_URL = "platform_url"
 TUYA_RESPONSE_QR_CODE = "qrcode"
 TUYA_RESPONSE_RESULT = "result"
 TUYA_RESPONSE_SUCCESS = "success"
-
-TUYA_SMART_APP = "tuyaSmart"
-SMARTLIFE_APP = "smartlife"
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
