@@ -300,9 +300,8 @@ async def async_setup_trigger(
 
     # We update the device based on the trigger config to obtain the device_id.
     # In all cases the setup will lead to device entry to be created or updated.
-    # There is an edge case, that the trigger seems to be a duplicate.
-    # In that case the device config was updated but the device trigger creation was
-    # canceled.
+    # If the trigger is a duplicate, trigger creation will be cancelled but we allow
+    # the device data to be updated to not add additional complexity to the code.
     device_id = update_device(hass, config_entry, config)
     discovery_id = discovery_data[ATTR_DISCOVERY_HASH][1]
     trigger_type = config[CONF_TYPE]
