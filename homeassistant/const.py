@@ -171,6 +171,7 @@ CONF_FOR_EACH: Final = "for_each"
 CONF_FORCE_UPDATE: Final = "force_update"
 CONF_FRIENDLY_NAME: Final = "friendly_name"
 CONF_FRIENDLY_NAME_TEMPLATE: Final = "friendly_name_template"
+CONF_GROUP_ID: Final = "group_id"
 CONF_HEADERS: Final = "headers"
 CONF_HOST: Final = "host"
 CONF_HOSTS: Final = "hosts"
@@ -385,6 +386,9 @@ ATTR_NAME: Final = "name"
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID: Final = "entity_id"
+
+# Contains one string or a list of strings, each being an entity id
+ATTR_GROUP_ID: Final = "group_id"
 
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID: Final = "area_id"

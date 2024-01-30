@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_NAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
+    RASC_RESPONSE,
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
@@ -28,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Event,
     HomeAssistant,
     ServiceCall,
     State,
@@ -474,6 +476,11 @@ class GroupEntity(Entity):
 
     _attr_should_poll = False
     _entity_ids: list[str]
+    _action_tracker: dict[str, str | None] = {}
+
+    def _async_call(self) -> None:
+        for entity_id in self._entity_ids:
+            self._action_tracker[entity_id] = None
 
     @callback
     def async_start_preview(
@@ -533,6 +540,12 @@ class GroupEntity(Entity):
             self.async_write_ha_state()
 
         self.async_on_remove(start.async_at_start(self.hass, _update_at_start))
+
+        self.hass.bus.async_listen(RASC_RESPONSE, self._handle_rasc_response)
+
+    @abstractmethod
+    def _handle_rasc_response(self, e: Event) -> None:
+        """Abstract method to handle rasc response."""
 
     @callback
     def async_defer_or_update_ha_state(self) -> None:

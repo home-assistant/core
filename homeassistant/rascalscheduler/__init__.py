@@ -13,6 +13,7 @@ from typing import Any
 
 from homeassistant.components.script import BaseScriptEntity
 from homeassistant.const import (
+    ATTR_SERVICE_DATA,
     CONF_DELAY,
     CONF_ENTITY_ID,
     CONF_PARALLEL,

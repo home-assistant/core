@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
+from logging import getLogger
 import time
 from typing import Any, TypeVar, cast
 
@@ -12,6 +13,9 @@ import numpy as np
 import scipy.stats as st
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_GROUP_ID,
+    ATTR_SERVICE_DATA,
     CONF_EVENT,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
@@ -26,6 +30,8 @@ from .storage import Store
 from .template import device_entities
 
 RT = TypeVar("RT")
+
+_LOGGER = getLogger(__name__)
 
 FAILED_TIMEOUT = 300
 
@@ -115,7 +121,7 @@ class RASCState:
         complete_state: dict[str, Any],
     ) -> RASCState:
         """Create rasc state."""
-        transition: float = event.data["service_data"].get("transition", 0)
+        transition: float = event.data[ATTR_SERVICE_DATA].get("transition", 0)
         key = ",".join((entity.entity_id, event.data[CONF_SERVICE], str(transition)))
         rasc_history = await get_rasc_history(entity.hass)
         if key not in rasc_history:
@@ -185,6 +191,8 @@ async def rasc_on_command(
 ) -> timedelta | None:
     """Invoke when RASC receives an event."""
     target_entities = get_target_entities(hass, e, entities)
+    if len(target_entities) == 0:
+        return None
     polling_interval = default_polling_interval
     for target_entity in target_entities:
         rascal_state_map[target_entity.entity_id] = await async_get_rasc_state(
@@ -219,20 +227,20 @@ def rasc_on_update(
 
 def get_target_entities(
     hass: HomeAssistant, e: Event, own_entities: Iterable[Entity]
-) -> Iterable[Entity]:
+) -> list[Entity]:
     """Get target entities from Event e."""
     entities: list[str] = []
-    if "device_id" in e.data["service_data"]:
+    if "device_id" in e.data[ATTR_SERVICE_DATA]:
         entities = entities + [
             entity
-            for _device_id in e.data["service_data"]["device_id"]
+            for _device_id in e.data[ATTR_SERVICE_DATA]["device_id"]
             for entity in device_entities(hass, _device_id)
         ]
-    if "entity_id" in e.data["service_data"]:
-        if isinstance(e.data["service_data"]["entity_id"], str):
-            entities = entities + [e.data["service_data"]["entity_id"]]
+    if "entity_id" in e.data[ATTR_SERVICE_DATA]:
+        if isinstance(e.data[ATTR_SERVICE_DATA]["entity_id"], str):
+            entities = entities + [e.data[ATTR_SERVICE_DATA]["entity_id"]]
         else:
-            entities = entities + e.data["service_data"]["entity_id"]
+            entities = entities + e.data[ATTR_SERVICE_DATA]["entity_id"]
 
     return [entity for entity in own_entities if entity.entity_id in entities]
 
@@ -246,7 +254,7 @@ async def async_get_rasc_state(
             {
                 CONF_EVENT: RASC_START,
                 CONF_SERVICE: e.data[CONF_SERVICE],
-                CONF_SERVICE_DATA: e.data["service_data"],
+                CONF_SERVICE_DATA: e.data[ATTR_SERVICE_DATA],
             }
         )
     ) or {}
@@ -255,7 +263,7 @@ async def async_get_rasc_state(
             {
                 CONF_EVENT: RASC_COMPLETE,
                 CONF_SERVICE: e.data[CONF_SERVICE],
-                CONF_SERVICE_DATA: e.data["service_data"],
+                CONF_SERVICE_DATA: e.data[ATTR_SERVICE_DATA],
             }
         )
     ) or {}
@@ -285,15 +293,27 @@ def update_rasc_state(
             transition is None or time.time() - state.exec_time > transition / 2
         ):
             if state.next_response == RASC_START:
-                print("fire", RASC_START, "response:", entity_id)  # noqa: T201
+                _LOGGER.info("Fire %s response: %s", RASC_START, entity_id)
                 hass.bus.async_fire(
                     RASC_RESPONSE,
-                    {"type": RASC_START, "entity_id": entity_id},
+                    {
+                        "type": RASC_START,
+                        ATTR_ENTITY_ID: entity_id,
+                        ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
+                            ATTR_GROUP_ID
+                        ),
+                    },
                 )
-            print("fire", RASC_COMPLETE, "response:", entity_id)  # noqa: T201
+            _LOGGER.info("Fire %s response: %s", RASC_COMPLETE, entity_id)
             hass.bus.async_fire(
                 RASC_RESPONSE,
-                {"type": RASC_COMPLETE, "entity_id": entity_id},
+                {
+                    "type": RASC_COMPLETE,
+                    ATTR_ENTITY_ID: entity_id,
+                    ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
+                        ATTR_GROUP_ID
+                    ),
+                },
             )
             time_to_complete = time.time() - state.exec_time
             hass.loop.create_task(
@@ -316,10 +336,16 @@ def update_rasc_state(
                 start_state_matched = False
                 break
         if start_state_matched and state.next_response == RASC_START:
-            print("fire", RASC_START, "response:", entity_id)  # noqa: T201
+            _LOGGER.info("Fire %s response: %s", RASC_START, entity_id)
             hass.bus.async_fire(
                 RASC_RESPONSE,
-                {"type": state.next_response, "entity_id": entity_id},
+                {
+                    "type": RASC_START,
+                    ATTR_ENTITY_ID: entity_id,
+                    ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
+                        ATTR_GROUP_ID
+                    ),
+                },
             )
             state.next_response = RASC_COMPLETE
             time_to_start = time.time() - state.exec_time
