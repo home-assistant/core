@@ -132,8 +132,18 @@ class ProximityTrackedEntitySensor(
         self._attr_device_info = _device_info(coordinator)
 
     @property
+    def data(self) -> dict[str, str | int | None] | None:
+        """Get data from coordinator."""
+        return self.coordinator.data.entities.get(self.tracked_entity_id)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.data is not None
+
+    @property
     def native_value(self) -> str | float | None:
         """Return native sensor value."""
-        if (data := self.coordinator.data.entities.get(self.tracked_entity_id)) is None:
+        if self.data is None:
             return None
-        return data.get(self.entity_description.key)
+        return self.data.get(self.entity_description.key)

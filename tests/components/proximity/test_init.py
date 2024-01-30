@@ -11,7 +11,7 @@ from homeassistant.components.proximity.const import (
     DOMAIN,
 )
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.const import CONF_ZONE, STATE_UNKNOWN
+from homeassistant.const import CONF_ZONE, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -67,9 +67,9 @@ async def test_proximities(
     for device in config["devices"]:
         entity_base_name = f"sensor.{friendly_name}_{slugify(device.split('.')[-1])}"
         state = hass.states.get(f"{entity_base_name}_distance")
-        assert state.state == STATE_UNKNOWN
+        assert state.state == STATE_UNAVAILABLE
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
-        assert state.state == STATE_UNKNOWN
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_legacy_setup(hass: HomeAssistant) -> None:
@@ -906,7 +906,7 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
     assert state.state == "away_from"
 
 
-async def test_create_issue(
+async def test_create_deprecated_proximity_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
 ) -> None:
@@ -968,4 +968,50 @@ async def test_create_issue(
 
     assert not issue_registry.async_get_issue(
         DOMAIN, "deprecated_proximity_entity_work"
+    )
+
+
+async def test_create_removed_tracked_entity_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create an issue for removed tracked entities."""
+    hass.states.async_set(
+        "device_tracker.test1", "not_home", {"friendly_name": "test1"}
+    )
+    hass.states.async_set(
+        "device_tracker.test2", "not_home", {"friendly_name": "test2"}
+    )
+
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        title="home",
+        data={
+            CONF_ZONE: "zone.home",
+            CONF_TRACKED_ENTITIES: ["device_tracker.test1", "device_tracker.test2"],
+            CONF_IGNORED_ZONES: [],
+            CONF_TOLERANCE: 1,
+        },
+        unique_id=f"{DOMAIN}_home",
+    )
+
+    mock_config.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.home_test1_distance")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.home_test2_distance")
+    assert state.state == STATE_UNKNOWN
+
+    hass.states.async_remove("device_tracker.test2")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.home_test1_distance")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.home_test2_distance")
+    assert state.state == STATE_UNAVAILABLE
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, "tracked_entity_removed_device_tracker.test2"
     )

@@ -14,6 +14,7 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.location import distance
@@ -30,6 +31,7 @@ from .const import (
     DEFAULT_DIR_OF_TRAVEL,
     DEFAULT_DIST_TO_ZONE,
     DEFAULT_NEAREST,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -214,6 +216,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     _LOGGER.debug(
                         "%s: %s does not exist -> remove", self.name, entity_id
                     )
+                    self._create_removed_tracked_entity_issue(entity_id)
                 continue
 
             if entity_id not in entities_data:
@@ -309,3 +312,16 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         proximity_data[ATTR_DIST_TO] = self._convert(proximity_data[ATTR_DIST_TO])
 
         return ProximityData(proximity_data, entities_data)
+
+    def _create_removed_tracked_entity_issue(self, entity_id: str) -> None:
+        """Create a repair issue for a removed tracked entity."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"tracked_entity_removed_{entity_id}",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="tracked_entity_removed",
+            translation_placeholders={"entity_id": entity_id, "name": self.name},
+        )

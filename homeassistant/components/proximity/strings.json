@@ -54,6 +54,17 @@
           }
         }
       }
+    },
+    "tracked_entity_removed": {
+      "title": "Tracked entity has been removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::proximity::issues::tracked_entity_removed::title%]",
+            "description": "The entity `{entity_id}` has been removed from HA, but is used in proximity {name}. Please remove `{entity_id}` from the list of tracked entities. Related proximity sensor entites were set to unavailable and can be removed."
+          }
+        }
+      }
     }
   }
 }
