@@ -727,6 +727,9 @@
       },
       "local_temperature_calibration": {
         "name": "Local temperature offset"
+      },
+      "presence_detection_timeout": {
+        "name": "Presence detection timeout"
       }
     },
     "select": {
@@ -792,6 +795,9 @@
       },
       "decoupled_mode": {
         "name": "Decoupled mode"
+      },
+      "detection_sensitivity": {
+        "name": "Detection Sensitivity"
       }
     },
     "sensor": {
@@ -831,6 +837,9 @@
       "tier6_summation_delivered": {
         "name": "Tier 6 summation delivered"
       },
+      "summation_received": {
+        "name": "Summation received"
+      },
       "device_temperature": {
         "name": "Device temperature"
       },
@@ -869,6 +878,9 @@
       },
       "smoke_density": {
         "name": "Smoke density"
+      },
+      "last_illumination_state": {
+        "name": "Last illumination state"
       }
     },
     "switch": {
@@ -892,6 +904,9 @@
       },
       "invert_switch": {
         "name": "Invert switch"
+      },
+      "inverted": {
+        "name": "Inverted"
       },
       "smart_bulb_mode": {
         "name": "Smart bulb mode"

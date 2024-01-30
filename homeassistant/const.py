@@ -251,6 +251,7 @@ CONF_SERVICE: Final = "service"
 CONF_SERVICE_DATA: Final = "data"
 CONF_SERVICE_DATA_TEMPLATE: Final = "data_template"
 CONF_SERVICE_TEMPLATE: Final = "service_template"
+CONF_SET_CONVERSATION_RESPONSE: Final = "set_conversation_response"
 CONF_SHOW_ON_MAP: Final = "show_on_map"
 CONF_SLAVE: Final = "slave"
 CONF_SOURCE: Final = "source"
@@ -1041,7 +1042,9 @@ class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
     CUBIC_METERS_PER_HOUR = "m³/h"
-    CUBIC_FEET_PER_MINUTE = "ft³/m"
+    CUBIC_FEET_PER_MINUTE = "ft³/min"
+    LITERS_PER_MINUTE = "L/min"
+    GALLONS_PER_MINUTE = "gal/min"
 
 
 _DEPRECATED_VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = DeprecatedConstantEnum(

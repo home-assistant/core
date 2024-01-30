@@ -2,16 +2,16 @@
 import asyncio
 
 import zigpy.exceptions
-from zigpy.zcl.clusters import lightlink
+from zigpy.zcl.clusters.lightlink import LightLink
 from zigpy.zcl.foundation import GENERAL_COMMANDS, GeneralCommand
 
 from .. import registries
 from . import ClusterHandler, ClusterHandlerStatus
 
 
-@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(lightlink.LightLink.cluster_id)
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(lightlink.LightLink.cluster_id)
-class LightLink(ClusterHandler):
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(LightLink.cluster_id)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(LightLink.cluster_id)
+class LightLinkClusterHandler(ClusterHandler):
     """Lightlink cluster handler."""
 
     BIND: bool = False
