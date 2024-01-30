@@ -676,7 +676,7 @@ class SonoffPresenceDetectionSensitivity(ZCLEnumSelectEntity):
 
 
 class KeypadLockoutEnum(types.enum8):
-    """Often only the first 2 are implemented."""
+    """Keypad lockout options."""
 
     Unlock = 0x00
     Lock1 = 0x01
