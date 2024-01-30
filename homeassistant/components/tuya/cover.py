@@ -160,9 +160,7 @@ async def async_setup_entry(
                         or description.key in device.status_range
                     ):
                         entities.append(
-                            TuyaCoverEntity(
-                                device, hass_data.manager, description
-                            )
+                            TuyaCoverEntity(device, hass_data.manager, description)
                         )
 
         async_add_entities(entities)

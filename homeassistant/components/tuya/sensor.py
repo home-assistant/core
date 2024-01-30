@@ -1117,9 +1117,7 @@ async def async_setup_entry(
                 for description in descriptions:
                     if description.key in device.status:
                         entities.append(
-                            TuyaSensorEntity(
-                                device, hass_data.manager, description
-                            )
+                            TuyaSensorEntity(device, hass_data.manager, description)
                         )
 
         async_add_entities(entities)

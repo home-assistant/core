@@ -79,9 +79,7 @@ async def async_setup_entry(
                 for description in descriptions:
                     if description.key in device.status:
                         entities.append(
-                            TuyaButtonEntity(
-                                device, hass_data.manager, description
-                            )
+                            TuyaButtonEntity(device, hass_data.manager, description)
                         )
 
         async_add_entities(entities)
