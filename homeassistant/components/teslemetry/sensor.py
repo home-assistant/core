@@ -335,6 +335,8 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         key="wall_connector_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
 )
