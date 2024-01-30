@@ -148,6 +148,9 @@
       },
       "wall_connector_power": {
         "name": "Power"
+      },
+      "vin": {
+        "name": "Vehicle"
       }
     }
   }

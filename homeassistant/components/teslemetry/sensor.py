@@ -324,12 +324,14 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
+        icon="mdi:ev-station",
     ),
     SensorEntityDescription(
         key="wall_connector_fault_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
+        icon="mdi:ev-station",
     ),
     SensorEntityDescription(
         key="wall_connector_power",
@@ -338,6 +340,11 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
+        icon="mdi:ev-station",
+    ),
+    SensorEntityDescription(
+        key="vin",
+        icon="mdi:car-electric",
     ),
 )
 

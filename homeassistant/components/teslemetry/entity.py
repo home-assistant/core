@@ -124,4 +124,4 @@ class TeslemetryWallConnectorEntity(CoordinatorEntity[TeslemetryEnergyDataCoordi
     @property
     def _value(self) -> int:
         """Return a specific wall connector value from coordinator data."""
-        return self.coordinator.data["wall_connectors"][self.din][self.key]
+        return self.coordinator.data["wall_connectors"][self.din].get(self.key)
