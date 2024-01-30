@@ -7,7 +7,13 @@ from dataclasses import dataclass
 from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_2, MODEL_25, RPC_GENERATIONS
+from aioshelly.const import (
+    MODEL_2,
+    MODEL_25,
+    MODEL_GAS,
+    MODEL_WALL_DISPLAY,
+    RPC_GENERATIONS,
+)
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_PLATFORM
 from homeassistant.components.switch import (
@@ -110,13 +116,22 @@ async def async_setup_entry(
             hass, config_entry, async_add_entities, RPC_SWITCHES, RpcRelaySwitch
         )
 
+    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    if coordinator and coordinator.model is MODEL_GAS:
+        return async_setup_entry_attribute_entities(
+            hass, config_entry, async_add_entities, GAS_VALVE_SWITCH, BlockValveSwitch
+        )
+
     return async_setup_entry_attribute_entities(
         hass, config_entry, async_add_entities, SWITCHES, BlockRelaySwitch
     )
 
 
-class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
-    """Entity that controls a relay on Block based Shelly devices."""
+class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
+    """Entity that controls a Gas Valve on Block based Shelly devices.
+
+    This class is deprecated and will be removed in Home Assistant 2024.7.0.
+    """
 
     entity_description: BlockSwitchDescription
     _attr_translation_key = "valve_switch"
@@ -128,31 +143,34 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         attribute: str,
         description: BlockSwitchDescription,
     ) -> None:
-        """Initialize relay switch."""
+        """Initialize valve."""
         super().__init__(coordinator, block, attribute, description)
-        self._attr_unique_id: str = f"{super().unique_id}"
         self.control_result: dict[str, Any] | None = None
-        self._valve = description.name == "Valve"
+
+    @property
+    def is_on(self) -> bool:
+        """If valve is open."""
+        if self.control_result:
+            return self.control_result["state"] in GAS_VALVE_OPEN_STATES
+
+        return self.attribute_value in GAS_VALVE_OPEN_STATES
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on relay."""
-        if self._valve:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_valve_switch",
-                breaks_in_ha_version="2024.7.0",
-                is_fixable=True,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_valve_switch",
-                translation_placeholders={
-                    "entity": f"{VALVE_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
-                    "service": f"{VALVE_DOMAIN}.open_valve",
-                },
-            )
-            self.control_result = await self.set_state(go="open")
-        else:
-            self.control_result = await self.set_state(turn="on")
+        """Open valve."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_valve_switch",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_valve_switch",
+            translation_placeholders={
+                "entity": f"{VALVE_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                "service": f"{VALVE_DOMAIN}.open_valve",
+            },
+        )
+        self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -175,12 +193,6 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         else:
             self.control_result = await self.set_state(turn="off")
         self.async_write_ha_state()
-
-    @callback
-    def _update_callback(self) -> None:
-        """When device updates, clear control result that overrides state."""
-        self.control_result = None
-        super()._update_callback()
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
