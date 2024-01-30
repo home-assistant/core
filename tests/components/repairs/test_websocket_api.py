@@ -37,14 +37,15 @@ async def create_issues(hass, ws_client, issues=None):
     """Create issues."""
 
     def api_issue(issue):
-        excluded_keys = ("data",)
-        return dict(
-            {key: issue[key] for key in issue if key not in excluded_keys},
+        res = dict(
+            {key: issue[key] for key in issue},
             created=ANY,
             dismissed_version=None,
             ignored=False,
             issue_domain=None,
         )
+        res.setdefault("data", None)
+        return res
 
     if issues is None:
         issues = DEFAULT_ISSUES
@@ -182,6 +183,7 @@ async def test_dismiss_issue(
             dict(
                 issue,
                 created=ANY,
+                data=None,
                 dismissed_version=ha_version,
                 ignored=True,
                 issue_domain=None,
@@ -212,6 +214,7 @@ async def test_dismiss_issue(
             dict(
                 issue,
                 created=ANY,
+                data=None,
                 dismissed_version=None,
                 ignored=False,
                 issue_domain=None,
@@ -258,6 +261,7 @@ async def test_fix_non_existing_issue(
             dict(
                 issue,
                 created=ANY,
+                data=None,
                 dismissed_version=None,
                 ignored=False,
                 issue_domain=None,
@@ -467,6 +471,7 @@ async def test_list_issues(
     issues = [
         {
             "breaks_in_ha_version": "2022.9",
+            "data": None,
             "domain": "test",
             "is_fixable": True,
             "issue_id": "issue_1",
@@ -478,6 +483,7 @@ async def test_list_issues(
         },
         {
             "breaks_in_ha_version": "2022.8",
+            "data": {"key": "value"},
             "domain": "test",
             "is_fixable": False,
             "issue_id": "issue_2",
@@ -495,6 +501,7 @@ async def test_list_issues(
             issue["domain"],
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
+            data=issue["data"],
             is_fixable=issue["is_fixable"],
             is_persistent=False,
             learn_more_url=issue["learn_more_url"],
