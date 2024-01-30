@@ -35,7 +35,7 @@ on:
 env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
-  MYPY_CACHE_VERSION: 6
+  MYPY_CACHE_VERSION: 7
   HA_SHORT_VERSION: "2024.2"
   DEFAULT_PYTHON: "3.11"
   ALL_PYTHON_VERSIONS: "['3.11', '3.12']"
@@ -898,6 +898,7 @@ jobs:
           python --version
           set -o pipefail
           mariadb=$(echo "${{ matrix.mariadb-group }}" | sed "s/:/-/g")
+          echo "mariadb=${mariadb}" >> $GITHUB_OUTPUT
           cov_params=()
           if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
             cov_params+=(--cov="homeassistant.components.recorder")
@@ -929,7 +930,8 @@ jobs:
         if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v3.1.2
         with:
-          name: coverage-${{ matrix.python-version }}-mariadb
+          name: coverage-${{ matrix.python-version }}-mariadb-${{
+            steps.pytest-partial.outputs.mariadb }}
           path: coverage.xml
       - name: Check dirty
         run: |
@@ -1022,6 +1024,7 @@ jobs:
           python --version
           set -o pipefail
           postgresql=$(echo "${{ matrix.postgresql-group }}" | sed "s/:/-/g")
+          echo "postgresql=${postgresql}" >> $GITHUB_OUTPUT
           cov_params=()
           if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
             cov_params+=(--cov="homeassistant.components.recorder")
@@ -1054,7 +1057,8 @@ jobs:
         if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: coverage-${{ matrix.python-version }}-postgresql
+          name: coverage-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.postgresql }}
           path: coverage.xml
       - name: Check dirty
         run: |

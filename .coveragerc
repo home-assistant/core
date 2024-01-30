@@ -150,6 +150,8 @@ omit =
     homeassistant/components/braviatv/coordinator.py
     homeassistant/components/braviatv/media_player.py
     homeassistant/components/braviatv/remote.py
+    homeassistant/components/bring/coordinator.py
+    homeassistant/components/bring/todo.py
     homeassistant/components/broadlink/climate.py
     homeassistant/components/broadlink/light.py
     homeassistant/components/broadlink/remote.py
@@ -435,6 +437,7 @@ omit =
     homeassistant/components/foscam/__init__.py
     homeassistant/components/foscam/camera.py
     homeassistant/components/foscam/coordinator.py
+    homeassistant/components/foscam/entity.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
     homeassistant/components/freebox/camera.py
@@ -716,6 +719,7 @@ omit =
     homeassistant/components/lutron/binary_sensor.py
     homeassistant/components/lutron/cover.py
     homeassistant/components/lutron/entity.py
+    homeassistant/components/lutron/fan.py
     homeassistant/components/lutron/light.py
     homeassistant/components/lutron/switch.py
     homeassistant/components/lutron_caseta/__init__.py
