@@ -58,7 +58,7 @@ class MockViCareService:
 
     def hasRoles(self, requested_roles: list[str]) -> bool:
         """Return true if requested roles are assigned."""
-        return requested_roles and set(requested_roles) in self.roles
+        return requested_roles and set(requested_roles).issubset(self.roles)
 
     def getProperty(self, property_name: str):
         """Read a property from json dump."""
