@@ -150,6 +150,8 @@ class DeviceListener(SharingDeviceListener):
 
 
 class TokenListener(SharingTokenListener):
+    """Token listener for upstream token updates."""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -160,6 +162,6 @@ class TokenListener(SharingTokenListener):
         self.entry = entry
 
     def update_token(self, token_info: [str, Any]):
+        """Update token info in config entry."""
         data = {**self.entry.data, "token_info": token_info}
-        LOGGER.debug("update token info : %s", data)
         self.hass.config_entries.async_update_entry(self.entry, data=data)
