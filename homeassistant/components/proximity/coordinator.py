@@ -99,8 +99,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     @callback
     def async_add_entity_mapping(self, tracked_entity_id: str, entity_id: str) -> None:
         """Add an tracked entity to proximity entity mapping."""
-        if tracked_entity_id not in self.entity_mapping:
-            self.entity_mapping[tracked_entity_id] = []
         self.entity_mapping[tracked_entity_id].append(entity_id)
 
     async def async_check_proximity_state_change(
