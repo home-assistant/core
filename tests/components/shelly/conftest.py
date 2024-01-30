@@ -311,7 +311,14 @@ MOCK_STATUS_COAP = {
     "wifi_sta": {"rssi": -64},
 }
 
-
+MOCK_STATUS_RPC_COVER = {
+    "cover:0": {
+        "state": "stopped",
+        "pos_control": True,
+        "current_pos": 50,
+        "apower": 85.3,
+    },
+}
 MOCK_STATUS_RPC = {
     "switch:0": {
         "id": 0,
@@ -333,12 +340,6 @@ MOCK_STATUS_RPC = {
     "rgb:0": {"output": True, "brightness": 53.0, "rgb": [45, 55, 65]},
     "rgbw:0": {"output": True, "brightness": 53.0, "rgb": [21, 22, 23], "white": 120},
     "cloud": {"connected": False},
-    # "cover:0": {
-    #     "state": "stopped",
-    #     "pos_control": True,
-    #     "current_pos": 50,
-    #     "apower": 85.3,
-    # },
     "devicepower:0": {"external": {"present": True}},
     "temperature:0": {"tC": 22.9},
     "illuminance:0": {"lux": 345},
@@ -467,8 +468,11 @@ async def mock_block_device():
         yield block_device_mock.return_value
 
 
-def _mock_rpc_device(version: str | None = None):
+def _mock_rpc_device(version: str | None = None, cover: bool = False):
     """Mock rpc (Gen2, Websocket) device."""
+    shelly_status_rpc = MOCK_STATUS_RPC
+    if cover:
+        shelly_status_rpc.update(MOCK_STATUS_RPC_COVER)
     device = Mock(
         spec=RpcDevice,
         config=MOCK_CONFIG,
@@ -479,36 +483,13 @@ def _mock_rpc_device(version: str | None = None):
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         initialized=True,
-        connected=True,
-        script_getcode=AsyncMock(
-            side_effect=lambda script_id: {"data": MOCK_SCRIPTS[script_id - 1]}
-        ),
-        xmod_info={},
-    )
-    type(device).name = PropertyMock(return_value="Test name")
-    return device
-
-
-def _mock_blu_rtv_device(version: str | None = None):
-    """Mock rpc (Gen2, Websocket) device."""
-    device = Mock(
-        spec=RpcDevice,
-        config=MOCK_CONFIG | MOCK_BLU_TRV_REMOTE_CONFIG,
-        event={},
-        shelly=MOCK_SHELLY_RPC,
-        version=version or "1.0.0",
-        hostname="test-host",
-        status=MOCK_STATUS_RPC | MOCK_BLU_TRV_REMOTE_STATUS,
-        firmware_version="some fw string",
-        initialized=True,
-        connected=True,
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
 
 
 @pytest.fixture
-async def mock_rpc_device():
+async def mock_rpc_device(cover: bool = False):
     """Mock rpc (Gen2, Websocket) device with BLE support."""
     with (
         patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock,
