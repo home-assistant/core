@@ -12,7 +12,7 @@ from aiopvapi.shades import Shades
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, IntegrationError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -57,9 +57,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hub.query_firmware()
             device_info = await async_get_device_info(hub)
             if hub.role != "Primary":
-                raise IntegrationError(
-                    f"{hub.name} ({hub.hub_address}) is performing role of {hub.role} Hub. Only the Primary Hub can manage shades"
+                # this should be caught in config_flow, but account for a hub changing roles (which only happens manually by a user)
+                _LOGGER.error(
+                    "%s (%s) is performing role of %s Hub. Only the Primary Hub can manage shades",
+                    hub.name,
+                    hub.hub_address,
+                    hub.role,
                 )
+                return False
             if CONF_API_VERSION not in config:
                 new_data = {**entry.data}
                 new_data[CONF_API_VERSION] = hub.api_version
