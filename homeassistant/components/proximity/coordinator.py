@@ -1,5 +1,6 @@
 """Data update coordinator for the Proximity integration."""
 
+from collections import defaultdict
 from dataclasses import dataclass
 import logging
 
@@ -82,7 +83,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self.unit_of_measurement: str = config.get(
             CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
         )
-        self.entity_mapping: dict[str, list[str]] = {}
+        self.entity_mapping: dict[str, list[str]] = defaultdict(list)
 
         super().__init__(
             hass,
