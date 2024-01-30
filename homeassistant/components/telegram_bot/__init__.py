@@ -23,6 +23,7 @@ from telegram import (
 )
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, Filters
+from telegram.files import inputmedia
 from telegram.parsemode import ParseMode
 from telegram.utils.request import Request
 import voluptuous as vol
@@ -460,6 +461,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await hass.async_add_executor_job(
                 partial(notify_service.delete_message, **kwargs)
             )
+        elif msgtype in [
+            SERVICE_EDIT_PHOTO,
+            SERVICE_EDIT_ANIMATION,
+            SERVICE_EDIT_VIDEO,
+            SERVICE_EDIT_VOICE,
+            SERVICE_EDIT_DOCUMENT,
+        ]:
+            await hass.async_add_executor_job(
+                partial(notify_service.edit_message_media, msgtype, **kwargs)
+            )
         else:
             await hass.async_add_executor_job(
                 partial(notify_service.edit_message, msgtype, **kwargs)
@@ -757,6 +768,46 @@ class TelegramNotificationService:
             chat_id=chat_id,
             message_id=message_id,
             inline_message_id=inline_message_id,
+            reply_markup=params[ATTR_REPLYMARKUP],
+            timeout=params[ATTR_TIMEOUT],
+        )
+
+    def edit_message_media(self, type_edit, chat_id=None, **kwargs):
+        """Edit a previously sent message's media."""
+        chat_id = self._get_target_chat_ids(chat_id)[0]
+        message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
+        params = self._get_msg_kwargs(kwargs)
+        _LOGGER.debug(
+            "Edit message %s in chat ID %s with params: %s",
+            message_id or inline_message_id,
+            chat_id,
+            params,
+        )
+        file_content = load_data(
+            self.hass,
+            url=kwargs.get(ATTR_URL),
+            filepath=kwargs.get(ATTR_FILE),
+            username=kwargs.get(ATTR_USERNAME),
+            password=kwargs.get(ATTR_PASSWORD),
+            authentication=kwargs.get(ATTR_AUTHENTICATION),
+            verify_ssl=kwargs.get(ATTR_VERIFY_SSL),
+        )
+        input_media_map = {
+            SERVICE_EDIT_PHOTO: inputmedia.InputMediaPhoto,
+            SERVICE_EDIT_ANIMATION: inputmedia.InputMediaAnimation,
+            SERVICE_EDIT_VIDEO: inputmedia.InputMediaVideo,
+            SERVICE_EDIT_VOICE: inputmedia.InputMediaAudio,
+            SERVICE_EDIT_DOCUMENT: inputmedia.InputMediaAudio,
+        }
+        media_input = input_media_map[type_edit](media=file_content)
+        return self._send_msg(
+            self.bot.edit_message_media,
+            "Error editing message attributes",
+            params[ATTR_MESSAGE_TAG],
+            chat_id=chat_id,
+            message_id=message_id,
+            inline_message_id=inline_message_id,
+            media=media_input,
             reply_markup=params[ATTR_REPLYMARKUP],
             timeout=params[ATTR_TIMEOUT],
         )
