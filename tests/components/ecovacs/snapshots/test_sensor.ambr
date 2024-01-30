@@ -326,9 +326,6 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -338,7 +335,7 @@
     'supported_features': 0,
     'translation_key': 'stats_time',
     'unique_id': 'E1234567890000000001_stats_time',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
 # name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_time_cleaned:state]
@@ -468,9 +465,6 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -480,7 +474,7 @@
     'supported_features': 0,
     'translation_key': 'total_stats_time',
     'unique_id': 'E1234567890000000001_total_stats_time',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_time_cleaned:state]
