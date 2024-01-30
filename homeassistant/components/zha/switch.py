@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_BASIC,
+    CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
     SIGNAL_ADD_ENTITIES,
@@ -591,7 +592,7 @@ class AqaraBuzzerManualAlarm(ZHASwitchConfigurationEntity):
     _attr_icon: str = "mdi:bullhorn"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="window_covering")
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
 class WindowCoveringInversionSwitch(ZHASwitchConfigurationEntity):
     """Representation of a switch that controls inversion for window covering devices.
 
