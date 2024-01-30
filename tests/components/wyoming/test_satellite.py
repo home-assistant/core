@@ -968,3 +968,123 @@ async def test_client_stops_pipeline(hass: HomeAssistant) -> None:
         # Stop the satellite
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def test_pipeline_name_in_run_pipeline(hass: HomeAssistant) -> None:
+    """Test that the pipeline to run can be changed in the RunPipeline message."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    pipeline_data: assist_pipeline.PipelineData = hass.data[assist_pipeline.DOMAIN]
+    pipeline2 = await pipeline_data.pipeline_store.async_create_item(
+        {
+            "name": "Pipeline 2",
+            "conversation_engine": "test",
+            "conversation_language": "en",
+            "language": "en",
+            "stt_engine": "test",
+            "stt_language": "en",
+            "tts_engine": "test",
+            "tts_language": "en",
+            "tts_voice": "test",
+            "wake_word_entity": "test",
+            "wake_word_id": "test",
+        }
+    )
+
+    events = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE,
+            end_stage=PipelineStage.TTS,
+            name=pipeline2.name,
+        ).event(),
+    ]
+
+    run_pipeline_called = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(
+        hass: HomeAssistant,
+        context,
+        event_callback,
+        stt_metadata,
+        stt_stream,
+        **kwargs,
+    ) -> None:
+        # Pipeline id should match the new pipeline
+        assert kwargs["pipeline_id"] == pipeline2.id
+        run_pipeline_called.set()
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+        SatelliteAsyncTcpClient(events),
+    ) as mock_client, patch(
+        "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+        async_pipeline_from_audio_stream,
+    ):
+        entry = await setup_config_entry(hass)
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        # Pipeline has started
+        async with asyncio.timeout(1):
+            await run_pipeline_called.wait()
+
+        # Stop the satellite
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_invalid_pipeline_name_in_run_pipeline(hass: HomeAssistant) -> None:
+    """Test that an invalid pipeline name in the RunPipeline message fails."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    events = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE,
+            end_stage=PipelineStage.TTS,
+            name="this pipeline does not exist",
+        ).event(),
+    ]
+
+    run_failed_event = asyncio.Event()
+
+    original_run_pipeline_once = wyoming.satellite.WyomingSatellite._run_pipeline_once
+
+    def _run_pipeline_once(self, run_pipeline):
+        try:
+            original_run_pipeline_once(self, run_pipeline)
+        except ValueError:
+            run_failed_event.set()
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+        SatelliteAsyncTcpClient(events),
+    ) as mock_client, patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite._run_pipeline_once",
+        _run_pipeline_once,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+    ) as mock_run_pipeline:
+        entry = await setup_config_entry(hass)
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        # Pipeline run failed
+        async with asyncio.timeout(1):
+            await run_failed_event.wait()
+
+        # Pipeline should not have started
+        assert not mock_run_pipeline.called
+
+        # Stop the satellite
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
