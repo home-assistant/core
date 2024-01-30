@@ -184,6 +184,10 @@ class RoutineEntity:
                         routine_entity[action_id].children.append(
                             routine_entity[child.action_id]
                         )
+                    else:
+                        routine_entity[action_id].children.append(
+                            routine_entity["end_virtual_node"]
+                        )
 
         if self._last_trigger_time is None:
             self._start_time = time.time()
@@ -199,7 +203,7 @@ class RoutineEntity:
     def output(self) -> None:
         """Print the routine information."""
         actions = []
-        for action_id, entity in self.actions.items():
+        for _, entity in self.actions.items():
             parents = []
             children = []
 
@@ -210,7 +214,7 @@ class RoutineEntity:
                 children.append(child.action_id)
 
             entity_json = {
-                "action_id": action_id,
+                "action_id": entity.action_id,
                 "action": entity.action,
                 "state": entity.action_state,
                 "parents": parents,

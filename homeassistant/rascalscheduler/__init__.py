@@ -387,7 +387,7 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
 
         # todo, remove routine from the table
         if action_entity.action_id is None:
-            print("This is the end of the routine")  # noqa: T201
+            print("This is the end of the routine.")  # noqa: T201
             return
 
         # todo, get entity id based on the action_type
@@ -502,6 +502,7 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
         """After action_entity completed, schedule the next subroutines."""
         if not action_entity.children:
             return
+
         next_subroutine = action_entity.children
 
         for action in next_subroutine:
