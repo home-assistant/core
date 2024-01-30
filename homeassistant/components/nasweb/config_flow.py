@@ -13,11 +13,10 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN, NASWEB_SCHEMA_IMG_URL, NOTIFY_COORDINATOR
 from .coordinator import NASwebCoordinator, NotificationCoordinator
-from .helper import initialize_notification_coordinator
+from .helper import get_integration_webhook_url, initialize_notification_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,18 +45,15 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     )
     if notify_coordinator is None:
         notify_coordinator = initialize_notification_coordinator(hass)
-        if notify_coordinator is None:
-            raise RuntimeError("Cannot initialize coordinator")
-        hass.data[DOMAIN][NOTIFY_COORDINATOR] = notify_coordinator
 
     webio_serial = webio_api.get_serial_number()
     if webio_serial is None:
         raise MissingNASwebData("Device serial number is not available")
 
     coordinator = NASwebCoordinator(hass, webio_api)
-    hass_address = get_url(hass)
+    webhook_url = get_integration_webhook_url(hass)
     notify_coordinator.add_coordinator(webio_serial, coordinator)
-    subscription = await webio_api.status_subscription(hass_address, True)
+    subscription = await webio_api.status_subscription(webhook_url, True)
     if not subscription:
         notify_coordinator.remove_coordinator(webio_serial)
         raise MissingNASwebData("Failed to subscribe for status updates from device")
@@ -66,7 +62,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     notify_coordinator.remove_coordinator(webio_serial)
     if not result:
         if subscription:
-            await webio_api.status_subscription(hass_address, False)
+            await webio_api.status_subscription(webhook_url, False)
         raise MissingNASwebData("Did not receive status from device")
 
     name = webio_api.get_name()

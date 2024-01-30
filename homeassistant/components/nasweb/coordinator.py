@@ -5,15 +5,16 @@ import logging
 import time
 from typing import Any
 
-from aiohttp import web
+from aiohttp.web import Request
 from webio_api import Output as NASwebOutput, WebioAPI
 from webio_api.const import KEY_DEVICE_SERIAL, KEY_OUTPUTS, KEY_TYPE, TYPE_STATUS_UPDATE
 
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import STATUS_UPDATE_MAX_TIME_INTERVAL
+from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
 from .relay_switch import RelaySwitch
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,22 +55,26 @@ class NotificationCoordinator:
             _LOGGER.debug("Checking connection with: %s (%s)", serial, counter)
         return nasweb_coordinator.is_connection_confirmed()
 
-    async def handle_notification(self, request: web.BaseRequest) -> web.Response:
-        """NASweb push notification handler."""
+    async def handle_webhook_request(
+        self, hass: HomeAssistant, webhook_id: str, request: Request
+    ) -> None:
+        """Handle webhook request from Push API."""
+        if hass.data[DOMAIN][CONF_WEBHOOK_ID] != webhook_id:
+            _LOGGER.debug("Received request with incorrect webhook id")
         if not self.has_coordinators():
-            return web.Response()
+            return None
         notification = await request.json()
         serial = notification.get(KEY_DEVICE_SERIAL, None)
         _LOGGER.debug("Received push: %s", notification)
         if serial is None:
             _LOGGER.warning("Received notification without nasweb identifier")
-            return web.Response()
+            return None
         nasweb_coordinator = self._coordinators.get(serial)
         if nasweb_coordinator is None:
             _LOGGER.warning("Received notification for not registered nasweb")
-            return web.Response()
+            return None
         nasweb_coordinator.handle_push_notification(notification)
-        return web.Response()
+        return None
 
 
 class NASwebCoordinator(DataUpdateCoordinator):
