@@ -1295,7 +1295,7 @@ async def websocket_browse_media(
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
         return
 
-    if MediaPlayerEntityFeature.BROWSE_MEDIA not in player.supported_features:
+    if MediaPlayerEntityFeature.BROWSE_MEDIA not in player.supported_features_compat:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], ERR_NOT_SUPPORTED, "Player does not support browsing media"

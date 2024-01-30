@@ -152,7 +152,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Return list of notify services."""
         unordered_services = set()
 
-        for service in self.hass.services.async_services().get("notify", {}):
+        for service in self.hass.services.async_services_for_domain("notify"):
             if service not in self._exclude:
                 unordered_services.add(service)
 

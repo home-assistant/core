@@ -23,3 +23,23 @@ TP357_SERVICE_INFO = BluetoothServiceInfo(
     service_data={},
     source="local",
 )
+
+TP962R_SERVICE_INFO = BluetoothServiceInfo(
+    name="TP962R (0000)",
+    manufacturer_data={14081: b"\x00;\x0b7\x00"},
+    service_uuids=["72fbb631-6f6b-d1ba-db55-2ee6fdd942bd"],
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-52,
+    service_data={},
+    source="local",
+)
+
+TP962R_SERVICE_INFO_2 = BluetoothServiceInfo(
+    name="TP962R (0000)",
+    manufacturer_data={17152: b"\x00\x17\nC\x00", 14081: b"\x00;\x0b7\x00"},
+    service_uuids=["72fbb631-6f6b-d1ba-db55-2ee6fdd942bd"],
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-52,
+    service_data={},
+    source="local",
+)

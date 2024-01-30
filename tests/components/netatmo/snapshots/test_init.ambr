@@ -27,6 +27,34 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[netatmo-0009999993]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'https://home.netatmo.com/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '0009999993',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Bubbendorf',
+    'model': 'Orientable Shutter',
+    'name': 'Bubendorff blind',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[netatmo-00:11:22:33:00:11:45:fe]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "switch": {
+      "automation": {
+        "default": "mdi:robot"
+      }
+    }
+  }
+}

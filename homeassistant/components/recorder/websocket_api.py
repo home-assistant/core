@@ -12,7 +12,7 @@ from homeassistant.components.websocket_api import messages
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.json import JSON_DUMP
+from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DataRateConverter,
@@ -28,6 +28,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 from .models import StatisticPeriod
@@ -67,6 +68,7 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
         vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
+        vol.Optional("volume_flow_rate"): vol.In(VolumeFlowRateConverter.VALID_UNITS),
     }
 )
 
@@ -97,9 +99,9 @@ def _ws_get_statistic_during_period(
     statistic_id: str,
     types: set[Literal["max", "mean", "min", "change"]] | None,
     units: dict[str, str],
-) -> str:
+) -> bytes:
     """Fetch statistics and convert them to json in the executor."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.result_message(
             msg_id,
             statistic_during_period(
@@ -155,7 +157,7 @@ def _ws_get_statistics_during_period(
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str],
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
-) -> str:
+) -> bytes:
     """Fetch statistics and convert them to json in the executor."""
     result = statistics_during_period(
         hass,
@@ -174,7 +176,7 @@ def _ws_get_statistics_during_period(
                 item["end"] = int(end * 1000)
             if (last_reset := item.get("last_reset")) is not None:
                 item["last_reset"] = int(last_reset * 1000)
-    return JSON_DUMP(messages.result_message(msg_id, result))
+    return json_bytes(messages.result_message(msg_id, result))
 
 
 async def ws_handle_get_statistics_during_period(
@@ -242,12 +244,12 @@ def _ws_get_list_statistic_ids(
     hass: HomeAssistant,
     msg_id: int,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-) -> str:
+) -> bytes:
     """Fetch a list of available statistic_id and convert them to JSON.
 
     Runs in the executor.
     """
-    return JSON_DUMP(
+    return json_bytes(
         messages.result_message(msg_id, list_statistic_ids(hass, None, statistic_type))
     )
 
