@@ -1408,6 +1408,7 @@
         'slots': dict({
           'name': 'my cool light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -1432,6 +1433,7 @@
         'slots': dict({
           'name': 'my cool light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -1462,6 +1464,7 @@
           'area': 'kitchen',
           'domain': 'light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -1498,6 +1501,7 @@
           'domain': 'light',
           'state': 'on',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': False,
@@ -1522,6 +1526,7 @@
         'slots': dict({
           'domain': 'scene',
         }),
+        'source': 'builtin',
         'targets': dict({
         }),
         'unmatched_slots': dict({
@@ -1538,6 +1543,35 @@
       'text': 'my cool light',
       'value': 'my cool light',
     }),
+  })
+# ---
+# name: test_ws_hass_agent_debug_custom_sentence
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'beer_style': dict({
+            'name': 'beer_style',
+            'text': 'lager',
+            'value': 'lager',
+          }),
+        }),
+        'file': 'en/beer.yaml',
+        'intent': dict({
+          'name': 'OrderBeer',
+        }),
+        'match': True,
+        'sentence_template': "I'd like to order a {beer_style} [please]",
+        'slots': dict({
+          'beer_style': 'lager',
+        }),
+        'source': 'custom',
+        'targets': dict({
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+    ]),
   })
 # ---
 # name: test_ws_hass_agent_debug_null_result
@@ -1572,6 +1606,7 @@
           'brightness': 100,
           'name': 'test light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.demo_1234': dict({
             'matched': True,
@@ -1602,11 +1637,23 @@
         'slots': dict({
           'name': 'test light',
         }),
+        'source': 'builtin',
         'targets': dict({
         }),
         'unmatched_slots': dict({
           'brightness': 1001,
         }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_sentence_trigger
+  dict({
+    'results': list([
+      dict({
+        'match': True,
+        'sentence_template': 'hello[ world]',
+        'source': 'trigger',
       }),
     ]),
   })

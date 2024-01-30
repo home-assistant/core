@@ -19,14 +19,14 @@ bluetooth-data-tools==1.19.0
 cached_ipaddress==0.3.0
 certifi>=2021.5.30
 ciso8601==2.3.0
-cryptography==41.0.7
+cryptography==42.0.1
 dbus-fast==2.21.1
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.1.0
 habluetooth==2.4.0
 hass-nabucasa==0.75.1
-hassil==1.5.3
+hassil==1.6.0
 home-assistant-bluetooth==1.12.0
 home-assistant-frontend==20240112.0
 home-assistant-intents==2024.1.2
@@ -44,7 +44,7 @@ pip>=21.3.1
 psutil-home-assistant==0.0.1
 PyJWT==2.8.0
 PyNaCl==1.5.0
-pyOpenSSL==23.2.0
+pyOpenSSL==24.0.0
 pyserial==3.5
 python-slugify==8.0.1
 PyTurboJPEG==1.7.1
@@ -145,9 +145,9 @@ iso4217!=1.10.20220401
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
 
-# pyOpenSSL 23.1.0 or later required to avoid import errors when
-# cryptography 40.0.1 is installed with botocore
-pyOpenSSL>=23.1.0
+# pyOpenSSL 24.0.0 or later required to avoid import errors when
+# cryptography 42.0.0 is installed with botocore
+pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
