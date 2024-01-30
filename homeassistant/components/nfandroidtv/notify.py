@@ -123,8 +123,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 if data.get(ATTR_COLOR) in Notifications.BKG_COLORS:
                     bkgcolor = data.get(ATTR_COLOR)
                 else:
-                    _LOGGER.warning("Invalid color-value: %s",
-                                    data.get(ATTR_COLOR))
+                    _LOGGER.warning("Invalid color-value: %s", data.get(ATTR_COLOR))
             if ATTR_INTERRUPT in data:
                 try:
                     interrupt = cv.boolean(data.get(ATTR_INTERRUPT))
@@ -134,8 +133,11 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     )
             if imagedata := data.get(ATTR_IMAGE):
                 if isinstance(imagedata, str):
-                    image_file = self.load_file(url=imagedata) if imagedata.startswith(
-                        "http") else self.load_file(local_path=imagedata)
+                    image_file = (
+                        self.load_file(url=imagedata)
+                        if imagedata.startswith("http")
+                        else self.load_file(local_path=imagedata)
+                    )
                 elif isinstance(imagedata, dict):
                     image_file = self.load_file(
                         url=imagedata.get(ATTR_IMAGE_URL),
@@ -145,23 +147,24 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         auth=imagedata.get(ATTR_IMAGE_AUTH),
                     )
                 else:
-                    _LOGGER.error(
-                        "Unexpected image data passed to notify service")
+                    _LOGGER.error("Unexpected image data passed to notify service")
             if icondata := data.get(ATTR_ICON):
                 if isinstance(icondata, str):
-                    icondata = self.load_file(url=icondata) if icondata.startswith(
-                        "http") else self.load_file(local_path=icondata)
+                    icondata = (
+                        self.load_file(url=icondata)
+                        if icondata.startswith("http")
+                        else self.load_file(local_path=icondata)
+                    )
                 elif isinstance(icondata, dict):
-                    image_file = self.load_file(
-                        url=icondata.get(ATTR_IMAGE_URL),
-                        local_path=icondata.get(ATTR_IMAGE_PATH),
-                        username=icondata.get(ATTR_IMAGE_USERNAME),
-                        password=icondata.get(ATTR_IMAGE_PASSWORD),
-                        auth=icondata.get(ATTR_IMAGE_AUTH),
+                    icon = self.load_file(
+                        url=icondata.get(ATTR_ICON_URL),
+                        local_path=icondata.get(ATTR_ICON_PATH),
+                        username=icondata.get(ATTR_ICON_USERNAME),
+                        password=icondata.get(ATTR_ICON_PASSWORD),
+                        auth=icondata.get(ATTR_ICON_AUTH),
                     )
                 else:
-                    _LOGGER.error(
-                        "Unexpected icon data passed to notify service")
+                    _LOGGER.error("Unexpected icon data passed to notify service")
         self.notify.send(
             message,
             title=title,
@@ -195,8 +198,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     else:
                         auth_ = HTTPBasicAuth(username, password)
                     # Load file from URL with authentication
-                    req = requests.get(
-                        url, auth=auth_, timeout=DEFAULT_TIMEOUT)
+                    req = requests.get(url, auth=auth_, timeout=DEFAULT_TIMEOUT)
                 else:
                     # Load file from URL without authentication
                     req = requests.get(url, timeout=DEFAULT_TIMEOUT)
@@ -206,8 +208,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
                     return open(local_path, "rb")
-                _LOGGER.warning(
-                    "'%s' is not secure to load data from!", local_path)
+                _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             else:
                 _LOGGER.warning("Neither URL nor local path found in params!")
 
