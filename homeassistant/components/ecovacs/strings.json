@@ -12,14 +12,15 @@
       "auth": {
         "data": {
           "country": "Country",
+          "override_rest_url": "REST URL",
+          "override_mqtt_url": "MQTT URL",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "override_rest_url": "REST URL",
-          "override_mqtt_url": "MQTT URL"
+          "verify_mqtt_certificate": "Verify MQTT SSL certificate"
         },
         "data_description": {
-          "override_rest_url": "Insert the REST URL of your self-hosted/bumper instance including the scheme (http/https).",
-          "override_mqtt_url": "Insert the MQTT URL of your self-hosted/bumper instance including the scheme (mqtt/mqtts)."
+          "override_rest_url": "Insert the REST URL of your self-hosted instance including the scheme (http/https).",
+          "override_mqtt_url": "Insert the MQTT URL of your self-hosted instance including the scheme (mqtt/mqtts)."
         }
       },
       "user": {

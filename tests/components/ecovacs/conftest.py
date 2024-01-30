@@ -12,10 +12,10 @@ import pytest
 from homeassistant.components.ecovacs import PLATFORMS
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import Platform
+from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import VALID_ENTRY_DATA
+from .const import VALID_ENTRY_DATA_CLOUD
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -30,13 +30,9 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    return MockConfigEntry(
-        title="username",
-        domain=DOMAIN,
-        data=VALID_ENTRY_DATA,
-    )
+def mock_config_entry_data() -> dict[str, Any]:
+    """Return the default mocked config entry data."""
+    return VALID_ENTRY_DATA_CLOUD
 
 
 @pytest.fixture
@@ -117,11 +113,11 @@ def platforms() -> Platform | list[Platform]:
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_authenticator: Mock,
     mock_mqtt_client: Mock,
     mock_device_execute: AsyncMock,
     platforms: Platform | list[Platform],
+    mock_config_entry_data: dict[str, Any],
 ) -> MockConfigEntry:
     """Set up the Ecovacs integration for testing."""
     if not isinstance(platforms, list):
@@ -131,11 +127,16 @@ async def init_integration(
         "homeassistant.components.ecovacs.PLATFORMS",
         platforms,
     ):
-        mock_config_entry.add_to_hass(hass)
+        config_entry = MockConfigEntry(
+            title=mock_config_entry_data[CONF_USERNAME],
+            domain=DOMAIN,
+            data=mock_config_entry_data,
+        )
+        config_entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        yield mock_config_entry
+        yield config_entry
 
 
 @pytest.fixture
