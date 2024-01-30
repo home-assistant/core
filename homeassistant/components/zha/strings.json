@@ -905,6 +905,9 @@
       "invert_switch": {
         "name": "Invert switch"
       },
+      "inverted": {
+        "name": "Inverted"
+      },
       "smart_bulb_mode": {
         "name": "Smart bulb mode"
       },

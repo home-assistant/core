@@ -1444,7 +1444,7 @@ async def test_options_flow_exclude_mode_skips_category_entities(
 
     # sonos_config_switch.entity_id is a config category entity
     # so it should not be selectable since it will always be excluded
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(vol.error.Invalid):
         await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"entities": [sonos_config_switch.entity_id]},
@@ -1539,7 +1539,7 @@ async def test_options_flow_exclude_mode_skips_hidden_entities(
 
     # sonos_hidden_switch.entity_id is a hidden entity
     # so it should not be selectable since it will always be excluded
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(vol.error.Invalid):
         await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"entities": [sonos_hidden_switch.entity_id]},

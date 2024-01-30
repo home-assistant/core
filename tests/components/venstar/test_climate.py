@@ -10,6 +10,8 @@ EXPECTED_BASE_SUPPORTED_FEATURES = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.FAN_MODE
     | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
 )
 
 
