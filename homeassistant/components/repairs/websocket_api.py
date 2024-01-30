@@ -52,7 +52,12 @@ def ws_get_issue_data(
     """Fix an issue."""
     issue_registry = async_get_issue_registry(hass)
     if not (issue := issue_registry.async_get_issue(msg["domain"], msg["issue_id"])):
-        raise ValueError("Unknown issue")
+        connection.send_error(
+            msg["id"],
+            "unknown_issue",
+            f"Issue '{msg['issue_id']}' not found",
+        )
+        return
     connection.send_result(msg["id"], {"issue_data": issue.data})
 
 
