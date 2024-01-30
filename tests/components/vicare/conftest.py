@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Generator
+from dataclasses import dataclass
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -16,10 +17,18 @@ from . import ENTRY_CONFIG, MODULE
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 
+@dataclass
+class Fixture:
+    """Fixture representation with the assigned roles and dummy data location."""
+
+    roles: set[str]
+    data_file: str
+
+
 class MockPyViCare:
     """Mocked PyVicare class based on a json dump."""
 
-    def __init__(self, fixtures: list[tuple[list[str], str]]) -> None:
+    def __init__(self, fixtures: list[Fixture]) -> None:
         """Init a single device from json dump."""
         self.devices = []
         for idx, fixture in enumerate(fixtures):
@@ -39,16 +48,12 @@ class MockViCareService:
     """PyVicareService mock using a json dump."""
 
     def __init__(
-        self,
-        installation_id: str,
-        gateway_id: str,
-        device_id: str,
-        fixture: tuple[list[str], str],
+        self, installation_id: str, gateway_id: str, device_id: str, fixture: Fixture
     ) -> None:
         """Initialize the mock from a json dump."""
-        self._test_data = load_json_object_fixture(fixture[1])
+        self._test_data = load_json_object_fixture(fixture.data_file)
         self.fetch_all_features = Mock(return_value=self._test_data)
-        self.roles = fixture[0]
+        self.roles = fixture.roles
         self.accessor = ViCareDeviceAccessor(installation_id, gateway_id, device_id)
 
     def hasRoles(self, requested_roles: list[str]) -> bool:
@@ -76,9 +81,7 @@ async def mock_vicare_gas_boiler(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> AsyncGenerator[MockConfigEntry, None]:
     """Return a mocked ViCare API representing a single gas boiler device."""
-    fixtures: list[tuple[list[str], str]] = [
-        ({"type:boiler"}, "vicare/Vitodens300W.json")
-    ]
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with patch(
         f"{MODULE}.vicare_login",
         return_value=MockPyViCare(fixtures),
