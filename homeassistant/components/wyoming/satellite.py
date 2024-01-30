@@ -308,6 +308,17 @@ class WyomingSatellite:
         pipeline = assist_pipeline.async_get_pipeline(self.hass, pipeline_id)
         assert pipeline is not None
 
+        # Text-to-speech audio format
+        tts_audio_output = {tts.ATTR_PREFERRED_FORMAT: "wav"}
+        if run_pipeline.snd_format is not None:
+            # Satellite has requested a specific sample rate, etc.
+            tts_audio_output[
+                tts.ATTR_PREFERRED_SAMPLE_RATE
+            ] = run_pipeline.snd_format.rate
+            tts_audio_output[
+                tts.ATTR_PREFERRED_SAMPLE_CHANNELS
+            ] = run_pipeline.snd_format.channels
+
         # We will push audio in through a queue
         self._audio_queue = asyncio.Queue()
         stt_stream = self._stt_stream()
@@ -337,7 +348,7 @@ class WyomingSatellite:
                 stt_stream=stt_stream,
                 start_stage=start_stage,
                 end_stage=end_stage,
-                tts_audio_output="wav",
+                tts_audio_output=tts_audio_output,
                 pipeline_id=pipeline_id,
                 audio_settings=assist_pipeline.AudioSettings(
                     noise_suppression_level=self.device.noise_suppression_level,

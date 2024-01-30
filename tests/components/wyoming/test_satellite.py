@@ -9,7 +9,7 @@ from unittest.mock import patch
 import wave
 
 from wyoming.asr import Transcribe, Transcript
-from wyoming.audio import AudioChunk, AudioStart, AudioStop
+from wyoming.audio import AudioChunk, AudioFormat, AudioStart, AudioStop
 from wyoming.error import Error
 from wyoming.event import Event
 from wyoming.ping import Ping, Pong
@@ -19,7 +19,7 @@ from wyoming.tts import Synthesize
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
-from homeassistant.components import assist_pipeline, wyoming
+from homeassistant.components import assist_pipeline, tts, wyoming
 from homeassistant.components.wyoming.data import WyomingService
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
@@ -1084,6 +1084,60 @@ async def test_invalid_pipeline_name_in_run_pipeline(hass: HomeAssistant) -> Non
 
         # Pipeline should not have started
         assert not mock_run_pipeline.called
+
+        # Stop the satellite
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_sound_format_in_run_pipeline(hass: HomeAssistant) -> None:
+    """Test that the satellite can request a preferred sound format in the RunPipeline message."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    events = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE,
+            end_stage=PipelineStage.TTS,
+            snd_format=AudioFormat(rate=48000, width=2, channels=2),
+        ).event(),
+    ]
+
+    checked_format_event = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(
+        hass: HomeAssistant,
+        context,
+        event_callback,
+        stt_metadata,
+        stt_stream,
+        **kwargs,
+    ) -> None:
+        assert kwargs.get("tts_audio_output") == {
+            tts.ATTR_PREFERRED_FORMAT: "wav",
+            tts.ATTR_PREFERRED_SAMPLE_RATE: 48000,
+            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
+        }
+        checked_format_event.set()
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+        SatelliteAsyncTcpClient(events),
+    ) as mock_client, patch(
+        "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+        async_pipeline_from_audio_stream,
+    ):
+        entry = await setup_config_entry(hass)
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        # Verify audio format
+        async with asyncio.timeout(1):
+            await checked_format_event.wait()
 
         # Stop the satellite
         await hass.config_entries.async_unload(entry.entry_id)
