@@ -74,7 +74,7 @@ class LutronEventEntity(LutronKeypad, EventEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-        self._lutron_device.subscribe(self._update_callback, None)
+        self._lutron_device.subscribe(self.handle_event, None)
 
     @callback
     def handle_event(
