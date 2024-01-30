@@ -22,7 +22,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import singleton
+from homeassistant.helpers import issue_registry as ir, singleton
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_get as dr_async_get,
@@ -38,6 +38,7 @@ from .const import (
     DEFAULT_COAP_PORT,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
+    FIRMWARE_NOT_UPDATED_ISSUE_ID,
     GEN1_RELEASE_URL,
     GEN2_RELEASE_URL,
     LOGGER,
@@ -426,3 +427,31 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
         return None
 
     return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
+
+
+async def check_if_device_has_latest_firmware(
+    hass: HomeAssistant, device: BlockDevice | RpcDevice, unique_id: None | str
+) -> None:
+    """Check if device i updated and if not notify user."""
+    firmware_web_version = await device.get_latest_firmware()
+    LOGGER.debug(
+        "Device %s [%s] installed firmware: %s, available firmware %s",
+        device.name,
+        device.ip_address,
+        device.firmware_version,
+        firmware_web_version,
+    )
+    if device.firmware_version != firmware_web_version:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            FIRMWARE_NOT_UPDATED_ISSUE_ID.format(unique=unique_id),
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="firmware_not_updated",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+        )
