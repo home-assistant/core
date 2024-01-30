@@ -360,6 +360,8 @@ class QNAPNetworkSensor(QNAPSensor):
                 ATTR_MASK: data["mask"],
                 ATTR_MAC: data["mac"],
                 ATTR_MAX_SPEED: data["max_speed"],
+                ATTR_PACKETS_RX: data["rx_packets"],
+                ATTR_PACKETS_TX: data["tx_packets"],
                 ATTR_PACKETS_ERR: data["err_packets"],
             }
 
