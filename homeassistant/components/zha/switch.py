@@ -604,6 +604,42 @@ class WindowCoveringInversionSwitch(ZHASwitchConfigurationEntity):
     _attr_translation_key = "inverted"
     _attr_icon: str = "mdi:arrow-up-down"
 
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> Self | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        cluster_handler = cluster_handlers[0]
+        window_covering_mode_attr = (
+            WindowCovering.AttributeDefs.window_covering_mode.name
+        )
+        # this entity needs 2 attributes to function
+        if (
+            cls._attribute_name in cluster_handler.cluster.unsupported_attributes
+            or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
+            or cluster_handler.cluster.get(cls._attribute_name) is None
+            or window_covering_mode_attr
+            in cluster_handler.cluster.unsupported_attributes
+            or window_covering_mode_attr
+            not in cluster_handler.cluster.attributes_by_name
+            or cluster_handler.cluster.get(window_covering_mode_attr) is None
+        ):
+            _LOGGER.debug(
+                "%s is not supported - skipping %s entity creation",
+                cls._attribute_name,
+                cls.__name__,
+            )
+            return None
+
+        return cls(unique_id, zha_device, cluster_handlers, **kwargs)
+
     @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
