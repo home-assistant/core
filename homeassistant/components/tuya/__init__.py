@@ -1,35 +1,33 @@
 """Support for Tuya Smart devices."""
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
-import requests
-from tuya_iot import (
-    AuthType,
-    TuyaDevice,
-    TuyaDeviceListener,
-    TuyaDeviceManager,
-    TuyaHomeManager,
-    TuyaOpenAPI,
-    TuyaOpenMQ,
+from tuya_sharing import (
+    CustomerDevice,
+    Manager,
+    SharingDeviceListener,
+    SharingTokenListener,
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.loader import async_get_integration
 
 from .const import (
-    CONF_ACCESS_ID,
-    CONF_ACCESS_SECRET,
     CONF_APP_TYPE,
-    CONF_AUTH_TYPE,
     CONF_ENDPOINT,
+    CONF_TERMINAL_ID,
+    CONF_TOKEN_INFO,
+    CONF_USER_CODE,
     DOMAIN,
     LOGGER,
     PLATFORMS,
+    TUYA_CLIENT_ID,
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
@@ -38,66 +36,46 @@ from .const import (
 class HomeAssistantTuyaData(NamedTuple):
     """Tuya data stored in the Home Assistant data object."""
 
-    device_listener: TuyaDeviceListener
-    device_manager: TuyaDeviceManager
-    home_manager: TuyaHomeManager
+    manager: Manager
+    listener: SharingDeviceListener
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    auth_type = AuthType(entry.data[CONF_AUTH_TYPE])
-    api = TuyaOpenAPI(
-        endpoint=entry.data[CONF_ENDPOINT],
-        access_id=entry.data[CONF_ACCESS_ID],
-        access_secret=entry.data[CONF_ACCESS_SECRET],
-        auth_type=auth_type,
-    )
+    if CONF_APP_TYPE in entry.data:
+        raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
-    api.set_dev_channel("hass")
+    if hass.data[DOMAIN].get(entry.entry_id) is None:
+        token_listener = TokenListener(hass, entry)
+        manager = Manager(
+            TUYA_CLIENT_ID,
+            entry.data[CONF_USER_CODE],
+            entry.data[CONF_TERMINAL_ID],
+            entry.data[CONF_ENDPOINT],
+            entry.data[CONF_TOKEN_INFO],
+            token_listener,
+        )
 
-    try:
-        if auth_type == AuthType.CUSTOM:
-            response = await hass.async_add_executor_job(
-                api.connect, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
-            )
-        else:
-            response = await hass.async_add_executor_job(
-                api.connect,
-                entry.data[CONF_USERNAME],
-                entry.data[CONF_PASSWORD],
-                entry.data[CONF_COUNTRY_CODE],
-                entry.data[CONF_APP_TYPE],
-            )
-    except requests.exceptions.RequestException as err:
-        raise ConfigEntryNotReady(err) from err
+        listener = DeviceListener(hass, manager)
+        manager.add_device_listener(listener)
+        hass.data[DOMAIN][entry.entry_id] = HomeAssistantTuyaData(
+            manager=manager, listener=listener
+        )
+    else:
+        tuya: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+        manager = tuya.manager
 
-    if response.get("success", False) is False:
-        raise ConfigEntryNotReady(response)
-
-    tuya_mq = TuyaOpenMQ(api)
-    tuya_mq.start()
-
-    device_ids: set[str] = set()
-    device_manager = TuyaDeviceManager(api, tuya_mq)
-    home_manager = TuyaHomeManager(api, tuya_mq, device_manager)
-    listener = DeviceListener(hass, device_manager, device_ids)
-    device_manager.add_device_listener(listener)
-
-    hass.data[DOMAIN][entry.entry_id] = HomeAssistantTuyaData(
-        device_listener=listener,
-        device_manager=device_manager,
-        home_manager=home_manager,
-    )
+    await report_version(hass, manager)
 
     # Get devices & clean up device entities
-    await hass.async_add_executor_job(home_manager.update_device_cache)
-    await cleanup_device_registry(hass, device_manager)
+    await hass.async_add_executor_job(manager.update_device_cache)
+    await cleanup_device_registry(hass, manager)
 
     # Register known device IDs
     device_registry = dr.async_get(hass)
-    for device in device_manager.device_map.values():
+    for device in manager.device_map.values():
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.id)},
@@ -105,15 +83,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             name=device.name,
             model=f"{device.product_name} (unsupported)",
         )
-        device_ids.add(device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # If the device does not register any entities, the device does not need to subscribe
+    # So the subscription is here
+    await hass.async_add_executor_job(manager.refresh_mq)
     return True
 
 
-async def cleanup_device_registry(
-    hass: HomeAssistant, device_manager: TuyaDeviceManager
-) -> None:
+async def report_version(hass: HomeAssistant, manager: Manager):
+    integration = await async_get_integration(hass, DOMAIN)
+    manifest = integration.manifest
+    tuya_version = manifest.get("version", "unknown")
+    sdk_version = manifest.get("requirements", "unknown")
+    sharing_sdk = ""
+    for item in sdk_version:
+        if "device-sharing-sdk" in item:
+            sharing_sdk = item.split("==")[1]
+    await hass.async_add_executor_job(
+        manager.report_version, __version__, tuya_version, sharing_sdk
+    )
+
+
+async def cleanup_device_registry(hass: HomeAssistant, device_manager: Manager) -> None:
     """Remove deleted device registry entry if there are no remaining entities."""
     device_registry = dr.async_get(hass)
     for dev_id, device_entry in list(device_registry.devices.items()):
@@ -125,58 +117,53 @@ async def cleanup_device_registry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unloading the Tuya platforms."""
-    unload = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload:
-        hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
-        hass_data.device_manager.mq.stop()
-        hass_data.device_manager.remove_device_listener(hass_data.device_listener)
 
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
-
-    return unload
+    LOGGER.debug("unload entry id = %s", entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class DeviceListener(TuyaDeviceListener):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    LOGGER.debug("remove entry id = %s", entry.entry_id)
+    tuya: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+
+    if tuya.manager.mq is not None:
+        tuya.manager.mq.stop()
+    tuya.manager.remove_device_listener(tuya.listener)
+    await hass.async_add_executor_job(tuya.manager.unload)
+    hass.data[DOMAIN].pop(entry.entry_id)
+    if not hass.data[DOMAIN]:
+        hass.data.pop(DOMAIN)
+    pass
+
+
+class DeviceListener(SharingDeviceListener):
     """Device Update Listener."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        device_manager: TuyaDeviceManager,
-        device_ids: set[str],
+        manager: Manager,
     ) -> None:
         """Init DeviceListener."""
         self.hass = hass
-        self.device_manager = device_manager
-        self.device_ids = device_ids
+        self.manager = manager
 
-    def update_device(self, device: TuyaDevice) -> None:
+    def update_device(self, device: CustomerDevice) -> None:
         """Update device status."""
-        if device.id in self.device_ids:
-            LOGGER.debug(
-                "Received update for device %s: %s",
-                device.id,
-                self.device_manager.device_map[device.id].status,
-            )
-            dispatcher_send(self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
+        LOGGER.debug(
+            "Received update for device %s: %s",
+            device.id,
+            self.manager.device_map[device.id].status,
+        )
+        dispatcher_send(self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
 
-    def add_device(self, device: TuyaDevice) -> None:
+    def add_device(self, device: CustomerDevice) -> None:
         """Add device added listener."""
         # Ensure the device isn't present stale
         self.hass.add_job(self.async_remove_device, device.id)
 
-        self.device_ids.add(device.id)
         dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
-
-        device_manager = self.device_manager
-        device_manager.mq.stop()
-        tuya_mq = TuyaOpenMQ(device_manager.api)
-        tuya_mq.start()
-
-        device_manager.mq = tuya_mq
-        tuya_mq.add_message_listener(device_manager.on_message)
 
     def remove_device(self, device_id: str) -> None:
         """Add device removed listener."""
@@ -192,4 +179,19 @@ class DeviceListener(TuyaDeviceListener):
         )
         if device_entry is not None:
             device_registry.async_remove_device(device_entry.id)
-            self.device_ids.discard(device_id)
+
+
+class TokenListener(SharingTokenListener):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+    ) -> None:
+        """Init TokenListener."""
+        self.hass = hass
+        self.entry = entry
+
+    def update_token(self, token_info: [str, Any]):
+        data = {**self.entry.data, "token_info": token_info}
+        LOGGER.debug("update token info : %s", data)
+        self.hass.config_entries.async_update_entry(self.entry, data=data)

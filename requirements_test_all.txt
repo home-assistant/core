@@ -2067,7 +2067,10 @@ transmission-rpc==7.0.3
 ttls==1.5.1
 
 # homeassistant.components.tuya
-tuya-iot-py-sdk==0.6.6
+tuya-device-sharing-sdk==0.1.9
+
+# homeassistant.components.tuya
+segno==1.5.3
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.0.1
