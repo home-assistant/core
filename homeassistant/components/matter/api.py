@@ -14,12 +14,13 @@ from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 
 from .adapter import MatterAdapter
-from .helpers import get_matter
+from .helpers import get_matter, node_from_ha_device_id
 
 _P = ParamSpec("_P")
 
 ID = "id"
 TYPE = "type"
+DEVICE_ID = "device_id"
 
 
 @callback
@@ -184,7 +185,7 @@ async def websocket_set_wifi_credentials(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "matter/node_diagnostics",
-        vol.Required("node_id"): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -197,14 +198,17 @@ async def websocket_node_diagnostics(
     matter: MatterAdapter,
 ) -> None:
     """Gather diagnostics for the given node."""
-    result = await matter.matter_client.node_diagnostics(node_id=msg["node_id"])
+    node = node_from_ha_device_id(hass, msg[DEVICE_ID])
+    if not node:
+        raise MatterError("Node not found")
+    result = await matter.matter_client.node_diagnostics(node_id=node.node_id)
     connection.send_result(msg[ID], dataclass_to_dict(result))
 
 
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "matter/ping_node",
-        vol.Required("node_id"): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -217,7 +221,10 @@ async def websocket_ping_node(
     matter: MatterAdapter,
 ) -> None:
     """Ping node on the currently known IP-adress(es)."""
-    result = await matter.matter_client.ping_node(node_id=msg["node_id"])
+    node = node_from_ha_device_id(hass, msg[DEVICE_ID])
+    if not node:
+        raise MatterError("Node not found")
+    result = await matter.matter_client.ping_node(node_id=node.node_id)
     connection.send_result(msg[ID], result)
 
 
@@ -225,7 +232,7 @@ async def websocket_ping_node(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "matter/open_commissioning_window",
-        vol.Required("node_id"): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -238,9 +245,10 @@ async def websocket_open_commissioning_window(
     matter: MatterAdapter,
 ) -> None:
     """Open a commissioning window to commission a device present on this controller to another."""
-    result = await matter.matter_client.open_commissioning_window(
-        node_id=msg["node_id"]
-    )
+    node = node_from_ha_device_id(hass, msg[DEVICE_ID])
+    if not node:
+        raise MatterError("Node not found")
+    result = await matter.matter_client.open_commissioning_window(node_id=node.node_id)
     connection.send_result(msg[ID], dataclass_to_dict(result))
 
 
@@ -248,7 +256,7 @@ async def websocket_open_commissioning_window(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "matter/remove_matter_fabric",
-        vol.Required("node_id"): int,
+        vol.Required(DEVICE_ID): str,
         vol.Required("fabric_index"): int,
     }
 )
@@ -262,15 +270,21 @@ async def websocket_remove_matter_fabric(
     matter: MatterAdapter,
 ) -> None:
     """Remove Matter fabric from a device."""
+    node = node_from_ha_device_id(hass, msg[DEVICE_ID])
+    if not node:
+        raise MatterError("Node not found")
     await matter.matter_client.remove_matter_fabric(
-        node_id=msg["node_id"], fabric_index=msg["fabric_index"]
+        node_id=node.node_id, fabric_index=msg["fabric_index"]
     )
     connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "matter/interview_node", vol.Required("node_id"): int}
+    {
+        vol.Required(TYPE): "matter/interview_node",
+        vol.Required(DEVICE_ID): str,
+    }
 )
 @websocket_api.async_response
 @async_handle_failed_command
@@ -282,5 +296,8 @@ async def websocket_interview_node(
     matter: MatterAdapter,
 ) -> None:
     """Interview a node."""
-    await matter.matter_client.interview_node(node_id=msg["node_id"])
+    node = node_from_ha_device_id(hass, msg[DEVICE_ID])
+    if not node:
+        raise MatterError("Node not found")
+    await matter.matter_client.interview_node(node_id=node.node_id)
     connection.send_result(msg[ID])
