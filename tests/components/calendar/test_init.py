@@ -1,6 +1,7 @@
 """The tests for the calendar component."""
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
@@ -35,7 +36,7 @@ def mock_frozen_time() -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_set_frozen_time(frozen_time: Any) -> None:
+def mock_set_frozen_time(frozen_time: Any) -> Generator[None]:
     """Fixture to freeze time that also can work for other fixtures."""
     if not frozen_time:
         yield
