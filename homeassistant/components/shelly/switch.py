@@ -21,13 +21,11 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import STATE_ON, EntityCategory
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.entity_registry import RegistryEntry
-from homeassistant.helpers.entity_registry import RegistryEntry
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_SLEEP_PERIOD, MOTION_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
@@ -75,33 +73,8 @@ RPC_RELAY_SWITCHES = {
     "switch": RpcSwitchDescription(
         key="switch",
         sub_key="output",
-        removal_condition=is_rpc_exclude_from_relay,
-        is_on=lambda status: bool(status["output"]),
-        method_on="Switch.Set",
-        method_off="Switch.Set",
-        method_params_fn=lambda id, value: {"id": id, "on": value},
-    ),
-}
-
-RPC_SWITCHES = {
-    "boolean": RpcSwitchDescription(
-        key="boolean",
-        sub_key="value",
-        is_on=lambda status: bool(status["value"]),
-        method_on="Boolean.Set",
-        method_off="Boolean.Set",
-        method_params_fn=lambda id, value: {"id": id, "value": value},
-    ),
-    "script": RpcSwitchDescription(
-        key="script",
-        sub_key="running",
-        is_on=lambda status: bool(status["running"]),
-        method_on="Script.Start",
-        method_off="Script.Stop",
-        method_params_fn=lambda id, _: {"id": id},
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.CONFIG,
-    ),
+        removal_condition=is_rpc_channel_type_light,
+    )
 }
 
 
