@@ -28,7 +28,7 @@ from .const import DOMAIN
 from .coordinator import TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 
-STATUS_TYPE = [s.value for s in Status]
+STATUS_TYPE = [s.value for s in Status if s != Status.UNKNOWN]
 
 
 @dataclass(frozen=True, kw_only=True)
