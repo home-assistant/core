@@ -146,7 +146,7 @@ async def test_cover_non_tilt_initial_state(
     """Test ZHA cover platform."""
 
     # load up cover domain
-    cluster = zigpy_cover_device.endpoints.get(1).window_covering
+    cluster = zigpy_cover_device.endpoints[1].window_covering
     cluster.PLUGGED_ATTR_READS = {
         WCAttrs.current_position_lift_percentage.name: 0,
         WCAttrs.window_covering_type.name: WCT.Drapery,
@@ -196,7 +196,7 @@ async def test_cover(
     """Test ZHA cover platform."""
 
     # load up cover domain
-    cluster = zigpy_cover_device.endpoints.get(1).window_covering
+    cluster = zigpy_cover_device.endpoints[1].window_covering
     cluster.PLUGGED_ATTR_READS = {
         WCAttrs.current_position_lift_percentage.name: 0,
         WCAttrs.current_position_tilt_percentage.name: 42,
@@ -470,7 +470,7 @@ async def test_cover_failures(
     """Test ZHA cover platform failure cases."""
 
     # load up cover domain
-    cluster = zigpy_cover_device.endpoints.get(1).window_covering
+    cluster = zigpy_cover_device.endpoints[1].window_covering
     cluster.PLUGGED_ATTR_READS = {
         WCAttrs.current_position_tilt_percentage.name: 42,
         WCAttrs.window_covering_type.name: WCT.Tilt_blind_tilt_and_lift,
@@ -680,8 +680,8 @@ async def test_shade(
     # load up cover domain
     zha_device = await zha_device_joined_restored(zigpy_shade_device)
 
-    cluster_on_off = zigpy_shade_device.endpoints.get(1).on_off
-    cluster_level = zigpy_shade_device.endpoints.get(1).level
+    cluster_on_off = zigpy_shade_device.endpoints[1].on_off
+    cluster_level = zigpy_shade_device.endpoints[1].level
     entity_id = find_entity_id(Platform.COVER, zha_device, hass)
     assert entity_id is not None
 
@@ -878,7 +878,7 @@ async def test_cover_restore_state(
     hass: HomeAssistant, zha_device_restored, zigpy_cover_device
 ) -> None:
     """Ensure states are restored on startup."""
-    cluster = zigpy_cover_device.endpoints.get(1).window_covering
+    cluster = zigpy_cover_device.endpoints[1].window_covering
     cluster.PLUGGED_ATTR_READS = {
         WCAttrs.current_position_lift_percentage.name: 50,
         WCAttrs.current_position_tilt_percentage.name: 42,
@@ -906,8 +906,8 @@ async def test_keen_vent(
     # load up cover domain
     zha_device = await zha_device_joined_restored(zigpy_keen_vent)
 
-    cluster_on_off = zigpy_keen_vent.endpoints.get(1).on_off
-    cluster_level = zigpy_keen_vent.endpoints.get(1).level
+    cluster_on_off = zigpy_keen_vent.endpoints[1].on_off
+    cluster_level = zigpy_keen_vent.endpoints[1].level
     entity_id = find_entity_id(Platform.COVER, zha_device, hass)
     assert entity_id is not None
 

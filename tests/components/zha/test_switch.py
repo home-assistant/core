@@ -157,7 +157,7 @@ async def test_switch(
     """Test ZHA switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
-    cluster = zigpy_device.endpoints.get(1).on_off
+    cluster = zigpy_device.endpoints[1].on_off
     entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
     assert entity_id is not None
 
@@ -446,7 +446,7 @@ async def test_switch_configurable(
     """Test ZHA configurable switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device_tuya)
-    cluster = zigpy_device_tuya.endpoints.get(1).tuya_manufacturer
+    cluster = zigpy_device_tuya.endpoints[1].tuya_manufacturer
     entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
     assert entity_id is not None
 
@@ -576,7 +576,7 @@ async def test_cover_inversion_switch(
     """Test ZHA cover platform."""
 
     # load up cover domain
-    cluster = zigpy_cover_device.endpoints.get(1).window_covering
+    cluster = zigpy_cover_device.endpoints[1].window_covering
     cluster.PLUGGED_ATTR_READS = {
         WCAttrs.current_position_lift_percentage.name: 65,
         WCAttrs.current_position_tilt_percentage.name: 42,
@@ -644,7 +644,7 @@ async def test_cover_inversion_switch(
         assert cluster.write_attributes.call_count == 1
         assert cluster.write_attributes.call_args_list[0] == call(
             {
-                "window_covering_mode": WCM.Motor_direction_reversed
+                WCAttrs.window_covering_mode.name: WCM.Motor_direction_reversed
                 | WCM.LEDs_display_feedback
             },
             manufacturer=None,
@@ -665,7 +665,7 @@ async def test_cover_inversion_switch(
         )
         assert cluster.write_attributes.call_count == 1
         assert cluster.write_attributes.call_args_list[0] == call(
-            {"window_covering_mode": WCM.LEDs_display_feedback},
+            {WCAttrs.window_covering_mode.name: WCM.LEDs_display_feedback},
             manufacturer=None,
         )
 

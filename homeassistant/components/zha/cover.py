@@ -158,7 +158,9 @@ class ZhaCover(ZhaEntity, CoverEntity):
                 WCT.Tilt_blind_tilt_and_lift,
             )
         ):
-            self._determine_state(self.current_cover_tilt_position)
+            self._determine_state(
+                self.current_cover_tilt_position, is_lift_update=False
+            )
             if (
                 self._cover_cluster_handler.window_covering_type
                 == WCT.Tilt_blind_tilt_and_lift
