@@ -157,7 +157,7 @@ class MeteringClusterHandler(ClusterHandler):
         0: "Electric Metering",
         1: "Gas Metering",
         2: "Water Metering",
-        3: "Thermal Metering",  # depreciated
+        3: "Thermal Metering",  # deprecated
         4: "Pressure Metering",
         5: "Heat Metering",
         6: "Cooling Metering",
