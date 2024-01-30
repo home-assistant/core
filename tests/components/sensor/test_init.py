@@ -30,6 +30,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNKNOWN,
     EntityCategory,
+    UnitOfDataRate,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -2591,75 +2592,118 @@ def test_deprecated_constants_sensor_device_class(
     )
 
 
-async def test_suggested_unit_guard(
+@pytest.mark.parametrize(
+    ("device_class", "native_unit"),
+    [
+        (SensorDeviceClass.TEMPERATURE, UnitOfTemperature.CELSIUS),
+        (SensorDeviceClass.DATA_RATE, UnitOfDataRate.KILOBITS_PER_SECOND),
+    ],
+)
+async def test_suggested_unit_guard_invalid_unit(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    device_class: SensorDeviceClass,
+    native_unit: str,
 ) -> None:
     """Test suggested_unit_of_measurement guard.
 
-    Only valid units should be stored in the entity registry.
-    On an invalid unit, a log entry should be created.
+    An invalid suggested unit creates a log entry and the suggested unit will be ignored.
     """
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
 
     state_value = 10
-    native_unit = UnitOfTemperature.CELSIUS
     invalid_suggested_unit = "invalid_unit"
-    valid_suggested_unit = UnitOfTemperature.KELVIN
 
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity = platform.ENTITIES["0"] = platform.MockSensor(
         name="Invalid",
-        device_class=SensorDeviceClass.TEMPERATURE,
+        device_class=device_class,
         native_unit_of_measurement=native_unit,
         suggested_unit_of_measurement=invalid_suggested_unit,
         native_value=str(state_value),
         unique_id="invalid",
     )
-    entity_invalid = platform.ENTITIES["0"]
-
-    platform.ENTITIES["1"] = platform.MockSensor(
-        name="Valid",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=native_unit,
-        native_value=str(state_value),
-        suggested_unit_of_measurement=valid_suggested_unit,
-        unique_id="valid",
-    )
-    entity_valid = platform.ENTITIES["1"]
-
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    # Invalid unit should have native unit
-    state = hass.states.get(entity_invalid.entity_id)
+    # Unit of measurement should be native one
+    state = hass.states.get(entity.entity_id)
     assert int(state.state) == state_value
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
 
-    # Assert the suggested unit is NOT stored in the registry
-    entry = entity_registry.async_get(entity_invalid.entity_id)
-    assert entry.unit_of_measurement == invalid_suggested_unit
-    assert entry.options != {
-        "sensor.private": {"suggested_unit_of_measurement": invalid_suggested_unit},
-    }
+    # Assert the suggested unit is ignored and not stored in the entity registry
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.unit_of_measurement == native_unit
+    assert entry.options == {}
     assert (
         "homeassistant.components.sensor",
         logging.WARNING,
         (
             "<class 'custom_components.test.sensor.MockSensor'> sets an"
             " invalid suggested_unit_of_measurement. Please report it to the author"
-            " of the 'test' custom integration"
+            " of the 'test' custom integration. This warning will become an error in"
+            " Home Assistant Core 2024.5"
         ),
     ) in caplog.record_tuples
 
-    # Valid unit should have suggested unit
-    state = hass.states.get(entity_valid.entity_id)
-    assert float(state.state) == state_value + 273
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == valid_suggested_unit
-    # Assert the suggested unit is stored in the registry
-    entry = entity_registry.async_get(entity_valid.entity_id)
-    assert entry.unit_of_measurement == valid_suggested_unit
+
+@pytest.mark.parametrize(
+    ("device_class", "native_unit", "native_value", "suggested_unit", "expect_value"),
+    [
+        (
+            SensorDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            10,
+            UnitOfTemperature.KELVIN,
+            283,
+        ),
+        (
+            SensorDeviceClass.DATA_RATE,
+            UnitOfDataRate.KILOBITS_PER_SECOND,
+            10,
+            UnitOfDataRate.BITS_PER_SECOND,
+            10000,
+        ),
+    ],
+)
+async def test_suggested_unit_guard_valid_unit(
+    hass: HomeAssistant,
+    device_class: SensorDeviceClass,
+    native_unit: str,
+    native_value: int,
+    suggested_unit: str,
+    expect_value: float | int,
+) -> None:
+    """Test suggested_unit_of_measurement guard.
+
+    Suggested unit is valid and therefore should be used for unit conversion and stored
+    in the entity registry.
+    """
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    entity = platform.ENTITIES["0"] = platform.MockSensor(
+        name="Valid",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_unit_of_measurement=suggested_unit,
+        unique_id="valid",
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Unit of measurement should set to the suggested unit of measurement
+    state = hass.states.get(entity.entity_id)
+    assert float(state.state) == expect_value
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+
+    # Assert the suggested unit of measurement is stored in the registry
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.unit_of_measurement == suggested_unit
     assert entry.options == {
-        "sensor.private": {"suggested_unit_of_measurement": valid_suggested_unit},
+        "sensor.private": {"suggested_unit_of_measurement": suggested_unit},
     }
