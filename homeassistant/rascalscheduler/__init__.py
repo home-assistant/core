@@ -13,8 +13,8 @@ from typing import Any
 
 from homeassistant.components.script import BaseScriptEntity
 from homeassistant.const import (
-    ATTR_SERVICE_DATA,
     CONF_DELAY,
+    CONF_DEVICE_ID,
     CONF_ENTITY_ID,
     CONF_PARALLEL,
     CONF_SEQUENCE,
@@ -36,6 +36,7 @@ from homeassistant.helpers.rascalscheduler import (
     QueueEntity,
     RoutineEntity,
 )
+from homeassistant.helpers.template import device_entities
 
 CONF_ROUTINE_ID = "routine_id"
 CONF_STEP = "step"
@@ -114,7 +115,7 @@ def dag_operator(
             next_parents.append(entities[action_id])
 
         else:
-            leaf_nodes = dfs(script, config, next_parents, entities)
+            leaf_nodes = dfs(hass, script, config, next_parents, entities)
             next_parents.clear()
             next_parents = leaf_nodes
 
@@ -138,6 +139,7 @@ def dag_operator(
 
 
 def dfs(
+    hass: HomeAssistant,
     script: dict[str, Any],
     config: dict[str, Any],
     parents: list[ActionEntity],
@@ -149,14 +151,14 @@ def dfs(
     # print("script:", script)
     if CONF_PARALLEL in script:
         for item in list(script.values())[0]:
-            leaf_entities = dfs(item, config, parents, entities)
+            leaf_entities = dfs(hass, item, config, parents, entities)
             for entity in leaf_entities:
                 next_parents.append(entity)
 
     elif CONF_SEQUENCE in script:
         next_parents = parents
         for item in list(script.values())[0]:
-            leaf_entities = dfs(item, config, next_parents, entities)
+            leaf_entities = dfs(hass, item, config, next_parents, entities)
             next_parents = leaf_entities
 
     elif CONF_SERVICE in script:
@@ -171,10 +173,29 @@ def dfs(
                 if base_script is not None and base_script.raw_config is not None:
                     next_parents = parents
                     for item in base_script.raw_config[CONF_SEQUENCE]:
-                        leaf_entities = dfs(item, config, next_parents, entities)
+                        leaf_entities = dfs(hass, item, config, next_parents, entities)
                         next_parents = leaf_entities
         else:  # only support for one target, todo
-            for target_entity in script[CONF_TARGET][CONF_ENTITY_ID]:
+            target_entities: list[str] = []
+            if CONF_DEVICE_ID in script[CONF_TARGET]:
+                device_ids = []
+                if isinstance(script[CONF_TARGET][CONF_DEVICE_ID], str):
+                    device_ids = [script[CONF_TARGET][CONF_DEVICE_ID]]
+                else:
+                    device_ids = script[CONF_TARGET][CONF_DEVICE_ID]
+                target_entities += [
+                    entity
+                    for device_id in device_ids
+                    for entity in device_entities(hass, device_id)
+                ]
+
+            if CONF_ENTITY_ID in script[CONF_TARGET]:
+                if isinstance(script[CONF_TARGET][CONF_ENTITY_ID], str):
+                    target_entities += [script[CONF_TARGET][CONF_ENTITY_ID]]
+                else:
+                    target_entities += script[CONF_TARGET][CONF_ENTITY_ID]
+
+            for target_entity in target_entities:
                 config[CONF_STEP] = config[CONF_STEP] + 1
                 action_id = config[CONF_ROUTINE_ID] + str(config[CONF_STEP])
 

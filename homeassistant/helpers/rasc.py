@@ -13,6 +13,7 @@ import numpy as np
 import scipy.stats as st
 
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_GROUP_ID,
     ATTR_SERVICE_DATA,
@@ -230,17 +231,17 @@ def get_target_entities(
 ) -> list[Entity]:
     """Get target entities from Event e."""
     entities: list[str] = []
-    if "device_id" in e.data[ATTR_SERVICE_DATA]:
+    if ATTR_DEVICE_ID in e.data[ATTR_SERVICE_DATA]:
         entities = entities + [
             entity
-            for _device_id in e.data[ATTR_SERVICE_DATA]["device_id"]
+            for _device_id in e.data[ATTR_SERVICE_DATA][ATTR_DEVICE_ID]
             for entity in device_entities(hass, _device_id)
         ]
-    if "entity_id" in e.data[ATTR_SERVICE_DATA]:
-        if isinstance(e.data[ATTR_SERVICE_DATA]["entity_id"], str):
-            entities = entities + [e.data[ATTR_SERVICE_DATA]["entity_id"]]
+    if ATTR_ENTITY_ID in e.data[ATTR_SERVICE_DATA]:
+        if isinstance(e.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID], str):
+            entities = entities + [e.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID]]
         else:
-            entities = entities + e.data[ATTR_SERVICE_DATA]["entity_id"]
+            entities = entities + e.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID]
 
     return [entity for entity in own_entities if entity.entity_id in entities]
 
@@ -479,9 +480,10 @@ def get_best_distribution(data: list[float]) -> Any:
     best_dist, _ = max(dist_results, key=lambda item: item[1])
     # store the name of the best fit and its p value
 
-    print("Best fitting distribution: " + str(best_dist))  # noqa: T201
+    _LOGGER.info(
+        "Best fitting distribution: %s%s", str(best_dist), str(params[best_dist])
+    )
     # print("Best p value: " + str(best_p))
-    print("Parameters for the best fit: " + str(params[best_dist]))  # noqa: T201
 
     return getattr(st, best_dist)(*params[best_dist])
 
