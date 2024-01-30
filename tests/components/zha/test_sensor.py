@@ -259,6 +259,24 @@ async def async_test_em_apparent_power(hass: HomeAssistant, cluster, entity_id):
     assert_state(hass, entity_id, "9.9", UnitOfApparentPower.VOLT_AMPERE)
 
 
+async def async_test_em_power_factor(hass: HomeAssistant, cluster, entity_id):
+    """Test electrical measurement Power Factor sensor."""
+    # update divisor cached value
+    await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 100, 10: 1000})
+    assert_state(hass, entity_id, "100", PERCENTAGE)
+
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 99, 10: 1000})
+    assert_state(hass, entity_id, "99", PERCENTAGE)
+
+    await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 100, 10: 5000})
+    assert_state(hass, entity_id, "100", PERCENTAGE)
+
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 99, 10: 5000})
+    assert_state(hass, entity_id, "99", PERCENTAGE)
+
+
 async def async_test_em_rms_current(hass: HomeAssistant, cluster, entity_id):
     """Test electrical measurement RMS Current sensor."""
 
@@ -427,6 +445,14 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
             7,
             {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
             {"active_power", "rms_current", "rms_voltage"},
+        ),
+        (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            "power_factor",
+            async_test_em_power_factor,
+            7,
+            {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
+            {"active_power", "apparent_power", "rms_current", "rms_voltage"},
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
