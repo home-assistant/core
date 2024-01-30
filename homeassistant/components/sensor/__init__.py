@@ -219,6 +219,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _last_reset_reported = False
     _sensor_option_display_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
+    _invalid_suggested_unit_of_measurement_reported = False
 
     @callback
     def add_to_platform_start(
@@ -376,6 +377,34 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return None
 
+    def _is_valid_suggested_unit(self, suggested_unit_of_measurement: str) -> bool:
+        """Validate the suggested unit.
+
+        Validate that a unit converter exists for the sensor's device class and that the
+        unit converter supports both the native and the suggested units of measurement.
+        """
+        # Make sure we can convert the units
+        if (
+            (unit_converter := UNIT_CONVERTERS.get(self.device_class)) is None
+            or self.native_unit_of_measurement not in unit_converter.VALID_UNITS
+            or suggested_unit_of_measurement not in unit_converter.VALID_UNITS
+        ):
+            if not self._invalid_suggested_unit_of_measurement_reported:
+                self._invalid_suggested_unit_of_measurement_reported = True
+                report_issue = self._suggest_report_issue()
+                # This should raise in Home Assistant Core 2024.5
+                _LOGGER.warning(
+                    (
+                        "%s sets an invalid suggested_unit_of_measurement. Please %s. "
+                        "This warning will become an error in Home Assistant Core 2024.5"
+                    ),
+                    type(self),
+                    report_issue,
+                )
+            return False
+
+        return True
+
     def _get_initial_suggested_unit(self) -> str | UndefinedType:
         """Return the initial unit."""
         # Unit suggested by the integration
@@ -388,6 +417,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         if suggested_unit_of_measurement is None:
+            return UNDEFINED
+
+        # Make sure we can convert the units
+        if not self._is_valid_suggested_unit(suggested_unit_of_measurement):
             return UNDEFINED
 
         return suggested_unit_of_measurement
@@ -486,16 +519,17 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self._sensor_option_unit_of_measurement is not UNDEFINED:
             return self._sensor_option_unit_of_measurement
 
+        native_unit_of_measurement = self.native_unit_of_measurement
+
         # Second priority, for non registered entities: unit suggested by integration
         if not self.registry_entry and (
             suggested_unit_of_measurement := self.suggested_unit_of_measurement
         ):
-            return suggested_unit_of_measurement
+            if self._is_valid_suggested_unit(suggested_unit_of_measurement):
+                return suggested_unit_of_measurement
 
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities
-        native_unit_of_measurement = self.native_unit_of_measurement
-
         if (
             native_unit_of_measurement in TEMPERATURE_UNITS
             and self.device_class is SensorDeviceClass.TEMPERATURE
