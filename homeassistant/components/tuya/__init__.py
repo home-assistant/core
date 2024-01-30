@@ -45,25 +45,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if CONF_APP_TYPE in entry.data:
         raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
-    if hass.data[DOMAIN].get(entry.entry_id) is None:
-        token_listener = TokenListener(hass, entry)
-        manager = Manager(
-            TUYA_CLIENT_ID,
-            entry.data[CONF_USER_CODE],
-            entry.data[CONF_TERMINAL_ID],
-            entry.data[CONF_ENDPOINT],
-            entry.data[CONF_TOKEN_INFO],
-            token_listener,
-        )
+    token_listener = TokenListener(hass, entry)
+    manager = Manager(
+        TUYA_CLIENT_ID,
+        entry.data[CONF_USER_CODE],
+        entry.data[CONF_TERMINAL_ID],
+        entry.data[CONF_ENDPOINT],
+        entry.data[CONF_TOKEN_INFO],
+        token_listener,
+    )
 
-        listener = DeviceListener(hass, manager)
-        manager.add_device_listener(listener)
-        hass.data[DOMAIN][entry.entry_id] = HomeAssistantTuyaData(
-            manager=manager, listener=listener
-        )
-    else:
-        tuya: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
-        manager = tuya.manager
+    listener = DeviceListener(hass, manager)
+    manager.add_device_listener(listener)
+    hass.data[DOMAIN][entry.entry_id] = HomeAssistantTuyaData(
+        manager=manager, listener=listener
+    )
 
     # Get devices & clean up device entities
     await hass.async_add_executor_job(manager.update_device_cache)
@@ -99,24 +95,14 @@ async def cleanup_device_registry(hass: HomeAssistant, device_manager: Manager) 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unloading the Tuya platforms."""
-
-    LOGGER.debug("unload entry id = %s", entry.entry_id)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Remove a config entry."""
-    LOGGER.debug("remove entry id = %s", entry.entry_id)
-    tuya: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
-
-    if tuya.manager.mq is not None:
-        tuya.manager.mq.stop()
-    tuya.manager.remove_device_listener(tuya.listener)
-    await hass.async_add_executor_job(tuya.manager.unload)
-    hass.data[DOMAIN].pop(entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-    pass
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        tuya: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+        if tuya.manager.mq is not None:
+            tuya.manager.mq.stop()
+        tuya.manager.remove_device_listener(tuya.listener)
+        await hass.async_add_executor_job(tuya.manager.unload)
+        del hass.data[DOMAIN][entry.entry_id]
+    return unload_ok
 
 
 class DeviceListener(SharingDeviceListener):
