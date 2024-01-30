@@ -30,7 +30,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::cloud::issues::deprecated_voice::title%]",
-            "description": "The {deprecated_voice} voice is deprecated and will be removed.\nPlease update your automations and scripts to replace the {deprecated_voice} with another voice like eg. `{replacement_voice}`."
+            "description": "The '{deprecated_voice}' voice is deprecated and will be removed.\nPlease update your automations and scripts to replace the '{deprecated_voice}' with another voice like eg. '{replacement_voice}'."
           }
         }
       }
