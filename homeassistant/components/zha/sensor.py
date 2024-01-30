@@ -1272,7 +1272,7 @@ class SonoffPresenceSenorIlluminationStatus(Sensor):
 class PiHeatingDemand(Sensor):
     """Sensor that displays the percentage of heating power used.
 
-    Optional Thermostat attribute.
+    Optional thermostat attribute.
     """
 
     _unique_id_suffix = "pi_heating_demand"
