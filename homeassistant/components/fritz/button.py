@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import AvmWrapper, FritzData, FritzDevice, FritzDeviceBase, _is_tracked
-from .const import BUTTON_TYPE_WOL, DATA_FRITZ, DOMAIN, MeshRoles
+from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DATA_FRITZ, DOMAIN, MeshRoles
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,8 +142,15 @@ async def _async_wol_buttons_list(
         data_fritz.wol_buttons[avm_wrapper.unique_id] = set()
 
     for mac, device in avm_wrapper.devices.items():
-        if _is_tracked(mac, data_fritz.wol_buttons.values()):
+        if _is_tracked(mac, data_fritz.wol_buttons.values()):  # pragma: no cover
             _LOGGER.debug("Skipping wol button creation for device %s", device.hostname)
+            continue
+
+        if device.connection_type != CONNECTION_TYPE_LAN:
+            _LOGGER.debug(
+                "Skipping wol button creation for device %s, not connected via LAN",
+                device.hostname,
+            )
             continue
 
         new_wols.append(FritzBoxWOLButton(avm_wrapper, device))
