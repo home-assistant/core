@@ -81,7 +81,7 @@ class TeslemetryEnergyDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Update vehicle data using Teslemetry API."""
+        """Update energy site data using Teslemetry API."""
 
         try:
             data = await self.api.live_status()
@@ -90,7 +90,7 @@ class TeslemetryEnergyDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Convert Wall Connectors from array to dict
         data["response"]["wall_connectors"] = {
-            wc["din"]: wc for wc in data["response"].get("wall_connectors", {})
+            wc["din"]: wc for wc in data["response"].get("wall_connectors", [])
         }
 
         return data["response"]

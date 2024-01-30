@@ -94,12 +94,6 @@ class TeslemetryEnergyEntity(CoordinatorEntity[TeslemetryEnergyDataCoordinator])
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(key or self.key, default)
 
-    def set(self, *args: Any) -> None:
-        """Set a value in coordinator data."""
-        for key, value in args:
-            self.coordinator.data[key] = value
-        self.async_write_ha_state()
-
 
 class TeslemetryWallConnectorEntity(CoordinatorEntity[TeslemetryEnergyDataCoordinator]):
     """Parent class for Teslemetry Wall Connector Entities."""
