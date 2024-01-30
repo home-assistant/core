@@ -55,6 +55,12 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
+        key="charge_state_conn_charge_cable",
+        is_on=lambda x: x != "<invalid>",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    TessieBinarySensorEntityDescription(
         key="climate_state_auto_seat_climate_left",
         device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -128,6 +134,26 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     TessieBinarySensorEntityDescription(
         key="vehicle_state_rp_window",
         device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_df",
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_dr",
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_pf",
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_pr",
+        device_class=BinarySensorDeviceClass.DOOR,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

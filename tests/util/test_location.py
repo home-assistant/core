@@ -33,7 +33,7 @@ async def session(hass):
 
 
 @pytest.fixture
-async def raising_session(event_loop):
+async def raising_session():
     """Return an aioclient session that only fails."""
     return Mock(get=Mock(side_effect=aiohttp.ClientError))
 
