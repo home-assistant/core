@@ -36,6 +36,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, State
@@ -170,12 +171,11 @@ async def test_deprecated_last_reset(
         "Entity sensor.test (<class 'custom_components.test.sensor.MockSensor'>) "
         f"with state_class {state_class} has set last_reset. Setting last_reset for "
         "entities with state_class other than 'total' is not supported. Please update "
-        "your configuration if state_class is manually configured, otherwise report it "
-        "to the author of the 'test' custom integration"
+        "your configuration if state_class is manually configured."
     ) in caplog.text
 
     state = hass.states.get("sensor.test")
-    assert "last_reset" not in state.attributes
+    assert state is None
 
 
 async def test_datetime_conversion(
@@ -580,6 +580,22 @@ async def test_restore_sensor_restore_state(
             UnitOfPressure.HPA,
             -0.00001,
             "0",
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            50.0,
+            "13.2",
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            13.0,
+            "49.2",
         ),
     ],
 )

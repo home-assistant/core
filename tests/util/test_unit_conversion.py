@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -41,6 +42,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 INVALID_SYMBOL = "bob"
@@ -65,6 +67,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         TemperatureConverter,
         UnitlessRatioConverter,
         VolumeConverter,
+        VolumeFlowRateConverter,
     )
 }
 
@@ -103,6 +106,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     ),
     UnitlessRatioConverter: (PERCENTAGE, None, 100),
     VolumeConverter: (UnitOfVolume.GALLONS, UnitOfVolume.LITERS, 0.264172),
+    VolumeFlowRateConverter: (
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        0.06,
+    ),
 }
 
 # Dict containing a conversion test for every known unit.
@@ -412,6 +420,62 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 478753.24, UnitOfVolume.FLUID_OUNCES),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 3740.26, UnitOfVolume.GALLONS),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 14158.42, UnitOfVolume.LITERS),
+    ],
+    VolumeFlowRateConverter: [
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            16.6666667,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            0.58857777,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            4.40286754,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            0.06,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            0.03531466,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            0.264172052,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            1.69901079,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            28.3168465,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            7.48051948,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
     ],
 }
 
