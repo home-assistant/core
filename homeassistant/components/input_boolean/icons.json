@@ -11,6 +11,6 @@
     "toggle": "mdi:toggle-switch",
     "turn_off": "mdi:toggle-switch-off",
     "turn_on": "mdi:toggle-switch",
-    "reload": "mdi:toggle-switch"
+    "reload": "mdi:reload"
   }
 }
