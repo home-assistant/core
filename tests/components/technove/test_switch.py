@@ -11,46 +11,37 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
-pytestmark = pytest.mark.usefixtures("init_integration")
+from . import setup_with_selected_platforms
+
+from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize(
-    ("entity_id", "method", "called_with_on", "called_with_off"),
-    [
-        (
-            "switch.technove_station_auto_charge",
-            "set_auto_charge",
-            {"enabled": True},
-            {"enabled": False},
-        ),
-    ],
-)
-async def test_switch_state(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")
+async def test_switches(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    mock_technove: MagicMock,
-    entity_id: str,
-    method: str,
-    called_with_on: dict[str, bool | int],
-    called_with_off: dict[str, bool | int],
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation and values of the TechnoVE switches."""
-    assert (state := hass.states.get(entity_id))
-    assert state == snapshot
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SWITCH])
 
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
-    assert entity_entry == snapshot
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
 
-    assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
-    assert device_entry == snapshot
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-state"
+        )
 
 
 @pytest.mark.parametrize(
@@ -64,6 +55,7 @@ async def test_switch_state(
         ),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_switch_on_off(
     hass: HomeAssistant,
     mock_technove: MagicMock,
@@ -106,6 +98,7 @@ async def test_switch_on_off(
         ),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_invalid_response(
     hass: HomeAssistant,
     mock_technove: MagicMock,
@@ -139,6 +132,7 @@ async def test_invalid_response(
         ),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_connection_error(
     hass: HomeAssistant,
     mock_technove: MagicMock,
