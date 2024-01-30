@@ -474,7 +474,7 @@ async def test_deprecated_voice(
     assert mock_process_tts.call_args.kwargs["voice"] == replacement_voice
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
     issue = issue_registry.async_get_issue(
-        "cloud", f"deprecated_voice_{deprecated_voice}"
+        "cloud", f"deprecated_voice_{replacement_voice}"
     )
     assert issue is None
     mock_process_tts.reset_mock()
