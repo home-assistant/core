@@ -70,7 +70,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
         description = SynologyDSMCameraEntityDescription(
             api_key=SynoSurveillanceStation.CAMERA_API_KEY,
             key=camera_id,
-            name=coordinator.data["cameras"][camera_id].name,
+            name=None,
             entity_registry_enabled_default=coordinator.data["cameras"][
                 camera_id
             ].is_enabled,
