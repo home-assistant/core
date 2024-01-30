@@ -53,7 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"API-{device.id[:8]}",
-                    data={CONF_API_KEY: user_input[CONF_API_KEY]},
+                    data=user_input,
                 )
 
         return self.async_show_form(
