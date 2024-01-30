@@ -604,7 +604,7 @@ async def test_restore_sensor_restore_state(
             UnitOfTime.HOURS,
             UnitOfTime.HOURS,
             5400.0,
-            "1.5",
+            "1.5000",
         ),
         (
             SensorDeviceClass.DURATION,
@@ -612,7 +612,7 @@ async def test_restore_sensor_restore_state(
             UnitOfTime.MINUTES,
             UnitOfTime.MINUTES,
             0.5,
-            "720",
+            "720.0",
         ),
     ],
 )
