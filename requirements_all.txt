@@ -2407,7 +2407,7 @@ raspyrfm-client==1.2.8
 refoss-ha==1.2.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2023.06.0
+regenmaschine==2024.01.0
 
 # homeassistant.components.renault
 renault-api==0.2.1
