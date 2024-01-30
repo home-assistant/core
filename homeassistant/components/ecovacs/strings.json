@@ -20,7 +20,7 @@
   },
   "entity": {
     "binary_sensor": {
-      "mop_attached": {
+      "water_mop_attached": {
         "name": "Mop attached"
       }
     },
