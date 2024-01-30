@@ -1,7 +1,15 @@
 """Test the api module."""
-from unittest.mock import MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, call
 
+from matter_server.client.models.node import (
+    MatterFabricData,
+    NetworkType,
+    NodeDiagnostics,
+    NodeType,
+)
 from matter_server.common.errors import InvalidCommand, NodeCommissionFailed
+from matter_server.common.helpers.util import dataclass_to_dict
+from matter_server.common.models import CommissioningParameters
 import pytest
 
 from homeassistant.components.matter.api import ID, TYPE
@@ -177,3 +185,142 @@ async def test_set_wifi_credentials(
     assert matter_client.set_wifi_credentials.call_args == call(
         ssid="test_network", credentials="test_password"
     )
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_node_diagnostics(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    matter_client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the node diagnostics command."""
+    ws_client = await hass_ws_client(hass)
+
+    mock_diagnostics = NodeDiagnostics(
+        node_id=1,
+        network_type=NetworkType.WIFI,
+        node_type=NodeType.END_DEVICE,
+        network_name="SuperCoolWiFi",
+        ip_adresses=["192.168.1.1", "fe80::260:97ff:fe02:6ea5"],
+        mac_address="00:11:22:33:44:55",
+        reachable=True,
+        active_fabrics=[MatterFabricData(2, 4939, 1, vendor_name="Nabu Casa")],
+    )
+    matter_client.node_diagnostics = AsyncMock(return_value=mock_diagnostics)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/node_diagnostics",
+            "node_id": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["type"] == "result"
+    diag_res = dataclass_to_dict(mock_diagnostics)
+    # dataclass to dict allows enums which are converted to string when serializing
+    diag_res["network_type"] = diag_res["network_type"].value
+    diag_res["node_type"] = diag_res["node_type"].value
+    assert msg["result"] == diag_res
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_ping_node(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    matter_client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the ping_node command."""
+    ws_client = await hass_ws_client(hass)
+
+    ping_result = {"192.168.1.1": False, "fe80::260:97ff:fe02:6ea5": True}
+    matter_client.ping_node = AsyncMock(return_value=ping_result)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/ping_node",
+            "node_id": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["type"] == "result"
+    assert msg["result"] == ping_result
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_open_commissioning_window(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    matter_client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the open_commissioning_window command."""
+    ws_client = await hass_ws_client(hass)
+
+    commissioning_parameters = CommissioningParameters(
+        setupPinCode=51590642,
+        setupManualCode="36296231484",
+        setupQRCode="MT:00000CQM008-WE3G310",
+    )
+    matter_client.open_commissioning_window = AsyncMock(
+        return_value=commissioning_parameters
+    )
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/open_commissioning_window",
+            "node_id": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["type"] == "result"
+    assert msg["result"] == dataclass_to_dict(commissioning_parameters)
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_remove_matter_fabric(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    matter_client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the remove_matter_fabric command."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {ID: 1, TYPE: "matter/remove_matter_fabric", "node_id": 1, "fabric_index": 3}
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    matter_client.remove_matter_fabric.assert_called_once_with(1, 3)
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_interview_node(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    matter_client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the interview_node command."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({ID: 1, TYPE: "matter/interview_node", "node_id": 1})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    matter_client.interview_node.assert_called_once_with(1)

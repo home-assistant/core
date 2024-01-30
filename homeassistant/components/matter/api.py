@@ -6,6 +6,7 @@ from functools import wraps
 from typing import Any, Concatenate, ParamSpec
 
 from matter_server.common.errors import MatterError
+from matter_server.common.helpers.util import dataclass_to_dict
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -28,6 +29,11 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_commission_on_network)
     websocket_api.async_register_command(hass, websocket_set_thread_dataset)
     websocket_api.async_register_command(hass, websocket_set_wifi_credentials)
+    websocket_api.async_register_command(hass, websocket_node_diagnostics)
+    websocket_api.async_register_command(hass, websocket_ping_node)
+    websocket_api.async_register_command(hass, websocket_open_commissioning_window)
+    websocket_api.async_register_command(hass, websocket_remove_matter_fabric)
+    websocket_api.async_register_command(hass, websocket_interview_node)
 
 
 def async_get_matter_adapter(
@@ -172,4 +178,109 @@ async def websocket_set_wifi_credentials(
     await matter.matter_client.set_wifi_credentials(
         ssid=msg["network_name"], credentials=msg["password"]
     )
+    connection.send_result(msg[ID])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/node_diagnostics",
+        vol.Required("node_id"): int,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_node_diagnostics(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Gather diagnostics for the given node."""
+    result = await matter.matter_client.node_diagnostics(node_id=msg["node_id"])
+    connection.send_result(msg[ID], dataclass_to_dict(result))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/ping_node",
+        vol.Required("node_id"): int,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_ping_node(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Ping node on the currently known IP-adress(es)."""
+    result = await matter.matter_client.ping_node(node_id=msg["node_id"])
+    connection.send_result(msg[ID], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/open_commissioning_window",
+        vol.Required("node_id"): int,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_open_commissioning_window(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Open a commissioning window to commission a device present on this controller to another."""
+    result = await matter.matter_client.open_commissioning_window(
+        node_id=msg["node_id"]
+    )
+    connection.send_result(msg[ID], dataclass_to_dict(result))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/remove_matter_fabric",
+        vol.Required("node_id"): int,
+        vol.Required("fabric_index"): int,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_remove_matter_fabric(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Remove Matter fabric from a device."""
+    await matter.matter_client.remove_matter_fabric(
+        node_id=msg["node_id"], fabric_index=msg["fabric_index"]
+    )
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {vol.Required(TYPE): "matter/interview_node", vol.Required("node_id"): int}
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_interview_node(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Interview a node."""
+    await matter.matter_client.interview_node(node_id=msg["node_id"])
     connection.send_result(msg[ID])
