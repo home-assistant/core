@@ -44,7 +44,7 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             pyvlx = PyVLX(
