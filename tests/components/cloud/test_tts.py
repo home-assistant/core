@@ -510,6 +510,7 @@ async def test_deprecated_voice(
         "cloud", f"deprecated_voice_{deprecated_voice}"
     )
     assert issue is not None
+    assert issue.breaks_in_ha_version == "2024.8.0"
     assert issue.is_fixable is True
     assert issue.is_persistent is True
     assert issue.severity == IssueSeverity.WARNING

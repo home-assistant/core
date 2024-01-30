@@ -273,6 +273,7 @@ def handle_deprecated_voice(
             is_fixable=True,
             is_persistent=True,
             severity=IssueSeverity.WARNING,
+            breaks_in_ha_version="2024.8.0",
             translation_key="deprecated_voice",
             translation_placeholders={
                 "deprecated_voice": original_voice,
