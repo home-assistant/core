@@ -106,164 +106,109 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
-
-    return async_setup_block_entry(hass, config_entry, async_add_entities)
-
-
-@callback
-def async_setup_block_entry(
-    hass: HomeAssistant,
-    config_entry: ShellyConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up entities for block device."""
-    coordinator = config_entry.runtime_data.block
-    assert coordinator
-
-    # Add Shelly Motion as a switch
-    if coordinator.model in MOTION_MODELS:
-        async_setup_entry_attribute_entities(
-            hass,
-            config_entry,
-            async_add_entities,
-            {("sensor", "motionActive"): MOTION_SWITCH},
-            BlockSleepingMotionSwitch,
+        return async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_SWITCHES, RpcRelaySwitch
         )
-        return
 
-    if config_entry.data[CONF_SLEEP_PERIOD]:
-        return
-
-    # In roller mode the relay blocks exist but do not contain required info
-    if (
-        coordinator.model in [MODEL_2, MODEL_25]
-        and coordinator.device.settings["mode"] != "relay"
-    ):
-        return
-
-    relay_blocks = []
-    assert coordinator.device.blocks
-    for block in coordinator.device.blocks:
-        if block.type != "relay" or (
-            block.channel is not None
-            and is_block_channel_type_light(
-                coordinator.device.settings, int(block.channel)
-            )
-        ):
-            continue
-
-        relay_blocks.append(block)
-        unique_id = f"{coordinator.mac}-{block.type}_{block.channel}"
-        async_remove_shelly_entity(hass, "light", unique_id)
-
-    if not relay_blocks:
-        return
-
-    async_add_entities(BlockRelaySwitch(coordinator, block) for block in relay_blocks)
-
-
-@callback
-def async_setup_rpc_entry(
-    hass: HomeAssistant,
-    config_entry: ShellyConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up entities for RPC device."""
-    coordinator = config_entry.runtime_data.rpc
-    assert coordinator
-
-    async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, RPC_RELAY_SWITCHES, RpcRelaySwitch
-    )
-
-    async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, RPC_SWITCHES, RpcSwitch
-    )
-
-    # the user can remove virtual components from the device configuration, so we need
-    # to remove orphaned entities
-    virtual_switch_ids = get_virtual_component_ids(
-        coordinator.device.config, SWITCH_PLATFORM
-    )
-    async_remove_orphaned_entities(
-        hass,
-        config_entry.entry_id,
-        coordinator.mac,
-        SWITCH_PLATFORM,
-        virtual_switch_ids,
-        "boolean",
-    )
-
-    # if the script is removed, from the device configuration, we need
-    # to remove orphaned entities
-    async_remove_orphaned_entities(
-        hass,
-        config_entry.entry_id,
-        coordinator.mac,
-        SWITCH_PLATFORM,
-        coordinator.device.status,
-        "script",
-    )
-
-    # if the climate is removed, from the device configuration, we need
-    # to remove orphaned entities
-    async_remove_orphaned_entities(
-        hass,
-        config_entry.entry_id,
-        coordinator.mac,
-        CLIMATE_PLATFORM,
-        coordinator.device.status,
-        "thermostat",
+    return async_setup_entry_attribute_entities(
+        hass, config_entry, async_add_entities, SWITCHES, BlockRelaySwitch
     )
 
 
-class BlockSleepingMotionSwitch(
-    ShellySleepingBlockAttributeEntity, RestoreEntity, SwitchEntity
-):
-    """Entity that controls Motion Sensor on Block based Shelly devices."""
+class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
+    """Entity that controls a relay on Block based Shelly devices."""
 
     entity_description: BlockSwitchDescription
-    _attr_translation_key = "motion_switch"
+    _attr_translation_key = "valve_switch"
 
     def __init__(
         self,
         coordinator: ShellyBlockCoordinator,
-        block: Block | None,
+        block: Block,
         attribute: str,
         description: BlockSwitchDescription,
-        entry: RegistryEntry | None = None,
     ) -> None:
-        """Initialize the sleeping sensor."""
-        super().__init__(coordinator, block, attribute, description, entry)
-        self.last_state: State | None = None
-
-    @property
-    def is_on(self) -> bool | None:
-        """If motion is active."""
-        if self.block is not None:
-            return bool(self.block.motionActive)
-
-        if self.last_state is None:
-            return None
-
-        return self.last_state.state == STATE_ON
+        """Initialize relay switch."""
+        super().__init__(coordinator, block, attribute, description)
+        self._attr_unique_id: str = f"{super().unique_id}"
+        self.control_result: dict[str, Any] | None = None
+        self._valve = description.name == "Valve"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Activate switch."""
-        await self.coordinator.device.set_shelly_motion_detection(True)
+        """Turn on relay."""
+        if self._valve:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_valve_switch",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_valve_switch",
+                translation_placeholders={
+                    "entity": f"{VALVE_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                    "service": f"{VALVE_DOMAIN}.open_valve",
+                },
+            )
+            self.control_result = await self.set_state(go="open")
+        else:
+            self.control_result = await self.set_state(turn="on")
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Deactivate switch."""
-        await self.coordinator.device.set_shelly_motion_detection(False)
+        """Turn off relay."""
+        if self._valve:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_valve_switch",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_valve_switche",
+                translation_placeholders={
+                    "entity": f"{VALVE_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                    "service": f"{VALVE_DOMAIN}.close_valve",
+                },
+            )
+            self.control_result = await self.set_state(go="close")
+        else:
+            self.control_result = await self.set_state(turn="off")
         self.async_write_ha_state()
 
+    @callback
+    def _update_callback(self) -> None:
+        """When device updates, clear control result that overrides state."""
+        self.control_result = None
+        super()._update_callback()
+
     async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
+        """Set up a listener when this entity is added to HA."""
         await super().async_added_to_hass()
-        if (last_state := await self.async_get_last_state()) is not None:
-            self.last_state = last_state
+
+        entity_automations = automations_with_entity(self.hass, self.entity_id)
+        entity_scripts = scripts_with_entity(self.hass, self.entity_id)
+        for item in entity_automations + entity_scripts:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_valve_{self.entity_id}_{item}",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_valve_switch_entity",
+                translation_placeholders={
+                    "entity": f"{SWITCH_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                    "info": item,
+                },
+            )
+
+    @callback
+    def _update_callback(self) -> None:
+        """When device updates, clear control result that overrides state."""
+        self.control_result = None
+
+        super()._update_callback()
 
 
 class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
@@ -308,37 +253,10 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         super()._update_callback()
 
 
-class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
-    """Entity that controls a switch on RPC based Shelly devices."""
+class RpcRelaySwitch(ShellyRpcAttributeEntity, SwitchEntity):
+    """Entity that controls a relay on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
-    _attr_has_entity_name = True
-
-    @property
-    def is_on(self) -> bool:
-        """If switch is on."""
-        return self.entity_description.is_on(self.status)
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on relay."""
-        await self.call_rpc(
-            self.entity_description.method_on,
-            self.entity_description.method_params_fn(self._id, True),
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off relay."""
-        await self.call_rpc(
-            self.entity_description.method_off,
-            self.entity_description.method_params_fn(self._id, False),
-        )
-
-
-class RpcRelaySwitch(RpcSwitch):
-    """Entity that controls a switch on RPC based Shelly devices."""
-
-    # False to avoid double naming as True is inerithed from base class
-    _attr_has_entity_name = False
 
     def __init__(
         self,
