@@ -356,7 +356,7 @@ aiounifi==69
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.4.3
+aiovodafone==0.5.4
 
 # homeassistant.components.waqi
 aiowaqi==3.0.1
@@ -377,7 +377,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.5.6-2
+airthings-ble==0.6.0
 
 # homeassistant.components.airthings
 airthings-cloud==0.1.0
@@ -860,6 +860,7 @@ iaqualink==0.5.0
 # homeassistant.components.ibeacon
 ibeacon-ble==1.0.1
 
+# homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 ical==6.1.1
@@ -1110,7 +1111,7 @@ open-meteo==0.3.1
 openai==1.3.8
 
 # homeassistant.components.openerz
-openerz-api==0.2.0
+openerz-api==0.3.0
 
 # homeassistant.components.openhome
 openhomedevice==2.2.0
@@ -2150,7 +2151,7 @@ yalexs==1.10.0
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.3.4
+yolink-api==0.3.6
 
 # homeassistant.components.youless
 youless-api==1.0.1
@@ -2186,7 +2187,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.60.6
+zigpy==0.60.7
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.3

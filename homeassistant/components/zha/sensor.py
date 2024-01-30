@@ -481,8 +481,12 @@ class Illuminance(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = LIGHT_LUX
 
-    def formatter(self, value: int) -> int:
+    def formatter(self, value: int) -> int | None:
         """Convert illumination data."""
+        if value == 0:
+            return 0
+        if value == 0xFFFF:
+            return None
         return round(pow(10, ((value - 1) / 10000)))
 
 

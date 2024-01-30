@@ -478,7 +478,7 @@ class ClimateCapabilities(AlexaEntity):
         if (
             self.entity.domain == climate.DOMAIN
             and climate.HVACMode.OFF
-            in self.entity.attributes.get(climate.ATTR_HVAC_MODES, [])
+            in (self.entity.attributes.get(climate.ATTR_HVAC_MODES) or [])
             or self.entity.domain == water_heater.DOMAIN
             and (supported_features & water_heater.WaterHeaterEntityFeature.ON_OFF)
         ):
@@ -742,7 +742,8 @@ class MediaPlayerCapabilities(AlexaEntity):
             and domain != "denonavr"
         ):
             inputs = AlexaEqualizerController.get_valid_inputs(
-                self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST, [])
+                self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST)
+                or []
             )
             if len(inputs) > 0:
                 yield AlexaEqualizerController(self.entity)
