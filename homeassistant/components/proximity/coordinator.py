@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_ZONE,
     UnitOfLength,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, EventType
@@ -82,6 +82,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self.unit_of_measurement: str = config.get(
             CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
         )
+        self.entity_mapping: dict[str, list[str]] = {}
 
         super().__init__(
             hass,
@@ -94,6 +95,13 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         self.state_change_data: StateChangedData | None = None
 
+    @callback
+    def async_add_entity_mapping(self, tracked_entity_id: str, entity_id: str) -> None:
+        """Add an tracked entity to proximity entity mapping."""
+        if tracked_entity_id not in self.entity_mapping:
+            self.entity_mapping[tracked_entity_id] = []
+        self.entity_mapping[tracked_entity_id].append(entity_id)
+
     async def async_check_proximity_state_change(
         self, entity: str, old_state: State | None, new_state: State | None
     ) -> None:
@@ -105,10 +113,33 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self, event: EventType[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Fetch and process tracked entity change event."""
-        _LOGGER.debug("async_check_tracked_entity_change.event: %s", event)
         data = event.data
         if data["action"] == "remove":
             self._create_removed_tracked_entity_issue(data["entity_id"])
+
+        if data["action"] == "update" and "entity_id" in data["changes"]:
+            old_tracked_entity_id = data["old_entity_id"]
+            new_tracked_entity_id = data["entity_id"]
+
+            entity_reg = er.async_get(self.hass)
+            for rel_ent_id in self.entity_mapping.get(old_tracked_entity_id, []):
+                if (rel_ent := entity_reg.async_get(rel_ent_id)) is None:
+                    continue
+                old_uid = rel_ent.unique_id
+                new_uid = old_uid.replace(old_tracked_entity_id, new_tracked_entity_id)
+                entity_reg.async_update_entity(rel_ent_id, new_unique_id=new_uid)
+
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={
+                    **self.config_entry.data,
+                    CONF_TRACKED_ENTITIES: [
+                        te
+                        for te in self.tracked_entities + [new_tracked_entity_id]
+                        if te != old_tracked_entity_id
+                    ],
+                },
+            )
 
     def _convert(self, value: float | str) -> float | str:
         """Round and convert given distance value."""

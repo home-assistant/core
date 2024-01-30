@@ -131,6 +131,13 @@ class ProximityTrackedEntitySensor(
         self._attr_name = f"{tracked_entity_id.split('.')[-1]} {description.name}"
         self._attr_device_info = _device_info(coordinator)
 
+    async def async_added_to_hass(self) -> None:
+        """Register entity mapping."""
+        await super().async_added_to_hass()
+        self.coordinator.async_add_entity_mapping(
+            self.tracked_entity_id, self.entity_id
+        )
+
     @property
     def data(self) -> dict[str, str | int | None] | None:
         """Get data from coordinator."""
