@@ -52,6 +52,10 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
     mock_envoy = Mock(spec=Envoy)
     mock_envoy.serial_number = serial_number
     mock_envoy.firmware = "7.1.2"
+    mock_envoy.part_number = "123456789"
+    mock_envoy.envoy_model = (
+        "Envoy, phases: 3, phase mode: three, net-consumption CT, production CT"
+    )
     mock_envoy.authenticate = mock_authenticate
     mock_envoy.setup = mock_setup
     mock_envoy.auth = mock_auth
@@ -67,6 +71,7 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
     mock_envoy.active_phase_count = 3
     mock_envoy.ct_meter_count = 2
     mock_envoy.consumption_meter_type = CtType.NET_CONSUMPTION
+    mock_envoy.production_meter_type = CtType.PRODUCTION
     mock_envoy.data = EnvoyData(
         system_consumption=EnvoySystemConsumption(
             watt_hours_last_7_days=1234,

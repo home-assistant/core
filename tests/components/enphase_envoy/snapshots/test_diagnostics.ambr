@@ -1,10 +1,7 @@
 # serializer version: 1
 # name: test_entry_diagnostics
   dict({
-    'data': dict({
-      'varies_by': 'firmware_version',
-    }),
-    'entry': dict({
+    'config_entry': dict({
       'data': dict({
         'host': '1.1.1.1',
         'name': '**REDACTED**',
@@ -25,6 +22,84 @@
       'unique_id': '**REDACTED**',
       'version': 1,
     }),
-    'envoy_firmware': '7.1.2',
+    'envoy_entities_by_device': list([
+    ]),
+    'envoy_model_data': dict({
+      'ctmeter_consumption': None,
+      'ctmeter_consumption_phases': None,
+      'ctmeter_production': None,
+      'ctmeter_production_phases': None,
+      'dry_contact_settings': dict({
+      }),
+      'dry_contact_status': dict({
+      }),
+      'encharge_aggregate': None,
+      'encharge_inventory': None,
+      'encharge_power': None,
+      'enpower': None,
+      'inverters': dict({
+        '1': dict({
+          '__type': "<class 'pyenphase.models.inverter.EnvoyInverter'>",
+          'repr': "EnvoyInverter(serial_number='1', last_report_date=1, last_report_watts=1, max_report_watts=1)",
+        }),
+      }),
+      'system_consumption': dict({
+        '__type': "<class 'pyenphase.models.system_consumption.EnvoySystemConsumption'>",
+        'repr': 'EnvoySystemConsumption(watt_hours_lifetime=1234, watt_hours_last_7_days=1234, watt_hours_today=1234, watts_now=1234)',
+      }),
+      'system_consumption_phases': dict({
+        'L1': dict({
+          '__type': "<class 'pyenphase.models.system_consumption.EnvoySystemConsumption'>",
+          'repr': 'EnvoySystemConsumption(watt_hours_lifetime=1322, watt_hours_last_7_days=1321, watt_hours_today=1323, watts_now=1324)',
+        }),
+        'L2': dict({
+          '__type': "<class 'pyenphase.models.system_consumption.EnvoySystemConsumption'>",
+          'repr': 'EnvoySystemConsumption(watt_hours_lifetime=2322, watt_hours_last_7_days=2321, watt_hours_today=2323, watts_now=2324)',
+        }),
+        'L3': dict({
+          '__type': "<class 'pyenphase.models.system_consumption.EnvoySystemConsumption'>",
+          'repr': 'EnvoySystemConsumption(watt_hours_lifetime=3322, watt_hours_last_7_days=3321, watt_hours_today=3323, watts_now=3324)',
+        }),
+      }),
+      'system_production': dict({
+        '__type': "<class 'pyenphase.models.system_production.EnvoySystemProduction'>",
+        'repr': 'EnvoySystemProduction(watt_hours_lifetime=1234, watt_hours_last_7_days=1234, watt_hours_today=1234, watts_now=1234)',
+      }),
+      'system_production_phases': dict({
+        'L1': dict({
+          '__type': "<class 'pyenphase.models.system_production.EnvoySystemProduction'>",
+          'repr': 'EnvoySystemProduction(watt_hours_lifetime=1232, watt_hours_last_7_days=1231, watt_hours_today=1233, watts_now=1234)',
+        }),
+        'L2': dict({
+          '__type': "<class 'pyenphase.models.system_production.EnvoySystemProduction'>",
+          'repr': 'EnvoySystemProduction(watt_hours_lifetime=2232, watt_hours_last_7_days=2231, watt_hours_today=2233, watts_now=2234)',
+        }),
+        'L3': dict({
+          '__type': "<class 'pyenphase.models.system_production.EnvoySystemProduction'>",
+          'repr': 'EnvoySystemProduction(watt_hours_lifetime=3232, watt_hours_last_7_days=3231, watt_hours_today=3233, watts_now=3234)',
+        }),
+      }),
+      'tariff': None,
+    }),
+    'envoy_properties': dict({
+      'active_phasecount': '3',
+      'ct_consumption_meter': 'net-consumption',
+      'ct_count': '2',
+      'ct_production_meter': 'production',
+      'envoy_firmware': '7.1.2',
+      'envoy_model': 'Envoy, phases: 3, phase mode: three, net-consumption CT, production CT',
+      'part_number': '123456789',
+      'phase_count': '3',
+      'phase_mode': 'three',
+      'supported_features': list([
+        'INVERTERS',
+        'METERING',
+        'PRODUCTION',
+        'THREEPHASE',
+      ]),
+    }),
+    'raw_data': dict({
+      'varies_by': 'firmware_version',
+    }),
   })
 # ---
