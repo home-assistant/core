@@ -12,8 +12,12 @@ from matter_server.common.helpers.util import dataclass_to_dict
 from matter_server.common.models import CommissioningParameters
 import pytest
 
-from homeassistant.components.matter.api import ID, TYPE
+from homeassistant.components.matter.api import DEVICE_ID, ID, TYPE
+from homeassistant.components.matter.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from .common import setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -193,11 +197,24 @@ async def test_node_diagnostics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     matter_client: MagicMock,
-    integration: MockConfigEntry,
 ) -> None:
     """Test the node diagnostics command."""
-    ws_client = await hass_ws_client(hass)
+    # setup (mock) integration with a random node fixture
+    await setup_integration_with_node_fixture(
+        hass,
+        "onoff-light",
+        matter_client,
+    )
+    # get the device registry entry for the mocked node
+    dev_reg = dr.async_get(hass)
+    entry = dev_reg.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
 
+    # create a mock NodeDiagnostics
     mock_diagnostics = NodeDiagnostics(
         node_id=1,
         network_type=NetworkType.WIFI,
@@ -210,11 +227,13 @@ async def test_node_diagnostics(
     )
     matter_client.node_diagnostics = AsyncMock(return_value=mock_diagnostics)
 
+    # issue command on the ws api
+    ws_client = await hass_ws_client(hass)
     await ws_client.send_json(
         {
             ID: 1,
             TYPE: "matter/node_diagnostics",
-            "node_id": 1,
+            DEVICE_ID: entry.id,
         }
     )
     msg = await ws_client.receive_json()
@@ -234,19 +253,34 @@ async def test_ping_node(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     matter_client: MagicMock,
-    integration: MockConfigEntry,
 ) -> None:
     """Test the ping_node command."""
-    ws_client = await hass_ws_client(hass)
+    # setup (mock) integration with a random node fixture
+    await setup_integration_with_node_fixture(
+        hass,
+        "onoff-light",
+        matter_client,
+    )
+    # get the device registry entry for the mocked node
+    dev_reg = dr.async_get(hass)
+    entry = dev_reg.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
 
+    # create a mocked ping result
     ping_result = {"192.168.1.1": False, "fe80::260:97ff:fe02:6ea5": True}
     matter_client.ping_node = AsyncMock(return_value=ping_result)
 
+    # issue command on the ws api
+    ws_client = await hass_ws_client(hass)
     await ws_client.send_json(
         {
             ID: 1,
             TYPE: "matter/ping_node",
-            "node_id": 1,
+            DEVICE_ID: entry.id,
         }
     )
     msg = await ws_client.receive_json()
@@ -262,11 +296,24 @@ async def test_open_commissioning_window(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     matter_client: MagicMock,
-    integration: MockConfigEntry,
 ) -> None:
     """Test the open_commissioning_window command."""
-    ws_client = await hass_ws_client(hass)
+    # setup (mock) integration with a random node fixture
+    await setup_integration_with_node_fixture(
+        hass,
+        "onoff-light",
+        matter_client,
+    )
+    # get the device registry entry for the mocked node
+    dev_reg = dr.async_get(hass)
+    entry = dev_reg.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
 
+    # create mocked CommissioningParameters
     commissioning_parameters = CommissioningParameters(
         setupPinCode=51590642,
         setupManualCode="36296231484",
@@ -276,11 +323,13 @@ async def test_open_commissioning_window(
         return_value=commissioning_parameters
     )
 
+    # issue command on the ws api
+    ws_client = await hass_ws_client(hass)
     await ws_client.send_json(
         {
             ID: 1,
             TYPE: "matter/open_commissioning_window",
-            "node_id": 1,
+            DEVICE_ID: entry.id,
         }
     )
     msg = await ws_client.receive_json()
@@ -296,13 +345,32 @@ async def test_remove_matter_fabric(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     matter_client: MagicMock,
-    integration: MockConfigEntry,
 ) -> None:
     """Test the remove_matter_fabric command."""
-    ws_client = await hass_ws_client(hass)
+    # setup (mock) integration with a random node fixture
+    await setup_integration_with_node_fixture(
+        hass,
+        "onoff-light",
+        matter_client,
+    )
+    # get the device registry entry for the mocked node
+    dev_reg = dr.async_get(hass)
+    entry = dev_reg.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
 
+    # issue command on the ws api
+    ws_client = await hass_ws_client(hass)
     await ws_client.send_json(
-        {ID: 1, TYPE: "matter/remove_matter_fabric", "node_id": 1, "fabric_index": 3}
+        {
+            ID: 1,
+            TYPE: "matter/remove_matter_fabric",
+            DEVICE_ID: entry.id,
+            "fabric_index": 3,
+        }
     )
     msg = await ws_client.receive_json()
     assert msg["success"]
@@ -315,12 +383,27 @@ async def test_interview_node(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     matter_client: MagicMock,
-    integration: MockConfigEntry,
 ) -> None:
     """Test the interview_node command."""
+    # setup (mock) integration with a random node fixture
+    await setup_integration_with_node_fixture(
+        hass,
+        "onoff-light",
+        matter_client,
+    )
+    # get the device registry entry for the mocked node
+    dev_reg = dr.async_get(hass)
+    entry = dev_reg.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+    # issue command on the ws api
     ws_client = await hass_ws_client(hass)
-
-    await ws_client.send_json({ID: 1, TYPE: "matter/interview_node", "node_id": 1})
+    await ws_client.send_json(
+        {ID: 1, TYPE: "matter/interview_node", DEVICE_ID: entry.id}
+    )
     msg = await ws_client.receive_json()
     assert msg["success"]
     matter_client.interview_node.assert_called_once_with(1)
