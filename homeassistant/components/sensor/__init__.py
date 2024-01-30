@@ -378,7 +378,11 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     def _is_valid_suggested_unit(self, suggested_unit_of_measurement: str) -> bool:
-        """Validate that a converter for the device_class exists and supports the conversation form native to the suggested unit of measurement."""
+        """Validate the suggested unit.
+        
+        Validate that a unit converter exists for the sensor's device class and that the
+        unit converter supports both the native and the suggested units of measurement.
+        """
         # Make sure we can convert the units
         if (
             (unit_converter := UNIT_CONVERTERS.get(self.device_class)) is None
