@@ -546,8 +546,15 @@ class ClusterHandler(LogMixin):
         if ignore_failures:
             success.update({k: None for k in failure})
         elif failure:
+            success_text = ", ".join(f"{k}={v!r}" for k, v in success.items())
             failure_text = ", ".join(f"{k}={v!r}" for k, v in failure.items())
-            raise AttributeReadFailure(f"Could not read attributes {failure_text}")
+
+            msg = f"Could not read attributes {failure_text}"
+
+            if success_text:
+                msg += f" (read {success_text})"
+
+            raise AttributeReadFailure(msg)
 
         return success
 
