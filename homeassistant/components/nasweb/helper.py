@@ -2,28 +2,44 @@
 
 import logging
 
-from homeassistant.core import HomeAssistant
+from aiohttp.hdrs import METH_POST
 
-from .const import PUSH_API_ENDPOINT
+from homeassistant.components.webhook import (
+    async_generate_id,
+    async_register as webhook_register,
+)
+from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.network import get_url
+
+from .const import DOMAIN, NOTIFY_COORDINATOR, WEBHOOK_URL
 from .coordinator import NotificationCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def initialize_notification_coordinator(
-    hass: HomeAssistant,
-) -> NotificationCoordinator | None:
+def get_integration_webhook_url(hass: HomeAssistant) -> str:
+    """Return webhook url for Push API."""
+    hass_url = get_url(hass)
+    return WEBHOOK_URL.format(
+        internal_url=hass_url, webhook_id=hass.data[DOMAIN][CONF_WEBHOOK_ID]
+    )
+
+
+def initialize_notification_coordinator(hass: HomeAssistant) -> NotificationCoordinator:
     """Initialize and set up NotificationCoordinator instance."""
-    notify_coordinator = NotificationCoordinator()
-    try:
-        _LOGGER.debug("Adding push notification handler")
-        hass.http.app.router.add_post(
-            PUSH_API_ENDPOINT, notify_coordinator.handle_notification
+    if NOTIFY_COORDINATOR not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][NOTIFY_COORDINATOR] = NotificationCoordinator()
+    notify_coordinator: NotificationCoordinator = hass.data[DOMAIN][NOTIFY_COORDINATOR]
+    if CONF_WEBHOOK_ID not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][CONF_WEBHOOK_ID] = async_generate_id()
+        webhook_register(
+            hass,
+            DOMAIN,
+            "NASweb",
+            hass.data[DOMAIN][CONF_WEBHOOK_ID],
+            notify_coordinator.handle_webhook_request,
+            allowed_methods=[METH_POST],
         )
-    except RuntimeError:
-        _LOGGER.error(
-            "Integration cannot register endpoint for local push. "
-            "Home Assistant restart should fix this issue"
-        )
-        return None
+        _LOGGER.debug("Registered webhook: %s", hass.data[DOMAIN][CONF_WEBHOOK_ID])
     return notify_coordinator
