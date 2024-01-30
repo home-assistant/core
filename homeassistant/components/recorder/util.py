@@ -484,7 +484,7 @@ def async_create_backup_failure_issue(
         severity=ir.IssueSeverity.CRITICAL,
         learn_more_url="https://www.home-assistant.io/integrations/recorder",
         translation_key="backup_failed_out_of_resources",
-        translation_placeholders={"start_time": str(local_start_time)},
+        translation_placeholders={"start_time": local_start_time.strftime("%H:%M:%S")},
     )
 
 
