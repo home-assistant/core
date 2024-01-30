@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN
 from .coordinator import ComelitSerialBridge
 
 
@@ -124,7 +124,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     def _api_mode(self) -> str:
         """Return device mode."""
         # Values from API: "O", "L", "U"
-        _LOGGER.warning("Unknown API mode '%s' received", self._clima[2])
         return self._clima[2]
 
     @property
