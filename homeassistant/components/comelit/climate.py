@@ -115,7 +115,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     @property
     def _clima(self) -> list[Any]:
         """Return clima device data."""
-        # CLIMATE has 2 turple:
+        # CLIMATE has a 2 item tuple:
         # - first  for Clima
         # - second for Humidifier
         return self.coordinator.data[CLIMATE][self._device.index].val[0]
@@ -124,6 +124,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     def _api_mode(self) -> str:
         """Return device mode."""
         # Values from API: "O", "L", "U"
+        _LOGGER.warning("Unknown API mode '%s' received", self._clima[2])
         return self._clima[2]
 
     @property
@@ -159,7 +160,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         if self._api_mode in API_STATUS:
             return API_STATUS[self._api_mode]["hvac_mode"]
 
-        _LOGGER.warning("Unknown API mode '%s' in hvac_mode", self._api_mode)
         return None
 
     @property
@@ -175,7 +175,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         if self._api_mode in API_STATUS:
             return API_STATUS[self._api_mode]["hvac_action"]
 
-        _LOGGER.warning("Unknown API mode '%s' in hvac_action", self._api_mode)
         return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
