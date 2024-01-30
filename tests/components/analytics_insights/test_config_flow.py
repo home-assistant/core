@@ -5,6 +5,7 @@ from python_homeassistant_analytics import HomeassistantAnalyticsConnectionError
 
 from homeassistant import config_entries
 from homeassistant.components.analytics_insights.const import (
+    CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
 )
@@ -26,14 +27,20 @@ async def test_form(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TRACKED_INTEGRATIONS: ["youtube"]},
+        {
+            CONF_TRACKED_INTEGRATIONS: ["youtube"],
+            CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+        },
     )
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home Assistant Analytics Insights"
     assert result["data"] == {}
-    assert result["options"] == {CONF_TRACKED_INTEGRATIONS: ["youtube"]}
+    assert result["options"] == {
+        CONF_TRACKED_INTEGRATIONS: ["youtube"],
+        CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -60,7 +67,10 @@ async def test_form_already_configured(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
-        options={CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify"]},
+        options={
+            CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify"],
+            CONF_TRACKED_CUSTOM_INTEGRATIONS: [],
+        },
     )
     entry.add_to_hass(hass)
 
@@ -87,6 +97,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={
             CONF_TRACKED_INTEGRATIONS: ["youtube", "hue"],
+            CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
         },
     )
     await hass.async_block_till_done()
@@ -94,6 +105,7 @@ async def test_options_flow(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_TRACKED_INTEGRATIONS: ["youtube", "hue"],
+        CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
     }
     await hass.async_block_till_done()
     mock_analytics_client.get_integrations.assert_called_once()

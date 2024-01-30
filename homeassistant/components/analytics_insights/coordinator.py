@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from python_homeassistant_analytics import (
+    CustomIntegration,
     HomeassistantAnalyticsClient,
     HomeassistantAnalyticsConnectionError,
     HomeassistantAnalyticsNotModifiedError,
@@ -14,14 +15,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN, LOGGER
+from .const import (
+    CONF_TRACKED_CUSTOM_INTEGRATIONS,
+    CONF_TRACKED_INTEGRATIONS,
+    DOMAIN,
+    LOGGER,
+)
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class AnalyticsData:
     """Analytics data class."""
 
     core_integrations: dict[str, int]
+    custom_integrations: dict[str, int]
 
 
 class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[AnalyticsData]):
@@ -43,10 +50,14 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
         self._tracked_integrations = self.config_entry.options[
             CONF_TRACKED_INTEGRATIONS
         ]
+        self._tracked_custom_integrations = self.config_entry.options[
+            CONF_TRACKED_CUSTOM_INTEGRATIONS
+        ]
 
     async def _async_update_data(self) -> AnalyticsData:
         try:
             data = await self._client.get_current_analytics()
+            custom_data = await self._client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError as err:
             raise UpdateFailed(
                 "Error communicating with Homeassistant Analytics"
@@ -57,4 +68,17 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
             integration: data.integrations.get(integration, 0)
             for integration in self._tracked_integrations
         }
-        return AnalyticsData(core_integrations=core_integrations)
+        custom_integrations = {
+            integration: get_custom_integration_value(custom_data, integration)
+            for integration in self._tracked_custom_integrations
+        }
+        return AnalyticsData(core_integrations, custom_integrations)
+
+
+def get_custom_integration_value(
+    data: dict[str, CustomIntegration], domain: str
+) -> int:
+    """Get custom integration value."""
+    if domain in data:
+        return data[domain].total
+    return 0
