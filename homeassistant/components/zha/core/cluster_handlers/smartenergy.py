@@ -137,12 +137,30 @@ class MeteringClusterHandler(ClusterHandler):
         4: "Pressure Metering",
         5: "Heat Metering",
         6: "Cooling Metering",
+        7: "End Use Measurement Device (EUMD) for metering electric vehicle charging",
+        8: "PV Generation Metering",
+        9: "Wind Turbine Generation Metering",
+        10: "Water Turbine Generation Metering",
+        11: "Micro Generation Metering",
+        12: "Solar Hot Water Generation Metering",
+        13: "Electric Metering Element/Phase 1",
+        14: "Electric Metering Element/Phase 2",
+        15: "Electric Metering Element/Phase 3",
         128: "Mirrored Gas Metering",
         129: "Mirrored Water Metering",
         130: "Mirrored Thermal Metering",
         131: "Mirrored Pressure Metering",
         132: "Mirrored Heat Metering",
         133: "Mirrored Cooling Metering",
+        134: "Mirrored End Use Measurement Device (EUMD) for metering electric vehicle charging",
+        135: "Mirrored PV Generation Metering",
+        136: "Mirrored Wind Turbine Generation Metering",
+        137: "Mirrored Water Turbine Generation Metering",
+        138: "Mirrored Micro Generation Metering",
+        139: "Mirrored Solar Hot Water Generation Metering",
+        140: "Mirrored Electric Metering Element/Phase 1",
+        141: "Mirrored Electric Metering Element/Phase 2",
+        142: "Mirrored Electric Metering Element/Phase 3",
     }
 
     class DeviceStatusElectric(enum.IntFlag):
@@ -198,7 +216,25 @@ class MeteringClusterHandler(ClusterHandler):
         """Return metering device status."""
         if (status := self.cluster.get(Metering.AttributeDefs.status.name)) is None:
             return None
-        if self.cluster.get(Metering.AttributeDefs.metering_device_type.name) == 0:
+        if self.cluster.get(Metering.AttributeDefs.metering_device_type.name) in (
+            0,
+            7,
+            8,
+            9,
+            10,
+            11,
+            13,
+            14,
+            15,
+            134,
+            135,
+            136,
+            137,
+            138,
+            140,
+            141,
+            142,
+        ):
             # Electric metering device type
             return self.DeviceStatusElectric(status)
         return self.DeviceStatusDefault(status)
