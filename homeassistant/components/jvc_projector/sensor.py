@@ -18,7 +18,7 @@ from . import JvcProjectorDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import JvcProjectorEntity
 
-JVC_SENSORS = (
+JVC_SENSORS = [
     SensorEntityDescription(
         key="power",
         translation_key="jvc_power_status",
@@ -44,7 +44,7 @@ JVC_SENSORS = (
             const.NOSIGNAL,
         ],
     ),
-)
+]
 
 
 async def async_setup_entry(
@@ -53,12 +53,12 @@ async def async_setup_entry(
     """Set up the JVC Projector platform from a config entry."""
     coordinator: JvcProjectorDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors_descriptions: list[SensorEntityDescription] = []
-    for description in JVC_SENSORS:
-        sensors_descriptions.append(description)
+    #    sensors_descriptions: list[SensorEntityDescription] = []
+    #    for description in JVC_SENSORS:
+    #        sensors_descriptions.append(description)
 
     async_add_entities(
-        JvcSensor(coordinator, description) for description in sensors_descriptions
+        JvcSensor(coordinator, description) for description in JVC_SENSORS
     )
 
 
