@@ -6,7 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.tuya.const import CONF_APP_TYPE, DOMAIN, TUYA_SMART_APP
+from homeassistant.components.tuya.const import (
+    CONF_APP_TYPE,
+    CONF_USER_CODE,
+    DOMAIN,
+    TUYA_SMART_APP,
+)
 
 from tests.common import MockConfigEntry
 
@@ -18,6 +23,17 @@ def mock_old_config_entry() -> MockConfigEntry:
         title="Old Tuya configuration entry",
         domain=DOMAIN,
         data={CONF_APP_TYPE: TUYA_SMART_APP},
+        unique_id="12345",
+    )
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock an config entry."""
+    return MockConfigEntry(
+        title="12345",
+        domain=DOMAIN,
+        data={CONF_USER_CODE: "12345"},
         unique_id="12345",
     )
 
