@@ -270,8 +270,3 @@ class WindowCoveringClusterHandler(ClusterHandler):
     def window_covering_type(self) -> WindowCovering.WindowCoveringType | None:
         """Return the window covering type."""
         return self.cluster.get(WindowCovering.AttributeDefs.window_covering_type.name)
-
-    @property
-    def window_covering_mode(self) -> WindowCovering.WindowCoveringMode | None:
-        """Return the window covering mode."""
-        return self.cluster.get(WindowCovering.AttributeDefs.window_covering_mode.name)

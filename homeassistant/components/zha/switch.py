@@ -635,19 +635,17 @@ class WindowCoveringInversionSwitch(ZHASwitchConfigurationEntity):
 
     async def _async_on_off(self, invert: bool) -> None:
         """Turn the entity on or off."""
-        if (current_mode := self._cluster_handler.window_covering_mode) is None:
-            await self.async_update()
-
-        current_mode = self._cluster_handler.window_covering_mode
-
+        name: str = WindowCovering.AttributeDefs.window_covering_mode.name
+        current_mode: WindowCoveringMode = WindowCoveringMode(
+            self._cluster_handler.cluster.get(name)
+        )
+        send_command: bool = False
         if invert and WindowCoveringMode.Motor_direction_reversed not in current_mode:
             current_mode |= WindowCoveringMode.Motor_direction_reversed
+            send_command = True
         elif not invert and WindowCoveringMode.Motor_direction_reversed in current_mode:
             current_mode &= ~WindowCoveringMode.Motor_direction_reversed
-        else:
-            return
-
-        await self._cluster_handler.write_attributes_safe(
-            {WindowCovering.AttributeDefs.window_covering_mode.name: current_mode}
-        )
-        await self.async_update()
+            send_command = True
+        if send_command:
+            await self._cluster_handler.write_attributes_safe({name: current_mode})
+            await self.async_update()
