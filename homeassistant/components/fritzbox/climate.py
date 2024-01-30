@@ -74,7 +74,10 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     _attr_precision = PRECISION_HALVES
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
