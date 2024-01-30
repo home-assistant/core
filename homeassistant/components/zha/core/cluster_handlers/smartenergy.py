@@ -146,6 +146,7 @@ class MeteringClusterHandler(ClusterHandler):
         13: "Electric Metering Element/Phase 1",
         14: "Electric Metering Element/Phase 2",
         15: "Electric Metering Element/Phase 3",
+        127: "Mirrored Electric Metering",
         128: "Mirrored Gas Metering",
         129: "Mirrored Water Metering",
         130: "Mirrored Thermal Metering",
