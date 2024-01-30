@@ -173,7 +173,7 @@ class MeteringClusterHandler(ClusterHandler):
         127: "Mirrored Electric Metering",
         128: "Mirrored Gas Metering",
         129: "Mirrored Water Metering",
-        130: "Mirrored Thermal Metering",  # depreciated
+        130: "Mirrored Thermal Metering",  # deprecated
         131: "Mirrored Pressure Metering",
         132: "Mirrored Heat Metering",
         133: "Mirrored Cooling Metering",
