@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import zigpy.profiles.zha
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
+from zigpy.zcl.clusters.hvac import Thermostat
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.zha.core.const import ZHA_CLUSTER_HANDLER_READS_PER_REQ
@@ -302,14 +303,18 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
 
 async def async_test_setpoint_change_source(hass, cluster, entity_id):
     """Test the translation of numerical state into enum text."""
-    await send_attributes_report(hass, cluster, {0x0030: 0x01})
+    await send_attributes_report(
+        hass, cluster, {Thermostat.AttributeDefs.setpoint_change_source.id: 0x01}
+    )
     hass_state = hass.states.get(entity_id)
     assert hass_state.state == "Schedule"
 
 
 async def async_test_pi_heating_demand(hass, cluster, entity_id):
     """Test pi heating demand is correctly returned."""
-    await send_attributes_report(hass, cluster, {0x0008: 1})
+    await send_attributes_report(
+        hass, cluster, {Thermostat.AttributeDefs.pi_heating_demand.id: 1}
+    )
     assert_state(hass, entity_id, "1", "%")
 
 

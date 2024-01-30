@@ -991,7 +991,7 @@ class SonoffPresenceSenorTimeout(ZHANumberConfigurationEntity):
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
-    """Common Entity Class for ZCL Temperature input."""
+    """Common entity class for ZCL temperature input."""
 
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_mode: NumberMode = NumberMode.BOX
@@ -1001,7 +1001,7 @@ class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
-    """Min or Max Heat Setpoint setting on thermostats."""
+    """Min or max heat setpoint setting on thermostats."""
 
     _attr_icon: str = "mdi:thermostat"
     _attr_native_step: float = 0.5
@@ -1026,9 +1026,9 @@ class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
-    """Max Heat Setpoint setting on thermostats.
+    """Max heat setpoint setting on thermostats.
 
-    Optional Thermostat attribute
+    Optional thermostat attribute.
     """
 
     _unique_id_suffix = "max_heat_setpoint_limit"
@@ -1042,9 +1042,9 @@ class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
-    """Min Heat Setpoint setting on thermostats.
+    """Min heat setpoint setting on thermostats.
 
-    Optional Thermostat attribute
+    Optional thermostat attribute.
     """
 
     _unique_id_suffix = "min_heat_setpoint_limit"

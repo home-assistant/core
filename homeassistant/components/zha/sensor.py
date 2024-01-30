@@ -1272,7 +1272,7 @@ class SonoffPresenceSenorIlluminationStatus(Sensor):
 class PiHeatingDemand(Sensor):
     """Sensor that displays the percentage of heating power used.
 
-    Optional Thermostat attribute
+    Optional Thermostat attribute.
     """
 
     _unique_id_suffix = "pi_heating_demand"
@@ -1297,7 +1297,7 @@ class SetpointChangeSourceEnum(types.enum8):
 class SetpointChangeSource(EnumSensor):
     """Sensor that displays the source of the setpoint change.
 
-    Optional Thermostat attribute
+    Optional thermostat attribute.
     """
 
     _unique_id_suffix = "setpoint_change_source"
