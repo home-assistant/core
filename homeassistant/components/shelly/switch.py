@@ -12,7 +12,7 @@ from aioshelly.const import (
     MODEL_25,
     MODEL_GAS,
     MODEL_WALL_DISPLAY,
-    RPC_GENERATIONS,
+    MODEL_WALL_DISPLAY, RPC_GENERATIONS,
 )
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_PLATFORM
@@ -39,7 +39,7 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import (
-    async_remove_orphaned_entities,
+    async_remove_shelly_entity,
     get_device_entry_gen,
     get_virtual_component_ids,
     is_block_channel_type_light,
@@ -85,12 +85,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
+        rpc_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+        if rpc_coordinator and rpc_coordinator.model == MODEL_WALL_DISPLAY:
+            if not rpc_coordinator.device.shelly.get("relay_in_thermostat", False):
+                # Wall Display relay is not used as the thermostat actuator,
+                # we need to remove a climate entity
+                unique_id = f"{rpc_coordinator.mac}-thermostat:0"
+                async_remove_shelly_entity(hass, "climate", unique_id)
+
         return async_setup_entry_rpc(
             hass, config_entry, async_add_entities, RPC_SWITCHES, RpcRelaySwitch
         )
 
-    coordinator = get_entry_data(hass)[config_entry.entry_id].block
-    if coordinator and coordinator.model is MODEL_GAS:
+    block_coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    if block_coordinator and block_coordinator.model is MODEL_GAS:
         return async_setup_entry_attribute_entities(
             hass, config_entry, async_add_entities, GAS_VALVE_SWITCH, BlockValveSwitch
         )
