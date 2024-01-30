@@ -333,12 +333,12 @@ MOCK_STATUS_RPC = {
     "rgb:0": {"output": True, "brightness": 53.0, "rgb": [45, 55, 65]},
     "rgbw:0": {"output": True, "brightness": 53.0, "rgb": [21, 22, 23], "white": 120},
     "cloud": {"connected": False},
-    "cover:0": {
-        "state": "stopped",
-        "pos_control": True,
-        "current_pos": 50,
-        "apower": 85.3,
-    },
+    # "cover:0": {
+    #     "state": "stopped",
+    #     "pos_control": True,
+    #     "current_pos": 50,
+    #     "apower": 85.3,
+    # },
     "devicepower:0": {"external": {"present": True}},
     "temperature:0": {"tC": 22.9},
     "illuminance:0": {"lux": 345},

@@ -362,17 +362,17 @@ async def test_rpc_sensor(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC sensor."""
-    entity_id = f"{SENSOR_DOMAIN}.test_cover_0_power"
+    entity_id = f"{SENSOR_DOMAIN}.test_switch_0_power"
     await init_integration(hass, 2)
 
     assert hass.states.get(entity_id).state == "85.3"
 
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "apower", "88.2")
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "switch:0", "apower", "88.2")
     mock_rpc_device.mock_update()
 
     assert hass.states.get(entity_id).state == "88.2"
 
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "apower", None)
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "switch:0", "apower", None)
     mock_rpc_device.mock_update()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
