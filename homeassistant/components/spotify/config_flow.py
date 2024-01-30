@@ -39,6 +39,7 @@ class SpotifyFlowHandler(
         spotify = Spotify(auth=data["token"]["access_token"])
 
         try:
+            await self.hass.async_add_executor_job(spotify.me)
             current_user = await self.hass.async_add_executor_job(spotify.current_user)
         except Exception:  # pylint: disable=broad-except
             return self.async_abort(reason="connection_error")
