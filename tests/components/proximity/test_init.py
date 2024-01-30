@@ -1024,3 +1024,53 @@ async def test_create_removed_tracked_entity_issue(
     assert issue_registry.async_get_issue(
         DOMAIN, f"tracked_entity_removed_{t2.entity_id}"
     )
+
+
+async def test_migrate_unique_ids_on_renamed_tracked_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that we migrate the unique ids when tracked entity is renamed."""
+    t1 = entity_registry.async_get_or_create(
+        "device_tracker", "device_tracker", "test1"
+    )
+
+    hass.states.async_set(t1.entity_id, "not_home")
+
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        title="home",
+        data={
+            CONF_ZONE: "zone.home",
+            CONF_TRACKED_ENTITIES: [t1.entity_id],
+            CONF_IGNORED_ZONES: [],
+            CONF_TOLERANCE: 1,
+        },
+        unique_id=f"{DOMAIN}_home",
+    )
+
+    mock_config.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config.entry_id)
+    await hass.async_block_till_done()
+
+    sensor_t1 = f"sensor.home_{t1.entity_id.split('.')[-1]}_distance"
+
+    entity = entity_registry.async_get(sensor_t1)
+    assert entity
+    assert entity.unique_id == f"{mock_config.entry_id}_{t1.entity_id}_dist_to_zone"
+
+    entity_registry.async_update_entity(
+        t1.entity_id, new_entity_id=f"{t1.entity_id}_renamed"
+    )
+    await hass.async_block_till_done()
+
+    entity = entity_registry.async_get(sensor_t1)
+    assert entity
+    assert (
+        entity.unique_id
+        == f"{mock_config.entry_id}_{t1.entity_id}_renamed_dist_to_zone"
+    )
+
+    entry = hass.config_entries.async_get_entry(mock_config.entry_id)
+    assert entry
+    assert entry.data[CONF_TRACKED_ENTITIES] == [f"{t1.entity_id}_renamed"]
