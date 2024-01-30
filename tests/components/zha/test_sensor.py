@@ -987,11 +987,20 @@ async def test_elec_measurement_sensor_polling(
 
     entity_id = ENTITY_ID_PREFIX.format("power")
     zigpy_dev = elec_measurement_zigpy_dev
-    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS[
-        "active_power"
-    ] = 20
 
-    await zha_device_joined_restored(zigpy_dev)
+    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS.update(
+        {
+            "active_power": 20,
+            "active_power_max": 0,
+            "apparent_power": 0,
+            "rms_current": 0,
+            "rms_current_max": 0,
+            "rms_voltage": 0,
+            "rms_voltage_max": 0,
+            "ac_frequency": 0,
+            "ac_frequency_max": 0,
+        }
+    )
 
     # test that the sensor has an initial state of 2.0
     state = hass.states.get(entity_id)
