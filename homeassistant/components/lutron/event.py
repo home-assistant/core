@@ -63,10 +63,10 @@ class LutronEventEntity(LutronKeypad, EventEntity):
         self._has_release_event = (
             button.button_type is not None and "RaiseLower" in button.button_type
         )
-        event_types: list[str] = [LutronEventType.PRESS, LutronEventType.RELEASE]
-        if not self._has_release_event:
-            event_types.append(LutronEventType.SINGLE_PRESS)
-        self._attr_event_types = event_types
+        if self._has_release_event:
+            self._attr_event_types = [LutronEventType.PRESS, LutronEventType.RELEASE]
+        else:
+            self._attr_event_types = [LutronEventType.SINGLE_PRESS]
 
         self._full_id = slugify(f"{area_name} {name}")
         self._id = slugify(name)
