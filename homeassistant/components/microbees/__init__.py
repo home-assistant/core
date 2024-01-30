@@ -32,7 +32,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, domain=DOMAIN
 ) -> bool:
     """Set up microBees from a config entry."""
-    hass.data[domain] = {}
+    hass.data[DOMAIN] = {}
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -50,16 +50,16 @@ async def async_setup_entry(
         ):
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
-    hass.data[domain][entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         AUTH: api.ConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     }
     microbees = MicroBeesConnector(token=session.token[ACCESS_TOKEN])
-    hass.data[domain][CONNECTOR] = microbees
+    hass.data[DOMAIN][CONNECTOR] = microbees
     bees = await microbees.getBees()
 
-    hass.data[domain][BEES] = bees
-    hass.data.setdefault(domain, {})
-    hass.data[domain][entry.entry_id] = HomeAssistantMicroBeesData(
+    hass.data[DOMAIN][BEES] = bees
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = HomeAssistantMicroBeesData(
         client=microbees,
         bees=bees,
         session=session,
