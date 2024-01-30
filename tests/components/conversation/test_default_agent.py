@@ -147,8 +147,8 @@ async def test_conversation_agent(
         conversation.HOME_ASSISTANT_AGENT
     )
     with patch(
-        "homeassistant.components.conversation.default_agent.get_domains_and_languages",
-        return_value={"homeassistant": ["dwarvish", "elvish", "entish"]},
+        "homeassistant.components.conversation.default_agent.get_languages",
+        return_value=["dwarvish", "elvish", "entish"],
     ):
         assert agent.supported_languages == ["dwarvish", "elvish", "entish"]
 
@@ -440,7 +440,7 @@ async def test_error_missing_entity(hass: HomeAssistant, init_components) -> Non
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "No device or entity named missing entity"
+        == "Sorry, I am not aware of any device or entity called missing entity"
     )
 
 
@@ -452,7 +452,10 @@ async def test_error_missing_area(hass: HomeAssistant, init_components) -> None:
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
-    assert result.response.speech["plain"]["speech"] == "No area named missing area"
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any area called missing area"
+    )
 
 
 async def test_error_no_exposed_for_domain(
@@ -467,7 +470,8 @@ async def test_error_no_exposed_for_domain(
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
-        result.response.speech["plain"]["speech"] == "kitchen does not contain a light"
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any light in the kitchen area"
     )
 
 
@@ -483,7 +487,8 @@ async def test_error_no_exposed_for_device_class(
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
-        result.response.speech["plain"]["speech"] == "bedroom does not contain a window"
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any window in the bedroom area"
     )
 
 
@@ -596,5 +601,5 @@ async def test_all_domains_loaded(
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "No device or entity named test light"
+        == "Sorry, I am not aware of any device or entity called test light"
     )
