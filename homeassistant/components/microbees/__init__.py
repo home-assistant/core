@@ -10,12 +10,7 @@ from microBeesPy.bee import Bee
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_entry_flow as cv,
-    config_entry_oauth2_flow,
-)
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
 from .const import ACCESS_TOKEN, AUTH, BEES, CONNECTOR, DOMAIN, PLATFORMS
@@ -24,34 +19,25 @@ from .microbees import MicroBeesConnector
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Netatmo component."""
-    CONFIG_SCHEMA = cv.config_entry_only_config_schema
-    hass.data[DOMAIN] = {}
-
-    return True
-
-
 @dataclass
 class HomeAssistantMicroBeesData:
-    """Spotify data stored in the Home Assistant data object."""
+    """Microbees data stored in the Home Assistant data object."""
 
     client: MicroBeesConnector
     bees: list[Bee]
     session: config_entry_oauth2_flow.OAuth2Session
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, domain=DOMAIN
+) -> bool:
     """Set up microBees from a config entry."""
+    hass.data[domain] = {}
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
         )
     )
-
-    # Set unique id if non was set (migration)
-    if not entry.unique_id:
-        hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     try:
@@ -64,22 +50,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ):
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data[domain][entry.entry_id] = {
         AUTH: api.ConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     }
     microbees = MicroBeesConnector(token=session.token[ACCESS_TOKEN])
-    hass.data[DOMAIN][CONNECTOR] = microbees
+    hass.data[domain][CONNECTOR] = microbees
     bees = await microbees.getBees()
 
-    hass.data[DOMAIN][BEES] = bees
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = HomeAssistantMicroBeesData(
+    hass.data[domain][BEES] = bees
+    hass.data.setdefault(domain, {})
+    hass.data[domain][entry.entry_id] = HomeAssistantMicroBeesData(
         client=microbees,
         bees=bees,
         session=session,
     )
 
-    await hass.config_entries.async_forward_entry_setup(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

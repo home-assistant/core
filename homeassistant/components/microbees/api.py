@@ -34,5 +34,5 @@ class ConfigEntryAuth(MicroBeesAuth):
 
 
 def get_api_scopes(auth_implementation: str) -> Iterable[str]:
-    """Return the Netatmo API scopes based on the auth implementation."""
+    """Return the microBees API scopes based on the auth implementation."""
     return ["read", "write"]

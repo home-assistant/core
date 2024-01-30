@@ -5,25 +5,21 @@ from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_entry_flow as cv,
-    config_entry_oauth2_flow,
-)
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .api import get_api_scopes
 from .const import DOMAIN, VERSION
 from .microbees import MicroBeesConnector
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.warning(DOMAIN)
 
 
 class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a config flow for microBees."""
 
-    CONFIG_SCHEMA = cv.config_entry_only_config_schema
-    DOMAIN = DOMAIN
     VERSION = VERSION
+    DOMAIN = DOMAIN
 
     @property
     def logger(self) -> logging.Logger:
@@ -55,8 +51,6 @@ class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMA
 
         name = current_user.firstName + " " + current_user.lastName
         data["name"] = name
-
-        await self.async_set_unique_id(current_user.id)
 
         return self.async_create_entry(title=name, data=data)
 

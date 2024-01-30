@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from homeassistant.components.switch import ToggleEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,7 +27,7 @@ async def async_setup_entry(
     async_add_entities(switches)
 
 
-class MBSwitch(ToggleEntity):
+class MBSwitch(SwitchEntity):
     """Representation of a microBees switch."""
 
     def __init__(self, act, microbees) -> None:

@@ -241,9 +241,6 @@ aiohttp-fast-url-dispatcher==0.3.0
 # homeassistant.components.http
 aiohttp-zlib-ng==0.3.1
 
-# homeassistant.components.microbees
-aiohttp==3.9.1
-
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0

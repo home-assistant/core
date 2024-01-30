@@ -3,17 +3,6 @@
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
-      },
-      "user": {
-        "title": "microBees configuration",
-        "description": "Go to https://developers.microbees.com/dashboard/?p=wizard, create a new Application.\nSelect **Web Application** for the Application Type.\nChoose a Label for the App and input `https://my.home-assistant.io/redirect/oauth` under *Authorized Website URL*.",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "client_id": "Client Id",
-          "client_secret": "Client Secret"
-        }
       }
     },
     "error": {
