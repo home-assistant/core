@@ -67,6 +67,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.HEAT_COOL]
     _attr_target_temperature_step = 0.5
