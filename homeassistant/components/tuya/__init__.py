@@ -1,7 +1,8 @@
 """Support for Tuya Smart devices."""
 from __future__ import annotations
 
-from typing import Any, NamedTuple
+import logging
+from typing import NamedTuple
 
 from tuya_sharing import (
     CustomerDevice,
@@ -30,6 +31,9 @@ from .const import (
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
 
+# Suppress logs from the library, it logs unneeded on error
+logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)
+
 
 class HomeAssistantTuyaData(NamedTuple):
     """Tuya data stored in the Home Assistant data object."""
@@ -40,8 +44,6 @@ class HomeAssistantTuyaData(NamedTuple):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     if CONF_APP_TYPE in entry.data:
         raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
@@ -57,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     listener = DeviceListener(hass, manager)
     manager.add_device_listener(listener)
-    hass.data[DOMAIN][entry.entry_id] = HomeAssistantTuyaData(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantTuyaData(
         manager=manager, listener=listener
     )
 
@@ -161,7 +163,7 @@ class TokenListener(SharingTokenListener):
         self.hass = hass
         self.entry = entry
 
-    def update_token(self, token_info: [str, Any]):
+    def update_token(self, token_info: str) -> None:
         """Update token info in config entry."""
         data = {**self.entry.data, "token_info": token_info}
         self.hass.config_entries.async_update_entry(self.entry, data=data)

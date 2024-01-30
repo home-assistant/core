@@ -105,6 +105,7 @@ async def async_setup_entry(
                         device,
                         hass_data.manager,
                         CLIMATE_DESCRIPTIONS[device.category],
+                        hass.config.units.temperature_unit,
                     )
                 )
         async_add_entities(entities)
@@ -132,6 +133,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaClimateEntityDescription,
+        system_temperature_unit: UnitOfTemperature,
     ) -> None:
         """Determine which values to use."""
         self._attr_target_temperature_step = 1.0
@@ -157,7 +159,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
         # Default to System Temperature Unit
-        self._attr_temperature_unit = self.hass.config.units.temperature_unit
+        self._attr_temperature_unit = system_temperature_unit
 
         # Figure out current temperature, use preferred unit or what is available
         celsius_type = self.find_dpcode(
