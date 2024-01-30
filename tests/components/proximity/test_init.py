@@ -13,6 +13,7 @@ from homeassistant.components.proximity.const import (
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import CONF_ZONE, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
@@ -974,21 +975,25 @@ async def test_create_deprecated_proximity_issue(
 async def test_create_removed_tracked_entity_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we create an issue for removed tracked entities."""
-    hass.states.async_set(
-        "device_tracker.test1", "not_home", {"friendly_name": "test1"}
+    t1 = entity_registry.async_get_or_create(
+        "device_tracker", "device_tracker", "test1"
     )
-    hass.states.async_set(
-        "device_tracker.test2", "not_home", {"friendly_name": "test2"}
+    t2 = entity_registry.async_get_or_create(
+        "device_tracker", "device_tracker", "test2"
     )
+
+    hass.states.async_set(t1.entity_id, "not_home")
+    hass.states.async_set(t2.entity_id, "not_home")
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         title="home",
         data={
             CONF_ZONE: "zone.home",
-            CONF_TRACKED_ENTITIES: ["device_tracker.test1", "device_tracker.test2"],
+            CONF_TRACKED_ENTITIES: [t1.entity_id, t2.entity_id],
             CONF_IGNORED_ZONES: [],
             CONF_TOLERANCE: 1,
         },
@@ -999,19 +1004,23 @@ async def test_create_removed_tracked_entity_issue(
     assert await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.home_test1_distance")
+    sensor_t1 = f"sensor.home_{t1.entity_id.split('.')[-1]}_distance"
+    sensor_t2 = f"sensor.home_{t2.entity_id.split('.')[-1]}_distance"
+
+    state = hass.states.get(sensor_t1)
     assert state.state == STATE_UNKNOWN
-    state = hass.states.get("sensor.home_test2_distance")
+    state = hass.states.get(sensor_t2)
     assert state.state == STATE_UNKNOWN
 
-    hass.states.async_remove("device_tracker.test2")
+    hass.states.async_remove(t2.entity_id)
+    entity_registry.async_remove(t2.entity_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.home_test1_distance")
+    state = hass.states.get(sensor_t1)
     assert state.state == STATE_UNKNOWN
-    state = hass.states.get("sensor.home_test2_distance")
+    state = hass.states.get(sensor_t2)
     assert state.state == STATE_UNAVAILABLE
 
     assert issue_registry.async_get_issue(
-        DOMAIN, "tracked_entity_removed_device_tracker.test2"
+        DOMAIN, f"tracked_entity_removed_{t2.entity_id}"
     )

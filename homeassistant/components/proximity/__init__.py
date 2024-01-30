@@ -15,7 +15,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import (
+    async_track_entity_registry_updated_event,
+    async_track_state_change,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -140,6 +143,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             entry.data[CONF_TRACKED_ENTITIES],
             coordinator.async_check_proximity_state_change,
+        )
+    )
+
+    entry.async_on_unload(
+        async_track_entity_registry_updated_event(
+            hass,
+            entry.data[CONF_TRACKED_ENTITIES],
+            coordinator.async_check_tracked_entity_change,
         )
     )
 

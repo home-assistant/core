@@ -14,8 +14,9 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.location import distance
 from homeassistant.util.unit_conversion import DistanceConverter
@@ -99,6 +100,15 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         """Fetch and process state change event."""
         self.state_change_data = StateChangedData(entity, old_state, new_state)
         await self.async_refresh()
+
+    async def async_check_tracked_entity_change(
+        self, event: EventType[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Fetch and process tracked entity change event."""
+        _LOGGER.debug("async_check_tracked_entity_change.event: %s", event)
+        data = event.data
+        if data["action"] == "remove":
+            self._create_removed_tracked_entity_issue(data["entity_id"])
 
     def _convert(self, value: float | str) -> float | str:
         """Round and convert given distance value."""
@@ -216,7 +226,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     _LOGGER.debug(
                         "%s: %s does not exist -> remove", self.name, entity_id
                     )
-                    self._create_removed_tracked_entity_issue(entity_id)
                 continue
 
             if entity_id not in entities_data:
