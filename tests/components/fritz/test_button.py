@@ -1,6 +1,6 @@
 """Tests for Fritz!Tools button platform."""
 import copy
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 
@@ -27,7 +27,7 @@ async def test_button_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -
     assert entry.state == ConfigEntryState.LOADED
 
     buttons = hass.states.async_all(BUTTON_DOMAIN)
-    assert len(buttons) == 5
+    assert len(buttons) == 4
 
     for button in buttons:
         assert button.state == STATE_UNKNOWN
@@ -85,7 +85,12 @@ async def test_wol_button(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    with patch(
+        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+        PropertyMock(return_value=True),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
@@ -122,6 +127,36 @@ async def test_wol_button_absent_for_mesh_slave(
     with patch(
         "tests.components.fritz.conftest.FritzHostMock.get_mesh_topology",
         return_value=slave_mesh_data,
+    ), patch(
+        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+        PropertyMock(return_value=True),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert entry.state == ConfigEntryState.LOADED
+
+        button = hass.states.get("button.printer_wake_on_lan")
+        assert button is None
+
+
+async def test_wol_button_absent_for_non_lan_device(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test WoL button not created if interviewed device is not connected via LAN."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    printer_wifi_data = copy.deepcopy(MOCK_MESH_DATA)
+    # initialization logic uses the connection type of the `node_interface_1_uid` pair of the printer
+    printer_wifi_data["nodes"][0]["node_interfaces"][3]["type"] = "WLAN"
+    with patch(
+        "tests.components.fritz.conftest.FritzHostMock.get_mesh_topology",
+        return_value=printer_wifi_data,
+    ), patch(
+        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+        PropertyMock(return_value=True),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
