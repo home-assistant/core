@@ -121,14 +121,30 @@ async def test_user_success(hass: HomeAssistant) -> None:
         assert result["data"] == DUMMY_DATA
 
 
-async def test_import(hass: HomeAssistant) -> None:
-    """Test import initialized flow."""
+async def test_import_valid_config(hass: HomeAssistant) -> None:
+    """Test import initialized flow with valid config."""
+    with patch("homeassistant.components.velux.config_flow.PyVLX", autospec=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=DUMMY_DATA,
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == DUMMY_DATA[CONF_HOST]
+        assert result["data"] == DUMMY_DATA
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=DUMMY_DATA,
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == DUMMY_DATA[CONF_HOST]
-    assert result["data"] == DUMMY_DATA
+
+async def test_import_invalid_config(hass: HomeAssistant) -> None:
+    """Test import initialized flow with invalid config."""
+    with patch(
+        "homeassistant.components.velux.config_flow.PyVLX",
+        autospec=True,
+    ) as client_mock:
+        client_mock.return_value.connect.side_effect = PyVLXException("DUMMY")
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=DUMMY_DATA,
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "cannot_connect"

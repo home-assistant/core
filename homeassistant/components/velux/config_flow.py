@@ -25,6 +25,16 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
         self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
+
+        pyvlx = PyVLX(host=config[CONF_HOST], password=config[CONF_PASSWORD])
+        try:
+            await pyvlx.connect()
+            await pyvlx.disconnect()
+        except (PyVLXException, ConnectionError):
+            return self.async_abort(reason="cannot_connect")
+        except Exception:  # pylint: disable=broad-except
+            return self.async_abort(reason="unknown")
+
         return self.async_create_entry(
             title=config[CONF_HOST],
             data=config,
@@ -37,10 +47,10 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, Any] = {}
 
         if user_input is not None:
+            pyvlx = PyVLX(
+                host=user_input[CONF_HOST], password=user_input[CONF_PASSWORD]
+            )
             try:
-                pyvlx = PyVLX(
-                    host=user_input[CONF_HOST], password=user_input[CONF_PASSWORD]
-                )
                 await pyvlx.connect()
                 await pyvlx.disconnect()
             except (PyVLXException, ConnectionError) as err:
