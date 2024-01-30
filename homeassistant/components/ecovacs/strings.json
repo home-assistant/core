@@ -24,6 +24,11 @@
         "name": "Mop attached"
       }
     },
+    "image": {
+      "map": {
+        "name": "Map"
+      }
+    },
     "sensor": {
       "error": {
         "name": "Error",

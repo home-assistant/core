@@ -1,8 +1,7 @@
 """Lighting cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from zigpy.zcl.clusters import lighting
-from zigpy.zcl.clusters.lighting import Color
+from zigpy.zcl.clusters.lighting import Ballast, Color
 
 from homeassistant.backports.functools import cached_property
 
@@ -11,8 +10,8 @@ from ..const import REPORT_CONFIG_DEFAULT
 from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(lighting.Ballast.cluster_id)
-class Ballast(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Ballast.cluster_id)
+class BallastClusterHandler(ClusterHandler):
     """Ballast cluster handler."""
 
 

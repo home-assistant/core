@@ -226,6 +226,8 @@ async def test_supported_features(
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     assert state.attributes.get("supported_features") == support
@@ -1327,6 +1329,8 @@ async def test_set_aux(
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     assert state.attributes.get("supported_features") == support

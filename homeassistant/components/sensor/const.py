@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 from homeassistant.helpers.deprecation import (
@@ -58,6 +59,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 DOMAIN: Final = "sensor"
@@ -395,6 +397,14 @@ class SensorDeviceClass(StrEnum):
     USCS/imperial units are currently assumed to be US volumes)
     """
 
+    VOLUME_FLOW_RATE = "volume_flow_rate"
+    """Generic flow rate
+
+    Unit of measurement: UnitOfVolumeFlowRate
+    - SI / metric: `m³/h`, `L/min`
+    - USCS / imperial: `ft³/min`, `gal/min`
+    """
+
     WATER = "water"
     """Water.
 
@@ -491,6 +501,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.VOLTAGE: ElectricPotentialConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
     SensorDeviceClass.VOLUME_STORAGE: VolumeConverter,
+    SensorDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
     SensorDeviceClass.WATER: VolumeConverter,
     SensorDeviceClass.WEIGHT: MassConverter,
     SensorDeviceClass.WIND_SPEED: SpeedConverter,
@@ -557,6 +568,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     },
     SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),
+    SensorDeviceClass.VOLUME_FLOW_RATE: set(UnitOfVolumeFlowRate),
     SensorDeviceClass.VOLUME_STORAGE: set(UnitOfVolume),
     SensorDeviceClass.WATER: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
@@ -623,6 +635,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
         SensorStateClass.TOTAL_INCREASING,
     },
     SensorDeviceClass.VOLUME_STORAGE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.VOLUME_FLOW_RATE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.WATER: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
