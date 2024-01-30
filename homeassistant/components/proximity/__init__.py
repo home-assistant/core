@@ -5,8 +5,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.automation import automations_with_entity
-from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICES,
@@ -35,6 +33,7 @@ from .const import (
     UNITS,
 )
 from .coordinator import ProximityDataUpdateCoordinator
+from .helpers import entity_used_in
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,9 +67,7 @@ async def _async_setup_legacy(
     await proximity.async_added_to_hass()
     proximity.async_write_ha_state()
 
-    used_in = automations_with_entity(hass, f"{DOMAIN}.{friendly_name}")
-    used_in += scripts_with_entity(hass, f"{DOMAIN}.{friendly_name}")
-    if used_in:
+    if used_in := entity_used_in(hass, f"{DOMAIN}.{friendly_name}"):
         async_create_issue(
             hass,
             DOMAIN,
