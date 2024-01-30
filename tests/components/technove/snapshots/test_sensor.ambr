@@ -294,7 +294,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'unknown',
+        None,
         'unplugged',
         'plugged_waiting',
         'plugged_charging',
@@ -331,7 +331,7 @@
       'device_class': 'enum',
       'friendly_name': 'TechnoVE Station Status',
       'options': list([
-        'unknown',
+        None,
         'unplugged',
         'plugged_waiting',
         'plugged_charging',
