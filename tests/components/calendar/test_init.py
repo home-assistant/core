@@ -36,7 +36,7 @@ def mock_frozen_time() -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_set_frozen_time(frozen_time: Any) -> Generator[None]:
+def mock_set_frozen_time(frozen_time: Any) -> Generator[None, None, None]:
     """Fixture to freeze time that also can work for other fixtures."""
     if not frozen_time:
         yield
