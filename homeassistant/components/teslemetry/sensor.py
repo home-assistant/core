@@ -40,7 +40,7 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 
 @callback
-def hours_to_datetime(value: StateType) -> datetime | None:
+def minutes_to_datetime(value: StateType) -> datetime | None:
     """Convert relative hours into absolute datetime."""
     if isinstance(value, (int, float)) and value > 0:
         return dt_util.now() + timedelta(minutes=value)
@@ -99,7 +99,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         key="charge_state_minutes_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=hours_to_datetime,
+        value_fn=minutes_to_datetime,
     ),
     TeslemetrySensorEntityDescription(
         key="charge_state_battery_range",
@@ -223,9 +223,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
     ),
     TeslemetrySensorEntityDescription(
         key="drive_state_active_route_minutes_to_arrival",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=minutes_to_datetime,
     ),
     TeslemetrySensorEntityDescription(
         key="drive_state_active_route_destination",
