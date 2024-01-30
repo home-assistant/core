@@ -696,7 +696,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             # Make a new empty script stack; automations are allowed
             # to recursively trigger themselves
             script_stack_cv.set([])
-            # print("sequence:", self.action_script.sequence)
+
             try:
                 with trace_path("action"):
                     # change to execute rascal scheduler

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Sequence
+import copy
 from datetime import timedelta
 import json
 import logging
@@ -13,8 +14,6 @@ from typing import Any
 from homeassistant.components.script import BaseScriptEntity
 from homeassistant.const import (
     CONF_DELAY,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_PARALLEL,
     CONF_SEQUENCE,
@@ -23,17 +22,18 @@ from homeassistant.const import (
     CONF_TYPE,
     DOMAIN_RASCALSCHEDULER,
     DOMAIN_SCRIPT,
+    EVENT_CALL_SERVICE,
     RASC_COMPLETE,
     RASC_RESPONSE,
     RASC_START,
 )
 from homeassistant.core import Event, HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.rascalscheduler import (
     ActionEntity,
     QueueEntity,
     RoutineEntity,
-    async_get_device_id_from_entity_id,
 )
 
 CONF_ROUTINE_ID = "routine_id"
@@ -41,6 +41,7 @@ CONF_STEP = "step"
 CONF_HASS = "hass"
 CONF_ENTITY_REGISTRY = "entity_registry"
 CONF_LOGGER = "logger"
+CONF_END_VIRTUAL_NODE = "end_virtual_node"
 
 
 TIMEOUT = 3000  # millisecond
@@ -80,6 +81,7 @@ def dag_operator(
     config[CONF_LOGGER] = LOGGER
 
     for _, script in enumerate(action_script):
+        # print("script:", script)
         if (
             CONF_PARALLEL not in script
             and CONF_SEQUENCE not in script
@@ -114,6 +116,22 @@ def dag_operator(
             next_parents.clear()
             next_parents = leaf_nodes
 
+    # add virtual node to the end of the routine
+    # the use of the virtual node is to identify if all actions in the routine are completed
+    entities["end_virtual_node"] = ActionEntity(
+        hass=hass,
+        action={},
+        action_id=None,
+        action_state=None,
+        routine_id=config[CONF_ROUTINE_ID],
+        delay=None,
+        logger=config[CONF_LOGGER],
+    )
+
+    for parent in next_parents:
+        parent.children.append(entities["end_virtual_node"])
+        entities["end_virtual_node"].parents.append(parent)
+
     return RoutineEntity(name, routine_id, entities, TIMEOUT, LOGGER)
 
 
@@ -139,9 +157,7 @@ def dfs(
             leaf_entities = dfs(item, config, next_parents, entities)
             next_parents = leaf_entities
 
-    elif (
-        CONF_SERVICE in script
-    ):  # switch to the associated case based on the domain, todo
+    elif CONF_SERVICE in script:
         domain = script["service"].split(".")[0]
         if domain == DOMAIN_SCRIPT:
             script_component: EntityComponent[BaseScriptEntity] = config[
@@ -149,29 +165,40 @@ def dfs(
             ].data[DOMAIN_SCRIPT]
 
             if script_component is not None:
-                baseScript = script_component.get_entity(list(script.values())[0])
-                if baseScript is not None and baseScript.raw_config is not None:
+                base_script = script_component.get_entity(list(script.values())[0])
+                if base_script is not None and base_script.raw_config is not None:
                     next_parents = parents
-                    for item in baseScript.raw_config[CONF_SEQUENCE]:
+                    for item in base_script.raw_config[CONF_SEQUENCE]:
                         leaf_entities = dfs(item, config, next_parents, entities)
                         next_parents = leaf_entities
         else:  # only support for one target, todo
-            item = {}
-            item[CONF_TYPE] = script["service"].split(".")[1]
-            item[CONF_DEVICE_ID] = async_get_device_id_from_entity_id(
-                config[CONF_HASS], script[CONF_TARGET][CONF_ENTITY_ID]
-            )
-            item[CONF_ENTITY_ID] = script[CONF_TARGET][CONF_ENTITY_ID]
-            item[CONF_DOMAIN] = domain
+            for target_entity in script[CONF_TARGET][CONF_ENTITY_ID]:
+                config[CONF_STEP] = config[CONF_STEP] + 1
+                action_id = config[CONF_ROUTINE_ID] + str(config[CONF_STEP])
 
-            leaf_entities = dfs(item, config, parents, entities)
-            next_parents = leaf_entities
+                entity_script = copy.deepcopy(script)
+                entity_script[CONF_TARGET][CONF_ENTITY_ID] = [target_entity]
 
+                entities[action_id] = ActionEntity(
+                    hass=config[CONF_HASS],
+                    action=entity_script,
+                    action_id=action_id,
+                    action_state=None,
+                    routine_id=config[CONF_ROUTINE_ID],
+                    delay=None,
+                    logger=config[CONF_LOGGER],
+                )
+
+                for entity in parents:
+                    entities[action_id].parents.append(entity)
+                    entity.children.append(entities[action_id])
+
+                next_parents.append(entities[action_id])
     elif CONF_DELAY in script:
-        hours = script["delay"]["hours"]
-        minutes = script["delay"]["minutes"]
-        seconds = script["delay"]["seconds"]
-        milliseconds = script["delay"]["milliseconds"]
+        hours = script[CONF_DELAY]["hours"]
+        minutes = script[CONF_DELAY]["minutes"]
+        seconds = script[CONF_DELAY]["seconds"]
+        milliseconds = script[CONF_DELAY]["milliseconds"]
 
         delta = timedelta(
             hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds
@@ -322,13 +349,29 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
     def start_routine(self, routine_entity: RoutineEntity) -> None:
         """Start routine entity."""
         for _, action_entity in routine_entity.actions.items():
-            # convert number to entity id
+            # skip virtual node
+            if action_entity.action_id is None:
+                continue
+
+            # todo, switch case based on action type
             pattern = re.compile("^[^.]+[.][^.]+$")
-            if not pattern.match(action_entity.action[CONF_ENTITY_ID]):
-                registry = self.hass.data[CONF_ENTITY_REGISTRY]
-                action_entity.action[CONF_ENTITY_ID] = registry.async_get(
-                    action_entity.action[CONF_ENTITY_ID]
-                ).as_partial_dict[CONF_ENTITY_ID]
+
+            action = cv.determine_script_action(action_entity.action)
+
+            # todo, convert the number to the entity id if it is needed
+            if action is not EVENT_CALL_SERVICE:
+                if not pattern.match(action_entity.action[CONF_ENTITY_ID]):
+                    registry = self.hass.data[CONF_ENTITY_REGISTRY]
+                    action_entity.action[CONF_ENTITY_ID] = registry.async_get(
+                        action_entity.action[CONF_ENTITY_ID]
+                    ).as_partial_dict[CONF_ENTITY_ID]
+
+            # if CONF_TARGET in action_entity.action:
+            #     if not pattern.match(action_entity.action[CONF_TARGET][CONF_ENTITY_ID][0]):
+            #         registry = self.hass.data[CONF_ENTITY_REGISTRY]
+            #         action_entity.action[CONF_TARGET][CONF_ENTITY_ID][0] = registry.async_get(
+            #             action_entity.action[CONF_TARGET][CONF_ENTITY_ID][0]
+            #         ).as_partial_dict[CONF_ENTITY_ID]
 
             # if the entity doesn't have parents, set it to ready queues
             if not action_entity.parents:
@@ -342,7 +385,17 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
 
         """
 
-        entity_id = action_entity.action[CONF_ENTITY_ID]
+        # todo, remove routine from the table
+        if action_entity.action_id is None:
+            print("This is the end of the routine")  # noqa: T201
+            return
+
+        # todo, get entity id based on the action_type
+        if CONF_TARGET in action_entity.action:
+            entity_id = action_entity.action[CONF_TARGET][CONF_ENTITY_ID][0]
+
+        else:
+            entity_id = action_entity.action[CONF_ENTITY_ID]
 
         if self._active_routines[entity_id] is None:  # set as active routine
             self._set_active_routine(entity_id, action_entity)
@@ -398,13 +451,13 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
 
         """
 
-        eventType = event.data.get(CONF_TYPE)
-        entityID = event.data.get(CONF_ENTITY_ID)
-        if entityID is not None:
-            action_entity = self.get_active_routine(str(entityID))
+        event_type = event.data.get(CONF_TYPE)
+        entity_id = event.data.get(CONF_ENTITY_ID)
+        if entity_id is not None:
+            action_entity = self.get_active_routine(str(entity_id))
 
         if action_entity is not None:
-            if eventType == RASC_COMPLETE:
+            if event_type == RASC_COMPLETE:
                 if action_entity.delay is not None:
                     await action_entity.async_delay_step()
 
@@ -412,7 +465,7 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
                 # self.output_active_routines()
                 self.schedule_next(action_entity)
 
-        elif eventType == RASC_START:
+        elif event_type == RASC_START:
             self.update_action_state(action_entity, RASC_START)
             # self.output_active_routines()
 
@@ -421,7 +474,12 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
         if action_entity is None:
             return
 
-        entity_id = action_entity.action[CONF_ENTITY_ID]
+        action = cv.determine_script_action(action_entity.action)
+
+        if action is EVENT_CALL_SERVICE:
+            entity_id = action_entity.action[CONF_TARGET][CONF_ENTITY_ID][0]
+        else:
+            entity_id = action_entity.action[CONF_ENTITY_ID]
 
         self._add_subroutines_to_ready_queues(action_entity)
 

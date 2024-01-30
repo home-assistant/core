@@ -675,10 +675,10 @@ class _ScriptRun:
         params = service.async_prepare_call_from_config(
             self._hass, self._action, self._variables
         )
-
         # Validate response data parameters. This check ignores services that do
         # not exist which will raise an appropriate error in the service call below.
         response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
+
         return_response = response_variable is not None
         if self._hass.services.has_service(params[CONF_DOMAIN], params[CONF_SERVICE]):
             supports_response = self._hass.services.supports_response(
@@ -700,7 +700,6 @@ class _ScriptRun:
             and params[CONF_SERVICE] == "trigger"
             or params[CONF_DOMAIN] in ("python_script", "script")
         )
-
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
             self._hass.async_create_task(

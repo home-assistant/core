@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterator, MutableMapping, MutableSequence
+from contextlib import suppress
 from datetime import timedelta
 import json
 import logging
@@ -15,6 +16,7 @@ from homeassistant import exceptions
 from homeassistant.components.device_automation import action as device_action
 from homeassistant.const import (
     CONF_CONTINUE_ON_ERROR,
+    CONF_RESPONSE_VARIABLE,
     DOMAIN_AUTOMATION,
     DOMAIN_PERSON,
     DOMAIN_RASCALSCHEDULER,
@@ -32,11 +34,11 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util import slugify
 
-from . import config_validation as cv, entity_registry as er
+from . import config_validation as cv, entity_registry as er, service
 
 _KT = TypeVar("_KT")
 _VT = TypeVar("_VT")
-
+_T = TypeVar("_T")
 
 _LOGGER = logging.getLogger(__name__)
 _LOG_EXCEPTION = logging.ERROR + 1
@@ -81,7 +83,7 @@ def delete_x_active_queue(hass: HomeAssistant, entity_id: str) -> None:
 
         _LOGGER.info("Delete queue: %s", entity_id)
     except (KeyError, ValueError):
-        _LOGGER.warning("Unable to delete unknown queue %s", entity_id)
+        _LOGGER.error("Unable to delete unknown queue %s", entity_id)
 
 
 def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> str:
@@ -154,29 +156,34 @@ class RoutineEntity:
 
     def duplicate(self) -> RoutineEntity:
         """Duplicate the routine entity."""
+
         routine_entity = {}
 
         for action_id, entity in self.actions.items():
-            routine_entity[action_id] = ActionEntity(
-                hass=entity.hass,
-                action=entity.action,
-                action_id=entity.action_id,
-                action_state=None,
-                routine_id=entity.routine_id,
-                delay=entity.delay,
-                logger=entity.get_logger(),
-            )
+            if action_id is not None:
+                routine_entity[action_id] = ActionEntity(
+                    hass=entity.hass,
+                    action=entity.action,
+                    action_id=entity.action_id,
+                    action_state=None,
+                    routine_id=entity.routine_id,
+                    delay=entity.delay,
+                    logger=entity.get_logger(),
+                )
 
         for action_id, entity in self.actions.items():
-            for parent in entity.parents:
-                routine_entity[action_id].parents.append(
-                    routine_entity[parent.action_id]
-                )
+            if action_id is not None:
+                for parent in entity.parents:
+                    if parent.action_id is not None:
+                        routine_entity[action_id].parents.append(
+                            routine_entity[parent.action_id]
+                        )
 
-            for child in entity.children:
-                routine_entity[action_id].children.append(
-                    routine_entity[child.action_id]
-                )
+                for child in entity.children:
+                    if child.action_id is not None:
+                        routine_entity[action_id].children.append(
+                            routine_entity[child.action_id]
+                        )
 
         if self._last_trigger_time is None:
             self._start_time = time.time()
@@ -225,7 +232,7 @@ class ActionEntity:
         self,
         hass: HomeAssistant,
         action: dict[str, Any],
-        action_id: str,
+        action_id: str | None,
         action_state: str | None,
         routine_id: str | None,
         delay: timedelta | None,
@@ -284,6 +291,7 @@ class ActionEntity:
     async def attach_triggered(self, log_exceptions: bool) -> None:
         """Trigger the function."""
         action = cv.determine_script_action(self.action)
+
         continue_on_error = self.action.get(CONF_CONTINUE_ON_ERROR, False)
 
         try:
@@ -316,6 +324,66 @@ class ActionEntity:
                     await self._stop.wait()
             except asyncio.TimeoutError:
                 self._step_log("delay completed")
+
+    async def _async_call_service_step(self) -> None:
+        """Call the service specified in the action."""
+        self._step_log("call service")
+
+        params = service.async_prepare_call_from_config(
+            self.hass, self.action, self.variables
+        )
+
+        # Validate response data parameters. This check ignores services that do
+        # not exist which will raise an appropriate error in the service call below.
+        response_variable = self.action.get(CONF_RESPONSE_VARIABLE)
+
+        return_response = response_variable is not None
+
+        response_data = await self._async_run_long_action(
+            self.hass.async_create_task(
+                self.hass.services.async_call(
+                    **params,
+                    blocking=True,
+                    context=self.context,
+                    return_response=return_response,
+                )
+            ),
+        )
+        if response_variable:
+            self.variables[response_variable] = response_data
+
+    async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
+        """Run a long task while monitoring for stop request."""
+
+        async def async_cancel_long_task() -> None:
+            # Stop long task and wait for it to finish.
+            long_task.cancel()
+            with suppress(Exception):
+                await long_task
+
+        # Wait for long task while monitoring for a stop request.
+        stop_task = self.hass.async_create_task(self._stop.wait())
+        try:
+            await asyncio.wait(
+                {long_task, stop_task}, return_when=asyncio.FIRST_COMPLETED
+            )
+        # If our task is cancelled, then cancel long task, too. Note that if long task
+        # is cancelled otherwise the CancelledError exception will not be raised to
+        # here due to the call to asyncio.wait(). Rather we'll check for that below.
+        except asyncio.CancelledError:
+            await async_cancel_long_task()
+            raise
+        finally:
+            stop_task.cancel()
+
+        if long_task.cancelled():
+            raise asyncio.CancelledError
+        if long_task.done():
+            # Propagate any exceptions that occurred.
+            return long_task.result()
+        # Stopped before long task completed, so cancel it.
+        await async_cancel_long_task()
+        return None
 
     def _handle_exception(
         self, exception: Exception, continue_on_error: bool, log_exceptions: bool
