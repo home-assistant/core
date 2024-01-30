@@ -15,9 +15,13 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "title": "The Velux YAML configuration is being removed",
-      "description": "Configuring Velux using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Velux YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Velux YAML configuration import cannot connect to server",
+      "description": "Configuring Velux using YAML is being removed but there was an connection error importing your YAML configuration.\n\nMake sure your home assistant can reach the KLF 200."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The Velux YAML configuration import failed with unknown error raised by pyvlx",
+      "description": "Configuring Velux using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nCheck your configuration or have a look at the documentation of the integration."
     }
   },
   "services": {

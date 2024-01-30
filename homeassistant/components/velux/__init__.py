@@ -4,7 +4,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -30,30 +36,49 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the velux component."""
-    async_create_issue(
-        hass,
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2024.5.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
+        context={"source": SOURCE_IMPORT},
+        data=config,
     )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
+
+    if (
+        result["type"] == FlowResultType.CREATE_ENTRY
+        or result["reason"] == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Velux",
+            },
         )
-    )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_${result['reason']}",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+        )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the velux component."""
+    module = VeluxModule(hass, entry.data)
     try:
-        module = VeluxModule(hass, entry.data)
         module.setup()
         await module.async_start()
 
