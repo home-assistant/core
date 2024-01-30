@@ -11,12 +11,10 @@ from tuya_sharing import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_APP_TYPE,
@@ -67,8 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         tuya: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
         manager = tuya.manager
 
-    await report_version(hass, manager)
-
     # Get devices & clean up device entities
     await hass.async_add_executor_job(manager.update_device_cache)
     await cleanup_device_registry(hass, manager)
@@ -89,20 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # So the subscription is here
     await hass.async_add_executor_job(manager.refresh_mq)
     return True
-
-
-async def report_version(hass: HomeAssistant, manager: Manager):
-    integration = await async_get_integration(hass, DOMAIN)
-    manifest = integration.manifest
-    tuya_version = manifest.get("version", "unknown")
-    sdk_version = manifest.get("requirements", "unknown")
-    sharing_sdk = ""
-    for item in sdk_version:
-        if "device-sharing-sdk" in item:
-            sharing_sdk = item.split("==")[1]
-    await hass.async_add_executor_job(
-        manager.report_version, __version__, tuya_version, sharing_sdk
-    )
 
 
 async def cleanup_device_registry(hass: HomeAssistant, device_manager: Manager) -> None:
