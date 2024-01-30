@@ -274,8 +274,7 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
     state = hass.states.get("sensor.test_ignore_non_numeric")
     assert state.state == "17.0"
     assert (
-        "Unable to use state. Only numerical states are supported,"
-        not in caplog.text
+        "Unable to use state. Only numerical states are supported," not in caplog.text
     )
 
     # Check that the final sensor value with all numeric inputs
@@ -315,10 +314,7 @@ async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
 
     state = hass.states.get("sensor.test_failure")
     assert state.state == "unknown"
-    assert (
-        "Unable to use state. Only numerical states are supported"
-        in caplog.text
-    )
+    assert "Unable to use state. Only numerical states are supported" in caplog.text
 
     # Check that the final sensor value is correct with all numeric inputs
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
