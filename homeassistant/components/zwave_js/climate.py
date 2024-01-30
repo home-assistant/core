@@ -18,7 +18,6 @@ from zwave_js_server.const.command_class.thermostat import (
 )
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
-from homeassistant.components.binary_sensor.device_trigger import TURNED_ON
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
