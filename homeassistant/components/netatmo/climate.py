@@ -65,7 +65,10 @@ PRESET_SCHEDULE = "Schedule"
 PRESET_MANUAL = "Manual"
 
 SUPPORT_FLAGS = (
-    ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
 )
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_BOOST, PRESET_FROST_GUARD, PRESET_SCHEDULE]
 

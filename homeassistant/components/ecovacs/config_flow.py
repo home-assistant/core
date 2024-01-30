@@ -5,9 +5,8 @@ import logging
 from typing import Any, cast
 
 from aiohttp import ClientError
-from deebot_client.authentication import Authenticator
+from deebot_client.authentication import Authenticator, create_rest_config
 from deebot_client.exceptions import InvalidAuthenticationError
-from deebot_client.models import Configuration
 from deebot_client.util import md5
 from deebot_client.util.continents import COUNTRIES_TO_CONTINENTS, get_continent
 import voluptuous as vol
@@ -32,15 +31,14 @@ async def _validate_input(
     """Validate user input."""
     errors: dict[str, str] = {}
 
-    deebot_config = Configuration(
+    rest_config = create_rest_config(
         aiohttp_client.async_get_clientsession(hass),
         device_id=get_client_device_id(),
         country=user_input[CONF_COUNTRY],
-        continent=user_input.get(CONF_CONTINENT),
     )
 
     authenticator = Authenticator(
-        deebot_config,
+        rest_config,
         user_input[CONF_USERNAME],
         md5(user_input[CONF_PASSWORD]),
     )

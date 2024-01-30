@@ -12,6 +12,7 @@ from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
     REST_SENSORS_UPDATE_INTERVAL,
 )
+from homeassistant.core import HomeAssistant
 
 from . import MOCK_MAC
 
@@ -158,6 +159,7 @@ MOCK_CONFIG = {
         "ui_data": {},
         "device": {"name": "Test name"},
     },
+    "wifi": {"sta": {"enable": True}},
 }
 
 MOCK_SHELLY_COAP = {
@@ -252,19 +254,19 @@ def mock_ws_server():
 
 
 @pytest.fixture
-def device_reg(hass):
+def device_reg(hass: HomeAssistant):
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture
-def events(hass):
+def events(hass: HomeAssistant):
     """Yield caught shelly_click events."""
     return async_capture_events(hass, EVENT_SHELLY_CLICK)
 

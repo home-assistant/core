@@ -6,7 +6,6 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 import functools
-import itertools
 import logging
 from pathlib import Path
 import re
@@ -28,7 +27,7 @@ from hassil.recognize import (
     recognize_all,
 )
 from hassil.util import merge_dict
-from home_assistant_intents import get_domains_and_languages, get_intents
+from home_assistant_intents import get_intents, get_languages
 import yaml
 
 from homeassistant import core, setup
@@ -156,7 +155,7 @@ class DefaultAgent(AbstractConversationAgent):
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return get_domains_and_languages()["homeassistant"]
+        return get_languages()
 
     async def async_initialize(self, config_intents: dict[str, Any] | None) -> None:
         """Initialize the default agent."""
@@ -387,6 +386,7 @@ class DefaultAgent(AbstractConversationAgent):
             return maybe_result
 
         # Try again with missing entities enabled
+        best_num_unmatched_entities = 0
         for result in recognize_all(
             user_input.text,
             lang_intents.intents,
@@ -394,20 +394,28 @@ class DefaultAgent(AbstractConversationAgent):
             intent_context=intent_context,
             allow_unmatched_entities=True,
         ):
-            # Remove missing entities that couldn't be filled from context
-            for entity_key, entity in list(result.unmatched_entities.items()):
-                if isinstance(entity, UnmatchedTextEntity) and (
-                    entity.text == MISSING_ENTITY
-                ):
-                    result.unmatched_entities.pop(entity_key)
+            if result.text_chunks_matched < 1:
+                # Skip results that don't match any literal text
+                continue
+
+            # Don't count missing entities that couldn't be filled from context
+            num_unmatched_entities = 0
+            for entity in result.unmatched_entities_list:
+                if isinstance(entity, UnmatchedTextEntity):
+                    if entity.text != MISSING_ENTITY:
+                        num_unmatched_entities += 1
+                else:
+                    num_unmatched_entities += 1
 
             if maybe_result is None:
                 # First result
                 maybe_result = result
-            elif len(result.unmatched_entities) < len(maybe_result.unmatched_entities):
+                best_num_unmatched_entities = num_unmatched_entities
+            elif num_unmatched_entities < best_num_unmatched_entities:
                 # Fewer unmatched entities
                 maybe_result = result
-            elif len(result.unmatched_entities) == len(maybe_result.unmatched_entities):
+                best_num_unmatched_entities = num_unmatched_entities
+            elif num_unmatched_entities == best_num_unmatched_entities:
                 if (result.text_chunks_matched > maybe_result.text_chunks_matched) or (
                     (result.text_chunks_matched == maybe_result.text_chunks_matched)
                     and ("name" in result.unmatched_entities)  # prefer entities
@@ -536,14 +544,12 @@ class DefaultAgent(AbstractConversationAgent):
             intents_dict = lang_intents.intents_dict
             language_variant = lang_intents.language_variant
 
-        domains_langs = get_domains_and_languages()
+        supported_langs = set(get_languages())
 
         if not language_variant:
             # Choose a language variant upfront and commit to it for custom
             # sentences, etc.
-            all_language_variants = {
-                lang.lower(): lang for lang in itertools.chain(*domains_langs.values())
-            }
+            all_language_variants = {lang.lower(): lang for lang in supported_langs}
 
             # en-US, en_US, en, ...
             for maybe_variant in _get_language_variations(language):
@@ -558,23 +564,17 @@ class DefaultAgent(AbstractConversationAgent):
                 )
                 return None
 
-            # Load intents for all domains supported by this language variant
-            for domain in domains_langs:
-                domain_intents = get_intents(
-                    domain, language_variant, json_load=json_load
-                )
+            # Load intents for this language variant
+            lang_variant_intents = get_intents(language_variant, json_load=json_load)
 
-                if not domain_intents:
-                    continue
-
+            if lang_variant_intents:
                 # Merge sentences into existing dictionary
-                merge_dict(intents_dict, domain_intents)
+                merge_dict(intents_dict, lang_variant_intents)
 
                 # Will need to recreate graph
                 intents_changed = True
                 _LOGGER.debug(
-                    "Loaded intents domain=%s, language=%s (%s)",
-                    domain,
+                    "Loaded intents  language=%s (%s)",
                     language,
                     language_variant,
                 )

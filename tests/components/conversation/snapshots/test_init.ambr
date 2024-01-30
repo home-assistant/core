@@ -352,14 +352,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named do something',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -519,7 +519,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named late added alias',
+          'speech': 'Sorry, I am not aware of any device or entity called late added alias',
         }),
       }),
     }),
@@ -539,7 +539,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named kitchen light',
+          'speech': 'Sorry, I am not aware of any device or entity called kitchen light',
         }),
       }),
     }),
@@ -679,7 +679,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named late added light',
+          'speech': 'Sorry, I am not aware of any device or entity called late added light',
         }),
       }),
     }),
@@ -759,7 +759,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named kitchen light',
+          'speech': 'Sorry, I am not aware of any device or entity called kitchen light',
         }),
       }),
     }),
@@ -779,7 +779,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named my cool light',
+          'speech': 'Sorry, I am not aware of any device or entity called my cool light',
         }),
       }),
     }),
@@ -919,7 +919,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named kitchen light',
+          'speech': 'Sorry, I am not aware of any device or entity called kitchen light',
         }),
       }),
     }),
@@ -969,7 +969,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named renamed light',
+          'speech': 'Sorry, I am not aware of any device or entity called renamed light',
         }),
       }),
     }),
@@ -1252,14 +1252,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1292,14 +1292,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1312,14 +1312,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1352,14 +1352,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1510,29 +1510,7 @@
         'unmatched_slots': dict({
         }),
       }),
-      dict({
-        'details': dict({
-          'domain': dict({
-            'name': 'domain',
-            'text': '',
-            'value': 'scene',
-          }),
-        }),
-        'intent': dict({
-          'name': 'HassTurnOn',
-        }),
-        'match': False,
-        'sentence_template': '[activate|<turn>] <name> [scene] [on]',
-        'slots': dict({
-          'domain': 'scene',
-        }),
-        'source': 'builtin',
-        'targets': dict({
-        }),
-        'unmatched_slots': dict({
-          'name': 'this will not match anything',
-        }),
-      }),
+      None,
     ]),
   })
 # ---
