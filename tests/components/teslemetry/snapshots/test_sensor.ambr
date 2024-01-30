@@ -1773,7 +1773,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
+    'original_icon': 'mdi:ev-station',
     'original_name': 'Fault state',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1788,6 +1788,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Wall Connector Fault state',
+      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_fault_state',
@@ -1817,7 +1818,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
+    'original_icon': 'mdi:ev-station',
     'original_name': 'Fault state',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1832,6 +1833,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Wall Connector Fault state',
+      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_fault_state_2',
@@ -1861,16 +1863,22 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
+    'original_icon': 'mdi:ev-station',
     'original_name': 'Power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_power',
     'unique_id': '123456-abd-123-wall_connector_power',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
 # name: test_sensors[sensor.wall_connector_power-state]
@@ -1878,14 +1886,15 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Wall Connector Power',
+      'icon': 'mdi:ev-station',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_power',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_power_2-entry]
@@ -1909,16 +1918,22 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
+    'original_icon': 'mdi:ev-station',
     'original_name': 'Power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_power',
     'unique_id': '123456-bcd-234-wall_connector_power',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
 # name: test_sensors[sensor.wall_connector_power_2-state]
@@ -1926,14 +1941,15 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Wall Connector Power',
+      'icon': 'mdi:ev-station',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_power_2',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_state-entry]
@@ -1957,7 +1973,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
+    'original_icon': 'mdi:ev-station',
     'original_name': 'State',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1972,6 +1988,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Wall Connector State',
+      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state',
@@ -2001,7 +2018,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
+    'original_icon': 'mdi:ev-station',
     'original_name': 'State',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -2016,11 +2033,100 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Wall Connector State',
+      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_2',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.wall_connector_vehicle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wall_connector_vehicle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:car-electric',
+    'original_name': 'Vehicle',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vin',
+    'unique_id': '123456-abd-123-vin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.wall_connector_vehicle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wall Connector Vehicle',
+      'icon': 'mdi:car-electric',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_vehicle',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.wall_connector_vehicle_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wall_connector_vehicle_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:car-electric',
+    'original_name': 'Vehicle',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vin',
+    'unique_id': '123456-bcd-234-vin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.wall_connector_vehicle_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wall Connector Vehicle',
+      'icon': 'mdi:car-electric',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_vehicle_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
