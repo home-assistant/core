@@ -150,6 +150,8 @@ omit =
     homeassistant/components/braviatv/coordinator.py
     homeassistant/components/braviatv/media_player.py
     homeassistant/components/braviatv/remote.py
+    homeassistant/components/bring/coordinator.py
+    homeassistant/components/bring/todo.py
     homeassistant/components/broadlink/climate.py
     homeassistant/components/broadlink/light.py
     homeassistant/components/broadlink/remote.py
@@ -182,6 +184,7 @@ omit =
     homeassistant/components/comed_hourly_pricing/sensor.py
     homeassistant/components/comelit/__init__.py
     homeassistant/components/comelit/alarm_control_panel.py
+    homeassistant/components/comelit/climate.py
     homeassistant/components/comelit/const.py
     homeassistant/components/comelit/cover.py
     homeassistant/components/comelit/coordinator.py
@@ -283,6 +286,7 @@ omit =
     homeassistant/components/econet/water_heater.py
     homeassistant/components/ecovacs/controller.py
     homeassistant/components/ecovacs/entity.py
+    homeassistant/components/ecovacs/image.py
     homeassistant/components/ecovacs/util.py
     homeassistant/components/ecovacs/vacuum.py
     homeassistant/components/ecowitt/__init__.py
@@ -433,6 +437,7 @@ omit =
     homeassistant/components/foscam/__init__.py
     homeassistant/components/foscam/camera.py
     homeassistant/components/foscam/coordinator.py
+    homeassistant/components/foscam/entity.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
     homeassistant/components/freebox/camera.py
@@ -708,11 +713,13 @@ omit =
     homeassistant/components/lupusec/__init__.py
     homeassistant/components/lupusec/alarm_control_panel.py
     homeassistant/components/lupusec/binary_sensor.py
+    homeassistant/components/lupusec/entity.py
     homeassistant/components/lupusec/switch.py
     homeassistant/components/lutron/__init__.py
     homeassistant/components/lutron/binary_sensor.py
     homeassistant/components/lutron/cover.py
     homeassistant/components/lutron/entity.py
+    homeassistant/components/lutron/fan.py
     homeassistant/components/lutron/light.py
     homeassistant/components/lutron/switch.py
     homeassistant/components/lutron_caseta/__init__.py
@@ -779,6 +786,7 @@ omit =
     homeassistant/components/motionmount/entity.py
     homeassistant/components/motionmount/number.py
     homeassistant/components/motionmount/select.py
+    homeassistant/components/motionmount/sensor.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/msteams/notify.py
@@ -1367,11 +1375,6 @@ omit =
     homeassistant/components/telnet/switch.py
     homeassistant/components/temper/sensor.py
     homeassistant/components/tensorflow/image_processing.py
-    homeassistant/components/teslemetry/__init__.py
-    homeassistant/components/teslemetry/climate.py
-    homeassistant/components/teslemetry/coordinator.py
-    homeassistant/components/teslemetry/entity.py
-    homeassistant/components/teslemetry/context.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
     homeassistant/components/thethingsnetwork/*
