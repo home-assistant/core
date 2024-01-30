@@ -71,6 +71,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -80,7 +83,7 @@
     'supported_features': 0,
     'translation_key': 'activity_active_duration_today',
     'unique_id': 'withings_12345_activity_active_duration_today',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_active_time_today-state]
@@ -1173,6 +1176,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -1182,7 +1188,7 @@
     'supported_features': 0,
     'translation_key': 'activity_intense_duration_today',
     'unique_id': 'withings_12345_activity_intense_duration_today',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_intense_activity_today-state]
@@ -1268,6 +1274,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -1277,7 +1286,7 @@
     'supported_features': 0,
     'translation_key': 'workout_duration',
     'unique_id': 'withings_12345_workout_duration',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_last_workout_duration-state]
@@ -1741,6 +1750,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -1750,7 +1762,7 @@
     'supported_features': 0,
     'translation_key': 'activity_moderate_duration_today',
     'unique_id': 'withings_12345_activity_moderate_duration_today',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_moderate_activity_today-state]
@@ -1839,6 +1851,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -1848,7 +1863,7 @@
     'supported_features': 0,
     'translation_key': 'workout_pause_duration',
     'unique_id': 'withings_12345_workout_pause_duration',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_pause_during_last_workout-state]
@@ -2030,6 +2045,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -2039,7 +2057,7 @@
     'supported_features': 0,
     'translation_key': 'sleep_goal',
     'unique_id': 'withings_12345_sleep_goal',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_sleep_goal-state]
@@ -2217,6 +2235,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -2226,7 +2247,7 @@
     'supported_features': 0,
     'translation_key': 'activity_soft_duration_today',
     'unique_id': 'withings_12345_activity_soft_duration_today',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_soft_activity_today-state]
