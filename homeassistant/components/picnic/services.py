@@ -71,7 +71,7 @@ async def handle_add_product(
         raise PicnicServiceException("No product found or no product ID given!")
 
     await hass.async_add_executor_job(
-        api_client.add_product, str(product_id), call.data.get("amount", 1)
+        api_client.add_product, product_id, call.data.get("amount", 1)
     )
 
 
