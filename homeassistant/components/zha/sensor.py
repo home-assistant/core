@@ -1377,7 +1377,6 @@ class BitMapSensor(Sensor):
     The sensor value will be a sensor of the state attributes.
     """
 
-    _default_value: str
     _bitmap: dict[str, int]
 
     def formatter(self, _value: int) -> str:
@@ -1386,11 +1385,7 @@ class BitMapSensor(Sensor):
             key for (key, elem) in self.extra_state_attributes.items() if elem
         ]
 
-        return (
-            ", ".join(binary_state_attributes)
-            if binary_state_attributes
-            else self._default_value
-        )
+        return "something" if binary_state_attributes else "nothing"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -1460,11 +1455,10 @@ class DanfossAdaptationRunStatus(BitMapSensor):
     _attribute_name = "adaptation_run_status"
     _attr_translation_key: str = "adaptation_run_status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _default_value = "Nothing"
     _bitmap = {
-        "In progress": 0x0001,
-        "Run successful": 0x0002,
-        "Valve characteristic lost": 0x0004,
+        "in_progress": 0x0001,
+        "run_successful": 0x0002,
+        "valve_characteristic_lost": 0x0004,
     }
 
 
@@ -1496,23 +1490,22 @@ class DanfossSoftwareErrorCode(BitMapSensor):
     _attribute_name = "sw_error_code"
     _attr_translation_key: str = "software_error"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _default_value = "Good"
     _bitmap = {
-        "Top PCB sensor error": 0x0001,
-        "Side PCB sensor error": 0x0002,
-        "Non-volative memory error": 0x0004,
-        "Unknown HW error": 0x0008,
+        "top_pcb_sensor_error": 0x0001,
+        "side_pcb_sensor_error": 0x0002,
+        "non_volatile_memory_error": 0x0004,
+        "unknown_hw_error": 0x0008,
         # 0x0010 = N/A
-        "Motor error": 0x0020,
+        "motor_error": 0x0020,
         # 0x0040 = N/A
-        "Invalid internal communication": 0x0080,
+        "invalid_internal_communication": 0x0080,
         # 0x0100 = N/A
-        "Invalid clock information": 0x0200,
+        "invalid_clock_information": 0x0200,
         # 0x0400 = N/A
-        "Radio communication error": 0x0800,
-        "Encoder jammed": 0x1000,
-        "Low battery": 0x2000,
-        "Critical low battery": 0x4000,
+        "radio_communication_error": 0x0800,
+        "encoder_jammed": 0x1000,
+        "low_battery": 0x2000,
+        "critical_low_battery": 0x4000,
         # 0x8000 = Reserved
     }
 

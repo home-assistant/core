@@ -952,13 +952,67 @@
         "name": "Load estimate"
       },
       "adaptation_run_status": {
-        "name": "Adaptation run status"
+        "name": "Adaptation run status",
+        "state": {
+          "nothing": "Idle",
+          "something": "State"
+        },
+        "state_attributes": {
+          "in_progress": {
+            "name": "In progress"
+          },
+          "run_successful": {
+            "name": "Run successful"
+          },
+          "valve_characteristic_lost": {
+            "name": "Valve characteristic lost"
+          }
+        }
       },
       "preheat_time": {
         "name": "Pre-heat time"
       },
       "software_error": {
-        "name": "Software error"
+        "name": "Software error",
+        "state": {
+          "nothing": "Good",
+          "something": "Error"
+        },
+        "state_attributes": {
+          "top_pcb_sensor_error": {
+            "name": "Top PCB sensor error"
+          },
+          "side_pcb_sensor_error": {
+            "name": "Side PCB sensor error"
+          },
+          "non_volatile_memory_error": {
+            "name": "Non-volatile memory error"
+          },
+          "unknown_hw_error": {
+            "name": "Unknown HW error"
+          },
+          "motor_error": {
+            "name": "Motor error"
+          },
+          "invalid_internal_communication": {
+            "name": "Invalid internal communication"
+          },
+          "invalid_clock_information": {
+            "name": "Invalid clock information"
+          },
+          "radio_communication_error": {
+            "name": "Radio communication error"
+          },
+          "encoder_jammed": {
+            "name": "Encoder jammed"
+          },
+          "low_battery": {
+            "name": "Low battery"
+          },
+          "critical_low_battery": {
+            "name": "Critical low battery"
+          }
+        }
       },
       "motor_stepcount": {
         "name": "Motor stepcount"
