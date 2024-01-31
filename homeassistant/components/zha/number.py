@@ -1062,7 +1062,7 @@ class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossExerciseTriggerTime(ZHANumberConfigurationEntity):
-    """Danfoss Proprietary Attribute to set the time to exercise the valve."""
+    """Danfoss proprietary attribute to set the time to exercise the valve."""
 
     _unique_id_suffix = "exercise_trigger_time"
     _attribute_name: str = "exercise_trigger_time"
@@ -1080,7 +1080,7 @@ class DanfossExerciseTriggerTime(ZHANumberConfigurationEntity):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossExternalMeasuredRoomSensor(ZCLTemperatureEntity):
-    """Danfoss Proprietary Attribute to communicate the value of the external temperature sensor."""
+    """Danfoss proprietary attribute to communicate the value of the external temperature sensor."""
 
     _unique_id_suffix = "external_measured_room_sensor"
     _attribute_name: str = "external_measured_room_sensor"
@@ -1096,7 +1096,7 @@ class DanfossExternalMeasuredRoomSensor(ZCLTemperatureEntity):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossLoadRoomMean(ZHANumberConfigurationEntity):
-    """Danfoss Proprietary Attribute to set a value for the load."""
+    """Danfoss proprietary attribute to set a value for the load."""
 
     _unique_id_suffix = "load_room_mean"
     _attribute_name: str = "load_room_mean"
@@ -1113,7 +1113,7 @@ class DanfossLoadRoomMean(ZHANumberConfigurationEntity):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossControlAlgorithmScaleFactor(ZHANumberConfigurationEntity):
-    """Danfoss Proprietary Attribute to configure the aggressiveness of the control algorithm."""
+    """Danfoss proprietary attribute to configure the aggressiveness of the control algorithm."""
 
     _unique_id_suffix = "control_algorithm_scale_factor"
     _attribute_name: str = "control_algorithm_scale_factor"
@@ -1130,7 +1130,7 @@ class DanfossControlAlgorithmScaleFactor(ZHANumberConfigurationEntity):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossRegulationSetpointOffset(ZHANumberConfigurationEntity):
-    """Danfoss Proprietary Attribute to set the regulation setpoint offset."""
+    """Danfoss proprietary attribute to set the regulation setpoint offset."""
 
     _unique_id_suffix = "regulation_setpoint_offset"
     _attribute_name: str = "regulation_setpoint_offset"

@@ -1406,7 +1406,7 @@ class BitMapSensor(Sensor):
 
 
 class DanfossOpenWindowDetectionEnum(types.enum8):
-    """Danfoss Open Window Detection judgments."""
+    """Danfoss open window detection judgments."""
 
     Quarantine = 0x00
     Closed = 0x01
@@ -1421,7 +1421,7 @@ class DanfossOpenWindowDetectionEnum(types.enum8):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossOpenWindowDetection(EnumSensor):
-    """Danfoss Proprietary attribute.
+    """Danfoss proprietary attribute.
 
     Sensor that displays whether the TRV detects an open window using the temperature sensor.
     """
@@ -1439,7 +1439,7 @@ class DanfossOpenWindowDetection(EnumSensor):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossLoadEstimate(Sensor):
-    """Danfoss Proprietary attribute for communicating its estimate of the radiator load."""
+    """Danfoss proprietary attribute for communicating its estimate of the radiator load."""
 
     _unique_id_suffix = "load_estimate"
     _attribute_name = "load_estimate"
@@ -1453,7 +1453,7 @@ class DanfossLoadEstimate(Sensor):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossAdaptationRunStatus(BitMapSensor):
-    """Danfoss Proprietary attribute for showing the status of the adaptation run."""
+    """Danfoss proprietary attribute for showing the status of the adaptation run."""
 
     _unique_id_suffix = "adaptation_run_status"
     _attribute_name = "adaptation_run_status"
@@ -1473,7 +1473,7 @@ class DanfossAdaptationRunStatus(BitMapSensor):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossPreheatTime(Sensor):
-    """Danfoss Proprietary attribute for communicating the time when it starts pre-heating."""
+    """Danfoss proprietary attribute for communicating the time when it starts pre-heating."""
 
     _unique_id_suffix = "preheat_time"
     _attribute_name = "preheat_time"
@@ -1488,7 +1488,7 @@ class DanfossPreheatTime(Sensor):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossSoftwareErrorCode(BitMapSensor):
-    """Danfoss Proprietary attribute for communicating the error code."""
+    """Danfoss proprietary attribute for communicating the error code."""
 
     _unique_id_suffix = "sw_error_code"
     _attribute_name = "sw_error_code"
@@ -1521,7 +1521,7 @@ class DanfossSoftwareErrorCode(BitMapSensor):
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossMotorStepCounter(Sensor):
-    """Danfoss Proprietary attribute for communicating the motor step counter."""
+    """Danfoss proprietary attribute for communicating the motor step counter."""
 
     _unique_id_suffix = "motor_step_counter"
     _attribute_name = "motor_step_counter"

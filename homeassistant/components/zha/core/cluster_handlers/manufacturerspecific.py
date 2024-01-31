@@ -30,10 +30,9 @@ from ..const import (
     UNKNOWN,
 )
 from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
-
-from .homeautomation import Diagnostic
-from .hvac import ThermostatClusterHandler, UserInterface
 from .general import MultistateInputClusterHandler
+from .homeautomation import DiagnosticClusterHandler
+from .hvac import ThermostatClusterHandler, UserInterfaceClusterHandler
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -451,13 +450,13 @@ class SonoffPresenceSenorClusterHandler(ClusterHandler):
         super().__init__(cluster, endpoint)
         if self.cluster.endpoint.model == "SNZB-06P":
             self.ZCL_INIT_ATTRS = {"last_illumination_state": True}
-    
-    
+
+
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     clusters.hvac.Thermostat.cluster_id, DANFOSS_ALLY_THERMOSTAT
 )
 class DanfossThermostatClusterHandler(ThermostatClusterHandler):
-    """TRV Channel class for the Danfoss TRV and derivatives."""
+    """Thermostat cluster handler for the Danfoss TRV and derivatives."""
 
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Extend ThermostatClusterHandler."""
@@ -502,8 +501,8 @@ class DanfossThermostatClusterHandler(ThermostatClusterHandler):
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     clusters.hvac.UserInterface.cluster_id, DANFOSS_ALLY_THERMOSTAT
 )
-class DanfossUserInterfaceClusterHandler(UserInterface):
-    """Interface Channel class for the Danfoss TRV and derivatives."""
+class DanfossUserInterfaceClusterHandler(UserInterfaceClusterHandler):
+    """Interface cluster handler for the Danfoss TRV and derivatives."""
 
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Extend UserInterface."""
@@ -516,8 +515,8 @@ class DanfossUserInterfaceClusterHandler(UserInterface):
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     clusters.homeautomation.Diagnostic.cluster_id, DANFOSS_ALLY_THERMOSTAT
 )
-class DanfossDiagnosticClusterHandler(Diagnostic):
-    """Diagnostic Channel class for the Danfoss TRV and derivatives."""
+class DanfossDiagnosticClusterHandler(DiagnosticClusterHandler):
+    """Diagnostic cluster handler for the Danfoss TRV and derivatives."""
 
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Extend Diagnostic."""

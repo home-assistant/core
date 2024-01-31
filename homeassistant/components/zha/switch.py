@@ -705,7 +705,7 @@ class AqaraE1CurtainMotorHooksLockedSwitch(ZHASwitchConfigurationEntity):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossExternalOpenWindowDetected(ZHASwitchConfigurationEntity):
-    """Danfoss Proprietary attribute for communicating an open window."""
+    """Danfoss proprietary attribute for communicating an open window."""
 
     _unique_id_suffix = "external_open_window_detected"
     _attribute_name: str = "external_open_window_detected"
@@ -718,7 +718,7 @@ class DanfossExternalOpenWindowDetected(ZHASwitchConfigurationEntity):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossWindowOpenFeature(ZHASwitchConfigurationEntity):
-    """Danfoss Proprietary attribute enabling open window detection."""
+    """Danfoss proprietary attribute enabling open window detection."""
 
     _unique_id_suffix = "window_open_feature"
     _attribute_name: str = "window_open_feature"
@@ -731,7 +731,7 @@ class DanfossWindowOpenFeature(ZHASwitchConfigurationEntity):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossMountingModeControl(ZHASwitchConfigurationEntity):
-    """Danfoss Proprietary attribute for switching to mounting mode."""
+    """Danfoss proprietary attribute for switching to mounting mode."""
 
     _unique_id_suffix = "mounting_mode_control"
     _attribute_name: str = "mounting_mode_control"
@@ -743,7 +743,7 @@ class DanfossMountingModeControl(ZHASwitchConfigurationEntity):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossRadiatorCovered(ZHASwitchConfigurationEntity):
-    """Danfoss Proprietary attribute for communicating full usage of the external temperature sensor."""
+    """Danfoss proprietary attribute for communicating full usage of the external temperature sensor."""
 
     _unique_id_suffix = "radiator_covered"
     _attribute_name: str = "radiator_covered"
@@ -756,7 +756,7 @@ class DanfossRadiatorCovered(ZHASwitchConfigurationEntity):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossHeatAvailable(ZHASwitchConfigurationEntity):
-    """Danfoss Proprietary attribute for communicating available heat."""
+    """Danfoss proprietary attribute for communicating available heat."""
 
     _unique_id_suffix = "heat_available"
     _attribute_name: str = "heat_available"
@@ -769,7 +769,7 @@ class DanfossHeatAvailable(ZHASwitchConfigurationEntity):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossLoadBalancingEnable(ZHASwitchConfigurationEntity):
-    """Danfoss Proprietary attribute for enabling load balancing."""
+    """Danfoss proprietary attribute for enabling load balancing."""
 
     _unique_id_suffix = "load_balancing_enable"
     _attribute_name: str = "load_balancing_enable"
@@ -782,7 +782,7 @@ class DanfossLoadBalancingEnable(ZHASwitchConfigurationEntity):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossAdaptationRunSettings(ZHASwitchConfigurationEntity):
-    """Danfoss Proprietary attribute for enabling daily adaptation run.
+    """Danfoss proprietary attribute for enabling daily adaptation run.
 
     Actually a bitmap, but only the first bit is used.
     """

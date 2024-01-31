@@ -687,7 +687,7 @@ class KeypadLockout(ZCLEnumSelectEntity):
 
 
 class DanfossExerciseDayOfTheWeekEnum(types.enum8):
-    """Day of the Week."""
+    """Day of the week."""
 
     Sunday = 0
     Monday = 1
@@ -703,7 +703,7 @@ class DanfossExerciseDayOfTheWeekEnum(types.enum8):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
-    """Danfoss Proprietary attribute for setting the day of the week for exercising."""
+    """Danfoss proprietary attribute for setting the day of the week for exercising."""
 
     _unique_id_suffix = "exercise_day_of_week"
     _attribute_name = "exercise_day_of_week"
@@ -713,7 +713,7 @@ class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
 
 
 class DanfossOrientationEnum(types.enum8):
-    """Vertical or horizontal."""
+    """Vertical or Horizontal."""
 
     Horizontal = 0x00
     Vertical = 0x01
@@ -724,9 +724,9 @@ class DanfossOrientationEnum(types.enum8):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossOrientation(ZCLEnumSelectEntity):
-    """Danfoss Proprietary attribute for setting the orientation of the valve.
+    """Danfoss proprietary attribute for setting the orientation of the valve.
 
-    needed for biasing the internal temperature sensor.
+    Needed for biasing the internal temperature sensor.
     """
 
     _unique_id_suffix = "orientation"
@@ -748,7 +748,7 @@ class DanfossAdaptationRunControlEnum(types.enum8):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
-    """Danfoss Proprietary attribute for controlling the current adaptation run."""
+    """Danfoss proprietary attribute for controlling the current adaptation run."""
 
     _unique_id_suffix = "adaptation_run_control"
     _attribute_name = "adaptation_run_control"
@@ -768,7 +768,7 @@ class DanfossViewingDirectionEnum(types.enum8):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossViewingDirection(ZCLEnumSelectEntity):
-    """Danfoss Proprietary attribute for setting the viewing direction of the screen."""
+    """Danfoss proprietary attribute for setting the viewing direction of the screen."""
 
     _unique_id_suffix = "viewing_direction"
     _attribute_name = "viewing_direction"

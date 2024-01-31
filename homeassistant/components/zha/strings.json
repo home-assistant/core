@@ -571,13 +571,13 @@
         "name": "Opened by hand"
       },
       "mounting_mode_active": {
-        "name": "Mounting Mode Active"
+        "name": "Mounting mode active"
       },
       "heat_required": {
-        "name": "Heat Required"
+        "name": "Heat required"
       },
       "preheat_status": {
-        "name": "Pre-heat Status"
+        "name": "Pre-heat status"
       }
     },
     "button": {
@@ -750,19 +750,19 @@
         "name": "Min heat setpoint limit"
       },
       "exercise_trigger_time": {
-        "name": "Exercise Start Time"
+        "name": "Exercise start time"
       },
       "external_temperature_sensor": {
-        "name": "External Temperature Sensor"
+        "name": "External temperature sensor"
       },
       "load_room_mean": {
-        "name": "Load Room Mean"
+        "name": "Load room mean"
       },
       "control_algorithm_scale_factor": {
-        "name": "Control Algorithm Scale Factor"
+        "name": "Control algorithm scale factor"
       },
       "regulation_setpoint_offset": {
-        "name": "Regulation Setpoint Offset"
+        "name": "Regulation setpoint offset"
       }
     },
     "select": {
@@ -836,16 +836,16 @@
         "name": "Keypad lockout"
       },
       "exercise_day_of_week": {
-        "name": "Exercise Day of the Week"
+        "name": "Exercise day of the week"
       },
       "valve_orientation": {
-        "name": "Valve Orientation"
+        "name": "Valve orientation"
       },
       "adaptation_run_command": {
-        "name": "Adaptation Run Command"
+        "name": "Adaptation run command"
       },
       "viewing_direction": {
-        "name": "Viewing Direction"
+        "name": "Viewing direction"
       }
     },
     "sensor": {
@@ -946,22 +946,22 @@
         "name": "Hooks state"
       },
       "open_window_detected": {
-        "name": "Open Window Detected"
+        "name": "Open window detected"
       },
       "load_estimate": {
-        "name": "Load Estimate"
+        "name": "Load estimate"
       },
       "adaptation_run_status": {
-        "name": "Adaptation Run Status"
+        "name": "Adaptation run status"
       },
       "preheat_time": {
-        "name": "Pre-heat Time"
+        "name": "Pre-heat time"
       },
       "software_error": {
-        "name": "Software Error"
+        "name": "Software error"
       },
       "motor_stepcount": {
-        "name": "Motor Stepcount"
+        "name": "Motor stepcount"
       }
     },
     "switch": {
@@ -1047,25 +1047,25 @@
         "name": "Buzzer manual alarm"
       },
       "external_window_sensor": {
-        "name": "External Window Sensor"
+        "name": "External window sensor"
       },
       "use_internal_window_detection": {
-        "name": "Use Internal Window Detection"
+        "name": "Use internal window detection"
       },
       "mounting_mode": {
-        "name": "Mounting Mode"
+        "name": "Mounting mode"
       },
       "prioritize_external_temperature_sensor": {
-        "name": "Prioritize External Temperature Sensor"
+        "name": "Prioritize external temperature sensor"
       },
       "heat_available": {
-        "name": "Heat Available"
+        "name": "Heat available"
       },
       "use_load_balancing": {
-        "name": "Use Load Balancing"
+        "name": "Use load balancing"
       },
       "adaptation_run_enabled": {
-        "name": "Adaptation Run Enabled"
+        "name": "Adaptation run enabled"
       }
     }
   }
