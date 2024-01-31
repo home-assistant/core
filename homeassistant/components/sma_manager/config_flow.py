@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Enables the Integration to be configured in the UI."""
+    """Handle a config flow for SMA Manager."""
 
     VERSION = 1
 
