@@ -10,9 +10,11 @@ from pylutron import Output
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_FLASH,
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
@@ -105,6 +107,7 @@ class LutronLight(LutronDevice, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
     _lutron_device: Output
     _prev_brightness: int | None = None
     _attr_name = None
@@ -135,15 +138,18 @@ class LutronLight(LutronDevice, LightEntity):
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_light_fan_on",
             )
-        if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-        elif self._prev_brightness == 0:
-            brightness = 255 / 2
+        if flash := kwargs.get(ATTR_FLASH):
+            self._lutron_device.set_flash(0.5 if flash == "short" else 1.5)
         else:
-            brightness = self._prev_brightness
-        self._prev_brightness = brightness
-        # self._lutron_device.level = to_lutron_level(brightness)
-        self._set_brightness(brightness, **kwargs)
+            if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+            elif self._prev_brightness == 0:
+                brightness = 255 / 2
+            else:
+                brightness = self._prev_brightness
+            self._prev_brightness = brightness
+            # self._lutron_device.level = to_lutron_level(brightness)
+            self._set_brightness(brightness, **kwargs)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
