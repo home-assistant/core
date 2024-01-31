@@ -29,4 +29,4 @@ class KitchenSinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Reauth confirm step."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
-        return self.async_abort(reason="test")
+        return self.async_abort(reason="reauth_successful")
