@@ -328,11 +328,21 @@ ENTITY_DESCRIPTION_KEY_MAP = {
 }
 
 
+def convert_dict_of_dicts(
+    statistics: ControllerStatisticsDataType | NodeStatisticsDataType, key: str
+) -> Any:
+    """Convert a dictionary of dictionaries."""
+    keys = key.split(".")
+    return statistics.get(keys[0], {}).get(keys[1], {}).get(keys[2])  # type: ignore[attr-defined]
+
+
 @dataclass(frozen=True, kw_only=True)
 class ZWaveJSStatisticsSensorEntityDescription(SensorEntityDescription):
     """Class to represent a Z-Wave JS statistics sensor entity description."""
 
-    convert: Callable[[Any], Any] = lambda value: value
+    convert: Callable[
+        [ControllerStatisticsDataType | NodeStatisticsDataType, str], Any
+    ] = lambda statistics, key: statistics.get(key)
 
 
 # Controller statistics descriptions
@@ -383,6 +393,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
         name="Average background RSSI (channel 0)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        convert=convert_dict_of_dicts,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="backgroundRSSI.channel0.current",
@@ -390,12 +401,14 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
+        convert=convert_dict_of_dicts,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="backgroundRSSI.channel1.average",
         name="Average background RSSI (channel 1)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        convert=convert_dict_of_dicts,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="backgroundRSSI.channel1.current",
@@ -403,12 +416,14 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
+        convert=convert_dict_of_dicts,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="backgroundRSSI.channel2.average",
         name="Average background RSSI (channel 2)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        convert=convert_dict_of_dicts,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="backgroundRSSI.channel2.current",
@@ -416,6 +431,7 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
+        convert=convert_dict_of_dicts,
     ),
 ]
 
@@ -464,7 +480,9 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
         key="lastSeen",
         name="Last Seen",
         device_class=SensorDeviceClass.TIMESTAMP,
-        convert=lambda value: datetime.fromisoformat(value) if value else None,
+        convert=lambda statistics, value: datetime.fromisoformat(dt)
+        if (dt := statistics.get(value)) and isinstance(dt, str)
+        else None,
     ),
 ]
 
@@ -905,6 +923,7 @@ class ZWaveControllerStatusSensor(SensorEntity):
 class ZWaveStatisticsSensor(SensorEntity):
     """Representation of a node/controller statistics sensor."""
 
+    entity_description: ZWaveJSStatisticsSensorEntityDescription
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
@@ -918,7 +937,7 @@ class ZWaveStatisticsSensor(SensorEntity):
         description: ZWaveJSStatisticsSensorEntityDescription,
     ) -> None:
         """Initialize a Z-Wave statistics entity."""
-        self.entity_description: ZWaveJSStatisticsSensorEntityDescription = description
+        self.entity_description = description
         self.config_entry = config_entry
         self.statistics_src = statistics_src
         node = (
@@ -948,24 +967,13 @@ class ZWaveStatisticsSensor(SensorEntity):
         self, statistics: ControllerStatisticsDataType | NodeStatisticsDataType
     ) -> Any:
         """Get the data from the statistics dict."""
-        if "." not in self.entity_description.key:
-            return self.entity_description.convert(
-                statistics.get(self.entity_description.key)
-            )
-
-        # If key contains dots, we need to traverse the dict to get to the right value
-        data: Any = statistics
-        for key in self.entity_description.key.split("."):
-            if key not in data:
-                return None
-            data = data[key]
-        return self.entity_description.convert(data)
+        return self.entity_description.convert(statistics, self.entity_description.key)
 
     @callback
     def statistics_updated(self, event_data: dict) -> None:
         """Call when statistics updated event is received."""
-        self._attr_native_value = self._get_data_from_statistics(
-            event_data["statistics"]
+        self._attr_native_value = self.entity_description.convert(
+            event_data["statistics"], self.entity_description.key
         )
         self.async_write_ha_state()
 
@@ -990,6 +998,6 @@ class ZWaveStatisticsSensor(SensorEntity):
         )
 
         # Set initial state
-        self._attr_native_value = self._get_data_from_statistics(
-            self.statistics_src.statistics.data
+        self._attr_native_value = self.entity_description.convert(
+            self.statistics_src.statistics.data, self.entity_description.key
         )
