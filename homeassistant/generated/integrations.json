@@ -6169,7 +6169,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_polling",
-          "name": "Traccar"
+          "name": "Traccar Client"
         },
         "traccar_server": {
           "integration_type": "hub",
