@@ -331,7 +331,7 @@ ENTITY_DESCRIPTION_KEY_MAP = {
 def convert_dict_of_dicts(
     statistics: ControllerStatisticsDataType | NodeStatisticsDataType, key: str
 ) -> Any:
-    """Convert a dictionary of dictionaries."""
+    """Convert a dictionary of dictionaries to a value."""
     keys = key.split(".")
     return statistics.get(keys[0], {}).get(keys[1], {}).get(keys[2])  # type: ignore[attr-defined]
 
