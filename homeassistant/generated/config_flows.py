@@ -538,6 +538,7 @@ FLOWS = {
         "tplink",
         "tplink_omada",
         "traccar",
+        "traccar_server",
         "tractive",
         "tradfri",
         "trafikverket_camera",
