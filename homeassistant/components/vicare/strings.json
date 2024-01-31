@@ -242,28 +242,25 @@
       "volumetric_flow": {
         "name": "Volumetric flow"
       },
-      "ess_state_of_charge": {
-        "name": "Battery"
-      },
       "ess_power_current": {
         "name": "Battery power"
       },
       "ess_state": {
         "name": "Battery state",
         "state": {
-          "charge": "Charge",
-          "discharge": "Discharge",
+          "charge": "Charging",
+          "discharge": "Discharging",
           "standby": "Standby"
         }
       },
       "pcc_current_power_exchange": {
-        "name": "PCC power exchange"
+        "name": "Grid power exchange"
       },
       "pcc_energy_consumption": {
-        "name": "PCC energy consumption"
+        "name": "Energy import from grid"
       },
       "pcc_energy_feed_in": {
-        "name": "PCC energy feed-in"
+        "name": "Energy export to grid"
       },
       "photovoltaic_power_production_current": {
         "name": "Solar power"

@@ -825,8 +825,8 @@ class ViCareSensor(ViCareEntity, SensorEntity):
                 if self.entity_description.unit_getter:
                     vicare_unit = self.entity_description.unit_getter(self._api)
                     if vicare_unit is not None:
-                        device_class = VICARE_UNIT_TO_DEVICE_CLASS.get(vicare_unit)
-                        if device_class is not None:
+                        if(device_class := VICARE_UNIT_TO_DEVICE_CLASS.get(vicare_unit)
+) is not None:
                             self._attr_device_class = device_class
                         self._attr_native_unit_of_measurement = (
                             VICARE_UNIT_TO_UNIT_OF_MEASUREMENT.get(vicare_unit)
