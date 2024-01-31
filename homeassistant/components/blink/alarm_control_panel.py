@@ -65,7 +65,7 @@ class BlinkSyncModuleHA(
             name=f"{DOMAIN} {name}",
             manufacturer=DEFAULT_BRAND,
             serial_number=sync.serial,
-            sw_version=sync.attributes.get("version"),
+            sw_version=sync.version,
         )
         self._update_attr()
 

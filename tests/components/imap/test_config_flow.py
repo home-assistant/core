@@ -239,6 +239,7 @@ async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
@@ -464,7 +465,7 @@ async def test_advanced_options_form(
                 # Check if entry was updated
                 for key, value in new_config.items():
                     assert entry.data[key] == value
-    except vol.MultipleInvalid:
+    except vol.Invalid:
         # Check if form was expected with these options
         assert assert_result == data_entry_flow.FlowResultType.FORM
 
