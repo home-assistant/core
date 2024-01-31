@@ -471,25 +471,6 @@ class AqaraT2RelayDecoupledMode(ZCLEnumSelectEntity):
     _attr_translation_key: str = "decoupled_mode"
 
 
-class AqaraE1ReverseDirection(types.enum8):
-    """Aqara curtain reversal."""
-
-    Normal = 0x00
-    Inverted = 0x01
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="window_covering", models={"lumi.curtain.agl001"}
-)
-class AqaraCurtainMode(ZCLEnumSelectEntity):
-    """Representation of a ZHA curtain mode configuration entity."""
-
-    _unique_id_suffix = "window_covering_mode"
-    _attribute_name = "window_covering_mode"
-    _enum = AqaraE1ReverseDirection
-    _attr_translation_key: str = "window_covering_mode"
-
-
 class InovelliOutputMode(types.enum1):
     """Inovelli output mode."""
 
