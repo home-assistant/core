@@ -384,11 +384,6 @@ async def test_warning_not_implemented_turn_on_off_feature(
             """Turn off."""
             called.append("turn_off")
 
-    class MockClimateEntityTestNoBackwardsCompatibility(MockClimateEntityTest):
-        """Mock Climate device with backwards compatibility flag disabled."""
-
-        _enable_turn_on_off_backwards_compatibility = False
-
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
@@ -403,12 +398,7 @@ async def test_warning_not_implemented_turn_on_off_feature(
     ) -> None:
         """Set up test climate platform via config entry."""
         async_add_entities(
-            [MockClimateEntityTest(name="test", entity_id="climate.test")],
-            [
-                MockClimateEntityTestNoBackwardsCompatibility(
-                    name="test", entity_id="climate.test_1"
-                )
-            ],
+            [MockClimateEntityTest(name="test", entity_id="climate.test")]
         )
 
     mock_integration(
@@ -446,23 +436,6 @@ async def test_warning_not_implemented_turn_on_off_feature(
         " does not set ClimateEntityFeature.TURN_ON but implements the turn_on method."
         " Please report it to the author of the 'test' custom integration"
         in caplog.text
-    )
-
-    assert (
-        "Entity climate.test_1 (<class 'tests.components.climate.test_init."
-        "test_warning_not_implemented_turn_on_off_feature.<locals>."
-        "MockClimateEntityTestNoBackwardsCompatibility'>) does not set "
-        "ClimateEntityFeature.TURN_OFF but implements the turn_off method."
-        " Please report it to the author of the 'test' custom integration"
-        not in caplog.text
-    )
-    assert (
-        "Entity climate.test_1 (<class 'tests.components.climate.test_init."
-        "test_warning_not_implemented_turn_on_off_feature.<locals>."
-        "MockClimateEntityTestNoBackwardsCompatibility'>) does not set "
-        "ClimateEntityFeature.TURN_ON but implements the turn_on method."
-        " Please report it to the author of the 'test' custom integration"
-        not in caplog.text
     )
 
     await hass.services.async_call(

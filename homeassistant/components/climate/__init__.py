@@ -300,11 +300,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
 
-    # Integrations can set `_enable_turn_on_off_backwards_compatibility` to False
-    # to skip the automatic setting of feature flags TURN_ON/TURN_OFF for
-    # backwards compatibility.
-    # This should be removed in 2025.1.
-    _enable_turn_on_off_backwards_compatibility: bool = True
     __mod_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
 
     def __getattribute__(self, __name: str) -> Any:
@@ -362,12 +357,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 report_issue,
             )
 
-        # If backwards compatibility is enabled, adds
-        # ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
+        # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
         # This should be removed in 2025.1.
-        if not self._enable_turn_on_off_backwards_compatibility:
-            return
-
         if not self.supported_features & ClimateEntityFeature.TURN_OFF:
             if (
                 type(self).async_turn_off is not ClimateEntity.async_turn_off
