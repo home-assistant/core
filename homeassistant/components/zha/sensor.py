@@ -1433,7 +1433,7 @@ class DanfossOpenWindowDetection(EnumSensor):
     _enum = DanfossOpenWindowDetectionEnum
 
 
-@MULTI_MATCH(
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
@@ -1445,9 +1445,10 @@ class DanfossLoadEstimate(Sensor):
     _attribute_name = "load_estimate"
     _attr_translation_key: str = "load_estimate"
     _attr_icon: str = "mdi:scale-balance"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
-@MULTI_MATCH(
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
@@ -1467,7 +1468,7 @@ class DanfossAdaptationRunStatus(BitMapSensor):
     }
 
 
-@MULTI_MATCH(
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
@@ -1480,9 +1481,10 @@ class DanfossPreheatTime(Sensor):
     _attr_translation_key: str = "preheat_time"
     _attr_icon: str = "mdi:radiator"
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
-@MULTI_MATCH(
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="diagnostic",
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
@@ -1515,7 +1517,7 @@ class DanfossSoftwareErrorCode(BitMapSensor):
     }
 
 
-@MULTI_MATCH(
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="diagnostic",
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )

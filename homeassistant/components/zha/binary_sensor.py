@@ -353,7 +353,7 @@ class AqaraE1CurtainMotorOpenedByHandBinarySensor(BinarySensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
-@MULTI_MATCH(
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
@@ -364,6 +364,7 @@ class DanfossMountingModeActive(BinarySensor):
     _attribute_name = "mounting_mode_active"
     _attr_translation_key: str = "mounting_mode_active"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
 @MULTI_MATCH(
@@ -378,7 +379,7 @@ class DanfossHeatRequired(BinarySensor):
     _attr_translation_key: str = "heat_required"
 
 
-@MULTI_MATCH(
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
@@ -389,3 +390,4 @@ class DanfossPreheatStatus(BinarySensor):
     _attribute_name = "preheat_status"
     _attr_translation_key: str = "preheat_status"
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
