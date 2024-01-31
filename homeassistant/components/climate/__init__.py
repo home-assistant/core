@@ -392,7 +392,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             _modes = [_mode for _mode in self.hvac_modes if _mode is not None]
             _report_turn_on_off(", ".join(_modes or []), "turn_on/turn_off")
             self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                ClimateEntityFeature.TURN_ON
+                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
             )
 
     @final
