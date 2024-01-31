@@ -103,8 +103,8 @@ async def test_remote_services(
     assert mock_disconnect.called is False
 
 
-async def test_startup_shutdown_events(hass: HomeAssistant, mock_cloud_fixture) -> None:
-    """Test if the cloud will start on startup event."""
+async def test_shutdown_event(hass: HomeAssistant, mock_cloud_fixture) -> None:
+    """Test if the cloud will stop on shutdown event."""
     with patch("hass_nabucasa.Cloud.stop") as mock_stop:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()

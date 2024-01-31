@@ -11,7 +11,11 @@ from gps3.agps3threaded import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -77,7 +81,7 @@ async def async_setup_platform(
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
         is_fixable=False,
-        breaks_in_ha_version="2024.6.0",
+        breaks_in_ha_version="2024.9.0",
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
         translation_placeholders={
@@ -98,7 +102,9 @@ class GpsdSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_translation_key = DOMAIN
+    _attr_translation_key = "mode"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["2d_fix", "3d_fix"]
 
     def __init__(
         self,
@@ -111,7 +117,7 @@ class GpsdSensor(SensorEntity):
             identifiers={(DOMAIN, unique_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = f"{unique_id}-mode"
 
         self.agps_thread = AGPS3mechanism()
         self.agps_thread.stream_data(host=host, port=port)

@@ -11,16 +11,14 @@
         }
       }
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
     "sensor": {
-      "gpsd": {
+      "mode": {
         "state": {
           "2d_fix": "2D Fix",
           "3d_fix": "3D Fix"
