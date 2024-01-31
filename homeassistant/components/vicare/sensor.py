@@ -579,9 +579,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_status",
         device_class=SensorDeviceClass.ENUM,
         options=["nothing", "ready", "production", "unknown"],
-        value_getter=lambda api: None
-        if (state := api.getPhotovoltaicStatus()) == "unknown"
-        else state,
+        value_getter=lambda api: _filter_pv_states(api.getPhotovoltaicStatus()),
     ),
 )
 
@@ -687,6 +685,10 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
+
+
+def _filter_pv_states(state: str):
+    return None if state == "unknown" else state
 
 
 def _build_entity(
