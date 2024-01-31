@@ -466,12 +466,16 @@ async def test_interview_node(
     assert msg["success"]
     matter_client.interview_node.assert_called_once_with(1)
 
-    # repeat test with invalid device id
+    # repeat test with a device id that does not have a node attached
+    new_entry = dev_reg.async_get_or_create(
+        config_entry_id=list(entry.config_entries)[0],
+        identifiers={(DOMAIN, "MatterNodeDevice")},
+    )
     await ws_client.send_json(
         {
             ID: 2,
             TYPE: "matter/interview_node",
-            DEVICE_ID: "invalid",
+            DEVICE_ID: new_entry.id,
         }
     )
     msg = await ws_client.receive_json()
