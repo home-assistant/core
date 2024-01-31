@@ -203,6 +203,7 @@ FLOWS = {
         "google_travel_time",
         "govee_ble",
         "govee_light_local",
+        "gpsd",
         "gpslogger",
         "gree",
         "growatt_server",
