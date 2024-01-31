@@ -522,6 +522,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 self._current_mode, self._last_hvac_mode_id_before_off
             )
             self._last_hvac_mode_id_before_off = None
+            return
 
         # Attempt to set the device to the first available mode among heat_cool, heat,
         # and cool to mirror previous behavior. If none of those are available, set it
