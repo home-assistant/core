@@ -14,7 +14,6 @@ from .coordinator import TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 from .helpers import technove_exception_handler
 
-PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -44,7 +43,7 @@ class TechnoVEAutoChargeSwitch(TechnoVEEntity, SwitchEntity):
         super().__init__(coordinator, "auto_charge")
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return the state of the switch."""
         return bool(self.coordinator.data.info.auto_charge)
 
