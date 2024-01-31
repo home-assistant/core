@@ -1891,6 +1891,9 @@ screenlogicpy==0.10.0
 # homeassistant.components.backup
 securetar==2023.3.0
 
+# homeassistant.components.tuya
+segno==1.5.3
+
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense-energy==0.12.2
@@ -2067,7 +2070,7 @@ transmission-rpc==7.0.3
 ttls==1.5.1
 
 # homeassistant.components.tuya
-tuya-iot-py-sdk==0.6.6
+tuya-device-sharing-sdk==0.1.9
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.0.1
