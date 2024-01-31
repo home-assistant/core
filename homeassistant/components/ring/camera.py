@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from itertools import chain
 import logging
+from typing import Optional
 
 from haffmpeg.camera import CameraMjpeg
 import requests
@@ -16,8 +17,9 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, RING_DEVICES, RING_HISTORY_COORDINATOR
-from .entity import RingEntityMixin
+from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
+from .coordinator import RingDataCoordinator
+from .entity import RingEntity
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 
@@ -31,6 +33,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Ring Door Bell and StickUp Camera."""
     devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
+    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        RING_DEVICES_COORDINATOR
+    ]
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
     cams = []
@@ -40,19 +45,20 @@ async def async_setup_entry(
         if not camera.has_subscription:
             continue
 
-        cams.append(RingCam(config_entry.entry_id, ffmpeg_manager, camera))
+        cams.append(RingCam(camera, devices_coordinator, ffmpeg_manager))
 
     async_add_entities(cams)
 
 
-class RingCam(RingEntityMixin, Camera):
+class RingCam(RingEntity, Camera):
     """An implementation of a Ring Door Bell camera."""
 
     _attr_name = None
 
-    def __init__(self, config_entry_id, ffmpeg_manager, device):
+    def __init__(self, device, coordinator, ffmpeg_manager):
         """Initialize a Ring Door Bell camera."""
-        super().__init__(config_entry_id, device)
+        super().__init__(device, coordinator)
+        Camera.__init__(self)
 
         self._ffmpeg_manager = ffmpeg_manager
         self._last_event = None
@@ -62,25 +68,12 @@ class RingCam(RingEntityMixin, Camera):
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
         self._attr_unique_id = device.id
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-
-        await self.ring_objects[RING_HISTORY_COORDINATOR].async_track_device(
-            self._device, self._history_update_callback
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect callbacks."""
-        await super().async_will_remove_from_hass()
-
-        self.ring_objects[RING_HISTORY_COORDINATOR].async_untrack_device(
-            self._device, self._history_update_callback
-        )
-
     @callback
-    def _history_update_callback(self, history_data):
+    def _handle_coordinator_update(self):
         """Call update method."""
+        history_data: Optional[list]
+        if not (history_data := self._get_coordinator_history()):
+            return
         if history_data:
             self._last_event = history_data[0]
             self.async_schedule_update_ha_state(True)
