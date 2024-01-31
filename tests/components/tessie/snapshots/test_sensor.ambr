@@ -493,54 +493,6 @@
     'state': '22.5',
   })
 # ---
-# name: test_sensors[sensor.test_duration-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_duration',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Duration',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'drive_state_active_route_minutes_to_arrival',
-    'unique_id': 'VINVINVIN-drive_state_active_route_minutes_to_arrival',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensors[sensor.test_duration-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Duration',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_duration',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '59.2',
-  })
-# ---
 # name: test_sensors[sensor.test_inside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -951,6 +903,50 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '65',
+  })
+# ---
+# name: test_sensors[sensor.test_time_to_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_time_to_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Time to arrival',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'drive_state_active_route_minutes_to_arrival',
+    'unique_id': 'VINVINVIN-drive_state_active_route_minutes_to_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_time_to_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test Time to arrival',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_time_to_arrival',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:59:12+00:00',
   })
 # ---
 # name: test_sensors[sensor.test_time_to_full_charge-entry]
