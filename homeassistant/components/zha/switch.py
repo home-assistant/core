@@ -110,7 +110,8 @@ class Switch(ZhaEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Attempt to retrieve on off state from the switch."""
-        await super().async_update()
+        # onoff is used in a few spots. we want to always update switch entities
+        # so we can't use the cluster handler's async_update method.
         await self._on_off_cluster_handler.read_attribute("on_off")
 
 
@@ -254,7 +255,6 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
-        await super().async_update()
         await self._cluster_handler.read_attributes(
             [self._attribute_name]
             if self._inverter_attribute_name is None

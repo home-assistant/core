@@ -1085,6 +1085,7 @@ async def test_elec_measurement_sensor_polling(
             "ac_frequency_max": 0,
         }
     )
+    await zha_device_joined_restored(zigpy_dev)
 
     # test that the sensor has an initial state of 2.0
     state = hass.states.get(entity_id)
