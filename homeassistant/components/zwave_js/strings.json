@@ -1,4 +1,26 @@
 {
+  "entity": {
+    "sensor": {
+      "node_status": {
+        "name": "Node status",
+        "state": {
+          "alive": "Alive",
+          "asleep": "Asleep",
+          "awake": "Awake",
+          "dead": "Dead",
+          "unknown": "Unknown"
+        }
+      },
+      "controller_status": {
+        "name": "Status",
+        "state": {
+          "ready": "Ready",
+          "unresponsive": "Unresponsive",
+          "jammed": "Jammed"
+        }
+      }
+    }
+  },
   "config": {
     "flow_title": "{name}",
     "step": {
