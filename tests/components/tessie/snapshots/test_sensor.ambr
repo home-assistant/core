@@ -990,7 +990,7 @@
     'entity_id': 'sensor.test_time_to_full_charge',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_front_left-entry]
