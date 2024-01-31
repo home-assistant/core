@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable
 from datetime import timedelta
 from logging import getLogger
 import time
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import numdifftools as nd
 import numpy as np
@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_GROUP_ID,
+    ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     CONF_EVENT,
     CONF_SERVICE,
@@ -29,6 +30,10 @@ from homeassistant.core import Event, HomeAssistant
 from .entity import Entity
 from .storage import Store
 from .template import device_entities
+
+if TYPE_CHECKING:
+    from .entity_platform import EntityPlatform
+    from .update_coordinator import DataUpdateCoordinator
 
 RT = TypeVar("RT")
 
@@ -108,10 +113,11 @@ class RASCState:
         self.transition = transition
         self.event = event
         self.entity = entity
-        self.s_detector = StateDetector(history.st_history)
-        self.c_detector = StateDetector(history.ct_history)
-        # metadata
-        self.exec_time = time.time()
+        if entity.should_poll:
+            self.s_detector = StateDetector(history.st_history)
+            self.c_detector = StateDetector(history.ct_history)
+            # metadata
+            self.exec_time = time.time()
 
     @classmethod
     async def create(
@@ -124,28 +130,20 @@ class RASCState:
         """Create rasc state."""
         transition: float = event.data[ATTR_SERVICE_DATA].get("transition", 0)
         key = ",".join((entity.entity_id, event.data[CONF_SERVICE], str(transition)))
-        rasc_history = await get_rasc_history(entity.hass)
+        rasc_history = await _get_rasc_history(entity.hass)
         if key not in rasc_history:
             rasc_history[key] = RASCHistory()
         return RASCState(
             entity, event, start_state, complete_state, transition, rasc_history[key]
         )
 
-    def get_polling_interval(self) -> timedelta | None:
+    def get_polling_interval(self) -> timedelta:
         """Get polling interval."""
         if self.next_response == RASC_START:
             return self.s_detector.next_interval()
         if self.next_response == RASC_COMPLETE:
             return self.c_detector.next_interval()
-        return None
-
-
-async def get_rasc_history(hass: HomeAssistant) -> dict[str, RASCHistory]:
-    """Get rasc history."""
-    if hass.rasc_store is None:
-        hass.rasc_store = RASCStore(hass)
-        await hass.rasc_store.async_load()
-    return hass.rasc_store.history
+        return timedelta(seconds=1)
 
 
 def rasc_push_event(func: Callable[..., RT]) -> Callable[..., RT]:
@@ -160,7 +158,72 @@ def rasc_push_event(func: Callable[..., RT]) -> Callable[..., RT]:
     return _wrapper
 
 
-async def update_state(
+async def rasc_on_command(
+    hass: HomeAssistant,
+    platform: EntityPlatform | DataUpdateCoordinator,
+    e: Event,
+) -> tuple[list[Entity] | None, dict[str, timedelta]]:
+    """Invoke when RASC receives an event."""
+    if isinstance(platform.entities, dict):
+        entities = list(platform.entities.values())
+    else:
+        entities = platform.entities
+    target_entities = _get_target_entities(hass, e, entities)
+    if not target_entities:
+        return None, {}
+
+    next_intervals: dict[str, timedelta] = {}
+    for target_entity in target_entities:
+        platform.rascal_state_map[
+            target_entity.entity_id
+        ] = await _async_get_rasc_state(hass, e, target_entity)
+        if target_entity.should_poll:
+            next_intervals[target_entity.entity_id] = platform.rascal_state_map[
+                target_entity.entity_id
+            ].get_polling_interval()
+    return target_entities, next_intervals
+
+
+def rasc_on_update(
+    hass: HomeAssistant, rascal_state_map: dict[str, RASCState], entity: Entity
+) -> timedelta | None:
+    """Invoke when RASC updates the state."""
+    rasc_state = rascal_state_map.get(entity.entity_id)
+    if not rasc_state:
+        return None
+    completed = _update_rasc_state(hass, rasc_state)
+    if completed:
+        del rascal_state_map[entity.entity_id]
+        return None
+    # if the entity is push-based, no need to get polling interval
+    if not entity.should_poll:
+        return None
+    _polling_interval = rasc_state.get_polling_interval()
+    return _polling_interval
+
+
+def rasc_fire(
+    hass: HomeAssistant,
+    rasc_type: str,
+    entity: Entity,
+    action: str,
+    data: dict | None = None,
+) -> None:
+    """Fire a rasc response."""
+    data = data or {}
+    _LOGGER.info("%s %s: %s", entity.entity_id, action, rasc_type)
+    hass.bus.async_fire(
+        RASC_RESPONSE,
+        {
+            "type": rasc_type,
+            ATTR_SERVICE: action,
+            ATTR_ENTITY_ID: entity.entity_id,
+            **data,
+        },
+    )
+
+
+async def _update_state(
     hass: HomeAssistant,
     entity: Entity,
     action: str,
@@ -170,7 +233,7 @@ async def update_state(
 ) -> None:
     """Update rasc state."""
     key = ",".join((entity.entity_id, action, str(transition)))
-    rasc_history = await get_rasc_history(hass)
+    rasc_history = await _get_rasc_history(hass)
     if key not in rasc_history:
         rasc_history[key] = RASCHistory()
 
@@ -183,50 +246,15 @@ async def update_state(
     await hass.rasc_store.async_save()
 
 
-async def rasc_on_command(
-    hass: HomeAssistant,
-    e: Event,
-    entities: Iterable[Entity],
-    default_polling_interval: timedelta | None,
-    rascal_state_map: dict[str, RASCState],
-) -> timedelta | None:
-    """Invoke when RASC receives an event."""
-    target_entities = get_target_entities(hass, e, entities)
-    if len(target_entities) == 0:
-        return None
-    polling_interval = default_polling_interval
-    for target_entity in target_entities:
-        rascal_state_map[target_entity.entity_id] = await async_get_rasc_state(
-            hass, e, target_entity
-        )
-        _polling_interval = rascal_state_map[
-            target_entity.entity_id
-        ].get_polling_interval()
-        if _polling_interval is None:
-            continue
-        if polling_interval is None or _polling_interval < polling_interval:
-            polling_interval = _polling_interval
-    return polling_interval
+async def _get_rasc_history(hass: HomeAssistant) -> dict[str, RASCHistory]:
+    """Get rasc history."""
+    if hass.rasc_store is None:
+        hass.rasc_store = RASCStore(hass)
+        await hass.rasc_store.async_load()
+    return hass.rasc_store.history
 
 
-def rasc_on_update(
-    hass: HomeAssistant,
-    default_polling_interval: timedelta | None,
-    rascal_state_map: dict[str, RASCState],
-) -> tuple[list[Entity], timedelta | None]:
-    """Invoke when RASC updates the state."""
-    completed_entities = update_rasc_state(hass, rascal_state_map)
-    polling_interval = default_polling_interval
-    for rasc_state in rascal_state_map.values():
-        _polling_interval = rasc_state.get_polling_interval()
-        if _polling_interval is None:
-            continue
-        if polling_interval is None or _polling_interval < polling_interval:
-            polling_interval = _polling_interval
-    return completed_entities, polling_interval
-
-
-def get_target_entities(
+def _get_target_entities(
     hass: HomeAssistant, e: Event, own_entities: Iterable[Entity]
 ) -> list[Entity]:
     """Get target entities from Event e."""
@@ -246,7 +274,7 @@ def get_target_entities(
     return [entity for entity in own_entities if entity.entity_id in entities]
 
 
-async def async_get_rasc_state(
+async def _async_get_rasc_state(
     hass: HomeAssistant, e: Event, entity: Entity
 ) -> RASCState:
     """Get RASC state on the given Event e."""
@@ -271,96 +299,86 @@ async def async_get_rasc_state(
     return await RASCState.create(entity, e, start_state, complete_state)
 
 
-def update_rasc_state(
-    hass: HomeAssistant,
-    rascal_state_map: dict[str, RASCState],
-    entity: Entity | None = None,
-) -> list[Entity]:
+def _update_rasc_state(hass: HomeAssistant, state: RASCState) -> bool:
     """Update RASC and fire responses if any."""
-    completed_list: list[Entity] = []
-    for entity_id, state in list(rascal_state_map.items()):
-        if entity and entity.entity_id != entity_id:
-            continue
 
-        # check complete state
-        complete_state_matched = True
-        for attr, match in state.complete_state.items():
-            if not match(getattr(entity or state.entity, attr)):
-                complete_state_matched = False
-                break
-        # prevent hazardous changes
-        transition = state.transition
-        if complete_state_matched and (
-            transition is None or time.time() - state.exec_time > transition / 2
-        ):
-            if state.next_response == RASC_START:
-                _LOGGER.info("Fire %s response: %s", RASC_START, entity_id)
-                hass.bus.async_fire(
-                    RASC_RESPONSE,
-                    {
-                        "type": RASC_START,
-                        ATTR_ENTITY_ID: entity_id,
-                        ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
-                            ATTR_GROUP_ID
-                        ),
-                    },
-                )
-            _LOGGER.info("Fire %s response: %s", RASC_COMPLETE, entity_id)
-            hass.bus.async_fire(
-                RASC_RESPONSE,
+    # check complete state
+    complete_state_matched = True
+    for attr, match in state.complete_state.items():
+        if not match(getattr(state.entity, attr)):
+            complete_state_matched = False
+            break
+    # prevent hazardous changes
+    transition = state.transition
+    if complete_state_matched and (
+        transition is None or time.time() - state.exec_time > transition / 2
+    ):
+        if state.next_response == RASC_START:
+            rasc_fire(
+                hass,
+                RASC_START,
+                state.entity,
+                state.event.data[ATTR_SERVICE],
                 {
-                    "type": RASC_COMPLETE,
-                    ATTR_ENTITY_ID: entity_id,
                     ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
                         ATTR_GROUP_ID
                     ),
                 },
             )
-            time_to_complete = time.time() - state.exec_time
-            hass.loop.create_task(
-                update_state(
-                    hass,
-                    entity or state.entity,
-                    state.event.data[CONF_SERVICE],
-                    state.transition,
-                    time_to_complete=time_to_complete,
-                )
+        rasc_fire(
+            hass,
+            RASC_COMPLETE,
+            state.entity,
+            state.event.data[ATTR_SERVICE],
+            {
+                ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
+                    ATTR_GROUP_ID
+                ),
+            },
+        )
+        time_to_complete = time.time() - state.exec_time
+        hass.loop.create_task(
+            _update_state(
+                hass,
+                state.entity,
+                state.event.data[CONF_SERVICE],
+                state.transition,
+                time_to_complete=time_to_complete,
             )
+        )
 
-            completed_list.append(entity or state.entity)
-            del rascal_state_map[entity_id]
-            continue
+        return True
 
-        start_state_matched = True
-        for attr, match in state.start_state.items():
-            if not match(getattr(entity or state.entity, attr)):
-                start_state_matched = False
-                break
-        if start_state_matched and state.next_response == RASC_START:
-            _LOGGER.info("Fire %s response: %s", RASC_START, entity_id)
-            hass.bus.async_fire(
-                RASC_RESPONSE,
-                {
-                    "type": RASC_START,
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
-                        ATTR_GROUP_ID
-                    ),
-                },
+    start_state_matched = True
+    for attr, match in state.start_state.items():
+        if not match(getattr(state.entity, attr)):
+            start_state_matched = False
+            break
+    if start_state_matched and state.next_response == RASC_START:
+        rasc_fire(
+            hass,
+            RASC_START,
+            state.entity,
+            state.event.data[ATTR_SERVICE],
+            {
+                ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
+                    ATTR_GROUP_ID
+                ),
+            },
+        )
+        state.next_response = RASC_COMPLETE
+        time_to_start = time.time() - state.exec_time
+        state.exec_time = time.time()
+        hass.loop.create_task(
+            _update_state(
+                hass,
+                state.entity,
+                state.event.data[CONF_SERVICE],
+                state.transition,
+                time_to_start=time_to_start,
             )
-            state.next_response = RASC_COMPLETE
-            time_to_start = time.time() - state.exec_time
-            state.exec_time = time.time()
-            hass.loop.create_task(
-                update_state(
-                    hass,
-                    entity or state.entity,
-                    state.event.data[CONF_SERVICE],
-                    state.transition,
-                    time_to_start=time_to_start,
-                )
-            )
-    return completed_list
+        )
+    return False
 
 
 def _get_polling_interval(dist: Any, num_poll: int, upper_bound: float) -> list[float]:

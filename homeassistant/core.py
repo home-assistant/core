@@ -338,12 +338,6 @@ class HomeAssistant:
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
         # rasc
-        # should record:
-        # 1. Failure timeout
-        # 2. polling interval
-        #    - Based on history: (command, duration) -> polling interval
-        #    - Based on interpolation: value_change/(current_time-last_polled_time) -> changing curve
-
         self.rasc_store: RASCStore | None = None
 
     @property
@@ -2016,6 +2010,7 @@ class ServiceRegistry:
             return None
 
         response_data = await coro
+        # rasc_fire(self._hass, RASC_ACK, ,service)
         if not return_response:
             return None
         if not isinstance(response_data, dict):

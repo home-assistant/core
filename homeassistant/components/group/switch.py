@@ -14,15 +14,13 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    RASC_COMPLETE,
-    RASC_RESPONSE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -123,26 +121,6 @@ class SwitchGroup(GroupEntity, SwitchEntity):
         self.mode = any
         if mode:
             self.mode = all
-
-    @callback
-    def _handle_rasc_response(self, e: Event) -> None:
-        if e.data.get(ATTR_GROUP_ID) != self._attr_unique_id:
-            return
-        if e.data[ATTR_ENTITY_ID] in self._action_tracker:
-            self._action_tracker[e.data[ATTR_ENTITY_ID]] = e.data["type"]
-
-        for state in self._action_tracker.values():
-            if state != RASC_COMPLETE:
-                return
-        self._action_tracker.clear()
-        _LOGGER.info("Fire %s response: %s", RASC_COMPLETE, self.entity_id)
-        self.hass.bus.async_fire(
-            RASC_RESPONSE,
-            {
-                "type": RASC_COMPLETE,
-                ATTR_ENTITY_ID: self.entity_id,
-            },
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to all switches in the group."""

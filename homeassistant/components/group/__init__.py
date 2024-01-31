@@ -14,14 +14,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_GROUP_ID,
     ATTR_ICON,
     ATTR_NAME,
+    ATTR_SERVICE,
     CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
+    RASC_ACK,
+    RASC_COMPLETE,
     RASC_RESPONSE,
+    RASC_START,
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
@@ -47,6 +52,7 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
+from homeassistant.helpers.rasc import rasc_fire
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import bind_hass
@@ -476,11 +482,33 @@ class GroupEntity(Entity):
 
     _attr_should_poll = False
     _entity_ids: list[str]
-    _action_tracker: dict[str, str | None] = {}
+    _action_tracker: dict[str, str] = {}
 
+    # rasc
     def _async_call(self) -> None:
         for entity_id in self._entity_ids:
-            self._action_tracker[entity_id] = None
+            self._action_tracker[entity_id] = RASC_ACK
+
+    @callback
+    def _handle_rasc_response(self, e: Event) -> None:
+        if e.data.get(ATTR_GROUP_ID) != self._attr_unique_id:
+            return
+        if e.data[ATTR_ENTITY_ID] in self._action_tracker:
+            self._action_tracker[e.data[ATTR_ENTITY_ID]] = e.data["type"]
+
+        s_cnt = 0
+        c_cnt = 0
+        for state in self._action_tracker.values():
+            if state != RASC_START:
+                s_cnt += 1
+            if state == RASC_COMPLETE:
+                c_cnt += 1
+        if c_cnt == len(self._action_tracker):
+            self._action_tracker.clear()
+            rasc_fire(self.hass, RASC_COMPLETE, self, e.data[ATTR_SERVICE])
+            return
+        if s_cnt == len(self._action_tracker):
+            rasc_fire(self.hass, RASC_START, self, e.data[ATTR_SERVICE])
 
     @callback
     def async_start_preview(
@@ -542,10 +570,6 @@ class GroupEntity(Entity):
         self.async_on_remove(start.async_at_start(self.hass, _update_at_start))
 
         self.hass.bus.async_listen(RASC_RESPONSE, self._handle_rasc_response)
-
-    @abstractmethod
-    def _handle_rasc_response(self, e: Event) -> None:
-        """Abstract method to handle rasc response."""
 
     @callback
     def async_defer_or_update_ha_state(self) -> None:

@@ -326,7 +326,7 @@ class Entity(ABC):
     _attr_unit_of_measurement: str | None
 
     # rascal
-    async_on_push_event: Callable[[Entity | None], None] | None = None
+    async_on_push_event: Callable[[Entity], None] | None = None
 
     @property
     def should_poll(self) -> bool:
