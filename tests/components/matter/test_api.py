@@ -251,12 +251,16 @@ async def test_node_diagnostics(
     diag_res["node_type"] = diag_res["node_type"].value
     assert msg["result"] == diag_res
 
-    # repeat test with invalid device id
+    # repeat test with a device id that does not have a node attached
+    new_entry = dev_reg.async_get_or_create(
+        config_entry_id=list(entry.config_entries)[0],
+        identifiers={(DOMAIN, "MatterNodeDevice")},
+    )
     await ws_client.send_json(
         {
             ID: 2,
             TYPE: "matter/node_diagnostics",
-            DEVICE_ID: "invalid",
+            DEVICE_ID: new_entry.id,
         }
     )
     msg = await ws_client.receive_json()
@@ -307,12 +311,16 @@ async def test_ping_node(
     assert msg["type"] == "result"
     assert msg["result"] == ping_result
 
-    # repeat test with invalid device id
+    # repeat test with a device id that does not have a node attached
+    new_entry = dev_reg.async_get_or_create(
+        config_entry_id=list(entry.config_entries)[0],
+        identifiers={(DOMAIN, "MatterNodeDevice")},
+    )
     await ws_client.send_json(
         {
             ID: 2,
             TYPE: "matter/ping_node",
-            DEVICE_ID: "invalid",
+            DEVICE_ID: new_entry.id,
         }
     )
     msg = await ws_client.receive_json()
@@ -369,12 +377,16 @@ async def test_open_commissioning_window(
     assert msg["type"] == "result"
     assert msg["result"] == dataclass_to_dict(commissioning_parameters)
 
-    # repeat test with invalid device id
+    # repeat test with a device id that does not have a node attached
+    new_entry = dev_reg.async_get_or_create(
+        config_entry_id=list(entry.config_entries)[0],
+        identifiers={(DOMAIN, "MatterNodeDevice")},
+    )
     await ws_client.send_json(
         {
             ID: 2,
             TYPE: "matter/open_commissioning_window",
-            DEVICE_ID: "invalid",
+            DEVICE_ID: new_entry.id,
         }
     )
     msg = await ws_client.receive_json()
@@ -420,12 +432,16 @@ async def test_remove_matter_fabric(
     assert msg["success"]
     matter_client.remove_matter_fabric.assert_called_once_with(1, 3)
 
-    # repeat test with invalid device id
+    # repeat test with a device id that does not have a node attached
+    new_entry = dev_reg.async_get_or_create(
+        config_entry_id=list(entry.config_entries)[0],
+        identifiers={(DOMAIN, "MatterNodeDevice")},
+    )
     await ws_client.send_json(
         {
             ID: 2,
             TYPE: "matter/remove_matter_fabric",
-            DEVICE_ID: "invalid",
+            DEVICE_ID: new_entry.id,
             "fabric_index": 3,
         }
     )

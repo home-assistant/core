@@ -121,7 +121,7 @@ def async_handle_failed_command(
             await func(hass, connection, msg, *args, **kwargs)
         except MatterError as err:
             connection.send_error(msg[ID], str(err.error_code), err.args[0])
-        except (MissingNode, ValueError) as err:
+        except MissingNode as err:
             connection.send_error(msg[ID], ERROR_NODE_NOT_FOUND, err.args[0])
 
     return async_handle_failed_command_func
