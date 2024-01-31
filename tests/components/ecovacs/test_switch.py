@@ -3,19 +3,31 @@
 from dataclasses import dataclass
 
 from deebot_client.command import Command
-from deebot_client.commands.json import SetVolume
-from deebot_client.events import Event, VolumeEvent
+from deebot_client.commands.json import (
+    SetAdvancedMode,
+    SetCarpetAutoFanBoost,
+    SetContinuousCleaning,
+)
+from deebot_client.events import (
+    AdvancedModeEvent,
+    CarpetAutoFanBoostEvent,
+    ContinuousCleaningEvent,
+    Event,
+)
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.components.number.const import (
-    ATTR_VALUE,
-    DOMAIN as PLATFORM_DOMAIN,
-    SERVICE_SET_VALUE,
+from homeassistant.components.switch.const import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -27,18 +39,16 @@ pytestmark = [pytest.mark.usefixtures("init_integration")]
 @pytest.fixture
 def platforms() -> Platform | list[Platform]:
     """Platforms, which should be loaded during the test."""
-    return Platform.NUMBER
+    return Platform.SWITCH
 
 
 @dataclass(frozen=True)
-class NumberTestCase:
-    """Number test."""
+class SwitchTestCase:
+    """Switch test."""
 
     entity_id: str
     event: Event
-    current_state: str
-    set_value: int
-    command: Command
+    command: type[Command]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -48,23 +58,35 @@ class NumberTestCase:
         (
             "yna5x1",
             [
-                NumberTestCase(
-                    "number.ozmo_950_volume", VolumeEvent(5, 11), "5", 10, SetVolume(10)
+                SwitchTestCase(
+                    "switch.ozmo_950_advanced_mode",
+                    AdvancedModeEvent(True),
+                    SetAdvancedMode,
+                ),
+                SwitchTestCase(
+                    "switch.ozmo_950_continuous_cleaning",
+                    ContinuousCleaningEvent(True),
+                    SetContinuousCleaning,
+                ),
+                SwitchTestCase(
+                    "switch.ozmo_950_carpet_auto_fan_speed_boost",
+                    CarpetAutoFanBoostEvent(True),
+                    SetCarpetAutoFanBoost,
                 ),
             ],
         ),
     ],
     ids=["yna5x1"],
 )
-async def test_number_entities(
+async def test_switch_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     controller: EcovacsController,
-    tests: list[NumberTestCase],
+    tests: list[SwitchTestCase],
 ) -> None:
-    """Test that number entity snapshots match."""
+    """Test switch entities."""
     device = controller.devices[0]
     event_bus = device.events
 
@@ -74,14 +96,14 @@ async def test_number_entities(
     for test_case in tests:
         entity_id = test_case.entity_id
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
-        assert state.state == STATE_UNKNOWN
+        assert state.state == STATE_OFF
 
         event_bus.notify(test_case.event)
         await block_till_done(hass, event_bus)
 
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert snapshot(name=f"{entity_id}:state") == state
-        assert state.state == test_case.current_state
+        assert state.state == STATE_ON
 
         assert (entity_entry := entity_registry.async_get(state.entity_id))
         assert snapshot(name=f"{entity_id}:entity-registry") == entity_entry
@@ -93,11 +115,20 @@ async def test_number_entities(
         device._execute_command.reset_mock()
         await hass.services.async_call(
             PLATFORM_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: test_case.set_value},
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        device._execute_command.assert_called_with(test_case.command)
+        device._execute_command.assert_called_with(test_case.command(False))
+
+        device._execute_command.reset_mock()
+        await hass.services.async_call(
+            PLATFORM_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        device._execute_command.assert_called_with(test_case.command(True))
 
 
 @pytest.mark.parametrize(
@@ -105,15 +136,19 @@ async def test_number_entities(
     [
         (
             "yna5x1",
-            ["number.ozmo_950_volume"],
+            [
+                "switch.ozmo_950_advanced_mode",
+                "switch.ozmo_950_continuous_cleaning",
+                "switch.ozmo_950_carpet_auto_fan_speed_boost",
+            ],
         ),
     ],
     ids=["yna5x1"],
 )
-async def test_disabled_by_default_number_entities(
+async def test_disabled_by_default_switch_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_ids: list[str]
 ) -> None:
-    """Test the disabled by default number entities."""
+    """Test the disabled by default switch entities."""
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
@@ -122,28 +157,3 @@ async def test_disabled_by_default_number_entities(
         ), f"Entity registry entry for {entity_id} is missing"
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_volume_maximum(
-    hass: HomeAssistant,
-    controller: EcovacsController,
-) -> None:
-    """Test volume maximum."""
-    device = controller.devices[0]
-    event_bus = device.events
-    entity_id = "number.ozmo_950_volume"
-    assert (state := hass.states.get(entity_id))
-    assert state.attributes["max"] == 10
-
-    event_bus.notify(VolumeEvent(5, 20))
-    await block_till_done(hass, event_bus)
-    assert (state := hass.states.get(entity_id))
-    assert state.state == "5"
-    assert state.attributes["max"] == 20
-
-    event_bus.notify(VolumeEvent(10, None))
-    await block_till_done(hass, event_bus)
-    assert (state := hass.states.get(entity_id))
-    assert state.state == "10"
-    assert state.attributes["max"] == 20
