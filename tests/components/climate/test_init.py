@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from enum import Enum
 from types import ModuleType
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import voluptuous as vol
@@ -415,23 +415,26 @@ async def test_warning_not_implemented_turn_on_off_feature(
         MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
     )
 
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch.object(
+        MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
+    ):
+        config_entry = MockConfigEntry(domain="test")
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
     assert state is not None
 
     assert (
-        "Entity climate.test (<class 'tests.components.climate.test_init."
+        "Entity climate.test (<class 'tests.custom_components.climate.test_init."
         "test_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
         " does not set ClimateEntityFeature.TURN_OFF but implements the turn_off method."
         " Please report it to the author of the 'test' custom integration"
         in caplog.text
     )
     assert (
-        "Entity climate.test (<class 'tests.components.climate.test_init."
+        "Entity climate.test (<class 'tests.custom_components.climate.test_init."
         "test_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
         " does not set ClimateEntityFeature.TURN_ON but implements the turn_on method."
         " Please report it to the author of the 'test' custom integration"
@@ -520,16 +523,19 @@ async def test_implicit_warning_not_implemented_turn_on_off_feature(
         MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
     )
 
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch.object(
+        MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
+    ):
+        config_entry = MockConfigEntry(domain="test")
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
     assert state is not None
 
     assert (
-        "Entity climate.test (<class 'tests.components.climate.test_init."
+        "Entity climate.test (<class 'tests.custom_components.climate.test_init."
         "test_implicit_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
         " implements HVACMode(s): off, heat and therefore implicitly supports the turn_on/turn_off"
         " methods without setting the proper ClimateEntityFeature. Please report it to the author"
@@ -584,10 +590,13 @@ async def test_no_warning_implemented_turn_on_off_feature(
         MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
     )
 
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch.object(
+        MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
+    ):
+        config_entry = MockConfigEntry(domain="test")
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
     assert state is not None
@@ -652,10 +661,13 @@ async def test_no_warning_integration_has_migrated(
         MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
     )
 
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch.object(
+        MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
+    ):
+        config_entry = MockConfigEntry(domain="test")
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
     assert state is not None
