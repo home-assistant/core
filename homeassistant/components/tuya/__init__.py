@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from tuya_sharing import (
     CustomerDevice,
@@ -163,9 +163,18 @@ class TokenListener(SharingTokenListener):
         self.hass = hass
         self.entry = entry
 
-    def update_token(self, token_info: str) -> None:
+    def update_token(self, token_info: dict[str, Any]) -> None:
         """Update token info in config entry."""
-        data = {**self.entry.data, "token_info": token_info}
+        data = {
+            **self.entry.data,
+            CONF_TOKEN_INFO: {
+                "t": token_info["t"],
+                "uid": token_info["uid"],
+                "expire_time": token_info["expire_time"],
+                "access_token": token_info["access_token"],
+                "refresh_token": token_info["refresh_token"],
+            },
+        }
 
         @callback
         def async_update_entry() -> None:
