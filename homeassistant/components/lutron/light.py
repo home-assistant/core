@@ -8,7 +8,12 @@ from typing import Any
 from pylutron import Output
 
 from homeassistant.components.automation import automations_with_entity
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_TRANSITION,
+    ColorMode,
+    LightEntity,
+)
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -109,6 +114,14 @@ class LutronLight(LutronDevice, LightEntity):
         super().__init__(area_name, lutron_device, controller)
         self._is_fan = lutron_device.type == "CEILING_FAN_TYPE"
 
+    async def _set_brightness(self, brightness, **kwargs):
+        args = {}
+        if ATTR_TRANSITION in kwargs:
+            args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
+        args["new_level"] = brightness
+
+        await self._lutron_device.set_level(**args)
+
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if self._is_fan:
@@ -129,7 +142,8 @@ class LutronLight(LutronDevice, LightEntity):
         else:
             brightness = self._prev_brightness
         self._prev_brightness = brightness
-        self._lutron_device.level = to_lutron_level(brightness)
+        # self._lutron_device.level = to_lutron_level(brightness)
+        self._set_brightness(brightness, **kwargs)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
@@ -144,7 +158,8 @@ class LutronLight(LutronDevice, LightEntity):
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_light_fan_off",
             )
-        self._lutron_device.level = 0
+        # self._lutron_device.level = 0
+        self._set_brightness(0, **kwargs)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
