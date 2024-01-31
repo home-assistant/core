@@ -21,7 +21,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Enables the Integration to be configured in the UI."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Init Config Flow object with data default values."""
