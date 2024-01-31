@@ -645,7 +645,7 @@ async def test_set_network_fails_4(
     otbr_config_entry_multipan,
     websocket_client,
 ) -> None:
-    """Test create network."""
+    """Test set network."""
     with patch(
         "python_otbr_api.OTBR.get_border_agent_id",
         side_effect=python_otbr_api.OTBRError,
@@ -669,7 +669,7 @@ async def test_set_network_fails_5(
     otbr_config_entry_multipan,
     websocket_client,
 ) -> None:
-    """Test create network."""
+    """Test set network."""
     with patch(
         "python_otbr_api.OTBR.get_border_agent_id",
         return_value=TEST_BORDER_AGENT_ID,
@@ -800,7 +800,7 @@ async def test_set_channel_fails_2(
     otbr_config_entry_multipan,
     websocket_client,
 ) -> None:
-    """Test create network."""
+    """Test set channel."""
     with patch(
         "python_otbr_api.OTBR.get_border_agent_id",
         side_effect=python_otbr_api.OTBRError,
@@ -824,7 +824,7 @@ async def test_set_channel_fails_3(
     otbr_config_entry_multipan,
     websocket_client,
 ) -> None:
-    """Test create network."""
+    """Test set channel."""
     with patch(
         "python_otbr_api.OTBR.get_border_agent_id",
         return_value=TEST_BORDER_AGENT_ID,
