@@ -258,7 +258,7 @@
       "climate_state_auto_seat_climate_right": {
         "name": "Auto seat climate right"
       },
-      "climate_state_auto_steering_wheel_heater": {
+      "climate_state_auto_steering_wheel_heat": {
         "name": "Auto steering wheel heater"
       },
       "climate_state_cabin_overheat_protection": {
