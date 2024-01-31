@@ -1057,7 +1057,7 @@ async def test_track_renamed_tracked_entity(
 
     entity = entity_registry.async_get(sensor_t1)
     assert entity
-    assert entity.unique_id == f"{mock_config.entry_id}_{t1.unique_id}_dist_to_zone"
+    assert entity.unique_id == f"{mock_config.entry_id}_{t1.id}_dist_to_zone"
 
     entity_registry.async_update_entity(
         t1.entity_id, new_entity_id=f"{t1.entity_id}_renamed"
@@ -1066,7 +1066,7 @@ async def test_track_renamed_tracked_entity(
 
     entity = entity_registry.async_get(sensor_t1)
     assert entity
-    assert entity.unique_id == f"{mock_config.entry_id}_{t1.unique_id}_dist_to_zone"
+    assert entity.unique_id == f"{mock_config.entry_id}_{t1.id}_dist_to_zone"
 
     entry = hass.config_entries.async_get_entry(mock_config.entry_id)
     assert entry
@@ -1104,7 +1104,7 @@ async def test_sensor_unique_ids(
     sensor_t1 = f"sensor.home_{t1.entity_id.split('.')[-1]}_distance"
     entity = entity_registry.async_get(sensor_t1)
     assert entity
-    assert entity.unique_id == f"{mock_config.entry_id}_{t1.unique_id}_dist_to_zone"
+    assert entity.unique_id == f"{mock_config.entry_id}_{t1.id}_dist_to_zone"
 
     entity = entity_registry.async_get("sensor.home_test2_distance")
     assert entity

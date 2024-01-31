@@ -78,7 +78,7 @@ async def async_setup_entry(
             tracked_entity_descriptors.append(
                 {
                     "entity_id": tracked_entity_id,
-                    "identifier": entity.unique_id,
+                    "identifier": entity.id,
                 }
             )
         else:
