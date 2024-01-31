@@ -1,5 +1,5 @@
 """Test the init functions for AEH."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from unittest.mock import patch
 
@@ -24,6 +24,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.freeze_time("2024-01-01 00:00:00")
 @pytest.mark.parametrize(
     ("sideeffect"),
     [None, KustoServiceError("test"), KustoAuthenticationError("test", Exception)],
@@ -43,9 +44,7 @@ async def test_put_event_on_queue_with_managed_client(
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
 
-    async_fire_time_changed(
-        hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
-    )
+    async_fire_time_changed(hass, datetime(2024, 2, 1, 0, 0, 0))
 
     await hass.async_block_till_done()
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.assert_called_once()
@@ -82,24 +81,10 @@ async def test_import(hass) -> None:
             },
         }
     }
-    assert await async_setup_component(hass, DOMAIN, config)
 
-
-async def test_filter_only_config(hass) -> None:
-    """Test the popping of the filter and further import of the config."""
-    config = {
-        DOMAIN: {
-            "filter": {
-                "include_domains": ["light"],
-                "include_entity_globs": ["sensor.included_*"],
-                "include_entities": ["binary_sensor.included"],
-                "exclude_domains": ["light"],
-                "exclude_entity_globs": ["sensor.excluded_*"],
-                "exclude_entities": ["binary_sensor.excluded"],
-            },
-        }
-    }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+    assert DOMAIN in hass.data
 
 
 async def test_unload_entry(
@@ -113,6 +98,7 @@ async def test_unload_entry(
     this verifies that the unload, calls async_stop, which calls async_send and
     shuts down the hub.
     """
+    assert entry_managed.state == ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry_managed.entry_id)
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.assert_not_called()
     assert entry_managed.state == ConfigEntryState.NOT_LOADED

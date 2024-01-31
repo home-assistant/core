@@ -57,6 +57,10 @@ async def test_config_flow_errors(
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": expected}
 
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+
 
 async def test_options_flow(hass, entry_managed) -> None:
     """Test options flow."""
@@ -66,9 +70,13 @@ async def test_options_flow(hass, entry_managed) -> None:
     assert result["step_id"] == "init"
     assert result["last_step"]
 
+    previous_send_interval = entry_managed.options["send_interval"]
+
     updated = await hass.config_entries.options.async_configure(
         result["flow_id"], UPDATE_OPTIONS
     )
     assert updated["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert updated["data"] == UPDATE_OPTIONS
+    assert updated["data"]["send_interval"] != previous_send_interval
+
     await hass.async_block_till_done()
