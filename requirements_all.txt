@@ -233,7 +233,7 @@ aioeagle==1.1.0
 aioecowitt==2023.5.0
 
 # homeassistant.components.co2signal
-aioelectricitymaps==0.1.6
+aioelectricitymaps==0.2.0
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -376,11 +376,14 @@ aioswitcher==3.4.1
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
 
+# homeassistant.components.tankerkoenig
+aiotankerkoenig==0.2.0
+
 # homeassistant.components.tractive
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==69
+aiounifi==70
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -765,6 +768,9 @@ elkm1-lib==2.2.6
 
 # homeassistant.components.elmax
 elmax-api==0.0.4
+
+# homeassistant.components.elvia
+elvia==0.1.0
 
 # homeassistant.components.xmpp
 emoji==2.8.0
@@ -2153,9 +2159,6 @@ pysuez==0.2.0
 # homeassistant.components.switchbee
 pyswitchbee==1.8.0
 
-# homeassistant.components.tankerkoenig
-pytankerkoenig==0.0.6
-
 # homeassistant.components.tautulli
 pytautulli==23.1.1
 
@@ -2302,6 +2305,7 @@ pytomorrowio==0.3.6
 pytouchline==0.7
 
 # homeassistant.components.traccar
+# homeassistant.components.traccar_server
 pytraccar==2.0.0
 
 # homeassistant.components.tradfri
@@ -2438,6 +2442,9 @@ rocketchat-API==0.6.1
 
 # homeassistant.components.roku
 rokuecp==0.18.1
+
+# homeassistant.components.romy
+romy==0.0.7
 
 # homeassistant.components.roomba
 roombapy==1.6.10

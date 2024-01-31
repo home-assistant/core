@@ -287,6 +287,7 @@ omit =
     homeassistant/components/ecovacs/controller.py
     homeassistant/components/ecovacs/entity.py
     homeassistant/components/ecovacs/image.py
+    homeassistant/components/ecovacs/number.py
     homeassistant/components/ecovacs/util.py
     homeassistant/components/ecovacs/vacuum.py
     homeassistant/components/ecowitt/__init__.py
@@ -319,6 +320,8 @@ omit =
     homeassistant/components/elmax/cover.py
     homeassistant/components/elmax/switch.py
     homeassistant/components/elv/*
+    homeassistant/components/elvia/__init__.py
+    homeassistant/components/elvia/importer.py
     homeassistant/components/emby/media_player.py
     homeassistant/components/emoncms/sensor.py
     homeassistant/components/emoncms_history/*
@@ -1103,6 +1106,9 @@ omit =
     homeassistant/components/ripple/sensor.py
     homeassistant/components/roborock/coordinator.py
     homeassistant/components/rocketchat/notify.py
+    homeassistant/components/romy/__init__.py
+    homeassistant/components/romy/coordinator.py
+    homeassistant/components/romy/vacuum.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
     homeassistant/components/roomba/braava.py
@@ -1418,6 +1424,11 @@ omit =
     homeassistant/components/tplink_omada/controller.py
     homeassistant/components/tplink_omada/update.py
     homeassistant/components/traccar/device_tracker.py
+    homeassistant/components/traccar_server/__init__.py
+    homeassistant/components/traccar_server/coordinator.py
+    homeassistant/components/traccar_server/device_tracker.py
+    homeassistant/components/traccar_server/entity.py
+    homeassistant/components/traccar_server/helpers.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/binary_sensor.py
     homeassistant/components/tractive/device_tracker.py
@@ -1517,7 +1528,6 @@ omit =
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/__init__.py
-    homeassistant/components/vicare/binary_sensor.py
     homeassistant/components/vicare/button.py
     homeassistant/components/vicare/climate.py
     homeassistant/components/vicare/entity.py
