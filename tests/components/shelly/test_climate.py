@@ -146,6 +146,29 @@ async def test_climate_set_temperature(
     mock_block_device.http_request.assert_called_once_with(
         "get", "thermostat/0", {"target_t_enabled": 1, "target_t": "23.0"}
     )
+    mock_block_device.http_request.reset_mock()
+
+    # Test conversion from C to F
+    monkeypatch.setattr(
+        mock_block_device,
+        "settings",
+        {
+            "thermostats": [
+                {"target_t": {"units": "F"}},
+            ]
+        },
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
+        blocking=True,
+    )
+
+    mock_block_device.http_request.assert_called_once_with(
+        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": "68.0"}
+    )
 
 
 async def test_climate_set_preset_mode(

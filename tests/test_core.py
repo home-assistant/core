@@ -742,9 +742,9 @@ def test_state_as_dict_json() -> None:
         context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
     )
     expected = (
-        '{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
-        '"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
-        '"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
+        b'{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
+        b'"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
+        b'"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
     )
     as_dict_json_1 = state.as_dict_json
     assert as_dict_json_1 == expected
@@ -852,7 +852,7 @@ def test_state_as_compressed_state_json() -> None:
         last_changed=last_time,
         context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
     )
-    expected = '"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    expected = b'"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
     as_compressed_state = state.as_compressed_state_json
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
@@ -1269,13 +1269,37 @@ def test_service_call_repr() -> None:
     )
 
 
-async def test_serviceregistry_has_service(hass: HomeAssistant) -> None:
+async def test_service_registry_has_service(hass: HomeAssistant) -> None:
     """Test has_service method."""
     hass.services.async_register("test_domain", "test_service", lambda call: None)
     assert len(hass.services.async_services()) == 1
     assert hass.services.has_service("tesT_domaiN", "tesT_servicE")
     assert not hass.services.has_service("test_domain", "non_existing")
     assert not hass.services.has_service("non_existing", "test_service")
+
+
+async def test_service_registry_service_enumeration(hass: HomeAssistant) -> None:
+    """Test enumerating services methods."""
+    hass.services.async_register("test_domain", "test_service", lambda call: None)
+    services1 = hass.services.async_services()
+    services2 = hass.services.async_services()
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is not services2  # should be a copy
+
+    services1 = hass.services.async_services_internal()
+    services2 = hass.services.async_services_internal()
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is services2  # should be the same object
+
+    assert hass.services.async_services_for_domain("unknown") == {}
+
+    services1 = hass.services.async_services_for_domain("test_domain")
+    services2 = hass.services.async_services_for_domain("test_domain")
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is not services2  # should be a copy
 
 
 async def test_serviceregistry_call_with_blocking_done_in_time(
@@ -1622,11 +1646,11 @@ async def test_config_as_dict() -> None:
         CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
         "location_name": "Home",
         "time_zone": "UTC",
-        "components": set(),
+        "components": [],
         "config_dir": "/test/ha-config",
-        "whitelist_external_dirs": set(),
-        "allowlist_external_dirs": set(),
-        "allowlist_external_urls": set(),
+        "whitelist_external_dirs": [],
+        "allowlist_external_dirs": [],
+        "allowlist_external_urls": [],
         "version": __version__,
         "config_source": ha.ConfigSource.DEFAULT,
         "recovery_mode": False,
@@ -1723,9 +1747,7 @@ async def test_bad_timezone_raises_value_error(hass: HomeAssistant) -> None:
         await hass.config.async_update(time_zone="not_a_timezone")
 
 
-async def test_start_taking_too_long(
-    event_loop, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_start_taking_too_long(caplog: pytest.LogCaptureFixture) -> None:
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant("/test/ha-config")
     caplog.set_level(logging.WARNING)

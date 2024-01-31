@@ -279,7 +279,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NukiCoordinator(DataUpdateCoordinator[None]):
+class NukiCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Data Update Coordinator for the Nuki integration."""
 
     def __init__(self, hass, bridge, locks, openers):

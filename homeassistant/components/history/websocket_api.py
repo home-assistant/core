@@ -34,7 +34,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.json import JSON_DUMP
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.typing import EventType
 import homeassistant.util.dt as dt_util
 
@@ -72,9 +72,9 @@ def _ws_get_significant_states(
     significant_changes_only: bool,
     minimal_response: bool,
     no_attributes: bool,
-) -> str:
+) -> bytes:
     """Fetch history significant_states and convert them to json in the executor."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.result_message(
             msg_id,
             history.get_significant_states(
@@ -201,9 +201,9 @@ def _generate_websocket_response(
     start_time: dt,
     end_time: dt,
     states: MutableMapping[str, list[dict[str, Any]]],
-) -> str:
+) -> bytes:
     """Generate a websocket response."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.event_message(
             msg_id, _generate_stream_message(states, start_time, end_time)
         )
@@ -221,7 +221,7 @@ def _generate_historical_response(
     minimal_response: bool,
     no_attributes: bool,
     send_empty: bool,
-) -> tuple[float, dt | None, str | None]:
+) -> tuple[float, dt | None, bytes | None]:
     """Generate a historical response."""
     states = cast(
         MutableMapping[str, list[dict[str, Any]]],
@@ -346,7 +346,7 @@ async def _async_events_consumer(
 
         if history_states := _events_to_compressed_states(events, no_attributes):
             connection.send_message(
-                JSON_DUMP(
+                json_bytes(
                     messages.event_message(
                         msg_id,
                         {"states": history_states},
