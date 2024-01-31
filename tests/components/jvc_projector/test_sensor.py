@@ -18,10 +18,21 @@ async def test_entity_state(
     mock_integration: MockConfigEntry,
 ) -> None:
     """Tests entity state is registered."""
+    # mock_device.get_state.return_value = {"power": "on", "input": "hdmi1"}
     entity = hass.states.get(POWER_ID)
     assert entity
     assert entity_registry.async_get(entity.entity_id)
 
+    await hass.async_block_till_done()
+    entity = hass.states.get(entity.entity_id)
+    assert entity is not None
+    assert entity.state == "standby"
+
     entity = hass.states.get(INPUT_ID)
     assert entity
     assert entity_registry.async_get(entity.entity_id)
+
+    await hass.async_block_till_done()
+    entity = hass.states.get(entity.entity_id)
+    assert entity is not None
+    assert entity.state == "hdmi1"
