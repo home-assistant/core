@@ -46,6 +46,12 @@
     }
   },
   "exceptions": {
+    "entry_not_found": {
+      "message": "No Viam config entries found"
+    },
+    "entry_not_loaded": {
+      "message": "{config_entry_title} is not loaded"
+    },
     "robot_credentials_required": {
       "message": "The robot location and secret are required for this connection type."
     },
