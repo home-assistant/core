@@ -776,7 +776,7 @@ class TelegramNotificationService:
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
-            "Edit message %s in chat ID %s with params: %s",
+            "Edit message %s media in chat ID %s with params: %s",
             message_id or inline_message_id,
             chat_id,
             params,
