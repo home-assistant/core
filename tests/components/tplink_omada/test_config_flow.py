@@ -412,5 +412,5 @@ async def test_create_omada_client_with_ip_creates_clientsession(
         "https://10.10.10.10", "test-username", "test-password", "ws"
     )
     mock_create_clientsession.assert_called_once_with(
-        hass, cookie_jar=mock_jar.return_value
+        hass, cookie_jar=mock_jar.return_value, verify_ssl=True
     )
