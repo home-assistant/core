@@ -11,7 +11,7 @@ from .const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_REFRESH_INTERVAL, DOMAI
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SMAManagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMA Manager."""
 
     VERSION = 1
