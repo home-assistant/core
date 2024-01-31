@@ -7,7 +7,8 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = "sensor.jvc_projector_power_status"
+POWER_ID = "sensor.jvc_projector_power_status"
+INPUT_ID = "sensor.jvc_projector_input"
 
 
 async def test_entity_state(
@@ -17,6 +18,10 @@ async def test_entity_state(
     mock_integration: MockConfigEntry,
 ) -> None:
     """Tests entity state is registered."""
-    entity = hass.states.get(ENTITY_ID)
+    entity = hass.states.get(POWER_ID)
+    assert entity
+    assert entity_registry.async_get(entity.entity_id)
+
+    entity = hass.states.get(INPUT_ID)
     assert entity
     assert entity_registry.async_get(entity.entity_id)
