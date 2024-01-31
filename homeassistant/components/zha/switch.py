@@ -655,13 +655,11 @@ class WindowCoveringInversionSwitch(ZHASwitchConfigurationEntity):
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
         self.debug("Polling current state")
-        await self._cluster_handler.get_attributes(
+        await self._cluster_handler.read_attributes(
             [
                 self._attribute_name,
                 WindowCovering.AttributeDefs.window_covering_mode.name,
-            ],
-            from_cache=False,
-            only_cache=False,
+            ]
         )
         self.async_write_ha_state()
 
