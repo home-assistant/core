@@ -24,7 +24,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
             "sensor.tesla_wall_connector_grid_frequency", "50.021", "49.981"
         ),
         EntityAndExpectedValues(
-            "sensor.tesla_wall_connector_energy", "988022", "989000"
+            "sensor.tesla_wall_connector_energy", "988.022", "989.000"
         ),
         EntityAndExpectedValues(
             "sensor.tesla_wall_connector_phase_a_current", "10", "7"
@@ -44,6 +44,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
         EntityAndExpectedValues(
             "sensor.tesla_wall_connector_phase_c_voltage", "232.1", "230"
         ),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_session_energy", "1234.56", "112.2"
+        ),
     ]
 
     mock_vitals_first_update = get_vitals_mock()
@@ -57,6 +60,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     mock_vitals_first_update.currentA_a = 10
     mock_vitals_first_update.currentB_a = 11.1
     mock_vitals_first_update.currentC_a = 12
+    mock_vitals_first_update.session_energy_wh = 1234.56
 
     mock_vitals_second_update = get_vitals_mock()
     mock_vitals_second_update.evse_state = 2
@@ -69,6 +73,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     mock_vitals_second_update.currentA_a = 7
     mock_vitals_second_update.currentB_a = 8
     mock_vitals_second_update.currentC_a = 9
+    mock_vitals_second_update.session_energy_wh = 112.2
 
     lifetime_mock_first_update = get_lifetime_mock()
     lifetime_mock_first_update.energy_wh = 988022

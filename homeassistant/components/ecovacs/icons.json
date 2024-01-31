@@ -1,11 +1,25 @@
 {
   "entity": {
     "binary_sensor": {
-      "mop_attached": {
+      "water_mop_attached": {
         "default": "mdi:water-off",
         "state": {
           "on": "mdi:water"
         }
+      }
+    },
+    "button": {
+      "relocate": {
+        "default": "mdi:map-marker-question"
+      },
+      "reset_lifespan_brush": {
+        "default": "mdi:broom"
+      },
+      "reset_lifespan_filter": {
+        "default": "mdi:air-filter"
+      },
+      "reset_lifespan_side_brush": {
+        "default": "mdi:broom"
       }
     },
     "sensor": {
@@ -44,6 +58,14 @@
       },
       "total_stats_cleanings": {
         "default": "mdi:counter"
+      }
+    },
+    "select": {
+      "water_amount": {
+        "default": "mdi:water"
+      },
+      "work_mode": {
+        "default": "mdi:cog"
       }
     }
   }

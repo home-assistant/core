@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -181,7 +182,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             self._attr_unique_id = legacy_device_id(device)
         else:
             self._attr_unique_id = device.mac.replace(":", "").upper()
-        modes: set[ColorMode] = set()
+        modes: set[ColorMode] = {ColorMode.ONOFF}
         if device.is_variable_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
             temp_range = device.valid_temperature_range
@@ -191,9 +192,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             modes.add(ColorMode.HS)
         if device.is_dimmable:
             modes.add(ColorMode.BRIGHTNESS)
-        if not modes:
-            modes.add(ColorMode.ONOFF)
-        self._attr_supported_color_modes = modes
+        self._attr_supported_color_modes = filter_supported_color_modes(modes)
         self._async_update_attrs()
 
     @callback

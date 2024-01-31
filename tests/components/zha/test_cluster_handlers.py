@@ -235,6 +235,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
                 "current_tier4_summ_delivered",
                 "current_tier5_summ_delivered",
                 "current_tier6_summ_delivered",
+                "current_summ_received",
                 "status",
             },
         ),
@@ -712,7 +713,9 @@ async def test_zll_device_groups(
     """Test adding coordinator to ZLL groups."""
 
     cluster = zigpy_zll_device.endpoints[1].lightlink
-    cluster_handler = cluster_handlers.lightlink.LightLink(cluster, endpoint)
+    cluster_handler = cluster_handlers.lightlink.LightLinkClusterHandler(
+        cluster, endpoint
+    )
 
     get_group_identifiers_rsp = zigpy.zcl.clusters.lightlink.LightLink.commands_by_name[
         "get_group_identifiers_rsp"
@@ -979,3 +982,17 @@ async def test_retry_request(
     assert func.await_count == 3
     assert isinstance(exc.value, HomeAssistantError)
     assert str(exc.value) == expected_error
+
+
+async def test_cluster_handler_naming() -> None:
+    """Test that all cluster handlers are named appropriately."""
+    for client_cluster_handler in registries.CLIENT_CLUSTER_HANDLER_REGISTRY.values():
+        assert issubclass(client_cluster_handler, cluster_handlers.ClientClusterHandler)
+        assert client_cluster_handler.__name__.endswith("ClientClusterHandler")
+
+    for cluster_handler_dict in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.values():
+        for cluster_handler in cluster_handler_dict.values():
+            assert not issubclass(
+                cluster_handler, cluster_handlers.ClientClusterHandler
+            )
+            assert cluster_handler.__name__.endswith("ClusterHandler")

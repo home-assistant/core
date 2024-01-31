@@ -46,9 +46,7 @@ async def test_light_known_device(
         assert light is not None
 
         color_modes = light.attributes[ATTR_SUPPORTED_COLOR_MODES]
-        assert ColorMode.RGB in color_modes
-        assert ColorMode.BRIGHTNESS in color_modes
-        assert ColorMode.COLOR_TEMP in color_modes
+        assert set(color_modes) == {ColorMode.COLOR_TEMP, ColorMode.RGB}
 
         # Remove
         assert await hass.config_entries.async_remove(entry.entry_id)

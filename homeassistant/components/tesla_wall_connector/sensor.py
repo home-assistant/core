@@ -126,8 +126,16 @@ WALL_CONNECTOR_SENSORS = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     WallConnectorSensorDescription(
+        key="session_energy_wh",
+        translation_key="session_energy_wh",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].session_energy_wh,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WallConnectorSensorDescription(
         key="energy_kWh",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_LIFETIME].energy_wh,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,

@@ -12,7 +12,7 @@ from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
 
 import voluptuous as vol
 
@@ -100,6 +100,12 @@ from .trace import (
 )
 from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import UNDEFINED, ConfigType, UndefinedType
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -477,11 +483,12 @@ class _ScriptRun:
                 try:
                     handler = f"_async_{action}_step"
                     await getattr(self, handler)()
-                    trace_element.update_variables(self._variables)
                 except Exception as ex:  # pylint: disable=broad-except
                     self._handle_exception(
                         ex, continue_on_error, self._log_exceptions or log_exceptions
                     )
+                finally:
+                    trace_element.update_variables(self._variables)
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access
@@ -1288,9 +1295,6 @@ class Script:
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
         self._parallel_scripts: dict[int, list[Script]] = {}
-        self._referenced_entities: set[str] | None = None
-        self._referenced_devices: set[str] | None = None
-        self._referenced_areas: set[str] | None = None
         self.variables = variables
         self._variables_dynamic = template.is_complex(variables)
         if self._variables_dynamic:
@@ -1361,15 +1365,12 @@ class Script:
         """Return true if the current mode support max."""
         return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
 
-    @property
+    @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
-        if self._referenced_areas is not None:
-            return self._referenced_areas
-
-        self._referenced_areas = set()
-        Script._find_referenced_areas(self._referenced_areas, self.sequence)
-        return self._referenced_areas
+        referenced_areas: set[str] = set()
+        Script._find_referenced_areas(referenced_areas, self.sequence)
+        return referenced_areas
 
     @staticmethod
     def _find_referenced_areas(
@@ -1401,15 +1402,12 @@ class Script:
                 for script in step[CONF_PARALLEL]:
                     Script._find_referenced_areas(referenced, script[CONF_SEQUENCE])
 
-    @property
+    @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
-        if self._referenced_devices is not None:
-            return self._referenced_devices
-
-        self._referenced_devices = set()
-        Script._find_referenced_devices(self._referenced_devices, self.sequence)
-        return self._referenced_devices
+        referenced_devices: set[str] = set()
+        Script._find_referenced_devices(referenced_devices, self.sequence)
+        return referenced_devices
 
     @staticmethod
     def _find_referenced_devices(
@@ -1451,15 +1449,12 @@ class Script:
                 for script in step[CONF_PARALLEL]:
                     Script._find_referenced_devices(referenced, script[CONF_SEQUENCE])
 
-    @property
+    @cached_property
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
-        if self._referenced_entities is not None:
-            return self._referenced_entities
-
-        self._referenced_entities = set()
-        Script._find_referenced_entities(self._referenced_entities, self.sequence)
-        return self._referenced_entities
+        referenced_entities: set[str] = set()
+        Script._find_referenced_entities(referenced_entities, self.sequence)
+        return referenced_entities
 
     @staticmethod
     def _find_referenced_entities(

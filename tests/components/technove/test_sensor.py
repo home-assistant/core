@@ -7,9 +7,11 @@ import pytest
 from syrupy import SnapshotAssertion
 from technove import Status, TechnoVEError
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from . import setup_with_selected_platforms
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -22,11 +24,7 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation and values of the TechnoVE sensors."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    entity_registry = er.async_get(hass)
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
@@ -89,9 +87,9 @@ async def test_sensor_update_failure(
 
     assert hass.states.get(entity_id).state == Status.PLUGGED_CHARGING.value
 
+    mock_technove.update.side_effect = TechnoVEError("Test error")
     freezer.tick(timedelta(minutes=5, seconds=1))
     async_fire_time_changed(hass)
-    mock_technove.update.side_effect = TechnoVEError("Test error")
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

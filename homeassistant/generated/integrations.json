@@ -581,6 +581,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "bang_olufsen": {
+      "name": "Bang & Olufsen",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "bayesian": {
       "name": "Bayesian",
       "integration_type": "hub",
@@ -725,6 +731,12 @@
       "name": "Brel Home",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
+    },
+    "bring": {
+      "name": "Bring!",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "broadlink": {
       "name": "Broadlink",
@@ -911,6 +923,11 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "coautilities": {
+      "name": "City of Austin Utilities",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "coinbase": {
       "name": "Coinbase",
@@ -2590,6 +2607,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "huum": {
+      "name": "Huum",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "hvv_departures": {
       "name": "HVV Departures",
       "integration_type": "hub",
@@ -3075,6 +3098,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "leaone": {
+      "name": "LeaOne",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "led_ble": {
       "name": "LED BLE",
       "integration_type": "hub",
@@ -3294,7 +3323,7 @@
     "lupusec": {
       "name": "Lupus Electronics LUPUSEC",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "lutron": {
@@ -4533,7 +4562,7 @@
     },
     "proximity": {
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "calculated"
     },
     "proxmoxve": {
@@ -4942,6 +4971,12 @@
     "roku": {
       "name": "Roku",
       "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "romy": {
+      "name": "ROMY Vacuum Cleaner",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5934,6 +5969,12 @@
           "name": "Tesla Wall Connector"
         }
       }
+    },
+    "teslemetry": {
+      "name": "Teslemetry",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "tessie": {
       "name": "Tessie",

@@ -55,7 +55,7 @@
   },
   "services": {
     "set_fan_mode": "mdi:fan",
-    "set_humidity": "mdi:humidity-percent",
+    "set_humidity": "mdi:water-percent",
     "set_swing_mode": "mdi:arrow-oscillating",
     "set_temperature": "mdi:thermometer"
   }
