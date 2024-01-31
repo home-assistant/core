@@ -963,12 +963,6 @@ class ZWaveStatisticsSensor(SensorEntity):
             " service won't work for it"
         )
 
-    def _get_data_from_statistics(
-        self, statistics: ControllerStatisticsDataType | NodeStatisticsDataType
-    ) -> Any:
-        """Get the data from the statistics dict."""
-        return self.entity_description.convert(statistics, self.entity_description.key)
-
     @callback
     def statistics_updated(self, event_data: dict) -> None:
         """Call when statistics updated event is received."""
