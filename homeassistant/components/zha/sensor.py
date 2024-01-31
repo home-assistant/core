@@ -1367,6 +1367,7 @@ class AqaraCurtainHookStateSensor(EnumSensor):
     _unique_id_suffix = "hooks_state"
     _attr_translation_key: str = "hooks_state"
     _attr_icon: str = "mdi:hook"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -1402,7 +1403,7 @@ class BitMapSensor(Sensor):
             state_attr[text] = bool(value & bit)
 
         return state_attr
-    
+
 
 class DanfossOpenWindowDetectionEnum(types.enum8):
     """Danfoss Open Window Detection judgments."""
