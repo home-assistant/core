@@ -34,8 +34,8 @@
         "name": "Status",
         "state": {
           "booting": "Booting",
-          "not_connected": "Vehicule not connected",
-          "connected": "Vehicule connected",
+          "not_connected": "Vehicle not connected",
+          "connected": "Vehicle connected",
           "ready": "Ready to charge",
           "negociating": "Negociating connection",
           "error": "Error",
