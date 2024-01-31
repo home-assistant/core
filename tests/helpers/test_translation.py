@@ -478,8 +478,8 @@ async def test_caching(hass: HomeAssistant) -> None:
 
     # Patch with same method so we can count invocations
     with patch(
-        "homeassistant.helpers.translation._build_resources",
-        side_effect=translation._build_resources,
+        "homeassistant.helpers.translation.build_resources",
+        side_effect=translation.build_resources,
     ) as mock_build:
         load_sensor_only = await translation.async_get_translations(
             hass, "en", "title", integrations={"sensor"}

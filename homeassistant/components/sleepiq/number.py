@@ -5,7 +5,13 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, cast
 
-from asyncsleepiq import SleepIQActuator, SleepIQBed, SleepIQFootWarmer, SleepIQSleeper
+from asyncsleepiq import (
+    FootWarmingTemps,
+    SleepIQActuator,
+    SleepIQBed,
+    SleepIQFootWarmer,
+    SleepIQSleeper,
+)
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -79,6 +85,10 @@ def _get_sleeper_unique_id(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
 async def _async_set_foot_warmer_time(
     foot_warmer: SleepIQFootWarmer, time: int
 ) -> None:
+    temperature = FootWarmingTemps(foot_warmer.temperature)
+    if temperature != FootWarmingTemps.OFF:
+        await foot_warmer.turn_on(temperature, time)
+
     foot_warmer.timer = time
 
 

@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -40,6 +41,7 @@
       'color_mode': None,
       'friendly_name': 'Bathroom light',
       'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),

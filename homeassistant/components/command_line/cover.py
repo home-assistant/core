@@ -20,7 +20,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    ManualTriggerEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
@@ -50,6 +53,7 @@ async def async_setup_platform(
         trigger_entity_config = {
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_NAME: Template(device_config.get(CONF_NAME, device_name), hass),
+            CONF_AVAILABILITY: device_config.get(CONF_AVAILABILITY),
         }
 
         covers.append(

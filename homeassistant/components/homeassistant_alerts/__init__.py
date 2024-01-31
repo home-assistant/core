@@ -124,7 +124,7 @@ class IntegrationAlert:
         return f"{self.filename}_{self.integration}"
 
 
-class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]]):
+class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]]):  # pylint: disable=hass-enforce-coordinator-module
     """Data fetcher for HA Alerts."""
 
     def __init__(self, hass: HomeAssistant) -> None:

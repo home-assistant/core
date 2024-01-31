@@ -5,15 +5,25 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_ZONE,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_DIR_OF_TRAVEL,
+    ATTR_DIST_TO,
     ATTR_NEAREST,
     CONF_IGNORED_ZONES,
     CONF_TOLERANCE,
@@ -46,10 +56,12 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Get the zones and offsets from configuration.yaml."""
     hass.data.setdefault(DOMAIN, {})
-    for zone, proximity_config in config[DOMAIN].items():
-        _LOGGER.debug("setup %s with config:%s", zone, proximity_config)
+    for friendly_name, proximity_config in config[DOMAIN].items():
+        _LOGGER.debug("setup %s with config:%s", friendly_name, proximity_config)
 
-        coordinator = ProximityDataUpdateCoordinator(hass, zone, proximity_config)
+        coordinator = ProximityDataUpdateCoordinator(
+            hass, friendly_name, proximity_config
+        )
 
         async_track_state_change(
             hass,
@@ -58,11 +70,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         await coordinator.async_refresh()
-        hass.data[DOMAIN][zone] = coordinator
+        hass.data[DOMAIN][friendly_name] = coordinator
 
-        proximity = Proximity(hass, zone, coordinator)
+        proximity = Proximity(hass, friendly_name, coordinator)
         await proximity.async_added_to_hass()
         proximity.async_write_ha_state()
+
+        await async_load_platform(
+            hass,
+            "sensor",
+            DOMAIN,
+            {CONF_NAME: friendly_name, **proximity_config},
+            config,
+        )
+
+        # deprecate proximity entity - can be removed in 2024.8
+        used_in = automations_with_entity(hass, f"{DOMAIN}.{friendly_name}")
+        used_in += scripts_with_entity(hass, f"{DOMAIN}.{friendly_name}")
+        if used_in:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_proximity_entity_{friendly_name}",
+                breaks_in_ha_version="2024.8.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_proximity_entity",
+                translation_placeholders={
+                    "entity": f"{DOMAIN}.{friendly_name}",
+                    "used_in": "\n- ".join([f"`{x}`" for x in used_in]),
+                },
+            )
 
     return True
 
@@ -91,12 +130,14 @@ class Proximity(CoordinatorEntity[ProximityDataUpdateCoordinator]):
     @property
     def state(self) -> str | int | float:
         """Return the state."""
-        return self.coordinator.data["dist_to_zone"]
+        return self.coordinator.data.proximity[ATTR_DIST_TO]
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
-            ATTR_DIR_OF_TRAVEL: str(self.coordinator.data["dir_of_travel"]),
-            ATTR_NEAREST: str(self.coordinator.data["nearest"]),
+            ATTR_DIR_OF_TRAVEL: str(
+                self.coordinator.data.proximity[ATTR_DIR_OF_TRAVEL]
+            ),
+            ATTR_NEAREST: str(self.coordinator.data.proximity[ATTR_NEAREST]),
         }

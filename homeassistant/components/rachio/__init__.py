@@ -22,7 +22,7 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 

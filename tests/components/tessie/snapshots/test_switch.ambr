@@ -1,0 +1,254 @@
+# serializer version: 1
+# name: test_switches[switch.test_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': 'mdi:ev-station',
+    'original_name': 'Charge',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charge_enable_request',
+    'unique_id': 'VINVINVIN-charge_state_charge_enable_request',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.test_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test Charge',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_charge',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[switch.test_defrost_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_defrost_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': 'mdi:snowflake',
+    'original_name': 'Defrost mode',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_defrost_mode',
+    'unique_id': 'VINVINVIN-climate_state_defrost_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.test_defrost_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test Defrost mode',
+      'icon': 'mdi:snowflake',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_defrost_mode',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[switch.test_sentry_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_sentry_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': 'mdi:shield-car',
+    'original_name': 'Sentry mode',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_sentry_mode',
+    'unique_id': 'VINVINVIN-vehicle_state_sentry_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.test_sentry_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test Sentry mode',
+      'icon': 'mdi:shield-car',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_sentry_mode',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[switch.test_steering_wheel_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_steering_wheel_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': 'mdi:steering',
+    'original_name': 'Steering wheel heater',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_steering_wheel_heater',
+    'unique_id': 'VINVINVIN-climate_state_steering_wheel_heater',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.test_steering_wheel_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test Steering wheel heater',
+      'icon': 'mdi:steering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_steering_wheel_heater',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[switch.test_valet_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_valet_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': 'mdi:car-key',
+    'original_name': 'Valet mode',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_valet_mode',
+    'unique_id': 'VINVINVIN-vehicle_state_valet_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.test_valet_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test Valet mode',
+      'icon': 'mdi:car-key',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_valet_mode',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[turn_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test Charge',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_charge',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[turn_on]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test Charge',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_charge',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

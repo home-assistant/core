@@ -858,6 +858,11 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
                     "longitude": 2.0,
                     "radius": 3.0,
                 },
+                {
+                    "latitude": 1,
+                    "longitude": 2,
+                    "radius": 3,
+                },
             ),
             (
                 None,
@@ -865,7 +870,6 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
                 {},
                 {"latitude": 1.0},
                 {"longitude": 1.0},
-                {"latitude": 1.0, "longitude": "1.0"},
             ),
         ),
     ),

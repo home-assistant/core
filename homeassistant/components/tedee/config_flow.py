@@ -11,8 +11,9 @@ from pytedee_async import (
 )
 import voluptuous as vol
 
+from homeassistant.components.webhook import async_generate_id as webhook_generate_id
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -61,7 +62,10 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
                 await self.async_set_unique_id(local_bridge.serial)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=NAME, data=user_input)
+                return self.async_create_entry(
+                    title=NAME,
+                    data={**user_input, CONF_WEBHOOK_ID: webhook_generate_id()},
+                )
 
         return self.async_show_form(
             step_id="user",

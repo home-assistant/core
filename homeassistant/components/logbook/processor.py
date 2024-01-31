@@ -175,6 +175,7 @@ class EventProcessor:
         """Humanify rows."""
         return list(
             _humanify(
+                self.hass,
                 rows,
                 self.ent_reg,
                 self.logbook_run,
@@ -184,6 +185,7 @@ class EventProcessor:
 
 
 def _humanify(
+    hass: HomeAssistant,
     rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result,
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
@@ -219,7 +221,7 @@ def _humanify(
             if (
                 is_continuous := continuous_sensors.get(entity_id)
             ) is None and split_entity_id(entity_id)[0] == SENSOR_DOMAIN:
-                is_continuous = is_sensor_continuous(ent_reg, entity_id)
+                is_continuous = is_sensor_continuous(hass, ent_reg, entity_id)
                 continuous_sensors[entity_id] = is_continuous
             if is_continuous:
                 continue

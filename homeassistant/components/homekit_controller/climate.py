@@ -180,7 +180,7 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     @cached_property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = ClimateEntityFeature(0)
+        features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
 
         if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
             features |= ClimateEntityFeature.FAN_MODE

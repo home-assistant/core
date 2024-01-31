@@ -1693,7 +1693,7 @@ async def websocket_set_config_parameter(
         msg[ID],
         {
             VALUE_ID: zwave_value.value_id,
-            STATUS: cmd_status,
+            STATUS: cmd_status.status,
         },
     )
 

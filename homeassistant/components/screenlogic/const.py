@@ -24,6 +24,13 @@ SERVICE_SET_COLOR_MODE = "set_color_mode"
 ATTR_COLOR_MODE = "color_mode"
 SUPPORTED_COLOR_MODES = {slugify(cm.name): cm.value for cm in COLOR_MODE}
 
+SERVICE_START_SUPER_CHLORINATION = "start_super_chlorination"
+ATTR_RUNTIME = "runtime"
+MAX_RUNTIME = 72
+MIN_RUNTIME = 0
+
+SERVICE_STOP_SUPER_CHLORINATION = "stop_super_chlorination"
+
 LIGHT_CIRCUIT_FUNCTIONS = {
     FUNCTION.COLOR_WHEEL,
     FUNCTION.DIMMER,

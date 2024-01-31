@@ -17,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR]
 
 UPDATE_INTERVAL = timedelta(seconds=60)
 
@@ -52,7 +52,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
+class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):  # pylint: disable=hass-enforce-coordinator-module
     """Keep the base instance in one place and centralize the update."""
 
     def __init__(self, hass: HomeAssistant, base: Alpha2Base) -> None:

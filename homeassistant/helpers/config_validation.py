@@ -67,6 +67,7 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
+    CONF_SET_CONVERSATION_RESPONSE,
     CONF_STATE,
     CONF_STOP,
     CONF_TARGET,
@@ -1267,6 +1268,9 @@ def make_entity_service_schema(
     )
 
 
+SCRIPT_CONVERSATION_RESPONSE_SCHEMA = vol.Any(template, None)
+
+
 SCRIPT_VARIABLES_SCHEMA = vol.All(
     vol.Schema({str: template_complex}),
     # pylint: disable-next=unnecessary-lambda
@@ -1742,6 +1746,15 @@ _SCRIPT_SET_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(
+            CONF_SET_CONVERSATION_RESPONSE
+        ): SCRIPT_CONVERSATION_RESPONSE_SCHEMA,
+    }
+)
+
 _SCRIPT_STOP_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
@@ -1794,6 +1807,7 @@ SCRIPT_ACTION_VARIABLES = "variables"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
+SCRIPT_ACTION_SET_CONVERSATION_RESPONSE = "set_conversation_response"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1840,6 +1854,9 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_PARALLEL in action:
         return SCRIPT_ACTION_PARALLEL
 
+    if CONF_SET_CONVERSATION_RESPONSE in action:
+        return SCRIPT_ACTION_SET_CONVERSATION_RESPONSE
+
     raise ValueError("Unable to determine action")
 
 
@@ -1858,6 +1875,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
+    SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA,
 }
 
 

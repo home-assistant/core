@@ -14,8 +14,6 @@ class FritzState(StrEnum):
     DISCONNECT = "DISCONNECT"
 
 
-ICON_PHONE: Final = "mdi:phone"
-
 ATTR_PREFIXES = "prefixes"
 
 FRITZ_ATTR_NAME = "name"

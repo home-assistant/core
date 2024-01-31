@@ -1,7 +1,7 @@
 """Support for Tuya number."""
 from __future__ import annotations
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -323,19 +323,17 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya number."""
         entities: list[TuyaNumberEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if descriptions := NUMBERS.get(device.category):
                 for description in descriptions:
                     if description.key in device.status:
                         entities.append(
-                            TuyaNumberEntity(
-                                device, hass_data.device_manager, description
-                            )
+                            TuyaNumberEntity(device, hass_data.manager, description)
                         )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -349,8 +347,8 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: NumberEntityDescription,
     ) -> None:
         """Init Tuya sensor."""

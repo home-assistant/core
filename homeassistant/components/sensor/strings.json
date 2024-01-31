@@ -45,6 +45,7 @@
       "is_volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::condition_type::is_volatile_organic_compounds%]",
       "is_voltage": "Current {entity_name} voltage",
       "is_volume": "Current {entity_name} volume",
+      "is_volume_flow_rate": "Current {entity_name} volume flow rate",
       "is_water": "Current {entity_name} water",
       "is_weight": "Current {entity_name} weight",
       "is_wind_speed": "Current {entity_name} wind speed"
@@ -93,6 +94,7 @@
       "volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::trigger_type::volatile_organic_compounds%]",
       "voltage": "{entity_name} voltage changes",
       "volume": "{entity_name} volume changes",
+      "volume_flow_rate": "{entity_name} volume flow rate changes",
       "water": "{entity_name} water changes",
       "weight": "{entity_name} weight changes",
       "wind_speed": "{entity_name} wind speed changes"
@@ -259,6 +261,9 @@
     },
     "volume": {
       "name": "Volume"
+    },
+    "volume_flow_rate": {
+      "name": "Volume flow rate"
     },
     "volume_storage": {
       "name": "Stored volume"

@@ -81,10 +81,6 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude},
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
-
     async def async_step_cities(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

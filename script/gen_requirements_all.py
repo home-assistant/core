@@ -138,9 +138,9 @@ iso4217!=1.10.20220401
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
 
-# pyOpenSSL 23.1.0 or later required to avoid import errors when
-# cryptography 40.0.1 is installed with botocore
-pyOpenSSL>=23.1.0
+# pyOpenSSL 24.0.0 or later required to avoid import errors when
+# cryptography 42.0.0 is installed with botocore
+pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
@@ -178,6 +178,9 @@ charset-normalizer==3.2.0
 # dacite: Ensure we have a version that is able to handle type unions for
 # Roborock, NAM, Brother, and GIOS.
 dacite>=1.7.0
+
+# Musle wheels for pandas 2.2.0 cannot be build for any architecture.
+pandas==2.1.4
 """
 
 GENERATED_MESSAGE = (

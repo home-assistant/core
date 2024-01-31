@@ -175,6 +175,10 @@ class IntesisAC(ClimateEntity):
         self._power_consumption_heat = None
         self._power_consumption_cool = None
 
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
+
         # Setpoint support
         if controller.has_setpoint_control(ih_device_id):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE

@@ -85,7 +85,7 @@ class Options:
             )
 
 
-class DeviceCoordinator(DataUpdateCoordinator[None]):
+class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Home Assistant wrapper for a pyWeMo device."""
 
     options: Options | None = None

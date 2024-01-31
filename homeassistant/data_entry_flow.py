@@ -104,6 +104,23 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
+# ignore misc is required as vol.Invalid is not typed
+# mypy error: Class cannot subclass "Invalid" (has type "Any")
+class InvalidData(vol.Invalid):  # type: ignore[misc]
+    """Invalid data provided."""
+
+    def __init__(
+        self,
+        message: str,
+        path: list[str | vol.Marker] | None,
+        error_message: str | None,
+        schema_errors: dict[str, Any],
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(message, path, error_message, **kwargs)
+        self.schema_errors = schema_errors
+
+
 class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
@@ -163,6 +180,29 @@ def _async_flow_handler_to_flow_result(
             result["step_id"] = flow.cur_step["step_id"]
         results.append(result)
     return results
+
+
+def _map_error_to_schema_errors(
+    schema_errors: dict[str, Any],
+    error: vol.Invalid,
+    data_schema: vol.Schema,
+) -> None:
+    """Map an error to the correct position in the schema_errors.
+
+    Raises ValueError if the error path could not be found in the schema.
+    Limitation: Nested schemas are not supported and a ValueError will be raised.
+    """
+    schema = data_schema.schema
+    error_path = error.path
+    if not error_path or (path_part := error_path[0]) not in schema:
+        raise ValueError("Could not find path in schema")
+
+    if len(error_path) > 1:
+        raise ValueError("Nested schemas are not supported")
+
+    # path_part can also be vol.Marker, but we need a string key
+    path_part_str = str(path_part)
+    schema_errors[path_part_str] = error.error_message
 
 
 class FlowManager(abc.ABC):
@@ -313,6 +353,18 @@ class FlowManager(abc.ABC):
         self, flow_id: str, user_input: dict | None = None
     ) -> FlowResult:
         """Continue a data entry flow."""
+        result: FlowResult | None = None
+        while not result or result["type"] == FlowResultType.SHOW_PROGRESS_DONE:
+            result = await self._async_configure(flow_id, user_input)
+            flow = self._progress.get(flow_id)
+            if flow and flow.deprecated_show_progress:
+                break
+        return result
+
+    async def _async_configure(
+        self, flow_id: str, user_input: dict | None = None
+    ) -> FlowResult:
+        """Continue a data entry flow."""
         if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
 
@@ -322,7 +374,26 @@ class FlowManager(abc.ABC):
         if (
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
-            user_input = data_schema(user_input)
+            try:
+                user_input = data_schema(user_input)
+            except vol.Invalid as ex:
+                raised_errors = [ex]
+                if isinstance(ex, vol.MultipleInvalid):
+                    raised_errors = ex.errors
+
+                schema_errors: dict[str, Any] = {}
+                for error in raised_errors:
+                    try:
+                        _map_error_to_schema_errors(schema_errors, error, data_schema)
+                    except ValueError:
+                        # If we get here, the path in the exception does not exist in the schema.
+                        schema_errors.setdefault("base", []).append(str(error))
+                raise InvalidData(
+                    "Schema validation failed",
+                    path=ex.path,
+                    error_message=ex.error_message,
+                    schema_errors=schema_errors,
+                ) from ex
 
         # Handle a menu navigation choice
         if cur_step["type"] == FlowResultType.MENU and user_input:
@@ -455,7 +526,7 @@ class FlowManager(abc.ABC):
             # The flow's progress task was changed, register a callback on it
             async def call_configure() -> None:
                 with suppress(UnknownFlow):
-                    await self.async_configure(flow.flow_id)
+                    await self._async_configure(flow.flow_id)
 
             def schedule_configure(_: asyncio.Task) -> None:
                 self.hass.async_create_task(call_configure())
@@ -531,6 +602,7 @@ class FlowHandler:
 
     __progress_task: asyncio.Task[Any] | None = None
     __no_progress_task_reported = False
+    deprecated_show_progress = False
 
     @property
     def source(self) -> str | None:
@@ -700,6 +772,9 @@ class FlowHandler:
                 cls.__name__,
                 report_issue,
             )
+
+        if progress_task is None:
+            self.deprecated_show_progress = True
 
         flow_result = FlowResult(
             type=FlowResultType.SHOW_PROGRESS,

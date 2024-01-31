@@ -305,6 +305,7 @@ DEMO_DEVICES = [
         "id": "climate.hvac",
         "name": {"name": "Hvac"},
         "traits": [
+            "action.devices.traits.OnOff",
             "action.devices.traits.TemperatureSetting",
             "action.devices.traits.FanSpeed",
         ],
@@ -326,7 +327,10 @@ DEMO_DEVICES = [
     {
         "id": "climate.heatpump",
         "name": {"name": "HeatPump"},
-        "traits": ["action.devices.traits.TemperatureSetting"],
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.TemperatureSetting",
+        ],
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
     },
@@ -334,6 +338,7 @@ DEMO_DEVICES = [
         "id": "climate.ecobee",
         "name": {"name": "Ecobee"},
         "traits": [
+            "action.devices.traits.OnOff",
             "action.devices.traits.TemperatureSetting",
             "action.devices.traits.FanSpeed",
         ],

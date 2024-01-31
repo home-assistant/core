@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
@@ -25,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -710,3 +712,52 @@ async def test_updating_manually(
     )
     await hass.async_block_till_done()
     assert called
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "switch": {
+                        "command_state": "echo 1",
+                        "command_on": "echo 2",
+                        "command_off": "echo 3",
+                        "name": "Test",
+                        "availability": '{{ states("sensor.input1")=="on" }}',
+                    },
+                }
+            ]
+        }
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test availability."""
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.command_line.utils.subprocess.check_output",
+        return_value=b"50\n",
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE

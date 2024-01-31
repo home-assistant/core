@@ -28,7 +28,10 @@ async def test_cover_add_feature_at_runtime(
     assert climate.unique_id == "00:00:00:00:00:00_1233851541_169"
 
     climate_state = hass.states.get("climate.89_living_room")
-    assert climate_state.attributes[ATTR_SUPPORTED_FEATURES] is ClimateEntityFeature(0)
+    assert (
+        climate_state.attributes[ATTR_SUPPORTED_FEATURES]
+        is ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+    )
     assert ATTR_SWING_MODES not in climate_state.attributes
 
     climate = entity_registry.async_get("climate.89_living_room")
@@ -44,5 +47,7 @@ async def test_cover_add_feature_at_runtime(
     assert (
         climate_state.attributes[ATTR_SUPPORTED_FEATURES]
         is ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert climate_state.attributes[ATTR_SWING_MODES] == ["off", "vertical"]

@@ -179,7 +179,7 @@ class UpdateCoordinatorDataType(TypedDict):
 
 class FritzBoxTools(
     update_coordinator.DataUpdateCoordinator[UpdateCoordinatorDataType]
-):
+):  # pylint: disable=hass-enforce-coordinator-module
     """FritzBoxTools class."""
 
     def __init__(
@@ -315,12 +315,14 @@ class FritzBoxTools(
         }
         try:
             await self.async_scan_devices()
-            for key, update_fn in self._entity_update_functions.items():
+            for key in list(self._entity_update_functions):
                 _LOGGER.debug("update entity %s", key)
                 entity_data["entity_states"][
                     key
                 ] = await self.hass.async_add_executor_job(
-                    update_fn, self.fritz_status, self.data["entity_states"].get(key)
+                    self._entity_update_functions[key],
+                    self.fritz_status,
+                    self.data["entity_states"].get(key),
                 )
             if self.has_call_deflections:
                 entity_data[
@@ -755,7 +757,7 @@ class FritzBoxTools(
             raise HomeAssistantError("Service not supported") from ex
 
 
-class AvmWrapper(FritzBoxTools):
+class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-module
     """Setup AVM wrapper for API calls."""
 
     async def _async_service_call(

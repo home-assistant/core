@@ -52,9 +52,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Test the connection to the host and get the current status for serial number.
         coordinator = APCUPSdCoordinator(self.hass, host, port)
-
         await coordinator.async_request_refresh()
-        await self.hass.async_block_till_done()
+
         if isinstance(coordinator.last_exception, (UpdateFailed, asyncio.TimeoutError)):
             errors = {"base": "cannot_connect"}
             return self.async_show_form(

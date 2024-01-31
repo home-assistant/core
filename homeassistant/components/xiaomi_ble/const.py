@@ -7,11 +7,23 @@ DOMAIN = "xiaomi_ble"
 
 
 CONF_DISCOVERED_EVENT_CLASSES: Final = "known_events"
-CONF_SLEEPY_DEVICE: Final = "sleepy_device"
 CONF_EVENT_PROPERTIES: Final = "event_properties"
-EVENT_PROPERTIES: Final = "event_properties"
+CONF_EVENT_CLASS: Final = "event_class"
+CONF_SLEEPY_DEVICE: Final = "sleepy_device"
+CONF_SUBTYPE: Final = "subtype"
+
+EVENT_CLASS: Final = "event_class"
 EVENT_TYPE: Final = "event_type"
+EVENT_SUBTYPE: Final = "event_subtype"
+EVENT_PROPERTIES: Final = "event_properties"
 XIAOMI_BLE_EVENT: Final = "xiaomi_ble_event"
+
+EVENT_CLASS_BUTTON: Final = "button"
+EVENT_CLASS_MOTION: Final = "motion"
+
+BUTTON_PRESS: Final = "button_press"
+BUTTON_PRESS_DOUBLE_LONG: Final = "button_press_double_long"
+MOTION_DEVICE: Final = "motion_device"
 
 
 class XiaomiBleEvent(TypedDict):

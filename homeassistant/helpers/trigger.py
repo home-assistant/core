@@ -73,7 +73,7 @@ class TriggerActionType(Protocol):
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> None:
+    ) -> Any:
         """Define action callback type."""
 
 

@@ -1,7 +1,6 @@
 """The repairs websocket API."""
 from __future__ import annotations
 
-import dataclasses
 from http import HTTPStatus
 from typing import Any
 
@@ -65,21 +64,25 @@ def ws_list_issues(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return a list of issues."""
-
-    def ws_dict(kv_pairs: list[tuple[Any, Any]]) -> dict[Any, Any]:
-        excluded_keys = ("active", "data", "is_persistent")
-        result = {k: v for k, v in kv_pairs if k not in excluded_keys}
-        result["ignored"] = result["dismissed_version"] is not None
-        result["created"] = result["created"].isoformat()
-        return result
-
     issue_registry = async_get_issue_registry(hass)
     issues = [
-        dataclasses.asdict(issue, dict_factory=ws_dict)
+        {
+            "breaks_in_ha_version": issue.breaks_in_ha_version,
+            "created": issue.created,
+            "dismissed_version": issue.dismissed_version,
+            "ignored": issue.dismissed_version is not None,
+            "domain": issue.domain,
+            "is_fixable": issue.is_fixable,
+            "issue_domain": issue.issue_domain,
+            "issue_id": issue.issue_id,
+            "learn_more_url": issue.learn_more_url,
+            "severity": issue.severity,
+            "translation_key": issue.translation_key,
+            "translation_placeholders": issue.translation_placeholders,
+        }
         for issue in issue_registry.issues.values()
         if issue.active
     ]
-
     connection.send_result(msg["id"], {"issues": issues})
 
 

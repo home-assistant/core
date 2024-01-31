@@ -1,0 +1,122 @@
+{
+  "config": {
+    "flow_title": "La Marzocco Espresso {host}",
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_machines": "No machines found in account",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Your username from the La Marzocco app",
+          "password": "Your password from the La Marzocco app"
+        }
+      },
+      "machine_selection": {
+        "description": "Select the machine you want to integrate. Set the \"IP\" to get access to shot time related sensors.",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "machine": "Machine"
+        },
+        "data_description": {
+          "host": "Local IP address of the machine"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Re-authentication required. Please enter your password again.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "brew_active": {
+        "name": "Brewing active"
+      },
+      "water_tank": {
+        "name": "Water tank empty"
+      }
+    },
+    "button": {
+      "start_backflush": {
+        "name": "Start backflush"
+      }
+    },
+    "number": {
+      "coffee_temp": {
+        "name": "Coffee target temperature"
+      },
+      "steam_temp": {
+        "name": "Steam target temperature"
+      },
+      "tea_water_duration": {
+        "name": "Tea water duration"
+      }
+    },
+    "select": {
+      "prebrew_infusion_select": {
+        "name": "Prebrew/-infusion mode",
+        "state": {
+          "disabled": "Disabled",
+          "prebrew": "Prebrew",
+          "preinfusion": "Preinfusion"
+        }
+      },
+      "steam_temp_select": {
+        "name": "Steam level",
+        "state": {
+          "1": "1",
+          "2": "2",
+          "3": "3"
+        }
+      }
+    },
+    "sensor": {
+      "current_temp_coffee": {
+        "name": "Current coffee temperature"
+      },
+      "current_temp_steam": {
+        "name": "Current steam temperature"
+      },
+      "drink_stats_coffee": {
+        "name": "Total coffees made"
+      },
+      "drink_stats_flushing": {
+        "name": "Total flushes made"
+      },
+      "shot_timer": {
+        "name": "Shot timer"
+      }
+    },
+    "switch": {
+      "auto_on_off": {
+        "name": "Auto on/off"
+      },
+      "steam_boiler": {
+        "name": "Steam boiler"
+      }
+    },
+    "update": {
+      "machine_firmware": {
+        "name": "Machine firmware"
+      },
+      "gateway_firmware": {
+        "name": "Gateway firmware"
+      }
+    }
+  }
+}

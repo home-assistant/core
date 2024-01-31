@@ -17,7 +17,7 @@ from .const import DATA_API, DATA_LOCATION, DOMAIN
 
 DEFAULT_NAME = "ipma"
 
-PLATFORMS = [Platform.WEATHER, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 

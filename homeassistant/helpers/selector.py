@@ -879,9 +879,9 @@ class LocationSelector(Selector[LocationSelectorConfig]):
     )
     DATA_SCHEMA = vol.Schema(
         {
-            vol.Required("latitude"): float,
-            vol.Required("longitude"): float,
-            vol.Optional("radius"): float,
+            vol.Required("latitude"): vol.Coerce(float),
+            vol.Required("longitude"): vol.Coerce(float),
+            vol.Optional("radius"): vol.Coerce(float),
         }
     )
 

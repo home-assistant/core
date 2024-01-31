@@ -21,41 +21,83 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_EVENT_PROPERTIES,
+    BUTTON_PRESS,
+    BUTTON_PRESS_DOUBLE_LONG,
+    CONF_SUBTYPE,
     DOMAIN,
-    EVENT_PROPERTIES,
+    EVENT_CLASS,
+    EVENT_CLASS_BUTTON,
+    EVENT_CLASS_MOTION,
     EVENT_TYPE,
+    MOTION_DEVICE,
     XIAOMI_BLE_EVENT,
 )
 
-MOTION_DEVICE_TRIGGERS = [
-    {CONF_TYPE: "motion_detected", CONF_EVENT_PROPERTIES: None},
-]
-
-MOTION_DEVICE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {
-        vol.Required(CONF_TYPE): vol.In(
-            [trigger[CONF_TYPE] for trigger in MOTION_DEVICE_TRIGGERS]
-        ),
-        vol.Optional(CONF_EVENT_PROPERTIES): vol.In(
-            [trigger[CONF_EVENT_PROPERTIES] for trigger in MOTION_DEVICE_TRIGGERS]
-        ),
-    }
-)
+TRIGGERS_BY_TYPE = {
+    BUTTON_PRESS: ["press"],
+    BUTTON_PRESS_DOUBLE_LONG: ["press", "double_press", "long_press"],
+    MOTION_DEVICE: ["motion_detected"],
+}
 
 
 @dataclass
 class TriggerModelData:
     """Data class for trigger model data."""
 
-    triggers: list[dict[str, Any]]
     schema: vol.Schema
+    event_class: str
+    triggers: list[str]
+
+
+TRIGGER_MODEL_DATA = {
+    BUTTON_PRESS: TriggerModelData(
+        schema=DEVICE_TRIGGER_BASE_SCHEMA.extend(
+            {
+                vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_BUTTON]),
+                vol.Required(CONF_SUBTYPE): vol.In(TRIGGERS_BY_TYPE[BUTTON_PRESS]),
+            }
+        ),
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS],
+    ),
+    BUTTON_PRESS_DOUBLE_LONG: TriggerModelData(
+        schema=DEVICE_TRIGGER_BASE_SCHEMA.extend(
+            {
+                vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_BUTTON]),
+                vol.Required(CONF_SUBTYPE): vol.In(
+                    TRIGGERS_BY_TYPE[BUTTON_PRESS_DOUBLE_LONG]
+                ),
+            }
+        ),
+        event_class=EVENT_CLASS_BUTTON,
+        triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS_DOUBLE_LONG],
+    ),
+    MOTION_DEVICE: TriggerModelData(
+        schema=DEVICE_TRIGGER_BASE_SCHEMA.extend(
+            {
+                vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_MOTION]),
+                vol.Required(CONF_SUBTYPE): vol.In(TRIGGERS_BY_TYPE[MOTION_DEVICE]),
+            }
+        ),
+        event_class=EVENT_CLASS_MOTION,
+        triggers=TRIGGERS_BY_TYPE[MOTION_DEVICE],
+    ),
+}
 
 
 MODEL_DATA = {
-    "MUE4094RT": TriggerModelData(
-        triggers=MOTION_DEVICE_TRIGGERS, schema=MOTION_DEVICE_SCHEMA
-    )
+    "JTYJGD03MI": TRIGGER_MODEL_DATA[BUTTON_PRESS],
+    "MS1BB(MI)": TRIGGER_MODEL_DATA[BUTTON_PRESS],
+    "RTCGQ02LM": TRIGGER_MODEL_DATA[BUTTON_PRESS],
+    "SJWS01LM": TRIGGER_MODEL_DATA[BUTTON_PRESS],
+    "K9B-1BTN": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "K9B-2BTN": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "K9B-3BTN": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "K9BB-1BTN": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "YLAI003": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "XMWXKG01LM": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "XMWXKG01YL": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "MUE4094RT": TRIGGER_MODEL_DATA[MOTION_DEVICE],
 }
 
 
@@ -77,14 +119,20 @@ async def async_get_triggers(
     # Check if device is a model supporting device triggers.
     if not (model_data := _async_trigger_model_data(hass, device_id)):
         return []
+
+    event_type = model_data.event_class
+    event_subtypes = model_data.triggers
     return [
         {
+            # Required fields of TRIGGER_BASE_SCHEMA
             CONF_PLATFORM: "device",
-            CONF_DOMAIN: DOMAIN,
             CONF_DEVICE_ID: device_id,
-            **trigger,
+            CONF_DOMAIN: DOMAIN,
+            # Required fields of TRIGGER_SCHEMA
+            CONF_TYPE: event_type,
+            CONF_SUBTYPE: event_subtype,
         }
-        for trigger in model_data.triggers
+        for event_subtype in event_subtypes
     ]
 
 
@@ -95,19 +143,17 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-
-    event_data = {
-        CONF_DEVICE_ID: config[CONF_DEVICE_ID],
-        EVENT_TYPE: config[CONF_TYPE],
-        EVENT_PROPERTIES: config[CONF_EVENT_PROPERTIES],
-    }
     return await event_trigger.async_attach_trigger(
         hass,
         event_trigger.TRIGGER_SCHEMA(
             {
                 event_trigger.CONF_PLATFORM: CONF_EVENT,
                 event_trigger.CONF_EVENT_TYPE: XIAOMI_BLE_EVENT,
-                event_trigger.CONF_EVENT_DATA: event_data,
+                event_trigger.CONF_EVENT_DATA: {
+                    CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+                    EVENT_CLASS: config[CONF_TYPE],
+                    EVENT_TYPE: config[CONF_SUBTYPE],
+                },
             }
         ),
         action,

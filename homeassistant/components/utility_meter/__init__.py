@@ -27,6 +27,7 @@ from .const import (
     CONF_METER_OFFSET,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
+    CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
@@ -93,6 +94,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
                 cv.ensure_list, vol.Unique(), [cv.string]
             ),
             vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
+            vol.Optional(CONF_SENSOR_ALWAYS_AVAILABLE, default=False): cv.boolean,
         },
         period_or_cron,
     )

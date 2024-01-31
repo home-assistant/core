@@ -54,7 +54,7 @@ class MockFFmpegDev(ffmpeg.FFmpegBase):
 
     def __init__(self, hass, initial_state=True, entity_id="test.ffmpeg_device"):
         """Initialize mock."""
-        super().__init__(initial_state)
+        super().__init__(None, initial_state)
 
         self.hass = hass
         self.entity_id = entity_id

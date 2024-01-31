@@ -17,8 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AbodeDevice, AbodeSystem
 from .const import DOMAIN
 
-ICON = "mdi:security"
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -33,7 +31,6 @@ async def async_setup_entry(
 class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Abode."""
 
-    _attr_icon = ICON
     _attr_name = None
     _attr_code_arm_required = False
     _attr_supported_features = (

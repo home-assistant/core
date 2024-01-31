@@ -37,6 +37,51 @@ _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
 
 
+@callback
+def async_static_info_updated(
+    hass: HomeAssistant,
+    entry_data: RuntimeEntryData,
+    platform: entity_platform.EntityPlatform,
+    async_add_entities: AddEntitiesCallback,
+    info_type: type[_InfoT],
+    entity_type: type[_EntityT],
+    state_type: type[_StateT],
+    infos: list[EntityInfo],
+) -> None:
+    """Update entities of this platform when entities are listed."""
+    current_infos = entry_data.info[info_type]
+    new_infos: dict[int, EntityInfo] = {}
+    add_entities: list[_EntityT] = []
+
+    for info in infos:
+        if not current_infos.pop(info.key, None):
+            # Create new entity
+            entity = entity_type(entry_data, platform.domain, info, state_type)
+            add_entities.append(entity)
+        new_infos[info.key] = info
+
+    # Anything still in current_infos is now gone
+    if current_infos:
+        device_info = entry_data.device_info
+        if TYPE_CHECKING:
+            assert device_info is not None
+        hass.async_create_task(
+            entry_data.async_remove_entities(
+                hass, current_infos.values(), device_info.mac_address
+            )
+        )
+
+    # Then update the actual info
+    entry_data.info[info_type] = new_infos
+
+    if new_infos:
+        entry_data.async_update_entity_infos(new_infos.values())
+
+    if add_entities:
+        # Add entities to Home Assistant
+        async_add_entities(add_entities)
+
+
 async def platform_async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -55,39 +100,21 @@ async def platform_async_setup_entry(
     entry_data.info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
     platform = entity_platform.async_get_current_platform()
-
-    @callback
-    def async_list_entities(infos: list[EntityInfo]) -> None:
-        """Update entities of this platform when entities are listed."""
-        current_infos = entry_data.info[info_type]
-        new_infos: dict[int, EntityInfo] = {}
-        add_entities: list[_EntityT] = []
-
-        for info in infos:
-            if not current_infos.pop(info.key, None):
-                # Create new entity
-                entity = entity_type(entry_data, platform.domain, info, state_type)
-                add_entities.append(entity)
-            new_infos[info.key] = info
-
-        # Anything still in current_infos is now gone
-        if current_infos:
-            hass.async_create_task(
-                entry_data.async_remove_entities(current_infos.values())
-            )
-
-        # Then update the actual info
-        entry_data.info[info_type] = new_infos
-
-        if new_infos:
-            entry_data.async_update_entity_infos(new_infos.values())
-
-        if add_entities:
-            # Add entities to Home Assistant
-            async_add_entities(add_entities)
-
+    on_static_info_update = functools.partial(
+        async_static_info_updated,
+        hass,
+        entry_data,
+        platform,
+        async_add_entities,
+        info_type,
+        entity_type,
+        state_type,
+    )
     entry_data.cleanup_callbacks.append(
-        entry_data.async_register_static_info_callback(info_type, async_list_entities)
+        entry_data.async_register_static_info_callback(
+            info_type,
+            on_static_info_update,
+        )
     )
 
 

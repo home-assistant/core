@@ -1,4 +1,5 @@
 """Constants used by multiple MQTT modules."""
+
 from homeassistant.const import CONF_PAYLOAD, Platform
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
@@ -7,6 +8,7 @@ ATTR_DISCOVERY_TOPIC = "discovery_topic"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
+ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_TOPIC = "topic"
 
 CONF_AVAILABILITY = "availability"
@@ -73,6 +75,7 @@ CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
 CONF_HW_VERSION = "hw_version"
 CONF_SW_VERSION = "sw_version"
+CONF_SERIAL_NUMBER = "serial_number"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
@@ -142,9 +145,9 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.DEVICE_TRACKER,
     Platform.EVENT,
-    Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.IMAGE,
@@ -152,8 +155,8 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
-    Platform.SELECT,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,

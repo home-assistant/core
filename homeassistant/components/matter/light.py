@@ -14,6 +14,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityDescription,
+    filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -53,30 +54,9 @@ class MatterLight(MatterEntity, LightEntity):
     """Representation of a Matter light."""
 
     entity_description: LightEntityDescription
-
-    @property
-    def supports_color(self) -> bool:
-        """Return if the device supports color control."""
-        if not self._attr_supported_color_modes:
-            return False
-        return (
-            ColorMode.HS in self._attr_supported_color_modes
-            or ColorMode.XY in self._attr_supported_color_modes
-        )
-
-    @property
-    def supports_color_temperature(self) -> bool:
-        """Return if the device supports color temperature control."""
-        if not self._attr_supported_color_modes:
-            return False
-        return ColorMode.COLOR_TEMP in self._attr_supported_color_modes
-
-    @property
-    def supports_brightness(self) -> bool:
-        """Return if the device supports bridghtness control."""
-        if not self._attr_supported_color_modes:
-            return False
-        return ColorMode.BRIGHTNESS in self._attr_supported_color_modes
+    _supports_brightness = False
+    _supports_color = False
+    _supports_color_temperature = False
 
     async def _set_xy_color(self, xy_color: tuple[float, float]) -> None:
         """Set xy color."""
@@ -283,7 +263,7 @@ class MatterLight(MatterEntity, LightEntity):
             ):
                 await self._set_color_temp(color_temp)
 
-        if brightness is not None and self.supports_brightness:
+        if brightness is not None and self._supports_brightness:
             await self._set_brightness(brightness)
             return
 
@@ -302,12 +282,13 @@ class MatterLight(MatterEntity, LightEntity):
         """Update from device."""
         if self._attr_supported_color_modes is None:
             # work out what (color)features are supported
-            supported_color_modes: set[ColorMode] = set()
+            supported_color_modes = {ColorMode.ONOFF}
             # brightness support
             if self._entity_info.endpoint.has_attribute(
                 None, clusters.LevelControl.Attributes.CurrentLevel
             ):
                 supported_color_modes.add(ColorMode.BRIGHTNESS)
+                self._supports_brightness = True
             # colormode(s)
             if self._entity_info.endpoint.has_attribute(
                 None, clusters.ColorControl.Attributes.ColorMode
@@ -325,19 +306,23 @@ class MatterLight(MatterEntity, LightEntity):
                     & clusters.ColorControl.Bitmaps.ColorCapabilities.kHueSaturationSupported
                 ):
                     supported_color_modes.add(ColorMode.HS)
+                    self._supports_color = True
 
                 if (
                     capabilities
                     & clusters.ColorControl.Bitmaps.ColorCapabilities.kXYAttributesSupported
                 ):
                     supported_color_modes.add(ColorMode.XY)
+                    self._supports_color = True
 
                 if (
                     capabilities
                     & clusters.ColorControl.Bitmaps.ColorCapabilities.kColorTemperatureSupported
                 ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
+                    self._supports_color_temperature = True
 
+            supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
 
             LOGGER.debug(
@@ -347,8 +332,17 @@ class MatterLight(MatterEntity, LightEntity):
             )
 
         # set current values
+        self._attr_is_on = self.get_matter_attribute_value(
+            clusters.OnOff.Attributes.OnOff
+        )
 
-        if self.supports_color:
+        if self._supports_brightness:
+            self._attr_brightness = self._get_brightness()
+
+        if self._supports_color_temperature:
+            self._attr_color_temp = self._get_color_temperature()
+
+        if self._supports_color:
             self._attr_color_mode = color_mode = self._get_color_mode()
             if (
                 ColorMode.HS in self._attr_supported_color_modes
@@ -360,16 +354,12 @@ class MatterLight(MatterEntity, LightEntity):
                 and color_mode == ColorMode.XY
             ):
                 self._attr_xy_color = self._get_xy_color()
-
-        if self.supports_color_temperature:
-            self._attr_color_temp = self._get_color_temperature()
-
-        self._attr_is_on = self.get_matter_attribute_value(
-            clusters.OnOff.Attributes.OnOff
-        )
-
-        if self.supports_brightness:
-            self._attr_brightness = self._get_brightness()
+        elif self._attr_color_temp is not None:
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+        elif self._attr_brightness is not None:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities

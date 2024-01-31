@@ -35,12 +35,40 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    },
     "light": {
       "main": {
         "name": "Main"
+      },
+      "segment": {
+        "name": "Segment {segment}"
+      }
+    },
+    "number": {
+      "intensity": {
+        "name": "Intensity"
+      },
+      "segment_intensity": {
+        "name": "Segment {segment} intensity"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "segment_speed": {
+        "name": "Segment {segment} speed"
       }
     },
     "select": {
+      "color_palette": {
+        "name": "Color palette"
+      },
+      "segment_color_palette": {
+        "name": "Segment {segment} color palette"
+      },
       "live_override": {
         "name": "Live override",
         "state": {
@@ -97,44 +125,12 @@
       },
       "sync_receive": {
         "name": "Sync receive"
-      }
-    }
-  },
-  "services": {
-    "effect": {
-      "name": "Set effect",
-      "description": "Controls the effect settings of WLED.",
-      "fields": {
-        "effect": {
-          "name": "Effect",
-          "description": "Name or ID of the WLED light effect."
-        },
-        "intensity": {
-          "name": "Effect intensity",
-          "description": "Intensity of the effect. Number between 0 and 255."
-        },
-        "palette": {
-          "name": "Color palette",
-          "description": "Name or ID of the WLED light palette."
-        },
-        "speed": {
-          "name": "Effect speed",
-          "description": "Speed of the effect."
-        },
-        "reverse": {
-          "name": "Reverse effect",
-          "description": "Reverse the effect. Either true to reverse or false otherwise."
-        }
-      }
-    },
-    "preset": {
-      "name": "Set preset (deprecated)",
-      "description": "Sets a preset for the WLED device.",
-      "fields": {
-        "preset": {
-          "name": "Preset ID",
-          "description": "ID of the WLED preset."
-        }
+      },
+      "reverse": {
+        "name": "Reverse"
+      },
+      "segment_reverse": {
+        "name": "Segment {segment} reverse"
       }
     }
   }

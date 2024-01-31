@@ -13,6 +13,12 @@
       "manufacturer_id": 89,
       "manufacturer_data_start": [8],
       "connectable": false
+    },
+    {
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 89,
+      "manufacturer_data_start": [12],
+      "connectable": false
     }
   ],
   "codeowners": ["@bdraco"],

@@ -63,7 +63,9 @@ HA_STATES = [
 ]
 
 
-async def validate_cloud_input(hass: core.HomeAssistant, data) -> dict[str, str]:
+async def validate_cloud_input(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect to Risco Cloud.
 
     Data has the keys from CLOUD_SCHEMA with values provided by the user.
@@ -124,16 +126,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return RiscoOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         return self.async_show_menu(
             step_id="user",
             menu_options=["cloud", "local"],
         )
 
-    async def async_step_cloud(self, user_input=None):
+    async def async_step_cloud(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Configure a cloud based alarm."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             if not self._reauth_entry:
                 await self.async_set_unique_id(user_input[CONF_USERNAME])
@@ -168,14 +174,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry = await self.async_set_unique_id(entry_data[CONF_USERNAME])
         return await self.async_step_cloud()
 
-    async def async_step_local(self, user_input=None):
+    async def async_step_local(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Configure a local based alarm."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 info = await validate_local_input(self.hass, user_input)
-            except CannotConnectError:
-                _LOGGER.debug("Cannot connect", exc_info=1)
+            except CannotConnectError as ex:
+                _LOGGER.debug("Cannot connect", exc_info=ex)
                 errors["base"] = "cannot_connect"
             except UnauthorizedError:
                 errors["base"] = "invalid_auth"
@@ -208,7 +216,7 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}
 
-    def _options_schema(self):
+    def _options_schema(self) -> vol.Schema:
         return vol.Schema(
             {
                 vol.Required(
@@ -224,7 +232,9 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             self._data = {**self._data, **user_input}
@@ -232,7 +242,9 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(step_id="init", data_schema=self._options_schema())
 
-    async def async_step_risco_to_ha(self, user_input=None):
+    async def async_step_risco_to_ha(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Map Risco states to HA states."""
         if user_input is not None:
             self._data[CONF_RISCO_STATES_TO_HA] = user_input
@@ -250,7 +262,9 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(step_id="risco_to_ha", data_schema=options)
 
-    async def async_step_ha_to_risco(self, user_input=None):
+    async def async_step_ha_to_risco(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Map HA states to Risco states."""
         if user_input is not None:
             self._data[CONF_HA_STATES_TO_RISCO] = user_input

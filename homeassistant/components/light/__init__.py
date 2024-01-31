@@ -234,6 +234,7 @@ ATTR_EFFECT_LIST = "effect_list"
 # Apply an effect to the light, can be EFFECT_COLORLOOP.
 ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
+EFFECT_OFF = "off"
 EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
 
@@ -607,7 +608,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 )
 
         # If white is set to True, set it to the light's brightness
-        # Add a warning in Home Assistant Core 2023.5 if the brightness is set to an
+        # Add a warning in Home Assistant Core 2024.3 if the brightness is set to an
         # integer.
         if params.get(ATTR_WHITE) is True:
             params[ATTR_WHITE] = light.brightness
@@ -896,7 +897,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the color mode of the light with backwards compatibility."""
         if (color_mode := self.color_mode) is None:
             # Backwards compatibility for color_mode added in 2021.4
-            # Add warning in 2021.6, remove in 2021.10
+            # Add warning in 2024.3, remove in 2025.3
             supported = self._light_internal_supported_color_modes
 
             if ColorMode.HS in supported and self.hs_color is not None:
@@ -1060,6 +1061,51 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
         return data
 
+    def __validate_color_mode(
+        self,
+        color_mode: ColorMode | str | None,
+        supported_color_modes: set[ColorMode] | set[str],
+        effect: str | None,
+    ) -> None:
+        """Validate the color mode."""
+        if color_mode is None:
+            # The light is turned off
+            return
+
+        if not effect or effect == EFFECT_OFF:
+            # No effect is active, the light must set color mode to one of the supported
+            # color modes
+            if color_mode in supported_color_modes:
+                return
+            # Increase severity to warning in 2024.3, reject in 2025.3
+            _LOGGER.debug(
+                "%s: set to unsupported color_mode: %s, supported_color_modes: %s",
+                self.entity_id,
+                color_mode,
+                supported_color_modes,
+            )
+            return
+
+        # When an effect is active, the color mode should indicate what adjustments are
+        # supported by the effect. To make this possible, we allow the light to set its
+        # color mode to on_off, and to brightness if the light allows adjusting
+        # brightness, in addition to the otherwise supported color modes.
+        effect_color_modes = supported_color_modes | {ColorMode.ONOFF}
+        if brightness_supported(effect_color_modes):
+            effect_color_modes.add(ColorMode.BRIGHTNESS)
+
+        if color_mode in effect_color_modes:
+            return
+
+        # Increase severity to warning in 2024.3, reject in 2025.3
+        _LOGGER.debug(
+            "%s: set to unsupported color_mode: %s, supported for effect: %s",
+            self.entity_id,
+            color_mode,
+            effect_color_modes,
+        )
+        return
+
     @final
     @property
     def state_attributes(self) -> dict[str, Any] | None:
@@ -1074,14 +1120,13 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         _is_on = self.is_on
         color_mode = self._light_internal_color_mode if _is_on else None
 
-        if color_mode and color_mode not in legacy_supported_color_modes:
-            # Increase severity to warning in 2021.6, reject in 2021.10
-            _LOGGER.debug(
-                "%s: set to unsupported color_mode: %s, supported_color_modes: %s",
-                self.entity_id,
-                color_mode,
-                legacy_supported_color_modes,
-            )
+        effect: str | None
+        if LightEntityFeature.EFFECT in supported_features:
+            data[ATTR_EFFECT] = effect = self.effect if _is_on else None
+        else:
+            effect = None
+
+        self.__validate_color_mode(color_mode, legacy_supported_color_modes, effect)
 
         data[ATTR_COLOR_MODE] = color_mode
 
@@ -1092,7 +1137,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_BRIGHTNESS] = None
         elif supported_features_value & SUPPORT_BRIGHTNESS:
             # Backwards compatibility for ambiguous / incomplete states
-            # Add warning in 2021.6, remove in 2021.10
+            # Add warning in 2024.3, remove in 2025.3
             if _is_on:
                 data[ATTR_BRIGHTNESS] = self.brightness
             else:
@@ -1113,7 +1158,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_COLOR_TEMP] = None
         elif supported_features_value & SUPPORT_COLOR_TEMP:
             # Backwards compatibility
-            # Add warning in 2021.6, remove in 2021.10
+            # Add warning in 2024.3, remove in 2025.3
             if _is_on:
                 color_temp_kelvin = self.color_temp_kelvin
                 data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
@@ -1140,9 +1185,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if color_mode:
                 data.update(self._light_internal_convert_color(color_mode))
 
-        if LightEntityFeature.EFFECT in supported_features:
-            data[ATTR_EFFECT] = self.effect if _is_on else None
-
         return data
 
     @property
@@ -1152,7 +1194,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return _supported_color_modes
 
         # Backwards compatibility for supported_color_modes added in 2021.4
-        # Add warning in 2021.6, remove in 2021.10
+        # Add warning in 2024.3, remove in 2025.3
         supported_features = self.supported_features_compat
         supported_features_value = supported_features.value
         supported_color_modes: set[ColorMode] = set()

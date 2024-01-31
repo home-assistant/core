@@ -53,7 +53,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching iAlarm data."""
 
     def __init__(self, hass: HomeAssistant, ialarm: IAlarm, mac: str) -> None:

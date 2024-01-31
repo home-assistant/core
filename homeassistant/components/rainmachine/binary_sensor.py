@@ -13,10 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity
 from .const import DATA_PROVISION_SETTINGS, DATA_RESTRICTIONS_CURRENT, DOMAIN
-from .model import (
-    RainMachineEntityDescription,
-    RainMachineEntityDescriptionMixinDataKey,
-)
+from .model import RainMachineEntityDescription
 from .util import (
     EntityDomainReplacementStrategy,
     async_finish_entity_domain_replacements,
@@ -32,13 +29,13 @@ TYPE_RAINSENSOR = "rainsensor"
 TYPE_WEEKDAY = "weekday"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RainMachineBinarySensorDescription(
-    BinarySensorEntityDescription,
-    RainMachineEntityDescription,
-    RainMachineEntityDescriptionMixinDataKey,
+    BinarySensorEntityDescription, RainMachineEntityDescription
 ):
     """Describe a RainMachine binary sensor."""
+
+    data_key: str
 
 
 BINARY_SENSOR_DESCRIPTIONS = (
