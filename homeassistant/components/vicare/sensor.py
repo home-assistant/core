@@ -145,6 +145,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getDomesticHotWaterMaxTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="hotwater_min_temperature",
@@ -153,6 +154,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getDomesticHotWaterMinTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="hotwater_gas_consumption_today",
