@@ -19,13 +19,21 @@ import zigpy.types as t
 from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 
-from homeassistant.components.zha.select import AqaraMotionSensitivities
+from homeassistant.components.zha.select import (
+    AqaraMotionSensitivities,
+    MultitermElectricValveStates,
+)
 from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, restore_state
 from homeassistant.util import dt as dt_util
 
-from .common import async_enable_traffic, find_entity_id, send_attributes_report
+from .common import (
+    async_enable_traffic,
+    find_entity_id,
+    send_attributes_report,
+    update_attribute_cache,
+)
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import async_mock_load_restore_state_from_storage
@@ -48,6 +56,31 @@ def select_select_only():
         ),
     ):
         yield
+
+
+@pytest.fixture
+async def multiterm_zc0101_binary_output(hass, zigpy_device_mock):
+    """Binary Output fixture."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    # general.Basic.cluster_id,
+                    general.BinaryOutput.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    # general.Basic.cluster_id
+                ],
+                SIG_EP_TYPE: zha.DeviceType.HEATING_COOLING_UNIT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        manufacturer="MultiTerm",
+        model="ZC0101",
+    )
+
+    return zigpy_device
 
 
 @pytest.fixture
@@ -118,6 +151,55 @@ def core_rs(hass_storage: dict[str, Any]):
         }
 
     return _storage
+
+
+async def test_select_multiterm_zc0101_binary_output(
+    hass: HomeAssistant, zha_device_joined_restored, multiterm_zc0101_binary_output
+) -> None:
+    """Test ZHA select platform."""
+
+    # Load mandatory attributes
+    cluster = multiterm_zc0101_binary_output.endpoints[1].binary_output
+    cluster.PLUGGED_ATTR_READS = {
+        general.BinaryOutput.AttributeDefs.description.name: "Electric Valve",
+        general.BinaryOutput.AttributeDefs.inactive_text.name: MultitermElectricValveStates.Off.name,
+        general.BinaryOutput.AttributeDefs.active_text.name: MultitermElectricValveStates.On.name,
+        general.BinaryOutput.AttributeDefs.present_value.name: False,
+    }
+    update_attribute_cache(cluster)
+
+    zha_device = await zha_device_joined_restored(multiterm_zc0101_binary_output)
+    entity_id = find_entity_id(Platform.SELECT, zha_device, hass)
+    assert entity_id is not None
+
+    # Test that entity is created properly
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == MultitermElectricValveStates.Off.name
+    assert state.attributes["options"] == [
+        MultitermElectricValveStates.Off.name,
+        MultitermElectricValveStates.On.name,
+    ]
+
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == EntityCategory.CONFIG
+
+    # Test select option and update state
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": entity_id,
+            "option": MultitermElectricValveStates.On.name,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == MultitermElectricValveStates.On.name
 
 
 async def test_select(
