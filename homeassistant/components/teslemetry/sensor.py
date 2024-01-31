@@ -41,7 +41,7 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 @callback
 def minutes_to_datetime(value: StateType) -> datetime | None:
-    """Convert relative hours into absolute datetime."""
+    """Convert relative minutes into absolute datetime."""
     if isinstance(value, (int, float)) and value > 0:
         return dt_util.now() + timedelta(minutes=value)
     return None
@@ -322,14 +322,12 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         key="wall_connector_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.ENUM,
         icon="mdi:ev-station",
     ),
     SensorEntityDescription(
         key="wall_connector_fault_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.ENUM,
         icon="mdi:ev-station",
     ),
     SensorEntityDescription(
@@ -396,6 +394,11 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.get())
+
+    @property
+    def available(self) -> bool:
+        """Return if sensor is available."""
+        return super().available and self.get() is not None
 
 
 class TeslemetryEnergySensorEntity(TeslemetryEnergyEntity, SensorEntity):
