@@ -50,6 +50,9 @@
       },
       "commands_dropped": {
         "default": "mdi:trash-can"
+      },
+      "last_seen": {
+        "default": "mdi:timer-sync"
       }
     }
   }

@@ -62,6 +62,9 @@
       },
       "rssi": {
         "name": "RSSI"
+      },
+      "last_seen": {
+        "name": "Last seen"
       }
     }
   },

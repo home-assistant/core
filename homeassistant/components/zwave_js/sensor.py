@@ -492,7 +492,7 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
     ),
     ZWaveJSStatisticsSensorEntityDescription(
         key="lastSeen",
-        name="Last Seen",
+        translation_key="last_seen",
         device_class=SensorDeviceClass.TIMESTAMP,
         convert=(
             lambda statistics, key: (
