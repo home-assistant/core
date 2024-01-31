@@ -53,7 +53,7 @@
         "name": "Commands dropped ({direction})"
       },
       "rtt": {
-        "name": "Round Trip Time"
+        "name": "Round trip time"
       },
       "rssi": {
         "name": "RSSI"
