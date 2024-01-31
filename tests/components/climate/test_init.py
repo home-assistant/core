@@ -531,9 +531,9 @@ async def test_implicit_warning_not_implemented_turn_on_off_feature(
     assert (
         "Entity climate.test (<class 'tests.components.climate.test_init."
         "test_implicit_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
-        " implements HVACMode(s): off, heat and therefore implicitly supports the off, heat methods"
-        " without setting the proper ClimateEntityFeature. Please report it to the author of"
-        " the 'test' custom integration" in caplog.text
+        " implements HVACMode(s): off, heat and therefore implicitly supports the turn_on/turn_off"
+        " methods without setting the proper ClimateEntityFeature. Please report it to the author"
+        " of the 'test' custom integration" in caplog.text
     )
 
 
@@ -601,10 +601,6 @@ async def test_no_warning_implemented_turn_on_off_feature(
         not in caplog.text
     )
     assert (
-        "implements HVACMode.off and therefore implicitly implements the off method without setting"
-        not in caplog.text
-    )
-    assert (
-        "implements HVACMode.heat and therefore implicitly implements the heat method without setting"
+        " implements HVACMode(s): off, heat and therefore implicitly supports the off, heat methods"
         not in caplog.text
     )

@@ -357,7 +357,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.entity_id,
                 type(self),
                 feature,
-                feature.lower(),
+                method,
                 report_issue,
             )
 
