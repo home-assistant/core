@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
 
-SUPPORT_FLAGS = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+SUPPORT_FLAGS = ClimateEntityFeature(0)
 
 
 async def async_setup_entry(
@@ -97,7 +97,6 @@ class DemoClimate(ClimateEntity):
     _attr_name = None
     _attr_should_poll = False
     _attr_translation_key = "ubercool"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
