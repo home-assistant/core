@@ -15,7 +15,7 @@ from viam.services.vision.client import RawImage
 import voluptuous as vol
 
 from homeassistant.components import camera
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_API_KEY
 from homeassistant.core import (
     HomeAssistant,
@@ -23,7 +23,8 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_API_ID,
@@ -45,6 +46,11 @@ from .const import (
     SERVICE_ROBOT_ADDRESS,
     SERVICE_ROBOT_SECRET,
     SERVICE_VALUES,
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({})},
+    extra=vol.ALLOW_EXTRA,
 )
 
 DATA_CAPTURE_SERVICE_SCHEMA = vol.Schema(
@@ -305,6 +311,33 @@ class ViamManager:
         return await RobotClient.at_address(address, robot_options)
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Viam component."""
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    if not config_entries:
+        raise HomeAssistantError(
+            "No Viam config entries found",
+            translation_domain=DOMAIN,
+            translation_key="entry_not_found",
+        )
+
+    for config_entry in config_entries:
+        if config_entry.state != ConfigEntryState.LOADED:
+            raise HomeAssistantError(
+                f"{config_entry.title} is not loaded",
+                translation_domain=DOMAIN,
+                translation_key="entry_not_loaded",
+                translation_placeholders={
+                    "config_entry_title": config_entry.title,
+                },
+            )
+        manager: ViamManager = hass.data[DOMAIN][config_entry.entry_id]
+        manager.register_services()
+        break
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up viam from a config entry."""
     credential_type = entry.data[CONF_CREDENTIAL_TYPE]
@@ -321,7 +354,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = manager
-    manager.register_services()
 
     return True
 
