@@ -8,6 +8,31 @@
         }
       }
     },
+    "button": {
+      "relocate": {
+        "default": "mdi:map-marker-question"
+      },
+      "reset_lifespan_brush": {
+        "default": "mdi:broom"
+      },
+      "reset_lifespan_filter": {
+        "default": "mdi:air-filter"
+      },
+      "reset_lifespan_side_brush": {
+        "default": "mdi:broom"
+      }
+    },
+    "number": {
+      "clean_count": {
+        "default": "mdi:counter"
+      },
+      "volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      }
+    },
     "sensor": {
       "error": {
         "default": "mdi:alert-circle"
