@@ -34,7 +34,7 @@ class ImportCollector(ast.NodeVisitor):
             try:
                 self.visit(ast.parse(fil.read_text()))
             except SyntaxError as e:
-                e.add_note(f'File: {fil}')
+                e.add_note(f"File: {fil}")
                 raise
             self._cur_fil_dir = None
 
