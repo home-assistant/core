@@ -82,6 +82,9 @@ class MatterEntity(Entity):
         self._attr_should_poll = entity_info.should_poll
         self._extra_poll_timer_unsub: CALLBACK_TYPE | None = None
 
+        # make sure to update the attributes once
+        self._update_from_device()
+
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
@@ -114,9 +117,6 @@ class MatterEntity(Entity):
                 node_filter=self._endpoint.node.node_id,
             )
         )
-
-        # make sure to update the attributes once
-        self._update_from_device()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""

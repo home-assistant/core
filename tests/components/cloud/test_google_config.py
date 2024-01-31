@@ -236,7 +236,7 @@ async def test_google_entity_registry_sync(
         assert len(mock_sync.mock_calls) == 3
 
         # When hass is not started yet we wait till started
-        hass.state = CoreState.starting
+        hass.set_state(CoreState.starting)
         hass.bus.async_fire(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "create", "entity_id": entry.entity_id},
@@ -338,7 +338,7 @@ async def test_sync_google_on_home_assistant_start(
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
     )
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     with patch.object(config, "async_sync_entities_all") as mock_sync:
         await config.async_initialize()
         await config.async_connect_agent_user("mock-user-id")
@@ -441,8 +441,10 @@ def test_enabled_requires_valid_sub(
     assert not config.enabled
 
 
-async def test_setup_integration(hass: HomeAssistant, mock_conf, cloud_prefs) -> None:
-    """Test that we set up the integration if used."""
+async def test_setup_google_assistant(
+    hass: HomeAssistant, mock_conf, cloud_prefs
+) -> None:
+    """Test that we set up the google_assistant integration if enabled in cloud."""
     assert await async_setup_component(hass, "homeassistant", {})
     mock_conf._cloud.subscription_expired = False
 
@@ -473,8 +475,10 @@ async def test_google_handle_logout(
         "homeassistant.components.google_assistant.report_state.async_enable_report_state",
     ) as mock_enable:
         gconf.async_enable_report_state()
+        await hass.async_block_till_done()
 
     assert len(mock_enable.mock_calls) == 1
+    assert len(gconf._on_deinitialize) == 6
 
     # This will trigger a prefs update when we logout.
     await cloud_prefs.get_cloud_user()
@@ -484,8 +488,13 @@ async def test_google_handle_logout(
         "async_check_token",
         side_effect=AssertionError("Should not be called"),
     ):
+        # Fake logging out; CloudClient.logout_cleanups sets username to None
+        # and deinitializes the Google config.
         await cloud_prefs.async_set_username(None)
+        gconf.async_deinitialize()
         await hass.async_block_till_done()
+        # Check listeners are removed:
+        assert not gconf._on_deinitialize
 
     assert len(mock_enable.return_value.mock_calls) == 1
 
@@ -498,7 +507,7 @@ async def test_google_config_migrate_expose_entity_prefs(
     google_settings_version: int,
 ) -> None:
     """Test migrating Google entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -611,7 +620,7 @@ async def test_google_config_migrate_expose_entity_prefs_v2_no_exposed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config from v2 to v3 when no entity is exposed."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -658,7 +667,7 @@ async def test_google_config_migrate_expose_entity_prefs_v2_exposed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config from v2 to v3 when an entity is exposed."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -705,7 +714,7 @@ async def test_google_config_migrate_expose_entity_prefs_default_none(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     entity_default = entity_registry.async_get_or_create(
@@ -742,7 +751,7 @@ async def test_google_config_migrate_expose_entity_prefs_default(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
 

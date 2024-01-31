@@ -21,7 +21,9 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -30,6 +32,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
+    DurationConverter,
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
@@ -41,6 +44,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 INVALID_SYMBOL = "bob"
@@ -54,6 +58,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     for converter in (
         DataRateConverter,
         DistanceConverter,
+        DurationConverter,
         ElectricCurrentConverter,
         ElectricPotentialConverter,
         EnergyConverter,
@@ -65,6 +70,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         TemperatureConverter,
         UnitlessRatioConverter,
         VolumeConverter,
+        VolumeFlowRateConverter,
     )
 }
 
@@ -76,6 +82,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         8,
     ),
     DistanceConverter: (UnitOfLength.KILOMETERS, UnitOfLength.METERS, 0.001),
+    DurationConverter: (UnitOfTime.MINUTES, UnitOfTime.SECONDS, 1 / 60),
     ElectricCurrentConverter: (
         UnitOfElectricCurrent.AMPERE,
         UnitOfElectricCurrent.MILLIAMPERE,
@@ -103,6 +110,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     ),
     UnitlessRatioConverter: (PERCENTAGE, None, 100),
     VolumeConverter: (UnitOfVolume.GALLONS, UnitOfVolume.LITERS, 0.264172),
+    VolumeFlowRateConverter: (
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        0.06,
+    ),
 }
 
 # Dict containing a conversion test for every known unit.
@@ -193,6 +205,50 @@ _CONVERTED_VALUE: dict[
         (5000000, UnitOfLength.MILLIMETERS, 5468.066, UnitOfLength.YARDS),
         (5000000, UnitOfLength.MILLIMETERS, 16404.2, UnitOfLength.FEET),
         (5000000, UnitOfLength.MILLIMETERS, 196850.5, UnitOfLength.INCHES),
+    ],
+    DurationConverter: [
+        (5, UnitOfTime.MICROSECONDS, 0.005, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.MICROSECONDS, 5e-6, UnitOfTime.SECONDS),
+        (5, UnitOfTime.MICROSECONDS, 8.333333333333333e-8, UnitOfTime.MINUTES),
+        (5, UnitOfTime.MICROSECONDS, 1.388888888888889e-9, UnitOfTime.HOURS),
+        (5, UnitOfTime.MICROSECONDS, 5.787e-11, UnitOfTime.DAYS),
+        (5, UnitOfTime.MICROSECONDS, 8.267195767195767e-12, UnitOfTime.WEEKS),
+        (5, UnitOfTime.MILLISECONDS, 5000, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.MILLISECONDS, 0.005, UnitOfTime.SECONDS),
+        (5, UnitOfTime.MILLISECONDS, 8.333333333333333e-5, UnitOfTime.MINUTES),
+        (5, UnitOfTime.MILLISECONDS, 1.388888888888889e-6, UnitOfTime.HOURS),
+        (5, UnitOfTime.MILLISECONDS, 5.787e-8, UnitOfTime.DAYS),
+        (5, UnitOfTime.MILLISECONDS, 8.267195767195767e-9, UnitOfTime.WEEKS),
+        (5, UnitOfTime.SECONDS, 5e6, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.SECONDS, 5000, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.SECONDS, 0.0833333, UnitOfTime.MINUTES),
+        (5, UnitOfTime.SECONDS, 0.00138889, UnitOfTime.HOURS),
+        (5, UnitOfTime.SECONDS, 5.787037037037037e-5, UnitOfTime.DAYS),
+        (5, UnitOfTime.SECONDS, 8.267195767195768e-06, UnitOfTime.WEEKS),
+        (5, UnitOfTime.MINUTES, 3e8, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.MINUTES, 300000, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.MINUTES, 300, UnitOfTime.SECONDS),
+        (5, UnitOfTime.MINUTES, 0.0833333, UnitOfTime.HOURS),
+        (5, UnitOfTime.MINUTES, 0.00347222, UnitOfTime.DAYS),
+        (5, UnitOfTime.MINUTES, 0.000496031746031746, UnitOfTime.WEEKS),
+        (5, UnitOfTime.HOURS, 18000000000, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.HOURS, 18000000, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.HOURS, 18000, UnitOfTime.SECONDS),
+        (5, UnitOfTime.HOURS, 300, UnitOfTime.MINUTES),
+        (5, UnitOfTime.HOURS, 0.208333333, UnitOfTime.DAYS),
+        (5, UnitOfTime.HOURS, 0.02976190476190476, UnitOfTime.WEEKS),
+        (5, UnitOfTime.DAYS, 4.32e11, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.DAYS, 4.32e8, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.DAYS, 432000, UnitOfTime.SECONDS),
+        (5, UnitOfTime.DAYS, 7200, UnitOfTime.MINUTES),
+        (5, UnitOfTime.DAYS, 120, UnitOfTime.HOURS),
+        (5, UnitOfTime.DAYS, 0.7142857142857143, UnitOfTime.WEEKS),
+        (5, UnitOfTime.WEEKS, 3.024e12, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.WEEKS, 3.024e9, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.WEEKS, 3024000, UnitOfTime.SECONDS),
+        (5, UnitOfTime.WEEKS, 50400, UnitOfTime.MINUTES),
+        (5, UnitOfTime.WEEKS, 840, UnitOfTime.HOURS),
+        (5, UnitOfTime.WEEKS, 35, UnitOfTime.DAYS),
     ],
     ElectricCurrentConverter: [
         (5, UnitOfElectricCurrent.AMPERE, 5000, UnitOfElectricCurrent.MILLIAMPERE),
@@ -412,6 +468,62 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 478753.24, UnitOfVolume.FLUID_OUNCES),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 3740.26, UnitOfVolume.GALLONS),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 14158.42, UnitOfVolume.LITERS),
+    ],
+    VolumeFlowRateConverter: [
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            16.6666667,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            0.58857777,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            4.40286754,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            0.06,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            0.03531466,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            0.264172052,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            1.69901079,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            28.3168465,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            7.48051948,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
     ],
 }
 

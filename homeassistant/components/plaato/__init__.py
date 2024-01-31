@@ -208,7 +208,7 @@ def _device_id(data):
     return f"{data.get(ATTR_DEVICE_NAME)}_{data.get(ATTR_DEVICE_ID)}"
 
 
-class PlaatoCoordinator(DataUpdateCoordinator):
+class PlaatoCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching data from the API."""
 
     def __init__(

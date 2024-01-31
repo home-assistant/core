@@ -18,7 +18,6 @@ from homeassistant.components.climate import (
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
@@ -41,10 +40,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 
 from .common import (
-    CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
     CLIMATE_DANFOSS_LC13_ENTITY,
     CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_FLOOR_THERMOSTAT_ENTITY,
@@ -86,6 +83,8 @@ async def test_thermostat_v2(
         == ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     client.async_send_command.reset_mock()
@@ -435,7 +434,10 @@ async def test_thermostat_heatit_z_trm6(
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_MIN_TEMP] == 5
     assert state.attributes[ATTR_MAX_TEMP] == 40
@@ -516,6 +518,8 @@ async def test_thermostat_heatit_z_trm3(
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_MIN_TEMP] == 5
     assert state.attributes[ATTR_MAX_TEMP] == 35
@@ -585,7 +589,10 @@ async def test_thermostat_heatit_z_trm2fx(
     assert state.attributes[ATTR_TEMPERATURE] == 29
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_MIN_TEMP] == 7
     assert state.attributes[ATTR_MAX_TEMP] == 35
@@ -630,7 +637,7 @@ async def test_thermostat_srt321_hrt4_zw(
         HVACMode.HEAT,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 384
 
 
 async def test_preset_and_no_setpoint(
@@ -769,98 +776,3 @@ async def test_thermostat_unknown_values(
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
     assert ATTR_HVAC_ACTION not in state.attributes
-
-
-async def test_thermostat_dry_and_fan_both_hvac_mode_and_preset(
-    hass: HomeAssistant,
-    client,
-    climate_airzone_aidoo_control_hvac_unit,
-    integration,
-) -> None:
-    """Test that dry and fan modes are both available as hvac mode and preset."""
-    state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
-    assert state
-    assert state.attributes[ATTR_HVAC_MODES] == [
-        HVACMode.OFF,
-        HVACMode.HEAT,
-        HVACMode.COOL,
-        HVACMode.FAN_ONLY,
-        HVACMode.DRY,
-        HVACMode.HEAT_COOL,
-    ]
-    assert state.attributes[ATTR_PRESET_MODES] == [
-        PRESET_NONE,
-        "Fan",
-        "Dry",
-    ]
-
-
-async def test_thermostat_raise_repair_issue_and_warning_when_setting_dry_preset(
-    hass: HomeAssistant,
-    client,
-    climate_airzone_aidoo_control_hvac_unit,
-    integration,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test raise of repair issue and warning when setting Dry preset."""
-    client.async_send_command.return_value = {"result": {"status": 1}}
-
-    state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
-    assert state
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {
-            ATTR_ENTITY_ID: CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
-            ATTR_PRESET_MODE: "Dry",
-        },
-        blocking=True,
-    )
-
-    issue_id = f"dry_fan_presets_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
-    issue_registry = ir.async_get(hass)
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id=issue_id,
-    )
-    assert (
-        "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. Please use the corresponding Dry and Fan HVAC modes instead"
-        in caplog.text
-    )
-
-
-async def test_thermostat_raise_repair_issue_and_warning_when_setting_fan_preset(
-    hass: HomeAssistant,
-    client,
-    climate_airzone_aidoo_control_hvac_unit,
-    integration,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test raise of repair issue and warning when setting Fan preset."""
-    client.async_send_command.return_value = {"result": {"status": 1}}
-    state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
-    assert state
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {
-            ATTR_ENTITY_ID: CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
-            ATTR_PRESET_MODE: "Fan",
-        },
-        blocking=True,
-    )
-
-    issue_id = f"dry_fan_presets_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
-    issue_registry = ir.async_get(hass)
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id=issue_id,
-    )
-    assert (
-        "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. Please use the corresponding Dry and Fan HVAC modes instead"
-        in caplog.text
-    )

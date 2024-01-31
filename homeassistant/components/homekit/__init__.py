@@ -353,7 +353,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[DOMAIN][entry.entry_id] = entry_data
 
-    if hass.state == CoreState.running:
+    if hass.state is CoreState.running:
         await homekit.async_start()
     else:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, homekit.async_start)

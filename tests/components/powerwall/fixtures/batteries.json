@@ -1,0 +1,32 @@
+[
+  {
+    "PackagePartNumber": "3012170-05-C",
+    "PackageSerialNumber": "TG0123456789AB",
+    "energy_charged": 2693355,
+    "energy_discharged": 2358235,
+    "nominal_energy_remaining": 14715,
+    "nominal_full_pack_energy": 14715,
+    "wobble_detected": false,
+    "p_out": -100,
+    "q_out": -1080,
+    "v_out": 245.70000000000002,
+    "f_out": 50.037,
+    "i_out": 0.30000000000000004,
+    "pinv_grid_state": "Grid_Compliant"
+  },
+  {
+    "PackagePartNumber": "3012170-05-C",
+    "PackageSerialNumber": "TG9876543210BA",
+    "energy_charged": 610483,
+    "energy_discharged": 509907,
+    "nominal_energy_remaining": 15137,
+    "nominal_full_pack_energy": 15137,
+    "wobble_detected": false,
+    "p_out": -100,
+    "q_out": -1090,
+    "v_out": 245.60000000000002,
+    "f_out": 50.037,
+    "i_out": 0.1,
+    "pinv_grid_state": "Grid_Compliant"
+  }
+]

@@ -1,4 +1,4 @@
-"""Test the Logitech Harmony Hub config flow."""
+"""Test the Hunter Douglas Powerview config flow."""
 import asyncio
 from ipaddress import ip_address
 import json
@@ -11,6 +11,8 @@ from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
+from . import MOCK_MAC
+
 from tests.common import MockConfigEntry, load_fixture
 
 ZEROCONF_HOST = "1.2.3.4"
@@ -20,7 +22,7 @@ HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     hostname="mock_hostname",
     name="Hunter Douglas Powerview Hub._hap._tcp.local.",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: "AA::BB::CC::DD::EE::FF"},
+    properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC},
     type="mock_type",
 )
 

@@ -123,7 +123,7 @@ class XboxData:
     presence: dict[str, PresenceData]
 
 
-class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
+class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):  # pylint: disable=hass-enforce-coordinator-module
     """Store Xbox Console Status."""
 
     def __init__(
