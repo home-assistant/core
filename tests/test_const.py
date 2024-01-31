@@ -103,7 +103,13 @@ def test_all() -> None:
         ],
         "VOLUME_",
     )
-    + _create_tuples(const.UnitOfVolumeFlowRate, "VOLUME_FLOW_RATE_")
+    + _create_tuples(
+        [
+            const.UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            const.UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ],
+        "VOLUME_FLOW_RATE_",
+    )
     + _create_tuples(
         [
             const.UnitOfMass.GRAMS,

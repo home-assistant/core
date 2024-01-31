@@ -8,7 +8,7 @@ aiohttp_cors==0.7.0
 astral==2.2
 async-upnp-client==0.38.1
 atomicwrites-homeassistant==1.4.1
-attrs==23.1.0
+attrs==23.2.0
 awesomeversion==23.11.0
 bcrypt==4.0.1
 bleak-retry-connector==3.4.0
@@ -29,7 +29,7 @@ hass-nabucasa==0.75.1
 hassil==1.6.0
 home-assistant-bluetooth==1.12.0
 home-assistant-frontend==20240112.0
-home-assistant-intents==2024.1.2
+home-assistant-intents==2024.1.29
 httpx==0.26.0
 ifaddr==0.2.0
 janus==1.0.0

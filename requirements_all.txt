@@ -1056,7 +1056,7 @@ holidays==0.41
 home-assistant-frontend==20240112.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.1.2
+home-assistant-intents==2024.1.29
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1352,7 +1352,7 @@ neurio==0.3.1
 nexia==2.0.8
 
 # homeassistant.components.nextcloud
-nextcloudmonitor==1.4.0
+nextcloudmonitor==1.5.0
 
 # homeassistant.components.discord
 nextcord==2.0.0a8
@@ -2235,7 +2235,7 @@ python-kasa[speedups]==0.6.2
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==5.3.0
+python-matter-server==5.3.1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2281,7 +2281,7 @@ python-songpal==0.16.1
 python-tado==0.17.4
 
 # homeassistant.components.technove
-python-technove==1.1.1
+python-technove==1.2.1
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -2407,7 +2407,7 @@ raspyrfm-client==1.2.8
 refoss-ha==1.2.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2023.06.0
+regenmaschine==2024.01.0
 
 # homeassistant.components.renault
 renault-api==0.2.1
@@ -2846,7 +2846,7 @@ wyoming==1.5.2
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.21.2
+xiaomi-ble==0.23.1
 
 # homeassistant.components.knx
 xknx==2.11.2
@@ -2906,7 +2906,7 @@ zeroconf==0.131.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.109
+zha-quirks==0.0.110
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9

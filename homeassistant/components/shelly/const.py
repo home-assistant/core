@@ -212,6 +212,8 @@ PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
 
 NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
 
+FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
+
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 
 OTA_BEGIN = "ota_begin"
