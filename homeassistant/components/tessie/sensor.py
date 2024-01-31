@@ -90,10 +90,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="charge_state_minutes_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=ignore_variance(
-            lambda value: dt_util.now() + timedelta(minutes=cast(float, value)),
-            timedelta(minutes=5),
-        ),
+        value_fn=lambda value: dt_util.now() + timedelta(minutes=cast(float, value)),
         available_fn=lambda x: cast(bool, x),
     ),
     TessieSensorEntityDescription(
