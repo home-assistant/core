@@ -597,6 +597,466 @@ edit_message:
       selector:
         object:
 
+edit_photo:
+  name: Edit photo
+  description: Edit a previously sent photo.
+  fields:
+    message_id:
+      name: Message ID
+      description: id of the message to edit.
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    chat_id:
+      name: Chat ID
+      description: The chat_id where to edit the message.
+      required: true
+      example: 12345
+      selector:
+        text:
+    url:
+      name: URL
+      description: Remote path to an image.
+      example: "http://example.org/path/to/the/image.png"
+      selector:
+        text:
+    file:
+      name: File
+      description: Local path to an image.
+      example: "/path/to/the/image.png"
+      selector:
+        text:
+    caption:
+      name: Caption
+      description: The title of the image.
+      example: "My image"
+      selector:
+        text:
+    username:
+      name: Username
+      description: Username for a URL which require HTTP authentication.
+      example: myuser
+      selector:
+        text:
+    password:
+      name: Password
+      description: Password (or bearer token) for a URL which require HTTP authentication.
+      example: myuser_pwd
+      selector:
+        text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
+    parse_mode:
+      name: Parse mode
+      description: "Parser for the message text."
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdown2"
+    verify_ssl:
+      name: Verify SSL
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      selector:
+        boolean:
+    timeout:
+      name: Timeout
+      description: Timeout for send photo. Will help with timeout errors (poor internet connection, etc)
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    keyboard:
+      name: Keyboard
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        object:
+    inline_keyboard:
+      name: Inline keyboard
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+
+edit_animation:
+  name: Edit animation
+  description: Edit a previously sent anmiation.
+  fields:
+    message_id:
+      name: Message ID
+      description: id of the message to edit.
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    chat_id:
+      name: Chat ID
+      description: The chat_id where to edit the message.
+      required: true
+      example: 12345
+      selector:
+        text:
+    url:
+      name: URL
+      description: Remote path to a GIF or H.264/MPEG-4 AVC video without sound.
+      example: "http://example.org/path/to/the/animation.gif"
+      selector:
+        text:
+    file:
+      name: File
+      description: Local path to a GIF or H.264/MPEG-4 AVC video without sound.
+      example: "/path/to/the/animation.gif"
+      selector:
+        text:
+    caption:
+      name: Caption
+      description: The title of the animation.
+      example: "My animation"
+      selector:
+        text:
+    username:
+      name: Username
+      description: Username for a URL which require HTTP authentication.
+      example: myuser
+      selector:
+        text:
+    password:
+      name: Password
+      description: Password (or bearer token) for a URL which require HTTP authentication.
+      example: myuser_pwd
+      selector:
+        text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
+    parse_mode:
+      name: Parse mode
+      description: "Parser for the message text."
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdown2"
+    verify_ssl:
+      name: Verify SSL
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      selector:
+        boolean:
+    timeout:
+      name: Timeout
+      description: Timeout for send photo. Will help with timeout errors (poor internet connection, etc)
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    keyboard:
+      name: Keyboard
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        object:
+    inline_keyboard:
+      name: Inline keyboard
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+
+edit_video:
+  name: Edit video
+  description: Edit a previously sent video.
+  fields:
+    message_id:
+      name: Message ID
+      description: id of the message to edit.
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    chat_id:
+      name: Chat ID
+      description: The chat_id where to edit the message.
+      required: true
+      example: 12345
+      selector:
+        text:
+    url:
+      name: URL
+      description: Remote path to a video.
+      example: "http://example.org/path/to/the/video.mp4"
+      selector:
+        text:
+    file:
+      name: File
+      description: Local path to a video.
+      example: "/path/to/the/video.mp4"
+      selector:
+        text:
+    caption:
+      name: Caption
+      description: The title of the video.
+      example: "My video"
+      selector:
+        text:
+    username:
+      name: Username
+      description: Username for a URL which require HTTP authentication.
+      example: myuser
+      selector:
+        text:
+    password:
+      name: Password
+      description: Password (or bearer token) for a URL which require HTTP authentication.
+      example: myuser_pwd
+      selector:
+        text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
+    parse_mode:
+      name: Parse mode
+      description: "Parser for the message text."
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdown2"
+    verify_ssl:
+      name: Verify SSL
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      selector:
+        boolean:
+    timeout:
+      name: Timeout
+      description: Timeout for send photo. Will help with timeout errors (poor internet connection, etc)
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    keyboard:
+      name: Keyboard
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        object:
+    inline_keyboard:
+      name: Inline keyboard
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+
+edit_voice:
+  name: Edit voice
+  description: Edit a previously sent voice message.
+  fields:
+    message_id:
+      name: Message ID
+      description: id of the message to edit.
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    chat_id:
+      name: Chat ID
+      description: The chat_id where to edit the message.
+      required: true
+      example: 12345
+      selector:
+        text:
+    url:
+      name: URL
+      description: Remote path to a voice message.
+      example: "http://example.org/path/to/the/voice.opus"
+      selector:
+        text:
+    file:
+      name: File
+      description: Local path to a voice message.
+      example: "/path/to/the/voice.opus"
+      selector:
+        text:
+    caption:
+      name: Caption
+      description: The title of the voice message.
+      example: "My microphone recording"
+      selector:
+        text:
+    username:
+      name: Username
+      description: Username for a URL which require HTTP authentication.
+      example: myuser
+      selector:
+        text:
+    password:
+      name: Password
+      description: Password (or bearer token) for a URL which require HTTP authentication.
+      example: myuser_pwd
+      selector:
+        text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
+    parse_mode:
+      name: Parse mode
+      description: "Parser for the message text."
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdown2"
+    verify_ssl:
+      name: Verify SSL
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      selector:
+        boolean:
+    timeout:
+      name: Timeout
+      description: Timeout for edit voice. Will help with timeout errors (poor internet connection, etc)
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    keyboard:
+      name: Keyboard
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        object:
+    inline_keyboard:
+      name: Inline keyboard
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+
+edit_document:
+  name: Edit document
+  description: Edit a previously sent document.
+  fields:
+    message_id:
+      name: Message ID
+      description: id of the message to edit.
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    chat_id:
+      name: Chat ID
+      description: The chat_id where to edit the message.
+      required: true
+      example: 12345
+      selector:
+        text:
+    url:
+      name: URL
+      description: Remote path to a document.
+      example: "http://example.org/path/to/the/document.odf"
+      selector:
+        text:
+    file:
+      name: File
+      description: Local path to a document.
+      example: "/tmp/whatever.odf"
+      selector:
+        text:
+    caption:
+      name: Caption
+      description: The title of the document.
+      example: Document Title xy
+      selector:
+        text:
+    username:
+      name: Username
+      description: Username for a URL which require HTTP authentication.
+      example: myuser
+      selector:
+        text:
+    password:
+      name: Password
+      description: Password (or bearer token) for a URL which require HTTP authentication.
+      example: myuser_pwd
+      selector:
+        text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
+    parse_mode:
+      name: Parse mode
+      description: "Parser for the message text."
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdown2"
+    verify_ssl:
+      name: Verify SSL
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      selector:
+        boolean:
+    timeout:
+      name: Timeout
+      description: Timeout for send document. Will help with timeout errors (poor internet connection, etc)
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    keyboard:
+      name: Keyboard
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+      selector:
+        object:
+    inline_keyboard:
+      name: Inline keyboard
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+
 edit_caption:
   fields:
     message_id:
