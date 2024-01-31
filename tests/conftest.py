@@ -517,14 +517,13 @@ def hass_fixture_setup() -> list[bool]:
 @pytest.fixture
 async def hass(
     hass_fixture_setup: list[bool],
-    event_loop: asyncio.AbstractEventLoop,
     load_registries: bool,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Create a test instance of Home Assistant."""
 
-    loop = event_loop
+    loop = asyncio.get_running_loop()
     hass_fixture_setup.append(True)
 
     orig_tz = dt_util.DEFAULT_TIME_ZONE
@@ -577,12 +576,11 @@ async def hass(
 
 
 @pytest.fixture
-async def stop_hass(
-    event_loop: asyncio.AbstractEventLoop,
-) -> AsyncGenerator[None, None]:
+async def stop_hass() -> AsyncGenerator[None, None]:
     """Make sure all hass are stopped."""
     orig_hass = ha.HomeAssistant
 
+    event_loop = asyncio.get_running_loop()
     created = []
 
     def mock_hass(*args):
@@ -1509,7 +1507,7 @@ async def async_setup_recorder_instance(
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running
-            if hass.state == CoreState.running:
+            if hass.state is CoreState.running:
                 await async_recorder_block_till_done(hass)
             return instance
 
@@ -1578,9 +1576,10 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
-    with patch(
-        "habluetooth.scanner.OriginalBleakScanner.start",
-    ) as mock_bleak_scanner_start:
+    with patch.object(
+        bluetooth_scanner.OriginalBleakScanner,
+        "start",
+    ) as mock_bleak_scanner_start, patch.object(bluetooth_scanner, "HaScanner"):
         yield mock_bleak_scanner_start
 
 

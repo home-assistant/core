@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
 
+from zigpy.zcl.clusters.hvac import Thermostat
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
@@ -23,6 +25,7 @@ from .core.const import (
     CLUSTER_HANDLER_COLOR,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_LEVEL,
+    CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
@@ -971,11 +974,29 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[0]
 
 
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY, models={"SNZB-06P"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SonoffPresenceSenorTimeout(ZHANumberConfigurationEntity):
+    """Configuration of Sonoff sensor presence detection timeout."""
+
+    _unique_id_suffix = "presence_detection_timeout"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: int = 15
+    _attr_native_max_value: int = 60
+    _attribute_name = "ultrasonic_o_to_u_delay"
+    _attr_translation_key: str = "presence_detection_timeout"
+
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:timer-edit"
+
+
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
-    """Common Entity Class for ZCL Temperature input."""
+    """Common entity class for ZCL temperature input."""
 
-    _attr_native_unit_of_measurement: str = "°C"
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_native_step: float = 0.01
     _attr_multiplier: float = 0.01
@@ -983,21 +1004,20 @@ class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
-    """Min or Max Heat Setpoint setting on thermostats."""
+    """Min or max heat setpoint setting on thermostats."""
 
     _attr_icon: str = "mdi:thermostat"
     _attr_native_step: float = 0.5
 
-    _min_source = "abs_min_heat_setpoint_limit"
-    _max_source = "abs_max_heat_setpoint_limit"
+    _min_source = Thermostat.AttributeDefs.abs_min_heat_setpoint_limit.name
+    _max_source = Thermostat.AttributeDefs.abs_max_heat_setpoint_limit.name
 
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        # This is a 16bit signed integer, which has to be converted to a python integer
-        min_present_value = self._cluster_handler.cluster.get(
-            self._min_source, ctypes.c_short(0x954D).value
-        )
+
+        # The spec says 0x954D, which is a signed integer, therefore the value is in decimals
+        min_present_value = self._cluster_handler.cluster.get(self._min_source, -27315)
         return min_present_value * self._attr_multiplier
 
     @property
@@ -1010,31 +1030,33 @@ class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
-    """Max Heat Setpoint setting on thermostats.
+    """Max heat setpoint setting on thermostats.
 
-    Optional Thermostat attribute
+    Optional thermostat attribute.
     """
 
     _unique_id_suffix = "max_heat_setpoint_limit"
     _attribute_name: str = "max_heat_setpoint_limit"
     _attr_translation_key: str = "max_heat_setpoint_limit"
+    _attr_entity_category = EntityCategory.CONFIG
 
-    _min_source = "min_heat_setpoint_limit"
+    _min_source = Thermostat.AttributeDefs.min_heat_setpoint_limit.name
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
-    """Min Heat Setpoint setting on thermostats.
+    """Min heat setpoint setting on thermostats.
 
-    Optional Thermostat attribute
+    Optional thermostat attribute.
     """
 
     _unique_id_suffix = "min_heat_setpoint_limit"
     _attribute_name: str = "min_heat_setpoint_limit"
     _attr_translation_key: str = "min_heat_setpoint_limit"
+    _attr_entity_category = EntityCategory.CONFIG
 
-    _max_source = "max_heat_setpoint_limit"
+    _max_source = Thermostat.AttributeDefs.max_heat_setpoint_limit.name
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

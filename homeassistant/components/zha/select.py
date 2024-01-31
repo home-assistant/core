@@ -29,6 +29,7 @@ from .core.const import (
     CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
+    CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
@@ -475,25 +476,6 @@ class AqaraT2RelayDecoupledMode(ZCLEnumSelectEntity):
     _attr_translation_key: str = "decoupled_mode"
 
 
-class AqaraE1ReverseDirection(types.enum8):
-    """Aqara curtain reversal."""
-
-    Normal = 0x00
-    Inverted = 0x01
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="window_covering", models={"lumi.curtain.agl001"}
-)
-class AqaraCurtainMode(ZCLEnumSelectEntity):
-    """Representation of a ZHA curtain mode configuration entity."""
-
-    _unique_id_suffix = "window_covering_mode"
-    _attribute_name = "window_covering_mode"
-    _enum = AqaraE1ReverseDirection
-    _attr_translation_key: str = "window_covering_mode"
-
-
 class InovelliOutputMode(types.enum1):
     """Inovelli output mode."""
 
@@ -659,8 +641,28 @@ class AqaraThermostatPreset(ZCLEnumSelectEntity):
     _attr_translation_key: str = "preset"
 
 
+class SonoffPresenceDetectionSensitivityEnum(types.enum8):
+    """Enum for detection sensitivity select entity."""
+
+    Low = 0x01
+    Medium = 0x02
+    High = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY, models={"SNZB-06P"}
+)
+class SonoffPresenceDetectionSensitivity(ZCLEnumSelectEntity):
+    """Entity to set the detection sensitivity of the Sonoff SNZB-06P."""
+
+    _unique_id_suffix = "detection_sensitivity"
+    _attribute_name = "ultrasonic_u_to_o_threshold"
+    _enum = SonoffPresenceDetectionSensitivityEnum
+    _attr_translation_key: str = "detection_sensitivity"
+
+
 class KeypadLockoutEnum(types.enum8):
-    """Often only the first 2 are implemented."""
+    """Keypad lockout options."""
 
     Unlock = 0x00
     Lock1 = 0x01
@@ -671,9 +673,10 @@ class KeypadLockoutEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="thermostat_ui")
 class KeypadLockout(ZCLEnumSelectEntity):
-    """Mandatory Attribute for this cluster.
+    """Mandatory attribute for thermostat_ui cluster.
 
-    often just a switch, but can be a select if need be.
+    Often only the first two are implemented, and Lock2 to Lock4 should map to Lock1 in the firmware.
+    This however covers all bases.
     """
 
     _unique_id_suffix = "keypad_lockout"

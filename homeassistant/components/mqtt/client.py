@@ -38,7 +38,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 from .const import (
@@ -217,7 +216,11 @@ def subscribe(
 
     def remove() -> None:
         """Remove listener convert."""
-        run_callback_threadsafe(hass.loop, async_remove).result()
+        # MQTT messages tend to be high volume,
+        # and since they come in via a thread and need to be processed in the event loop,
+        # we want to avoid hass.add_job since most of the time is spent calling
+        # inspect to figure out how to run the callback.
+        hass.loop.call_soon_threadsafe(async_remove)
 
     return remove
 
@@ -414,7 +417,7 @@ class MQTT:
         )
         self._pending_unsubscribes: set[str] = set()  # topic
 
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             self._ha_started.set()
         else:
 
@@ -797,6 +800,10 @@ class MQTT:
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         """Message received callback."""
+        # MQTT messages tend to be high volume,
+        # and since they come in via a thread and need to be processed in the event loop,
+        # we want to avoid hass.add_job since most of the time is spent calling
+        # inspect to figure out how to run the callback.
         self.loop.call_soon_threadsafe(self._mqtt_handle_message, msg)
 
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none

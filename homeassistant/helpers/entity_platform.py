@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
+from functools import partial
 from logging import Logger, getLogger
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -20,7 +21,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
-    EntityServiceResponse,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     SupportsResponse,
@@ -143,10 +144,6 @@ class EntityPlatform:
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
         self.parallel_updates_created = platform is None
-
-        hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
-            self.platform_name, []
-        ).append(self)
 
         self.domain_entities: dict[str, Entity] = hass.data.setdefault(
             DATA_DOMAIN_ENTITIES, {}
@@ -309,44 +306,8 @@ class EntityPlatform:
         logger = self.logger
         hass = self.hass
         full_name = f"{self.platform_name}.{self.domain}"
-        object_id_language = (
-            hass.config.language
-            if hass.config.language in languages.NATIVE_ENTITY_IDS
-            else languages.DEFAULT_LANGUAGE
-        )
 
-        async def get_translations(
-            language: str, category: str, integration: str
-        ) -> dict[str, Any]:
-            """Get entity translations."""
-            try:
-                return await translation.async_get_translations(
-                    hass, language, category, {integration}
-                )
-            except Exception as err:  # pylint: disable=broad-exception-caught
-                _LOGGER.debug(
-                    "Could not load translations for %s",
-                    integration,
-                    exc_info=err,
-                )
-            return {}
-
-        self.component_translations = await get_translations(
-            hass.config.language, "entity_component", self.domain
-        )
-        self.platform_translations = await get_translations(
-            hass.config.language, "entity", self.platform_name
-        )
-        if object_id_language == hass.config.language:
-            self.object_id_component_translations = self.component_translations
-            self.object_id_platform_translations = self.platform_translations
-        else:
-            self.object_id_component_translations = await get_translations(
-                object_id_language, "entity_component", self.domain
-            )
-            self.object_id_platform_translations = await get_translations(
-                object_id_language, "entity", self.platform_name
-            )
+        await self.async_load_translations()
 
         logger.info("Setting up %s", full_name)
         warn_task = hass.loop.call_at(
@@ -400,7 +361,7 @@ class EntityPlatform:
                     self._async_cancel_retry_setup = None
                     await self._async_setup_platform(async_create_setup_task, tries)
 
-                if hass.state == CoreState.running:
+                if hass.state is CoreState.running:
                     self._async_cancel_retry_setup = async_call_later(
                         hass, wait_time, setup_again
                     )
@@ -428,6 +389,48 @@ class EntityPlatform:
                 return False
             finally:
                 warn_task.cancel()
+
+    async def _async_get_translations(
+        self, language: str, category: str, integration: str
+    ) -> dict[str, Any]:
+        """Get translations for a language, category, and integration."""
+        try:
+            return await translation.async_get_translations(
+                self.hass, language, category, {integration}
+            )
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            _LOGGER.debug(
+                "Could not load translations for %s",
+                integration,
+                exc_info=err,
+            )
+        return {}
+
+    async def async_load_translations(self) -> None:
+        """Load translations."""
+        hass = self.hass
+        object_id_language = (
+            hass.config.language
+            if hass.config.language in languages.NATIVE_ENTITY_IDS
+            else languages.DEFAULT_LANGUAGE
+        )
+        config_language = hass.config.language
+        self.component_translations = await self._async_get_translations(
+            config_language, "entity_component", self.domain
+        )
+        self.platform_translations = await self._async_get_translations(
+            config_language, "entity", self.platform_name
+        )
+        if object_id_language == config_language:
+            self.object_id_component_translations = self.component_translations
+            self.object_id_platform_translations = self.platform_translations
+        else:
+            self.object_id_component_translations = await self._async_get_translations(
+                object_id_language, "entity_component", self.domain
+            )
+            self.object_id_platform_translations = await self._async_get_translations(
+                object_id_language, "entity", self.platform_name
+            )
 
     def _schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
@@ -782,6 +785,13 @@ class EntityPlatform:
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
+    @callback
+    def async_prepare(self) -> None:
+        """Register the entity platform in DATA_ENTITY_PLATFORM."""
+        self.hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
+            self.platform_name, []
+        ).append(self)
+
     async def async_destroy(self) -> None:
         """Destroy an entity platform.
 
@@ -833,18 +843,21 @@ class EntityPlatform:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> EntityServiceResponse | None:
-            """Handle the service."""
-            return await service.entity_service_call(
-                self.hass,
-                self.domain_entities,
-                func,
-                call,
-                required_features,
-            )
+        service_func: str | HassJob[..., Any]
+        service_func = func if isinstance(func, str) else HassJob(func)
 
         self.hass.services.async_register(
-            self.platform_name, name, handle_service, schema, supports_response
+            self.platform_name,
+            name,
+            partial(
+                service.entity_service_call,
+                self.hass,
+                self.domain_entities,
+                service_func,
+                required_features=required_features,
+            ),
+            schema,
+            supports_response,
         )
 
     async def _update_entity_states(self, now: datetime) -> None:

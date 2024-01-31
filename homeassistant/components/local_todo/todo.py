@@ -127,7 +127,7 @@ class LocalTodoListEntity(TodoListEntity):
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
-        """Add an item to the To-do list."""
+        """Delete an item from the To-do list."""
         store = TodoStore(self._calendar)
         for uid in uids:
             store.delete(uid)

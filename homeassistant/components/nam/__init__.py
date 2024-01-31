@@ -90,7 +90,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
+class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching Nettigo Air Monitor data."""
 
     def __init__(
