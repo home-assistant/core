@@ -47,11 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(self, user_input=None):
-        """UI form for adding integration.
-
-        @param user_input:
-        @return:
-        """
+        """Handle the user step."""
         errors = {}
         if not user_input:
             return self.async_show_form(
