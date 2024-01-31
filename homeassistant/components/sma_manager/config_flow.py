@@ -1,17 +1,11 @@
 """SMA Manager Config Flow for UI configuration."""
 
-# Built-In Imports
+
 import logging
 import re
-
-# 3rd-Party Imports
 from sma_manager_api import SMA
 from voluptuous import Required, Schema
-
-# Home Assistant Imports
 from homeassistant import config_entries
-
-# Local Imports
 from .const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_REFRESH_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
