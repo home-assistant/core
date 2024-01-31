@@ -18,7 +18,6 @@ from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     remove_device_from_config,
 )
-from homeassistant.components.traccar_server import DOMAIN as TRACCAR_SERVER_DOMAIN
 from homeassistant.config import load_yaml_config_file
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -217,7 +216,7 @@ async def async_setup_scanner(
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                TRACCAR_SERVER_DOMAIN,
+                "traccar_server",
                 context={"source": SOURCE_IMPORT},
                 data=config,
             )
