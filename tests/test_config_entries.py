@@ -6,7 +6,7 @@ from collections.abc import Generator
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -19,7 +19,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
+    CoreState,
+    Event,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -27,7 +33,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -59,7 +65,13 @@ def mock_handlers() -> Generator[None, None, None]:
 
         async def async_step_reauth(self, data):
             """Mock Reauth."""
-            return self.async_show_form(step_id="reauth")
+            return await self.async_step_reauth_confirm()
+
+        async def async_step_reauth_confirm(self, user_input=None):
+            """Test reauth confirm step."""
+            if user_input is None:
+                return self.async_show_form(step_id="reauth_confirm")
+            return self.async_abort(reason="test")
 
     with patch.dict(
         config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
@@ -425,10 +437,15 @@ async def test_remove_entry_cancels_reauth(
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
+    issue_registry = ir.async_get(hass)
+    issue_id = f"config_entry_reauth_test_{entry.entry_id}"
+    assert issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+
     await manager.async_remove(entry.entry_id)
 
     flows = hass.config_entries.flow.async_progress_by_handler("test")
     assert len(flows) == 0
+    assert not issue_registry.async_get_issue(HA_DOMAIN, issue_id)
 
 
 async def test_remove_entry_handles_callback_error(
@@ -734,6 +751,7 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "_integration_for_domain",
         "_tries",
         "_setup_again_job",
+        "_supports_options",
     }
 
     entry = MockConfigEntry(entry_id="mock-entry")
@@ -908,6 +926,49 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         notifications = async_get_persistent_notifications(hass)
         assert "config_entry_reconfigure" not in notifications
+
+
+async def test_reauth_issue(hass: HomeAssistant) -> None:
+    """Test that we create/delete an issue when source is reauth."""
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 0
+
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryAuthFailed())
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    entry.add_to_hass(hass)
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler("test")
+    assert len(flows) == 1
+
+    assert len(issue_registry.issues) == 1
+    issue_id = f"config_entry_reauth_test_{entry.entry_id}"
+    issue = issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+    assert issue == ir.IssueEntry(
+        active=True,
+        breaks_in_ha_version=None,
+        created=ANY,
+        data={"flow_id": flows[0]["flow_id"]},
+        dismissed_version=None,
+        domain=HA_DOMAIN,
+        is_fixable=False,
+        is_persistent=False,
+        issue_domain="test",
+        issue_id=issue_id,
+        learn_more_url=None,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="config_entry_reauth",
+        translation_placeholders=None,
+    )
+
+    result = await hass.config_entries.flow.async_configure(issue.data["flow_id"], {})
+    assert result["type"] == FlowResultType.ABORT
+    assert len(issue_registry.issues) == 0
 
 
 async def test_discovery_notification_not_created(hass: HomeAssistant) -> None:
@@ -1176,6 +1237,7 @@ async def test_create_entry_options(
 
         entries = hass.config_entries.async_entries("comp")
         assert len(entries) == 1
+        assert entries[0].supports_options is False
         assert entries[0].data == {"example": "data"}
         assert entries[0].options == {"example": "option"}
 
@@ -1202,6 +1264,10 @@ async def test_entry_options(
 
             return OptionsFlowHandler()
 
+        def async_supports_options_flow(self, entry: MockConfigEntry) -> bool:
+            """Test options flow."""
+            return True
+
     config_entries.HANDLERS["test"] = TestFlow()
     flow = await manager.options.async_create_flow(
         entry.entry_id, context={"source": "test"}, data=None
@@ -1216,6 +1282,7 @@ async def test_entry_options(
 
     assert entry.data == {"first": True}
     assert entry.options == {"second": True}
+    assert entry.supports_options is True
 
 
 async def test_entry_options_abort(
@@ -4144,3 +4211,49 @@ def test_raise_trying_to_add_same_config_entry_twice(
     entry.add_to_hass(hass)
     entry.add_to_hass(hass)
     assert f"An entry with the id {entry.entry_id} already exists" in caplog.text
+
+
+async def test_update_entry_and_reload(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test updating an entry and reloading."""
+    entry = MockConfigEntry(
+        domain="comp",
+        unique_id="1234",
+        title="Test",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass, MockModule("comp", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_reauth(self, data):
+            """Mock Reauth."""
+            return self.async_update_reload_and_abort(
+                entry=entry,
+                unique_id="5678",
+                title="Updated Title",
+                data={"vendor": "data2"},
+                options={"vendor": "options2"},
+            )
+
+    with patch.dict(config_entries.HANDLERS, {"comp": MockFlowHandler}):
+        task = await manager.flow.async_init("comp", context={"source": "reauth"})
+        await hass.async_block_till_done()
+
+        assert entry.title == "Updated Title"
+        assert entry.unique_id == "5678"
+        assert entry.data == {"vendor": "data2"}
+        assert entry.options == {"vendor": "options2"}
+        assert entry.state == config_entries.ConfigEntryState.LOADED
+        assert task["type"] == FlowResultType.ABORT
+        assert task["reason"] == "reauth_successful"

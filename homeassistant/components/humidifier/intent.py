@@ -110,7 +110,7 @@ class SetModeHandler(intent.IntentHandler):
         intent.async_test_feature(state, HumidifierEntityFeature.MODES, "modes")
         mode = slots["mode"]["value"]
 
-        if mode not in state.attributes.get(ATTR_AVAILABLE_MODES, []):
+        if mode not in (state.attributes.get(ATTR_AVAILABLE_MODES) or []):
             raise intent.IntentHandleError(
                 f"Entity {state.name} does not support {mode} mode"
             )

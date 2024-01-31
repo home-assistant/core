@@ -35,42 +35,23 @@ class GPSDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
-            self._async_abort_entries_match(
-                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-            )
+            self._async_abort_entries_match(user_input)
 
-            # Will hopefully be possible with the next gps3 update
-            # https://github.com/wadda/gps3/issues/11
-            # from gps3 import gps3
-            # try:
-            #     gpsd_socket = gps3.GPSDSocket()
-            #     gpsd_socket.connect(host=host, port=port)
-            # except GPSError:
-            #     _LOGGER.warning('Not able to connect to GPSD')
-            #     return False
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 sock.connect((user_input[CONF_HOST], user_input[CONF_PORT]))
                 sock.shutdown(2)
             except OSError:
-                errors["base"] = "cannot_connect"
-            else:
-                port = (
-                    f":{user_input[CONF_PORT]}"
-                    if user_input[CONF_PORT] != DEFAULT_PORT
-                    else ""
-                )
+                return self.async_abort(reason="cannot_connect")
 
-                return self.async_create_entry(
-                    title=user_input.get(
-                        CONF_NAME, f"GPS {user_input[CONF_HOST]}{port}"
-                    ),
-                    data=user_input,
-                )
+            port = ""
+            if user_input[CONF_PORT] != DEFAULT_PORT:
+                port = f":{user_input[CONF_PORT]}"
 
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+            return self.async_create_entry(
+                title=user_input.get(CONF_NAME, f"GPS {user_input[CONF_HOST]}{port}"),
+                data=user_input,
+            )
+
+        return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)

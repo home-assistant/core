@@ -26,6 +26,8 @@ from .const import (
     CONF_ACTION_LABEL_COLOR,
     CONF_ACTION_LABEL_TEXT,
     CONF_ACTION_NAME,
+    CONF_ACTION_SHOW_IN_CARPLAY,
+    CONF_ACTION_SHOW_IN_WATCH,
     CONF_ACTIONS,
     DOMAIN,
 )
@@ -147,6 +149,8 @@ ACTION_SCHEMA = vol.Schema(
             vol.Optional(CONF_ACTION_ICON_ICON): cv.string,
             vol.Optional(CONF_ACTION_ICON_COLOR): cv.string,
         },
+        vol.Optional(CONF_ACTION_SHOW_IN_CARPLAY): cv.boolean,
+        vol.Optional(CONF_ACTION_SHOW_IN_WATCH): cv.boolean,
     },
 )
 
