@@ -53,6 +53,7 @@ from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_ANALOG_INPUT,
     CLUSTER_HANDLER_BASIC,
+    CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_DEVICE_TEMPERATURE,
     CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     CLUSTER_HANDLER_HUMIDITY,
@@ -279,7 +280,6 @@ class Battery(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_translation_key: str = "battery_remaining"
 
     @classmethod
     def create_entity(
@@ -1317,7 +1317,7 @@ class SetpointChangeSource(EnumSensor):
     _enum = SetpointChangeSourceEnum
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="window_covering")
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class WindowCoveringTypeSensor(Sensor):
     """Sensor that displays the type of a cover device."""
@@ -1333,7 +1333,9 @@ class WindowCoveringTypeSensor(Sensor):
         return WindowCovering.WindowCoveringType(value).name
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="basic", models={"lumi.curtain.agl001"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_BASIC, models={"lumi.curtain.agl001"}
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AqaraCurtainMotorPowerSourceSensor(Sensor):
     """Sensor that displays the power source of the Aqara E1 curtain motor device."""

@@ -909,9 +909,6 @@
       "window_covering_type": {
         "name": "Window covering type"
       },
-      "battery_remaining": {
-        "name": "Battery"
-      },
       "hooks_state": {
         "name": "Hooks state"
       }
