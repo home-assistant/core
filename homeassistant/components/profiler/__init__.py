@@ -11,7 +11,7 @@ import time
 import traceback
 from typing import Any, cast
 
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -402,11 +402,6 @@ async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall)
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
-    if sys.version_info >= (3, 12):
-        raise HomeAssistantError(
-            "Memory profiling is not supported on Python 3.12. Please use Python 3.11."
-        )
-
     from guppy import hpy  # pylint: disable=import-outside-toplevel
 
     start_time = int(time.time() * 1000000)

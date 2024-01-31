@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 from fnmatch import translate
 from functools import lru_cache
-from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import re
@@ -22,6 +21,7 @@ from aiodiscover.discovery import (
     IP_ADDRESS as DISCOVERY_IP_ADDRESS,
     MAC_ADDRESS as DISCOVERY_MAC_ADDRESS,
 )
+from cached_ipaddress import cached_ip_addresses
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 
@@ -57,7 +57,6 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
-from homeassistant.util.async_ import run_callback_threadsafe
 
 from .const import DOMAIN
 
@@ -145,20 +144,19 @@ class WatcherBase(ABC):
 
     def process_client(self, ip_address: str, hostname: str, mac_address: str) -> None:
         """Process a client."""
-        return run_callback_threadsafe(
-            self.hass.loop,
-            self.async_process_client,
-            ip_address,
-            hostname,
-            mac_address,
-        ).result()
+        self.hass.loop.call_soon_threadsafe(
+            self.async_process_client, ip_address, hostname, mac_address
+        )
 
     @callback
     def async_process_client(
         self, ip_address: str, hostname: str, mac_address: str
     ) -> None:
         """Process a client."""
-        made_ip_address = make_ip_address(ip_address)
+        if (made_ip_address := cached_ip_addresses(ip_address)) is None:
+            # Ignore invalid addresses
+            _LOGGER.debug("Ignoring invalid IP Address: %s", ip_address)
+            return
 
         if (
             made_ip_address.is_link_local
@@ -489,7 +487,7 @@ class DHCPWatcher(WatcherBase):
 
 
 def _dhcp_options_as_dict(
-    dhcp_options: Iterable[tuple[str, int | bytes | None]]
+    dhcp_options: Iterable[tuple[str, int | bytes | None]],
 ) -> dict[str, str | int | bytes | None]:
     """Extract data from packet options as a dict."""
     return {option[0]: option[1] for option in dhcp_options if len(option) >= 2}

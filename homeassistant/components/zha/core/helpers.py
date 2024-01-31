@@ -5,19 +5,15 @@ https://home-assistant.io/integrations/zha/
 """
 from __future__ import annotations
 
-import asyncio
 import binascii
 import collections
 from collections.abc import Callable, Iterator
 import dataclasses
 from dataclasses import dataclass
 import enum
-import functools
-import itertools
 import logging
-from random import uniform
 import re
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -37,10 +33,14 @@ from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, CUSTOM_CONFIGURATION, DATA
 from .registries import BINDABLE_CLUSTERS
 
 if TYPE_CHECKING:
+    from .cluster_handlers import ClusterHandler
     from .device import ZHADevice
     from .gateway import ZHAGateway
 
+_ClusterHandlerT = TypeVar("_ClusterHandlerT", bound="ClusterHandler")
 _T = TypeVar("_T")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -318,49 +318,6 @@ class LogMixin:
         return self.log(logging.ERROR, msg, *args, **kwargs)
 
 
-def retryable_req(
-    delays=(1, 5, 10, 15, 30, 60, 120, 180, 360, 600, 900, 1800), raise_=False
-):
-    """Make a method with ZCL requests retryable.
-
-    This adds delays keyword argument to function.
-    len(delays) is number of tries.
-    raise_ if the final attempt should raise the exception.
-    """
-
-    def decorator(func):
-        @functools.wraps(func)
-        async def wrapper(cluster_handler, *args, **kwargs):
-            exceptions = (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError)
-            try_count, errors = 1, []
-            for delay in itertools.chain(delays, [None]):
-                try:
-                    return await func(cluster_handler, *args, **kwargs)
-                except exceptions as ex:
-                    errors.append(ex)
-                    if delay:
-                        delay = uniform(delay * 0.75, delay * 1.25)
-                        cluster_handler.debug(
-                            "%s: retryable request #%d failed: %s. Retrying in %ss",
-                            func.__name__,
-                            try_count,
-                            ex,
-                            round(delay, 1),
-                        )
-                        try_count += 1
-                        await asyncio.sleep(delay)
-                    else:
-                        cluster_handler.warning(
-                            "%s: all attempts have failed: %s", func.__name__, errors
-                        )
-                        if raise_:
-                            raise
-
-        return wrapper
-
-    return decorator
-
-
 def convert_install_code(value: str) -> bytes:
     """Convert string to install code bytes and validate length."""
 
@@ -395,6 +352,15 @@ QR_CODES = (
         ([0-9a-fA-F]{16})  # IEEE address
         \$I:
         ([0-9a-fA-F]{36})  # install code
+        $
+    """,
+    # Bosch
+    r"""
+        ^RB01SG
+        [0-9a-fA-F]{34}
+        ([0-9a-fA-F]{16}) # IEEE address
+        DLK
+        ([0-9a-fA-F]{36}) # install code
         $
     """,
 )
@@ -433,11 +399,15 @@ class ZHAData:
     device_trigger_cache: dict[str, tuple[str, dict]] = dataclasses.field(
         default_factory=dict
     )
+    allow_polling: bool = dataclasses.field(default=False)
 
 
 def get_zha_data(hass: HomeAssistant) -> ZHAData:
     """Get the global ZHA data object."""
-    return hass.data.get(DATA_ZHA, ZHAData())
+    if DATA_ZHA not in hass.data:
+        hass.data[DATA_ZHA] = ZHAData()
+
+    return hass.data[DATA_ZHA]
 
 
 def get_zha_gateway(hass: HomeAssistant) -> ZHAGateway:

@@ -110,6 +110,10 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "EC0BAE*",
     },
     {
+        "domain": "broadlink",
+        "macaddress": "780F77*",
+    },
+    {
         "domain": "dlink",
         "hostname": "dsp-w215",
     },
@@ -315,10 +319,6 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "motion_blinds",
         "hostname": "connector_*",
-    },
-    {
-        "domain": "myq",
-        "macaddress": "645299*",
     },
     {
         "domain": "nest",
@@ -572,6 +572,10 @@ DHCP: list[dict[str, str | bool]] = [
         "hostname": "tado*",
     },
     {
+        "domain": "tailwind",
+        "registered_devices": True,
+    },
+    {
         "domain": "tesla_wall_connector",
         "hostname": "teslawallconnector_*",
         "macaddress": "DC44271*",
@@ -602,6 +606,11 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "tplink",
         "hostname": "e[sp]*",
+        "macaddress": "3C52A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "e[sp]*",
         "macaddress": "54AF97*",
     },
     {
@@ -628,6 +637,11 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "tplink",
         "hostname": "hs*",
         "macaddress": "9C5322*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lps]*",
+        "macaddress": "5091E3*",
     },
     {
         "domain": "tplink",
@@ -793,6 +807,41 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "tplink",
         "hostname": "k[lps]*",
         "macaddress": "1C61B4*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l5*",
+        "macaddress": "5CE931*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l5*",
+        "macaddress": "3C52A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l5*",
+        "macaddress": "5C628B*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "482254*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "30DE4B*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l9*",
+        "macaddress": "A842A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l9*",
+        "macaddress": "3460F9*",
     },
     {
         "domain": "tuya",

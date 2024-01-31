@@ -1,5 +1,7 @@
 """The tests for the demo humidifier component."""
 
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
@@ -22,6 +24,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -31,8 +34,18 @@ ENTITY_HYGROSTAT = "humidifier.hygrostat"
 ENTITY_HUMIDIFIER = "humidifier.humidifier"
 
 
+@pytest.fixture
+async def humidifier_only() -> None:
+    """Enable only the datetime platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.HUMIDIFIER],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_demo_humidifier(hass, disable_platforms):
+async def setup_demo_humidifier(hass: HomeAssistant, humidifier_only: None):
     """Initialize setup demo humidifier."""
     assert await async_setup_component(
         hass, DOMAIN, {"humidifier": {"platform": "demo"}}

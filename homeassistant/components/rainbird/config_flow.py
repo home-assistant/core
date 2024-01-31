@@ -11,15 +11,17 @@ from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,
 )
+from pyrainbird.data import WifiParams
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     ATTR_DURATION,
@@ -69,7 +71,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         error_code: str | None = None
         if user_input:
             try:
-                serial_number = await self._test_connection(
+                serial_number, wifi_params = await self._test_connection(
                     user_input[CONF_HOST], user_input[CONF_PASSWORD]
                 )
             except ConfigFlowError as err:
@@ -77,11 +79,11 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 error_code = err.error_code
             else:
                 return await self.async_finish(
-                    serial_number,
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_SERIAL_NUMBER: serial_number,
+                        CONF_MAC: wifi_params.mac_address,
                     },
                     options={ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES},
                 )
@@ -92,8 +94,10 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors={"base": error_code} if error_code else None,
         )
 
-    async def _test_connection(self, host: str, password: str) -> str:
-        """Test the connection and return the device serial number.
+    async def _test_connection(
+        self, host: str, password: str
+    ) -> tuple[str, WifiParams]:
+        """Test the connection and return the device identifiers.
 
         Raises a ConfigFlowError on failure.
         """
@@ -106,7 +110,10 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             async with asyncio.timeout(TIMEOUT_SECONDS):
-                return await controller.get_serial_number()
+                return await asyncio.gather(
+                    controller.get_serial_number(),
+                    controller.get_wifi_params(),
+                )
         except asyncio.TimeoutError as err:
             raise ConfigFlowError(
                 f"Timeout connecting to Rain Bird controller: {str(err)}",
@@ -120,18 +127,28 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_finish(
         self,
-        serial_number: str,
         data: dict[str, Any],
         options: dict[str, Any],
     ) -> FlowResult:
         """Create the config entry."""
-        # Prevent devices with the same serial number. If the device does not have a serial number
-        # then we can at least prevent configuring the same host twice.
-        if serial_number:
-            await self.async_set_unique_id(serial_number)
-            self._abort_if_unique_id_configured()
-        else:
-            self._async_abort_entries_match(data)
+        # The integration has historically used a serial number, but not all devices
+        # historically had a valid one. Now the mac address is used as a unique id
+        # and serial is still persisted in config entry data in case it is needed
+        # in the future.
+        # Either way, also prevent configuring the same host twice.
+        await self.async_set_unique_id(format_mac(data[CONF_MAC]))
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: data[CONF_HOST],
+                CONF_PASSWORD: data[CONF_PASSWORD],
+            }
+        )
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: data[CONF_HOST],
+                CONF_PASSWORD: data[CONF_PASSWORD],
+            }
+        )
         return self.async_create_entry(
             title=data[CONF_HOST],
             data=data,

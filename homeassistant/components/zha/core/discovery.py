@@ -122,7 +122,7 @@ class ProbeEndpoint:
                 endpoint.device.manufacturer,
                 endpoint.device.model,
                 cluster_handlers,
-                endpoint.device.quirk_class,
+                endpoint.device.quirk_id,
             )
             if platform_entity_class is None:
                 return
@@ -181,7 +181,7 @@ class ProbeEndpoint:
             endpoint.device.manufacturer,
             endpoint.device.model,
             cluster_handler_list,
-            endpoint.device.quirk_class,
+            endpoint.device.quirk_id,
         )
         if entity_class is None:
             return
@@ -203,9 +203,20 @@ class ProbeEndpoint:
             if platform is None:
                 continue
 
-            cluster_handler_class = zha_regs.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-                cluster_id, ClusterHandler
+            cluster_handler_classes = zha_regs.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+                cluster_id, {None: ClusterHandler}
             )
+
+            quirk_id = (
+                endpoint.device.quirk_id
+                if endpoint.device.quirk_id in cluster_handler_classes
+                else None
+            )
+
+            cluster_handler_class = cluster_handler_classes.get(
+                quirk_id, ClusterHandler
+            )
+
             cluster_handler = cluster_handler_class(cluster, endpoint)
             self.probe_single_cluster(platform, cluster_handler, endpoint)
 
@@ -226,14 +237,14 @@ class ProbeEndpoint:
                 endpoint.device.manufacturer,
                 endpoint.device.model,
                 list(endpoint.all_cluster_handlers.values()),
-                endpoint.device.quirk_class,
+                endpoint.device.quirk_id,
             )
         else:
             matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
                 endpoint.device.manufacturer,
                 endpoint.device.model,
                 endpoint.unclaimed_cluster_handlers(),
-                endpoint.device.quirk_class,
+                endpoint.device.quirk_id,
             )
 
         endpoint.claim_cluster_handlers(claimed)

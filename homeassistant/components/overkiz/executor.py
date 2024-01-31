@@ -5,8 +5,11 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 from pyoverkiz.enums import OverkizCommand, Protocol
+from pyoverkiz.exceptions import OverkizException
 from pyoverkiz.models import Command, Device, StateDefinition
 from pyoverkiz.types import StateType as OverkizStateType
+
+from homeassistant.exceptions import HomeAssistantError
 
 from .coordinator import OverkizDataUpdateCoordinator
 
@@ -88,11 +91,15 @@ class OverkizExecutor:
         ):
             parameters.append(0)
 
-        exec_id = await self.coordinator.client.execute_command(
-            self.device.device_url,
-            Command(command_name, parameters),
-            "Home Assistant",
-        )
+        try:
+            exec_id = await self.coordinator.client.execute_command(
+                self.device.device_url,
+                Command(command_name, parameters),
+                "Home Assistant",
+            )
+        # Catch Overkiz exceptions to support `continue_on_error` functionality
+        except OverkizException as exception:
+            raise HomeAssistantError(exception) from exception
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need to register it here
         self.coordinator.executions[exec_id] = {

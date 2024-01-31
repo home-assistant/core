@@ -97,7 +97,7 @@ async def async_setup_entry(
 class ZhaDoorLock(ZhaEntity, LockEntity):
     """Representation of a ZHA lock."""
 
-    _attr_name: str = "Door lock"
+    _attr_translation_key: str = "door_lock"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""

@@ -184,13 +184,13 @@ async def test_bad_formatted_scene(
 async def test_delete_scene(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
     hass_config_store,
     setup_scene,
 ) -> None:
     """Test deleting a scene."""
-    ent_reg = er.async_get(hass)
 
-    assert len(ent_reg.entities) == 2
+    assert len(entity_registry.entities) == 2
 
     with patch.object(config, "SECTIONS", ["scene"]):
         assert await async_setup_component(hass, "config", {})
@@ -220,7 +220,7 @@ async def test_delete_scene(
         {"id": "light_off"},
     ]
 
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
 
 
 @pytest.mark.parametrize("scene_config", ({},))

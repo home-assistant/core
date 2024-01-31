@@ -50,7 +50,12 @@ DATA = {
 INVALID_DATA = {**DATA, "name": None, "mac": HOST}
 
 
-async def test_duplicate_removal(hass: HomeAssistant, mock_daikin) -> None:
+async def test_duplicate_removal(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_daikin,
+) -> None:
     """Test duplicate device removal."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -59,8 +64,6 @@ async def test_duplicate_removal(hass: HomeAssistant, mock_daikin) -> None:
         data={CONF_HOST: HOST, KEY_MAC: HOST},
     )
     config_entry.add_to_hass(hass)
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     type(mock_daikin).mac = PropertyMock(return_value=HOST)
     type(mock_daikin).values = PropertyMock(return_value=INVALID_DATA)
@@ -111,7 +114,12 @@ async def test_duplicate_removal(hass: HomeAssistant, mock_daikin) -> None:
     assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(MAC)
 
 
-async def test_unique_id_migrate(hass: HomeAssistant, mock_daikin) -> None:
+async def test_unique_id_migrate(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_daikin,
+) -> None:
     """Test unique id migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -120,8 +128,6 @@ async def test_unique_id_migrate(hass: HomeAssistant, mock_daikin) -> None:
         data={CONF_HOST: HOST, KEY_MAC: HOST},
     )
     config_entry.add_to_hass(hass)
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     type(mock_daikin).mac = PropertyMock(return_value=HOST)
     type(mock_daikin).values = PropertyMock(return_value=INVALID_DATA)
@@ -171,7 +177,6 @@ async def test_client_update_connection_error(
         data={CONF_HOST: HOST, KEY_MAC: MAC},
     )
     config_entry.add_to_hass(hass)
-    er.async_get(hass)
 
     type(mock_daikin).mac = PropertyMock(return_value=MAC)
     type(mock_daikin).values = PropertyMock(return_value=DATA)

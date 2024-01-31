@@ -1,8 +1,8 @@
 """Support for a ScreenLogic number entity."""
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
+from screenlogicpy.const.common import ScreenLogicCommunicationError, ScreenLogicError
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
@@ -14,11 +14,12 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
-from .entity import ScreenlogicEntity, ScreenLogicEntityDescription
+from .entity import ScreenLogicEntity, ScreenLogicEntityDescription
 from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,40 +27,21 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-@dataclass
-class ScreenLogicNumberRequiredMixin:
-    """Describes a required mixin for a ScreenLogic number entity."""
-
-    set_value_name: str
-    set_value_args: tuple[tuple[str | int, ...], ...]
-
-
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicNumberDescription(
     NumberEntityDescription,
     ScreenLogicEntityDescription,
-    ScreenLogicNumberRequiredMixin,
 ):
     """Describes a ScreenLogic number entity."""
 
 
 SUPPORTED_SCG_NUMBERS = [
     ScreenLogicNumberDescription(
-        set_value_name="async_set_scg_config",
-        set_value_args=(
-            (DEVICE.SCG, GROUP.CONFIGURATION, VALUE.POOL_SETPOINT),
-            (DEVICE.SCG, GROUP.CONFIGURATION, VALUE.SPA_SETPOINT),
-        ),
         data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.POOL_SETPOINT,
         entity_category=EntityCategory.CONFIG,
     ),
     ScreenLogicNumberDescription(
-        set_value_name="async_set_scg_config",
-        set_value_args=(
-            (DEVICE.SCG, GROUP.CONFIGURATION, VALUE.POOL_SETPOINT),
-            (DEVICE.SCG, GROUP.CONFIGURATION, VALUE.SPA_SETPOINT),
-        ),
         data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.SPA_SETPOINT,
         entity_category=EntityCategory.CONFIG,
@@ -88,13 +70,13 @@ async def async_setup_entry(
             cleanup_excluded_entity(coordinator, DOMAIN, scg_number_data_path)
             continue
         if gateway.get_data(*scg_number_data_path):
-            entities.append(ScreenLogicNumber(coordinator, scg_number_description))
+            entities.append(ScreenLogicSCGNumber(coordinator, scg_number_description))
 
     async_add_entities(entities)
 
 
-class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
-    """Class to represent a ScreenLogic Number entity."""
+class ScreenLogicNumber(ScreenLogicEntity, NumberEntity):
+    """Base class to represent a ScreenLogic Number entity."""
 
     entity_description: ScreenLogicNumberDescription
 
@@ -105,14 +87,7 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
     ) -> None:
         """Initialize a ScreenLogic number entity."""
         super().__init__(coordinator, entity_description)
-        if not callable(
-            func := getattr(self.gateway, entity_description.set_value_name)
-        ):
-            raise TypeError(
-                f"set_value_name '{entity_description.set_value_name}' is not a callable"
-            )
-        self._set_value_func: Callable[..., bool] = func
-        self._set_value_args = entity_description.set_value_args
+
         self._attr_native_unit_of_measurement = get_ha_unit(
             self.entity_data.get(ATTR.UNIT)
         )
@@ -136,19 +111,23 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
+        raise NotImplementedError()
 
-        # Current API requires certain values to be set at the same time. This
-        # gathers the existing values and updates the particular value being
-        # set by this entity.
-        args = {}
-        for data_path in self._set_value_args:
-            data_key = data_path[-1]
-            args[data_key] = self.coordinator.gateway.get_value(*data_path, strict=True)
 
-        args[self._data_key] = value
+class ScreenLogicSCGNumber(ScreenLogicNumber):
+    """Class to represent a ScreenLoigic SCG Number entity."""
 
-        if self._set_value_func(*args.values()):
-            _LOGGER.debug("Set '%s' to %s", self._data_key, value)
-            await self._async_refresh()
-        else:
-            _LOGGER.debug("Failed to set '%s' to %s", self._data_key, value)
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+
+        # Current API requires int values for the currently supported numbers.
+        value = int(value)
+
+        try:
+            await self.gateway.async_set_scg_config(**{self._data_key: value})
+        except (ScreenLogicCommunicationError, ScreenLogicError) as sle:
+            raise HomeAssistantError(
+                f"Failed to set '{self._data_key}' to {value}: {sle.msg}"
+            ) from sle
+        _LOGGER.debug("Set '%s' to %s", self._data_key, value)
+        await self._async_refresh()

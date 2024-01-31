@@ -1,6 +1,5 @@
 """The tests for the utility_meter sensor platform."""
 from datetime import timedelta
-from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
@@ -132,7 +131,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             3,
@@ -166,7 +165,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=20)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             6,
@@ -230,6 +229,106 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "unavailable"
+
+
+@pytest.mark.parametrize(
+    ("yaml_config", "config_entry_config"),
+    (
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "source": "sensor.energy",
+                        "always_available": True,
+                    }
+                }
+            },
+            None,
+        ),
+        (
+            None,
+            {
+                "cycle": "none",
+                "delta_values": False,
+                "name": "Energy bill",
+                "net_consumption": False,
+                "offset": 0,
+                "periodically_resetting": True,
+                "source": "sensor.energy",
+                "tariffs": [],
+                "always_available": True,
+            },
+        ),
+    ),
+)
+async def test_state_always_available(
+    hass: HomeAssistant, yaml_config, config_entry_config
+) -> None:
+    """Test utility sensor state."""
+    if yaml_config:
+        assert await async_setup_component(hass, DOMAIN, yaml_config)
+        await hass.async_block_till_done()
+        entity_id = yaml_config[DOMAIN]["energy_bill"]["source"]
+    else:
+        config_entry = MockConfigEntry(
+            data={},
+            domain=DOMAIN,
+            options=config_entry_config,
+            title=config_entry_config["name"],
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        entity_id = config_entry_config["source"]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
+
+    now = dt_util.utcnow() + timedelta(seconds=10)
+    with freeze_time(now):
+        hass.states.async_set(
+            entity_id,
+            3,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "1"
+    assert state.attributes.get("status") == COLLECTING
+
+    # test unavailable state
+    hass.states.async_set(
+        entity_id,
+        "unavailable",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "1"
+
+    # test unknown state
+    hass.states.async_set(
+        entity_id, None, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "1"
 
 
 @pytest.mark.parametrize(
@@ -535,7 +634,7 @@ async def test_restore_state(
 ) -> None:
     """Test utility sensor restore state."""
     # Home assistant is not runnit yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     last_reset = "2020-12-21T00:00:00.013073+00:00"
 
@@ -729,7 +828,7 @@ async def test_net_consumption(
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             1,
@@ -803,7 +902,7 @@ async def test_non_net_consumption(
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             1,
@@ -813,7 +912,7 @@ async def test_non_net_consumption(
         await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             None,
@@ -866,7 +965,7 @@ async def test_delta_values(
 ) -> None:
     """Test utility meter "delta_values" mode."""
     # Home assistant is not runnit yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     now = dt_util.utcnow()
     with freeze_time(now):
@@ -975,7 +1074,7 @@ async def test_non_periodically_resetting(
 ) -> None:
     """Test utility meter "non periodically resetting" mode."""
     # Home assistant is not runnit yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     now = dt_util.utcnow()
     with freeze_time(now):
@@ -1148,7 +1247,7 @@ async def test_non_periodically_resetting_meter_with_tariffs(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             3,
@@ -1186,7 +1285,7 @@ async def test_non_periodically_resetting_meter_with_tariffs(
     assert state.attributes.get("status") == COLLECTING
 
     now = dt_util.utcnow() + timedelta(seconds=20)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             6,
@@ -1266,7 +1365,9 @@ async def _test_self_reset(
     state = hass.states.get("sensor.energy_bill")
     if expect_reset:
         assert state.attributes.get("last_period") == "2"
-        assert state.attributes.get("last_reset") == now.isoformat()
+        assert (
+            state.attributes.get("last_reset") == dt_util.as_utc(now).isoformat()
+        )  # last_reset is kept in UTC
         assert state.state == "3"
     else:
         assert state.attributes.get("last_period") == "0"
@@ -1345,6 +1446,16 @@ async def test_self_reset_hourly(hass: HomeAssistant) -> None:
     """Test hourly reset of meter."""
     await _test_self_reset(
         hass, gen_config("hourly"), "2017-12-31T23:59:00.000000+00:00"
+    )
+
+
+async def test_self_reset_hourly_dst(hass: HomeAssistant) -> None:
+    """Test hourly reset of meter in DST change conditions."""
+
+    hass.config.time_zone = "Europe/Lisbon"
+    dt_util.set_default_time_zone(dt_util.get_time_zone(hass.config.time_zone))
+    await _test_self_reset(
+        hass, gen_config("hourly"), "2023-10-29T01:59:00.000000+00:00"
     )
 
 
@@ -1449,6 +1560,7 @@ def test_calculate_adjustment_invalid_new_state(
         net_consumption=False,
         parent_meter="sensor.test",
         periodically_resetting=True,
+        sensor_always_available=False,
         unique_id="test_utility_meter",
         source_entity="sensor.test",
         tariff=None,

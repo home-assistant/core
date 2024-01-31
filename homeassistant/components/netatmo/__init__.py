@@ -8,27 +8,16 @@ from typing import Any
 
 import aiohttp
 import pyatmo
-from pyatmo.const import ALL_SCOPES as NETATMO_SCOPES
-import voluptuous as vol
 
 from homeassistant.components import cloud
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.webhook import (
     async_generate_url as webhook_generate_url,
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_WEBHOOK_ID,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
@@ -37,7 +26,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
@@ -62,20 +50,7 @@ from .webhook import async_handle_webhook
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_CLIENT_ID): cv.string,
-                    vol.Required(CONF_CLIENT_SECRET): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 MAX_WEBHOOK_RETRIES = 3
 
@@ -90,39 +65,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_EVENTS: {},
         DATA_CAMERAS: {},
     }
-
-    if DOMAIN not in config:
-        return True
-
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-        ),
-    )
-    _LOGGER.warning(
-        "Configuration of Netatmo integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing configuration "
-        "(including OAuth Application Credentials) have been imported into "
-        "the UI automatically and can be safely removed from your "
-        "configuration.yaml file"
-    )
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.2.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Netatmo",
-        },
-    )
 
     return True
 
@@ -143,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as ex:
-        _LOGGER.debug("API error: %s (%s)", ex.status, ex.message)
+        _LOGGER.warning("API error: %s (%s)", ex.status, ex.message)
         if ex.status in (
             HTTPStatus.BAD_REQUEST,
             HTTPStatus.UNAUTHORIZED,
@@ -152,19 +94,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
 
-    if entry.data["auth_implementation"] == cloud.DOMAIN:
-        required_scopes = {
-            scope
-            for scope in NETATMO_SCOPES
-            if scope not in ("access_doorbell", "read_doorbell")
-        }
-    else:
-        required_scopes = set(NETATMO_SCOPES)
-
-    if not (set(session.token["scope"]) & required_scopes):
-        _LOGGER.debug(
+    required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
+    if not (set(session.token["scope"]) & set(required_scopes)):
+        _LOGGER.warning(
             "Session is missing scopes: %s",
-            required_scopes - set(session.token["scope"]),
+            set(required_scopes) - set(session.token["scope"]),
         )
         raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 

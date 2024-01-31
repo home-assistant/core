@@ -17,7 +17,7 @@ from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RitualsEntityDescriptionMixin:
     """Mixin values for Rituals entities."""
 
@@ -26,7 +26,7 @@ class RitualsEntityDescriptionMixin:
     turn_off_fn: Callable[[Diffuser], Awaitable[None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RitualsSwitchEntityDescription(
     SwitchEntityDescription, RitualsEntityDescriptionMixin
 ):

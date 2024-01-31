@@ -50,7 +50,10 @@ async def test_reauth_triggered(hass: HomeAssistant) -> None:
         side_effect=SynologyDSMLoginInvalidException(USERNAME),
     ), patch(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSMFlowHandler.async_step_reauth",
-        return_value={"type": data_entry_flow.FlowResultType.FORM},
+        return_value={
+            "type": data_entry_flow.FlowResultType.FORM,
+            "step_id": "reauth_confirm",
+        },
     ) as mock_async_step_reauth:
         entry = MockConfigEntry(
             domain=DOMAIN,

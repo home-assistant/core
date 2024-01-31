@@ -14,6 +14,8 @@ from nio import (
     LoginError,
     LoginResponse,
     Response,
+    RoomResolveAliasError,
+    RoomResolveAliasResponse,
     UploadResponse,
     WhoamiError,
     WhoamiResponse,
@@ -29,6 +31,8 @@ from homeassistant.components.matrix import (
     CONF_WORD,
     EVENT_MATRIX_COMMAND,
     MatrixBot,
+    RoomAlias,
+    RoomAnyID,
     RoomID,
 )
 from homeassistant.components.matrix.const import DOMAIN as MATRIX_DOMAIN
@@ -48,8 +52,17 @@ from tests.common import async_capture_events
 
 TEST_NOTIFIER_NAME = "matrix_notify"
 
-TEST_DEFAULT_ROOM = "!DefaultNotificationRoom:example.com"
-TEST_JOINABLE_ROOMS = ["!RoomIdString:example.com", "#RoomAliasString:example.com"]
+TEST_HOMESERVER = "example.com"
+TEST_DEFAULT_ROOM = RoomID("!DefaultNotificationRoom:example.com")
+TEST_ROOM_A_ID = RoomID("!RoomA-ID:example.com")
+TEST_ROOM_B_ID = RoomID("!RoomB-ID:example.com")
+TEST_ROOM_B_ALIAS = RoomAlias("#RoomB-Alias:example.com")
+TEST_ROOM_C_ID = RoomID("!RoomC-ID:example.com")
+TEST_JOINABLE_ROOMS: dict[RoomAnyID, RoomID] = {
+    TEST_ROOM_A_ID: TEST_ROOM_A_ID,
+    TEST_ROOM_B_ALIAS: TEST_ROOM_B_ID,
+    TEST_ROOM_C_ID: TEST_ROOM_C_ID,
+}
 TEST_BAD_ROOM = "!UninvitedRoom:example.com"
 TEST_MXID = "@user:example.com"
 TEST_DEVICE_ID = "FAKEID"
@@ -65,8 +78,16 @@ class _MockAsyncClient(AsyncClient):
     async def close(self):
         return None
 
+    async def room_resolve_alias(self, room_alias: RoomAnyID):
+        if room_id := TEST_JOINABLE_ROOMS.get(room_alias):
+            return RoomResolveAliasResponse(
+                room_alias=room_alias, room_id=room_id, servers=[TEST_HOMESERVER]
+            )
+        else:
+            return RoomResolveAliasError(message=f"Could not resolve {room_alias}")
+
     async def join(self, room_id: RoomID):
-        if room_id in TEST_JOINABLE_ROOMS:
+        if room_id in TEST_JOINABLE_ROOMS.values():
             return JoinResponse(room_id=room_id)
         else:
             return JoinError(message="Not allowed to join this room.")
@@ -102,10 +123,10 @@ class _MockAsyncClient(AsyncClient):
     async def room_send(self, *args, **kwargs):
         if not self.logged_in:
             raise LocalProtocolError
-        if kwargs["room_id"] in TEST_JOINABLE_ROOMS:
-            return Response()
-        else:
+        if kwargs["room_id"] not in TEST_JOINABLE_ROOMS.values():
             return ErrorResponse(message="Cannot send a message in this room.")
+        else:
+            return Response()
 
     async def sync(self, *args, **kwargs):
         return None
@@ -123,7 +144,7 @@ MOCK_CONFIG_DATA = {
         CONF_USERNAME: TEST_MXID,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_VERIFY_SSL: True,
-        CONF_ROOMS: TEST_JOINABLE_ROOMS,
+        CONF_ROOMS: list(TEST_JOINABLE_ROOMS),
         CONF_COMMANDS: [
             {
                 CONF_WORD: "WordTrigger",
@@ -132,6 +153,16 @@ MOCK_CONFIG_DATA = {
             {
                 CONF_EXPRESSION: "My name is (?P<name>.*)",
                 CONF_NAME: "ExpressionTriggerEventName",
+            },
+            {
+                CONF_WORD: "WordTriggerSubset",
+                CONF_NAME: "WordTriggerSubsetEventName",
+                CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
+            },
+            {
+                CONF_EXPRESSION: "Your name is (?P<name>.*)",
+                CONF_NAME: "ExpressionTriggerSubsetEventName",
+                CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
             },
         ],
     },
@@ -143,36 +174,70 @@ MOCK_CONFIG_DATA = {
 }
 
 MOCK_WORD_COMMANDS = {
-    "!RoomIdString:example.com": {
+    TEST_ROOM_A_ID: {
         "WordTrigger": {
             "word": "WordTrigger",
             "name": "WordTriggerEventName",
-            "rooms": ["!RoomIdString:example.com", "#RoomAliasString:example.com"],
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
         }
     },
-    "#RoomAliasString:example.com": {
+    TEST_ROOM_B_ID: {
         "WordTrigger": {
             "word": "WordTrigger",
             "name": "WordTriggerEventName",
-            "rooms": ["!RoomIdString:example.com", "#RoomAliasString:example.com"],
-        }
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        "WordTriggerSubset": {
+            "word": "WordTriggerSubset",
+            "name": "WordTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
+    },
+    TEST_ROOM_C_ID: {
+        "WordTrigger": {
+            "word": "WordTrigger",
+            "name": "WordTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        "WordTriggerSubset": {
+            "word": "WordTriggerSubset",
+            "name": "WordTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
     },
 }
 
 MOCK_EXPRESSION_COMMANDS = {
-    "!RoomIdString:example.com": [
+    TEST_ROOM_A_ID: [
         {
             "expression": re.compile("My name is (?P<name>.*)"),
             "name": "ExpressionTriggerEventName",
-            "rooms": ["!RoomIdString:example.com", "#RoomAliasString:example.com"],
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
         }
     ],
-    "#RoomAliasString:example.com": [
+    TEST_ROOM_B_ID: [
         {
             "expression": re.compile("My name is (?P<name>.*)"),
             "name": "ExpressionTriggerEventName",
-            "rooms": ["!RoomIdString:example.com", "#RoomAliasString:example.com"],
-        }
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        {
+            "expression": re.compile("Your name is (?P<name>.*)"),
+            "name": "ExpressionTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
+    ],
+    TEST_ROOM_C_ID: [
+        {
+            "expression": re.compile("My name is (?P<name>.*)"),
+            "name": "ExpressionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        {
+            "expression": re.compile("Your name is (?P<name>.*)"),
+            "name": "ExpressionTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
     ],
 }
 

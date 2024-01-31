@@ -6,6 +6,7 @@ ERROR = "error"
 STATUS = "status"
 
 MOCK_NUMBER_ENTITY_ID = "number.wallbox_wallboxname_maximum_charging_current"
+MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID = "number.wallbox_wallboxname_energy_price"
 MOCK_LOCK_ENTITY_ID = "lock.wallbox_wallboxname_lock"
 MOCK_SENSOR_CHARGING_SPEED_ID = "sensor.wallbox_wallboxname_charging_speed"
 MOCK_SENSOR_CHARGING_POWER_ID = "sensor.wallbox_wallboxname_charging_power"

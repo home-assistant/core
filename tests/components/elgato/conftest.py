@@ -70,20 +70,20 @@ def mock_elgato(
         "homeassistant.components.elgato.config_flow.Elgato", new=elgato_mock
     ):
         elgato = elgato_mock.return_value
-        elgato.info.return_value = Info.parse_raw(
+        elgato.info.return_value = Info.from_json(
             load_fixture(f"{device_fixtures}/info.json", DOMAIN)
         )
-        elgato.state.return_value = State.parse_raw(
+        elgato.state.return_value = State.from_json(
             load_fixture(f"{device_fixtures}/{state_variant}.json", DOMAIN)
         )
-        elgato.settings.return_value = Settings.parse_raw(
+        elgato.settings.return_value = Settings.from_json(
             load_fixture(f"{device_fixtures}/settings.json", DOMAIN)
         )
 
         # This may, or may not, be a battery-powered device
         if get_fixture_path(f"{device_fixtures}/battery.json", DOMAIN).exists():
             elgato.has_battery.return_value = True
-            elgato.battery.return_value = BatteryInfo.parse_raw(
+            elgato.battery.return_value = BatteryInfo.from_json(
                 load_fixture(f"{device_fixtures}/battery.json", DOMAIN)
             )
         else:

@@ -1,6 +1,6 @@
 """Test Home Assistant package util methods."""
 import asyncio
-from importlib.metadata import PackageNotFoundError, metadata
+from importlib.metadata import metadata
 import logging
 import os
 from subprocess import PIPE
@@ -194,33 +194,6 @@ def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv) -> N
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
-    """Test install with find-links on not installed package."""
-    env = mock_env_copy()
-    link = "https://wheels-repository"
-    assert package.install_package(TEST_NEW_REQ, False, find_links=link)
-    assert mock_popen.call_count == 2
-    assert mock_popen.mock_calls[0] == call(
-        [
-            mock_sys.executable,
-            "-m",
-            "pip",
-            "install",
-            "--quiet",
-            TEST_NEW_REQ,
-            "--find-links",
-            link,
-            "--prefer-binary",
-        ],
-        stdin=PIPE,
-        stdout=PIPE,
-        stderr=PIPE,
-        env=env,
-        close_fds=False,
-    )
-    assert mock_popen.return_value.communicate.call_count == 1
-
-
 async def test_async_get_user_site(mock_env_copy) -> None:
     """Test async get user site directory."""
     deps_dir = "/deps_dir"
@@ -262,21 +235,17 @@ def test_check_package_zip() -> None:
     assert not package.is_installed(TEST_ZIP_REQ)
 
 
-def test_get_distribution_falls_back_to_version() -> None:
-    """Test for get_distribution failing and fallback to version."""
+def test_get_is_installed() -> None:
+    """Test is_installed can parse complex requirements."""
     pkg = metadata("homeassistant")
     installed_package = pkg["name"]
     installed_version = pkg["version"]
 
-    with patch(
-        "homeassistant.util.package.distribution",
-        side_effect=PackageNotFoundError,
-    ):
-        assert package.is_installed(installed_package)
-        assert package.is_installed(f"{installed_package}=={installed_version}")
-        assert package.is_installed(f"{installed_package}>={installed_version}")
-        assert package.is_installed(f"{installed_package}<={installed_version}")
-        assert not package.is_installed(f"{installed_package}<{installed_version}")
+    assert package.is_installed(installed_package)
+    assert package.is_installed(f"{installed_package}=={installed_version}")
+    assert package.is_installed(f"{installed_package}>={installed_version}")
+    assert package.is_installed(f"{installed_package}<={installed_version}")
+    assert not package.is_installed(f"{installed_package}<{installed_version}")
 
 
 def test_check_package_previous_failed_install() -> None:
@@ -285,9 +254,6 @@ def test_check_package_previous_failed_install() -> None:
     installed_package = pkg["name"]
     installed_version = pkg["version"]
 
-    with patch(
-        "homeassistant.util.package.distribution",
-        side_effect=PackageNotFoundError,
-    ), patch("homeassistant.util.package.version", return_value=None):
+    with patch("homeassistant.util.package.version", return_value=None):
         assert not package.is_installed(installed_package)
         assert not package.is_installed(f"{installed_package}=={installed_version}")

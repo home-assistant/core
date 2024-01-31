@@ -33,7 +33,7 @@
           "allow_notify": "Allow notification service"
         },
         "data_description": {
-          "allow_notify": "Allow the usage of data notification service on TV instead of periodic polling. This allow faster reaction to state changes on the TV, however, some TV's will stop responding when this activated due to firmware bugs."
+          "allow_notify": "Allow the usage of data notification service on TV instead of periodic polling. This allows faster reaction to state changes on the TV, however, some TV's will stop responding with this activated due to firmware bugs."
         }
       }
     }
@@ -44,6 +44,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "recording_new": {
+        "name": "New recording available"
+      },
+      "recording_ongoing": {
+        "name": "Recording ongoing"
+      }
+    },
     "light": {
       "ambilight": {
         "name": "Ambilight"

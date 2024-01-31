@@ -423,6 +423,7 @@ async def test_fossil_energy_consumption_no_co2(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
+        period1.isoformat(): pytest.approx(22.0),
         period2.isoformat(): pytest.approx(33.0 - 22.0),
         period3.isoformat(): pytest.approx(55.0 - 33.0),
         period4.isoformat(): pytest.approx(88.0 - 55.0),
@@ -445,6 +446,7 @@ async def test_fossil_energy_consumption_no_co2(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
+        period1.isoformat(): pytest.approx(22.0),
         period2_day_start.isoformat(): pytest.approx(33.0 - 22.0),
         period3.isoformat(): pytest.approx(55.0 - 33.0),
         period4_day_start.isoformat(): pytest.approx(88.0 - 55.0),
@@ -467,7 +469,7 @@ async def test_fossil_energy_consumption_no_co2(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        period1.isoformat(): pytest.approx(33.0 - 22.0),
+        period1.isoformat(): pytest.approx(33.0),
         period3.isoformat(): pytest.approx((55.0 - 33.0) + (88.0 - 55.0)),
     }
 
@@ -586,8 +588,9 @@ async def test_fossil_energy_consumption_hole(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        period2.isoformat(): pytest.approx(3.0 - 20.0),
-        period3.isoformat(): pytest.approx(55.0 - 3.0),
+        period1.isoformat(): pytest.approx(20.0),
+        period2.isoformat(): pytest.approx(3.0),
+        period3.isoformat(): pytest.approx(32.0),
         period4.isoformat(): pytest.approx(88.0 - 55.0),
     }
 
@@ -608,8 +611,9 @@ async def test_fossil_energy_consumption_hole(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        period2_day_start.isoformat(): pytest.approx(3.0 - 20.0),
-        period3.isoformat(): pytest.approx(55.0 - 3.0),
+        period1.isoformat(): pytest.approx(20.0),
+        period2_day_start.isoformat(): pytest.approx(3.0),
+        period3.isoformat(): pytest.approx(32.0),
         period4_day_start.isoformat(): pytest.approx(88.0 - 55.0),
     }
 
@@ -630,8 +634,8 @@ async def test_fossil_energy_consumption_hole(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        period1.isoformat(): pytest.approx(3.0 - 20.0),
-        period3.isoformat(): pytest.approx((55.0 - 3.0) + (88.0 - 55.0)),
+        period1.isoformat(): pytest.approx(23.0),
+        period3.isoformat(): pytest.approx((55.0 - 3.0) + (88.0 - 55.0) - 20.0),
     }
 
 
@@ -930,6 +934,7 @@ async def test_fossil_energy_consumption(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
+        period1.isoformat(): pytest.approx(11.0 * 0.2),
         period2.isoformat(): pytest.approx((33.0 - 22.0) * 0.3),
         period3.isoformat(): pytest.approx((44.0 - 33.0) * 0.6),
         period4.isoformat(): pytest.approx((55.0 - 44.0) * 0.9),
@@ -952,6 +957,7 @@ async def test_fossil_energy_consumption(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
+        period1.isoformat(): pytest.approx(11.0 * 0.2),
         period2_day_start.isoformat(): pytest.approx((33.0 - 22.0) * 0.3),
         period3.isoformat(): pytest.approx((44.0 - 33.0) * 0.6),
         period4_day_start.isoformat(): pytest.approx((55.0 - 44.0) * 0.9),
@@ -974,7 +980,7 @@ async def test_fossil_energy_consumption(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        period1.isoformat(): pytest.approx((33.0 - 22.0) * 0.3),
+        period1.isoformat(): pytest.approx(11.0 * 0.5),
         period3.isoformat(): pytest.approx(
             ((44.0 - 33.0) * 0.6) + ((55.0 - 44.0) * 0.9)
         ),
@@ -1032,3 +1038,120 @@ async def test_fossil_energy_consumption_checks(
     assert msg["id"] == 2
     assert not msg["success"]
     assert msg["error"] == {"code": "invalid_end_time", "message": "Invalid end_time"}
+
+
+@pytest.mark.freeze_time("2021-08-01 01:00:00+00:00")
+async def test_fossil_energy_consumption_check_missing_hour(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test explicitly if the API keeps the first hour of data for the requested time frame."""
+
+    now = dt_util.utcnow()
+    later = dt_util.as_utc(dt_util.parse_datetime("2021-08-01 05:00:00"))
+
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    hour1 = dt_util.as_utc(dt_util.parse_datetime("2021-08-01 01:00:00"))
+    hour2 = dt_util.as_utc(dt_util.parse_datetime("2021-08-01 02:00:00"))
+    hour3 = dt_util.as_utc(dt_util.parse_datetime("2021-08-01 03:00:00"))
+    hour4 = dt_util.as_utc(dt_util.parse_datetime("2021-08-01 04:00:00"))
+
+    # add energy statistics for 4 hours
+    energy_statistics_1 = (
+        {
+            "start": hour1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 1,
+        },
+        {
+            "start": hour2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": hour3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 5,
+        },
+        {
+            "start": hour4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 8,
+        },
+    )
+    energy_metadata_1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(hass, energy_metadata_1, energy_statistics_1)
+
+    # add co2 statistics for 4 hours
+    co2_statistics = (
+        {
+            "start": hour1,
+            "last_reset": None,
+            "mean": 10,
+        },
+        {
+            "start": hour2,
+            "last_reset": None,
+            "mean": 30,
+        },
+        {
+            "start": hour3,
+            "last_reset": None,
+            "mean": 60,
+        },
+        {
+            "start": hour4,
+            "last_reset": None,
+            "mean": 90,
+        },
+    )
+    co2_metadata = {
+        "has_mean": True,
+        "has_sum": False,
+        "name": "Fossil percentage",
+        "source": "test",
+        "statistic_id": "test:fossil_percentage",
+        "unit_of_measurement": "%",
+    }
+
+    async_add_external_statistics(hass, co2_metadata, co2_statistics)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "energy/fossil_energy_consumption",
+            "start_time": now.isoformat(),
+            "end_time": later.isoformat(),
+            "energy_statistic_ids": [
+                "test:total_energy_import",
+            ],
+            "co2_statistic_id": "test:fossil_percentage",
+            "period": "hour",
+        }
+    )
+
+    # check if we received deltas for the requested time frame
+    response = await client.receive_json()
+    assert response["success"]
+    assert list(response["result"].keys()) == [
+        hour1.isoformat(),
+        hour2.isoformat(),
+        hour3.isoformat(),
+        hour4.isoformat(),
+    ]

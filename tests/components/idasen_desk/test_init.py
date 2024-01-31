@@ -1,7 +1,9 @@
 """Test the IKEA Idasen Desk init."""
+from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
-from bleak import BleakError
+from bleak.exc import BleakError
+from idasen_ha.errors import AuthFailedError
 import pytest
 
 from homeassistant.components.idasen_desk.const import DOMAIN
@@ -28,7 +30,7 @@ async def test_setup_and_shutdown(
     mock_desk_api.disconnect.assert_called_once()
 
 
-@pytest.mark.parametrize("exception", [TimeoutError(), BleakError()])
+@pytest.mark.parametrize("exception", [AuthFailedError(), TimeoutError(), BleakError()])
 async def test_setup_connect_exception(
     hass: HomeAssistant, mock_desk_api: MagicMock, exception: Exception
 ) -> None:
@@ -37,6 +39,17 @@ async def test_setup_connect_exception(
     entry = await init_integration(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_no_ble_device(hass: HomeAssistant, mock_desk_api: MagicMock) -> None:
+    """Test setup with no BLEDevice from address."""
+    with mock.patch(
+        "homeassistant.components.idasen_desk.bluetooth.async_ble_device_from_address",
+        return_value=None,
+    ):
+        entry = await init_integration(hass)
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant, mock_desk_api: MagicMock) -> None:

@@ -30,13 +30,13 @@ class BTHomePassiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordi
         mode: BluetoothScanningMode,
         update_method: Callable[[BluetoothServiceInfoBleak], Any],
         device_data: BTHomeBluetoothDeviceData,
-        discovered_device_classes: set[str],
+        discovered_event_classes: set[str],
         entry: ConfigEntry,
         connectable: bool = False,
     ) -> None:
         """Initialize the BTHome Bluetooth Passive Update Processor Coordinator."""
         super().__init__(hass, logger, address, mode, update_method, connectable)
-        self.discovered_device_classes = discovered_device_classes
+        self.discovered_event_classes = discovered_event_classes
         self.device_data = device_data
         self.entry = entry
 

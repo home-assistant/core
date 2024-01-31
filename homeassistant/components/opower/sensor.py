@@ -24,14 +24,14 @@ from .const import DOMAIN
 from .coordinator import OpowerCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class OpowerEntityDescriptionMixin:
     """Mixin values for required keys."""
 
     value_fn: Callable[[Forecast], str | float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class OpowerEntityDescription(SensorEntityDescription, OpowerEntityDescriptionMixin):
     """Class describing Opower sensors entities."""
 

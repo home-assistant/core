@@ -33,6 +33,7 @@ from homeassistant.components.mqtt.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .test_common import (
     help_custom_config,
@@ -120,6 +121,17 @@ async def test_setup_params(
     assert state.attributes.get("max_temp") == DEFAULT_MAX_TEMP
     assert state.attributes.get("min_humidity") == DEFAULT_MIN_HUMIDITY
     assert state.attributes.get("max_humidity") == DEFAULT_MAX_HUMIDITY
+    assert (
+        state.attributes.get("supported_features")
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
 
 @pytest.mark.parametrize(
@@ -138,9 +150,8 @@ async def test_preset_none_in_preset_modes(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test the preset mode payload reset configuration."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert "Invalid config for [mqtt]: not a valid value" in caplog.text
+    assert await mqtt_mock_entry()
+    assert "preset_modes must not include preset mode 'none'" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -226,6 +237,8 @@ async def test_supported_features(
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     assert state.attributes.get("supported_features") == support
@@ -1131,8 +1144,9 @@ async def test_set_preset_mode_optimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
-    await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-    assert "'invalid' is not a valid preset mode" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
+        assert "'invalid' is not a valid preset mode" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1188,8 +1202,9 @@ async def test_set_preset_mode_explicit_optimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
-    await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-    assert "'invalid' is not a valid preset mode" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
+        assert "'invalid' is not a valid preset mode" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1325,6 +1340,8 @@ async def test_set_aux(
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     assert state.attributes.get("supported_features") == support
@@ -2448,11 +2465,11 @@ async def test_publishing_with_custom_encoding(
 @pytest.mark.parametrize(
     ("hass_config", "valid"),
     [
-        (
+        (  # test_valid_humidity_min_max
             {
                 mqtt.DOMAIN: {
                     climate.DOMAIN: {
-                        "name": "test_valid_humidity_min_max",
+                        "name": "test",
                         "min_humidity": 20,
                         "max_humidity": 80,
                     },
@@ -2460,11 +2477,11 @@ async def test_publishing_with_custom_encoding(
             },
             True,
         ),
-        (
+        (  # test_invalid_humidity_min_max_1
             {
                 mqtt.DOMAIN: {
                     climate.DOMAIN: {
-                        "name": "test_invalid_humidity_min_max_1",
+                        "name": "test",
                         "min_humidity": 0,
                         "max_humidity": 101,
                     },
@@ -2472,11 +2489,11 @@ async def test_publishing_with_custom_encoding(
             },
             False,
         ),
-        (
+        (  # test_invalid_humidity_min_max_2
             {
                 mqtt.DOMAIN: {
                     climate.DOMAIN: {
-                        "name": "test_invalid_humidity_min_max_2",
+                        "name": "test",
                         "max_humidity": 20,
                         "min_humidity": 40,
                     },
@@ -2484,11 +2501,11 @@ async def test_publishing_with_custom_encoding(
             },
             False,
         ),
-        (
+        (  # test_valid_humidity_state
             {
                 mqtt.DOMAIN: {
                     climate.DOMAIN: {
-                        "name": "test_valid_humidity_state",
+                        "name": "test",
                         "target_humidity_state_topic": "humidity-state",
                         "target_humidity_command_topic": "humidity-command",
                     },
@@ -2496,11 +2513,11 @@ async def test_publishing_with_custom_encoding(
             },
             True,
         ),
-        (
+        (  # test_invalid_humidity_state
             {
                 mqtt.DOMAIN: {
                     climate.DOMAIN: {
-                        "name": "test_invalid_humidity_state",
+                        "name": "test",
                         "target_humidity_state_topic": "humidity-state",
                     },
                 }
@@ -2515,11 +2532,9 @@ async def test_humidity_configuration_validity(
     valid: bool,
 ) -> None:
     """Test the validity of humidity configurations."""
-    if valid:
-        await mqtt_mock_entry()
-        return
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
+    state = hass.states.get("climate.test")
+    assert (state is not None) == valid
 
 
 async def test_reloadable(

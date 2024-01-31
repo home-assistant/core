@@ -22,7 +22,11 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import inject_bluetooth_service_info, patch_all_discovered_devices
+from . import (
+    inject_bluetooth_service_info,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -159,10 +163,9 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
 
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices(
+        [MagicMock(address="44:44:33:11:23:45")]
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -176,9 +179,8 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
 
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 2
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
+    with patch_bluetooth_time(
+        monotonic_now,
     ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass,

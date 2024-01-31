@@ -44,7 +44,7 @@ HVAC_SYSTEM_MODE_MAP = {
 }
 SystemModeEnum = clusters.Thermostat.Enums.ThermostatSystemMode
 ControlSequenceEnum = clusters.Thermostat.Enums.ThermostatControlSequence
-ThermostatFeature = clusters.Thermostat.Bitmaps.ThermostatFeature
+ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
 
 
 class ThermostatRunningState(IntEnum):
@@ -250,9 +250,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_min_temp = DEFAULT_MIN_TEMP
         # update max_temp
         if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT_COOL):
-            attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
-        else:
             attribute = clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
+        else:
+            attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
         if (value := self._get_temperature_in_degrees(attribute)) is not None:
             self._attr_max_temp = value
         else:
@@ -268,7 +268,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     @staticmethod
     def _create_optional_setpoint_command(
-        mode: clusters.Thermostat.Enums.SetpointAdjustMode,
+        mode: clusters.Thermostat.Enums.SetpointAdjustMode | int,
         target_temp: float,
         current_target_temp: float,
     ) -> clusters.Thermostat.Commands.SetpointRaiseLower | None:

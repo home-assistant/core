@@ -34,7 +34,7 @@ from .entity import ZWaveBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZwaveHumidifierEntityDescriptionRequiredKeys:
     """A class for humidifier entity description required keys."""
 
@@ -48,7 +48,7 @@ class ZwaveHumidifierEntityDescriptionRequiredKeys:
     setpoint_type: HumidityControlSetpointType
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZwaveHumidifierEntityDescription(
     HumidifierEntityDescription, ZwaveHumidifierEntityDescriptionRequiredKeys
 ):

@@ -57,7 +57,7 @@ STATE_MAP = {"error": STATE_PROBLEM, "started": STATE_ON, "stopped": STATE_OFF}
 
 class UpCloudDataUpdateCoordinator(
     DataUpdateCoordinator[dict[str, upcloud_api.Server]]
-):
+):  # pylint: disable=hass-enforce-coordinator-module
     """UpCloud data update coordinator."""
 
     def __init__(
@@ -211,7 +211,7 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
     def is_on(self) -> bool:
         """Return true if the server is on."""
         try:
-            return STATE_MAP.get(self._server.state, self._server.state) == STATE_ON
+            return STATE_MAP.get(self._server.state, self._server.state) == STATE_ON  # type: ignore[no-any-return]
         except AttributeError:
             return False
 

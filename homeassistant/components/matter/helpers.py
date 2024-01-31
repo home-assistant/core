@@ -66,7 +66,18 @@ def get_device_id(
     return f"{operational_instance_id}-{postfix}"
 
 
-async def get_node_from_device_entry(
+@callback
+def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode | None:
+    """Get node id from ha device id."""
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get(ha_device_id)
+    if device is None:
+        raise ValueError("Invalid device ID")
+    return get_node_from_device_entry(hass, device)
+
+
+@callback
+def get_node_from_device_entry(
     hass: HomeAssistant, device: dr.DeviceEntry
 ) -> MatterNode | None:
     """Return MatterNode from device entry."""
@@ -83,7 +94,7 @@ async def get_node_from_device_entry(
     )
 
     if device_id_full is None:
-        raise ValueError(f"Device {device.id} is not a Matter device")
+        return None
 
     device_id = device_id_full.lstrip(device_id_type_prefix)
     matter_client = matter.matter_client

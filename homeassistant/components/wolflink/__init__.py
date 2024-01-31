@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             nonlocal refetch_parameters
             nonlocal parameters
             await wolf_client.update_session()
-            if not wolf_client.fetch_system_state_list(device_id, gateway_id):
+            if not await wolf_client.fetch_system_state_list(device_id, gateway_id):
                 refetch_parameters = True
                 raise UpdateFailed(
                     "Could not fetch values from server because device is Offline."

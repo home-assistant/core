@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_CONFIG_DATA
+from . import MOCK_CONFIG_DATA, OLD_MOCK_CONFIG_DATA
 
 from tests.common import MockConfigEntry
 
@@ -139,7 +139,7 @@ async def test_migrate_unique_id(
     new_unique_id: str,
 ) -> None:
     """Test unique id migration."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA, entry_id="1234")
+    entry = MockConfigEntry(domain=DOMAIN, data=OLD_MOCK_CONFIG_DATA, entry_id="1234")
     entry.add_to_hass(hass)
 
     entity: er.RegistryEntry = entity_registry.async_get_or_create(

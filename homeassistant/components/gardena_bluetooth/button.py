@@ -16,7 +16,7 @@ from .const import DOMAIN
 from .coordinator import Coordinator, GardenaBluetoothDescriptorEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class GardenaBluetoothButtonEntityDescription(ButtonEntityDescription):
     """Description of entity."""
 

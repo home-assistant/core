@@ -152,7 +152,9 @@ async def test_switch_has_correct_entities(hass: HomeAssistant) -> None:
 
 
 async def test_disabled_switches_can_be_enabled(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Verify disabled switches can be enabled."""
     client = create_mock_motioneye_client()
@@ -165,7 +167,6 @@ async def test_disabled_switches_can_be_enabled(
 
     for switch_key in disabled_switch_keys:
         entity_id = f"{TEST_SWITCH_ENTITY_ID_BASE}_{switch_key}"
-        entity_registry = er.async_get(hass)
         entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.disabled
@@ -191,19 +192,21 @@ async def test_disabled_switches_can_be_enabled(
         assert entity_state
 
 
-async def test_switch_device_info(hass: HomeAssistant) -> None:
+async def test_switch_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Verify device information includes expected details."""
     config_entry = await setup_mock_motioneye_config_entry(hass)
 
     device_identifer = get_motioneye_device_identifier(
         config_entry.entry_id, TEST_CAMERA_ID
     )
-    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_device(identifiers={device_identifer})
     assert device
 
-    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)

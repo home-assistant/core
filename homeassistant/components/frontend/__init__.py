@@ -17,10 +17,16 @@ from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.const import (
+    CONF_MODE,
+    CONF_NAME,
+    EVENT_PANELS_UPDATED,
+    EVENT_THEMES_UPDATED,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
@@ -40,7 +46,6 @@ CONF_EXTRA_MODULE_URL = "extra_module_url"
 CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
-EVENT_PANELS_UPDATED = "panels_updated"
 
 DEFAULT_THEME_COLOR = "#03A9F4"
 
@@ -340,6 +345,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
+    websocket_api.async_register_command(hass, websocket_get_icons)
     websocket_api.async_register_command(hass, websocket_get_panels)
     websocket_api.async_register_command(hass, websocket_get_themes)
     websocket_api.async_register_command(hass, websocket_get_translations)
@@ -381,8 +387,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    # Can be removed in 2023
-    hass.http.register_redirect("/config/server_control", "/developer-tools/yaml")
+    # Shopping list panel was replaced by todo panel in 2023.11
+    hass.http.register_redirect("/shopping-list", "/todo")
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
@@ -589,7 +595,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     async def get(self, request: web.Request) -> web.Response:
         """Serve the index page for panel pages."""
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
 
         if not onboarding.async_is_onboarded(hass):
             return web.Response(status=302, headers={"location": "/onboarding.html"})
@@ -598,15 +604,26 @@ class IndexView(web_urldispatcher.AbstractResource):
             self.get_template
         )
 
-        return web.Response(
+        extra_modules: frozenset[str]
+        extra_js_es5: frozenset[str]
+        if hass.config.safe_mode:
+            extra_modules = frozenset()
+            extra_js_es5 = frozenset()
+        else:
+            extra_modules = hass.data[DATA_EXTRA_MODULE_URL].urls
+            extra_js_es5 = hass.data[DATA_EXTRA_JS_URL_ES5].urls
+
+        response = web.Response(
             text=_async_render_index_cached(
                 template,
                 theme_color=MANIFEST_JSON["theme_color"],
-                extra_modules=hass.data[DATA_EXTRA_MODULE_URL].urls,
-                extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5].urls,
+                extra_modules=extra_modules,
+                extra_js_es5=extra_js_es5,
             ),
             content_type="text/html",
         )
+        response.enable_compression()
+        return response
 
     def __len__(self) -> int:
         """Return length of resource."""
@@ -632,6 +649,28 @@ class ManifestJSONView(HomeAssistantView):
         )
 
 
+@websocket_api.websocket_command(
+    {
+        "type": "frontend/get_icons",
+        vol.Required("category"): vol.In({"entity", "entity_component", "services"}),
+        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
+    }
+)
+@websocket_api.async_response
+async def websocket_get_icons(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get icons command."""
+    resources = await async_get_icons(
+        hass,
+        msg["category"],
+        msg.get("integration"),
+    )
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"resources": resources})
+    )
+
+
 @callback
 @websocket_api.websocket_command({"type": "get_panels"})
 def websocket_get_panels(
@@ -654,18 +693,13 @@ def websocket_get_themes(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get themes command."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         connection.send_message(
             websocket_api.result_message(
                 msg["id"],
                 {
-                    "themes": {
-                        "safe_mode": {
-                            "primary-color": "#db4437",
-                            "accent-color": "#ffca28",
-                        }
-                    },
-                    "default_theme": "safe_mode",
+                    "themes": {},
+                    "default_theme": "default",
                 },
             )
         )

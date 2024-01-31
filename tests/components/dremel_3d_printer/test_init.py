@@ -74,12 +74,14 @@ async def test_update_failed(
 
 
 async def test_device_info(
-    hass: HomeAssistant, connection, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    connection,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test device info."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert await async_setup_component(hass, DOMAIN, {})
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, config_entry.unique_id)}
     )

@@ -39,6 +39,7 @@ create:
       selector:
         text:
     entities:
+      advanced: true
       example: |
         light.tv_back_light: "on"
         light.ceiling:
@@ -53,3 +54,9 @@ create:
       selector:
         entity:
           multiple: true
+
+delete:
+  target:
+    entity:
+      - integration: homeassistant
+        domain: scene

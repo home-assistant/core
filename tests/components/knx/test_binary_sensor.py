@@ -24,7 +24,7 @@ from tests.common import (
 
 
 async def test_binary_sensor_entity_category(
-    hass: HomeAssistant, knx: KNXTestKit
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, knx: KNXTestKit
 ) -> None:
     """Test KNX binary sensor entity category."""
     await knx.setup_integration(
@@ -42,8 +42,7 @@ async def test_binary_sensor_entity_category(
     await knx.assert_read("1/1/1")
     await knx.receive_response("1/1/1", True)
 
-    registry = er.async_get(hass)
-    entity = registry.async_get("binary_sensor.test_normal")
+    entity = entity_registry.async_get("binary_sensor.test_normal")
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
 
 

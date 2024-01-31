@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 import yarl
 
-from . import config as conf_util, config_entries, core, loader
+from . import config as conf_util, config_entries, core, loader, requirements
 from .components import http
 from .const import (
     FORMAT_DATETIME,
@@ -27,6 +27,7 @@ from .const import (
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
+    config_validation as cv,
     device_registry,
     entity,
     entity_registry,
@@ -38,9 +39,9 @@ from .helpers import (
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
 from .setup import (
-    DATA_SETUP,
     DATA_SETUP_STARTED,
     DATA_SETUP_TIME,
+    async_notify_setup_error,
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
@@ -104,6 +105,52 @@ STAGE_1_INTEGRATIONS = {
     # Ensure supervisor is available
     "hassio",
 }
+DEFAULT_INTEGRATIONS = {
+    # These integrations are set up unless recovery mode is activated.
+    #
+    # Integrations providing core functionality:
+    "application_credentials",
+    "frontend",
+    "hardware",
+    "logger",
+    "network",
+    "system_health",
+    #
+    # Key-feature:
+    "automation",
+    "person",
+    "scene",
+    "script",
+    "tag",
+    "zone",
+    #
+    # Built-in helpers:
+    "counter",
+    "input_boolean",
+    "input_button",
+    "input_datetime",
+    "input_number",
+    "input_select",
+    "input_text",
+    "schedule",
+    "timer",
+}
+DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
+    # These integrations are set up if recovery mode is activated.
+    "frontend",
+}
+DEFAULT_INTEGRATIONS_SUPERVISOR = {
+    # These integrations are set up if using the Supervisor
+    "hassio",
+}
+DEFAULT_INTEGRATIONS_NON_SUPERVISOR = {
+    # These integrations are set up if not using the Supervisor
+    "backup",
+}
+CRITICAL_INTEGRATIONS = {
+    # Recovery mode is activated if these integrations fail to set up
+    "frontend",
+}
 
 
 async def async_setup_hass(
@@ -120,6 +167,7 @@ async def async_setup_hass(
         runtime_config.log_no_color,
     )
 
+    hass.config.safe_mode = runtime_config.safe_mode
     hass.config.skip_pip = runtime_config.skip_pip
     hass.config.skip_pip_packages = runtime_config.skip_pip_packages
     if runtime_config.skip_pip or runtime_config.skip_pip_packages:
@@ -137,14 +185,14 @@ async def async_setup_hass(
     config_dict = None
     basic_setup_success = False
 
-    if not (safe_mode := runtime_config.safe_mode):
+    if not (recovery_mode := runtime_config.recovery_mode):
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
 
         try:
             config_dict = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to parse configuration.yaml: %s. Activating safe mode",
+                "Failed to parse configuration.yaml: %s. Activating recovery mode",
                 err,
             )
         else:
@@ -156,24 +204,24 @@ async def async_setup_hass(
             )
 
     if config_dict is None:
-        safe_mode = True
+        recovery_mode = True
 
     elif not basic_setup_success:
-        _LOGGER.warning("Unable to set up core integrations. Activating safe mode")
-        safe_mode = True
+        _LOGGER.warning("Unable to set up core integrations. Activating recovery mode")
+        recovery_mode = True
 
-    elif (
-        "frontend" in hass.data.get(DATA_SETUP, {})
-        and "frontend" not in hass.config.components
-    ):
-        _LOGGER.warning("Detected that frontend did not load. Activating safe mode")
+    elif any(domain not in hass.config.components for domain in CRITICAL_INTEGRATIONS):
+        _LOGGER.warning(
+            "Detected that %s did not load. Activating recovery mode",
+            ",".join(CRITICAL_INTEGRATIONS),
+        )
         # Ask integrations to shut down. It's messy but we can't
         # do a clean stop without knowing what is broken
         with contextlib.suppress(asyncio.TimeoutError):
             async with hass.timeout.async_timeout(10):
                 await hass.async_stop()
 
-        safe_mode = True
+        recovery_mode = True
         old_config = hass.config
         old_logging = hass.data.get(DATA_LOGGING)
 
@@ -187,16 +235,18 @@ async def async_setup_hass(
         # Setup loader cache after the config dir has been set
         loader.async_setup(hass)
 
-    if safe_mode:
-        _LOGGER.info("Starting in safe mode")
-        hass.config.safe_mode = True
+    if recovery_mode:
+        _LOGGER.info("Starting in recovery mode")
+        hass.config.recovery_mode = True
 
         http_conf = (await http.async_get_last_config(hass)) or {}
 
         await async_from_config_dict(
-            {"safe_mode": {}, "http": http_conf},
+            {"recovery_mode": {}, "http": http_conf},
             hass,
         )
+    elif hass.config.safe_mode:
+        _LOGGER.info("Starting in safe mode")
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
@@ -224,7 +274,7 @@ def open_hass_ui(hass: core.HomeAssistant) -> None:
         )
 
 
-async def load_registries(hass: core.HomeAssistant) -> None:
+async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     """Load the registries and cache the result of platform.uname().processor."""
     if DATA_REGISTRIES_LOADED in hass.data:
         return
@@ -251,6 +301,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         hass.async_add_executor_job(_cache_uname_processor),
         template.async_load_custom_templates(hass),
         restore_state.async_load(hass),
+        hass.config_entries.async_initialize(),
     )
 
 
@@ -265,8 +316,7 @@ async def async_from_config_dict(
     start = monotonic()
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await hass.config_entries.async_initialize()
-    await load_registries(hass)
+    await async_load_base_functionality(hass)
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
@@ -289,7 +339,8 @@ async def async_from_config_dict(
     try:
         await conf_util.async_process_ha_core_config(hass, core_config)
     except vol.Invalid as config_err:
-        conf_util.async_log_exception(config_err, "homeassistant", core_config, hass)
+        conf_util.async_log_schema_error(config_err, core.DOMAIN, core_config, hass)
+        async_notify_setup_error(hass, core.DOMAIN)
         return None
     except HomeAssistantError:
         _LOGGER.error(
@@ -395,7 +446,7 @@ def async_enable_logging(
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
-        "Uncaught exception", exc_info=args  # type: ignore[arg-type]
+        "Uncaught exception", exc_info=args
     )
     threading.excepthook = lambda args: logging.getLogger(None).exception(
         "Uncaught thread exception",
@@ -468,15 +519,22 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
-    domains = {key.partition(" ")[0] for key in config if key != core.DOMAIN}
+    domains = {
+        domain for key in config if (domain := cv.domain_key(key)) != core.DOMAIN
+    }
 
-    # Add config entry domains
-    if not hass.config.safe_mode:
+    # Add config entry and default domains
+    if not hass.config.recovery_mode:
+        domains.update(DEFAULT_INTEGRATIONS)
         domains.update(hass.config_entries.async_domains())
+    else:
+        domains.update(DEFAULT_INTEGRATIONS_RECOVERY_MODE)
 
-    # Make sure the Hass.io component is loaded
+    # Add domains depending on if the Supervisor is used or not
     if "SUPERVISOR" in os.environ:
-        domains.add("hassio")
+        domains.update(DEFAULT_INTEGRATIONS_SUPERVISOR)
+    else:
+        domains.update(DEFAULT_INTEGRATIONS_NON_SUPERVISOR)
 
     return domains
 
@@ -519,11 +577,13 @@ async def async_setup_multi_components(
     config: dict[str, Any],
 ) -> None:
     """Set up multiple domains. Log on failure."""
+    # Avoid creating tasks for domains that were setup in a previous stage
+    domains_not_yet_setup = domains - hass.config.components
     futures = {
         domain: hass.async_create_task(
             async_setup_component(hass, domain, config), f"setup component {domain}"
         )
-        for domain in domains
+        for domain in domains_not_yet_setup
     }
     results = await asyncio.gather(*futures.values(), return_exceptions=True)
     for idx, domain in enumerate(futures):
@@ -547,6 +607,8 @@ async def _async_set_up_integrations(
 
     domains_to_setup = _get_domains(hass, config)
 
+    needed_requirements: set[str] = set()
+
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start rightaway
     integration_cache: dict[str, loader.Integration] = {}
@@ -562,6 +624,25 @@ async def _async_set_up_integrations(
             ).values()
             if isinstance(int_or_exc, loader.Integration)
         ]
+
+        manifest_deps: set[str] = set()
+        for itg in integrations_to_process:
+            manifest_deps.update(itg.dependencies)
+            manifest_deps.update(itg.after_dependencies)
+            needed_requirements.update(itg.requirements)
+
+        if manifest_deps:
+            # If there are dependencies, try to preload all
+            # the integrations manifest at once and add them
+            # to the list of requirements we need to install
+            # so we can try to check if they are already installed
+            # in a single call below which avoids each integration
+            # having to wait for the lock to do it individually
+            deps = await loader.async_get_integrations(hass, manifest_deps)
+            for dependant_itg in deps.values():
+                if isinstance(dependant_itg, loader.Integration):
+                    needed_requirements.update(dependant_itg.requirements)
+
         resolve_dependencies_tasks = [
             itg.resolve_dependencies()
             for itg in integrations_to_process
@@ -582,6 +663,14 @@ async def _async_set_up_integrations(
                 to_resolve.add(dep)
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
+
+    # Optimistically check if requirements are already installed
+    # ahead of setting up the integrations so we can prime the cache
+    # We do not wait for this since its an optimization only
+    hass.async_create_background_task(
+        requirements.async_load_installed_versions(hass, needed_requirements),
+        "check installed requirements",
+    )
 
     # Initialize recorder
     if "recorder" in domains_to_setup:

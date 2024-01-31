@@ -1,7 +1,7 @@
 """Test the Nibe Heat Pump config flow."""
-from unittest.mock import Mock
+from typing import Any
+from unittest.mock import AsyncMock, Mock
 
-from nibe.coil import Coil
 from nibe.exceptions import (
     AddressInUseException,
     CoilNotFoundException,
@@ -54,16 +54,12 @@ async def _get_connection_form(
 
 
 async def test_nibegw_form(
-    hass: HomeAssistant, mock_connection: Mock, mock_setup_entry: Mock
+    hass: HomeAssistant, coils: dict[int, Any], mock_setup_entry: Mock
 ) -> None:
     """Test we get the form."""
     result = await _get_connection_form(hass, "nibegw")
 
-    coil_wordswap = Coil(
-        48852, "modbus40-word-swap-48852", "Modbus40 Word Swap", "u8", min=0, max=1
-    )
-    coil_wordswap.value = "ON"
-    mock_connection.read_coil.return_value = coil_wordswap
+    coils[48852] = 1
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_FLOW_NIBEGW_USERDATA
@@ -85,16 +81,12 @@ async def test_nibegw_form(
 
 
 async def test_modbus_form(
-    hass: HomeAssistant, mock_connection: Mock, mock_setup_entry: Mock
+    hass: HomeAssistant, coils: dict[int, Any], mock_setup_entry: Mock
 ) -> None:
     """Test we get the form."""
     result = await _get_connection_form(hass, "modbus")
 
-    coil = Coil(
-        40022, "reset-alarm-40022", "Reset Alarm", "u8", min=0, max=1, write=True
-    )
-    coil.value = "ON"
-    mock_connection.read_coil.return_value = coil
+    coils[40022] = 1
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_FLOW_MODBUS_USERDATA
@@ -113,12 +105,12 @@ async def test_modbus_form(
 
 
 async def test_modbus_invalid_url(
-    hass: HomeAssistant, mock_connection_constructor: Mock
+    hass: HomeAssistant, mock_connection_construct: Mock
 ) -> None:
     """Test we handle invalid auth."""
     result = await _get_connection_form(hass, "modbus")
 
-    mock_connection_constructor.side_effect = ValueError()
+    mock_connection_construct.side_effect = ValueError()
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {**MOCK_FLOW_MODBUS_USERDATA, "modbus_url": "invalid://url"}
     )
@@ -131,6 +123,7 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
     """Test we handle invalid auth."""
     result = await _get_connection_form(hass, "nibegw")
 
+    mock_connection.start = AsyncMock()
     mock_connection.start.side_effect = AddressInUseException()
 
     result2 = await hass.config_entries.flow.async_configure(

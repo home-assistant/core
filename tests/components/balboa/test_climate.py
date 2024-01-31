@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 
 from . import init_integration
 
@@ -38,7 +39,7 @@ HVAC_SETTINGS = [
     HVACMode.AUTO,
 ]
 
-ENTITY_CLIMATE = "climate.fakespa_climate"
+ENTITY_CLIMATE = "climate.fakespa"
 
 
 async def test_spa_defaults(
@@ -50,7 +51,10 @@ async def test_spa_defaults(
     assert state
     assert (
         state.attributes["supported_features"]
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_MIN_TEMP] == 10.0
@@ -70,7 +74,10 @@ async def test_spa_defaults_fake_tscale(
     assert state
     assert (
         state.attributes["supported_features"]
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_MIN_TEMP] == 10.0
@@ -146,7 +153,7 @@ async def test_spa_preset_modes(
         assert state
         assert state.attributes[ATTR_PRESET_MODE] == mode
 
-    with pytest.raises(KeyError):
+    with pytest.raises(ServiceValidationError):
         await common.async_set_preset_mode(hass, 2, ENTITY_CLIMATE)
 
     # put it in RNR and test assertion
@@ -173,6 +180,8 @@ async def test_spa_with_blower(hass: HomeAssistant, client: MagicMock) -> None:
         == ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_MIN_TEMP] == 10.0

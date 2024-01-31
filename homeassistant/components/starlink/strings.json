@@ -26,7 +26,7 @@
         "name": "Heating"
       },
       "power_save_idle": {
-        "name": "[%key:common::state::idle%]"
+        "name": "Sleep"
       },
       "mast_near_vertical": {
         "name": "Mast near vertical"

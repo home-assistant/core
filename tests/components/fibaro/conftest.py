@@ -2,15 +2,21 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
-from pyfibaro.fibaro_scene import SceneModel
 import pytest
 
-from homeassistant.components.fibaro import DOMAIN
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.components.fibaro import CONF_IMPORT_PLUGINS, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+TEST_SERIALNUMBER = "HC2-111111"
+TEST_NAME = "my_fibaro_home_center"
+TEST_URL = "http://192.168.1.1/api/"
+TEST_USERNAME = "user"
+TEST_PASSWORD = "password"
+TEST_VERSION = "4.360"
+TEST_MODEL = "HC3"
 
 
 @pytest.fixture
@@ -22,10 +28,10 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
-@pytest.fixture(name="fibaro_scene")
-def mock_scene() -> SceneModel:
+@pytest.fixture
+def mock_scene() -> Mock:
     """Fixture for an individual scene."""
-    scene = Mock(SceneModel)
+    scene = Mock()
     scene.fibaro_id = 1
     scene.name = "Test scene"
     scene.room_id = 1
@@ -33,23 +39,58 @@ def mock_scene() -> SceneModel:
     return scene
 
 
-async def setup_platform(
-    hass: HomeAssistant,
-    platform: Platform,
-    room_name: str | None,
-    scenes: list[SceneModel],
-) -> ConfigEntry:
-    """Set up the fibaro platform and prerequisites."""
-    hass.config.components.add(DOMAIN)
-    config_entry = MockConfigEntry(domain=DOMAIN, title="Test")
-    config_entry.add_to_hass(hass)
+@pytest.fixture
+def mock_room() -> Mock:
+    """Fixture for an individual room."""
+    room = Mock()
+    room.fibaro_id = 1
+    room.name = "Room 1"
+    return room
 
-    controller_mock = Mock()
-    controller_mock.hub_serial = "HC2-111111"
-    controller_mock.get_room_name.return_value = room_name
-    controller_mock.read_scenes.return_value = scenes
 
-    hass.data[DOMAIN] = {config_entry.entry_id: controller_mock}
-    await hass.config_entries.async_forward_entry_setup(config_entry, platform)
+@pytest.fixture
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_IMPORT_PLUGINS: True,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    return mock_config_entry
+
+
+@pytest.fixture
+def mock_fibaro_client() -> Generator[Mock, None, None]:
+    """Return a mocked FibaroClient."""
+    info_mock = Mock()
+    info_mock.serial_number = TEST_SERIALNUMBER
+    info_mock.hc_name = TEST_NAME
+    info_mock.current_version = TEST_VERSION
+    info_mock.platform = TEST_MODEL
+
+    with patch(
+        "homeassistant.components.fibaro.FibaroClient", autospec=True
+    ) as fibaro_client_mock:
+        client = fibaro_client_mock.return_value
+        client.set_authentication.return_value = None
+        client.connect.return_value = True
+        client.read_info.return_value = info_mock
+        client.read_rooms.return_value = []
+        client.read_scenes.return_value = []
+        client.read_devices.return_value = []
+        client.register_update_handler.return_value = None
+        client.unregister_update_handler.return_value = None
+        yield client
+
+
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Set up the fibaro integration for testing."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    return config_entry

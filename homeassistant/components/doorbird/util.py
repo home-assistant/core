@@ -11,7 +11,7 @@ from .models import DoorBirdData
 
 def get_mac_address_from_door_station_info(door_station_info: dict[str, Any]) -> str:
     """Get the mac address depending on the device type."""
-    return door_station_info.get("PRIMARY_MAC_ADDR", door_station_info["WIFI_MAC_ADDR"])
+    return door_station_info.get("PRIMARY_MAC_ADDR", door_station_info["WIFI_MAC_ADDR"])  # type: ignore[no-any-return]
 
 
 def get_door_station_by_token(

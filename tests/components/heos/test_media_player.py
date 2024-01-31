@@ -249,6 +249,8 @@ async def test_updates_from_players_changed(
 
 async def test_updates_from_players_changed_new_ids(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     config_entry,
     config,
     controller,
@@ -257,8 +259,6 @@ async def test_updates_from_players_changed_new_ids(
 ) -> None:
     """Test player updates from changes to available players."""
     await setup_platform(hass, config_entry, config)
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
     player = controller.players[1]
     event = asyncio.Event()
 

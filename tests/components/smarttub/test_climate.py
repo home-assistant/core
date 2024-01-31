@@ -52,13 +52,15 @@ async def test_thermostat_update(
     assert state.state == HVACMode.HEAT
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        == ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 38
     assert state.attributes[ATTR_TEMPERATURE] == 39
     assert state.attributes[ATTR_MAX_TEMP] == DEFAULT_MAX_TEMP
     assert state.attributes[ATTR_MIN_TEMP] == DEFAULT_MIN_TEMP
-    assert state.attributes[ATTR_PRESET_MODES] == ["none", "eco", "day"]
+    assert state.attributes[ATTR_PRESET_MODES] == ["none", "eco", "day", "ready"]
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,

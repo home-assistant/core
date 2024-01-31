@@ -8,7 +8,7 @@
   "iot_class": "local_polling",
   "loggers": ["nettigo_air_monitor"],
   "quality_scale": "platinum",
-  "requirements": ["nettigo-air-monitor==2.1.0"],
+  "requirements": ["nettigo-air-monitor==2.2.2"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

@@ -11,6 +11,7 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -463,6 +464,17 @@ async def test_advanced_option_flow(
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "configure_entity_sources"
+    assert not result["last_step"]
+    assert list(result["data_schema"].schema[CONF_CLIENT_SOURCE].options.keys()) == [
+        "00:00:00:00:00:01"
+    ]
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "device_tracker"
     assert not result["last_step"]
     assert list(result["data_schema"].schema[CONF_SSID_FILTER].options.keys()) == [
@@ -510,6 +522,7 @@ async def test_advanced_option_flow(
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
+        CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"],
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
         CONF_TRACK_DEVICES: False,

@@ -15,12 +15,5 @@
         }
       }
     }
-  },
-  "selector": {
-    "areas": {
-      "options": {
-        "none": "No area"
-      }
-    }
   }
 }

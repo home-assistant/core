@@ -13,8 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .data import WyomingService
+from .data import WyomingService, load_wyoming_info
 from .error import WyomingError
+from .models import DomainDataItem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,10 +26,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Wyoming wake-word-detection."""
-    service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
+    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            WyomingWakeWordProvider(config_entry, service),
+            WyomingWakeWordProvider(hass, config_entry, item.service),
         ]
     )
 
@@ -38,10 +39,12 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         config_entry: ConfigEntry,
         service: WyomingService,
     ) -> None:
         """Set up provider."""
+        self.hass = hass
         self.service = service
         wake_service = service.info.wake[0]
 
@@ -52,9 +55,19 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         self._attr_name = wake_service.name
         self._attr_unique_id = f"{config_entry.entry_id}-wake_word"
 
-    @property
-    def supported_wake_words(self) -> list[wake_word.WakeWord]:
+    async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
+        info = await load_wyoming_info(
+            self.service.host, self.service.port, retries=0, timeout=1
+        )
+
+        if info is not None:
+            wake_service = info.wake[0]
+            self._supported_wake_words = [
+                wake_word.WakeWord(id=ww.name, name=ww.description or ww.name)
+                for ww in wake_service.models
+            ]
+
         return self._supported_wake_words
 
     async def _async_process_audio_stream(

@@ -22,14 +22,14 @@ from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary sensor entities."""
 
     value_fn: Callable[[OverkizStateType], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizBinarySensorDescription(
     BinarySensorEntityDescription, OverkizBinarySensorDescriptionMixin
 ):
