@@ -241,10 +241,9 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
     except BaseExceptionGroup as e:
         raise e.exceptions[0] from None
 
-    battery_map: dict[str, BatteryResponse] = {}
-
-    for battery in batteries.result():
-        battery_map[battery.serial_number] = battery
+    battery_map: dict[str, BatteryResponse] = {
+        battery.serial_number: battery for battery in batteries.result()
+    }
 
     # Serial numbers MUST be sorted to ensure the unique_id is always the same
     # for backwards compatibility.
@@ -289,10 +288,9 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     except BaseExceptionGroup as e:
         raise e.exceptions[0] from None
 
-    battery_map: dict[str, BatteryResponse] = {}
-
-    for battery in batteries.result():
-        battery_map[battery.serial_number] = battery
+    battery_map: dict[str, BatteryResponse] = {
+        battery.serial_number: battery for battery in batteries.result()
+    }
 
     return PowerwallData(
         charge=charge.result(),
