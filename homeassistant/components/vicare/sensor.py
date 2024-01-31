@@ -46,7 +46,7 @@ from .const import (
     VICARE_DEVICE_CONFIG,
     VICARE_KW,
     VICARE_KWH,
-    VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
+    VICARE_PERCENT,
     VICARE_W,
     VICARE_WH,
 )
@@ -61,6 +61,15 @@ VICARE_UNIT_TO_DEVICE_CLASS = {
     VICARE_W: SensorDeviceClass.POWER,
     VICARE_KW: SensorDeviceClass.POWER,
     VICARE_CUBIC_METER: SensorDeviceClass.GAS,
+}
+
+VICARE_UNIT_TO_HA_UNIT = {
+    VICARE_PERCENT: PERCENTAGE,
+    VICARE_W: UnitOfPower.WATT,
+    VICARE_KW: UnitOfPower.KILO_WATT,
+    VICARE_WH: UnitOfEnergy.WATT_HOUR,
+    VICARE_KWH: UnitOfEnergy.KILO_WATT_HOUR,
+    VICARE_CUBIC_METER: UnitOfVolume.CUBIC_METERS,
 }
 
 
@@ -816,6 +825,7 @@ class ViCareSensor(ViCareEntity, SensorEntity):
 
     def update(self) -> None:
         """Update state of sensor."""
+        vicare_unit = None
         try:
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_native_value = self.entity_description.value_getter(
@@ -824,13 +834,6 @@ class ViCareSensor(ViCareEntity, SensorEntity):
 
                 if self.entity_description.unit_getter:
                     vicare_unit = self.entity_description.unit_getter(self._api)
-                    if vicare_unit is not None:
-                        if(device_class := VICARE_UNIT_TO_DEVICE_CLASS.get(vicare_unit)
-) is not None:
-                            self._attr_device_class = device_class
-                        self._attr_native_unit_of_measurement = (
-                            VICARE_UNIT_TO_UNIT_OF_MEASUREMENT.get(vicare_unit)
-                        )
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
@@ -839,3 +842,12 @@ class ViCareSensor(ViCareEntity, SensorEntity):
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+
+        if vicare_unit is not None:
+            if (
+                device_class := VICARE_UNIT_TO_DEVICE_CLASS.get(vicare_unit)
+            ) is not None:
+                self._attr_device_class = device_class
+            self._attr_native_unit_of_measurement = VICARE_UNIT_TO_HA_UNIT.get(
+                vicare_unit
+            )
