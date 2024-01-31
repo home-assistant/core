@@ -38,6 +38,9 @@ CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.UPDATE
 )
 
+# don't let homeassistant check for updates button hammer the zigbee network
+PARALLEL_UPDATES = 1
+
 
 @dataclass
 class ZHAFirmwareUpdateExtraStoredData(ExtraStoredData):
@@ -139,7 +142,9 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     async def async_update(self) -> None:
         """Handle the update entity service call to manually check for available firmware updates."""
         await super().async_update()
-        if self.zha_device.available:
+        # check for updates in the HA settings menu can invoke this so we need to check if the device
+        # is mains powered so we don't get a ton of errors in the logs from sleepy devices.
+        if self.zha_device.available and self.zha_device.is_mains_powered:
             await self._ota_cluster_handler.async_check_for_update()
 
     async def async_install(
