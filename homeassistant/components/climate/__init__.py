@@ -300,9 +300,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
 
-    # Integrations should set this to false to bypass the backwards compatibility logic
-    # that will set the TURN_ON/TURN_OFF features if the entity has a turn_on/turn_off
-    # method.
+    # Integrations can set `_enable_turn_on_off_backwards_compatibility` to False
+    # to skip the automatic setting of feature flags TURN_ON/TURN_OFF for
+    # backwards compatibility.
     # This should be removed in 2025.1.
     _enable_turn_on_off_backwards_compatibility: bool = True
     __mod_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
