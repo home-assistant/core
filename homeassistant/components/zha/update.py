@@ -1,5 +1,4 @@
 """Representation of ZHA updates."""
-# pylint: skip-file
 from __future__ import annotations
 
 from dataclasses import dataclass

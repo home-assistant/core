@@ -72,9 +72,11 @@ async def setup_test_data(
     """Set up test data for the tests."""
     fw_version = 0x12345678
     installed_fw_version = fw_version - 10
-    cluster = zigpy_device.endpoints.get(1).out_clusters[general.Ota.cluster_id]
+    cluster = zigpy_device.endpoints[1].out_clusters[general.Ota.cluster_id]
     if not skip_attribute_plugs:
-        cluster.PLUGGED_ATTR_READS = {"current_file_version": installed_fw_version}
+        cluster.PLUGGED_ATTR_READS = {
+            general.Ota.AttributeDefs.current_file_version.name: installed_fw_version
+        }
         update_attribute_cache(cluster)
 
     # set up firmware image
@@ -260,7 +262,7 @@ async def test_firmware_update_success(
                     make_packet(
                         zigpy_device,
                         cluster,
-                        "query_next_image",
+                        general.Ota.ServerCommandDefs.query_next_image.name,
                         field_control=general.Ota.QueryNextImageCommand.FieldControl.HardwareVersion,
                         manufacturer_code=fw_image.header.manufacturer_id,
                         image_type=fw_image.header.image_type,
@@ -280,7 +282,7 @@ async def test_firmware_update_success(
                     make_packet(
                         zigpy_device,
                         cluster,
-                        "image_block",
+                        general.Ota.ServerCommandDefs.image_block.name,
                         field_control=general.Ota.ImageBlockCommand.FieldControl.RequestNodeAddr,
                         manufacturer_code=fw_image.header.manufacturer_id,
                         image_type=fw_image.header.image_type,
@@ -304,7 +306,7 @@ async def test_firmware_update_success(
                         make_packet(
                             zigpy_device,
                             cluster,
-                            "image_block",
+                            general.Ota.ServerCommandDefs.image_block.name,
                             field_control=general.Ota.ImageBlockCommand.FieldControl.RequestNodeAddr,
                             manufacturer_code=fw_image.header.manufacturer_id,
                             image_type=fw_image.header.image_type,
@@ -339,7 +341,7 @@ async def test_firmware_update_success(
                         make_packet(
                             zigpy_device,
                             cluster,
-                            "upgrade_end",
+                            general.Ota.ServerCommandDefs.upgrade_end.name,
                             status=foundation.Status.SUCCESS,
                             manufacturer_code=fw_image.header.manufacturer_id,
                             image_type=fw_image.header.image_type,
@@ -416,7 +418,7 @@ async def test_firmware_update_raises(
                     make_packet(
                         zigpy_device,
                         cluster,
-                        "query_next_image",
+                        general.Ota.ServerCommandDefs.query_next_image.name,
                         field_control=general.Ota.QueryNextImageCommand.FieldControl.HardwareVersion,
                         manufacturer_code=fw_image.header.manufacturer_id,
                         image_type=fw_image.header.image_type,
