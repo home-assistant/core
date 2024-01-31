@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -110,6 +111,116 @@ POWERWALL_INSTANT_SENSORS = (
         value_fn=_get_meter_average_voltage,
     ),
 )
+
+
+def _get_battery_charge(battery_data: BatteryResponse) -> float:
+    """Get the current value in %."""
+    ratio = float(battery_data.energy_remaining) / float(battery_data.capacity)
+    return round(100 * ratio, 1)
+
+
+BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
+    PowerwallSensorEntityDescription[BatteryResponse, int](
+        key="battery_capacity",
+        translation_key="battery_capacity",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda battery_data: battery_data.capacity,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="battery_instant_voltage",
+        translation_key="battery_instant_voltage",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        value_fn=lambda battery_data: round(battery_data.v_out, 1),
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="instant_frequency",
+        translation_key="instant_frequency",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        entity_registry_enabled_default=False,
+        value_fn=lambda battery_data: round(battery_data.f_out, 1),
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="instant_current",
+        translation_key="instant_current",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        entity_registry_enabled_default=False,
+        value_fn=lambda battery_data: round(battery_data.i_out, 1),
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, int](
+        key="instant_power",
+        translation_key="instant_power",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda battery_data: battery_data.p_out,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="battery_export",
+        translation_key="battery_export",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=0,
+        value_fn=lambda battery_data: battery_data.energy_discharged,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="battery_import",
+        translation_key="battery_import",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=0,
+        value_fn=lambda battery_data: battery_data.energy_charged,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, int](
+        key="battery_remaining",
+        translation_key="battery_remaining",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda battery_data: battery_data.energy_remaining,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, float](
+        key="charge",
+        translation_key="charge",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=_get_battery_charge,
+    ),
+    PowerwallSensorEntityDescription[BatteryResponse, str](
+        key="grid_state",
+        translation_key="grid_state",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.value.lower() for state in GridState],
+        value_fn=lambda battery_data: battery_data.grid_state.value.lower(),
+    ),
+]
 
 
 async def async_setup_entry(
@@ -310,103 +421,3 @@ class PowerWallBatterySensor(BatteryEntity, SensorEntity, Generic[_ValueT]):
     def native_value(self) -> float | int | str:
         """Get the current value."""
         return self.entity_description.value_fn(self.battery_data)
-
-
-def _get_battery_charge(battery_data: BatteryResponse) -> float:
-    """Get the current value in %."""
-    ratio = float(battery_data.energy_remaining) / float(battery_data.capacity)
-    return round(100 * ratio, 1)
-
-
-BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
-    PowerwallSensorEntityDescription[BatteryResponse, int](
-        key="battery_capacity",
-        translation_key="battery_capacity",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.ENERGY_STORAGE,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=1,
-        value_fn=lambda battery_data: battery_data.capacity,
-    ),
-    PowerwallSensorEntityDescription[BatteryResponse, float](
-        key="battery_instant_voltage",
-        translation_key="battery_instant_voltage",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value_fn=lambda battery_data: round(battery_data.v_out, 1),
-    ),
-    PowerwallSensorEntityDescription[BatteryResponse, float](
-        key="instant_frequency",
-        translation_key="instant_frequency",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.FREQUENCY,
-        native_unit_of_measurement=UnitOfFrequency.HERTZ,
-        entity_registry_enabled_default=False,
-        value_fn=lambda battery_data: round(battery_data.f_out, 1),
-    ),
-    PowerwallSensorEntityDescription[BatteryResponse, float](
-        key="instant_current",
-        translation_key="instant_current",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        entity_registry_enabled_default=False,
-        value_fn=lambda battery_data: round(battery_data.i_out, 1),
-    ),
-    PowerwallSensorEntityDescription[BatteryResponse, int](
-        key="instant_power",
-        translation_key="instant_power",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda battery_data: battery_data.p_out,
-    ),
-    PowerwallSensorEntityDescription[BatteryResponse, float](
-        key="battery_export",
-        translation_key="battery_export",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=0,
-        value_fn=lambda battery_data: battery_data.energy_discharged,
-    ),
-    PowerwallSensorEntityDescription[BatteryResponse, float](
-        key="battery_import",
-        translation_key="battery_import",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=0,
-        value_fn=lambda battery_data: battery_data.energy_charged,
-    ),
-    PowerwallSensorEntityDescription[BatteryResponse, int](
-        key="battery_remaining",
-        translation_key="battery_remaining",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.ENERGY_STORAGE,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=1,
-        value_fn=lambda battery_data: battery_data.energy_remaining,
-    ),
-    PowerwallSensorEntityDescription[BatteryResponse, float](
-        key="charge",
-        translation_key="charge",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        suggested_display_precision=0,
-        value_fn=_get_battery_charge,
-    ),
-    PowerwallSensorEntityDescription[BatteryResponse, str](
-        key="grid_state",
-        translation_key="grid_state",
-        device_class=SensorDeviceClass.ENUM,
-        options=[state.value.lower() for state in GridState],
-        value_fn=lambda battery_data: battery_data.grid_state.value.lower(),
-    ),
-]
