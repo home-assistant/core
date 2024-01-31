@@ -25,7 +25,7 @@
     'platform': 'technove',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'auto-charge',
+    'translation_key': 'auto_charge',
     'unique_id': 'AA:AA:AA:AA:AA:BB_auto_charge',
     'unit_of_measurement': None,
   })
@@ -40,81 +40,5 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
-  })
-# ---
-# serializer version: 1
-# name: test_switch_state[switch.technove_station_auto_charge-set_auto_charge-called_with_on0-called_with_off0]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Auto Charge',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.technove_station_auto_charge',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_switch_state[switch.technove_station_auto_charge-set_auto_charge-called_with_on0-called_with_off0].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.technove_station_auto_charge',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Auto Charge',
-    'platform': 'technove',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'auto-charge',
-    'unique_id': 'AA:AA:AA:AA:AA:BB_auto_charge',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switch_state[switch.technove_station_auto_charge-set_auto_charge-called_with_on0-called_with_off0].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        'aa:aa:aa:aa:aa:bb',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'technove',
-        'AA:AA:AA:AA:AA:BB',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'TechnoVE',
-    'model': 'TechnoVE i32',
-    'name': 'TechnoVE Station',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '1.82',
-    'via_device_id': None,
   })
 # ---

@@ -35,7 +35,7 @@ class TechnoVEAutoChargeSwitch(TechnoVEEntity, SwitchEntity):
     """Defines a TechnoVE auto-charge switch."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_translation_key = "auto-charge"
+    _attr_translation_key = "auto_charge"
     _segment: int
 
     def __init__(self, coordinator: TechnoVEDataUpdateCoordinator) -> None:

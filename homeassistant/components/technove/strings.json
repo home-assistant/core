@@ -68,7 +68,7 @@
       }
     },
     "switch": {
-      "auto-charge": {
+      "auto_charge": {
         "name": "Auto Charge"
       }
     }
