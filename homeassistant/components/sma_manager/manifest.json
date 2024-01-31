@@ -2,7 +2,6 @@
     "domain": "sma_manager",
     "name": "SMA Manager",
     "codeowners": ["DEADSEC-SECURITY"],
-    "dependencies": [],
     "documentation": "",
     "iot_class": "local_polling",
     "requirements": ["sma-manager~=2.0.0"],
