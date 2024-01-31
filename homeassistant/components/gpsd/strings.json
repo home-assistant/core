@@ -18,7 +18,7 @@
   },
   "entity": {
     "sensor": {
-      "gpsd": {
+      "mode": {
         "state": {
           "2d_fix": "2D Fix",
           "3d_fix": "3D Fix"

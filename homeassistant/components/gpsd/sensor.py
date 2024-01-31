@@ -102,7 +102,7 @@ class GpsdSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_translation_key = DOMAIN
+    _attr_translation_key = "mode"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = ["2d_fix", "3d_fix"]
 
@@ -117,7 +117,7 @@ class GpsdSensor(SensorEntity):
             identifiers={(DOMAIN, unique_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = f"{unique_id}-mode"
 
         self.agps_thread = AGPS3mechanism()
         self.agps_thread.stream_data(host=host, port=port)
