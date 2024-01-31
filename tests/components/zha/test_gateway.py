@@ -365,7 +365,7 @@ async def test_startup_concurrency_limit(
             zigpy.zdo.types.NodeDescriptor.MACCapabilityFlags.MainsPowered
         )
 
-        zha_gateway._async_get_or_create_device(zigpy_dev, restored=True)
+        zha_gateway._async_get_or_create_device(zigpy_dev)
 
     # Keep track of request concurrency during initialization
     current_concurrency = 0

@@ -402,12 +402,24 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         self._attr_supported_features = flags
 
         supported = set(map(_color_mode_to_ha, self._native_supported_color_modes))
+
+        # If we don't know the supported color modes, ESPHome lights
+        # are always at least ONOFF so we can safely discard UNKNOWN
+        supported.discard(ColorMode.UNKNOWN)
+
         if ColorMode.ONOFF in supported and len(supported) > 1:
             supported.remove(ColorMode.ONOFF)
         if ColorMode.BRIGHTNESS in supported and len(supported) > 1:
             supported.remove(ColorMode.BRIGHTNESS)
         if ColorMode.WHITE in supported and len(supported) == 1:
             supported.remove(ColorMode.WHITE)
+
+        # If we don't know the supported color modes, its a very old
+        # legacy device, and since ESPHome lights are always at least ONOFF
+        # we can safely assume that it supports ONOFF
+        if not supported:
+            supported.add(ColorMode.ONOFF)
+
         self._attr_supported_color_modes = supported
         self._attr_effect_list = static_info.effects
         self._attr_min_mireds = round(static_info.min_mireds)

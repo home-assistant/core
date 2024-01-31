@@ -45,7 +45,7 @@ class NWSData:
     coordinator_forecast_hourly: NwsDataUpdateCoordinator
 
 
-class NwsDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
+class NwsDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """NWS data update coordinator.
 
     Implements faster data update intervals for failed updates and exposes a last successful update time.
