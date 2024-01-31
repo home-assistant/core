@@ -778,10 +778,13 @@ googlemaps==2.5.1
 gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
-govee-ble==0.27.3
+govee-ble==0.31.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.4.1
+
+# homeassistant.components.gpsd
+gps3==0.33.3
 
 # homeassistant.components.gree
 greeclimate==1.4.1
@@ -852,7 +855,7 @@ hole==0.8.0
 holidays==0.41
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240112.0
+home-assistant-frontend==20240131.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.1.29
@@ -1857,7 +1860,7 @@ reolink-aio==0.8.7
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.5
+ring-doorbell[listen]==0.8.6
 
 # homeassistant.components.roku
 rokuecp==0.18.1
