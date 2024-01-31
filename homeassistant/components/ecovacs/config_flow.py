@@ -43,14 +43,13 @@ def _validate_url(
     schema_list: set[str],
 ) -> dict[str, str]:
     """Validate an URL and return error dictionary."""
-    if urlparse(value).scheme in schema_list:
-        try:
-            vol.Schema(vol.Url())(value)
-            return {}
-        except vol.Invalid:
-            return {field_name: "invalid_url"}
-
-    return {field_name: f"invalid_url_schema_{field_name}"}
+    if not urlparse(value).scheme in schema_list:
+        return {field_name: f"invalid_url_schema_{field_name}"}
+    try:
+        vol.Schema(vol.Url())(value)
+    except vol.Invalid:
+        return {field_name: "invalid_url"}
+    return {}
 
 
 async def _validate_input(
