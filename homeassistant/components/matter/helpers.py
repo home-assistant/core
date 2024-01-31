@@ -22,10 +22,6 @@ class MissingNode(HomeAssistantError):
     """Exception raised when we can't find a node."""
 
 
-class ConfigEntryNotFound(HomeAssistantError):
-    """Exception raised when we can't find a config entry."""
-
-
 @dataclass
 class MatterEntryData:
     """Hold Matter data for the config entry."""
@@ -82,10 +78,6 @@ def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode
     device = dev_reg.async_get(ha_device_id)
     if device is None:
         raise MissingNode(f"Invalid device ID: {ha_device_id}")
-    config_entry_id = list(device.config_entries)[0]
-    entry = hass.config_entries.async_get_entry(config_entry_id)
-    if entry is None:
-        raise ConfigEntryNotFound(f"Config entry {config_entry_id} not found")
     return get_node_from_device_entry(hass, device)
 
 
