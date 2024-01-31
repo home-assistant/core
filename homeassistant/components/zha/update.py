@@ -164,11 +164,11 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         assert self._result is not None
 
         # If the update was not successful, we should throw an error to let the user know
-        if self._result != Status.SUCCESS:
+        # save result since reset_progress will clear it
+        results = self._result
+        if results != Status.SUCCESS:
             self._reset_progress()
-            raise HomeAssistantError(
-                f"Update was not successful - result: {self._result}"
-            )
+            raise HomeAssistantError(f"Update was not successful - result: {results}")
 
         # If we get here, all files were installed successfully
         self._attr_installed_version = (
