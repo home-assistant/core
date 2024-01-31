@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .adapter import MatterAdapter
 from .helpers import get_matter, node_from_ha_device_id
@@ -25,6 +26,10 @@ DEVICE_ID = "device_id"
 
 
 ERROR_NODE_NOT_FOUND = "node_not_found"
+
+
+class MissingNode(HomeAssistantError):
+    """Exception raised when we can't find a node."""
 
 
 @callback
@@ -62,7 +67,7 @@ def async_get_node(
         """Provide user specific data and store to function."""
         node = node_from_ha_device_id(hass, msg[DEVICE_ID])
         if not node:
-            raise ValueError(
+            raise MissingNode(
                 f"Could not resolve Matter node from device id {msg[DEVICE_ID]}"
             )
         await func(hass, connection, msg, matter, node)
@@ -116,7 +121,7 @@ def async_handle_failed_command(
             await func(hass, connection, msg, *args, **kwargs)
         except MatterError as err:
             connection.send_error(msg[ID], str(err.error_code), err.args[0])
-        except ValueError as err:
+        except (MissingNode, ValueError) as err:
             connection.send_error(msg[ID], ERROR_NODE_NOT_FOUND, err.args[0])
 
     return async_handle_failed_command_func
