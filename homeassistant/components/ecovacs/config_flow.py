@@ -171,11 +171,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            self._async_abort_entries_match(
-                {
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                }
-            )
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
             errors = await _validate_input(self.hass, user_input)
 
