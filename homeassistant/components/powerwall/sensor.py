@@ -25,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, POWERWALL_COORDINATOR
 from .entity import BatteryEntity, PowerWallEntity
@@ -35,7 +34,7 @@ _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
 
 _ValueParamT = TypeVar("_ValueParamT")
-_ValueT = TypeVar("_ValueT", bound=float | int)
+_ValueT = TypeVar("_ValueT", bound=float | int | str)
 
 
 @dataclass(frozen=True)
@@ -308,7 +307,7 @@ class PowerWallBatterySensor(BatteryEntity, SensorEntity, Generic[_ValueT]):
         self._attr_unique_id = f"{self.base_unique_id}_{description.key}"
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> float | int | str:
         """Get the current value."""
         return self.entity_description.value_fn(self.battery_data)
 
