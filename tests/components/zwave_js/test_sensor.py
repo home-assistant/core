@@ -731,6 +731,7 @@ NODE_STATISTICS_SUFFIXES = {
 NODE_STATISTICS_SUFFIXES_UNKNOWN = {
     "round_trip_time": 6,
     "rssi": 7,
+    "last_seen": "2024-01-01T00:00:00+00:00",
 }
 
 
@@ -843,6 +844,7 @@ async def test_statistics_sensors(
                     "repeaterRSSI": [],
                     "routeFailedBetween": [],
                 },
+                "lastSeen": "2024-01-01T00:00:00+0000",
             },
         },
     )
