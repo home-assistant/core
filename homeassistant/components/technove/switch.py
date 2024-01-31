@@ -23,7 +23,7 @@ from .helpers import technove_exception_handler
 class TechnoVESwitchDescription(SwitchEntityDescription):
     """Describes TechnoVE binary sensor entity."""
 
-    is_on_fn: Callable[[TechnoVEStation], bool | None]
+    is_on_fn: Callable[[TechnoVEStation], bool]
     turn_on_fn: Callable[[TechnoVE], Awaitable[dict[str, Any]]]
     turn_off_fn: Callable[[TechnoVE], Awaitable[dict[str, Any]]]
 
@@ -68,7 +68,7 @@ class TechnoVESwitchEntity(TechnoVEEntity, SwitchEntity):
         super().__init__(coordinator, description.key)
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return the state of the TechnoVE switch."""
 
         return self.entity_description.is_on_fn(self.coordinator.data)
@@ -77,8 +77,10 @@ class TechnoVESwitchEntity(TechnoVEEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the TechnoVE switch."""
         await self.entity_description.turn_on_fn(self.coordinator.technove)
+        await self.coordinator.async_request_refresh()
 
     @technove_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the TechnoVE switch."""
         await self.entity_description.turn_off_fn(self.coordinator.technove)
+        await self.coordinator.async_request_refresh()
