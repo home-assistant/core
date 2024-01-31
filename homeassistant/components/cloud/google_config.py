@@ -253,8 +253,8 @@ class CloudGoogleConfig(AbstractConfig):
             if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
                 await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
-        start.async_at_start(self.hass, on_hass_start)
-        start.async_at_started(self.hass, on_hass_started)
+        self._on_deinitialize.append(start.async_at_start(self.hass, on_hass_start))
+        self._on_deinitialize.append(start.async_at_started(self.hass, on_hass_started))
 
         # Remove any stored user agent id that is not ours
         remove_agent_user_ids = []
