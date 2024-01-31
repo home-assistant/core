@@ -783,6 +783,9 @@ govee-ble==0.27.3
 # homeassistant.components.govee_light_local
 govee-local-api==1.4.1
 
+# homeassistant.components.gpsd
+gps3==0.33.3
+
 # homeassistant.components.gree
 greeclimate==1.4.1
 
