@@ -95,6 +95,9 @@ CLUSTER_HANDLER_ST_HUMIDITY_CLUSTER = (
 )
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SENSOR)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.SENSOR
+)
 
 
 async def async_setup_entry(
@@ -236,6 +239,19 @@ class PollableSensor(Sensor):
                 self._zha_device.available,
                 self.hass.data[DATA_ZHA].allow_polling,
             )
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class EnumSensor(Sensor):
+    """Sensor with value from enum."""
+
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
+    _enum: type[enum.Enum]
+
+    def formatter(self, value: int) -> str | None:
+        """Use name of enum."""
+        assert self._enum is not None
+        return self._enum(value).name
 
 
 @MULTI_MATCH(
@@ -1254,3 +1270,45 @@ class SonoffPresenceSenorIlluminationStatus(Sensor):
     def formatter(self, value: int) -> int | float | None:
         """Numeric pass-through formatter."""
         return SonoffIlluminationStates(value).name
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class PiHeatingDemand(Sensor):
+    """Sensor that displays the percentage of heating power demanded.
+
+    Optional thermostat attribute.
+    """
+
+    _unique_id_suffix = "pi_heating_demand"
+    _attribute_name = "pi_heating_demand"
+    _attr_translation_key: str = "pi_heating_demand"
+    _attr_icon: str = "mdi:radiator"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _decimals = 0
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
+class SetpointChangeSourceEnum(types.enum8):
+    """The source of the setpoint change."""
+
+    Manual = 0x00
+    Schedule = 0x01
+    External = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SetpointChangeSource(EnumSensor):
+    """Sensor that displays the source of the setpoint change.
+
+    Optional thermostat attribute.
+    """
+
+    _unique_id_suffix = "setpoint_change_source"
+    _attribute_name = "setpoint_change_source"
+    _attr_translation_key: str = "setpoint_change_source"
+    _attr_icon: str = "mdi:thermostat"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _enum = SetpointChangeSourceEnum
