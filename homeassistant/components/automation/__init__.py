@@ -6,17 +6,13 @@ import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
+import time
 from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.components.rascalscheduler import (
-    dag_opeator,
-    rascal_scheduler,
-    setup_rascal_scheduler_entity,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -55,6 +51,7 @@ from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     HomeAssistantError,
+    ServiceNotFound,
     TemplateError,
 )
 from homeassistant.helpers import condition
@@ -64,6 +61,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.rascalscheduler import RoutineEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -93,6 +92,11 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.rascalscheduler import (
+    dag_operator,
+    get_rascal_scheduler,
+    setup_rascal_scheduler_entity,
+)
 from homeassistant.util.dt import parse_datetime
 
 from .config import AutomationConfig
@@ -123,6 +127,8 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
+
+TIME_MILLISECOND = 1000
 
 
 class IfAction(Protocol):
@@ -252,8 +258,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         LOGGER, DOMAIN, hass
     )
 
-    # set up rascal scheduler component
+    # Set up rascal scheduler component
     setup_rascal_scheduler_entity(hass)
+
+    # Wait until script component is loaded
+    # Convert automation entity into DAG
+    def on_script_setup() -> None:
+        """Handle SCRIPT_SETUP_COMPLETE event."""
+        for entity in component.entities:
+            if entity.unique_id is not None and entity.raw_config:
+                routine_entity = dag_operator(
+                    hass=hass,
+                    name=entity.raw_config["alias"],
+                    routine_id=entity.unique_id,
+                    action_script=entity.raw_config["action"],
+                )
+                routine_entity.output()
+                entity.routine = routine_entity
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
@@ -263,6 +284,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_get_blueprints(hass)
 
     await _async_process_config(hass, config, component)
+
+    if "script" in hass.config.components:
+        on_script_setup()
+    else:
+        hass.bus.async_listen_once("SCRIPT_SETUP_COMPLETE", lambda _: on_script_setup())
 
     # Add some default blueprints to blueprints/automation, does nothing
     # if blueprints/automation already exists
@@ -300,6 +326,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
         await _async_process_config(hass, conf, component)
+
+        for entity in component.entities:
+            if entity.unique_id is not None and entity.raw_config is not None:
+                routine_entity = dag_operator(
+                    hass=hass,
+                    name=entity.raw_config["alias"],
+                    routine_id=entity.unique_id,
+                    action_script=entity.raw_config["action"],
+                )
+                routine_entity.output()
+                entity.routine = routine_entity
+
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
     reload_helper = ReloadServiceHelper(reload_service_handler)
@@ -321,6 +359,7 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     """Base class for automation entities."""
 
     raw_config: ConfigType | None
+    routine: RoutineEntity
 
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
@@ -450,6 +489,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
+        self.routine: RoutineEntity
 
     @property
     def name(self) -> str:
@@ -660,83 +700,54 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             # to recursively trigger themselves
             script_stack_cv.set([])
 
-            routine_id, routine_entity = dag_opeator(
-                self.hass,
-                str(self._attr_unique_id),
-                self.action_script.sequence,
-                variables,
-                trigger_context,
-            )
+            try:
+                with trace_path("action"):
+                    # change to execute rascal scheduler
+                    rascal = get_rascal_scheduler(self.hass)
 
-            # for item in routine_entity.actions.values():
-            #     if not item.parents and not item.children:
-            #         print(
-            #             "routine_id:", item.routine_id,
-            #             "action_id:", item.action_id,
-            #             "action:", item.action,
-            #             "parents:", item.parents[0].action_id,
-            #             "children:", item.children[0].action_id
-            #         )
-            #     elif not item.parents:
-            #         print(
-            #             "routine_id:", item.routine_id,
-            #             "action_id:", item.action_id,
-            #             "action:", item.action,
-            #             "parents:", item.parents,
-            #             "children:", item.children[0].action_id
-            #         )
-            #     elif not item.children:
-            #         print(
-            #             "routine_id:", item.routine_id,
-            #             "action_id:", item.action_id,
-            #             "action:", item.action,
-            #             "parents:", item.parents[0].action_id,
-            #             "children:", item.children
-            #         )
-            #     else:
-            #         print(
-            #             "routine_id:", item.routine_id,
-            #             "action_id:", item.action_id,
-            #             "action:", item.action,
-            #             "parents:", item.parents,
-            #             "children:", item.children
-            #         )
+                    now = time.time()
+                    last_trigger_time = self.routine.last_trigger_time
+                    timeout = self.routine.timeout
 
-            rascal = rascal_scheduler(self.hass)
-            rascal.start_routine(routine_entity)
+                    if (
+                        last_trigger_time is None
+                        or (now - last_trigger_time) * TIME_MILLISECOND > timeout
+                    ):
+                        routine_entity = self.routine.duplicate()
+                        routine_entity.set_variables(variables)
+                        routine_entity.set_context(trigger_context)
+                        rascal.start_routine(routine_entity)
 
-            # try:
-            #     with trace_path("action"):
-            #         await self.action_script.async_run(
-            #             variables, trigger_context, started_action
-            #         )
-            # except ServiceNotFound as err:
-            #     async_create_issue(
-            #         self.hass,
-            #         DOMAIN,
-            #         f"{self.entity_id}_service_not_found_{err.domain}.{err.service}",
-            #         is_fixable=True,
-            #         is_persistent=True,
-            #         severity=IssueSeverity.ERROR,
-            #         translation_key="service_not_found",
-            #         translation_placeholders={
-            #             "service": f"{err.domain}.{err.service}",
-            #             "entity_id": self.entity_id,
-            #             "name": self.name or self.entity_id,
-            #             "edit": f"/config/automation/edit/{self.unique_id}",
-            #         },
-            #     )
-            #     automation_trace.set_error(err)
-            # except (vol.Invalid, HomeAssistantError) as err:
-            #     self._logger.error(
-            #         "Error while executing automation %s: %s",
-            #         self.entity_id,
-            #         err,
-            #     )
-            #     automation_trace.set_error(err)
-            # except Exception as err:  # pylint: disable=broad-except
-            #     self._logger.exception("While executing automation %s", self.entity_id)
-            #     automation_trace.set_error(err)
+                    # await self.action_script.async_run(
+                    #     variables, trigger_context, started_action
+                    # )
+            except ServiceNotFound as err:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{self.entity_id}_service_not_found_{err.domain}.{err.service}",
+                    is_fixable=True,
+                    is_persistent=True,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="service_not_found",
+                    translation_placeholders={
+                        "service": f"{err.domain}.{err.service}",
+                        "entity_id": self.entity_id,
+                        "name": self.name or self.entity_id,
+                        "edit": f"/config/automation/edit/{self.unique_id}",
+                    },
+                )
+                automation_trace.set_error(err)
+            except (vol.Invalid, HomeAssistantError) as err:
+                self._logger.error(
+                    "Error while executing automation %s: %s",
+                    self.entity_id,
+                    err,
+                )
+                automation_trace.set_error(err)
+            except Exception as err:  # pylint: disable=broad-except
+                self._logger.exception("While executing automation %s", self.entity_id)
+                automation_trace.set_error(err)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
@@ -940,6 +951,7 @@ async def _create_automation_entities(
             automation_config.raw_blueprint_inputs,
             config_block[CONF_TRACE],
         )
+
         entities.append(entity)
 
     return entities

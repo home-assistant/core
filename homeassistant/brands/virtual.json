@@ -1,0 +1,5 @@
+{
+  "domain": "virtual",
+  "name": "Virtual Devices",
+  "integrations": ["virtual"]
+}

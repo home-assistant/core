@@ -1,5 +1,6 @@
-/config
+/config/*
 config2/*
+!/config/virtual.example.yaml
 
 tests/testing_config/deps
 tests/testing_config/home-assistant.log*

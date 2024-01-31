@@ -171,6 +171,7 @@ CONF_FOR_EACH: Final = "for_each"
 CONF_FORCE_UPDATE: Final = "force_update"
 CONF_FRIENDLY_NAME: Final = "friendly_name"
 CONF_FRIENDLY_NAME_TEMPLATE: Final = "friendly_name_template"
+CONF_GROUP_ID: Final = "group_id"
 CONF_HEADERS: Final = "headers"
 CONF_HOST: Final = "host"
 CONF_HOSTS: Final = "hosts"
@@ -385,6 +386,9 @@ ATTR_NAME: Final = "name"
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID: Final = "entity_id"
+
+# Contains one string or a list of strings, each being an entity id
+ATTR_GROUP_ID: Final = "group_id"
 
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID: Final = "area_id"
@@ -1196,6 +1200,23 @@ class EntityCategory(StrEnum):
     DIAGNOSTIC = "diagnostic"
 
 
+RASC_ACK = "ack"
 RASC_START = "start"
 RASC_COMPLETE = "complete"
 RASC_RESPONSE = "rasc_response"
+RASC_SCHEDULED = "scheduled"
+
+DOMAIN_AUTOMATION = "automation"
+DOMAIN_SCRIPT = "script"
+DOMAIN_PERSON = "person"
+DOMAIN_ZONE = "zone"
+DOMAIN_SENSOR = "sensor"
+DOMAIN_TTS = "tts"
+DOMAIN_RASCALSCHEDULER = "rascalscheduler"
+
+NAME_SUN_NEXT_DAWN = "sun_next_dawn"
+NAME_SUN_NEXT_DUSK = "sun_next_dusk"
+NAME_SUN_NEXT_MIDNIGHT = "sun_next_midnight"
+NAME_SUN_NEXT_NOON = "sun_next_noon"
+NAME_SUN_NEXT_RISING = "sun_next_rising"
+NAME_SUN_NEXT_SETTING = "sun_next_setting"

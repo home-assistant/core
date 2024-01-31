@@ -1,0 +1,54 @@
+# Describes the format for available virtual services
+
+turn_on:
+  target:
+    entity:
+      integration: virtual
+      domain: binary_sensor
+
+turn_off:
+  target:
+    entity:
+      integration: virtual
+      domain: binary_sensor
+
+toggle:
+  target:
+    entity:
+      integration: virtual
+      domain: binary_sensor
+
+set:
+  target:
+    entity:
+      integration: virtual
+      domain: sensor
+  fields:
+    value:
+      required: true
+      example: "10"
+      selector:
+        text:
+
+set_available:
+  target:
+    entity:
+      integration: virtual
+  fields:
+    value:
+      example: false
+      required: true
+      selector:
+        boolean:
+
+move:
+  target:
+    entity:
+      integration: virtual
+      domain: device_tracker
+  fields:
+    location:
+      required: true
+      example: "home"
+      selector:
+        text:

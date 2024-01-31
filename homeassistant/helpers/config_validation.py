@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_GROUP_ID,
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_ATTRIBUTE,
@@ -1201,6 +1202,7 @@ ENTITY_SERVICE_FIELDS = {
     vol.Optional(ATTR_AREA_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
+    vol.Optional(ATTR_GROUP_ID): str,
 }
 
 TARGET_SERVICE_FIELDS = {

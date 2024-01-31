@@ -45,7 +45,8 @@ from . import (
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .issue_registry import IssueSeverity, async_create_issue
-from .rasc import rasc_on_command, rasc_on_update, update_rasc_state
+from .rasc import RASCState, rasc_on_command, rasc_on_update
+from .rascalscheduler import create_x_ready_queue, delete_x_active_queue
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
@@ -153,7 +154,7 @@ class EntityPlatform:
         ).append(self)
 
         # rascal abstraction
-        self.rascal_state_map: dict[str, Any] = {}
+        self.rascal_state_map: dict[str, RASCState] = {}
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
@@ -434,20 +435,26 @@ class EntityPlatform:
             finally:
                 warn_task.cancel()
 
-    def async_on_push_event(self, entity: Entity | None) -> None:
+    def async_on_push_event(self, entity: Entity) -> None:
         """Handle push event from push-based devices."""
-        update_rasc_state(self.hass, self.rascal_state_map, entity)
+        rasc_on_update(self.hass, self.rascal_state_map, entity)
 
     async def _listen_to_command(self, e: Event) -> None:
-        new_polling_interval = await rasc_on_command(
+        target_entities, next_intervals = await rasc_on_command(
             self.hass,
+            self,
             e,
-            self.entities.values(),
-            self.default_scan_interval,
-            self.rascal_state_map,
         )
-
-        self._update_polling_interval(new_polling_interval)
+        if not target_entities:
+            return
+        for target_entity in target_entities:
+            if not target_entity.should_poll:
+                continue
+            self.hass.create_task(
+                self._track_entity_state(
+                    target_entity, next_intervals[target_entity.entity_id]
+                )
+            )
 
     def _schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
@@ -761,6 +768,8 @@ class EntityPlatform:
         entity_id = entity.entity_id
         self.entities[entity_id] = entity
 
+        create_x_ready_queue(self.hass, entity_id)
+
         if not restored:
             # Reserve the state in the state machine
             # because as soon as we return control to the event
@@ -790,6 +799,9 @@ class EntityPlatform:
             return
 
         tasks = [entity.async_remove() for entity in self.entities.values()]
+
+        for entity in self.entities.values():
+            delete_x_active_queue(self.hass, entity.entity_id)
 
         await asyncio.gather(*tasks)
 
@@ -900,38 +912,40 @@ class EntityPlatform:
                     # entity.
                     if entity.should_poll and entity.hass:
                         await entity.async_update_ha_state(True)
-                return
 
-            if tasks := [
+            elif tasks := [
                 entity.async_update_ha_state(True)
                 for entity in self.entities.values()
                 if entity.should_poll
             ]:
                 await asyncio.gather(*tasks)
 
-            completed_entities, new_polling_interval = rasc_on_update(
-                self.hass, self.default_scan_interval, self.rascal_state_map
-            )
-            # should consider multiple entities
-            if len(completed_entities) > 0:
-                self._update_polling_interval(self.default_scan_interval)
-            else:
-                self._update_polling_interval(new_polling_interval)
-
-    def _update_polling_interval(self, polling_interval: timedelta | None) -> None:
-        if polling_interval is None:
-            return
-        if self.scan_interval == polling_interval:
-            return
-        if self._async_unsub_polling is not None:
-            self.scan_interval = polling_interval
-            self._async_unsub_polling()
-            self._async_unsub_polling = async_track_time_interval(
-                self.hass,
-                self._update_entity_states,
+    async def _track_entity_state(
+        self, entity: Entity, delay: timedelta | None = None
+    ) -> None:
+        """Track the states of the entity."""
+        if delay:
+            await asyncio.sleep(delay.total_seconds())
+        if self._process_updates is None:
+            self._process_updates = asyncio.Lock()
+        if self._process_updates.locked():
+            self.logger.warning(
+                "Updating %s %s took longer than the scheduled update interval %s",
+                self.platform_name,
+                self.domain,
                 self.scan_interval,
-                name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
             )
+            return
+
+        async with self._process_updates:
+            if entity.should_poll and entity.hass:
+                await entity.async_update_ha_state(True)
+
+        next_interval = rasc_on_update(self.hass, self.rascal_state_map, entity)
+        if not next_interval:
+            return
+        await asyncio.sleep(next_interval.total_seconds())
+        self.hass.create_task(self._track_entity_state(entity))
 
 
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(

@@ -675,10 +675,10 @@ class _ScriptRun:
         params = service.async_prepare_call_from_config(
             self._hass, self._action, self._variables
         )
-
         # Validate response data parameters. This check ignores services that do
         # not exist which will raise an appropriate error in the service call below.
         response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
+
         return_response = response_variable is not None
         if self._hass.services.has_service(params[CONF_DOMAIN], params[CONF_SERVICE]):
             supports_response = self._hass.services.supports_response(
@@ -1047,6 +1047,7 @@ class _ScriptRun:
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
         """Run a sequence in parallel."""
+
         # pylint: disable-next=protected-access
         scripts = await self._script._async_get_parallel_scripts(self._step)
 

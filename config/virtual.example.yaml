@@ -1,0 +1,36 @@
+version: 1
+devices:
+  Living Room Sensor:
+    - platform: binary_sensor
+      name: Living Room Sensor
+      initial_value: "off"
+      class: motion
+  Back Door Sensor:
+    - platform: binary_sensor
+      name: Back Door Sensor
+      initial_value: "off"
+      class: door
+  Virtual Light:
+    - platform: light
+      name: Virtual Light
+  Virtual Switch 1:
+    - platform: switch
+      name: Virtual Switch 1
+  Virtual Switch 2:
+    - platform: switch
+      name: Virtual Switch 2
+  Virtual Lock:
+    - platform: lock
+      name: Front Door Lock
+      initial_value: locked
+      locking_time: 5
+      jamming_test: 5
+  Virtual Fan:
+    - platform: fan
+      speed: true
+      speed_count: 5
+      direction: true
+      oscillate: true
+  Virtual Cover:
+    - platform: cover
+      initial_value: "closed"
