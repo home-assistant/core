@@ -1267,7 +1267,7 @@ class SonoffPresenceSenorIlluminationStatus(Sensor):
         return SonoffIlluminationStates(value).name
 
 
-@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class PiHeatingDemand(Sensor):
     """Sensor that displays the percentage of heating power demanded.
