@@ -20,10 +20,10 @@
         }
       },
       "can": {
-        "default": "mdi:sail-boat-sink"
+        "default": "mdi:car-brake-alert"
       },
       "nak": {
-        "default": "mdi:cancel"
+        "default": "mdi:hand-back-left-off"
       },
       "timeout_ack": {
         "default": "mdi:timer-cancel"
