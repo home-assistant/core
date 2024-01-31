@@ -1254,41 +1254,6 @@ class AqaraSmokeDensityDbm(Sensor):
     _attr_suggested_display_precision: int = 3
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class BitMapSensor(Sensor):
-    """A sensor with only state attributes.
-
-    The sensor value will be a sensor of the state attributes.
-    """
-
-    _default_value: str
-    _bitmap: dict[str, int]
-
-    def formatter(self, _value: int) -> str:
-        """Summary of all attributes."""
-        binary_state_attributes = [
-            key for (key, elem) in self.extra_state_attributes.items() if elem
-        ]
-
-        return (
-            ", ".join(binary_state_attributes)
-            if binary_state_attributes
-            else self._default_value
-        )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Bitmap."""
-        value = self._cluster_handler.cluster.get(self._attribute_name)
-
-        state_attr = {}
-
-        for text, bit in self._bitmap.items():
-            state_attr[text] = bool(value & bit)
-
-        return state_attr
-
-
 class SonoffIlluminationStates(types.enum8):
     """Enum for displaying last Illumination state."""
 
@@ -1402,6 +1367,41 @@ class AqaraCurtainHookStateSensor(EnumSensor):
     _unique_id_suffix = "hooks_state"
     _attr_translation_key: str = "hooks_state"
     _attr_icon: str = "mdi:hook"
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class BitMapSensor(Sensor):
+    """A sensor with only state attributes.
+
+    The sensor value will be a sensor of the state attributes.
+    """
+
+    _default_value: str
+    _bitmap: dict[str, int]
+
+    def formatter(self, _value: int) -> str:
+        """Summary of all attributes."""
+        binary_state_attributes = [
+            key for (key, elem) in self.extra_state_attributes.items() if elem
+        ]
+
+        return (
+            ", ".join(binary_state_attributes)
+            if binary_state_attributes
+            else self._default_value
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Bitmap."""
+        value = self._cluster_handler.cluster.get(self._attribute_name)
+
+        state_attr = {}
+
+        for text, bit in self._bitmap.items():
+            state_attr[text] = bool(value & bit)
+
+        return state_attr
     
 
 class DanfossOpenWindowDetectionEnum(types.enum8):
