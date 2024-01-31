@@ -347,6 +347,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/elmax/ @albertogeniola
 /tests/components/elmax/ @albertogeniola
 /homeassistant/components/elv/ @majuss
+/homeassistant/components/elvia/ @ludeeus
+/tests/components/elvia/ @ludeeus
 /homeassistant/components/emby/ @mezz64
 /homeassistant/components/emoncms/ @borpin
 /homeassistant/components/emonitor/ @bdraco

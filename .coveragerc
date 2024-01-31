@@ -320,6 +320,8 @@ omit =
     homeassistant/components/elmax/cover.py
     homeassistant/components/elmax/switch.py
     homeassistant/components/elv/*
+    homeassistant/components/elvia/__init__.py
+    homeassistant/components/elvia/importer.py
     homeassistant/components/emby/media_player.py
     homeassistant/components/emoncms/sensor.py
     homeassistant/components/emoncms_history/*

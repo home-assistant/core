@@ -623,6 +623,9 @@ elkm1-lib==2.2.6
 # homeassistant.components.elmax
 elmax-api==0.0.4
 
+# homeassistant.components.elvia
+elvia==0.1.0
+
 # homeassistant.components.emulated_roku
 emulated-roku==0.2.1
 

@@ -766,6 +766,9 @@ elkm1-lib==2.2.6
 # homeassistant.components.elmax
 elmax-api==0.0.4
 
+# homeassistant.components.elvia
+elvia==0.1.0
+
 # homeassistant.components.xmpp
 emoji==2.8.0
 
