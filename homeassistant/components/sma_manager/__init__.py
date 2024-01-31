@@ -19,7 +19,6 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     @return:
     """
 
-    # Save to SMA object to state machine
     data = config.data
     sma = SMA(
         data[CONF_NAME], data[CONF_HOST], data[CONF_PORT], data[CONF_REFRESH_INTERVAL]
