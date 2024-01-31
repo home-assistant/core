@@ -61,17 +61,17 @@ async def handle_add_product(
     hass: HomeAssistant, api_client: PicnicAPI, call: ServiceCall
 ) -> None:
     """Handle the call for the add_product service."""
-    product_id = call.data.get("product_id")
+    product_id = call.data.get(ATTR_PRODUCT_ID)
     if not product_id:
         product_id = await hass.async_add_executor_job(
-            product_search, api_client, cast(str, call.data["product_name"])
+            product_search, api_client, cast(str, call.data[ATTR_PRODUCT_NAME])
         )
 
     if not product_id:
         raise PicnicServiceException("No product found or no product ID given!")
 
     await hass.async_add_executor_job(
-        api_client.add_product, product_id, call.data.get("amount", 1)
+        api_client.add_product, product_id, call.data.get(ATTR_AMOUNT, 1)
     )
 
 
