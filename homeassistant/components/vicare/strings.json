@@ -273,8 +273,7 @@
         "state": {
           "nothing": "Nothing",
           "ready": "Ready",
-          "production": "Production",
-          "unknown": "Unknown"
+          "production": "Production"
         }
       },
       "supply_temperature": {
