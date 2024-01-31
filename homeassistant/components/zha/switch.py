@@ -592,7 +592,7 @@ class AqaraBuzzerManualAlarm(ZHASwitchConfigurationEntity):
     _attr_translation_key = "buzzer_manual_alarm"
     _attr_icon: str = "mdi:bullhorn"
 
-      
+
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
 class WindowCoveringInversionSwitch(ZHASwitchConfigurationEntity):
     """Representation of a switch that controls inversion for window covering devices.
@@ -698,8 +698,8 @@ class AqaraE1CurtainMotorHooksLockedSwitch(ZHASwitchConfigurationEntity):
     _attribute_name = "hooks_lock"
     _attr_translation_key = "hooks_locked"
     _attr_icon: str = "mdi:lock"
-      
-      
+
+
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
