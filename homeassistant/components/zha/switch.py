@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
+from zigpy.zcl.clusters.closures import ConfigStatus, WindowCovering, WindowCoveringMode
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
@@ -19,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_BASIC,
+    CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
     SIGNAL_ADD_ENTITIES,
@@ -588,3 +590,110 @@ class AqaraBuzzerManualAlarm(ZHASwitchConfigurationEntity):
     _attribute_name = "buzzer_manual_alarm"
     _attr_translation_key = "buzzer_manual_alarm"
     _attr_icon: str = "mdi:bullhorn"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
+class WindowCoveringInversionSwitch(ZHASwitchConfigurationEntity):
+    """Representation of a switch that controls inversion for window covering devices.
+
+    This is necessary because this cluster uses 2 attributes to control inversion.
+    """
+
+    _unique_id_suffix = "inverted"
+    _attribute_name = WindowCovering.AttributeDefs.config_status.name
+    _attr_translation_key = "inverted"
+    _attr_icon: str = "mdi:arrow-up-down"
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> Self | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        cluster_handler = cluster_handlers[0]
+        window_covering_mode_attr = (
+            WindowCovering.AttributeDefs.window_covering_mode.name
+        )
+        # this entity needs 2 attributes to function
+        if (
+            cls._attribute_name in cluster_handler.cluster.unsupported_attributes
+            or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
+            or cluster_handler.cluster.get(cls._attribute_name) is None
+            or window_covering_mode_attr
+            in cluster_handler.cluster.unsupported_attributes
+            or window_covering_mode_attr
+            not in cluster_handler.cluster.attributes_by_name
+            or cluster_handler.cluster.get(window_covering_mode_attr) is None
+        ):
+            _LOGGER.debug(
+                "%s is not supported - skipping %s entity creation",
+                cls._attribute_name,
+                cls.__name__,
+            )
+            return None
+
+        return cls(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the switch is on based on the statemachine."""
+        config_status = ConfigStatus(
+            self._cluster_handler.cluster.get(self._attribute_name)
+        )
+        return ConfigStatus.Open_up_commands_reversed in config_status
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self._async_on_off(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self._async_on_off(False)
+
+    async def async_update(self) -> None:
+        """Attempt to retrieve the state of the entity."""
+        self.debug("Polling current state")
+        await self._cluster_handler.get_attributes(
+            [
+                self._attribute_name,
+                WindowCovering.AttributeDefs.window_covering_mode.name,
+            ],
+            from_cache=False,
+            only_cache=False,
+        )
+        self.async_write_ha_state()
+
+    async def _async_on_off(self, invert: bool) -> None:
+        """Turn the entity on or off."""
+        name: str = WindowCovering.AttributeDefs.window_covering_mode.name
+        current_mode: WindowCoveringMode = WindowCoveringMode(
+            self._cluster_handler.cluster.get(name)
+        )
+        send_command: bool = False
+        if invert and WindowCoveringMode.Motor_direction_reversed not in current_mode:
+            current_mode |= WindowCoveringMode.Motor_direction_reversed
+            send_command = True
+        elif not invert and WindowCoveringMode.Motor_direction_reversed in current_mode:
+            current_mode &= ~WindowCoveringMode.Motor_direction_reversed
+            send_command = True
+        if send_command:
+            await self._cluster_handler.write_attributes_safe({name: current_mode})
+            await self.async_update()
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.curtain.agl001"}
+)
+class AqaraE1CurtainMotorHooksLockedSwitch(ZHASwitchConfigurationEntity):
+    """Representation of a switch that controls whether the curtain motor hooks are locked."""
+
+    _unique_id_suffix = "hooks_lock"
+    _attribute_name = "hooks_lock"
+    _attr_translation_key = "hooks_locked"
+    _attr_icon: str = "mdi:lock"

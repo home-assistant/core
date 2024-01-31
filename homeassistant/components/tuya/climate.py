@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
     SWING_BOTH,
@@ -98,18 +98,19 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya climate."""
         entities: list[TuyaClimateEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if device and device.category in CLIMATE_DESCRIPTIONS:
                 entities.append(
                     TuyaClimateEntity(
                         device,
-                        hass_data.device_manager,
+                        hass_data.manager,
                         CLIMATE_DESCRIPTIONS[device.category],
+                        hass.config.units.temperature_unit,
                     )
                 )
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -129,9 +130,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: TuyaClimateEntityDescription,
+        system_temperature_unit: UnitOfTemperature,
     ) -> None:
         """Determine which values to use."""
         self._attr_target_temperature_step = 1.0
@@ -157,7 +159,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
         # Default to System Temperature Unit
-        self._attr_temperature_unit = self.hass.config.units.temperature_unit
+        self._attr_temperature_unit = system_temperature_unit
 
         # Figure out current temperature, use preferred unit or what is available
         celsius_type = self.find_dpcode(

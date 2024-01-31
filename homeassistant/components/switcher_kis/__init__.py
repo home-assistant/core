@@ -125,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class SwitcherDataUpdateCoordinator(
     update_coordinator.DataUpdateCoordinator[SwitcherBase]
-):
+):  # pylint: disable=hass-enforce-coordinator-module
     """Switcher device data update coordinator."""
 
     def __init__(

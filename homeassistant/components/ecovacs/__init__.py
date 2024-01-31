@@ -25,6 +25,10 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.IMAGE,
+    Platform.SELECT,
+    Platform.SENSOR,
     Platform.VACUUM,
 ]
 
