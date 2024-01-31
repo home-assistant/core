@@ -22,6 +22,17 @@
         "default": "mdi:broom"
       }
     },
+    "number": {
+      "clean_count": {
+        "default": "mdi:counter"
+      },
+      "volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      }
+    },
     "sensor": {
       "error": {
         "default": "mdi:alert-circle"
