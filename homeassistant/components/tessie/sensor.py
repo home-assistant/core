@@ -26,7 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
@@ -35,6 +35,14 @@ from homeassistant.util.variance import ignore_variance
 from .const import DOMAIN
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+
+
+@callback
+def hours_to_datetime(value: StateType) -> datetime | None:
+    """Convert relative hours into absolute datetime."""
+    if isinstance(value, (int, float)) and value > 0:
+        return dt_util.now() + timedelta(minutes=value)
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -90,8 +98,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="charge_state_minutes_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: dt_util.now() + timedelta(minutes=cast(float, value)),
-        available_fn=lambda x: cast(bool, x),
+        value_fn=hours_to_datetime,
     ),
     TessieSensorEntityDescription(
         key="charge_state_battery_range",
