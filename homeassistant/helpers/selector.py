@@ -579,7 +579,6 @@ class QrCodeSelectorConfig(TypedDict, total=False):
 
     data: str
     scale: int
-    center_image: str
     error_correction_level: QrErrorCorrectionLevel
 
 
@@ -593,7 +592,6 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
         {
             vol.Required("data"): str,
             vol.Optional("scale"): int,
-            vol.Optional("center_image"): str,
             vol.Optional("error_correction_level"): vol.All(
                 vol.Coerce(QrErrorCorrectionLevel), lambda val: val.value
             ),
@@ -606,7 +604,7 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        vol.Schema(self.config["data"])(data)
+        vol.Schema(vol.Any(str, None))(data)
         return self.config["data"]
 
 
