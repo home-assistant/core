@@ -339,7 +339,7 @@ class AqaraLinkageAlarmState(BinarySensor):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.SMOKE
     _attr_translation_key: str = "linkage_alarm_state"
 
-      
+
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.curtain.agl001"}
 )
@@ -351,8 +351,8 @@ class AqaraE1CurtainMotorOpenedByHandBinarySensor(BinarySensor):
     _attr_translation_key = "hand_open"
     _attr_icon = "mdi:hand-wave"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-      
-      
+
+
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
