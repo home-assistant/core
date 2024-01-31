@@ -11,7 +11,11 @@ from gps3.agps3threaded import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -98,6 +102,9 @@ class GpsdSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "mode"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["2d_fix", "3d_fix"]
 
     def __init__(
         self,
@@ -110,7 +117,7 @@ class GpsdSensor(SensorEntity):
             identifiers={(DOMAIN, unique_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = f"{unique_id}-mode"
 
         self.agps_thread = AGPS3mechanism()
         self.agps_thread.stream_data(host=host, port=port)
@@ -120,9 +127,9 @@ class GpsdSensor(SensorEntity):
     def native_value(self) -> str | None:
         """Return the state of GPSD."""
         if self.agps_thread.data_stream.mode == 3:
-            return "3D Fix"
+            return "3d_fix"
         if self.agps_thread.data_stream.mode == 2:
-            return "2D Fix"
+            return "2d_fix"
         return None
 
     @property
