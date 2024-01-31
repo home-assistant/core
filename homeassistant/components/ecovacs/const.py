@@ -1,7 +1,7 @@
 """Ecovacs constants."""
-from deebot_client.events import LifeSpan
-
 from enum import StrEnum
+
+from deebot_client.events import LifeSpan
 
 DOMAIN = "ecovacs"
 
