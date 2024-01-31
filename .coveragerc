@@ -287,6 +287,7 @@ omit =
     homeassistant/components/ecovacs/controller.py
     homeassistant/components/ecovacs/entity.py
     homeassistant/components/ecovacs/image.py
+    homeassistant/components/ecovacs/number.py
     homeassistant/components/ecovacs/util.py
     homeassistant/components/ecovacs/vacuum.py
     homeassistant/components/ecowitt/__init__.py
