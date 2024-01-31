@@ -10,6 +10,8 @@ import random
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
+from zigpy.zcl.clusters.closures import WindowCovering
+from zigpy.zcl.clusters.general import Basic
 
 from homeassistant.components.climate import HVACAction
 from homeassistant.components.sensor import (
@@ -51,6 +53,7 @@ from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_ANALOG_INPUT,
     CLUSTER_HANDLER_BASIC,
+    CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_DEVICE_TEMPERATURE,
     CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     CLUSTER_HANDLER_HUMIDITY,
@@ -1312,3 +1315,55 @@ class SetpointChangeSource(EnumSensor):
     _attr_icon: str = "mdi:thermostat"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _enum = SetpointChangeSourceEnum
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class WindowCoveringTypeSensor(EnumSensor):
+    """Sensor that displays the type of a cover device."""
+
+    _attribute_name: str = WindowCovering.AttributeDefs.window_covering_type.name
+    _enum = WindowCovering.WindowCoveringType
+    _unique_id_suffix: str = WindowCovering.AttributeDefs.window_covering_type.name
+    _attr_translation_key: str = WindowCovering.AttributeDefs.window_covering_type.name
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:curtains"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_BASIC, models={"lumi.curtain.agl001"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class AqaraCurtainMotorPowerSourceSensor(EnumSensor):
+    """Sensor that displays the power source of the Aqara E1 curtain motor device."""
+
+    _attribute_name: str = Basic.AttributeDefs.power_source.name
+    _enum = Basic.PowerSource
+    _unique_id_suffix: str = Basic.AttributeDefs.power_source.name
+    _attr_translation_key: str = Basic.AttributeDefs.power_source.name
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:battery-positive"
+
+
+class AqaraE1HookState(types.enum8):
+    """Aqara hook state."""
+
+    Unlocked = 0x00
+    Locked = 0x01
+    Locking = 0x02
+    Unlocking = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.curtain.agl001"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class AqaraCurtainHookStateSensor(EnumSensor):
+    """Representation of a ZHA curtain mode configuration entity."""
+
+    _attribute_name = "hooks_state"
+    _enum = AqaraE1HookState
+    _unique_id_suffix = "hooks_state"
+    _attr_translation_key: str = "hooks_state"
+    _attr_icon: str = "mdi:hook"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
