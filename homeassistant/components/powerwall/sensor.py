@@ -138,10 +138,10 @@ async def async_setup_entry(
         )
 
     for battery in data.batteries.values():
-        for description in BATTERY_INSTANT_SENSORS:
-            entities.append(
-                PowerWallBatterySensor(powerwall_data, battery, description)
-            )
+        entities.extend(
+            PowerWallBatterySensor(powerwall_data, battery, description)
+            for description in BATTERY_INSTANT_SENSORS
+        )
 
     async_add_entities(entities)
 
@@ -405,9 +405,7 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
         key="grid_state",
         translation_key="grid_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            member.value.lower() for name, member in GridState.__members__.items()
-        ],
+        options=[state.value.lower() for state in GridState],
         value_fn=lambda battery_data: battery_data.grid_state.value.lower(),
     ),
 ]
