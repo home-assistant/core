@@ -1462,8 +1462,8 @@ class DanfossAdaptationRunStatus(BitMapSensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _default_value = "Nothing"
     _bitmap = {
-        "In Progress": 0x0001,
-        "Run Successful": 0x0002,
+        "In progress": 0x0001,
+        "Run successful": 0x0002,
         "Valve characteristic lost": 0x0004,
     }
 
@@ -1500,7 +1500,7 @@ class DanfossSoftwareErrorCode(BitMapSensor):
     _bitmap = {
         "Top PCB sensor error": 0x0001,
         "Side PCB sensor error": 0x0002,
-        "Non-volative Memory error": 0x0004,
+        "Non-volative memory error": 0x0004,
         "Unknown HW error": 0x0008,
         # 0x0010 = N/A
         "Motor error": 0x0020,
@@ -1510,9 +1510,9 @@ class DanfossSoftwareErrorCode(BitMapSensor):
         "Invalid clock information": 0x0200,
         # 0x0400 = N/A
         "Radio communication error": 0x0800,
-        "Encoder Jammed": 0x1000,
-        "Low Battery": 0x2000,
-        "Critical Low Battery": 0x4000,
+        "Encoder jammed": 0x1000,
+        "Low battery": 0x2000,
+        "Critical low battery": 0x4000,
         # 0x8000 = Reserved
     }
 
