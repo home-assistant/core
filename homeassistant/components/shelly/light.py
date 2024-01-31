@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_BULB
+from aioshelly.const import MODEL_BULB, RPC_GENERATIONS
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,11 +24,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DUAL_MODE_LIGHT_MODELS,
-    FIRMWARE_PATTERN,
     KELVIN_MAX_VALUE,
     KELVIN_MIN_VALUE_COLOR,
     KELVIN_MIN_VALUE_WHITE,
-    LIGHT_TRANSITION_MIN_FIRMWARE_DATE,
     LOGGER,
     MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
@@ -55,7 +53,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up lights for device."""
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
     return async_setup_block_entry(hass, config_entry, async_add_entities)
@@ -155,12 +153,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             self._attr_supported_features |= LightEntityFeature.EFFECT
 
         if coordinator.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
-            match = FIRMWARE_PATTERN.search(coordinator.device.settings.get("fw", ""))
-            if (
-                match is not None
-                and int(match[0]) >= LIGHT_TRANSITION_MIN_FIRMWARE_DATE
-            ):
-                self._attr_supported_features |= LightEntityFeature.TRANSITION
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
 
     @property
     def is_on(self) -> bool:
@@ -228,7 +221,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             red = self.block.red
             green = self.block.green
             blue = self.block.blue
-        return (red, green, blue)
+        return (cast(int, red), cast(int, green), cast(int, blue))
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int]:
@@ -238,7 +231,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         else:
             white = self.block.white
 
-        return (*self.rgb_color, white)
+        return (*self.rgb_color, cast(int, white))
 
     @property
     def color_temp_kelvin(self) -> int:
@@ -269,9 +262,9 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             effect_index = self.block.effect
 
         if self.coordinator.model == MODEL_BULB:
-            return SHBLB_1_RGB_EFFECTS[effect_index]
+            return SHBLB_1_RGB_EFFECTS[cast(int, effect_index)]
 
-        return STANDARD_RGB_EFFECTS[effect_index]
+        return STANDARD_RGB_EFFECTS[cast(int, effect_index)]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""

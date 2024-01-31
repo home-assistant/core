@@ -438,7 +438,7 @@ async def test_delete_blueprint_in_use_by_automation(
         assert msg["id"] == 9
         assert not msg["success"]
         assert msg["error"] == {
-            "code": "unknown_error",
+            "code": "home_assistant_error",
             "message": "Blueprint in use",
         }
 
@@ -484,6 +484,6 @@ async def test_delete_blueprint_in_use_by_script(
         assert msg["id"] == 9
         assert not msg["success"]
         assert msg["error"] == {
-            "code": "unknown_error",
+            "code": "home_assistant_error",
             "message": "Blueprint in use",
         }

@@ -69,6 +69,22 @@
           }
         }
       },
+      "departure_time_next": {
+        "name": "Departure time next",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
+      },
+      "departure_time_next_next": {
+        "name": "Departure time next after",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
+      },
       "departure_state": {
         "name": "Departure state",
         "state": {

@@ -50,12 +50,12 @@ def macos_adapter():
         "homeassistant.components.bluetooth.platform.system",
         return_value="Darwin",
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "habluetooth.scanner.platform.system",
         return_value="Darwin",
     ), patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Darwin",
-    ):
+    ), patch("habluetooth.scanner.SYSTEM", "Darwin"):
         yield
 
 
@@ -65,7 +65,7 @@ def windows_adapter():
     with patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Windows",
-    ):
+    ), patch("habluetooth.scanner.SYSTEM", "Windows"):
         yield
 
 
@@ -76,12 +76,12 @@ def no_adapter_fixture():
         "homeassistant.components.bluetooth.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "habluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Linux",
-    ), patch(
+    ), patch("habluetooth.scanner.SYSTEM", "Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
@@ -97,12 +97,12 @@ def one_adapter_fixture():
         "homeassistant.components.bluetooth.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "habluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Linux",
-    ), patch(
+    ), patch("habluetooth.scanner.SYSTEM", "Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
@@ -128,7 +128,7 @@ def two_adapters_fixture():
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "habluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
@@ -168,7 +168,7 @@ def one_adapter_old_bluez():
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "habluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"

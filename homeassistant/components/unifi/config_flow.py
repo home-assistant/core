@@ -8,6 +8,7 @@ Configuration of options through options flow.
 from __future__ import annotations
 
 from collections.abc import Mapping
+import operator
 import socket
 from types import MappingProxyType
 from typing import Any
@@ -309,6 +310,11 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             client.mac: f"{client.name or client.hostname} ({client.mac})"
             for client in self.controller.api.clients.values()
         }
+        clients |= {
+            mac: f"Unknown ({mac})"
+            for mac in self.options.get(CONF_CLIENT_SOURCE, [])
+            if mac not in clients
+        }
 
         return self.async_show_form(
             step_id="configure_entity_sources",
@@ -317,7 +323,9 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_CLIENT_SOURCE,
                         default=self.options.get(CONF_CLIENT_SOURCE, []),
-                    ): cv.multi_select(clients),
+                    ): cv.multi_select(
+                        dict(sorted(clients.items(), key=operator.itemgetter(1)))
+                    ),
                 }
             ),
             last_step=False,

@@ -316,6 +316,7 @@ class AbstractConfig(ABC):
     @callback
     def async_enable_local_sdk(self) -> None:
         """Enable the local SDK."""
+        _LOGGER.debug("async_enable_local_sdk")
         setup_successful = True
         setup_webhook_ids = []
 
@@ -324,11 +325,16 @@ class AbstractConfig(ABC):
             self._local_sdk_active = False
             return
 
-        for user_agent_id, _ in self._store.agent_user_ids.items():
+        for user_agent_id in self._store.agent_user_ids:
             if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
                 setup_successful = False
                 break
 
+            _LOGGER.debug(
+                "Register webhook handler %s for agent user id %s",
+                webhook_id,
+                user_agent_id,
+            )
             try:
                 webhook.async_register(
                     self.hass,
@@ -360,13 +366,18 @@ class AbstractConfig(ABC):
     @callback
     def async_disable_local_sdk(self) -> None:
         """Disable the local SDK."""
+        _LOGGER.debug("async_disable_local_sdk")
         if not self._local_sdk_active:
             return
 
         for agent_user_id in self._store.agent_user_ids:
-            webhook.async_unregister(
-                self.hass, self.get_local_webhook_id(agent_user_id)
+            webhook_id = self.get_local_webhook_id(agent_user_id)
+            _LOGGER.debug(
+                "Unregister webhook handler %s for agent user id %s",
+                webhook_id,
+                agent_user_id,
             )
+            webhook.async_unregister(self.hass, webhook_id)
 
         self._local_sdk_active = False
 
@@ -686,8 +697,12 @@ class GoogleEntity:
             return device
 
         # Add Matter info
-        if "matter" in self.hass.config.components and (
-            matter_info := matter.get_matter_device_info(self.hass, device_entry.id)
+        if (
+            "matter" in self.hass.config.components
+            and any(x for x in device_entry.identifiers if x[0] == "matter")
+            and (
+                matter_info := matter.get_matter_device_info(self.hass, device_entry.id)
+            )
         ):
             device["matterUniqueId"] = matter_info["unique_id"]
             device["matterOriginalVendorId"] = matter_info["vendor_id"]

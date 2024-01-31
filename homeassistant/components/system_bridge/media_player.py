@@ -118,10 +118,8 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
         if data.media.is_next_enabled:
             features |= MediaPlayerEntityFeature.NEXT_TRACK
-        if data.media.is_pause_enabled:
-            features |= MediaPlayerEntityFeature.PAUSE
-        if data.media.is_play_enabled:
-            features |= MediaPlayerEntityFeature.PLAY
+        if data.media.is_pause_enabled or data.media.is_play_enabled:
+            features |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
         if data.media.is_stop_enabled:
             features |= MediaPlayerEntityFeature.STOP
 

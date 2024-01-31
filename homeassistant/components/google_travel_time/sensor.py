@@ -93,7 +93,7 @@ class GoogleTravelTimeSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
-        if self.hass.state != CoreState.running:
+        if self.hass.state is not CoreState.running:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, self.first_update
             )

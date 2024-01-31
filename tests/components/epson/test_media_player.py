@@ -30,9 +30,9 @@ async def test_set_unique_id(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.unique_id is None
-        entity = entity_registry.async_get("media_player.epson")
-        assert entity
-        assert entity.unique_id == entry.entry_id
+        entity_entry = entity_registry.async_get("media_player.epson")
+        assert entity_entry
+        assert entity_entry.unique_id == entry.entry_id
     with patch(
         "homeassistant.components.epson.Projector.get_power", return_value="01"
     ), patch(
@@ -43,7 +43,7 @@ async def test_set_unique_id(
         freezer.tick(timedelta(seconds=30))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        entity = entity_registry.async_get("media_player.epson")
-        assert entity
-        assert entity.unique_id == "123"
+        entity_entry = entity_registry.async_get("media_player.epson")
+        assert entity_entry
+        assert entity_entry.unique_id == "123"
         assert entry.unique_id == "123"

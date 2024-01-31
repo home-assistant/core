@@ -59,9 +59,7 @@ class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
     async def _async_set_island_mode(self, island_mode: IslandMode) -> None:
         """Toggles off-grid mode using the island_mode argument."""
         try:
-            await self.hass.async_add_executor_job(
-                self.power_wall.set_island_mode, island_mode
-            )
+            await self.power_wall.set_island_mode(island_mode)
         except PowerwallError as ex:
             raise HomeAssistantError(
                 f"Setting off-grid operation to {island_mode} failed: {ex}"

@@ -5,8 +5,9 @@ import asyncio
 from datetime import datetime, timedelta
 import ssl
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Literal
 
+import aiohttp
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -74,6 +75,7 @@ from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
+CHECK_WEBSOCKET_INTERVAL = timedelta(minutes=1)
 
 
 class UniFiController:
@@ -88,6 +90,7 @@ class UniFiController:
         self.api = api
 
         self.ws_task: asyncio.Task | None = None
+        self._cancel_websocket_check: CALLBACK_TYPE | None = None
 
         self.available = True
         self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
@@ -260,8 +263,8 @@ class UniFiController:
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):
-            if entry.domain == Platform.DEVICE_TRACKER:
-                macs.append(entry.unique_id.split("-", 1)[0])
+            if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id:
+                macs.append(entry.unique_id.split("-", 1)[1])
 
         for mac in self.option_supported_clients + self.option_block_clients + macs:
             if mac not in self.api.clients and mac in self.api.clients_all:
@@ -273,6 +276,9 @@ class UniFiController:
 
         self._cancel_heartbeat_check = async_track_time_interval(
             self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
+        )
+        self._cancel_websocket_check = async_track_time_interval(
+            self.hass, self._async_watch_websocket, CHECK_WEBSOCKET_INTERVAL
         )
 
     @callback
@@ -374,7 +380,10 @@ class UniFiController:
 
         async def _websocket_runner() -> None:
             """Start websocket."""
-            await self.api.start_websocket()
+            try:
+                await self.api.start_websocket()
+            except (aiohttp.ClientConnectorError, aiounifi.WebsocketError):
+                LOGGER.error("Websocket disconnected")
             self.available = False
             async_dispatcher_send(self.hass, self.signal_reachable)
             self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
@@ -406,6 +415,14 @@ class UniFiController:
             aiounifi.AiounifiException,
         ):
             self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
+
+    @callback
+    def _async_watch_websocket(self, now: datetime) -> None:
+        """Watch timestamp for last received websocket message."""
+        LOGGER.debug(
+            "Last received websocket timestamp: %s",
+            self.api.connectivity.ws_message_received,
+        )
 
     @callback
     def shutdown(self, event: Event) -> None:
@@ -446,6 +463,10 @@ class UniFiController:
             self._cancel_heartbeat_check()
             self._cancel_heartbeat_check = None
 
+        if self._cancel_websocket_check:
+            self._cancel_websocket_check()
+            self._cancel_websocket_check = None
+
         if self._cancel_poe_command:
             self._cancel_poe_command()
             self._cancel_poe_command = None
@@ -458,7 +479,7 @@ async def get_unifi_controller(
     config: MappingProxyType[str, Any],
 ) -> aiounifi.Controller:
     """Create a controller object and verify authentication."""
-    ssl_context: ssl.SSLContext | bool = False
+    ssl_context: ssl.SSLContext | Literal[False] = False
 
     if verify_ssl := config.get(CONF_VERIFY_SSL):
         session = aiohttp_client.async_get_clientsession(hass)
@@ -497,6 +518,7 @@ async def get_unifi_controller(
     except (
         asyncio.TimeoutError,
         aiounifi.BadGateway,
+        aiounifi.Forbidden,
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
         aiounifi.ResponseError,
@@ -505,14 +527,6 @@ async def get_unifi_controller(
             "Error connecting to the UniFi Network at %s: %s", config[CONF_HOST], err
         )
         raise CannotConnect from err
-
-    except aiounifi.Forbidden as err:
-        LOGGER.warning(
-            "Access forbidden to UniFi Network at %s, check access rights: %s",
-            config[CONF_HOST],
-            err,
-        )
-        raise AuthenticationRequired from err
 
     except aiounifi.LoginRequired as err:
         LOGGER.warning(

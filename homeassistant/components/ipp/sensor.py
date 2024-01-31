@@ -37,14 +37,14 @@ from .coordinator import IPPDataUpdateCoordinator
 from .entity import IPPEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class IPPSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Printer], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IPPSensorEntityDescription(
     SensorEntityDescription, IPPSensorEntityDescriptionMixin
 ):

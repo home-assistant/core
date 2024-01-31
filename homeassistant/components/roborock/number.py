@@ -23,7 +23,7 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockNumberDescriptionMixin:
     """Define an entity description mixin for button entities."""
 
@@ -33,7 +33,7 @@ class RoborockNumberDescriptionMixin:
     update_value: Callable[[AttributeCache, float], Coroutine[Any, Any, dict]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockNumberDescription(
     NumberEntityDescription, RoborockNumberDescriptionMixin
 ):
@@ -44,7 +44,6 @@ NUMBER_DESCRIPTIONS: list[RoborockNumberDescription] = [
     RoborockNumberDescription(
         key="volume",
         translation_key="volume",
-        icon="mdi:volume-source",
         native_min_value=0,
         native_max_value=100,
         native_unit_of_measurement=PERCENTAGE,

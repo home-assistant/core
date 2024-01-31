@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
-from tuya_iot.device import TuyaDeviceStatusRange
+from tuya_sharing import CustomerDevice, Manager
+from tuya_sharing.device import DeviceStatusRange
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -38,7 +38,7 @@ from .const import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
@@ -514,6 +514,18 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name=None,
             icon="mdi:gas-cylinder",
             state_class=SensorStateClass.MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
+    # Smart Water Timer
+    "sfkzq": (
+        # Total seconds of irrigation. Read-write value; the device appears to ignore the write action (maybe firmware bug)
+        TuyaSensorEntityDescription(
+            key=DPCode.TIME_USE,
+            translation_key="total_watering_time",
+            icon="mdi:history",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         *BATTERY_SENSORS,
     ),
@@ -1100,19 +1112,17 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya sensor."""
         entities: list[TuyaSensorEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 for description in descriptions:
                     if description.key in device.status:
                         entities.append(
-                            TuyaSensorEntity(
-                                device, hass_data.device_manager, description
-                            )
+                            TuyaSensorEntity(device, hass_data.manager, description)
                         )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -1124,15 +1134,15 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     entity_description: TuyaSensorEntityDescription
 
-    _status_range: TuyaDeviceStatusRange | None = None
+    _status_range: DeviceStatusRange | None = None
     _type: DPType | None = None
     _type_data: IntegerTypeData | EnumTypeData | None = None
     _uom: UnitOfMeasurement | None = None
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: TuyaSensorEntityDescription,
     ) -> None:
         """Init Tuya sensor."""

@@ -60,7 +60,7 @@ async def test_webostv_turn_on_trigger_device_id(
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0
 
-    with patch("homeassistant.config.load_yaml", return_value={}):
+    with patch("homeassistant.config.load_yaml_dict", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
     calls.clear()

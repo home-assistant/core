@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import BlinkUpdateCoordinator
-from .services import async_setup_services
+from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Blink."""
 
-    await async_setup_services(hass)
+    setup_services(hass)
 
     return True
 
@@ -107,7 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -129,9 +128,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    blink: Blink = hass.data[DOMAIN][entry.entry_id].api
-    blink.refresh_rate = entry.options[CONF_SCAN_INTERVAL]

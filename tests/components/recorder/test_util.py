@@ -99,7 +99,7 @@ def test_validate_or_move_away_sqlite_database(
 
 
 async def test_last_run_was_recently_clean(
-    event_loop, async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path: Path
+    async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path: Path
 ) -> None:
     """Test we can check if the last recorder run was recently clean."""
     config = {
@@ -883,7 +883,7 @@ def test_build_mysqldb_conv() -> None:
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 def test_execute_stmt_lambda_element(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test executing with execute_stmt_lambda_element."""
     hass = hass_recorder()

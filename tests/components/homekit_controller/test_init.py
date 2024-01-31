@@ -46,7 +46,7 @@ def create_motion_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_unload_on_stop(hass: HomeAssistant, utcnow) -> None:
+async def test_unload_on_stop(hass: HomeAssistant) -> None:
     """Test async_unload is called on stop."""
     await setup_test_component(hass, create_motion_sensor_service)
     with patch(

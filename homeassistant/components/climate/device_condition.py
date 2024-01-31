@@ -71,7 +71,7 @@ async def async_get_conditions(
 
         conditions.append({**base_condition, CONF_TYPE: "is_hvac_mode"})
 
-        if supported_features & const.SUPPORT_PRESET_MODE:
+        if supported_features & const.ClimateEntityFeature.PRESET_MODE:
             conditions.append({**base_condition, CONF_TYPE: "is_preset_mode"})
 
     return conditions

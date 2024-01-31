@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 from functools import partial
 import logging
-from typing import cast
+from typing import Any, cast
 
 import caldav
 from caldav.lib.error import DAVError, NotFoundError
@@ -21,6 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .api import async_get_calendars, get_attr_value
 from .const import DOMAIN
@@ -71,6 +72,12 @@ def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
         or (summary := get_attr_value(todo, "summary")) is None
     ):
         return None
+    due: date | datetime | None = None
+    if due_value := get_attr_value(todo, "due"):
+        if isinstance(due_value, datetime):
+            due = dt_util.as_local(due_value)
+        elif isinstance(due_value, date):
+            due = due_value
     return TodoItem(
         uid=uid,
         summary=summary,
@@ -78,6 +85,8 @@ def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
             get_attr_value(todo, "status") or "",
             TodoItemStatus.NEEDS_ACTION,
         ),
+        due=due,
+        description=get_attr_value(todo, "description"),
     )
 
 
@@ -89,6 +98,9 @@ class WebDavTodoListEntity(TodoListEntity):
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
+        | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+        | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
     def __init__(self, calendar: caldav.Calendar, config_entry_id: str) -> None:
@@ -114,15 +126,18 @@ class WebDavTodoListEntity(TodoListEntity):
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
+        item_data: dict[str, Any] = {}
+        if summary := item.summary:
+            item_data["summary"] = summary
+        if status := item.status:
+            item_data["status"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+        if due := item.due:
+            item_data["due"] = due
+        if description := item.description:
+            item_data["description"] = description
         try:
             await self.hass.async_add_executor_job(
-                partial(
-                    self._calendar.save_todo,
-                    summary=item.summary,
-                    status=TODO_STATUS_MAP_INV.get(
-                        item.status or TodoItemStatus.NEEDS_ACTION, "NEEDS-ACTION"
-                    ),
-                ),
+                partial(self._calendar.save_todo, **item_data),
             )
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
@@ -139,10 +154,17 @@ class WebDavTodoListEntity(TodoListEntity):
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
         vtodo = todo.icalendar_component  # type: ignore[attr-defined]
-        if item.summary:
-            vtodo["summary"] = item.summary
-        if item.status:
-            vtodo["status"] = TODO_STATUS_MAP_INV.get(item.status, "NEEDS-ACTION")
+        vtodo["SUMMARY"] = item.summary or ""
+        if status := item.status:
+            vtodo["STATUS"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+        if due := item.due:
+            todo.set_due(due)  # type: ignore[attr-defined]
+        else:
+            vtodo.pop("DUE", None)
+        if description := item.description:
+            vtodo["DESCRIPTION"] = description
+        else:
+            vtodo.pop("DESCRIPTION", None)
         try:
             await self.hass.async_add_executor_job(
                 partial(
