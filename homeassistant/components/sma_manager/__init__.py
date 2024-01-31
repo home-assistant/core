@@ -36,16 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
-    """Unload config.
-
-    This is called when an entry/configured device is to be removed. The class
-    needs to unload itself, and remove callbacks. See the classes for further
-    details
-
-    @param hass:
-    @param config:
-    @return:
-    """
+    """Unload a config entry."""
 
     unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
     if unload_ok:
