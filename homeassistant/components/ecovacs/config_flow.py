@@ -43,7 +43,7 @@ def _validate_url(
     schema_list: set[str],
 ) -> dict[str, str]:
     """Validate an URL and return error dictionary."""
-    if not urlparse(value).scheme in schema_list:
+    if urlparse(value).scheme not in schema_list:
         return {field_name: f"invalid_url_schema_{field_name}"}
     try:
         vol.Schema(vol.Url())(value)
@@ -88,7 +88,7 @@ async def _validate_input(
     try:
         await authenticator.authenticate()
     except ClientError:
-        _LOGGER.exception("Cannot connect")
+        _LOGGER.debug("Cannot connect", exc_info=True)
         errors["base"] = "cannot_connect"
     except InvalidAuthenticationError:
         errors["base"] = "invalid_auth"
@@ -116,7 +116,7 @@ async def _validate_input(
     try:
         await client.verify_config()
     except MqttError:
-        _LOGGER.exception("Cannot connect")
+        _LOGGER.debug("Cannot connect", exc_info=True)
         errors[cannot_connect_field] = "cannot_connect"
     except InvalidAuthenticationError:
         errors["base"] = "invalid_auth"
