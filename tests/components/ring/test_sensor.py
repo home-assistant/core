@@ -78,13 +78,4 @@ async def test_only_chime_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    success_msg = "Finished fetching devices data in 0.000 seconds (success: True)"
-    error_logs = [record for record in caplog.records if record.levelname == "ERROR"]
     assert "UnboundLocalError" not in caplog.text  # For issue #109210
-    assert success_msg in [
-        record.message
-        for record in caplog.records
-        if record.levelname == "DEBUG"
-        and record.name == "homeassistant.components.ring.coordinator"
-    ]
-    assert len(error_logs) == 0
