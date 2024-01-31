@@ -118,7 +118,7 @@ async def test_devices_in_dr(
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
-        ("yna5x1", 22),
+        ("yna5x1", 25),
     ],
 )
 async def test_all_entities_loaded(
