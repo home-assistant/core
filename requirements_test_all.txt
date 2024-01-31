@@ -212,7 +212,7 @@ aioeagle==1.1.0
 aioecowitt==2023.5.0
 
 # homeassistant.components.co2signal
-aioelectricitymaps==0.1.6
+aioelectricitymaps==0.2.0
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
