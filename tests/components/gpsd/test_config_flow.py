@@ -53,6 +53,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_import(hass: HomeAssistant) -> None:
