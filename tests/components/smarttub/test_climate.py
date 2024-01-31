@@ -52,9 +52,7 @@ async def test_thermostat_update(
     assert state.state == HVACMode.HEAT
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TURN_ON
+        == ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 38
     assert state.attributes[ATTR_TEMPERATURE] == 39
