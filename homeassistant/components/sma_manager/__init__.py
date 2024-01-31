@@ -19,7 +19,6 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
         data[CONF_NAME], data[CONF_HOST], data[CONF_PORT], data[CONF_REFRESH_INTERVAL]
     )
 
-    # Check if available/ready
     if not sma.available:
         raise ConfigEntryNotReady(
             f"Timeout while connecting socket at {data[CONF_HOST]}"
