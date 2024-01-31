@@ -167,7 +167,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         if self._result != Status.SUCCESS:
             self._reset_progress()
             raise HomeAssistantError(
-                "Update was not successful - result: {self._result}"
+                f"Update was not successful - result: {self._result}"
             )
 
         # If we get here, all files were installed successfully
