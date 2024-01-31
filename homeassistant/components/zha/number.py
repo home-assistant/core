@@ -1,13 +1,11 @@
 """Support for ZHA AnalogOutput cluster."""
 from __future__ import annotations
 
-import ctypes
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
-
 from zigpy.zcl.clusters.hvac import Thermostat
 
 from homeassistant.components.number import NumberEntity, NumberMode
@@ -1015,7 +1013,6 @@ class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-
         # The spec says 0x954D, which is a signed integer, therefore the value is in decimals
         min_present_value = self._cluster_handler.cluster.get(self._min_source, -27315)
         return min_present_value * self._attr_multiplier
