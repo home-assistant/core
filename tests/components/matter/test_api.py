@@ -252,7 +252,6 @@ async def test_node_diagnostics(
     assert msg["result"] == diag_res
 
     # repeat test with invalid device id
-    matter_client.set_wifi_credentials.reset_mock()
     await ws_client.send_json(
         {
             ID: 2,
@@ -308,6 +307,19 @@ async def test_ping_node(
     assert msg["type"] == "result"
     assert msg["result"] == ping_result
 
+    # repeat test with invalid device id
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "matter/ping_node",
+            DEVICE_ID: "invalid",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
+
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
@@ -357,6 +369,19 @@ async def test_open_commissioning_window(
     assert msg["type"] == "result"
     assert msg["result"] == dataclass_to_dict(commissioning_parameters)
 
+    # repeat test with invalid device id
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "matter/open_commissioning_window",
+            DEVICE_ID: "invalid",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
+
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
@@ -395,6 +420,20 @@ async def test_remove_matter_fabric(
     assert msg["success"]
     matter_client.remove_matter_fabric.assert_called_once_with(1, 3)
 
+    # repeat test with invalid device id
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "matter/remove_matter_fabric",
+            DEVICE_ID: "invalid",
+            "fabric_index": 3,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
+
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
@@ -426,3 +465,16 @@ async def test_interview_node(
     msg = await ws_client.receive_json()
     assert msg["success"]
     matter_client.interview_node.assert_called_once_with(1)
+
+    # repeat test with invalid device id
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "matter/interview_node",
+            DEVICE_ID: "invalid",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
