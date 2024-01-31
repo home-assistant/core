@@ -38,8 +38,8 @@ from .entity import TessieEntity
 
 
 @callback
-def hours_to_datetime(value: StateType) -> datetime | None:
-    """Convert relative hours into absolute datetime."""
+def minutes_to_datetime(value: StateType) -> datetime | None:
+    """Convert relative minutes into absolute datetime."""
     if isinstance(value, (int, float)) and value > 0:
         return dt_util.now() + timedelta(minutes=value)
     return None
@@ -98,7 +98,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="charge_state_minutes_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=hours_to_datetime,
+        value_fn=minutes_to_datetime,
     ),
     TessieSensorEntityDescription(
         key="charge_state_battery_range",
