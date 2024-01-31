@@ -195,7 +195,10 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         if HVACMode.OFF in self._hvac_modes:
             self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
-        if any(mode != HVACMode.OFF for mode in self._hvac_modes):
+        if any(
+            mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL)
+            for mode in self._hvac_modes
+        ):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
         # If any setpoint value exists, we can assume temperature
         # can be set
