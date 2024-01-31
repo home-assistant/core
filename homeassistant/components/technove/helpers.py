@@ -28,7 +28,6 @@ def technove_exception_handler(
     ) -> None:
         try:
             await func(self, *args, **kwargs)
-            self.coordinator.async_update_listeners()
 
         except TechnoVEConnectionError as error:
             self.coordinator.last_update_success = False

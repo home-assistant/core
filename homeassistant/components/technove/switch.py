@@ -15,7 +15,6 @@ from .entity import TechnoVEEntity
 from .helpers import technove_exception_handler
 
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
