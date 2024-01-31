@@ -363,7 +363,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
         # This should be removed in 2025.1.
         if self._enable_turn_on_off_backwards_compatibility is False:
-            # Return if integrations is migrated
+            # Return if integration has migrated already
             return
 
         if not self.supported_features & ClimateEntityFeature.TURN_OFF and (
@@ -387,8 +387,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         if (modes := self.hvac_modes) and len(modes) >= 2 and HVACMode.OFF in modes:
-            # turn_on/off implicitly supported by including more modes than 1 and one of them
-            # is HVACMode.OFF
+            # turn_on/off implicitly supported by including more modes than 1 and one of these
+            # are HVACMode.OFF
             _modes = [_mode for _mode in self.hvac_modes if _mode is not None]
             _report_turn_on_off(", ".join(_modes or []), "turn_on/turn_off")
             self.__mod_supported_features |= (  # pylint: disable=unused-private-member
