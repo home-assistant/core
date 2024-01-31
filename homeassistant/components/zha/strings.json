@@ -583,9 +583,6 @@
       },
       "self_test": {
         "name": "Self-test"
-      },
-      "identify": {
-        "name": "Identify"
       }
     },
     "climate": {
