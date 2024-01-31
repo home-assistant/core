@@ -301,9 +301,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_temperature_unit: str
 
     __mod_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
-    # Integrations can set `_enable_turn_on_off_backwards_compatibility` to False
-    # to skip the automatic setting of feature flags TURN_ON/TURN_OFF for
-    # backwards compatibility.
+    # Integrations should set `_enable_turn_on_off_backwards_compatibility` to False
+    # once migrated and set the feature flags TURN_ON/TURN_OFF as needed.
     _enable_turn_on_off_backwards_compatibility: bool = True
 
     def __getattribute__(self, __name: str) -> Any:
@@ -364,7 +363,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
         # This should be removed in 2025.1.
         if self._enable_turn_on_off_backwards_compatibility is False:
-            # Return if integrations have turned off backwards compatibility
+            # Return if integrations is migrated
             return
 
         if not self.supported_features & ClimateEntityFeature.TURN_OFF and (
@@ -387,17 +386,11 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 ClimateEntityFeature.TURN_ON
             )
 
-        if (
-            self.supported_features & ClimateEntityFeature.TURN_OFF
-            or self.supported_features & ClimateEntityFeature.TURN_ON
-        ):
-            # If feature flags has already been set return here
-            return
-
         if (modes := self.hvac_modes) and len(modes) >= 2 and HVACMode.OFF in modes:
             # turn_on/off implicitly supported by including more modes than 1 and one of them
             # is HVACMode.OFF
-            _report_turn_on_off(", ".join(modes or []), "turn_on/turn_off")
+            _modes = [_mode for _mode in self.hvac_modes if _mode is not None]
+            _report_turn_on_off(", ".join(_modes or []), "turn_on/turn_off")
             self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                 ClimateEntityFeature.TURN_ON
             )
