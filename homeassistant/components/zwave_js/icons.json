@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "controller_status": {
+        "default": "mdi:help-rhombus",
+        "state": {
+          "ready": "mdi:check",
+          "unresponsive": "mdi:bell-off",
+          "jammed": "mdi:lock"
+        }
+      },
+      "node_status": {
+        "default": "mdi:help-rhombus",
+        "state": {
+          "alive": "mdi:heart-pulse",
+          "asleep": "mdi:sleep",
+          "awake": "mdi:eye",
+          "dead": "mdi:robot-dead",
+          "unknown": "mdi:help-rhombus"
+        }
+      }
+    }
+  }
+}

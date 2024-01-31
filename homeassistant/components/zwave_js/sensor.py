@@ -6,7 +6,7 @@ from typing import cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, ControllerStatus, NodeStatus
+from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
@@ -90,20 +90,6 @@ from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 0
-
-CONTROLLER_STATUS_ICON: dict[ControllerStatus, str] = {
-    ControllerStatus.READY: "mdi:check",
-    ControllerStatus.UNRESPONSIVE: "mdi:bell-off",
-    ControllerStatus.JAMMED: "mdi:lock",
-}
-
-NODE_STATUS_ICON: dict[NodeStatus, str] = {
-    NodeStatus.ALIVE: "mdi:heart-pulse",
-    NodeStatus.ASLEEP: "mdi:sleep",
-    NodeStatus.AWAKE: "mdi:eye",
-    NodeStatus.DEAD: "mdi:robot-dead",
-    NodeStatus.UNKNOWN: "mdi:help-rhombus",
-}
 
 
 # These descriptions should include device class.
@@ -784,6 +770,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
+    _attr_translation_key = "node_status"
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, node: ZwaveNode
@@ -793,7 +780,6 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self.node = node
 
         # Entity class attributes
-        self._attr_name = "Node status"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.node_status"
         # device may not be precreated in main handler yet
@@ -814,11 +800,6 @@ class ZWaveNodeStatusSensor(SensorEntity):
         """Call when status event is received."""
         self._attr_native_value = self.node.status.name.lower()
         self.async_write_ha_state()
-
-    @property
-    def icon(self) -> str | None:
-        """Icon of the entity."""
-        return NODE_STATUS_ICON[self.node.status]
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -852,6 +833,7 @@ class ZWaveControllerStatusSensor(SensorEntity):
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
+    _attr_translation_key = "controller_status"
 
     def __init__(self, config_entry: ConfigEntry, driver: Driver) -> None:
         """Initialize a generic Z-Wave device entity."""
@@ -861,7 +843,6 @@ class ZWaveControllerStatusSensor(SensorEntity):
         assert node
 
         # Entity class attributes
-        self._attr_name = "Status"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.controller_status"
         # device may not be precreated in main handler yet
@@ -882,11 +863,6 @@ class ZWaveControllerStatusSensor(SensorEntity):
         """Call when status event is received."""
         self._attr_native_value = self.controller.status.name.lower()
         self.async_write_ha_state()
-
-    @property
-    def icon(self) -> str | None:
-        """Icon of the entity."""
-        return CONTROLLER_STATUS_ICON[self.controller.status]
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
