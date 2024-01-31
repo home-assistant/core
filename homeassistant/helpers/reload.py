@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, Literal, overload
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
@@ -13,7 +13,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
-from . import config_per_platform
 from .entity import Entity
 from .entity_component import EntityComponent
 from .entity_platform import EntityPlatform, async_get_platforms
@@ -60,7 +59,7 @@ async def _resetup_platform(
     """Resetup a platform."""
     integration = await async_get_integration(hass, platform_domain)
 
-    conf = await conf_util.async_process_component_config(
+    conf = await conf_util.async_process_component_and_handle_errors(
         hass, unprocessed_config, integration
     )
 
@@ -69,7 +68,7 @@ async def _resetup_platform(
 
     root_config: dict[str, list[ConfigType]] = {platform_domain: []}
     # Extract only the config for template, ignore the rest.
-    for p_type, p_config in config_per_platform(conf, platform_domain):
+    for p_type, p_config in conf_util.config_per_platform(conf, platform_domain):
         if p_type != integration_domain:
             continue
 
@@ -136,14 +135,41 @@ async def _async_reconfig_platform(
     await asyncio.gather(*tasks)
 
 
+@overload
 async def async_integration_yaml_config(
     hass: HomeAssistant, integration_name: str
 ) -> ConfigType | None:
+    ...
+
+
+@overload
+async def async_integration_yaml_config(
+    hass: HomeAssistant,
+    integration_name: str,
+    *,
+    raise_on_failure: Literal[True],
+) -> ConfigType:
+    ...
+
+
+@overload
+async def async_integration_yaml_config(
+    hass: HomeAssistant,
+    integration_name: str,
+    *,
+    raise_on_failure: Literal[False] | bool,
+) -> ConfigType | None:
+    ...
+
+
+async def async_integration_yaml_config(
+    hass: HomeAssistant, integration_name: str, *, raise_on_failure: bool = False
+) -> ConfigType | None:
     """Fetch the latest yaml configuration for an integration."""
     integration = await async_get_integration(hass, integration_name)
-
-    return await conf_util.async_process_component_config(
-        hass, await conf_util.async_hass_config_yaml(hass), integration
+    config = await conf_util.async_hass_config_yaml(hass)
+    return await conf_util.async_process_component_and_handle_errors(
+        hass, config, integration, raise_on_failure=raise_on_failure
     )
 
 

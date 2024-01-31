@@ -19,7 +19,7 @@ from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class LaMetricNumberEntityDescription(NumberEntityDescription):
     """Class describing LaMetric number entities."""
 

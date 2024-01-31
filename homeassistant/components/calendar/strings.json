@@ -73,7 +73,7 @@
       }
     },
     "get_events": {
-      "name": "Get event",
+      "name": "Get events",
       "description": "Get events on a calendar within a time range.",
       "fields": {
         "start_date_time": {

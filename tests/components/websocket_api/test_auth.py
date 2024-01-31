@@ -134,7 +134,7 @@ async def test_auth_active_user_inactive(
     hass_access_token: str,
 ) -> None:
     """Test authenticating with a token."""
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     refresh_token.user.is_active = False
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
@@ -216,11 +216,11 @@ async def test_auth_close_after_revoke(
     """Test that a websocket is closed after the refresh token is revoked."""
     assert not websocket_client.closed
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
-    await hass.auth.async_remove_refresh_token(refresh_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    hass.auth.async_remove_refresh_token(refresh_token)
 
     msg = await websocket_client.receive()
-    assert msg.type == aiohttp.WSMsgType.CLOSE
+    assert msg.type == aiohttp.WSMsgType.CLOSED
     assert websocket_client.closed
 
 

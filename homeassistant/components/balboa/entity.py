@@ -15,12 +15,11 @@ class BalboaEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, client: SpaClient, name: str | None = None) -> None:
+    def __init__(self, client: SpaClient, key: str) -> None:
         """Initialize the control."""
         mac = client.mac_address
         model = client.model
-        self._attr_unique_id = f'{model}-{name}-{mac.replace(":","")[-6:]}'
-        self._attr_name = name
+        self._attr_unique_id = f'{model}-{key}-{mac.replace(":","")[-6:]}'
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac)},
             name=model,

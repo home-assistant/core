@@ -2,7 +2,7 @@
 
 from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker.const import SourceType
 
 
 async def async_get_scanner(hass, config):
@@ -23,7 +23,7 @@ class MockScannerEntity(ScannerEntity):
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def battery_level(self):

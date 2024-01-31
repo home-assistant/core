@@ -374,7 +374,7 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
     )
 
     with assert_setup_component(0, "switch"), patch(
-        "homeassistant.config.async_notify_setup_error"
+        "homeassistant.setup.async_notify_setup_error"
     ) as mock_notify:
         assert await setup.async_setup_component(
             hass,
@@ -389,7 +389,7 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
     hass.config.components.remove("switch")
 
     with assert_setup_component(0), patch(
-        "homeassistant.config.async_notify_setup_error"
+        "homeassistant.setup.async_notify_setup_error"
     ) as mock_notify:
         assert await setup.async_setup_component(
             hass,
@@ -410,7 +410,7 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
     hass.config.components.remove("switch")
 
     with assert_setup_component(1, "switch"), patch(
-        "homeassistant.config.async_notify_setup_error"
+        "homeassistant.setup.async_notify_setup_error"
     ) as mock_notify:
         assert await setup.async_setup_component(
             hass,
@@ -672,7 +672,7 @@ async def test_async_get_loaded_integrations(hass: HomeAssistant) -> None:
     hass.config.components.add("notbase.switch")
     hass.config.components.add("myintegration")
     hass.config.components.add("device_tracker")
-    hass.config.components.add("device_tracker.other")
+    hass.config.components.add("other.device_tracker")
     hass.config.components.add("myintegration.light")
     assert setup.async_get_loaded_integrations(hass) == {
         "other",
@@ -729,9 +729,9 @@ async def test_async_start_setup(hass: HomeAssistant) -> None:
 
 async def test_async_start_setup_platforms(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times for platforms."""
-    with setup.async_start_setup(hass, ["sensor.august"]):
+    with setup.async_start_setup(hass, ["august.sensor"]):
         assert isinstance(
-            hass.data[setup.DATA_SETUP_STARTED]["sensor.august"], datetime.datetime
+            hass.data[setup.DATA_SETUP_STARTED]["august.sensor"], datetime.datetime
         )
 
     assert "august" not in hass.data[setup.DATA_SETUP_STARTED]

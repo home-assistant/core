@@ -126,6 +126,21 @@ class AsyncConfigEntryAuth:
             )
         await self._execute(batch)
 
+    async def move(
+        self,
+        task_list_id: str,
+        task_id: str,
+        previous: str | None,
+    ) -> None:
+        """Move a task resource to a specific position within the task list."""
+        service = await self._get_service()
+        cmd: HttpRequest = service.tasks().move(
+            tasklist=task_list_id,
+            task=task_id,
+            previous=previous,
+        )
+        await self._execute(cmd)
+
     async def _execute(self, request: HttpRequest | BatchHttpRequest) -> Any:
         try:
             result = await self._hass.async_add_executor_job(request.execute)

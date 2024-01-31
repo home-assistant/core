@@ -14,7 +14,7 @@ from homeassistant.const import CONF_FILENAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
-from homeassistant.util.yaml import Secrets, load_yaml
+from homeassistant.util.yaml import Secrets, load_yaml_dict
 
 from .const import (
     CONF_ICON,
@@ -201,7 +201,9 @@ class LovelaceYAML(LovelaceConfig):
         is_updated = self._cache is not None
 
         try:
-            config = load_yaml(self.path, Secrets(Path(self.hass.config.config_dir)))
+            config = load_yaml_dict(
+                self.path, Secrets(Path(self.hass.config.config_dir))
+            )
         except FileNotFoundError:
             raise ConfigNotFound from None
 

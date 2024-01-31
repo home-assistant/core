@@ -22,14 +22,14 @@ from .entity import DormakabaDkeyEntity
 from .models import DormakabaDkeyData
 
 
-@dataclass
+@dataclass(frozen=True)
 class DormakabaDkeyBinarySensorDescriptionMixin:
     """Class for keys required by Dormakaba dKey binary sensor entity."""
 
     is_on: Callable[[Notifications], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DormakabaDkeyBinarySensorDescription(
     BinarySensorEntityDescription, DormakabaDkeyBinarySensorDescriptionMixin
 ):

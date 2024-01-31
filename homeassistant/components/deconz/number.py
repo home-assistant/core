@@ -31,7 +31,7 @@ from .util import serial_from_unique_id
 T = TypeVar("T", Presence, PydeconzSensorBase)
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DeconzNumberDescription(Generic[T], NumberEntityDescription):
     """Class describing deCONZ number entities."""
 

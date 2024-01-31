@@ -23,7 +23,6 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_EFFECT,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     CONF_WHITE_CHANNEL_TYPE,
@@ -55,6 +54,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_EFFECT,
     CONF_HOST,
     CONF_MODE,
     CONF_NAME,

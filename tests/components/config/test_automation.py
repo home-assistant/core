@@ -23,7 +23,9 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 @pytest.fixture
 async def setup_automation(
-    hass, automation_config, stub_blueprint_populate  # noqa: F811
+    hass,
+    automation_config,
+    stub_blueprint_populate,  # noqa: F811
 ):
     """Set up automation integration."""
     assert await async_setup_component(

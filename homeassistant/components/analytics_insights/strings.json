@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "tracked_integrations": "Integrations"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "tracked_integrations": "[%key:component::analytics_insights::config::step::user::data::tracked_integrations%]"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "custom_integrations": {
+        "name": "{custom_integration_domain} (custom)"
+      }
+    }
+  }
+}

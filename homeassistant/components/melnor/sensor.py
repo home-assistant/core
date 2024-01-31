@@ -54,28 +54,28 @@ def next_cycle(valve: Valve) -> datetime | None:
     return None
 
 
-@dataclass
+@dataclass(frozen=True)
 class MelnorSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     state_fn: Callable[[Device], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MelnorZoneSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     state_fn: Callable[[Valve], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MelnorZoneSensorEntityDescription(
     SensorEntityDescription, MelnorZoneSensorEntityDescriptionMixin
 ):
     """Describes Melnor sensor entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class MelnorSensorEntityDescription(
     SensorEntityDescription, MelnorSensorEntityDescriptionMixin
 ):

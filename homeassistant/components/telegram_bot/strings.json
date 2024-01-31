@@ -42,7 +42,11 @@
         },
         "message_tag": {
           "name": "Message tag",
-          "description": "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}."
+          "description": "Tag for sent message."
+        },
+        "reply_to_message_id": {
+          "name": "Reply to message id",
+          "description": "Mark the message as a reply to a previous message."
         }
       }
     },
@@ -105,6 +109,10 @@
         "message_tag": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        },
+        "reply_to_message_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
         }
       }
     },
@@ -163,6 +171,10 @@
         "message_tag": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        },
+        "reply_to_message_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
         }
       }
     },
@@ -221,6 +233,14 @@
         "inline_keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        },
+        "message_tag": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        },
+        "reply_to_message_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
         }
       }
     },
@@ -283,6 +303,10 @@
         "message_tag": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        },
+        "reply_to_message_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
         }
       }
     },
@@ -341,6 +365,10 @@
         "message_tag": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        },
+        "reply_to_message_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
         }
       }
     },
@@ -403,6 +431,10 @@
         "message_tag": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        },
+        "reply_to_message_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
         }
       }
     },
@@ -441,6 +473,10 @@
         "message_tag": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        },
+        "reply_to_message_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
         }
       }
     },
@@ -479,6 +515,14 @@
         "timeout": {
           "name": "Timeout",
           "description": "Timeout for send poll. Will help with timeout errors (poor internet connection, etc)."
+        },
+        "message_tag": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
+        },
+        "reply_to_message_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
         }
       }
     },

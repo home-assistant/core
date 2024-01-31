@@ -79,7 +79,7 @@ def catch_request_errors() -> (
     """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
     def call_wrapper(
-        func: _FuncType[_OpenhomeDeviceT, _P, _R]
+        func: _FuncType[_OpenhomeDeviceT, _P, _R],
     ) -> _ReturnFuncType[_OpenhomeDeviceT, _P, _R]:
         """Call wrapper for decorator."""
 
@@ -154,7 +154,7 @@ class OpenhomeDevice(MediaPlayerEntity):
             self._source_index = source_index
             self._attr_source_list = source_names
 
-            if source["type"] == "Radio":
+            if source["type"] in ("Radio", "Receiver"):
                 self._attr_supported_features |= (
                     MediaPlayerEntityFeature.STOP
                     | MediaPlayerEntityFeature.PLAY

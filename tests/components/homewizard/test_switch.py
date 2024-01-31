@@ -30,6 +30,13 @@ pytestmark = [
     ("device_fixture", "entity_ids"),
     [
         (
+            "HWE-P1",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
             "HWE-WTR",
             [
                 "switch.device",
@@ -46,6 +53,20 @@ pytestmark = [
         ),
         (
             "SDM630",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
+            "HWE-KWH1",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
+            "HWE-KWH3",
             [
                 "switch.device",
                 "switch.device_switch_lock",
@@ -70,6 +91,8 @@ async def test_entities_not_created_for_device(
         ("HWE-SKT", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
         ("SDM230", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
         ("SDM630", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
+        ("HWE-KWH1", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
+        ("HWE-KWH3", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
     ],
 )
 async def test_switch_entities(
@@ -120,7 +143,10 @@ async def test_switch_entities(
     # Test request error handling
     mocked_method.side_effect = RequestError
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^An error occurred while communicating with HomeWizard device$",
+    ):
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
@@ -128,7 +154,10 @@ async def test_switch_entities(
             blocking=True,
         )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^An error occurred while communicating with HomeWizard device$",
+    ):
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_OFF,
@@ -139,7 +168,10 @@ async def test_switch_entities(
     # Test disabled error handling
     mocked_method.side_effect = DisabledError
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^The local API of the HomeWizard device is disabled$",
+    ):
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
@@ -147,7 +179,10 @@ async def test_switch_entities(
             blocking=True,
         )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^The local API of the HomeWizard device is disabled$",
+    ):
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_OFF,

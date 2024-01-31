@@ -77,13 +77,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._power = user_input[ATTR_POWER]
             self._power_p3 = user_input[ATTR_POWER_P3]
             self._use_api_token = user_input[CONF_USE_API_TOKEN]
-            return self.async_show_form(
-                step_id="api_token",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_API_TOKEN, default=self._api_token): str}
-                ),
-                description_placeholders={"mail_to_link": _MAIL_TO_LINK},
-            )
+            return await self.async_step_api_token()
 
         data_schema = vol.Schema(
             {
@@ -96,14 +90,24 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
-    async def async_step_api_token(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_api_token(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle optional step to define API token for extra sensors."""
-        self._api_token = user_input[CONF_API_TOKEN]
-        return await self._async_verify(
-            "api_token",
+        if user_input is not None:
+            self._api_token = user_input[CONF_API_TOKEN]
+            return await self._async_verify(
+                "api_token",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_API_TOKEN, default=self._api_token): str}
+                ),
+            )
+        return self.async_show_form(
+            step_id="api_token",
             data_schema=vol.Schema(
                 {vol.Required(CONF_API_TOKEN, default=self._api_token): str}
             ),
+            description_placeholders={"mail_to_link": _MAIL_TO_LINK},
         )
 
     async def _async_verify(self, step_id: str, data_schema: vol.Schema) -> FlowResult:
