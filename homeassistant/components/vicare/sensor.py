@@ -579,7 +579,9 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_status",
         device_class=SensorDeviceClass.ENUM,
         options=["nothing", "ready", "production", "unknown"],
-        value_getter=lambda api: api.getPhotovoltaicStatus(),
+        value_getter=lambda api: None
+        if (state := api.getPhotovoltaicStatus()) == "unknown"
+        else state,
     ),
 )
 
