@@ -480,9 +480,13 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
         key="lastSeen",
         name="Last Seen",
         device_class=SensorDeviceClass.TIMESTAMP,
-        convert=lambda statistics, value: datetime.fromisoformat(dt)  # type: ignore[arg-type]
-        if (dt := statistics.get(value))
-        else None,
+        convert=(
+            lambda statistics, value: (
+                datetime.fromisoformat(dt)  # type: ignore[arg-type]
+                if (dt := statistics.get(value))
+                else None
+            )
+        ),
     ),
 ]
 
