@@ -1,11 +1,12 @@
 """The tests for the Ring sensor platform."""
-from datetime import timedelta
+import logging
 
+from freezegun.api import FrozenDateTimeFactory
 import requests_mock
 
+from homeassistant.components.ring.const import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from .common import setup_platform
 
@@ -57,17 +58,33 @@ async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) 
 
 
 async def test_only_chime_devices(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker, caplog
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    freezer: FrozenDateTimeFactory,
+    caplog,
 ) -> None:
     """Tests the update service works correctly if only chimes are returned."""
+    hass.config.set_time_zone("UTC")
+    freezer.move_to("2021-01-09 12:00:00+00:00")
     requests_mock.get(
         "https://api.ring.com/clients_api/ring_devices",
         text=load_fixture("chime_devices.json", "ring"),
     )
     await setup_platform(hass, Platform.SENSOR)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    caplog.set_level(logging.DEBUG)
+    caplog.clear()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    success_msg = "Finished fetching devices data in 0.000 seconds (success: True)"
     error_logs = [record for record in caplog.records if record.levelname == "ERROR"]
+    assert "UnboundLocalError" not in caplog.text  # For issue #109210
+    assert success_msg in [
+        record.message
+        for record in caplog.records
+        if record.levelname == "DEBUG"
+        and record.name == "homeassistant.components.ring.coordinator"
+    ]
     assert len(error_logs) == 0
