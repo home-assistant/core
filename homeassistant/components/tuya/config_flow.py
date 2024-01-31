@@ -99,8 +99,8 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors={"base": "login_error"},
                 description_placeholders={
                     TUYA_RESPONSE_QR_CODE: self.__qr_image,
-                    TUYA_RESPONSE_MSG: info.get(TUYA_RESPONSE_MSG),
-                    TUYA_RESPONSE_CODE: info.get(TUYA_RESPONSE_CODE),
+                    TUYA_RESPONSE_MSG: info.get(TUYA_RESPONSE_MSG, "Unknown error"),
+                    TUYA_RESPONSE_CODE: info.get(TUYA_RESPONSE_CODE, 0),
                 },
             )
 
@@ -118,14 +118,10 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         if self.__reauth_entry:
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 self.__reauth_entry,
                 data=entry_data,
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.__reauth_entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(
             title=info.get("username"),

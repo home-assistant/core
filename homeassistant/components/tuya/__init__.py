@@ -166,4 +166,10 @@ class TokenListener(SharingTokenListener):
     def update_token(self, token_info: str) -> None:
         """Update token info in config entry."""
         data = {**self.entry.data, "token_info": token_info}
-        self.hass.config_entries.async_update_entry(self.entry, data=data)
+
+        @callback
+        def async_update_entry() -> None:
+            """Update config entry."""
+            self.hass.config_entries.async_update_entry(self.entry, data=data)
+
+        self.hass.add_job(async_update_entry)
