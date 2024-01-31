@@ -4,9 +4,6 @@
       "status": {
         "default": "mdi:checkbox-marked-circle-outline"
       },
-      "cpu_temp": {
-        "default": "mdi:checkbox-marked-circle-outline"
-      },
       "cpu_usage": {
         "default": "mdi:chip"
       },
