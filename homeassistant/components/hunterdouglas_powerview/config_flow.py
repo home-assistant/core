@@ -5,7 +5,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aiopvapi.helpers.aiorequest import AioRequest, PvApiConnectionError
+from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
 import voluptuous as vol
 
@@ -40,10 +40,13 @@ async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str
             hub = Hub(pv_request)
             await hub.query_firmware()
             if hub.role != "Primary":
-                raise PvApiConnectionError(
+                raise UnsupportedDevice(
                     f"{hub.name} ({hub.hub_address}) is performing role of {hub.role} Hub. Only the Primary Hub can manage shades"
                 )
             device_info = await async_get_device_info(hub)
+    except UnsupportedDevice as unsupported_err:
+        _LOGGER.debug(unsupported_err)
+        raise UnsupportedDevice from unsupported_err
     except HUB_EXCEPTIONS as err:
         _LOGGER.debug(err)
         raise CannotConnect from err
@@ -190,3 +193,7 @@ class PowerviewConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class UnsupportedDevice(exceptions.HomeAssistantError):
+    """Error to indicate the device is not supported."""
