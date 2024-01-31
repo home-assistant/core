@@ -97,7 +97,9 @@ async def test_number_entities(
         )
 
 
-@pytest.mark.parametrize("device_fixture", ["HWE-P1", "HWE-WTR", "SDM230", "SDM630"])
+@pytest.mark.parametrize(
+    "device_fixture", ["HWE-P1", "HWE-WTR", "SDM230", "SDM630", "HWE-KWH1", "HWE-KWH3"]
+)
 async def test_entities_not_created_for_device(hass: HomeAssistant) -> None:
     """Does not load number when device has no support for it."""
     assert not hass.states.get("number.device_status_light_brightness")

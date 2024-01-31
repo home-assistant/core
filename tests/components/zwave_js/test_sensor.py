@@ -25,7 +25,6 @@ from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
@@ -318,7 +317,6 @@ async def test_controller_status_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "ready"
-    assert state.attributes[ATTR_ICON] == "mdi:check"
 
     event = Event(
         "status changed",
@@ -328,7 +326,6 @@ async def test_controller_status_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unresponsive"
-    assert state.attributes[ATTR_ICON] == "mdi:bell-off"
 
     # Test transitions work
     event = Event(
@@ -339,7 +336,6 @@ async def test_controller_status_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "jammed"
-    assert state.attributes[ATTR_ICON] == "mdi:lock"
 
     # Disconnect the client and make sure the entity is still available
     await client.disconnect()
@@ -365,33 +361,24 @@ async def test_node_status_sensor(
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "dead"
-    assert (
-        hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:robot-dead"
-    )
 
     event = Event(
         "wake up", data={"source": "node", "event": "wake up", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "awake"
-    assert hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:eye"
 
     event = Event(
         "sleep", data={"source": "node", "event": "sleep", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "asleep"
-    assert hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:sleep"
 
     event = Event(
         "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "alive"
-    assert (
-        hass.states.get(node_status_entity_id).attributes[ATTR_ICON]
-        == "mdi:heart-pulse"
-    )
 
     # Disconnect the client and make sure the entity is still available
     await client.disconnect()
@@ -744,6 +731,7 @@ NODE_STATISTICS_SUFFIXES = {
 NODE_STATISTICS_SUFFIXES_UNKNOWN = {
     "round_trip_time": 6,
     "rssi": 7,
+    "last_seen": "2024-01-01T00:00:00+00:00",
 }
 
 
@@ -856,6 +844,7 @@ async def test_statistics_sensors(
                     "repeaterRSSI": [],
                     "routeFailedBetween": [],
                 },
+                "lastSeen": "2024-01-01T00:00:00+0000",
             },
         },
     )
