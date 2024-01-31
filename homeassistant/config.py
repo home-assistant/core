@@ -212,7 +212,11 @@ def _filter_bad_internal_external_urls(conf: dict) -> dict:
     return conf
 
 
+# Schema for all packages element
 PACKAGES_CONFIG_SCHEMA = vol.Schema({cv.string: vol.Any(dict, list)})
+
+# Schema for individual package definition
+PACKAGE_DEFINITION_SCHEMA = vol.Schema({cv.string: vol.Any(dict, list, None)})
 
 CUSTOMIZE_DICT_SCHEMA = vol.Schema(
     {
@@ -1039,12 +1043,10 @@ async def merge_packages_config(
     Raises vol.Invalid if whole package config is invalid.
     """
 
-    package_definition_schema = vol.Schema({cv.string: vol.Any(dict, list, None)})
-
     def _validate_package_definition(name: str, conf: Any) -> None:
         """Validate basic package definition properties."""
         cv.slug(name)
-        package_definition_schema(conf)
+        PACKAGE_DEFINITION_SCHEMA(conf)
 
     PACKAGES_CONFIG_SCHEMA(packages)
 
