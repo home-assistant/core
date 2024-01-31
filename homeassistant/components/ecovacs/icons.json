@@ -8,6 +8,20 @@
         }
       }
     },
+    "button": {
+      "relocate": {
+        "default": "mdi:map-marker-question"
+      },
+      "reset_lifespan_brush": {
+        "default": "mdi:broom"
+      },
+      "reset_lifespan_filter": {
+        "default": "mdi:air-filter"
+      },
+      "reset_lifespan_side_brush": {
+        "default": "mdi:broom"
+      }
+    },
     "sensor": {
       "error": {
         "default": "mdi:alert-circle"
