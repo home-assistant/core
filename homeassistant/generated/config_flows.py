@@ -429,6 +429,7 @@ FLOWS = {
         "rituals_perfume_genie",
         "roborock",
         "roku",
+        "romy",
         "roomba",
         "roon",
         "rpi_power",
