@@ -74,11 +74,11 @@ async def async_setup_entry(
 
     entity_reg = er.async_get(hass)
     for tracked_entity_id in coordinator.tracked_entities:
-        if (entity := entity_reg.async_get(tracked_entity_id)) is not None:
+        if (entity_entry := entity_reg.async_get(tracked_entity_id)) is not None:
             tracked_entity_descriptors.append(
                 {
                     "entity_id": tracked_entity_id,
-                    "identifier": entity.id,
+                    "identifier": entity_entry.id,
                 }
             )
         else:
