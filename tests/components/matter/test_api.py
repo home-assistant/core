@@ -12,7 +12,12 @@ from matter_server.common.helpers.util import dataclass_to_dict
 from matter_server.common.models import CommissioningParameters
 import pytest
 
-from homeassistant.components.matter.api import DEVICE_ID, ID, TYPE
+from homeassistant.components.matter.api import (
+    DEVICE_ID,
+    ERROR_NODE_NOT_FOUND,
+    ID,
+    TYPE,
+)
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -222,7 +227,7 @@ async def test_node_diagnostics(
         network_name="SuperCoolWiFi",
         ip_adresses=["192.168.1.1", "fe80::260:97ff:fe02:6ea5"],
         mac_address="00:11:22:33:44:55",
-        reachable=True,
+        available=True,
         active_fabrics=[MatterFabricData(2, 4939, 1, vendor_name="Nabu Casa")],
     )
     matter_client.node_diagnostics = AsyncMock(return_value=mock_diagnostics)
@@ -245,6 +250,20 @@ async def test_node_diagnostics(
     diag_res["network_type"] = diag_res["network_type"].value
     diag_res["node_type"] = diag_res["node_type"].value
     assert msg["result"] == diag_res
+
+    # repeat test with invalid device id
+    matter_client.set_wifi_credentials.reset_mock()
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "matter/node_diagnostics",
+            DEVICE_ID: "invalid",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -315,9 +334,9 @@ async def test_open_commissioning_window(
 
     # create mocked CommissioningParameters
     commissioning_parameters = CommissioningParameters(
-        setupPinCode=51590642,
-        setupManualCode="36296231484",
-        setupQRCode="MT:00000CQM008-WE3G310",
+        setup_pin_code=51590642,
+        setup_manual_code="36296231484",
+        setup_qr_code="MT:00000CQM008-WE3G310",
     )
     matter_client.open_commissioning_window = AsyncMock(
         return_value=commissioning_parameters
