@@ -1,13 +1,15 @@
 """The tests for the Ring sensor platform."""
+from datetime import timedelta
+
 import requests_mock
 
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .common import setup_platform
 
-from tests.common import load_fixture
+from tests.common import async_fire_time_changed, load_fixture
 
 WIFI_ENABLED = False
 
@@ -64,14 +66,8 @@ async def test_only_chime_devices(
     )
     await setup_platform(hass, Platform.SENSOR)
     await hass.async_block_till_done()
-
-    await async_setup_component(hass, "homeassistant", {})
-    await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
-        {ATTR_ENTITY_ID: ["sensor.downstairs_volume"]},
-        blocking=True,
-    )
+    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
     await hass.async_block_till_done()
+
     error_logs = [record for record in caplog.records if record.levelname == "ERROR"]
     assert len(error_logs) == 0
