@@ -1270,7 +1270,7 @@ class SonoffPresenceSenorIlluminationStatus(Sensor):
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class PiHeatingDemand(Sensor):
-    """Sensor that displays the percentage of heating power used.
+    """Sensor that displays the percentage of heating power demanded.
 
     Optional thermostat attribute.
     """
@@ -1282,6 +1282,7 @@ class PiHeatingDemand(Sensor):
     _attr_native_unit_of_measurement = PERCENTAGE
     _decimals = 0
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
 class SetpointChangeSourceEnum(types.enum8):
