@@ -399,6 +399,7 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
         value_fn=_get_battery_charge,
     ),
     PowerwallSensorEntityDescription[BatteryResponse, str](
