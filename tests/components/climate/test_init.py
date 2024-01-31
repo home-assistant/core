@@ -743,9 +743,6 @@ async def test_no_warning_on_core_integrations_for_on_off_feature_flags(
     assert state is not None
 
     assert (
-        "Entity climate.test (<class 'homeassistant.components.test.climate."
-        "test_no_warning_on_core_integrations_for_on_off_feature_flags.<locals>.MockClimateEntityTest'>)"
-        " does not set ClimateEntityFeature.TURN_OFF but implements the turn_off method."
-        " Please report it to the author of the 'test' custom integration"
-        in caplog.text
+        "does not set ClimateEntityFeature.TURN_OFF but implements the turn_off method."
+        not in caplog.text
     )
