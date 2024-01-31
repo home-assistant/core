@@ -120,18 +120,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             old_tracked_entity_id = data["old_entity_id"]
             new_tracked_entity_id = data["entity_id"]
 
-            entity_reg = er.async_get(self.hass)
-            for related_entity_id in self.entity_mapping.get(old_tracked_entity_id, []):
-                if (rel_ent := entity_reg.async_get(related_entity_id)) is None:
-                    continue
-                old_unique_id = rel_ent.unique_id
-                new_unique_id = old_unique_id.replace(
-                    old_tracked_entity_id, new_tracked_entity_id
-                )
-                entity_reg.async_update_entity(
-                    related_entity_id, new_unique_id=new_unique_id
-                )
-
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
                 data={

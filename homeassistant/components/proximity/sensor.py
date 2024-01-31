@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -69,10 +70,31 @@ async def async_setup_entry(
         for description in SENSORS_PER_PROXIMITY
     ]
 
+    tracked_entity_descriptors = []
+
+    entity_reg = er.async_get(hass)
+    for tracked_entity_id in coordinator.tracked_entities:
+        if (entity := entity_reg.async_get(tracked_entity_id)) is not None:
+            tracked_entity_descriptors.append(
+                {
+                    "entity_id": tracked_entity_id,
+                    "identifier": entity.unique_id,
+                }
+            )
+        else:
+            tracked_entity_descriptors.append(
+                {
+                    "entity_id": tracked_entity_id,
+                    "identifier": tracked_entity_id,
+                }
+            )
+
     entities += [
-        ProximityTrackedEntitySensor(description, coordinator, tracked_entity_id)
+        ProximityTrackedEntitySensor(
+            description, coordinator, tracked_entity_descriptor
+        )
         for description in SENSORS_PER_ENTITY
-        for tracked_entity_id in coordinator.tracked_entities
+        for tracked_entity_descriptor in tracked_entity_descriptors
     ]
 
     async_add_entities(entities)
@@ -117,18 +139,16 @@ class ProximityTrackedEntitySensor(
         self,
         description: SensorEntityDescription,
         coordinator: ProximityDataUpdateCoordinator,
-        tracked_entity_id: str,
+        tracked_entity_descriptor: dict[str, str],
     ) -> None:
         """Initialize the proximity."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        self.tracked_entity_id = tracked_entity_id
+        self.tracked_entity_id = tracked_entity_descriptor["entity_id"]
 
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{tracked_entity_id}_{description.key}"
-        )
-        self._attr_name = f"{tracked_entity_id.split('.')[-1]} {description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{tracked_entity_descriptor['identifier']}_{description.key}"
+        self._attr_name = f"{self.tracked_entity_id.split('.')[-1]} {description.name}"
         self._attr_device_info = _device_info(coordinator)
 
     async def async_added_to_hass(self) -> None:
