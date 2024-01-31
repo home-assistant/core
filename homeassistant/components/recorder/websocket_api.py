@@ -17,6 +17,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DataRateConverter,
     DistanceConverter,
+    DurationConverter,
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
@@ -28,6 +29,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 from .models import StatisticPeriod
@@ -56,6 +58,7 @@ UNIT_SCHEMA = vol.Schema(
     {
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),
         vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
         vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
         vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
@@ -67,6 +70,7 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
         vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
+        vol.Optional("volume_flow_rate"): vol.In(VolumeFlowRateConverter.VALID_UNITS),
     }
 )
 

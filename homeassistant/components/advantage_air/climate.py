@@ -88,7 +88,11 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
 
-        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+        self._attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
         self._attr_hvac_modes = [
             HVACMode.OFF,
             HVACMode.COOL,

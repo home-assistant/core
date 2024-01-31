@@ -219,6 +219,50 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.test_charge_cable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_charge_cable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Charge cable',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_conn_charge_cable',
+    'unique_id': 'VINVINVIN-charge_state_conn_charge_cable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_charge_cable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Test Charge cable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_charge_cable',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.test_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -307,6 +351,50 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.test_front_driver_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_front_driver_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Front driver door',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_df',
+    'unique_id': 'VINVINVIN-vehicle_state_df',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_front_driver_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Front driver door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_front_driver_door',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.test_front_driver_window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -346,6 +434,50 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_driver_window',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_front_passenger_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_front_passenger_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Front passenger door',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_pf',
+    'unique_id': 'VINVINVIN-vehicle_state_pf',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_front_passenger_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Front passenger door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_front_passenger_door',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
@@ -482,6 +614,50 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.test_rear_driver_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_rear_driver_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Rear driver door',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_dr',
+    'unique_id': 'VINVINVIN-vehicle_state_dr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_rear_driver_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Rear driver door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_rear_driver_door',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.test_rear_driver_window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -521,6 +697,50 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_driver_window',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_rear_passenger_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_rear_passenger_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Rear passenger door',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_pr',
+    'unique_id': 'VINVINVIN-vehicle_state_pr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_rear_passenger_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Rear passenger door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_rear_passenger_door',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',

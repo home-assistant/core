@@ -3,12 +3,12 @@
 -c homeassistant/package_constraints.txt
 
 # Home Assistant Core
-aiohttp==3.9.1
+aiohttp==3.9.3
 aiohttp_cors==0.7.0
 aiohttp-fast-url-dispatcher==0.3.0
 aiohttp-zlib-ng==0.3.1
 astral==2.2
-attrs==23.1.0
+attrs==23.2.0
 atomicwrites-homeassistant==1.4.1
 awesomeversion==23.11.0
 bcrypt==4.0.1
