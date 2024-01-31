@@ -13,10 +13,14 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 
 from .adapter import MatterAdapter
-from .helpers import get_matter, node_from_ha_device_id
+from .helpers import (
+    ConfigEntryNotFound,
+    MissingNode,
+    get_matter,
+    node_from_ha_device_id,
+)
 
 _P = ParamSpec("_P")
 
@@ -26,10 +30,7 @@ DEVICE_ID = "device_id"
 
 
 ERROR_NODE_NOT_FOUND = "node_not_found"
-
-
-class MissingNode(HomeAssistantError):
-    """Exception raised when we can't find a node."""
+ERROR_CONFIG_ENTRY_NOT_FOUND = "config_entry_not_found"
 
 
 @callback
@@ -121,6 +122,8 @@ def async_handle_failed_command(
             await func(hass, connection, msg, *args, **kwargs)
         except MatterError as err:
             connection.send_error(msg[ID], str(err.error_code), err.args[0])
+        except ConfigEntryNotFound as err:
+            connection.send_error(msg[ID], ERROR_CONFIG_ENTRY_NOT_FOUND, err.args[0])
         except MissingNode as err:
             connection.send_error(msg[ID], ERROR_NODE_NOT_FOUND, err.args[0])
 

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
@@ -15,6 +16,14 @@ if TYPE_CHECKING:
     from matter_server.common.models import ServerInfoMessage
 
     from .adapter import MatterAdapter
+
+
+class MissingNode(HomeAssistantError):
+    """Exception raised when we can't find a node."""
+
+
+class ConfigEntryNotFound(HomeAssistantError):
+    """Exception raised when we can't find a config entry."""
 
 
 @dataclass
@@ -72,7 +81,11 @@ def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get(ha_device_id)
     if device is None:
-        raise ValueError("Invalid device ID")
+        raise MissingNode(f"Invalid device ID: {ha_device_id}")
+    config_entry_id = list(device.config_entries)[0]
+    entry = hass.config_entries.async_get_entry(config_entry_id)
+    if entry is None:
+        raise ConfigEntryNotFound(f"Config entry {config_entry_id} not found")
     return get_node_from_device_entry(hass, device)
 
 
