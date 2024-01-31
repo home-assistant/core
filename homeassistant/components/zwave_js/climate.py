@@ -242,6 +242,10 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 # treat value as hvac mode
                 if hass_mode := ZW_HVAC_MODE_MAP.get(mode_id):
                     all_modes[hass_mode] = mode_id
+                    if hass_mode == HVACMode.OFF:
+                        self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
+                    else:
+                        self._attr_supported_features |= ClimateEntityFeature.TURN_ON
             else:
                 # treat value as hvac preset
                 all_presets[mode_name] = mode_id
