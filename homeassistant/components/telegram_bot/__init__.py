@@ -797,7 +797,9 @@ class TelegramNotificationService:
             SERVICE_EDIT_VOICE: inputmedia.InputMediaAudio,
             SERVICE_EDIT_DOCUMENT: inputmedia.InputMediaAudio,
         }
-        media_input = input_media_map[type_edit](media=file_content)
+        media_input = input_media_map[type_edit](
+            media=file_content, caption=params[ATTR_CAPTION]
+        )
         return self._send_msg(
             self.bot.edit_message_media,
             "Error editing message attributes",
