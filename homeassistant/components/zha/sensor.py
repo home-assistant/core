@@ -1319,36 +1319,30 @@ class SetpointChangeSource(EnumSensor):
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class WindowCoveringTypeSensor(Sensor):
+class WindowCoveringTypeSensor(EnumSensor):
     """Sensor that displays the type of a cover device."""
 
     _attribute_name: str = WindowCovering.AttributeDefs.window_covering_type.name
+    _enum = WindowCovering.WindowCoveringType
     _unique_id_suffix: str = WindowCovering.AttributeDefs.window_covering_type.name
     _attr_translation_key: str = WindowCovering.AttributeDefs.window_covering_type.name
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:curtains"
-
-    def formatter(self, value: int) -> int | float | None:
-        """Enum formatter."""
-        return WindowCovering.WindowCoveringType(value).name
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_BASIC, models={"lumi.curtain.agl001"}
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class AqaraCurtainMotorPowerSourceSensor(Sensor):
+class AqaraCurtainMotorPowerSourceSensor(EnumSensor):
     """Sensor that displays the power source of the Aqara E1 curtain motor device."""
 
     _attribute_name: str = Basic.AttributeDefs.power_source.name
+    _enum = Basic.PowerSource
     _unique_id_suffix: str = Basic.AttributeDefs.power_source.name
     _attr_translation_key: str = Basic.AttributeDefs.power_source.name
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:battery-positive"
-
-    def formatter(self, value: int) -> int | float | None:
-        """Enum formatter."""
-        return Basic.PowerSource(value).name
 
 
 class AqaraE1HookState(types.enum8):
@@ -1364,15 +1358,12 @@ class AqaraE1HookState(types.enum8):
     cluster_handler_names="opple_cluster", models={"lumi.curtain.agl001"}
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class AqaraCurtainHookStateSensor(Sensor):
+class AqaraCurtainHookStateSensor(EnumSensor):
     """Representation of a ZHA curtain mode configuration entity."""
 
     _attribute_name = "hooks_state"
+    _enum = AqaraE1HookState
     _unique_id_suffix = "hooks_state"
     _attr_translation_key: str = "hooks_state"
     _attr_icon: str = "mdi:hook"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def formatter(self, value: int) -> int | float | None:
-        """Enum formatter."""
-        return AqaraE1HookState(value).name
