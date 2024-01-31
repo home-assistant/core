@@ -24,6 +24,20 @@
         "name": "Mop attached"
       }
     },
+    "button": {
+      "relocate": {
+        "name": "Relocate"
+      },
+      "reset_lifespan_brush": {
+        "name": "Reset brush lifespan"
+      },
+      "reset_lifespan_filter": {
+        "name": "Reset filter lifespan"
+      },
+      "reset_lifespan_side_brush": {
+        "name": "Reset side brush lifespan"
+      }
+    },
     "image": {
       "map": {
         "name": "Map"
