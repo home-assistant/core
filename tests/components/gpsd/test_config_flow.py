@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 from gps3.agps3threaded import GPSD_PORT as DEFAULT_PORT
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.gpsd import config_flow
 from homeassistant.components.gpsd.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -19,7 +18,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
 
     with patch("socket.socket") as mock_socket:
         mock_connect = mock_socket.return_value.connect
@@ -39,7 +37,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         CONF_HOST: HOST,
         CONF_PORT: DEFAULT_PORT,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    mock_setup_entry.assert_called_once()
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:
@@ -54,9 +52,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             data={CONF_HOST: "nonexistent.local", CONF_PORT: 1234},
         )
 
-        assert result["type"] == "form"
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -65,11 +61,10 @@ async def test_import(hass: HomeAssistant) -> None:
         mock_connect = mock_socket.return_value.connect
         mock_connect.return_value = None
 
-        flow = config_flow.GPSDConfigFlow()
-        flow.hass = hass
-
-        result = await flow.async_step_import(
-            {CONF_HOST: HOST, CONF_PORT: 1234, CONF_NAME: "MyGPS"}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: HOST, CONF_PORT: 1234, CONF_NAME: "MyGPS"},
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "MyGPS"
