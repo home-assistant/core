@@ -845,6 +845,7 @@ omit =
     homeassistant/components/nextcloud/coordinator.py
     homeassistant/components/nextcloud/entity.py
     homeassistant/components/nextcloud/sensor.py
+    homeassistant/components/nextcloud/update.py
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/nibe_heatpump/__init__.py
@@ -1103,6 +1104,9 @@ omit =
     homeassistant/components/ripple/sensor.py
     homeassistant/components/roborock/coordinator.py
     homeassistant/components/rocketchat/notify.py
+    homeassistant/components/romy/__init__.py
+    homeassistant/components/romy/coordinator.py
+    homeassistant/components/romy/vacuum.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
     homeassistant/components/roomba/braava.py
@@ -1517,7 +1521,6 @@ omit =
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/__init__.py
-    homeassistant/components/vicare/binary_sensor.py
     homeassistant/components/vicare/button.py
     homeassistant/components/vicare/climate.py
     homeassistant/components/vicare/entity.py
