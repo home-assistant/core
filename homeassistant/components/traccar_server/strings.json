@@ -9,6 +9,10 @@
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Traccar Server",
+          "username": "The username (email) you use to login to your Traccar Server"
         }
       }
     },
@@ -28,6 +32,12 @@
           "skip_accuracy_filter_for": "Position skip filter for attributes",
           "custom_attributes": "Custom attributes",
           "events": "Events"
+        },
+        "data_description": {
+          "max_accuracy": "Any position reports with accuracy higher than this value will be ignored",
+          "skip_accuracy_filter_for": "Attributes defined here will bypass the accuracy filter if they are present in the update",
+          "custom_attributes": "Add any custom or calculated attributes here. These will be added to the device attributes",
+          "events": "Selected events will be fired in Home Assistant"
         }
       }
     }
