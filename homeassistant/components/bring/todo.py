@@ -6,9 +6,11 @@ from typing import TYPE_CHECKING
 import uuid
 
 from bring_api.exceptions import BringRequestException
-from bring_api.types import BringItem, BringItemOperation
+from bring_api.types import BringItem, BringItemOperation, BringNotificationType
+import voluptuous as vol
 
 from homeassistant.components.todo import (
+    DOMAIN as DOMAIN_TODO,
     TodoItem,
     TodoItemStatus,
     TodoListEntity,
@@ -17,10 +19,17 @@ from homeassistant.components.todo import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import (
+    ATTR_ITEM_NAME,
+    ATTR_LIST,
+    ATTR_NOTIFICATION_TYPE,
+    DOMAIN,
+    SERVICE_PUSH_NOTIFICATION,
+)
 from .coordinator import BringData, BringDataUpdateCoordinator
 
 
@@ -44,6 +53,22 @@ async def async_setup_entry(
             unique_id=unique_id,
         )
         for bring_list in coordinator.data.values()
+    )
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_PUSH_NOTIFICATION,
+        vol.Schema(
+            {
+                vol.Required(ATTR_LIST): cv.entities_domain(DOMAIN_TODO),
+                vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
+                    vol.Upper, cv.enum(BringNotificationType)
+                ),
+                vol.Optional(ATTR_ITEM_NAME): cv.string,
+            }
+        ),
+        "async_send_push_notification",
     )
 
 
@@ -215,3 +240,21 @@ class BringTodoListEntity(
             raise HomeAssistantError("Unable to delete todo item for bring") from e
 
         await self.coordinator.async_refresh()
+
+    async def async_send_push_notification(
+        self,
+        notification_type: BringNotificationType,
+        item_name: str | None = None,
+    ) -> None:
+        """Send a push notification to members of the To-Do list."""
+        try:
+            await self.hass.async_add_executor_job(
+                self.coordinator.bring.notify,
+                self.bring_list["listUuid"],
+                notification_type,
+                item_name or "",
+            )
+        except BringRequestException as e:
+            raise HomeAssistantError(
+                "Unable to send push notification for bring"
+            ) from e

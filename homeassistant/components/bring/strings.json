@@ -16,5 +16,35 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "services": {
+    "push_notification": {
+      "name": "Notifications",
+      "description": "Send a mobile push notification to members of a shared Bring! list.",
+      "fields": {
+        "bring_list": {
+          "name": "List",
+          "description": "Bring! list whose members (except sender) will be notified."
+        },
+        "notification_type": {
+          "name": "Notification type",
+          "description": "Type of push notification to send to list members."
+        },
+        "item_name": {
+          "name": "Item name (Required if message type 'Breaking news' selected)",
+          "description": "Item Name to include in an urgent message e.g. 'Breaking news - Please get cilantro!'"
+        }
+      }
+    }
+  },
+  "selector": {
+    "notification_type_selector": {
+      "options": {
+        "going_shopping": "I'm going shopping! - Last chance for adjustments",
+        "changed_list": "List changed - Check it out",
+        "shopping_done": "Shopping done - you can relax",
+        "urgent_message": "Breaking news - Please get 'item name' !"
+      }
+    }
   }
 }
