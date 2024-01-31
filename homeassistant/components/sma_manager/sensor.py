@@ -1,6 +1,5 @@
 """SMA Manager Sensor Entities."""
 
-# Built-In Imports
 from datetime import timedelta
 import logging
 
