@@ -34,7 +34,8 @@ class ImportCollector(ast.NodeVisitor):
             try:
                 self.visit(ast.parse(fil.read_text()))
             except SyntaxError as e:
-                raise SyntaxError(f"Can't parse file {fil}") from e
+                e.add_note(f'File: {fil}')
+                raise
             self._cur_fil_dir = None
 
     def _add_reference(self, reference_domain: str) -> None:
