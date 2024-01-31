@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
 
-SUPPORT_FLAGS = ClimateEntityFeature(0)
+SUPPORT_FLAGS = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
 
 
 async def async_setup_entry(
