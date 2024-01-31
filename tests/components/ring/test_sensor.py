@@ -1,9 +1,13 @@
 """The tests for the Ring sensor platform."""
 import requests_mock
 
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
+
+from tests.common import load_fixture
 
 WIFI_ENABLED = False
 
@@ -48,3 +52,26 @@ async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) 
     )
     assert front_door_wifi_signal_strength_state is not None
     assert front_door_wifi_signal_strength_state.state == "-58"
+
+
+async def test_only_chime_devices(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, caplog
+) -> None:
+    """Tests the update service works correctly if only chimes are returned."""
+    requests_mock.get(
+        "https://api.ring.com/clients_api/ring_devices",
+        text=load_fixture("chime_devices.json", "ring"),
+    )
+    await setup_platform(hass, Platform.SENSOR)
+    await hass.async_block_till_done()
+
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["sensor.downstairs_volume"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    error_logs = [record for record in caplog.records if record.levelname == "ERROR"]
+    assert len(error_logs) == 0
