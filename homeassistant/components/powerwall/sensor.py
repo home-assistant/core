@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date, datetime
-from decimal import Decimal
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from tesla_powerwall import MeterResponse, MeterType
@@ -27,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, POWERWALL_COORDINATOR
 from .entity import PowerWallEntity
@@ -37,7 +34,7 @@ _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
 
 _ValueParamT = TypeVar("_ValueParamT")
-_ValueT = TypeVar("_ValueT", bound=StateType | date | datetime | Decimal)
+_ValueT = TypeVar("_ValueT", bound=float)
 
 
 @dataclass(frozen=True)
