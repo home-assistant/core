@@ -61,6 +61,14 @@
         "name": "Map"
       }
     },
+    "number": {
+      "clean_count": {
+        "name": "Clean count"
+      },
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "sensor": {
       "error": {
         "name": "Error",
