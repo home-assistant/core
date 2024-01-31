@@ -86,13 +86,13 @@ class ZWaveNodePingButton(ButtonEntity):
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
+    _attr_translation_key = "ping"
 
     def __init__(self, driver: Driver, node: ZwaveNode) -> None:
         """Initialize a ping Z-Wave device button entity."""
         self.node = node
 
         # Entity class attributes
-        self._attr_name = "Ping"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.ping"
         # device may not be precreated in main handler yet

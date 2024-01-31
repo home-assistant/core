@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "ping": {
+        "name": "Ping"
+      }
+    },
     "sensor": {
       "node_status": {
         "name": "Node status",

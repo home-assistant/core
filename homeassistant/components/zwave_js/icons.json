@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "ping": {
+        "default": "mdi:crosshairs-gps"
+      }
+    },
     "sensor": {
       "controller_status": {
         "default": "mdi:help-rhombus",
