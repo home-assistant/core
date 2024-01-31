@@ -18,6 +18,45 @@
           "unresponsive": "Unresponsive",
           "jammed": "Jammed"
         }
+      },
+      "average_background_rssi": {
+        "name": "Average background RSSI (channel {channel})"
+      },
+      "current_background_rssi": {
+        "name": "Current background RSSI (channel {channel})"
+      },
+      "can": {
+        "name": "Collisions"
+      },
+      "nak": {
+        "name": "Messages not accepted"
+      },
+      "timeout_ack": {
+        "name": "Missing ACKs"
+      },
+      "timeout_callback": {
+        "name": "Timed out callbacks"
+      },
+      "timeout_response": {
+        "name": "Timed out responses"
+      },
+      "successful_messages": {
+        "name": "Successful messages ({direction})"
+      },
+      "messages_dropped": {
+        "name": "Messages dropped ({direction})"
+      },
+      "successful_commands": {
+        "name": "Successful commands ({direction})"
+      },
+      "commands_dropped": {
+        "name": "Commands dropped ({direction})"
+      },
+      "rtt": {
+        "name": "Round Trip Time"
+      },
+      "rssi": {
+        "name": "RSSI"
       }
     }
   },
