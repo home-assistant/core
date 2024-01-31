@@ -31,13 +31,13 @@
         "default": "mdi:hand-back-left-off"
       },
       "timeout_ack": {
-        "default": "mdi:timer-cancel"
+        "default": "mdi:ear-hearing-off"
       },
       "timeout_callback": {
-        "default": "mdi:timer-cancel"
+        "default": "mdi:timer-sand-empty"
       },
       "timeout_response": {
-        "default": "mdi:timer-cancel"
+        "default": "mdi:timer-sand-empty"
       },
       "successful_messages": {
         "default": "mdi:check"
