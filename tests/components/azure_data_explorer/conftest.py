@@ -44,7 +44,7 @@ def mock_filter_schema():
 
 
 @pytest.fixture(name="entry_managed")
-async def mock_entry_fixture_managed(hass, filter_schema):
+async def mock_entry_fixture_managed(hass, filter_schema) -> MockConfigEntry:
     """Create the setup in HA."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -57,7 +57,7 @@ async def mock_entry_fixture_managed(hass, filter_schema):
 
 
 @pytest.fixture(name="entry_queued")
-async def mock_entry_fixture_queued(hass, filter_schema):
+async def mock_entry_fixture_queued(hass, filter_schema) -> MockConfigEntry:
     """Create the setup in HA."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -69,7 +69,7 @@ async def mock_entry_fixture_queued(hass, filter_schema):
     return entry
 
 
-async def _entry(hass, filter_schema, entry):
+async def _entry(hass, filter_schema, entry) -> None:
     entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {CONF_FILTER: filter_schema}}
@@ -85,7 +85,7 @@ async def _entry(hass, filter_schema, entry):
 
 
 @pytest.fixture(name="entry_with_one_event")
-async def mock_entry_with_one_event(hass, entry_managed):
+async def mock_entry_with_one_event(hass, entry_managed) -> MockConfigEntry:
     """Use the entry and add a single test event to the queue."""
     assert entry_managed.state == ConfigEntryState.LOADED
     hass.states.async_set("sensor.test", STATE_ON)
@@ -94,7 +94,7 @@ async def mock_entry_with_one_event(hass, entry_managed):
 
 # Fixtures for config_flow tests
 @pytest.fixture
-def mock_setup_entry():
+def mock_setup_entry() -> MockConfigEntry:
     """Mock the setup entry call, used for config flow tests."""
     with patch(
         f"{AZURE_DATA_EXPLORER_PATH}.async_setup_entry", return_value=True
@@ -104,7 +104,7 @@ def mock_setup_entry():
 
 # Fixtures for mocking the Azure Data Explorer SDK calls.
 @pytest.fixture(autouse=True)
-def mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data():
+def mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data() -> None:
     """mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.ManagedStreamingIngestClient.ingest_from_stream",
@@ -114,7 +114,7 @@ def mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data():
 
 
 @pytest.fixture(autouse=True)
-def mock_azure_data_explorer_QueuedIngestClient_ingest_data():
+def mock_azure_data_explorer_QueuedIngestClient_ingest_data() -> None:
     """mock_azure_data_explorer_QueuedIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.QueuedIngestClient.ingest_from_stream",
@@ -124,7 +124,7 @@ def mock_azure_data_explorer_QueuedIngestClient_ingest_data():
 
 
 @pytest.fixture(autouse=True)
-def mock_execute_query():
+def mock_execute_query() -> None:
     """Mock KustoClient execute_query."""
     with patch(
         "azure.kusto.data.KustoClient.execute_query",
