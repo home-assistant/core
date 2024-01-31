@@ -139,7 +139,7 @@ class LutronLight(LutronDevice, LightEntity):
                 translation_key="deprecated_light_fan_on",
             )
         if flash := kwargs.get(ATTR_FLASH):
-            self._lutron_device.set_flash(0.5 if flash == "short" else 1.5)
+            self._lutron_device.flash(0.5 if flash == "short" else 1.5)
         else:
             if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
                 brightness = kwargs[ATTR_BRIGHTNESS]
@@ -148,7 +148,6 @@ class LutronLight(LutronDevice, LightEntity):
             else:
                 brightness = self._prev_brightness
             self._prev_brightness = brightness
-            # self._lutron_device.level = to_lutron_level(brightness)
             self._set_brightness(brightness, **kwargs)
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -164,7 +163,6 @@ class LutronLight(LutronDevice, LightEntity):
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_light_fan_off",
             )
-        # self._lutron_device.level = 0
         self._set_brightness(0, **kwargs)
 
     @property
