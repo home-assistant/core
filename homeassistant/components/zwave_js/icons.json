@@ -18,6 +18,33 @@
           "dead": "mdi:robot-dead",
           "unknown": "mdi:help-rhombus"
         }
+      },
+      "can": {
+        "default": "mdi:sail-boat-sink"
+      },
+      "nak": {
+        "default": "mdi:cancel"
+      },
+      "timeout_ack": {
+        "default": "mdi:timer-cancel"
+      },
+      "timeout_callback": {
+        "default": "mdi:timer-cancel"
+      },
+      "timeout_response": {
+        "default": "mdi:timer-cancel"
+      },
+      "successful_messages": {
+        "default": "mdi:check"
+      },
+      "messages_dropped": {
+        "default": "mdi:trash-can"
+      },
+      "successful_commands": {
+        "default": "mdi:check"
+      },
+      "commands_dropped": {
+        "default": "mdi:trash-can"
       }
     }
   }
