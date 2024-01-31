@@ -53,8 +53,8 @@
     'config': dict({
       'data': dict({
         'country': 'IT',
-        'override_mqtt_url': 'mqtt://localhost:1883',
-        'override_rest_url': 'http://localhost:8000',
+        'override_mqtt_url': '**REDACTED**',
+        'override_rest_url': '**REDACTED**',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
       }),

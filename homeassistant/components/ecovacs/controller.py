@@ -44,9 +44,6 @@ class EcovacsController:
         self._device_id = get_client_device_id()
         country = config[CONF_COUNTRY]
         self._continent = get_continent(country)
-        self._device_id = get_client_device_id()
-        country = config[CONF_COUNTRY]
-        self._continent = get_continent(country)
 
         self._authenticator = Authenticator(
             create_rest_config(
@@ -91,10 +88,8 @@ class EcovacsController:
                         credentials.user_id,
                         EcoVacsAPI.REALM,
                         self._device_id[0:8],
-                        self._device_id[0:8],
                         credentials.token,
                         device_config,
-                        self._continent,
                         self._continent,
                         monitor=True,
                     )

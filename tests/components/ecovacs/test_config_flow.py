@@ -1,5 +1,5 @@
 """Test Ecovacs config flow."""
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import ssl
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -32,31 +32,52 @@ from .const import (
 
 from tests.common import MockConfigEntry
 
-USER_STEP_SELF_HOSTED = {CONF_MODE: InstanceMode.SELF_HOSTED}
+_USER_STEP_SELF_HOSTED = {CONF_MODE: InstanceMode.SELF_HOSTED}
+
+_TEST_FN_AUTH_ARG = "user_input_auth"
+_TEST_FN_USER_ARG = "user_input_user"
 
 
 async def _test_user_flow(
     hass: HomeAssistant,
-    *,
     user_input_auth: dict[str, Any],
-    user_input_user: dict[str, Any] | None = None,
-    show_advanced_options: bool = False,
 ) -> dict[str, Any]:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": show_advanced_options},
+        context={"source": SOURCE_USER},
     )
 
-    if show_advanced_options:
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert not result["errors"]
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert not result["errors"]
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=user_input_user or {},
-        )
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input_auth,
+    )
+
+
+async def _test_user_flow_show_advanced_options(
+    hass: HomeAssistant,
+    *,
+    user_input_auth: dict[str, Any],
+    user_input_user: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Test config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER, "show_advanced_options": True},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input_user or {},
+    )
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "auth"
@@ -69,11 +90,26 @@ async def _test_user_flow(
 
 
 @pytest.mark.parametrize(
-    ("show_advanced_options", "user_input_auth", "user_input_user"),
+    ("test_fn", "test_fn_args", "entry_data"),
     [
-        (True, VALID_ENTRY_DATA_CLOUD, None),
-        (True, VALID_ENTRY_DATA_SELF_HOSTED, USER_STEP_SELF_HOSTED),
-        (False, VALID_ENTRY_DATA_CLOUD, None),
+        (
+            _test_user_flow_show_advanced_options,
+            {_TEST_FN_AUTH_ARG: VALID_ENTRY_DATA_CLOUD},
+            VALID_ENTRY_DATA_CLOUD,
+        ),
+        (
+            _test_user_flow_show_advanced_options,
+            {
+                _TEST_FN_AUTH_ARG: VALID_ENTRY_DATA_SELF_HOSTED,
+                _TEST_FN_USER_ARG: _USER_STEP_SELF_HOSTED,
+            },
+            VALID_ENTRY_DATA_SELF_HOSTED,
+        ),
+        (
+            _test_user_flow,
+            {_TEST_FN_AUTH_ARG: VALID_ENTRY_DATA_CLOUD},
+            VALID_ENTRY_DATA_CLOUD,
+        ),
     ],
     ids=["advanced_cloud", "advanced_self_hosted", "cloud"],
 )
@@ -82,21 +118,21 @@ async def test_user_flow(
     mock_setup_entry: AsyncMock,
     mock_authenticator_authenticate: AsyncMock,
     mock_mqtt_client: Mock,
-    *,
-    show_advanced_options: bool,
-    user_input_auth: dict[str, Any],
-    user_input_user: dict[str, Any],
+    test_fn: Callable[[HomeAssistant, dict[str, Any]], Awaitable[dict[str, Any]]]
+    | Callable[
+        [HomeAssistant, dict[str, Any], dict[str, Any]], Awaitable[dict[str, Any]]
+    ],
+    test_fn_args: dict[str, Any],
+    entry_data: dict[str, Any],
 ) -> None:
     """Test the user config flow."""
-    result = await _test_user_flow(
+    result = await test_fn(
         hass,
-        user_input_auth=user_input_auth,
-        user_input_user=user_input_user,
-        show_advanced_options=show_advanced_options,
+        **test_fn_args,
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == user_input_auth[CONF_USERNAME]
-    assert result["data"] == user_input_auth
+    assert result["title"] == entry_data[CONF_USERNAME]
+    assert result["data"] == entry_data
     mock_setup_entry.assert_called()
     mock_authenticator_authenticate.assert_called()
     mock_mqtt_client.verify_config.assert_called()
@@ -129,16 +165,26 @@ def _cannot_connect_error(user_input: dict[str, Any]) -> str:
     ids=["cannot_connect", "invalid_auth", "unknown"],
 )
 @pytest.mark.parametrize(
-    ("show_advanced_options", "user_input_auth", "user_input_user", "entry_data"),
+    ("test_fn", "test_fn_args", "entry_data"),
     [
-        (True, VALID_ENTRY_DATA_CLOUD, None, None),
         (
-            True,
-            VALID_ENTRY_DATA_SELF_HOSTED,
-            USER_STEP_SELF_HOSTED,
+            _test_user_flow_show_advanced_options,
+            {_TEST_FN_AUTH_ARG: VALID_ENTRY_DATA_CLOUD},
+            VALID_ENTRY_DATA_CLOUD,
+        ),
+        (
+            _test_user_flow_show_advanced_options,
+            {
+                _TEST_FN_AUTH_ARG: VALID_ENTRY_DATA_SELF_HOSTED,
+                _TEST_FN_USER_ARG: _USER_STEP_SELF_HOSTED,
+            },
             VALID_ENTRY_DATA_SELF_HOSTED_WITH_VALIDATE_CERT,
         ),
-        (False, VALID_ENTRY_DATA_CLOUD, None, None),
+        (
+            _test_user_flow,
+            {_TEST_FN_AUTH_ARG: VALID_ENTRY_DATA_CLOUD},
+            VALID_ENTRY_DATA_CLOUD,
+        ),
     ],
     ids=["advanced_cloud", "advanced_self_hosted", "cloud"],
 )
@@ -151,20 +197,21 @@ async def test_user_flow_raise_error(
     reason_rest: str,
     side_effect_mqtt: Exception,
     errors_mqtt: Callable[[dict[str, Any]], str],
-    show_advanced_options: bool,
-    user_input_auth: dict[str, Any],
-    user_input_user: dict[str, Any] | None,
-    entry_data: dict[str, Any] | None,
+    test_fn: Callable[[HomeAssistant, dict[str, Any]], Awaitable[dict[str, Any]]]
+    | Callable[
+        [HomeAssistant, dict[str, Any], dict[str, Any]], Awaitable[dict[str, Any]]
+    ],
+    test_fn_args: dict[str, Any],
+    entry_data: dict[str, Any],
 ) -> None:
     """Test handling error on library calls."""
+    user_input_auth = test_fn_args[_TEST_FN_AUTH_ARG]
 
     # Authenticator raises error
     mock_authenticator_authenticate.side_effect = side_effect_rest
-    result = await _test_user_flow(
+    result = await test_fn(
         hass,
-        user_input_auth=user_input_auth,
-        user_input_user=user_input_user,
-        show_advanced_options=show_advanced_options,
+        **test_fn_args,
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "auth"
@@ -196,7 +243,6 @@ async def test_user_flow_raise_error(
         user_input=user_input_auth,
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    entry_data = entry_data or user_input_auth
     assert result["title"] == entry_data[CONF_USERNAME]
     assert result["data"] == entry_data
     mock_setup_entry.assert_called()
@@ -212,15 +258,14 @@ async def test_user_flow_self_hosted_error(
 ) -> None:
     """Test handling selfhosted errors and custom ssl context."""
 
-    result = await _test_user_flow(
+    result = await _test_user_flow_show_advanced_options(
         hass,
         user_input_auth=VALID_ENTRY_DATA_SELF_HOSTED
         | {
             CONF_OVERRIDE_REST_URL: "bla://localhost:8000",
             CONF_OVERRIDE_MQTT_URL: "mqtt://",
         },
-        user_input_user=USER_STEP_SELF_HOSTED,
-        show_advanced_options=True,
+        user_input_user=_USER_STEP_SELF_HOSTED,
     )
 
     assert result["type"] == FlowResultType.FORM
