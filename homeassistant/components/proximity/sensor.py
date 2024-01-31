@@ -7,10 +7,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME, UnitOfLength
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_DIR_OF_TRAVEL, ATTR_DIST_TO, ATTR_NEAREST, DOMAIN
@@ -48,29 +50,51 @@ SENSORS_PER_PROXIMITY: list[SensorEntityDescription] = [
 ]
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Proximity sensor platform."""
-    if discovery_info is None:
-        return
+def _device_info(coordinator: ProximityDataUpdateCoordinator) -> DeviceInfo:
+    return DeviceInfo(
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+        name=coordinator.config_entry.title,
+        entry_type=DeviceEntryType.SERVICE,
+    )
 
-    coordinator: ProximityDataUpdateCoordinator = hass.data[DOMAIN][
-        discovery_info[CONF_NAME]
-    ]
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the proximity sensors."""
+
+    coordinator: ProximityDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[ProximitySensor | ProximityTrackedEntitySensor] = [
         ProximitySensor(description, coordinator)
         for description in SENSORS_PER_PROXIMITY
     ]
 
+    tracked_entity_descriptors = []
+
+    entity_reg = er.async_get(hass)
+    for tracked_entity_id in coordinator.tracked_entities:
+        if (entity_entry := entity_reg.async_get(tracked_entity_id)) is not None:
+            tracked_entity_descriptors.append(
+                {
+                    "entity_id": tracked_entity_id,
+                    "identifier": entity_entry.id,
+                }
+            )
+        else:
+            tracked_entity_descriptors.append(
+                {
+                    "entity_id": tracked_entity_id,
+                    "identifier": tracked_entity_id,
+                }
+            )
+
     entities += [
-        ProximityTrackedEntitySensor(description, coordinator, tracked_entity_id)
+        ProximityTrackedEntitySensor(
+            description, coordinator, tracked_entity_descriptor
+        )
         for description in SENSORS_PER_ENTITY
-        for tracked_entity_id in coordinator.tracked_entities
+        for tracked_entity_descriptor in tracked_entity_descriptors
     ]
 
     async_add_entities(entities)
@@ -91,9 +115,8 @@ class ProximitySensor(CoordinatorEntity[ProximityDataUpdateCoordinator], SensorE
 
         self.entity_description = description
 
-        # entity name will be removed as soon as we have a config entry
-        # and can follow the entity naming guidelines
-        self._attr_name = f"{coordinator.friendly_name} {description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._attr_device_info = _device_info(coordinator)
 
     @property
     def native_value(self) -> str | float | None:
@@ -116,23 +139,38 @@ class ProximityTrackedEntitySensor(
         self,
         description: SensorEntityDescription,
         coordinator: ProximityDataUpdateCoordinator,
-        tracked_entity_id: str,
+        tracked_entity_descriptor: dict[str, str],
     ) -> None:
         """Initialize the proximity."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        self.tracked_entity_id = tracked_entity_id
+        self.tracked_entity_id = tracked_entity_descriptor["entity_id"]
 
-        # entity name will be removed as soon as we have a config entry
-        # and can follow the entity naming guidelines
-        self._attr_name = (
-            f"{coordinator.friendly_name} {tracked_entity_id} {description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{tracked_entity_descriptor['identifier']}_{description.key}"
+        self._attr_name = f"{self.tracked_entity_id.split('.')[-1]} {description.name}"
+        self._attr_device_info = _device_info(coordinator)
+
+    async def async_added_to_hass(self) -> None:
+        """Register entity mapping."""
+        await super().async_added_to_hass()
+        self.coordinator.async_add_entity_mapping(
+            self.tracked_entity_id, self.entity_id
         )
+
+    @property
+    def data(self) -> dict[str, str | int | None] | None:
+        """Get data from coordinator."""
+        return self.coordinator.data.entities.get(self.tracked_entity_id)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.data is not None
 
     @property
     def native_value(self) -> str | float | None:
         """Return native sensor value."""
-        if (data := self.coordinator.data.entities.get(self.tracked_entity_id)) is None:
+        if self.data is None:
             return None
-        return data.get(self.entity_description.key)
+        return self.data.get(self.entity_description.key)

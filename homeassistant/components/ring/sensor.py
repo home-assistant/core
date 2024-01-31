@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from ring_doorbell.generic import RingGeneric
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -18,13 +20,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    RING_DEVICES,
-    RING_HEALTH_COORDINATOR,
-    RING_HISTORY_COORDINATOR,
-)
-from .entity import RingEntityMixin
+from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
+from .coordinator import RingDataCoordinator
+from .entity import RingEntity
 
 
 async def async_setup_entry(
@@ -34,9 +32,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up a sensor for a Ring device."""
     devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
+    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        RING_DEVICES_COORDINATOR
+    ]
 
     entities = [
-        description.cls(config_entry.entry_id, device, description)
+        description.cls(device, devices_coordinator, description)
         for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams")
         for description in SENSOR_TYPES
         if device_type in description.category
@@ -47,19 +48,19 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RingSensor(RingEntityMixin, SensorEntity):
+class RingSensor(RingEntity, SensorEntity):
     """A sensor implementation for Ring device."""
 
     entity_description: RingSensorEntityDescription
 
     def __init__(
         self,
-        config_entry_id,
-        device,
+        device: RingGeneric,
+        coordinator: RingDataCoordinator,
         description: RingSensorEntityDescription,
     ) -> None:
         """Initialize a sensor for Ring device."""
-        super().__init__(config_entry_id, device)
+        super().__init__(device, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}-{description.key}"
 
@@ -80,27 +81,6 @@ class HealthDataRingSensor(RingSensor):
     # These sensors are data hungry and not useful. Disable by default.
     _attr_entity_registry_enabled_default = False
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-
-        await self.ring_objects[RING_HEALTH_COORDINATOR].async_track_device(
-            self._device, self._health_update_callback
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect callbacks."""
-        await super().async_will_remove_from_hass()
-
-        self.ring_objects[RING_HEALTH_COORDINATOR].async_untrack_device(
-            self._device, self._health_update_callback
-        )
-
-    @callback
-    def _health_update_callback(self, _health_data):
-        """Call update method."""
-        self.async_write_ha_state()
-
     @property
     def native_value(self):
         """Return the state of the sensor."""
@@ -117,26 +97,10 @@ class HistoryRingSensor(RingSensor):
 
     _latest_event: dict[str, Any] | None = None
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-
-        await self.ring_objects[RING_HISTORY_COORDINATOR].async_track_device(
-            self._device, self._history_update_callback
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect callbacks."""
-        await super().async_will_remove_from_hass()
-
-        self.ring_objects[RING_HISTORY_COORDINATOR].async_untrack_device(
-            self._device, self._history_update_callback
-        )
-
     @callback
-    def _history_update_callback(self, history_data):
+    def _handle_coordinator_update(self):
         """Call update method."""
-        if not history_data:
+        if not (history_data := self._get_coordinator_history()):
             return
 
         kind = self.entity_description.kind
@@ -153,7 +117,7 @@ class HistoryRingSensor(RingSensor):
             return
 
         self._latest_event = found
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @property
     def native_value(self):

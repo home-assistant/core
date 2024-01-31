@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioshelly.exceptions import (
     DeviceConnectionError,
+    FirmwareUnsupported,
     InvalidAuthError,
     MacAddressMismatchError,
 )
@@ -79,15 +80,21 @@ async def test_setup_entry_not_shelly(
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
+@pytest.mark.parametrize("side_effect", [DeviceConnectionError, FirmwareUnsupported])
 async def test_device_connection_error(
-    hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    gen,
+    side_effect,
+    mock_block_device,
+    mock_rpc_device,
+    monkeypatch,
 ) -> None:
     """Test device connection error."""
     monkeypatch.setattr(
-        mock_block_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+        mock_block_device, "initialize", AsyncMock(side_effect=side_effect)
     )
     monkeypatch.setattr(
-        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+        mock_rpc_device, "initialize", AsyncMock(side_effect=side_effect)
     )
 
     entry = await init_integration(hass, gen)
