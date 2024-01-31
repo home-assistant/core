@@ -946,7 +946,7 @@
     'entity_id': 'sensor.test_time_to_arrival',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-30T22:54:14+00:00',
+    'state': '2024-01-01T00:59:12+00:00',
   })
 # ---
 # name: test_sensors[sensor.test_time_to_full_charge-entry]
