@@ -376,11 +376,14 @@ aioswitcher==3.4.1
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
 
+# homeassistant.components.tankerkoenig
+aiotankerkoenig==0.2.0
+
 # homeassistant.components.tractive
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==69
+aiounifi==70
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -766,6 +769,9 @@ elkm1-lib==2.2.6
 # homeassistant.components.elmax
 elmax-api==0.0.4
 
+# homeassistant.components.elvia
+elvia==0.1.0
+
 # homeassistant.components.xmpp
 emoji==2.8.0
 
@@ -955,7 +961,7 @@ goslide-api==0.5.1
 gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
-govee-ble==0.27.3
+govee-ble==0.31.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.4.1
@@ -1053,7 +1059,7 @@ hole==0.8.0
 holidays==0.41
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240112.0
+home-assistant-frontend==20240131.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.1.29
@@ -2153,9 +2159,6 @@ pysuez==0.2.0
 # homeassistant.components.switchbee
 pyswitchbee==1.8.0
 
-# homeassistant.components.tankerkoenig
-pytankerkoenig==0.0.6
-
 # homeassistant.components.tautulli
 pytautulli==23.1.1
 
@@ -2302,6 +2305,7 @@ pytomorrowio==0.3.6
 pytouchline==0.7
 
 # homeassistant.components.traccar
+# homeassistant.components.traccar_server
 pytraccar==2.0.0
 
 # homeassistant.components.tradfri
@@ -2425,7 +2429,7 @@ rfk101py==0.0.1
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.5
+ring-doorbell[listen]==0.8.6
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
@@ -2438,6 +2442,9 @@ rocketchat-API==0.6.1
 
 # homeassistant.components.roku
 rokuecp==0.18.1
+
+# homeassistant.components.romy
+romy==0.0.7
 
 # homeassistant.components.roomba
 roombapy==1.6.10
