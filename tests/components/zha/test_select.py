@@ -22,6 +22,8 @@ from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 from homeassistant.components.zha.select import (
     AqaraMotionSensitivities,
     MultitermElectricValveStates,
+    MultitermHeatingCoolingStates,
+    MultitermSleepModeStates,
 )
 from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
@@ -153,7 +155,7 @@ def core_rs(hass_storage: dict[str, Any]):
     return _storage
 
 
-async def test_select_multiterm_zc0101_binary_output(
+async def test_select_multiterm_zc0101_BO_EV(
     hass: HomeAssistant, zha_device_joined_restored, multiterm_zc0101_binary_output
 ) -> None:
     """Test ZHA select platform."""
@@ -202,10 +204,108 @@ async def test_select_multiterm_zc0101_binary_output(
     assert state.state == MultitermElectricValveStates.On.name
 
 
-async def test_select(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, siren
+async def test_select_multiterm_zc0101_BO_HC(
+    hass: HomeAssistant, zha_device_joined_restored, multiterm_zc0101_binary_output
 ) -> None:
     """Test ZHA select platform."""
+
+    # Load mandatory attributes
+    cluster = multiterm_zc0101_binary_output.endpoints[1].binary_output
+    cluster.PLUGGED_ATTR_READS = {
+        general.BinaryOutput.AttributeDefs.description.name: "Heating/Cooling",
+        general.BinaryOutput.AttributeDefs.inactive_text.name: MultitermHeatingCoolingStates.Heating.name,
+        general.BinaryOutput.AttributeDefs.active_text.name: MultitermHeatingCoolingStates.Cooling.name,
+        general.BinaryOutput.AttributeDefs.present_value.name: False,
+    }
+    update_attribute_cache(cluster)
+
+    zha_device = await zha_device_joined_restored(multiterm_zc0101_binary_output)
+    entity_id = find_entity_id(Platform.SELECT, zha_device, hass)
+    assert entity_id is not None
+
+    # Test that entity is created properly
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == MultitermHeatingCoolingStates.Heating.name
+    assert state.attributes["options"] == [
+        MultitermHeatingCoolingStates.Heating.name,
+        MultitermHeatingCoolingStates.Cooling.name,
+    ]
+
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == EntityCategory.CONFIG
+
+    # Test select option and update state
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": entity_id,
+            "option": MultitermHeatingCoolingStates.Cooling.name,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == MultitermHeatingCoolingStates.Cooling.name
+
+
+async def test_select_multiterm_zc0101_BO_SM(
+    hass: HomeAssistant, zha_device_joined_restored, multiterm_zc0101_binary_output
+) -> None:
+    """Test ZHA select platform."""
+
+    # Load mandatory attributes
+    cluster = multiterm_zc0101_binary_output.endpoints[1].binary_output
+    cluster.PLUGGED_ATTR_READS = {
+        general.BinaryOutput.AttributeDefs.description.name: "Sleep Mode",
+        general.BinaryOutput.AttributeDefs.inactive_text.name: MultitermSleepModeStates.Inactive.name,
+        general.BinaryOutput.AttributeDefs.active_text.name: MultitermSleepModeStates.Active.name,
+        general.BinaryOutput.AttributeDefs.present_value.name: False,
+    }
+    update_attribute_cache(cluster)
+
+    zha_device = await zha_device_joined_restored(multiterm_zc0101_binary_output)
+    entity_id = find_entity_id(Platform.SELECT, zha_device, hass)
+    assert entity_id is not None
+
+    # Test that entity is created properly
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == MultitermSleepModeStates.Inactive.name
+    assert state.attributes["options"] == [
+        MultitermSleepModeStates.Inactive.name,
+        MultitermSleepModeStates.Active.name,
+    ]
+
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == EntityCategory.CONFIG
+
+    # Test select option and update state
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": entity_id,
+            "option": MultitermSleepModeStates.Active.name,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == MultitermSleepModeStates.Active.name
+
+
+async def test_select(hass: HomeAssistant, siren) -> None:
+    """Test ZHA select platform."""
+
+    entity_registry = er.async_get(hass)
     zha_device, cluster = siren
     assert cluster is not None
     entity_id = find_entity_id(
