@@ -335,7 +335,7 @@ class ElectricalMeasurement(PollableSensor):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement: str = UnitOfPower.WATT
-    _div_mul_prefix = "ac_power"
+    _div_mul_prefix: str | None = "ac_power"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -358,10 +358,14 @@ class ElectricalMeasurement(PollableSensor):
 
     def formatter(self, value: int) -> int | float:
         """Return 'normalized' value."""
-        multiplier = getattr(
-            self._cluster_handler, f"{self._div_mul_prefix}_multiplier"
-        )
-        divisor = getattr(self._cluster_handler, f"{self._div_mul_prefix}_divisor")
+        if self._div_mul_prefix:
+            multiplier = getattr(
+                self._cluster_handler, f"{self._div_mul_prefix}_multiplier"
+            )
+            divisor = getattr(self._cluster_handler, f"{self._div_mul_prefix}_divisor")
+        else:
+            multiplier = self._multiplier
+            divisor = self._divisor
         value = float(value * multiplier) / divisor
         if value < 100 and divisor > 1:
             return round(value, self._decimals)
@@ -435,13 +439,14 @@ class ElectricalMeasurementFrequency(PolledElectricalMeasurement):
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ElectricalMeasurementPowerFactor(PolledElectricalMeasurement):
-    """Frequency measurement."""
+    """Power Factor measurement."""
 
     _attribute_name = "power_factor"
     _unique_id_suffix = "power_factor"
     _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
     _attr_native_unit_of_measurement = PERCENTAGE
+    _div_mul_prefix = None
 
 
 @MULTI_MATCH(

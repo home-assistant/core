@@ -156,9 +156,33 @@ async def async_test_metering(hass: HomeAssistant, cluster, entity_id):
     )
 
     await send_attributes_report(
-        hass, cluster, {"status": 32, "metering_device_type": 1}
+        hass, cluster, {"status": 64 + 8, "metering_device_type": 1}
     )
-    # currently only statuses for electric meters are supported
+    assert hass.states.get(entity_id).attributes["status"] in (
+        "SERVICE_DISCONNECT|NOT_DEFINED",
+        "NOT_DEFINED|SERVICE_DISCONNECT",
+    )
+
+    await send_attributes_report(
+        hass, cluster, {"status": 64 + 8, "metering_device_type": 2}
+    )
+    assert hass.states.get(entity_id).attributes["status"] in (
+        "SERVICE_DISCONNECT|PIPE_EMPTY",
+        "PIPE_EMPTY|SERVICE_DISCONNECT",
+    )
+
+    await send_attributes_report(
+        hass, cluster, {"status": 64 + 8, "metering_device_type": 5}
+    )
+    assert hass.states.get(entity_id).attributes["status"] in (
+        "SERVICE_DISCONNECT|TEMPERATURE_SENSOR",
+        "TEMPERATURE_SENSOR|SERVICE_DISCONNECT",
+    )
+
+    # Status for other meter types
+    await send_attributes_report(
+        hass, cluster, {"status": 32, "metering_device_type": 4}
+    )
     assert hass.states.get(entity_id).attributes["status"] in ("<bitmap8.32: 32>", "32")
 
 
@@ -234,6 +258,24 @@ async def async_test_em_apparent_power(hass: HomeAssistant, cluster, entity_id):
 
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 99, 10: 5000})
     assert_state(hass, entity_id, "9.9", UnitOfApparentPower.VOLT_AMPERE)
+
+
+async def async_test_em_power_factor(hass: HomeAssistant, cluster, entity_id):
+    """Test electrical measurement Power Factor sensor."""
+    # update divisor cached value
+    await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 100, 10: 1000})
+    assert_state(hass, entity_id, "100", PERCENTAGE)
+
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 99, 10: 1000})
+    assert_state(hass, entity_id, "99", PERCENTAGE)
+
+    await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 100, 10: 5000})
+    assert_state(hass, entity_id, "100", PERCENTAGE)
+
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 99, 10: 5000})
+    assert_state(hass, entity_id, "99", PERCENTAGE)
 
 
 async def async_test_em_rms_current(hass: HomeAssistant, cluster, entity_id):
@@ -421,6 +463,14 @@ async def async_test_pi_heating_demand(hass, cluster, entity_id):
             7,
             {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
             {"active_power", "rms_current", "rms_voltage"},
+        ),
+        (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            "power_factor",
+            async_test_em_power_factor,
+            7,
+            {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
+            {"active_power", "apparent_power", "rms_current", "rms_voltage"},
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,

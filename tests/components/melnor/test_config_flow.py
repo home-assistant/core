@@ -48,7 +48,7 @@ async def test_user_step_discovered_devices(
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "pick_device"
 
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(vol.Invalid):
             await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input={CONF_ADDRESS: "wrong_address"}
             )
@@ -95,7 +95,7 @@ async def test_user_step_with_existing_device(
 
         assert result["type"] == FlowResultType.FORM
 
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(vol.Invalid):
             await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input={CONF_ADDRESS: FAKE_ADDRESS_1}
             )

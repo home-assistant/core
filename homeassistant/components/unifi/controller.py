@@ -501,6 +501,7 @@ async def get_unifi_controller(
     except (
         asyncio.TimeoutError,
         aiounifi.BadGateway,
+        aiounifi.Forbidden,
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
         aiounifi.ResponseError,
@@ -509,14 +510,6 @@ async def get_unifi_controller(
             "Error connecting to the UniFi Network at %s: %s", config[CONF_HOST], err
         )
         raise CannotConnect from err
-
-    except aiounifi.Forbidden as err:
-        LOGGER.warning(
-            "Access forbidden to UniFi Network at %s, check access rights: %s",
-            config[CONF_HOST],
-            err,
-        )
-        raise AuthenticationRequired from err
 
     except aiounifi.LoginRequired as err:
         LOGGER.warning(

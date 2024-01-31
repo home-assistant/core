@@ -67,7 +67,11 @@ class AdaxDevice(ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_max_temp = 35
     _attr_min_temp = 5
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
