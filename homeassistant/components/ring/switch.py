@@ -4,6 +4,8 @@ import logging
 from typing import Any
 
 import requests
+from ring_doorbell import RingStickUpCam
+from ring_doorbell.generic import RingGeneric
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -11,8 +13,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, RING_DEVICES
-from .entity import RingEntityMixin
+from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
+from .coordinator import RingDataCoordinator
+from .entity import RingEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,21 +37,26 @@ async def async_setup_entry(
 ) -> None:
     """Create the switches for the Ring devices."""
     devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
+    coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        RING_DEVICES_COORDINATOR
+    ]
     switches = []
 
     for device in devices["stickup_cams"]:
         if device.has_capability("siren"):
-            switches.append(SirenSwitch(config_entry.entry_id, device))
+            switches.append(SirenSwitch(device, coordinator))
 
     async_add_entities(switches)
 
 
-class BaseRingSwitch(RingEntityMixin, SwitchEntity):
+class BaseRingSwitch(RingEntity, SwitchEntity):
     """Represents a switch for controlling an aspect of a ring device."""
 
-    def __init__(self, config_entry_id, device, device_type):
+    def __init__(
+        self, device: RingGeneric, coordinator: RingDataCoordinator, device_type: str
+    ) -> None:
         """Initialize the switch."""
-        super().__init__(config_entry_id, device)
+        super().__init__(device, coordinator)
         self._device_type = device_type
         self._attr_unique_id = f"{self._device.id}-{self._device_type}"
 
@@ -59,20 +67,23 @@ class SirenSwitch(BaseRingSwitch):
     _attr_translation_key = "siren"
     _attr_icon = SIREN_ICON
 
-    def __init__(self, config_entry_id, device):
+    def __init__(self, device: RingGeneric, coordinator: RingDataCoordinator) -> None:
         """Initialize the switch for a device with a siren."""
-        super().__init__(config_entry_id, device, "siren")
+        super().__init__(device, coordinator, "siren")
         self._no_updates_until = dt_util.utcnow()
         self._attr_is_on = device.siren > 0
 
     @callback
-    def _update_callback(self):
+    def _handle_coordinator_update(self):
         """Call update method."""
         if self._no_updates_until > dt_util.utcnow():
             return
 
-        self._attr_is_on = self._device.siren > 0
-        self.async_write_ha_state()
+        if (device := self._get_coordinator_device()) and isinstance(
+            device, RingStickUpCam
+        ):
+            self._attr_is_on = device.siren > 0
+        super()._handle_coordinator_update()
 
     def _set_switch(self, new_state):
         """Update switch state, and causes Home Assistant to correctly update."""

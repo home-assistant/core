@@ -87,6 +87,7 @@ async def test_async_setup_import(
     config_entries_expected: int,
     mock_setup_entry: AsyncMock,
     mock_authenticator_authenticate: AsyncMock,
+    mock_mqtt_client: Mock,
 ) -> None:
     """Test async_setup config import."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
@@ -95,6 +96,7 @@ async def test_async_setup_import(
     assert len(hass.config_entries.async_entries(DOMAIN)) == config_entries_expected
     assert mock_setup_entry.call_count == config_entries_expected
     assert mock_authenticator_authenticate.call_count == config_entries_expected
+    assert mock_mqtt_client.verify_config.call_count == config_entries_expected
 
 
 async def test_devices_in_dr(
@@ -116,7 +118,7 @@ async def test_devices_in_dr(
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
-        ("yna5x1", 17),
+        ("yna5x1", 25),
     ],
 )
 async def test_all_entities_loaded(
