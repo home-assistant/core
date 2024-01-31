@@ -33,7 +33,7 @@ class EcovacsNumberEntityDescription(
 ):
     """Ecovacs number entity description."""
 
-    native_max_value_fn: Callable[[EventT], float | None] = lambda _: None
+    native_max_value_fn: Callable[[EventT], float | int | None] = lambda _: None
     value_fn: Callable[[EventT], float | None]
 
 
@@ -41,7 +41,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
     EcovacsNumberEntityDescription[VolumeEvent](
         capability_fn=lambda caps: caps.settings.volume,
         value_fn=lambda e: e.volume,
-        native_max_value_fn=lambda e: e.maximum if e.maximum else None,
+        native_max_value_fn=lambda e: e.maximum,
         key="volume",
         translation_key="volume",
         entity_registry_enabled_default=False,
@@ -54,6 +54,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
         capability_fn=lambda caps: caps.clean.count,
         value_fn=lambda e: e.count,
         key="clean_count",
+        translation_key="clean_count",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         native_min_value=1,
