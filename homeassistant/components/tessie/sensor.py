@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,6 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.variance import ignore_variance
 
 from .const import DOMAIN
 from .coordinator import TessieStateUpdateCoordinator
@@ -36,8 +38,8 @@ from .entity import TessieEntity
 
 
 @callback
-def hours_to_datetime(value: StateType) -> datetime | None:
-    """Convert relative hours into absolute datetime."""
+def minutes_to_datetime(value: StateType) -> datetime | None:
+    """Convert relative minutes into absolute datetime."""
     if isinstance(value, (int, float)) and value > 0:
         return dt_util.now() + timedelta(minutes=value)
     return None
@@ -48,6 +50,7 @@ class TessieSensorEntityDescription(SensorEntityDescription):
     """Describes Tessie Sensor entity."""
 
     value_fn: Callable[[StateType], StateType | datetime] = lambda x: x
+    available_fn: Callable[[StateType], bool] = lambda _: True
 
 
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
@@ -95,7 +98,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="charge_state_minutes_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=hours_to_datetime,
+        value_fn=minutes_to_datetime,
     ),
     TessieSensorEntityDescription(
         key="charge_state_battery_range",
@@ -219,9 +222,12 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="drive_state_active_route_minutes_to_arrival",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=ignore_variance(
+            lambda value: dt_util.now() + timedelta(minutes=cast(float, value)),
+            timedelta(seconds=30),
+        ),
+        available_fn=lambda x: x is not None,
     ),
     TessieSensorEntityDescription(
         key="drive_state_active_route_destination",
@@ -262,3 +268,8 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.get())
+
+    @property
+    def available(self) -> bool:
+        """Return if sensor is available."""
+        return super().available and self.entity_description.available_fn(self.get())
