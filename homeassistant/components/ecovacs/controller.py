@@ -74,11 +74,16 @@ class EcovacsController:
 
     async def initialize(self) -> None:
         """Init controller."""
+        mqtt_config_verfied = False
         try:
             devices = await self._api_client.get_devices()
             credentials = await self._authenticator.authenticate()
             for device_config in devices:
                 if isinstance(device_config, DeviceInfo):
+                    # MQTT device
+                    if not mqtt_config_verfied:
+                        await self._mqtt.verify_config()
+                        mqtt_config_verfied = True
                     device = Device(device_config, self._authenticator)
                     await device.initialize(self._mqtt)
                     self.devices.append(device)
