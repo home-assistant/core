@@ -103,6 +103,7 @@ CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.SENSOR
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -255,7 +256,7 @@ class EnumSensor(Sensor):
         """Use name of enum."""
         assert self._enum is not None
         # convert old style CamelCase to snake_case for translations (however try to use snake_case in enums)
-        return self._enum(value).name.lower()
+        return self._enum(value).name
 
 
 @MULTI_MATCH(
