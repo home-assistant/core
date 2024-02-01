@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from automower_ble.mower import Mower
+from bleak_retry_connector import close_stale_connections_by_address, get_device
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -28,14 +29,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     mower = Mower(channel_id, address)
 
-    LOGGER.debug("connecting to " + address + " with channel ID " + str(channel_id))
-    device = bluetooth.async_ble_device_from_address(hass, address, connectable=True)
-    if await mower.connect(device) == False:
+    await close_stale_connections_by_address(address)
+
+    LOGGER.debug("connecting to %s with channel ID %s", address, str(channel_id))
+    device = bluetooth.async_ble_device_from_address(
+        hass, address, connectable=True
+    ) or await get_device(address)
+    if not await mower.connect(device):
         return False
     LOGGER.debug("connected and paired")
 
     model = await mower.get_model()
-    LOGGER.info("Connected to Automower: " + model)
+    LOGGER.info("Connected to Automower: %s", model)
 
     device_info = DeviceInfo(
         identifiers={(DOMAIN, str(address) + str(channel_id))},

@@ -6,6 +6,8 @@ import logging
 from typing import Any
 
 from automower_ble.mower import Mower
+from bleak import BleakError
+from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
@@ -13,6 +15,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,25 +54,52 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
         if self.mower.is_connected():
             await self.mower.disconnect()
 
+    async def _async_find_device(self):
+        _LOGGER.debug("Trying to reconnect")
+        await close_stale_connections_by_address(self.address)
+
+        device = bluetooth.async_ble_device_from_address(
+            self.hass, self.address, connectable=True
+        )
+        if not device:
+            _LOGGER.error("Can't find device")
+            raise UpdateFailed("Can't find device")
+
+        if not await self.mower.connect(device):
+            raise UpdateFailed("Failed to connect")
+
     async def _async_update_data(self) -> dict[str, bytes]:
         """Poll the device."""
         _LOGGER.debug("Polling device")
 
         data: dict[str, bytes] = {}
 
-        if await self.mower.is_connected():
-            device = bluetooth.async_ble_device_from_address(
-                self.hass, self.address, connectable=True
-            )
-            if await self.mower.connect(device) == False:
-                return
+        if not self.mower.is_connected():
+            await self._async_find_device()
 
-        data["battery_level"] = await self.mower.battery_level()
-        _LOGGER.debug(data["battery_level"])
-        data["activity"] = await self.mower.mower_activity()
-        _LOGGER.debug(data["activity"])
-        data["state"] = await self.mower.mower_state()
-        _LOGGER.debug(data["state"])
+        try:
+            data["battery_level"] = await self.mower.battery_level()
+            _LOGGER.debug(data["battery_level"])
+            if data["battery_level"] is None:
+                await self._async_find_device()
+                raise UpdateFailed("Error getting data from device")
+
+            data["activity"] = await self.mower.mower_activity()
+            _LOGGER.debug(data["activity"])
+            if data["activity"] is None:
+                await self._async_find_device()
+                raise UpdateFailed("Error getting data from device")
+
+            data["state"] = await self.mower.mower_state()
+            _LOGGER.debug(data["state"])
+            if data["state"] is None:
+                await self._async_find_device()
+                raise UpdateFailed("Error getting data from device")
+
+        except BleakError as err:
+            _LOGGER.error("Error getting data from device")
+            await self._async_find_device()
+            raise UpdateFailed("Error getting data from device") from err
 
         return data
 
