@@ -778,7 +778,7 @@ googlemaps==2.5.1
 gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
-govee-ble==0.27.3
+govee-ble==0.31.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.4.1
@@ -827,7 +827,7 @@ habitipy==0.2.0
 habluetooth==2.4.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.75.1
+hass-nabucasa==0.76.0
 
 # homeassistant.components.conversation
 hassil==1.6.0
@@ -1153,7 +1153,7 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.2.0
+opower==0.3.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1860,10 +1860,10 @@ reolink-aio==0.8.7
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.5
+ring-doorbell[listen]==0.8.6
 
 # homeassistant.components.roku
-rokuecp==0.18.1
+rokuecp==0.19.0
 
 # homeassistant.components.romy
 romy==0.0.7
