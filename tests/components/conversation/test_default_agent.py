@@ -2,6 +2,7 @@
 from collections import defaultdict
 from unittest.mock import AsyncMock, patch
 
+from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 import pytest
 
 from homeassistant.components import conversation
@@ -430,8 +431,8 @@ async def test_device_area_context(
         )
 
 
-async def test_error_missing_entity(hass: HomeAssistant, init_components) -> None:
-    """Test error message when entity is missing."""
+async def test_error_no_device(hass: HomeAssistant, init_components) -> None:
+    """Test error message when device/entity is missing."""
     result = await conversation.async_converse(
         hass, "turn on missing entity", None, Context(), None
     )
@@ -440,11 +441,11 @@ async def test_error_missing_entity(hass: HomeAssistant, init_components) -> Non
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "Sorry, I am not aware of any device or entity called missing entity"
+        == "Sorry, I am not aware of any device called missing entity"
     )
 
 
-async def test_error_missing_area(hass: HomeAssistant, init_components) -> None:
+async def test_error_no_area(hass: HomeAssistant, init_components) -> None:
     """Test error message when area is missing."""
     result = await conversation.async_converse(
         hass, "turn on the lights in missing area", None, Context(), None
@@ -458,10 +459,60 @@ async def test_error_missing_area(hass: HomeAssistant, init_components) -> None:
     )
 
 
-async def test_error_no_exposed_for_domain(
+async def test_error_no_device_in_area(
     hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
 ) -> None:
-    """Test error message when no entities for a domain are exposed in an area."""
+    """Test error message when area is missing a device/entity."""
+    area_registry.async_get_or_create("kitchen")
+    result = await conversation.async_converse(
+        hass, "turn on missing entity in the kitchen", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any device called missing entity in the kitchen area"
+    )
+
+
+async def test_error_no_domain(
+    hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
+) -> None:
+    """Test error message when no devices/entities exist for a domain."""
+
+    # We don't have a sentence for turning on all fans
+    fan_domain = MatchEntity(name="domain", value="fan", text="")
+    recognize_result = RecognizeResult(
+        intent=Intent("HassTurnOn"),
+        intent_data=IntentData([]),
+        entities={"domain": fan_domain},
+        entities_list=[fan_domain],
+    )
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[recognize_result],
+    ):
+        result = await conversation.async_converse(
+            hass, "turn on the fans", None, Context(), None
+        )
+
+        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert (
+            result.response.error_code
+            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+        )
+        assert (
+            result.response.speech["plain"]["speech"]
+            == "Sorry, I am not aware of any fan"
+        )
+
+
+async def test_error_no_domain_in_area(
+    hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
+) -> None:
+    """Test error message when no devices/entities for a domain exist in an area."""
     area_registry.async_get_or_create("kitchen")
     result = await conversation.async_converse(
         hass, "turn on the lights in the kitchen", None, Context(), None
@@ -475,10 +526,43 @@ async def test_error_no_exposed_for_domain(
     )
 
 
-async def test_error_no_exposed_for_device_class(
+async def test_error_no_device_class(
     hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
 ) -> None:
-    """Test error message when no entities of a device class are exposed in an area."""
+    """Test error message when no entities of a device class exist."""
+
+    # We don't have a sentence for opening all windows
+    window_class = MatchEntity(name="device_class", value="window", text="")
+    recognize_result = RecognizeResult(
+        intent=Intent("HassTurnOn"),
+        intent_data=IntentData([]),
+        entities={"device_class": window_class},
+        entities_list=[window_class],
+    )
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[recognize_result],
+    ):
+        result = await conversation.async_converse(
+            hass, "open the windows", None, Context(), None
+        )
+
+        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert (
+            result.response.error_code
+            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+        )
+        assert (
+            result.response.speech["plain"]["speech"]
+            == "Sorry, I am not aware of any window"
+        )
+
+
+async def test_error_no_device_class_in_area(
+    hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
+) -> None:
+    """Test error message when no entities of a device class exist in an area."""
     area_registry.async_get_or_create("bedroom")
     result = await conversation.async_converse(
         hass, "open bedroom windows", None, Context(), None
@@ -492,8 +576,8 @@ async def test_error_no_exposed_for_device_class(
     )
 
 
-async def test_error_match_failure(hass: HomeAssistant, init_components) -> None:
-    """Test response with complete match failure."""
+async def test_error_no_intent(hass: HomeAssistant, init_components) -> None:
+    """Test response with an intent match failure."""
     with patch(
         "homeassistant.components.conversation.default_agent.recognize_all",
         return_value=[],
@@ -505,6 +589,10 @@ async def test_error_match_failure(hass: HomeAssistant, init_components) -> None
         assert result.response.response_type == intent.IntentResponseType.ERROR
         assert (
             result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+        )
+        assert (
+            result.response.speech["plain"]["speech"]
+            == "Sorry, I couldn't understand that"
         )
 
 
@@ -601,5 +689,5 @@ async def test_all_domains_loaded(
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "Sorry, I am not aware of any device or entity called test light"
+        == "Sorry, I am not aware of any device called test light"
     )
