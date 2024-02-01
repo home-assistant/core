@@ -349,7 +349,7 @@ async def async_test_setpoint_change_source(hass, cluster, entity_id):
         hass, cluster, {Thermostat.AttributeDefs.setpoint_change_source.id: 0x01}
     )
     hass_state = hass.states.get(entity_id)
-    assert hass_state.state == "Schedule"
+    assert hass_state.state == "schedule"
 
 
 async def async_test_pi_heating_demand(hass, cluster, entity_id):
