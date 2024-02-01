@@ -51,10 +51,11 @@ def is_installed(requirement_str: str) -> bool:
         # This is a URL with a fragment
         # example: git+https://github.com/pypa/pip#pip>=1
 
-        # This was originally used to install zip files, and
-        # we no longer use this in Home Assistant. However, custom
-        # components use it to installed packages from git
-        # urls with a fragment.
+        # fragment support was originally used to install zip files, and
+        # we no longer do this in Home Assistant. However, custom
+        # components started using it to install packages from git
+        # urls which would make it would be a breaking change to
+        # remove it.
 
         requirement_str = urlparse(requirement_str).fragment
 
