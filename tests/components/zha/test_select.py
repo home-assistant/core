@@ -119,7 +119,27 @@ async def light(hass, zigpy_device_mock):
                     general.OnOff.cluster_id,
                 ],
                 SIG_EP_OUTPUT: [general.Ota.cluster_id],
-            }
+            },
+            2: {
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_LIGHT,
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    general.Identify.cluster_id,
+                    general.OnOff.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [general.Ota.cluster_id],
+            },
+            3: {
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_LIGHT,
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    general.Identify.cluster_id,
+                    general.OnOff.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [general.Ota.cluster_id],
+            },
         },
         node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
     )
@@ -155,151 +175,70 @@ def core_rs(hass_storage: dict[str, Any]):
     return _storage
 
 
-async def test_select_multiterm_zc0101_BO_EV(
+async def test_select_multiterm_zc0101_binary_output(
     hass: HomeAssistant, zha_device_joined_restored, multiterm_zc0101_binary_output
 ) -> None:
-    """Test ZHA select platform."""
+    """Test ZHA binary output device."""
+
+    enums = {
+        1: {"description": "Electric Valve", "enum": MultitermElectricValveStates},
+        2: {"description": "Heating/Cooling", "enum": MultitermHeatingCoolingStates},
+        3: {"description": "Sleep Mode", "enum": MultitermSleepModeStates},
+    }
 
     # Load mandatory attributes
-    cluster = multiterm_zc0101_binary_output.endpoints[1].binary_output
-    cluster.PLUGGED_ATTR_READS = {
-        general.BinaryOutput.AttributeDefs.description.name: "Electric Valve",
-        general.BinaryOutput.AttributeDefs.inactive_text.name: MultitermElectricValveStates.Off.name,
-        general.BinaryOutput.AttributeDefs.active_text.name: MultitermElectricValveStates.On.name,
-        general.BinaryOutput.AttributeDefs.present_value.name: False,
-    }
-    update_attribute_cache(cluster)
+    for ep_index, attrs in enums.items():
+        cluster = multiterm_zc0101_binary_output.endpoints[ep_index].binary_output
+        cluster.PLUGGED_ATTR_READS = {
+            general.BinaryOutput.AttributeDefs.description.name: attrs["description"],
+            general.BinaryOutput.AttributeDefs.inactive_text.name: attrs["enum"](
+                0
+            ).name,
+            general.BinaryOutput.AttributeDefs.active_text.name: attrs["enum"](1).name,
+            general.BinaryOutput.AttributeDefs.present_value.name: False,
+        }
+        update_attribute_cache(cluster)
 
     zha_device = await zha_device_joined_restored(multiterm_zc0101_binary_output)
-    entity_id = find_entity_id(Platform.SELECT, zha_device, hass)
-    assert entity_id is not None
 
-    # Test that entity is created properly
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == MultitermElectricValveStates.Off.name
-    assert state.attributes["options"] == [
-        MultitermElectricValveStates.Off.name,
-        MultitermElectricValveStates.On.name,
-    ]
+    # Check if entities are created and update their state
+    for attrs in enums.values():
+        entity_id = find_entity_id(
+            Platform.SELECT,
+            zha_device,
+            hass,
+            qualifier=attrs["description"].replace("/", "_").replace(" ", "_").lower(),
+        )
+        assert entity_id is not None
 
-    entity_registry = er.async_get(hass)
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+        # Test that entity is created properly
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == attrs["enum"](0).name
+        assert state.attributes["options"] == [
+            attrs["enum"](0).name,
+            attrs["enum"](1).name,
+        ]
 
-    # Test select option and update state
-    await hass.services.async_call(
-        "select",
-        "select_option",
-        {
-            "entity_id": entity_id,
-            "option": MultitermElectricValveStates.On.name,
-        },
-        blocking=True,
-    )
+        entity_registry = er.async_get(hass)
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry
+        assert entity_entry.entity_category == EntityCategory.CONFIG
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == MultitermElectricValveStates.On.name
+        # Test select option and update state
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {
+                "entity_id": entity_id,
+                "option": attrs["enum"](1).name,
+            },
+            blocking=True,
+        )
 
-
-async def test_select_multiterm_zc0101_BO_HC(
-    hass: HomeAssistant, zha_device_joined_restored, multiterm_zc0101_binary_output
-) -> None:
-    """Test ZHA select platform."""
-
-    # Load mandatory attributes
-    cluster = multiterm_zc0101_binary_output.endpoints[1].binary_output
-    cluster.PLUGGED_ATTR_READS = {
-        general.BinaryOutput.AttributeDefs.description.name: "Heating/Cooling",
-        general.BinaryOutput.AttributeDefs.inactive_text.name: MultitermHeatingCoolingStates.Heating.name,
-        general.BinaryOutput.AttributeDefs.active_text.name: MultitermHeatingCoolingStates.Cooling.name,
-        general.BinaryOutput.AttributeDefs.present_value.name: False,
-    }
-    update_attribute_cache(cluster)
-
-    zha_device = await zha_device_joined_restored(multiterm_zc0101_binary_output)
-    entity_id = find_entity_id(Platform.SELECT, zha_device, hass)
-    assert entity_id is not None
-
-    # Test that entity is created properly
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == MultitermHeatingCoolingStates.Heating.name
-    assert state.attributes["options"] == [
-        MultitermHeatingCoolingStates.Heating.name,
-        MultitermHeatingCoolingStates.Cooling.name,
-    ]
-
-    entity_registry = er.async_get(hass)
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
-
-    # Test select option and update state
-    await hass.services.async_call(
-        "select",
-        "select_option",
-        {
-            "entity_id": entity_id,
-            "option": MultitermHeatingCoolingStates.Cooling.name,
-        },
-        blocking=True,
-    )
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == MultitermHeatingCoolingStates.Cooling.name
-
-
-async def test_select_multiterm_zc0101_BO_SM(
-    hass: HomeAssistant, zha_device_joined_restored, multiterm_zc0101_binary_output
-) -> None:
-    """Test ZHA select platform."""
-
-    # Load mandatory attributes
-    cluster = multiterm_zc0101_binary_output.endpoints[1].binary_output
-    cluster.PLUGGED_ATTR_READS = {
-        general.BinaryOutput.AttributeDefs.description.name: "Sleep Mode",
-        general.BinaryOutput.AttributeDefs.inactive_text.name: MultitermSleepModeStates.Inactive.name,
-        general.BinaryOutput.AttributeDefs.active_text.name: MultitermSleepModeStates.Active.name,
-        general.BinaryOutput.AttributeDefs.present_value.name: False,
-    }
-    update_attribute_cache(cluster)
-
-    zha_device = await zha_device_joined_restored(multiterm_zc0101_binary_output)
-    entity_id = find_entity_id(Platform.SELECT, zha_device, hass)
-    assert entity_id is not None
-
-    # Test that entity is created properly
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == MultitermSleepModeStates.Inactive.name
-    assert state.attributes["options"] == [
-        MultitermSleepModeStates.Inactive.name,
-        MultitermSleepModeStates.Active.name,
-    ]
-
-    entity_registry = er.async_get(hass)
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
-
-    # Test select option and update state
-    await hass.services.async_call(
-        "select",
-        "select_option",
-        {
-            "entity_id": entity_id,
-            "option": MultitermSleepModeStates.Active.name,
-        },
-        blocking=True,
-    )
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == MultitermSleepModeStates.Active.name
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == attrs["enum"](1).name
 
 
 async def test_select(hass: HomeAssistant, siren) -> None:
