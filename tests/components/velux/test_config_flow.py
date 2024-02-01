@@ -134,6 +134,21 @@ async def test_import_valid_config(hass: HomeAssistant) -> None:
         assert result["data"] == DUMMY_DATA
 
 
+async def test_import_unknown_error(hass: HomeAssistant) -> None:
+    """Test import initialized flow with an unknown error."""
+    with patch(
+        PYVLX_CONNECT_FUNCTION_PATH,
+        side_effect=Exception("DUMMY"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=DUMMY_DATA,
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "unknown"
+
+
 async def test_import_invalid_config(hass: HomeAssistant) -> None:
     """Test import initialized flow with invalid config."""
     with patch(
