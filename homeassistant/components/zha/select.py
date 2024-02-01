@@ -4,7 +4,6 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
-import re
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import (
@@ -52,10 +51,6 @@ CONFIG_DIAGNOSTIC_MATCH = functools.partial(
 _LOGGER = logging.getLogger(__name__)
 
 
-def camelcase_to_snakecase(string: str):
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", string).lower()
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -93,9 +88,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     ) -> None:
         """Init this select entity."""
         self._attribute_name = self._enum.__name__
-        self._attr_options = [
-            camelcase_to_snakecase(entry.name) for entry in self._enum
-        ]
+        self._attr_options = [entry.name.lower() for entry in self._enum]
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
@@ -106,7 +99,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         if option is None:
             return None
         # convert old style CamelCase to snake_case for translations (however try to use snake_case in enums)
-        return camelcase_to_snakecase(option.name)
+        return option.name.lower()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
