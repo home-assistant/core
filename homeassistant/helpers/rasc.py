@@ -59,10 +59,7 @@ class StateDetector:
             self.polls = [history[0]]
             return
         dist = get_best_distribution(history)
-        # how to get upper_bound?
-        # print(history)
-        self.polls = get_polls(dist, max(history), 2)
-        # print(self.polls)
+        self.polls = get_polls(dist)
 
     def next_interval(self) -> timedelta:
         """Get next interval."""
@@ -457,8 +454,10 @@ def _examinate_2nd_derivate(dist: Any, L: list[float]) -> bool:
     return True
 
 
-def _examinate_delta(dist: Any, L: list[float], worst_delta: float) -> bool:
-    qouta = 0.01
+def _examinate_delta(
+    dist: Any, L: list[float], worst_delta: float, quality: float
+) -> bool:
+    qouta = 1 - quality
     _max = 0.0
     L = [0.0] + L
     for i in range(1, len(L)):
@@ -473,17 +472,22 @@ def _examinate_delta(dist: Any, L: list[float], worst_delta: float) -> bool:
 
 
 def get_polls(
-    dist: Any, upper_bound: float, worst_case_delta: float, name: str = "_"
+    dist: Any,
+    upper_bound: float | None = None,
+    worst_case_delta: float = 2.0,
+    quality: float = 0.99,
+    name: str = "_",
 ) -> list[float]:
     """Get polls based on distribution."""
     N = 1
     L = None
+    upper_bound = upper_bound or dist.ppf(0.99)
     while True:
         L = _get_polling_interval(dist, N, upper_bound)
         valid = _examinate_2nd_derivate(dist, L)
         if not valid:
             _LOGGER.warning("The result for %s is probably not minimized", name)
-        valid = _examinate_delta(dist, L, worst_case_delta)
+        valid = _examinate_delta(dist, L, worst_case_delta, quality)
         if valid:
             break
         N += 1
