@@ -827,7 +827,7 @@ habitipy==0.2.0
 habluetooth==2.4.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.75.1
+hass-nabucasa==0.76.0
 
 # homeassistant.components.conversation
 hassil==1.6.0
