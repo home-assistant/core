@@ -129,6 +129,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     """Representation of a Z-Wave climate."""
 
     _attr_precision = PRECISION_TENTHS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
@@ -193,6 +194,16 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         self._set_modes_and_presets()
         if self._current_mode and len(self._hvac_presets) > 1:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+        if HVACMode.OFF in self._hvac_modes:
+            self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
+
+            # We can only support turn on if we are able to turn the device off,
+            # otherwise the device can be considered always on
+            if len(self._hvac_modes) == 2 or any(
+                mode in self._hvac_modes
+                for mode in (HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL)
+            ):
+                self._attr_supported_features |= ClimateEntityFeature.TURN_ON
         # If any setpoint value exists, we can assume temperature
         # can be set
         if any(self._setpoint_values.values()):
