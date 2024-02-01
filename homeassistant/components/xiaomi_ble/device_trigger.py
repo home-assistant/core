@@ -24,6 +24,7 @@ from .const import (
     BUTTON,
     BUTTON_PRESS,
     BUTTON_PRESS_DOUBLE_LONG,
+    BUTTON_PRESS_LONG,
     CONF_SUBTYPE,
     DOMAIN,
     DOUBLE_BUTTON,
@@ -34,6 +35,10 @@ from .const import (
     EVENT_TYPE,
     MOTION,
     MOTION_DEVICE,
+    REMOTE,
+    REMOTE_BATHROOM,
+    REMOTE_FAN,
+    REMOTE_VENFAN,
     TRIPPLE_BUTTON,
     TRIPPLE_BUTTON_PRESS_DOUBLE_LONG,
     XIAOMI_BLE_EVENT,
@@ -41,6 +46,7 @@ from .const import (
 
 TRIGGERS_BY_TYPE = {
     BUTTON_PRESS: ["press"],
+    BUTTON_PRESS_LONG: ["press", "long_press"],
     BUTTON_PRESS_DOUBLE_LONG: ["press", "double_press", "long_press"],
     MOTION_DEVICE: ["motion_detected"],
 }
@@ -49,6 +55,41 @@ EVENT_TYPES = {
     BUTTON: ["button"],
     DOUBLE_BUTTON: ["button_left", "button_right"],
     TRIPPLE_BUTTON: ["button_left", "button_middle", "button_right"],
+    REMOTE: [
+        "button_on",
+        "button_off",
+        "button_brightness",
+        "button_plus",
+        "button_min",
+        "button_m",
+    ],
+    REMOTE_BATHROOM: [
+        "button_heat",
+        "button_air_exchange",
+        "button_dry",
+        "button_fan",
+        "button_swing",
+        "button_decrease_speed",
+        "button_increase_speed",
+        "button_stop",
+        "button_light",
+    ],
+    REMOTE_FAN: [
+        "button_fan",
+        "button_light",
+        "button_wind_speed",
+        "button_wind_mode",
+        "button_brightness",
+        "button_color_temperature",
+    ],
+    REMOTE_VENFAN: [
+        "button_swing",
+        "button_power",
+        "button_timer_30_minutes",
+        "button_timer_60_minutes",
+        "button_increase_wind_speed",
+        "button_decrease_wind_speed",
+    ],
     MOTION: ["motion"],
 }
 
@@ -83,6 +124,26 @@ TRIGGER_MODEL_DATA = {
         event_types=EVENT_TYPES[TRIPPLE_BUTTON],
         triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS_DOUBLE_LONG],
     ),
+    REMOTE: TriggerModelData(
+        event_class=EVENT_CLASS_BUTTON,
+        event_types=EVENT_TYPES[REMOTE],
+        triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS_LONG],
+    ),
+    REMOTE_BATHROOM: TriggerModelData(
+        event_class=EVENT_CLASS_BUTTON,
+        event_types=EVENT_TYPES[REMOTE_BATHROOM],
+        triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS_LONG],
+    ),
+    REMOTE_FAN: TriggerModelData(
+        event_class=EVENT_CLASS_BUTTON,
+        event_types=EVENT_TYPES[REMOTE_FAN],
+        triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS_LONG],
+    ),
+    REMOTE_VENFAN: TriggerModelData(
+        event_class=EVENT_CLASS_BUTTON,
+        event_types=EVENT_TYPES[REMOTE_VENFAN],
+        triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS_LONG],
+    ),
     MOTION_DEVICE: TriggerModelData(
         event_class=EVENT_CLASS_MOTION,
         event_types=EVENT_TYPES[MOTION],
@@ -103,6 +164,10 @@ MODEL_DATA = {
     "XMWXKG01YL": TRIGGER_MODEL_DATA[DOUBLE_BUTTON_PRESS_DOUBLE_LONG],
     "K9B-2BTN": TRIGGER_MODEL_DATA[DOUBLE_BUTTON_PRESS_DOUBLE_LONG],
     "K9B-3BTN": TRIGGER_MODEL_DATA[TRIPPLE_BUTTON_PRESS_DOUBLE_LONG],
+    "YLYK01YL": TRIGGER_MODEL_DATA[REMOTE],
+    "YLYK01YL-FANRC": TRIGGER_MODEL_DATA[REMOTE_FAN],
+    "YLYK01YL-VENFAN": TRIGGER_MODEL_DATA[REMOTE_VENFAN],
+    "YLYK01YL-BHFRC": TRIGGER_MODEL_DATA[REMOTE_BATHROOM],
     "MUE4094RT": TRIGGER_MODEL_DATA[MOTION_DEVICE],
 }
 

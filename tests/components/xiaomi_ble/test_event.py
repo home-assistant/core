@@ -50,6 +50,36 @@ from tests.components.bluetooth import (
             ],
         ),
         (
+            "F8:24:41:E9:50:74",
+            make_advertisement(
+                "F8:24:41:E9:50:74",
+                b"P0S\x01?tP\xe9A$\xf8\x01\x10\x03\x04\x00\x02",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.remote_control_5074_button_m",
+                    ATTR_FRIENDLY_NAME: "Remote Control 5074 Button M",
+                    ATTR_EVENT_TYPE: "long_press",
+                }
+            ],
+        ),
+        (
+            "F8:24:41:E9:50:74",
+            make_advertisement(
+                "F8:24:41:E9:50:74",
+                b"P0S\x01?tP\xe9A$\xf8\x01\x10\x03\x03\x00\x00",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.remote_control_5074_button_plus",
+                    ATTR_FRIENDLY_NAME: "Remote Control 5074 Button plus",
+                    ATTR_EVENT_TYPE: "press",
+                }
+            ],
+        ),
+        (
             "DE:70:E8:B2:39:0C",
             make_advertisement(
                 "DE:70:E8:B2:39:0C",
