@@ -842,10 +842,13 @@
         }
       },
       "switch_type": {
-        "single_pole": "Single Pole",
-        "three_way_dumb": "Three Way Dumb",
-        "three_way_aux": "Three Way AUX",
-        "single_pole_full_sine": "Single Pole Full Sine"
+        "name": "Switch type",
+        "state": {
+          "single_pole": "Single Pole",
+          "three_way_dumb": "Three Way Dumb",
+          "three_way_aux": "Three Way AUX",
+          "single_pole_full_sine": "Single Pole Full Sine"
+        }
       },
       "fan_switch_type": {
         "name": "Switch type",
