@@ -47,8 +47,14 @@ def is_installed(requirement_str: str) -> bool:
     Returns True when the requirement is met.
     Returns False when the package is not installed or doesn't meet req.
     """
-    if "#" in requirement_str:
-        # This is a URL with a fragment
+    try:
+        req = Requirement(requirement_str)
+    except InvalidRequirement:
+        if "#" not in requirement_str:
+            _LOGGER.error("Invalid requirement '%s'", requirement_str)
+            return False
+
+        # This is likely a URL with a fragment
         # example: git+https://github.com/pypa/pip#pip>=1
 
         # fragment support was originally used to install zip files, and
@@ -56,14 +62,11 @@ def is_installed(requirement_str: str) -> bool:
         # components started using it to install packages from git
         # urls which would make it would be a breaking change to
         # remove it.
-
-        requirement_str = urlparse(requirement_str).fragment
-
-    try:
-        req = Requirement(requirement_str)
-    except InvalidRequirement:
-        _LOGGER.error("Invalid requirement '%s'", requirement_str)
-        return False
+        try:
+            req = Requirement(urlparse(requirement_str).fragment)
+        except InvalidRequirement:
+            _LOGGER.error("Invalid requirement '%s'", requirement_str)
+            return False
 
     try:
         if (installed_version := version(req.name)) is None:
