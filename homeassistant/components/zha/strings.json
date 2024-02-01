@@ -743,73 +743,210 @@
     },
     "select": {
       "default_siren_tone": {
-        "name": "Default siren tone"
+        "name": "Default siren tone",
+        "state": {
+          "stop": "Stop",
+          "burglar": "Burglar",
+          "fire": "Fire",
+          "emergency": "Emergency",
+          "police_panic": "Police Panic",
+          "fire_panic": "Fire Panic",
+          "emergency_panic": "Emergency Panic"
+        }
       },
       "default_siren_level": {
-        "name": "Default siren level"
+        "name": "Default siren level",
+        "state": {
+          "low_level_sound": "Low level sound",
+          "medium_level_sound": "Medium level sound",
+          "high_level_sound": "High level sound",
+          "very_high_level_sound": "Very high level sound"
+        }
       },
       "default_strobe_level": {
-        "name": "Default strobe level"
+        "name": "Default strobe level",
+        "state": {
+          "low_level_strobe": "Low level strobe",
+          "medium_level_strobe": "Medium level strobe",
+          "high_level_strobe": "High level strobe",
+          "very_high_level_strobe": "Very high level strobe"
+        }
       },
       "default_strobe": {
-        "name": "Default strobe"
+        "name": "Default strobe",
+        "state": {
+          "no_strobe": "No_Strobe",
+          "strobe": "Strobe "
+        }
       },
       "start_up_on_off": {
-        "name": "Start-up behavior"
+        "name": "Start-up behavior",
+        "state": {
+          "off": "Off",
+          "on": "On",
+          "toggle": "Toggle",
+          "previousvalue": "PreviousValue",
+          "previous": "Previous"
+        }
       },
       "power_on_state": {
-        "name": "Power on state"
+        "name": "Power on state",
+        "state": {
+          "off": "Off",
+          "on": "On",
+          "laststate": "LastState"
+        }
       },
       "backlight_mode": {
-        "name": "Backlight mode"
+        "name": "Backlight mode",
+        "state": {
+          "off": "Off",
+          "lightwhenon": "LightWhenOn",
+          "lightwhenoff": "LightWhenOff",
+          "freeze": "Freeze"
+        }
       },
       "motion_sensitivity": {
-        "name": "Motion sensitivity"
+        "name": "Motion sensitivity",
+        "state": {
+          "lowest": "Lowest",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "highest": "Highest"
+        }
       },
       "monitoring_mode": {
-        "name": "Monitoring mode"
+        "name": "Monitoring mode",
+        "state": {
+          "undirected": "Undirected",
+          "left_right": "Left Right"
+        }
       },
       "approach_distance": {
-        "name": "Approach distance"
+        "name": "Approach distance",
+        "state": {
+          "far": "Far",
+          "medium": "Medium",
+          "near": "Near"
+        }
       },
       "window_covering_mode": {
         "name": "Curtain mode"
       },
       "output_mode": {
-        "name": "Output mode"
+        "name": "Output mode",
+        "state": {
+          "dimmer": "Dimmer",
+          "onoff": "OnOff"
+        }
       },
       "switch_type": {
-        "name": "Switch type"
+        "single_pole": "Single Pole",
+        "three_way_dumb": "Three Way Dumb",
+        "three_way_aux": "Three Way AUX",
+        "single_pole_full_sine": "Single Pole Full Sine"
+      },
+      "fan_switch_type": {
+        "name": "Switch type",
+        "state": {
+          "load_only": "Load Only",
+          "three_way_aux": "Three Way AUX"
+        }
+      },
+      "relay_switch_type": {
+        "name": "Switch Type",
+        "state": {
+          "toggle": "Toggle",
+          "momentary": "Momentary",
+          "noswitch": "NoSwitch"
+        }
       },
       "led_scaling_mode": {
-        "name": "Led scaling mode"
+        "name": "Led scaling mode",
+        "state": {
+          "vzm31sn": "VZM31SN",
+          "lzw31sn": "LZW31SN"
+        }
       },
       "smart_fan_led_display_levels": {
-        "name": "Smart fan led display levels"
+        "name": "Smart fan led display levels",
+        "state": {
+          "vzm31sn": "VZM31SN",
+          "grade_1": "Grade 1",
+          "grade_2": "Grade 2",
+          "grade_3": "Grade 3",
+          "grade_4": "Grade 4",
+          "grade_5": "Grade 5",
+          "grade_6": "Grade 6",
+          "grade_7": "Grade 7",
+          "grade_8": "Grade 8",
+          "grade_9": "Grade 9",
+          "adaptive": "Adaptive"
+        }
       },
       "increased_non_neutral_output": {
-        "name": "Non neutral output"
+        "name": "Non neutral output",
+        "state": {
+          "low": "Low",
+          "high": "High"
+        }
       },
       "feeding_mode": {
-        "name": "Mode"
+        "name": "Mode",
+        "state": {
+          "manual": "Manual",
+          "schedule": "Schedule"
+        }
       },
       "preset": {
-        "name": "Preset"
+        "name": "Preset",
+        "state": {
+          "manual": "Manual",
+          "auto": "Auto",
+          "away": "Away"
+        }
       },
       "detection_distance": {
-        "name": "Detection distance"
+        "name": "Detection distance",
+        "state": {
+          "tenmillimeters": "TenMillimeters",
+          "twentymillimeters": "TwentyMillimeters",
+          "thirtymillimeters": "ThirtyMillimeters"
+        }
       },
       "switch_mode": {
-        "name": "Switch mode"
+        "name": "Switch mode",
+        "state": {
+          "power": "Power",
+          "pulse": "Pulse",
+          "dry": "Dry"
+        }
       },
       "decoupled_mode": {
-        "name": "Decoupled mode"
+        "name": "Decoupled mode",
+        "state": {
+          "decoupled": "Decoupled",
+          "controlrelay": "ControlRelay"
+        }
       },
       "detection_sensitivity": {
-        "name": "Detection Sensitivity"
+        "name": "Detection Sensitivity",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
       },
       "keypad_lockout": {
-        "name": "Keypad lockout"
+        "name": "Keypad lockout",
+        "state": {
+          "unlock": "Unlock",
+          "lock1": "Lock1",
+          "lock2": "Lock2",
+          "lock3": "Lock3",
+          "lock4": "Lock4"
+        }
       }
     },
     "sensor": {
@@ -921,8 +1058,8 @@
           "mains_three_phase": "Mains three phase",
           "battery": "Battery",
           "dc_source": "DC Source",
-          "emergency_mains_always_on": "Emergency mains always on",
-          "emergency_mains_transfer_switch": "Emergency mains transfer switch"
+          "emergency_mains_always_on": "Emergency Mains Always On",
+          "emergency_mains_transfer_switch": "Emergency Mains Transfer Switch"
         }
       },
       "window_covering_type": {
