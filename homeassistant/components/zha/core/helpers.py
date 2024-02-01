@@ -318,7 +318,7 @@ class LogMixin:
         return self.log(logging.ERROR, msg, *args, **kwargs)
 
 
-def convert_install_code(value: str) -> bytes:
+def convert_install_code(value: str) -> zigpy.types.KeyData:
     """Convert string to install code bytes and validate length."""
 
     try:
@@ -329,10 +329,11 @@ def convert_install_code(value: str) -> bytes:
     if len(code) != 18:  # 16 byte code + 2 crc bytes
         raise vol.Invalid("invalid length of the install code")
 
-    if zigpy.util.convert_install_code(code) is None:
+    link_key = zigpy.util.convert_install_code(code)
+    if link_key is None:
         raise vol.Invalid("invalid install code")
 
-    return code
+    return link_key
 
 
 QR_CODES = (
@@ -360,13 +361,13 @@ QR_CODES = (
         [0-9a-fA-F]{34}
         ([0-9a-fA-F]{16}) # IEEE address
         DLK
-        ([0-9a-fA-F]{36}) # install code
+        ([0-9a-fA-F]{36}|[0-9a-fA-F]{32}) # install code / link key
         $
     """,
 )
 
 
-def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
+def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, zigpy.types.KeyData]:
     """Try to parse the QR code.
 
     if successful, return a tuple of a EUI64 address and install code.
@@ -379,10 +380,16 @@ def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
 
         ieee_hex = binascii.unhexlify(match[1])
         ieee = zigpy.types.EUI64(ieee_hex[::-1])
+
+        # Bosch supplies (A) device specific link key (DSLK) or (A) install code + crc
+        if "RB01SG" in code_pattern and len(match[2]) == 32:
+            link_key_hex = binascii.unhexlify(match[2])
+            link_key = zigpy.types.KeyData(link_key_hex)
+            return ieee, link_key
         install_code = match[2]
         # install_code sanity check
-        install_code = convert_install_code(install_code)
-        return ieee, install_code
+        link_key = convert_install_code(install_code)
+        return ieee, link_key
 
     raise vol.Invalid(f"couldn't convert qr code: {qr_code}")
 

@@ -65,7 +65,7 @@
     'platform': 'lamarzocco',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'main',
     'unique_id': 'GS01234_main',
     'unit_of_measurement': None,
   })

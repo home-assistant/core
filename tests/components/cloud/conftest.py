@@ -115,6 +115,13 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
         type(mock_cloud).is_connected = is_connected
         type(mock_cloud.iot).connected = is_connected
 
+        def mock_username() -> bool:
+            """Return the subscription username."""
+            return "abcdefghjkl"
+
+        username = PropertyMock(side_effect=mock_username)
+        type(mock_cloud).username = username
+
         # Properties that we mock as attributes.
         mock_cloud.expiration_date = utcnow()
         mock_cloud.subscription_expired = False

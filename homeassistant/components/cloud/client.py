@@ -29,6 +29,8 @@ from . import alexa_config, google_config
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 from .prefs import CloudPreferences
 
+_LOGGER = logging.getLogger(__name__)
+
 VALID_REPAIR_TRANSLATION_KEYS = {
     "warn_bad_custom_domain_configuration",
     "reset_bad_custom_domain_configuration",
@@ -149,6 +151,7 @@ class CloudClient(Interface):
 
     async def cloud_connected(self) -> None:
         """When cloud is connected."""
+        _LOGGER.debug("cloud_connected")
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
         async def enable_alexa(_: Any) -> None:
@@ -196,6 +199,9 @@ class CloudClient(Interface):
 
     async def cloud_disconnected(self) -> None:
         """When cloud disconnected."""
+        _LOGGER.debug("cloud_disconnected")
+        if self._google_config:
+            self._google_config.async_disable_local_sdk()
 
     async def cloud_started(self) -> None:
         """When cloud is started."""
@@ -207,6 +213,8 @@ class CloudClient(Interface):
         """Cleanup some stuff after logout."""
         await self.prefs.async_set_username(None)
 
+        if self._google_config:
+            self._google_config.async_deinitialize()
         self._google_config = None
 
     @callback

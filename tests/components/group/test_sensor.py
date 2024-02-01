@@ -245,15 +245,15 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.second_test")
 
 
-async def test_sensor_incorrect_state(
+async def test_sensor_incorrect_state_with_ignore_non_numeric(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test the min sensor."""
+    """Test that non numeric values are ignored in a group."""
     config = {
         SENSOR_DOMAIN: {
             "platform": GROUP_DOMAIN,
-            "name": "test_failure",
-            "type": "min",
+            "name": "test_ignore_non_numeric",
+            "type": "max",
             "ignore_non_numeric": True,
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "unique_id": "very_unique_id",
@@ -266,24 +266,63 @@ async def test_sensor_incorrect_state(
 
     entity_ids = config["sensor"]["entities"]
 
+    # Check that the final sensor value ignores the non numeric input
+    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_ignore_non_numeric")
+    assert state.state == "17.0"
+    assert (
+        "Unable to use state. Only numerical states are supported," not in caplog.text
+    )
+
+    # Check that the final sensor value with all numeric inputs
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_ignore_non_numeric")
+    assert state.state == "20.0"
+
+
+async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that non numeric values cause a group to be unknown."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_failure",
+            "type": "max",
+            "ignore_non_numeric": False,
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id",
+            "state_class": SensorStateClass.MEASUREMENT,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entities"]
+
+    # Check that the final sensor value is unavailable if a non numeric input exists
     for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_failure")
+    assert state.state == "unknown"
+    assert "Unable to use state. Only numerical states are supported" in caplog.text
 
-    assert state.state == "15.3"
-    assert (
-        "Unable to use state. Only numerical states are supported, entity sensor.test_2 with value string excluded from calculation"
-        in caplog.text
-    )
-
+    # Check that the final sensor value is correct with all numeric inputs
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_failure")
-    assert state.state == "15.3"
+    assert state.state == "20.0"
 
 
 async def test_sensor_require_all_states(hass: HomeAssistant) -> None:

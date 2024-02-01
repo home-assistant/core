@@ -61,6 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if "recorder" in hass.config.components:
         await _insert_statistics(hass)
 
+    # Start a reauth flow
+    config_entry.async_start_reauth(hass)
+
     return True
 
 

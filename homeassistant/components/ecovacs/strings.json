@@ -132,6 +132,23 @@
         }
       }
     },
+    "switch": {
+      "advanced_mode": {
+        "name": "Advanced mode"
+      },
+      "carpet_auto_fan_boost": {
+        "name": "Carpet auto fan speed boost"
+      },
+      "clean_preference": {
+        "name": "Clean preference"
+      },
+      "continuous_cleaning": {
+        "name": "Continuous cleaning"
+      },
+      "true_detect": {
+        "name": "True detect"
+      }
+    },
     "vacuum": {
       "vacuum": {
         "state_attributes": {

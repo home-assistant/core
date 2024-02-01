@@ -507,7 +507,8 @@ build.json @home-assistant/supervisor
 /tests/components/govee_ble/ @bdraco @PierreAronnax
 /homeassistant/components/govee_light_local/ @Galorhallen
 /tests/components/govee_light_local/ @Galorhallen
-/homeassistant/components/gpsd/ @fabaff
+/homeassistant/components/gpsd/ @fabaff @jrieger
+/tests/components/gpsd/ @fabaff @jrieger
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
 /homeassistant/components/greeneye_monitor/ @jkeljo

@@ -332,7 +332,7 @@ async def test_setpoint_thermostat(
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT]
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_ON
+        == ClimateEntityFeature.TARGET_TEMPERATURE
     )
 
     client.async_send_command_no_wait.reset_mock()

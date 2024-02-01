@@ -142,7 +142,7 @@
       "drive_state_active_route_miles_to_arrival": {
         "name": "Distance to arrival"
       },
-      "drive_state_active_route_time_to_arrival": {
+      "drive_state_active_route_minutes_to_arrival": {
         "name": "Time to arrival"
       },
       "drive_state_active_route_destination": {

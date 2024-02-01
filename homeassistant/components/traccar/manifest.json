@@ -1,6 +1,6 @@
 {
   "domain": "traccar",
-  "name": "Traccar",
+  "name": "Traccar Client",
   "codeowners": ["@ludeeus"],
   "config_flow": true,
   "dependencies": ["webhook"],
