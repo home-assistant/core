@@ -10,6 +10,8 @@ import random
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
+from zigpy.zcl.clusters.closures import WindowCovering
+from zigpy.zcl.clusters.general import Basic
 
 from homeassistant.components.climate import HVACAction
 from homeassistant.components.sensor import (
@@ -51,6 +53,7 @@ from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_ANALOG_INPUT,
     CLUSTER_HANDLER_BASIC,
+    CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_DEVICE_TEMPERATURE,
     CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     CLUSTER_HANDLER_HUMIDITY,
@@ -95,6 +98,9 @@ CLUSTER_HANDLER_ST_HUMIDITY_CLUSTER = (
 )
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SENSOR)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.SENSOR
+)
 
 
 async def async_setup_entry(
@@ -238,6 +244,19 @@ class PollableSensor(Sensor):
             )
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class EnumSensor(Sensor):
+    """Sensor with value from enum."""
+
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
+    _enum: type[enum.Enum]
+
+    def formatter(self, value: int) -> str | None:
+        """Use name of enum."""
+        assert self._enum is not None
+        return self._enum(value).name
+
+
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_ANALOG_INPUT,
     manufacturers="Digi",
@@ -319,7 +338,7 @@ class ElectricalMeasurement(PollableSensor):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement: str = UnitOfPower.WATT
-    _div_mul_prefix = "ac_power"
+    _div_mul_prefix: str | None = "ac_power"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -342,10 +361,14 @@ class ElectricalMeasurement(PollableSensor):
 
     def formatter(self, value: int) -> int | float:
         """Return 'normalized' value."""
-        multiplier = getattr(
-            self._cluster_handler, f"{self._div_mul_prefix}_multiplier"
-        )
-        divisor = getattr(self._cluster_handler, f"{self._div_mul_prefix}_divisor")
+        if self._div_mul_prefix:
+            multiplier = getattr(
+                self._cluster_handler, f"{self._div_mul_prefix}_multiplier"
+            )
+            divisor = getattr(self._cluster_handler, f"{self._div_mul_prefix}_divisor")
+        else:
+            multiplier = self._multiplier
+            divisor = self._divisor
         value = float(value * multiplier) / divisor
         if value < 100 and divisor > 1:
             return round(value, self._decimals)
@@ -419,13 +442,14 @@ class ElectricalMeasurementFrequency(PolledElectricalMeasurement):
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ElectricalMeasurementPowerFactor(PolledElectricalMeasurement):
-    """Frequency measurement."""
+    """Power Factor measurement."""
 
     _attribute_name = "power_factor"
     _unique_id_suffix = "power_factor"
     _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
     _attr_native_unit_of_measurement = PERCENTAGE
+    _div_mul_prefix = None
 
 
 @MULTI_MATCH(
@@ -1166,17 +1190,14 @@ class AqaraFeedingSource(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class AqaraPetFeederLastFeedingSource(Sensor):
+class AqaraPetFeederLastFeedingSource(EnumSensor):
     """Sensor that displays the last feeding source of pet feeder."""
 
     _attribute_name = "last_feeding_source"
     _unique_id_suffix = "last_feeding_source"
     _attr_translation_key: str = "last_feeding_source"
     _attr_icon = "mdi:devices"
-
-    def formatter(self, value: int) -> int | float | None:
-        """Numeric pass-through formatter."""
-        return AqaraFeedingSource(value).name
+    _enum = AqaraFeedingSource
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -1238,14 +1259,105 @@ class SonoffIlluminationStates(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names="sonoff_manufacturer", models={"SNZB-06P"})
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SonoffPresenceSenorIlluminationStatus(Sensor):
+class SonoffPresenceSenorIlluminationStatus(EnumSensor):
     """Sensor that displays the illumination status the last time peresence was detected."""
 
     _attribute_name = "last_illumination_state"
     _unique_id_suffix = "last_illumination"
     _attr_translation_key: str = "last_illumination_state"
     _attr_icon: str = "mdi:theme-light-dark"
+    _enum = SonoffIlluminationStates
 
-    def formatter(self, value: int) -> int | float | None:
-        """Numeric pass-through formatter."""
-        return SonoffIlluminationStates(value).name
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class PiHeatingDemand(Sensor):
+    """Sensor that displays the percentage of heating power demanded.
+
+    Optional thermostat attribute.
+    """
+
+    _unique_id_suffix = "pi_heating_demand"
+    _attribute_name = "pi_heating_demand"
+    _attr_translation_key: str = "pi_heating_demand"
+    _attr_icon: str = "mdi:radiator"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _decimals = 0
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
+class SetpointChangeSourceEnum(types.enum8):
+    """The source of the setpoint change."""
+
+    Manual = 0x00
+    Schedule = 0x01
+    External = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SetpointChangeSource(EnumSensor):
+    """Sensor that displays the source of the setpoint change.
+
+    Optional thermostat attribute.
+    """
+
+    _unique_id_suffix = "setpoint_change_source"
+    _attribute_name = "setpoint_change_source"
+    _attr_translation_key: str = "setpoint_change_source"
+    _attr_icon: str = "mdi:thermostat"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _enum = SetpointChangeSourceEnum
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class WindowCoveringTypeSensor(EnumSensor):
+    """Sensor that displays the type of a cover device."""
+
+    _attribute_name: str = WindowCovering.AttributeDefs.window_covering_type.name
+    _enum = WindowCovering.WindowCoveringType
+    _unique_id_suffix: str = WindowCovering.AttributeDefs.window_covering_type.name
+    _attr_translation_key: str = WindowCovering.AttributeDefs.window_covering_type.name
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:curtains"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_BASIC, models={"lumi.curtain.agl001"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class AqaraCurtainMotorPowerSourceSensor(EnumSensor):
+    """Sensor that displays the power source of the Aqara E1 curtain motor device."""
+
+    _attribute_name: str = Basic.AttributeDefs.power_source.name
+    _enum = Basic.PowerSource
+    _unique_id_suffix: str = Basic.AttributeDefs.power_source.name
+    _attr_translation_key: str = Basic.AttributeDefs.power_source.name
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:battery-positive"
+
+
+class AqaraE1HookState(types.enum8):
+    """Aqara hook state."""
+
+    Unlocked = 0x00
+    Locked = 0x01
+    Locking = 0x02
+    Unlocking = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.curtain.agl001"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class AqaraCurtainHookStateSensor(EnumSensor):
+    """Representation of a ZHA curtain mode configuration entity."""
+
+    _attribute_name = "hooks_state"
+    _enum = AqaraE1HookState
+    _unique_id_suffix = "hooks_state"
+    _attr_translation_key: str = "hooks_state"
+    _attr_icon: str = "mdi:hook"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC

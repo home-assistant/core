@@ -2,13 +2,21 @@
 from __future__ import annotations
 
 import logging
-import socket
 from typing import Any
 
-from gps3.agps3threaded import AGPS3mechanism
+from gps3.agps3threaded import (
+    GPSD_PORT as DEFAULT_PORT,
+    HOST as DEFAULT_HOST,
+    AGPS3mechanism,
+)
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -17,10 +25,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,9 +41,7 @@ ATTR_ELEVATION = "elevation"
 ATTR_GPS_TIME = "gps_time"
 ATTR_SPEED = "speed"
 
-DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "GPS"
-DEFAULT_PORT = 2947
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -42,71 +52,84 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the GPSD component."""
-    name = config[CONF_NAME]
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
+    async_add_entities(
+        [
+            GpsdSensor(
+                config_entry.data[CONF_HOST],
+                config_entry.data[CONF_PORT],
+                config_entry.entry_id,
+            )
+        ]
+    )
 
-    # Will hopefully be possible with the next gps3 update
-    # https://github.com/wadda/gps3/issues/11
-    # from gps3 import gps3
-    # try:
-    #     gpsd_socket = gps3.GPSDSocket()
-    #     gpsd_socket.connect(host=host, port=port)
-    # except GPSError:
-    #     _LOGGER.warning('Not able to connect to GPSD')
-    #     return False
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect((host, port))
-        sock.shutdown(2)
-        _LOGGER.debug("Connection to GPSD possible")
-    except OSError:
-        _LOGGER.error("Not able to connect to GPSD")
-        return
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Initialize gpsd import from config."""
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        breaks_in_ha_version="2024.9.0",
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "GPSD",
+        },
+    )
 
-    add_entities([GpsdSensor(hass, name, host, port)])
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 class GpsdSensor(SensorEntity):
     """Representation of a GPS receiver available via GPSD."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "mode"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["2d_fix", "3d_fix"]
+
     def __init__(
         self,
-        hass: HomeAssistant,
-        name: str,
         host: str,
         port: int,
+        unique_id: str,
     ) -> None:
         """Initialize the GPSD sensor."""
-        self.hass = hass
-        self._name = name
-        self._host = host
-        self._port = port
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
+        self._attr_unique_id = f"{unique_id}-mode"
 
         self.agps_thread = AGPS3mechanism()
-        self.agps_thread.stream_data(host=self._host, port=self._port)
+        self.agps_thread.stream_data(host=host, port=port)
         self.agps_thread.run_thread()
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
 
     @property
     def native_value(self) -> str | None:
         """Return the state of GPSD."""
         if self.agps_thread.data_stream.mode == 3:
-            return "3D Fix"
+            return "3d_fix"
         if self.agps_thread.data_stream.mode == 2:
-            return "2D Fix"
+            return "2d_fix"
         return None
 
     @property

@@ -1,10 +1,10 @@
-"""Config flow for Traccar."""
+"""Config flow for Traccar Client."""
 from homeassistant.helpers import config_entry_flow
 
 from .const import DOMAIN
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,
-    "Traccar Webhook",
+    "Traccar Client Webhook",
     {"docs_url": "https://www.home-assistant.io/integrations/traccar/"},
 )

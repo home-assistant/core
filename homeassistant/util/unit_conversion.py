@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
@@ -39,8 +40,9 @@ _MILE_TO_M = _YARD_TO_M * 1760  # 1760 yard = 1 mile (1609.344 m)
 _NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
 
 # Duration conversion constants
-_HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
+_MIN_TO_SEC = 60  # 1 min = 60 seconds
 _HRS_TO_MINUTES = 60  # 1 hr = 60 minutes
+_HRS_TO_SECS = _HRS_TO_MINUTES * _MIN_TO_SEC  # 1 hr = 60 minutes = 3600 seconds
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Mass conversion constants
@@ -540,4 +542,29 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+    }
+
+
+class DurationConverter(BaseUnitConverter):
+    """Utility to convert duration values."""
+
+    UNIT_CLASS = "duration"
+    NORMALIZED_UNIT = UnitOfTime.SECONDS
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfTime.MICROSECONDS: 1000000,
+        UnitOfTime.MILLISECONDS: 1000,
+        UnitOfTime.SECONDS: 1,
+        UnitOfTime.MINUTES: 1 / _MIN_TO_SEC,
+        UnitOfTime.HOURS: 1 / _HRS_TO_SECS,
+        UnitOfTime.DAYS: 1 / _DAYS_TO_SECS,
+        UnitOfTime.WEEKS: 1 / (7 * _DAYS_TO_SECS),
+    }
+    VALID_UNITS = {
+        UnitOfTime.MICROSECONDS,
+        UnitOfTime.MILLISECONDS,
+        UnitOfTime.SECONDS,
+        UnitOfTime.MINUTES,
+        UnitOfTime.HOURS,
+        UnitOfTime.DAYS,
+        UnitOfTime.WEEKS,
     }
