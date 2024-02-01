@@ -10,13 +10,14 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platfor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, MANUFACTURER, NASWEB_CONFIG_URL, NOTIFY_COORDINATOR
-from .coordinator import NASwebCoordinator, NotificationCoordinator
+from .const import DOMAIN, MANUFACTURER, NASWEB_CONFIG_URL
+from .coordinator import NASwebCoordinator
 from .helper import (
-    deinitialize_notification_coordinator_if_empty,
+    deinitialize_nasweb_data_if_empty,
     get_integration_webhook_url,
-    initialize_notification_coordinator,
+    initialize_nasweb_data,
 )
+from .nasweb_data import NASwebData
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
@@ -26,10 +27,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NASweb from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-    notify_coordinator = hass.data[DOMAIN].get(NOTIFY_COORDINATOR)
-    if notify_coordinator is None:
-        notify_coordinator = initialize_notification_coordinator(hass)
+    hass.data.setdefault(DOMAIN, NASwebData())
+    nasweb_data: NASwebData = hass.data[DOMAIN]
+    if not nasweb_data.is_initialized():
+        initialize_nasweb_data(hass)
 
     webio_api = WebioAPI(
         entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
@@ -48,15 +49,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = NASwebCoordinator(
         hass, webio_api, name=f"NASweb[{webio_api.get_name()}]"
     )
-    hass.data[DOMAIN][entry.entry_id] = coordinator
-    notify_coordinator.add_coordinator(webio_serial, coordinator)
+    nasweb_data.entries_coordinators[entry.entry_id] = coordinator
+    nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
 
     webhook_url = get_integration_webhook_url(hass)
     if not await webio_api.status_subscription(webhook_url, True):
         _LOGGER.error("Failed to subscribe for status updates from webio")
         return False
 
-    if not await notify_coordinator.check_connection(webio_serial):
+    if not await nasweb_data.notify_coordinator.check_connection(webio_serial):
         _LOGGER.error(
             "Wasn't able to confirm connection with webio. Check form data and try again"
         )
@@ -77,15 +78,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        notify_coordinator: NotificationCoordinator = hass.data[DOMAIN][
-            NOTIFY_COORDINATOR
-        ]
-        coordinator: NASwebCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        nasweb_data: NASwebData = hass.data[DOMAIN]
+        coordinator: NASwebCoordinator = nasweb_data.entries_coordinators.pop(
+            entry.entry_id
+        )
         webhook_url = get_integration_webhook_url(hass)
         await coordinator.webio_api.status_subscription(webhook_url, False)
         serial = coordinator.webio_api.get_serial_number()
         if serial is not None:
-            notify_coordinator.remove_coordinator(serial)
-        deinitialize_notification_coordinator_if_empty(hass)
+            nasweb_data.notify_coordinator.remove_coordinator(serial)
+        deinitialize_nasweb_data_if_empty(hass)
 
     return unload_ok
