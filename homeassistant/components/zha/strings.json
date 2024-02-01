@@ -877,7 +877,11 @@
         "name": "Filter run time"
       },
       "last_feeding_source": {
-        "name": "Last feeding source"
+        "name": "Last feeding source",
+        "state": {
+          "feeder": "Feeder",
+          "homeassistant": "HomeAssistant"
+        }
       },
       "last_feeding_size": {
         "name": "Last feeding size"
@@ -892,22 +896,58 @@
         "name": "Smoke density"
       },
       "last_illumination_state": {
-        "name": "Last illumination state"
+        "name": "Last illumination state",
+        "state": {
+          "dark": "Dark",
+          "light": "Light"
+        }
       },
       "pi_heating_demand": {
         "name": "Pi heating demand"
       },
       "setpoint_change_source": {
-        "name": "Setpoint change source"
+        "name": "Setpoint change source",
+        "state": {
+          "manual": "Manual",
+          "schedule": "Schedule",
+          "external": "External"
+        }
       },
       "power_source": {
-        "name": "Power source"
+        "name": "Power source",
+        "state": {
+          "unknown": "Unknown",
+          "mains_single_phase": "Mains single phase",
+          "mains_three_phase": "Mains three phase",
+          "battery": "Battery",
+          "dc_source": "DC Source",
+          "emergency_mains_always_on": "Emergency mains always on",
+          "emergency_mains_transfer_switch": "Emergency mains transfer switch"
+        }
       },
       "window_covering_type": {
-        "name": "Window covering type"
+        "name": "Window covering type",
+        "state": {
+          "rollershade": "Rollershade",
+          "rollershade_two_motors": "Rollershade two motors",
+          "rollershade_exterior": "Rollershade exterior",
+          "rollershade_exterior_two_motors": "Rollershade exterior two motors",
+          "drapery": "Drapery",
+          "awning": "Awning",
+          "shutter": "Shutter",
+          "tilt_blind_tilt_only": "Tilt blind tilt only",
+          "tilt_blind_tilt_and_lift": "Tilt blind tilt and lift",
+          "projector_screen": "Projector screen"
+        }
       },
       "hooks_state": {
-        "name": "Hooks state"
+        "name": "Hooks state",
+        "state": {
+          "unlocked": "Unlocked",
+          "locked": "Locked",
+          "locking": "Locking",
+          "unlocking": "Unlocking"
+        }
       }
     },
     "switch": {

@@ -7,7 +7,6 @@ import enum
 import functools
 import numbers
 import random
-import re
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
@@ -102,11 +101,6 @@ MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SENSOR)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.SENSOR
 )
-
-
-def camelcase_to_snakecase(string: str):
-    """Convert CamelCase to snake_case."""
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", string).lower()
 
 
 async def async_setup_entry(
@@ -260,8 +254,8 @@ class EnumSensor(Sensor):
     def formatter(self, value: int) -> str | None:
         """Use name of enum."""
         assert self._enum is not None
-        # convert old style CamelCase to snake_case for translations (however try to use snake_case in enums)
-        return camelcase_to_snakecase(self._enum(value).name)
+        # Remove first capital to get snake_case for translations
+        return self._enum(value).name.lower()
 
 
 @MULTI_MATCH(
