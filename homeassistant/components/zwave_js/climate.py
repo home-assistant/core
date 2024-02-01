@@ -144,6 +144,14 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         self._current_mode = self.get_zwave_value(
             THERMOSTAT_MODE_PROPERTY, command_class=CommandClass.THERMOSTAT_MODE
         )
+        self._supports_resume: bool = bool(
+            self._current_mode
+            and (
+                str(ThermostatMode.RESUME_ON.value)
+                in self._current_mode.metadata.states
+            )
+        )
+
         self._setpoint_values: dict[ThermostatSetpointType, ZwaveValue | None] = {}
         for enum in ThermostatSetpointType:
             self._setpoint_values[enum] = self.get_zwave_value(
@@ -197,10 +205,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         if HVACMode.OFF in self._hvac_modes:
             self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
-
             # We can only support turn on if we are able to turn the device off,
             # otherwise the device can be considered always on
-            if any(mode != HVACMode.OFF for mode in self._hvac_modes):
+            if len(self._hvac_modes) > 1:
                 self._attr_supported_features |= ClimateEntityFeature.TURN_ON
         # If any setpoint value exists, we can assume temperature
         # can be set
@@ -514,6 +521,11 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # device can be turned off and on which would require the device to have the
         # current mode Z-Wave Value
         assert self._current_mode
+
+        # If the device supports resume, use resume to get to the right mode
+        if self._supports_resume:
+            await self._async_set_value(self._current_mode, ThermostatMode.RESUME_ON)
+            return
 
         # If we have an HVAC mode ID from before the device was turned off, set it to
         # that mode
