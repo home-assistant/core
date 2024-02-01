@@ -961,6 +961,12 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "analoginput_xpercent": RpcSensorDescription(
+        key="input",
+        sub_key="xpercent",
+        name="Analog value",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
