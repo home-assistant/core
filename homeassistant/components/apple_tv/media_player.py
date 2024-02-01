@@ -155,7 +155,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         else:
             self._app_list = {
                 app_name: app.identifier
-                for app in sorted(apps, key=lambda app: app_name.lower())
+                for app in sorted(apps, key=lambda app: (app.name or "").lower())
                 if (app_name := app.name) is not None
             }
             self.async_write_ha_state()
