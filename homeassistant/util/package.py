@@ -41,6 +41,9 @@ def is_installed(requirement_str: str) -> bool:
     expected input is a pip compatible package specifier (requirement string)
     e.g. "package==1.0.0" or "package>=1.0.0,<2.0.0"
 
+    For backward compatibility, it also accepts a URL with a fragment
+    e.g. "git+https://github.com/pypa/pip#pip>=1"
+
     Returns True when the requirement is met.
     Returns False when the package is not installed or doesn't meet req.
     """
@@ -48,6 +51,11 @@ def is_installed(requirement_str: str) -> bool:
         req = Requirement(requirement_str)
     except InvalidRequirement:
         try:
+            # This was originally used to install zip files, and
+            # we no longer use this in Home Assistant. However, custom
+            # components use it to installed packages from git
+            # urls with a fragment.
+            # example: git+https://github.com/pypa/pip#pip>=1
             req = Requirement(urlparse(requirement_str).fragment)
         except InvalidRequirement:
             _LOGGER.error("Invalid requirement '%s'", requirement_str)
