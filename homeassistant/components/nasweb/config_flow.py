@@ -14,13 +14,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, NASWEB_SCHEMA_IMG_URL, NOTIFY_COORDINATOR
-from .coordinator import NASwebCoordinator, NotificationCoordinator
+from .const import DOMAIN, NASWEB_SCHEMA_IMG_URL
+from .coordinator import NASwebCoordinator
 from .helper import (
-    deinitialize_notification_coordinator_if_empty,
+    deinitialize_nasweb_data_if_empty,
     get_integration_webhook_url,
-    initialize_notification_coordinator,
+    initialize_nasweb_data,
 )
+from .nasweb_data import NASwebData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,12 +44,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except AuthError as e:
         raise InvalidAuth from e
 
-    hass.data.setdefault(DOMAIN, {})
-    notify_coordinator: NotificationCoordinator | None = hass.data[DOMAIN].get(
-        NOTIFY_COORDINATOR
-    )
-    if notify_coordinator is None:
-        notify_coordinator = initialize_notification_coordinator(hass)
+    hass.data.setdefault(DOMAIN, NASwebData())
+    nasweb_data: NASwebData = hass.data[DOMAIN]
+    if not nasweb_data.is_initialized():
+        initialize_nasweb_data(hass)
 
     webio_serial = webio_api.get_serial_number()
     if webio_serial is None:
@@ -56,14 +55,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     coordinator = NASwebCoordinator(hass, webio_api)
     webhook_url = get_integration_webhook_url(hass)
-    notify_coordinator.add_coordinator(webio_serial, coordinator)
+    nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
     subscription = await webio_api.status_subscription(webhook_url, True)
     if not subscription:
-        notify_coordinator.remove_coordinator(webio_serial)
+        nasweb_data.notify_coordinator.remove_coordinator(webio_serial)
         raise MissingNASwebData("Failed to subscribe for status updates from device")
 
-    result = await notify_coordinator.check_connection(webio_serial)
-    notify_coordinator.remove_coordinator(webio_serial)
+    result = await nasweb_data.notify_coordinator.check_connection(webio_serial)
+    nasweb_data.notify_coordinator.remove_coordinator(webio_serial)
     if not result:
         if subscription:
             await webio_api.status_subscription(webhook_url, False)
@@ -110,7 +109,7 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
             finally:
-                deinitialize_notification_coordinator_if_empty(self.hass)
+                deinitialize_nasweb_data_if_empty(self.hass)
 
         return self.async_show_form(
             step_id="user",

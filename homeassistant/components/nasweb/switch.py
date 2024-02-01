@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
-from .coordinator import NASwebCoordinator
+from .nasweb_data import NASwebData
 from .relay_switch import RelaySwitch
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,8 @@ async def async_setup_entry(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switch platform."""
-    coordinator: NASwebCoordinator = hass.data[DOMAIN][config.entry_id]
+    nasweb_data: NASwebData = hass.data[DOMAIN]
+    coordinator = nasweb_data.entries_coordinators[config.entry_id]
     nasweb_outputs = coordinator.data[KEY_OUTPUTS]
     coordinator.async_add_switch_callback = async_add_entities
     entities: list[RelaySwitch] = []

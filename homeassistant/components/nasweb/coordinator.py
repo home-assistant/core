@@ -9,12 +9,11 @@ from aiohttp.web import Request
 from webio_api import Output as NASwebOutput, WebioAPI
 from webio_api.const import KEY_DEVICE_SERIAL, KEY_OUTPUTS, KEY_TYPE, TYPE_STATUS_UPDATE
 
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
+from .const import STATUS_UPDATE_MAX_TIME_INTERVAL
 from .relay_switch import RelaySwitch
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,8 +58,6 @@ class NotificationCoordinator:
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ) -> None:
         """Handle webhook request from Push API."""
-        if hass.data[DOMAIN][CONF_WEBHOOK_ID] != webhook_id:
-            _LOGGER.debug("Received request with incorrect webhook id")
         if not self.has_coordinators():
             return None
         notification = await request.json()
