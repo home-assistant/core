@@ -29,7 +29,7 @@ hass-nabucasa==0.76.0
 hassil==1.6.0
 home-assistant-bluetooth==1.12.0
 home-assistant-frontend==20240131.0
-home-assistant-intents==2024.1.29
+home-assistant-intents==2024.2.1
 httpx==0.26.0
 ifaddr==0.2.0
 janus==1.0.0
