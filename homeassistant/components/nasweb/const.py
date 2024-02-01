@@ -2,7 +2,7 @@
 
 DOMAIN = "nasweb"
 MANUFACTURER = "chomtech.pl"
-NASWEB_CONFIG_URL = "https://[host]/page"
+NASWEB_CONFIG_URL = "https://{host}/page"
 NASWEB_SCHEMA_IMG_URL = (
     "https://home-assistant.io/images/integrations/nasweb/nasweb_scheme.png"
 )
