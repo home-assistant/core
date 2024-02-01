@@ -34,6 +34,41 @@ VICARE_UNIT_TO_UNIT_OF_MEASUREMENT = {
 }
 
 
+class HeatingProgram(enum.StrEnum):
+    """ViCare preset heating programs.
+
+    As listed inhttps://github.com/somm15/PyViCare/blob/63f9f7fea505fdf9a26c77c6cd0bff889abcdb05/PyViCare/PyViCareHeatingDevice.py#L606
+    """
+
+    # ACTIVE = "active"
+    COMFORT = "comfort"
+    # COMFORT_COOLING = "comfortCooling"
+    # COMFORT_COOLING_ECO = "comfortCoolingEnergySaving"
+    # COMFORT_ECO = "comfortEnergySaving"
+    COMFORT_HEATING = "comfortHeating"
+    # DHW_PRECEDENCE = "dhwPrecedence"
+    # ECO = "eco"
+    # EXTERNAL = "external"
+    # FIXED = "fixed"
+    # FORCED = "forcedLastFromSchedule"
+    # FROST_PROTECTION = "frostprotection"
+    # HOLIDAY = "holiday"
+    # HOLIDAY_AT_HOME = "holidayAtHome"
+    # MANUAL = "manual"
+    NORMAL = "normal"
+    # NORMAL_COOLING = "normalCooling"
+    # NORMAL_COOLING_ECO = "normalCoolingEnergySaving"
+    # NORMAL_ECO = "normalEnergySaving"
+    NORMAL_HEATING = "normalHeating"
+    REDUCED = "reduced"
+    # REDUCED_COOLING = "reducedCooling'"
+    # REDUCED_COOLING_ECO = "reducedCoolingEnergySaving"
+    # REDUCED_ECO = "reducedEnergySaving"
+    REDUCED_HEATING = "reducedHeating"
+    # STANDBY = "standby"
+    # SUMMER_ECO = "summerEco"
+
+
 class HeatingType(enum.Enum):
     """Possible options for heating type."""
 
