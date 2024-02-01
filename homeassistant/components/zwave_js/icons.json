@@ -6,13 +6,28 @@
       }
     },
     "sensor": {
+      "can": {
+        "default": "mdi:car-brake-alert"
+      },
+      "commands_dropped": {
+        "default": "mdi:trash-can"
+      },
       "controller_status": {
         "default": "mdi:help-rhombus",
         "state": {
+          "jammed": "mdi:lock",
           "ready": "mdi:check",
-          "unresponsive": "mdi:bell-off",
-          "jammed": "mdi:lock"
+          "unresponsive": "mdi:bell-off"
         }
+      },
+      "last_seen": {
+        "default": "mdi:timer-sync"
+      },
+      "messages_dropped": {
+        "default": "mdi:trash-can"
+      },
+      "nak": {
+        "default": "mdi:hand-back-left-off"
       },
       "node_status": {
         "default": "mdi:help-rhombus",
@@ -24,11 +39,11 @@
           "unknown": "mdi:help-rhombus"
         }
       },
-      "can": {
-        "default": "mdi:car-brake-alert"
+      "successful_commands": {
+        "default": "mdi:check"
       },
-      "nak": {
-        "default": "mdi:hand-back-left-off"
+      "successful_messages": {
+        "default": "mdi:check"
       },
       "timeout_ack": {
         "default": "mdi:ear-hearing-off"
@@ -38,21 +53,6 @@
       },
       "timeout_response": {
         "default": "mdi:timer-sand-empty"
-      },
-      "successful_messages": {
-        "default": "mdi:check"
-      },
-      "messages_dropped": {
-        "default": "mdi:trash-can"
-      },
-      "successful_commands": {
-        "default": "mdi:check"
-      },
-      "commands_dropped": {
-        "default": "mdi:trash-can"
-      },
-      "last_seen": {
-        "default": "mdi:timer-sync"
       }
     }
   },
