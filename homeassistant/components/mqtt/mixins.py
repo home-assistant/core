@@ -94,7 +94,6 @@ from .const import (
     MQTT_DISCONNECTED,
 )
 from .debug_info import log_message, log_messages
-from .device import MQTT_AVAILABILITY_SCHEMA, MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
@@ -111,6 +110,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
+from .schemas import MQTT_AVAILABILITY_SCHEMA, MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
