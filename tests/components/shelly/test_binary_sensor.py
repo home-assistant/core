@@ -231,13 +231,13 @@ async def test_rpc_binary_sensor(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test RPC binary sensor."""
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_switch_0_overpowering"
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_cover_0_overpowering"
     await init_integration(hass, 2)
 
     assert hass.states.get(entity_id).state == STATE_OFF
 
     mutate_rpc_device_status(
-        monkeypatch, mock_rpc_device, "switch:0", "errors", "overpower"
+        monkeypatch, mock_rpc_device, "cover:0", "errors", "overpower"
     )
     mock_rpc_device.mock_update()
 

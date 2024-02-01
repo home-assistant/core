@@ -311,7 +311,12 @@ MOCK_STATUS_COAP = {
     "wifi_sta": {"rssi": -64},
 }
 
-MOCK_STATUS_RPC_COVER = {
+
+MOCK_STATUS_RPC = {
+    "switch:0": {"id": 0, "output": True},
+    "input:0": {"id": 0, "state": None},
+    "light:0": {"output": True, "brightness": 53.0},
+    "cloud": {"connected": False},
     "cover:0": {
         "state": "stopped",
         "pos_control": True,
@@ -468,11 +473,8 @@ async def mock_block_device():
         yield block_device_mock.return_value
 
 
-def _mock_rpc_device(version: str | None = None, cover: bool = False):
+def _mock_rpc_device(version: str | None = None):
     """Mock rpc (Gen2, Websocket) device."""
-    shelly_status_rpc = MOCK_STATUS_RPC
-    if cover:
-        shelly_status_rpc.update(MOCK_STATUS_RPC_COVER)
     device = Mock(
         spec=RpcDevice,
         config=MOCK_CONFIG,
@@ -489,7 +491,7 @@ def _mock_rpc_device(version: str | None = None, cover: bool = False):
 
 
 @pytest.fixture
-async def mock_rpc_device(cover: bool = False):
+async def mock_rpc_device():
     """Mock rpc (Gen2, Websocket) device with BLE support."""
     with (
         patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock,
@@ -514,11 +516,6 @@ async def mock_rpc_device(cover: bool = False):
         def disconnected():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
                 {}, RpcUpdateType.DISCONNECTED
-            )
-
-        def initialized():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.INITIALIZED
             )
 
         device = _mock_rpc_device()
