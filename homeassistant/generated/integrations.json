@@ -4404,6 +4404,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "pglab": {
+      "name": "PG LAB Electronics",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "philips": {
       "name": "Philips",
       "integrations": {
