@@ -19,6 +19,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure air-Q integration",
+        "data": {
+          "return_average": "Show values averaged by the device",
+          "clip_negatives": "Clip negative values"
+        },
+        "data_description": {
+          "return_average": "air-Q allows to poll both the noisy sensor readings as well as the values averaged on the device (default)",
+          "clip_negatives": "For baseline calibration purposes, certain sensor values may briefly become negative. The default behaviour is to clip such values to 0"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "acetaldehyde": {
