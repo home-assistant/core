@@ -836,16 +836,38 @@
         "name": "Keypad lockout"
       },
       "exercise_day_of_week": {
-        "name": "Exercise day of the week"
+        "name": "Exercise day of the week",
+        "state": {
+          "sunday": "[%key:common::time::sunday%]",
+          "monday": "[%key:common::time::monday%]",
+          "tuesday": "[%key:common::time::tuesday%]",
+          "wednesday": "[%key:common::time::wednesday%]",
+          "thursday": "[%key:common::time::thursday%]",
+          "friday": "[%key:common::time::friday%]",
+          "saturday": "[%key:common::time::saturday%]"
+        }
       },
       "valve_orientation": {
-        "name": "Valve orientation"
+        "name": "Valve orientation",
+        "state": {
+          "horizontal": "Horizontal",
+          "vertical": "Vertical"
+        }
       },
       "adaptation_run_command": {
-        "name": "Adaptation run command"
+        "name": "Adaptation run command",
+        "state": {
+          "nothing": "Nothing",
+          "initiate": "Initiate",
+          "cancel": "Cancel"
+        }
       },
       "viewing_direction": {
-        "name": "Viewing direction"
+        "name": "Viewing direction",
+        "state": {
+          "default": "Default",
+          "inverted": "Inverted"
+        }
       }
     },
     "sensor": {
@@ -946,7 +968,14 @@
         "name": "Hooks state"
       },
       "open_window_detected": {
-        "name": "Open window detected"
+        "name": "Open window detected",
+        "state": {
+          "quarantine": "Quarantine",
+          "closed": "Closed",
+          "maybe": "Maybe",
+          "open": "Open",
+          "external": "External"
+        }
       },
       "load_estimate": {
         "name": "Load estimate"
