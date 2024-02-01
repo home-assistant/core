@@ -53,7 +53,7 @@ def is_installed(requirement_str: str) -> bool:
         try:
             # fragment support was originally used to install zip files, and
             # we no longer do this in Home Assistant. However, custom
-            # components started using it to installed packages from git
+            # components started using it to install packages from git
             # urls with a fragment because it worked so it would be a breaking
             # change to remove it.
             # example: git+https://github.com/pypa/pip#pip>=1
