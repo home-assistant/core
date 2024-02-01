@@ -688,7 +688,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 
 
 def _filter_pv_states(state: str):
-    return None if state == "unknown" else state
+    return None if state in ["nothing", "unknown"] else state
 
 
 def _build_entity(

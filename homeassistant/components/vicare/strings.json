@@ -271,8 +271,7 @@
       "photovoltaic_status": {
         "name": "Solar state",
         "state": {
-          "nothing": "Nothing",
-          "ready": "Ready",
+          "ready": "Standby",
           "production": "Production"
         }
       },
