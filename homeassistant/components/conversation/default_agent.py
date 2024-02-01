@@ -231,7 +231,10 @@ class DefaultAgent(AbstractConversationAgent):
                 )
             )
 
-            # Use last non-empty result as response
+            # Use last non-empty result as response.
+            #
+            # There may be multiple copies of a trigger running when editing in
+            # the UI, so it's critical that we filter out empty responses here.
             response_text: str | None = None
             for trigger_response in trigger_responses:
                 response_text = response_text or trigger_response
@@ -239,7 +242,7 @@ class DefaultAgent(AbstractConversationAgent):
             # Convert to conversation result
             response = intent.IntentResponse(language=language)
             response.response_type = intent.IntentResponseType.ACTION_DONE
-            response.async_set_speech(response_text or "")
+            response.async_set_speech(response_text or "Done")
 
             return ConversationResult(response=response)
 
