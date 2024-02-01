@@ -51,10 +51,11 @@ def is_installed(requirement_str: str) -> bool:
         req = Requirement(requirement_str)
     except InvalidRequirement:
         try:
-            # This was originally used to install zip files, and
-            # we no longer use this in Home Assistant. However, custom
-            # components use it to installed packages from git
-            # urls with a fragment.
+            # fragment support was originally used to install zip files, and
+            # we no longer do this in Home Assistant. However, custom
+            # components started using it to installed packages from git
+            # urls with a fragment because it worked so it would be a breaking
+            # change to remove it.
             # example: git+https://github.com/pypa/pip#pip>=1
             req = Requirement(urlparse(requirement_str).fragment)
         except InvalidRequirement:
