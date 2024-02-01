@@ -43,6 +43,7 @@ async def async_setup_entry(
 class SomaTilt(SomaEntity, CoverEntity):
     """Representation of a Soma Tilt device."""
 
+    _attr_name = None
     _attr_device_class = CoverDeviceClass.BLIND
     _attr_supported_features = (
         CoverEntityFeature.OPEN_TILT
@@ -50,6 +51,8 @@ class SomaTilt(SomaEntity, CoverEntity):
         | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
+    CLOSED_UP_THRESHOLD = 80
+    CLOSED_DOWN_THRESHOLD = 20
 
     @property
     def current_cover_tilt_position(self) -> int:
@@ -59,7 +62,12 @@ class SomaTilt(SomaEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover tilt is closed."""
-        return self.current_position == 0
+        if (
+            self.current_position < self.CLOSED_DOWN_THRESHOLD
+            or self.current_position > self.CLOSED_UP_THRESHOLD
+        ):
+            return True
+        return False
 
     def close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
@@ -118,6 +126,7 @@ class SomaTilt(SomaEntity, CoverEntity):
 class SomaShade(SomaEntity, CoverEntity):
     """Representation of a Soma Shade device."""
 
+    _attr_name = None
     _attr_device_class = CoverDeviceClass.SHADE
     _attr_supported_features = (
         CoverEntityFeature.OPEN

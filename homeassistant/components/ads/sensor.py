@@ -10,6 +10,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
+from .. import ads
 from . import (
     ADS_TYPEMAP,
     CONF_ADS_FACTOR,
@@ -18,7 +19,6 @@ from . import (
     STATE_KEY_STATE,
     AdsEntity,
 )
-from .. import ads
 
 DEFAULT_NAME = "ADS sensor"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

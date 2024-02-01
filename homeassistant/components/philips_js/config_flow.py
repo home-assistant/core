@@ -17,6 +17,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import selector
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from . import LOGGER
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
@@ -32,6 +37,15 @@ USER_SCHEMA = vol.Schema(
         ): vol.In([1, 5, 6]),
     }
 )
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ALLOW_NOTIFY, default=False): selector.BooleanSelector(),
+    }
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 async def _validate_input(
@@ -176,31 +190,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @core.callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> OptionsFlowHandler:
+    ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for AEMET."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_ALLOW_NOTIFY,
-                    default=self.config_entry.options.get(CONF_ALLOW_NOTIFY),
-                ): bool,
-            }
-        )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

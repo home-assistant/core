@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
@@ -24,7 +24,7 @@ from tests.common import (
 
 
 async def test_binary_sensor_entity_category(
-    hass: HomeAssistant, knx: KNXTestKit
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, knx: KNXTestKit
 ) -> None:
     """Test KNX binary sensor entity category."""
     await knx.setup_integration(
@@ -42,8 +42,7 @@ async def test_binary_sensor_entity_category(
     await knx.assert_read("1/1/1")
     await knx.receive_response("1/1/1", True)
 
-    registry = er.async_get(hass)
-    entity = registry.async_get("binary_sensor.test_normal")
+    entity = entity_registry.async_get("binary_sensor.test_normal")
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
 
 
@@ -147,7 +146,7 @@ async def test_binary_sensor_ignore_internal_state(
 
 async def test_binary_sensor_counter(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX binary_sensor with context timeout."""
-    async_fire_time_changed(hass, dt.utcnow())
+    async_fire_time_changed(hass, dt_util.utcnow())
     context_timeout = 1
 
     await knx.setup_integration(
@@ -172,7 +171,7 @@ async def test_binary_sensor_counter(hass: HomeAssistant, knx: KNXTestKit) -> No
     state = hass.states.get("binary_sensor.test")
     assert state.state is STATE_OFF
     assert state.attributes.get("counter") == 0
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=context_timeout))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=context_timeout))
     await hass.async_block_till_done()
     await knx.xknx.task_registry.block_till_done()
     # state changed twice after context timeout - once to ON with counter 1 and once to counter 0
@@ -196,7 +195,7 @@ async def test_binary_sensor_counter(hass: HomeAssistant, knx: KNXTestKit) -> No
     state = hass.states.get("binary_sensor.test")
     assert state.state is STATE_ON
     assert state.attributes.get("counter") == 0
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=context_timeout))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=context_timeout))
     await knx.xknx.task_registry.block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test")
@@ -213,7 +212,7 @@ async def test_binary_sensor_counter(hass: HomeAssistant, knx: KNXTestKit) -> No
 
 async def test_binary_sensor_reset(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX binary_sensor with reset_after function."""
-    async_fire_time_changed(hass, dt.utcnow())
+    async_fire_time_changed(hass, dt_util.utcnow())
 
     await knx.setup_integration(
         {
@@ -233,7 +232,7 @@ async def test_binary_sensor_reset(hass: HomeAssistant, knx: KNXTestKit) -> None
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test")
     assert state.state is STATE_ON
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     # state reset after after timeout

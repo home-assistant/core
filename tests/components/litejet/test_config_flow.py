@@ -67,18 +67,6 @@ async def test_flow_open_failed(hass: HomeAssistant) -> None:
     assert result["errors"][CONF_PORT] == "open_failed"
 
 
-async def test_import_step(hass: HomeAssistant) -> None:
-    """Test initializing via import step."""
-    test_data = {CONF_PORT: "/dev/imported"}
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=test_data
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == test_data[CONF_PORT]
-    assert result["data"] == test_data
-
-
 async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_PORT: "/dev/test"})

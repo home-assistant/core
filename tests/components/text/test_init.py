@@ -20,7 +20,10 @@ from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import (
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
 
 
 class MockTextEntity(TextEntity):
@@ -141,7 +144,7 @@ async def test_restore_number_save_state(
     await hass.async_block_till_done()
 
     # Trigger saving state
-    await hass.async_stop()
+    await async_mock_restore_state_shutdown_restart(hass)
 
     assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
     state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]

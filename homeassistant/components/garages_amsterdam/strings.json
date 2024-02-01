@@ -12,5 +12,21 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "free_space_short": {
+        "name": "Short parking free space"
+      },
+      "free_space_long": {
+        "name": "Long parking free space"
+      },
+      "short_capacity": {
+        "name": "Short parking capacity"
+      },
+      "long_capacity": {
+        "name": "Long parking capacity"
+      }
+    }
   }
 }

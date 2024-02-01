@@ -2,6 +2,7 @@
   "domain": "trafikverket",
   "name": "Trafikverket",
   "integrations": [
+    "trafikverket_camera",
     "trafikverket_ferry",
     "trafikverket_train",
     "trafikverket_weatherstation"

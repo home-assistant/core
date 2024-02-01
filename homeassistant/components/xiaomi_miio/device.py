@@ -8,15 +8,16 @@ from typing import Any, TypeVar
 from construct.core import ChecksumError
 from miio import Device, DeviceException
 
-from homeassistant.const import ATTR_CONNECTIONS, CONF_MODEL
+from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import CONF_MAC, DOMAIN, AuthException, SetupException
+from .const import DOMAIN, AuthException, SetupException
 
 _LOGGER = logging.getLogger(__name__)
 

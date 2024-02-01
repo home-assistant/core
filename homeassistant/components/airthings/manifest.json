@@ -1,10 +1,10 @@
 {
   "domain": "airthings",
   "name": "Airthings",
-  "codeowners": ["@danielhiversen"],
+  "codeowners": ["@danielhiversen", "@LaStrada"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airthings",
   "iot_class": "cloud_polling",
   "loggers": ["airthings"],
-  "requirements": ["airthings_cloud==0.1.0"]
+  "requirements": ["airthings-cloud==0.2.0"]
 }

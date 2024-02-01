@@ -37,5 +37,27 @@
         "title": "Reauthenticate an August account"
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "image_capture": {
+        "name": "Image capture"
+      }
+    },
+    "button": {
+      "wake": {
+        "name": "Wake"
+      }
+    },
+    "camera": {
+      "camera": {
+        "name": "[%key:component::camera::title%]"
+      }
+    },
+    "sensor": {
+      "operator": {
+        "name": "Operator"
+      }
+    }
   }
 }

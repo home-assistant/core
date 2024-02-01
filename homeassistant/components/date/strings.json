@@ -4,5 +4,17 @@
     "_": {
       "name": "[%key:component::date::title%]"
     }
+  },
+  "services": {
+    "set_value": {
+      "name": "Set date",
+      "description": "Sets the date.",
+      "fields": {
+        "date": {
+          "name": "Date",
+          "description": "The date to set."
+        }
+      }
+    }
   }
 }

@@ -17,7 +17,7 @@ from homeassistant.util.percentage import (
 
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
-from .utils import async_add_insteon_entities
+from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 SPEED_RANGE = (1, 255)  # off is not included
 
@@ -38,13 +38,19 @@ async def async_setup_entry(
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{Platform.FAN}"
     async_dispatcher_connect(hass, signal, async_add_insteon_fan_entities)
-    async_add_insteon_fan_entities()
+    async_add_insteon_devices(
+        hass,
+        Platform.FAN,
+        InsteonFanEntity,
+        async_add_entities,
+    )
 
 
 class InsteonFanEntity(InsteonEntity, FanEntity):
     """An INSTEON fan entity."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_speed_count = 3
 
     @property
     def percentage(self) -> int | None:
@@ -52,11 +58,6 @@ class InsteonFanEntity(InsteonEntity, FanEntity):
         if self._insteon_device_group.value is None:
             return None
         return ranged_value_to_percentage(SPEED_RANGE, self._insteon_device_group.value)
-
-    @property
-    def speed_count(self) -> int:
-        """Flag supported features."""
-        return 3
 
     async def async_turn_on(
         self,

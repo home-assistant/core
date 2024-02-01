@@ -11,7 +11,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ALARM_ARMING, STATE_ALARM_DISARMING
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -35,6 +35,7 @@ class VerisureAlarm(
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY

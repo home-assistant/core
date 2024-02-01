@@ -1,0 +1,75 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "description": "Please enter your API token from your [Todoist Settings page]({settings_url})"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "services": {
+    "new_task": {
+      "name": "New task",
+      "description": "Creates a new task and add it to a project.",
+      "fields": {
+        "content": {
+          "name": "Content",
+          "description": "The name of the task."
+        },
+        "project": {
+          "name": "Project",
+          "description": "The name of the project this task should belong to."
+        },
+        "labels": {
+          "name": "Labels",
+          "description": "Any labels that you want to apply to this task, separated by a comma."
+        },
+        "assignee": {
+          "name": "Assignee",
+          "description": "A members username of a shared project to assign this task to."
+        },
+        "priority": {
+          "name": "Priority",
+          "description": "The priority of this task, from 1 (normal) to 4 (urgent)."
+        },
+        "due_date_string": {
+          "name": "Due date string",
+          "description": "The day this task is due, in natural language."
+        },
+        "due_date_lang": {
+          "name": "Due date language",
+          "description": "The language of due_date_string."
+        },
+        "due_date": {
+          "name": "Due date",
+          "description": "The time this task is due, in format YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS, in UTC timezone."
+        },
+        "reminder_date_string": {
+          "name": "Reminder date string",
+          "description": "When should user be reminded of this task, in natural language."
+        },
+        "reminder_date_lang": {
+          "name": "Reminder data language",
+          "description": "The language of reminder_date_string."
+        },
+        "reminder_date": {
+          "name": "Reminder date",
+          "description": "When should user be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone."
+        }
+      }
+    }
+  }
+}

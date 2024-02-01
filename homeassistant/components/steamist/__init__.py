@@ -9,6 +9,7 @@ from aiosteamist import Steamist
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -25,10 +26,11 @@ from .discovery import (
 
 PLATFORMS: list[str] = [Platform.SENSOR, Platform.SWITCH]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the flux_led component."""
+    """Set up the steamist component."""
     domain_data = hass.data.setdefault(DOMAIN, {})
     domain_data[DISCOVERY] = await async_discover_devices(hass, STARTUP_SCAN_TIMEOUT)
 

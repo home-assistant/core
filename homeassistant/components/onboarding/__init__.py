@@ -1,7 +1,10 @@
 """Support to help onboard new users."""
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -19,11 +22,18 @@ from .const import (
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 4
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-class OnboadingStorage(Store):
+
+class OnboadingStorage(Store[dict[str, list[str]]]):
     """Store onboarding data."""
 
-    async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, list[str]],
+    ) -> dict[str, list[str]]:
         """Migrate to the new version."""
         # From version 1 -> 2, we automatically mark the integration step done
         if old_major_version < 2:
@@ -53,6 +63,7 @@ def async_is_user_onboarded(hass: HomeAssistant) -> bool:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the onboarding component."""
     store = OnboadingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
+    data: dict[str, list[str]] | None
     if (data := await store.async_load()) is None:
         data = {"done": []}
 

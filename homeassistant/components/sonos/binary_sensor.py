@@ -58,7 +58,6 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
-    _attr_name = "Power"
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the power entity binary sensor."""
@@ -92,7 +91,7 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:microphone"
-    _attr_name = "Microphone"
+    _attr_translation_key = "microphone"
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the microphone binary sensor entity."""

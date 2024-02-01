@@ -5,30 +5,29 @@ import asyncio
 import collections
 from collections.abc import Callable
 from contextlib import suppress
-from dataclasses import dataclass
 import datetime as dt
+from enum import StrEnum
 import functools as ft
+from functools import lru_cache
 import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
-import async_timeout
-from typing_extensions import Required
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
+    ATTR_ENTITY_PICTURE,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -132,6 +131,11 @@ from .const import (  # noqa: F401
     RepeatMode,
 )
 from .errors import BrowseError
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -450,15 +454,68 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class MediaPlayerEntityDescription(EntityDescription):
+class MediaPlayerEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes media player entities."""
 
     device_class: MediaPlayerDeviceClass | None = None
+    volume_step: float | None = None
 
 
-class MediaPlayerEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+    "state",
+    "volume_level",
+    "volume_step",
+    "is_volume_muted",
+    "media_content_id",
+    "media_content_type",
+    "media_duration",
+    "media_position",
+    "media_position_updated_at",
+    "media_image_url",
+    "media_image_remotely_accessible",
+    "media_title",
+    "media_artist",
+    "media_album_name",
+    "media_album_artist",
+    "media_track",
+    "media_series_title",
+    "media_season",
+    "media_episode",
+    "media_channel",
+    "media_playlist",
+    "app_id",
+    "app_name",
+    "source",
+    "source_list",
+    "sound_mode",
+    "sound_mode_list",
+    "shuffle",
+    "repeat",
+    "group_members",
+    "supported_features",
+}
+
+
+@lru_cache
+def _url_hash(url: str) -> str:
+    """Create hash for media image url."""
+    return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
+
+
+class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """ABC for media player entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_ENTITY_PICTURE_LOCAL,
+            ATTR_ENTITY_PICTURE,
+            ATTR_INPUT_SOURCE_LIST,
+            ATTR_MEDIA_POSITION_UPDATED_AT,
+            ATTR_MEDIA_POSITION,
+            ATTR_SOUND_MODE_LIST,
+        }
+    )
 
     entity_description: MediaPlayerEntityDescription
     _access_token: str | None = None
@@ -495,9 +552,10 @@ class MediaPlayerEntity(Entity):
     _attr_state: MediaPlayerState | None = None
     _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
+    _attr_volume_step: float
 
     # Implement these for your media player
-    @property
+    @cached_property
     def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -506,7 +564,7 @@ class MediaPlayerEntity(Entity):
             return self.entity_description.device_class
         return None
 
-    @property
+    @cached_property
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
         return self._attr_state
@@ -518,37 +576,49 @@ class MediaPlayerEntity(Entity):
             self._access_token = secrets.token_hex(32)
         return self._access_token
 
-    @property
+    @cached_property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._attr_volume_level
 
-    @property
+    @cached_property
+    def volume_step(self) -> float:
+        """Return the step to be used by the volume_up and volume_down services."""
+        if hasattr(self, "_attr_volume_step"):
+            return self._attr_volume_step
+        if (
+            hasattr(self, "entity_description")
+            and (volume_step := self.entity_description.volume_step) is not None
+        ):
+            return volume_step
+        return 0.1
+
+    @cached_property
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         return self._attr_is_volume_muted
 
-    @property
+    @cached_property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         return self._attr_media_content_id
 
-    @property
+    @cached_property
     def media_content_type(self) -> MediaType | str | None:
         """Content type of current playing media."""
         return self._attr_media_content_type
 
-    @property
+    @cached_property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         return self._attr_media_duration
 
-    @property
+    @cached_property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         return self._attr_media_position
 
-    @property
+    @cached_property
     def media_position_updated_at(self) -> dt.datetime | None:
         """When was the position of the current playing media valid.
 
@@ -556,12 +626,12 @@ class MediaPlayerEntity(Entity):
         """
         return self._attr_media_position_updated_at
 
-    @property
+    @cached_property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         return self._attr_media_image_url
 
-    @property
+    @cached_property
     def media_image_remotely_accessible(self) -> bool:
         """If the image url is remotely accessible."""
         return self._attr_media_image_remotely_accessible
@@ -573,7 +643,7 @@ class MediaPlayerEntity(Entity):
             return self._attr_media_image_hash
 
         if (url := self.media_image_url) is not None:
-            return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
+            return _url_hash(url)
 
         return None
 
@@ -596,105 +666,118 @@ class MediaPlayerEntity(Entity):
         """
         return None, None
 
-    @property
+    @cached_property
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return self._attr_media_title
 
-    @property
+    @cached_property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         return self._attr_media_artist
 
-    @property
+    @cached_property
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         return self._attr_media_album_name
 
-    @property
+    @cached_property
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media, music track only."""
         return self._attr_media_album_artist
 
-    @property
+    @cached_property
     def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
         return self._attr_media_track
 
-    @property
+    @cached_property
     def media_series_title(self) -> str | None:
         """Title of series of current playing media, TV show only."""
         return self._attr_media_series_title
 
-    @property
+    @cached_property
     def media_season(self) -> str | None:
         """Season of current playing media, TV show only."""
         return self._attr_media_season
 
-    @property
+    @cached_property
     def media_episode(self) -> str | None:
         """Episode of current playing media, TV show only."""
         return self._attr_media_episode
 
-    @property
+    @cached_property
     def media_channel(self) -> str | None:
         """Channel currently playing."""
         return self._attr_media_channel
 
-    @property
+    @cached_property
     def media_playlist(self) -> str | None:
         """Title of Playlist currently playing."""
         return self._attr_media_playlist
 
-    @property
+    @cached_property
     def app_id(self) -> str | None:
         """ID of the current running app."""
         return self._attr_app_id
 
-    @property
+    @cached_property
     def app_name(self) -> str | None:
         """Name of the current running app."""
         return self._attr_app_name
 
-    @property
+    @cached_property
     def source(self) -> str | None:
         """Name of the current input source."""
         return self._attr_source
 
-    @property
+    @cached_property
     def source_list(self) -> list[str] | None:
         """List of available input sources."""
         return self._attr_source_list
 
-    @property
+    @cached_property
     def sound_mode(self) -> str | None:
         """Name of the current sound mode."""
         return self._attr_sound_mode
 
-    @property
+    @cached_property
     def sound_mode_list(self) -> list[str] | None:
         """List of available sound modes."""
         return self._attr_sound_mode_list
 
-    @property
+    @cached_property
     def shuffle(self) -> bool | None:
         """Boolean if shuffle is enabled."""
         return self._attr_shuffle
 
-    @property
+    @cached_property
     def repeat(self) -> RepeatMode | str | None:
         """Return current repeat mode."""
         return self._attr_repeat
 
-    @property
+    @cached_property
     def group_members(self) -> list[str] | None:
         """List of members which are currently grouped together."""
         return self._attr_group_members
 
-    @property
+    @cached_property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return self._attr_supported_features
+
+    @property
+    def supported_features_compat(self) -> MediaPlayerEntityFeature:
+        """Return the supported features as MediaPlayerEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = MediaPlayerEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
 
     def turn_on(self) -> None:
         """Turn the media player on."""
@@ -835,87 +918,87 @@ class MediaPlayerEntity(Entity):
     @property
     def support_play(self) -> bool:
         """Boolean if play is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.PLAY)
+        return MediaPlayerEntityFeature.PLAY in self.supported_features_compat
 
     @final
     @property
     def support_pause(self) -> bool:
         """Boolean if pause is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.PAUSE)
+        return MediaPlayerEntityFeature.PAUSE in self.supported_features_compat
 
     @final
     @property
     def support_stop(self) -> bool:
         """Boolean if stop is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.STOP)
+        return MediaPlayerEntityFeature.STOP in self.supported_features_compat
 
     @final
     @property
     def support_seek(self) -> bool:
         """Boolean if seek is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.SEEK)
+        return MediaPlayerEntityFeature.SEEK in self.supported_features_compat
 
     @final
     @property
     def support_volume_set(self) -> bool:
         """Boolean if setting volume is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.VOLUME_SET)
+        return MediaPlayerEntityFeature.VOLUME_SET in self.supported_features_compat
 
     @final
     @property
     def support_volume_mute(self) -> bool:
         """Boolean if muting volume is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.VOLUME_MUTE)
+        return MediaPlayerEntityFeature.VOLUME_MUTE in self.supported_features_compat
 
     @final
     @property
     def support_previous_track(self) -> bool:
         """Boolean if previous track command supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.PREVIOUS_TRACK)
+        return MediaPlayerEntityFeature.PREVIOUS_TRACK in self.supported_features_compat
 
     @final
     @property
     def support_next_track(self) -> bool:
         """Boolean if next track command supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.NEXT_TRACK)
+        return MediaPlayerEntityFeature.NEXT_TRACK in self.supported_features_compat
 
     @final
     @property
     def support_play_media(self) -> bool:
         """Boolean if play media command supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.PLAY_MEDIA)
+        return MediaPlayerEntityFeature.PLAY_MEDIA in self.supported_features_compat
 
     @final
     @property
     def support_select_source(self) -> bool:
         """Boolean if select source command supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE)
+        return MediaPlayerEntityFeature.SELECT_SOURCE in self.supported_features_compat
 
     @final
     @property
     def support_select_sound_mode(self) -> bool:
         """Boolean if select sound mode command supported."""
-        return bool(
-            self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
+        return (
+            MediaPlayerEntityFeature.SELECT_SOUND_MODE in self.supported_features_compat
         )
 
     @final
     @property
     def support_clear_playlist(self) -> bool:
         """Boolean if clear playlist command supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.CLEAR_PLAYLIST)
+        return MediaPlayerEntityFeature.CLEAR_PLAYLIST in self.supported_features_compat
 
     @final
     @property
     def support_shuffle_set(self) -> bool:
         """Boolean if shuffle is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.SHUFFLE_SET)
+        return MediaPlayerEntityFeature.SHUFFLE_SET in self.supported_features_compat
 
     @final
     @property
     def support_grouping(self) -> bool:
         """Boolean if player grouping is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.GROUPING)
+        return MediaPlayerEntityFeature.GROUPING in self.supported_features_compat
 
     async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
@@ -944,9 +1027,11 @@ class MediaPlayerEntity(Entity):
         if (
             self.volume_level is not None
             and self.volume_level < 1
-            and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
+            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features_compat
         ):
-            await self.async_set_volume_level(min(1, self.volume_level + 0.1))
+            await self.async_set_volume_level(
+                min(1, self.volume_level + self.volume_step)
+            )
 
     async def async_volume_down(self) -> None:
         """Turn volume down for media player.
@@ -960,9 +1045,11 @@ class MediaPlayerEntity(Entity):
         if (
             self.volume_level is not None
             and self.volume_level > 0
-            and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
+            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features_compat
         ):
-            await self.async_set_volume_level(max(0, self.volume_level - 0.1))
+            await self.async_set_volume_level(
+                max(0, self.volume_level - self.volume_step)
+            )
 
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
@@ -1001,15 +1088,16 @@ class MediaPlayerEntity(Entity):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
+        supported_features = self.supported_features_compat
 
-        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
+        if (
             source_list := self.source_list
-        ):
+        ) and MediaPlayerEntityFeature.SELECT_SOURCE in supported_features:
             data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
+        if (
             sound_mode_list := self.sound_mode_list
-        ):
+        ) and MediaPlayerEntityFeature.SELECT_SOUND_MODE in supported_features:
             data[ATTR_SOUND_MODE_LIST] = sound_mode_list
 
         return data
@@ -1126,8 +1214,7 @@ class MediaPlayerImageView(HomeAssistantView):
     extra_urls = [
         # Need to modify the default regex for media_content_id as it may
         # include arbitrary characters including '/','{', or '}'
-        url
-        + "/browse_media/{media_content_type}/{media_content_id:.+}",
+        url + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
     def __init__(self, component: EntityComponent[MediaPlayerEntity]) -> None:
@@ -1208,7 +1295,7 @@ async def websocket_browse_media(
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
         return
 
-    if not player.supported_features & MediaPlayerEntityFeature.BROWSE_MEDIA:
+    if MediaPlayerEntityFeature.BROWSE_MEDIA not in player.supported_features_compat:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], ERR_NOT_SUPPORTED, "Player does not support browsing media"
@@ -1258,12 +1345,13 @@ async def async_fetch_image(
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
-        response = await websession.get(url)
-        if response.status == HTTPStatus.OK:
-            content = await response.read()
-            if content_type := response.headers.get(CONTENT_TYPE):
-                content_type = content_type.split(";")[0]
+    with suppress(asyncio.TimeoutError):
+        async with asyncio.timeout(10):
+            response = await websession.get(url)
+            if response.status == HTTPStatus.OK:
+                content = await response.read()
+                if content_type := response.headers.get(CONTENT_TYPE):
+                    content_type = content_type.split(";")[0]
 
     if content is None:
         url_parts = URL(url)

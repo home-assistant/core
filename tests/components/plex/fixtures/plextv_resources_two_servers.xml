@@ -1,21 +1,27 @@
-<MediaContainer size="6">
-  <Device name="Plex Server 1" product="Plex Media Server" productVersion="1.20.4.3517-ab5e1197c" platform="Linux" platformVersion="20.04.1 LTS (Focal Fossa)" device="PC" clientIdentifier="unique_id_123" createdAt="1429510140" lastSeenAt="1605500006" provides="server" owned="1" accessToken="faketoken" publicAddress="10.20.30.40" httpsRequired="0" synced="0" relay="0" dnsRebindingProtection="0" natLoopbackSupported="1" publicAddressMatches="1" presence="1">
-    <Connection protocol="https" address="1.2.3.4" port="32400" uri="https://1-2-3-4.123456789001234567890.plex.direct:32400" local="1"/>
-  </Device>
-  <Device name="Plex Server 2" product="Plex Media Server" productVersion="1.20.4.3517-ab5e1197c" platform="Linux" platformVersion="20.04.1 LTS (Focal Fossa)" device="PC" clientIdentifier="unique_id_456" createdAt="1429510140" lastSeenAt="1605500006" provides="server" owned="1" accessToken="faketoken" publicAddress="10.20.30.40" httpsRequired="0" synced="0" relay="0" dnsRebindingProtection="0" natLoopbackSupported="1" publicAddressMatches="1" presence="1">
-    <Connection protocol="https" address="4.3.2.1" port="32400" uri="https://4-3-2-1.123456789001234567890.plex.direct:32400" local="1"/>
-  </Device>
-  <Device name="Chrome" product="Plex Web" productVersion="4.46.2" platform="Chrome" platformVersion="14.0" device="OSX" clientIdentifier="plexweb_id" createdAt="1578086003" lastSeenAt="1605461664" provides="client,player,pubsub-player" owned="1" publicAddress="10.20.30.40" publicAddressMatches="1" presence="1" accessToken="faketoken">
-    <Connection protocol="https" address="1.2.3.5" port="32400" uri="https://1-2-3-5.123456789001234567890.plex.direct:32400" local="1"/>
-    <Connection protocol="https" address="10.20.30.40" port="35872" uri="https://10-20-30-40.123456789001234567890.plex.direct:35872" local="0"/>
-  </Device>
-  <Device name="AppleTV" product="Plex for Apple TV" productVersion="7.9" platform="tvOS" platformVersion="14.2" device="Apple TV" clientIdentifier="A10E4083-BF1A-4586-B884-C638A32D5285" createdAt="1447217545" lastSeenAt="1605495521" provides="client,player,pubsub-player,provider-playback" owned="1" publicAddress="10.20.30.40" publicAddressMatches="1" presence="0">
-    <Connection protocol="http" address="1.2.3.6" port="32500" uri="http://1.2.3.6:32500" local="1"/>
-  </Device>
-  <Device name="jPhone" product="Plex for iOS" productVersion="7.9" platform="iOS" platformVersion="14.2" device="iPhone" clientIdentifier="CDB83941-F8C2-4B56-989E-F3EFD0165BC1" createdAt="1537584529" lastSeenAt="1605501046" provides="client,controller,sync-target,player,pubsub-player,provider-playback" owned="1" publicAddress="10.20.30.40" publicAddressMatches="1" presence="0">
-    <Connection protocol="http" address="1.2.3.7" port="32500" uri="http://1.2.3.7:32500" local="1"/>
-  </Device>
-  <Device name="SHIELD Android TV" product="Plex for Android (TV)" productVersion="8.8.2.21525" platform="Android" platformVersion="9" device="SHIELD Android TV" clientIdentifier="2f2a5ae50a45837c-com-plexapp-android" createdAt="1584850408" lastSeenAt="1605384938" provides="player,pubsub-player,controller" owned="1" publicAddress="10.20.30.40" publicAddressMatches="1" presence="1">
-    <Connection protocol="http" address="1.2.3.11" port="32500" uri="http://1.2.3.11:32500" local="1"/>
-  </Device>
-</MediaContainer>
+<resources>
+  <resource name="Plex Server 1" product="Plex Media Server" productVersion="1.32.6.7468-07e0d4a7e" platform="Linux" platformVersion="5.15.0-69-generic" device="Docker Container" clientIdentifier="unique_id_123" createdAt="2013-01-01T12:34:56Z" lastSeenAt="2023-09-20T00:00:00Z" provides="server" ownerId="" sourceTitle="" publicAddress="10.20.30.40" accessToken="faketoken" owned="1" home="0" synced="0" relay="0" presence="1" httpsRequired="0" publicAddressMatches="1" dnsRebindingProtection="0" natLoopbackSupported="0">
+    <connections>
+      <connection protocol="https" address="1.2.3.4" port="32400" uri="https://1-2-3-4.123456789001234567890.plex.direct:32400" local="1" relay="0" IPv6="0"/>
+    </connections>
+  </resource>
+  <resource name="Plex Server 2" product="Plex Media Server" productVersion="1.32.6.7468-07e0d4a7e" platform="Linux" platformVersion="5.15.0-69-generic" device="Docker Container" clientIdentifier="unique_id_456" createdAt="2013-01-01T12:34:56Z" lastSeenAt="2023-09-20T00:00:00Z" provides="server" ownerId="" sourceTitle="" publicAddress="10.20.30.40" accessToken="faketoken" owned="1" home="0" synced="0" relay="0" presence="1" httpsRequired="0" publicAddressMatches="1" dnsRebindingProtection="0" natLoopbackSupported="0">
+    <connections>
+      <connection protocol="https" address="4.3.2.1" port="32400" uri="https://4-3-2-1.123456789001234567890.plex.direct:32400" local="1" relay="0" IPv6="0"/>
+    </connections>
+  </resource>
+  <resource name="Plex HTPC" product="Plex HTPC for Mac" productVersion="1.33.2.3525-140e01eb" platform="osx" platformVersion="13.5" device="" clientIdentifier="client_id" createdAt="2023-09-01T00:00:00Z" lastSeenAt="2023-09-01T00:00:00Z" provides="client,player" ownerId="" sourceTitle="" publicAddress="10.20.30.40" accessToken="faketoken" owned="1" home="0" synced="0" relay="0" presence="1" httpsRequired="0" publicAddressMatches="1">
+    <connections>
+      <connection protocol="https" address="1.2.3.6" port="32400" uri="https://1-2-3-6.123456789001234567890.plex.direct:32400" local="1" relay="0" IPv6="0"/>
+    </connections>
+  </resource>
+  <resource name="iPhone" product="Plex for iOS" productVersion="8.24" platform="iOS" platformVersion="16.6.1" device="iPhone" clientIdentifier="12345678-0123-0123-0123-012345678901" createdAt="2022-12-31T01:23:45Z" lastSeenAt="2023-09-19T00:00:00Z" provides="client,controller,sync-target,player,pubsub-player,provider-playback" ownerId="" sourceTitle="" publicAddress="10.20.30.40" accessToken="" owned="1" home="0" synced="0" relay="0" presence="0" httpsRequired="0" publicAddressMatches="1">
+    <connections>
+      <connection protocol="http" address="1.2.3.10" port="32500" uri="http://1.2.3.10:32500" local="1" relay="0" IPv6="0"/>
+    </connections>
+  </resource>
+  <resource name="SHIELD Android TV" product="Plex for Android (TV)" productVersion="9.31.0.3817" platform="Android" platformVersion="11" device="SHIELD Android TV" clientIdentifier="1234567890-com-plexapp-android" createdAt="2020-01-01T12:34:56Z" lastSeenAt="2023-09-20T00:00:00Z" provides="player,pubsub-player,controller" ownerId="" sourceTitle="" publicAddress="10.20.30.40" accessToken="" owned="1" home="0" synced="0" relay="0" presence="0" httpsRequired="0" publicAddressMatches="1">
+    <connections>
+      <connection protocol="http" address="1.2.3.11" port="32500" uri="http://1.2.3.11:32500" local="1" relay="0" IPv6="0"/>
+    </connections>
+  </resource>
+</resources>

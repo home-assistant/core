@@ -1,12 +1,11 @@
 """Helper to create SSL contexts."""
 import contextlib
+from enum import StrEnum
 from functools import cache
 from os import environ
 import ssl
 
 import certifi
-
-from homeassistant.backports.enum import StrEnum
 
 
 class SSLCipherList(StrEnum):
@@ -62,16 +61,11 @@ SSL_CIPHER_LISTS = {
 
 
 @cache
-def create_no_verify_ssl_context(
-    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
-) -> ssl.SSLContext:
-    """Return an SSL context that does not verify the server certificate.
+def _create_no_verify_ssl_context(ssl_cipher_list: SSLCipherList) -> ssl.SSLContext:
+    # This is a copy of aiohttp's create_default_context() function, with the
+    # ssl verify turned off.
+    # https://github.com/aio-libs/aiohttp/blob/33953f110e97eecc707e1402daa8d543f38a189b/aiohttp/connector.py#L911
 
-    This is a copy of aiohttp's create_default_context() function, with the
-    ssl verify turned off.
-
-    https://github.com/aio-libs/aiohttp/blob/33953f110e97eecc707e1402daa8d543f38a189b/aiohttp/connector.py#L911
-    """
     sslcontext = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     sslcontext.check_hostname = False
     sslcontext.verify_mode = ssl.CERT_NONE
@@ -85,12 +79,16 @@ def create_no_verify_ssl_context(
     return sslcontext
 
 
-@cache
-def client_context(
+def create_no_verify_ssl_context(
     ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
 ) -> ssl.SSLContext:
-    """Return an SSL context for making requests."""
+    """Return an SSL context that does not verify the server certificate."""
 
+    return _create_no_verify_ssl_context(ssl_cipher_list=ssl_cipher_list)
+
+
+@cache
+def _client_context(ssl_cipher_list: SSLCipherList) -> ssl.SSLContext:
     # Reuse environment variable definition from requests, since it's already a
     # requirement. If the environment variable has no value, fall back to using
     # certs from certifi package.
@@ -103,6 +101,14 @@ def client_context(
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
 
     return sslcontext
+
+
+def client_context(
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+) -> ssl.SSLContext:
+    """Return an SSL context for making requests."""
+
+    return _client_context(ssl_cipher_list=ssl_cipher_list)
 
 
 # Create this only once and reuse it
@@ -128,14 +134,9 @@ def server_context_modern() -> ssl.SSLContext:
     Modern guidelines are followed.
     """
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
 
-    context.options |= (
-        ssl.OP_NO_SSLv2
-        | ssl.OP_NO_SSLv3
-        | ssl.OP_NO_TLSv1
-        | ssl.OP_NO_TLSv1_1
-        | ssl.OP_CIPHER_SERVER_PREFERENCE
-    )
+    context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 

@@ -42,10 +42,8 @@ class RoombaVacuum(IRobotVacuum):
 class RoombaVacuumCarpetBoost(RoombaVacuum):
     """Roomba robot with carpet boost."""
 
-    @property
-    def supported_features(self):
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_ROOMBA_CARPET_BOOST
+    _attr_fan_speed_list = FAN_SPEEDS
+    _attr_supported_features = SUPPORT_ROOMBA_CARPET_BOOST
 
     @property
     def fan_speed(self):
@@ -61,11 +59,6 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
             else:  # carpet_boost and high_perf are False
                 fan_speed = FAN_SPEED_ECO
         return fan_speed
-
-    @property
-    def fan_speed_list(self):
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        return FAN_SPEEDS
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""

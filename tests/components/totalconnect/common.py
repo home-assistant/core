@@ -189,14 +189,23 @@ ZONE_5 = {
 # 99 is an unknown ZoneType
 ZONE_6 = {
     "ZoneID": "6",
-    "ZoneDescription": "Medical",
+    "ZoneDescription": "Unknown",
     "ZoneStatus": ZoneStatus.NORMAL,
     "ZoneTypeId": 99,
     "PartitionId": "1",
     "CanBeBypassed": 0,
 }
 
-ZONE_INFO = [ZONE_NORMAL, ZONE_2, ZONE_3, ZONE_4, ZONE_5, ZONE_6]
+ZONE_7 = {
+    "ZoneID": 7,
+    "ZoneDescription": "Temperature",
+    "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneTypeId": ZoneType.MONITOR,
+    "PartitionId": "1",
+    "CanBeBypassed": 0,
+}
+
+ZONE_INFO = [ZONE_NORMAL, ZONE_2, ZONE_3, ZONE_4, ZONE_5, ZONE_6, ZONE_7]
 ZONES = {"ZoneInfo": ZONE_INFO}
 
 METADATA_DISARMED = {

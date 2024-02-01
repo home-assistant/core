@@ -14,8 +14,8 @@ from .util import (
     CONFIG,
     GET_INSTALLATION_MOCK,
     GET_INSTALLATIONS_MOCK,
-    GET_WEBSERVER_MOCK,
     mock_get_device_status,
+    mock_get_webserver,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -42,7 +42,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         return_value=GET_INSTALLATIONS_MOCK,
     ) as mock_installations, patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
-        return_value=GET_WEBSERVER_MOCK,
+        side_effect=mock_get_webserver,
     ) as mock_webserver, patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
         return_value=None,
@@ -53,7 +53,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         mock_device_status.assert_called()
         mock_installation.assert_awaited_once()
         mock_installations.assert_called_once()
-        mock_webserver.assert_called_once()
+        mock_webserver.assert_called()
 
         mock_device_status.reset_mock()
         mock_installation.reset_mock()

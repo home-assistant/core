@@ -140,11 +140,11 @@ class KNXTestKit:
         await self.hass.async_block_till_done()
         try:
             telegram = self._outgoing_telegrams.get_nowait()
-        except asyncio.QueueEmpty:
+        except asyncio.QueueEmpty as err:
             raise AssertionError(
                 f"No Telegram found. Expected: {apci_type.__name__} -"
                 f" {group_address} - {payload}"
-            )
+            ) from err
 
         assert isinstance(
             telegram.payload, apci_type

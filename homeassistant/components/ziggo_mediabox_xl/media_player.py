@@ -62,11 +62,10 @@ def setup_platform(
             # Check if a connection can be established to the device.
             if mediabox.test_connection():
                 connection_successful = True
+            elif manual_config:
+                _LOGGER.info("Can't connect to %s", host)
             else:
-                if manual_config:
-                    _LOGGER.info("Can't connect to %s", host)
-                else:
-                    _LOGGER.error("Can't connect to %s", host)
+                _LOGGER.error("Can't connect to %s", host)
             # When the device is in eco mode it's not connected to the network
             # so it needs to be added anyway if it's configured manually.
             if manual_config or connection_successful:

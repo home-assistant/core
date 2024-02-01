@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-import json
 import logging
 import os
 from typing import Any, Final
 from unittest import mock
 
+from aiohomekit.controller.abstract import AbstractDescription, AbstractPairing
+from aiohomekit.hkjson import loads as hkloads
 from aiohomekit.model import (
     Accessories,
     AccessoriesState,
@@ -16,7 +17,6 @@ from aiohomekit.model import (
     mixin as model_mixin,
 )
 from aiohomekit.testing import FakeController, FakePairing
-from aiohomekit.zeroconf import HomeKitService
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit_controller.const import (
@@ -25,6 +25,7 @@ from homeassistant.components.homekit_controller.const import (
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
+    SUBSCRIBE_COOLDOWN,
 )
 from homeassistant.components.homekit_controller.utils import async_get_controller
 from homeassistant.config_entries import ConfigEntry
@@ -154,6 +155,13 @@ class Helper:
         assert state is not None
         return state
 
+    async def async_set_aid_iid_status(
+        self, aid_iid_status: list[tuple[int, int, int]]
+    ) -> None:
+        """Set the status of a set of aid/iid pairs."""
+        self.pairing.testing.set_aid_iid_status(aid_iid_status)
+        await self.hass.async_block_till_done()
+
     @callback
     def async_assert_service_values(
         self, service: str, characteristics: dict[str, Any]
@@ -180,12 +188,12 @@ async def time_changed(hass, seconds):
     await hass.async_block_till_done()
 
 
-async def setup_accessories_from_file(hass, path):
+async def setup_accessories_from_file(hass: HomeAssistant, path: str) -> Accessories:
     """Load an collection of accessory defs from JSON data."""
     accessories_fixture = await hass.async_add_executor_job(
         load_fixture, os.path.join("homekit_controller", path)
     )
-    accessories_json = json.loads(accessories_fixture)
+    accessories_json = hkloads(accessories_fixture)
     accessories = Accessories.from_list(accessories_json)
     return accessories
 
@@ -237,40 +245,36 @@ async def setup_test_accessories_with_controller(
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
+    await time_changed(hass, SUBSCRIBE_COOLDOWN)
     await hass.async_block_till_done()
 
     return config_entry, pairing
 
 
-async def device_config_changed(hass, accessories):
+async def device_config_changed(hass: HomeAssistant, accessories: Accessories):
     """Discover new devices added to Home Assistant at runtime."""
     # Update the accessories our FakePairing knows about
     controller = hass.data[CONTROLLER]
-    pairing = controller.pairings["00:00:00:00:00:00"]
+    pairing: AbstractPairing = controller.pairings["00:00:00:00:00:00"]
 
     accessories_obj = Accessories()
     for accessory in accessories:
         accessories_obj.add_accessory(accessory)
-    pairing._accessories_state = AccessoriesState(
-        accessories_obj, pairing.config_num + 1
-    )
+
+    new_config_num = pairing.config_num + 1
     pairing._async_description_update(
-        HomeKitService(
-            name="TestDevice.local",
+        AbstractDescription(
+            name="testdevice.local.",
             id="00:00:00:00:00:00",
-            model="",
-            config_num=2,
-            state_num=3,
-            feature_flags=0,
             status_flags=0,
+            config_num=new_config_num,
             category=1,
-            protocol_version="1.0",
-            type="_hap._tcp.local.",
-            address="127.0.0.1",
-            addresses=["127.0.0.1"],
-            port=8080,
         )
     )
+    # Set the accessories state only after calling
+    # _async_description_update, otherwise the config_num will be
+    # overwritten
+    pairing._accessories_state = AccessoriesState(accessories_obj, new_config_num)
 
     # Wait for services to reconfigure
     await hass.async_block_till_done()
@@ -325,9 +329,7 @@ async def assert_devices_and_entities_created(
         #   we have detected broken serial numbers (and serial number is not used as an identifier).
 
         device = device_registry.async_get_device(
-            {
-                (IDENTIFIER_ACCESSORY_ID, expected.unique_id),
-            }
+            identifiers={(IDENTIFIER_ACCESSORY_ID, expected.unique_id)}
         )
 
         logger.debug("Comparing device %r to %r", device, expected)

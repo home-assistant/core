@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
@@ -180,7 +180,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ) or self._has_switch:
             if not profile_names:
                 presets.append(PRESET_NONE)
-            presets.append(PRESET_BOOST)
+            presets.extend([PRESET_BOOST, PRESET_ECO])
 
         presets.extend(profile_names)
 
@@ -223,6 +223,8 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             await self._device.set_boost(False)
         if preset_mode == PRESET_BOOST:
             await self._device.set_boost()
+        if preset_mode == PRESET_ECO:
+            await self._device.set_control_mode(HMIP_ECO_CM)
         if preset_mode in self._device_profile_names:
             profile_idx = self._get_profile_idx_by_name(preset_mode)
             if self._device.controlMode != HMIP_AUTOMATIC_CM:

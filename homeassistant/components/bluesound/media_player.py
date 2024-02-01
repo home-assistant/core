@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from asyncio import CancelledError
+from asyncio import CancelledError, timeout
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -12,7 +12,6 @@ from urllib import parse
 import aiohttp
 from aiohttp.client_exceptions import ClientError
 from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
-import async_timeout
 import voluptuous as vol
 import xmltodict
 
@@ -355,7 +354,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         try:
             websession = async_get_clientsession(self._hass)
-            async with async_timeout.timeout(10):
+            async with timeout(10):
                 response = await websession.get(url)
 
             if response.status == HTTPStatus.OK:
@@ -396,7 +395,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         _LOGGER.debug("Calling URL: %s", url)
 
         try:
-            async with async_timeout.timeout(125):
+            async with timeout(125):
                 response = await self._polling_session.get(
                     url, headers={CONNECTION: KEEP_ALIVE}
                 )
@@ -694,7 +693,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         for source in [
             x
             for x in self._services_items
-            if x["type"] == "LocalMusic" or x["type"] == "RadioService"
+            if x["type"] in ("LocalMusic", "RadioService")
         ]:
             sources.append(source["title"])
 

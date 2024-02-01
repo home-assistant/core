@@ -5,9 +5,8 @@ from collections import OrderedDict
 import logging
 import os
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant import loader
@@ -16,9 +15,10 @@ from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
     YAML_CONFIG_FILE,
-    _format_config_error,
     config_per_platform,
     extract_domain_configs,
+    format_homeassistant_error,
+    format_schema_error,
     load_yaml_config_file,
     merge_packages_config,
 )
@@ -31,6 +31,7 @@ from homeassistant.requirements import (
 )
 import homeassistant.util.yaml.loader as yaml_loader
 
+from . import config_validation as cv
 from .typing import ConfigType
 
 
@@ -49,6 +50,7 @@ class HomeAssistantConfig(OrderedDict):
         """Initialize HA config."""
         super().__init__()
         self.errors: list[CheckConfigError] = []
+        self.warnings: list[CheckConfigError] = []
 
     def add_error(
         self,
@@ -56,14 +58,29 @@ class HomeAssistantConfig(OrderedDict):
         domain: str | None = None,
         config: ConfigType | None = None,
     ) -> Self:
-        """Add a single error."""
+        """Add an error."""
         self.errors.append(CheckConfigError(str(message), domain, config))
         return self
 
     @property
     def error_str(self) -> str:
-        """Return errors as a string."""
+        """Concatenate all errors to a string."""
         return "\n".join([err.message for err in self.errors])
+
+    def add_warning(
+        self,
+        message: str,
+        domain: str | None = None,
+        config: ConfigType | None = None,
+    ) -> Self:
+        """Add a warning."""
+        self.warnings.append(CheckConfigError(str(message), domain, config))
+        return self
+
+    @property
+    def warning_str(self) -> str:
+        """Concatenate all warnings to a string."""
+        return "\n".join([err.message for err in self.warnings])
 
 
 async def async_check_ha_config_file(  # noqa: C901
@@ -77,25 +94,57 @@ async def async_check_ha_config_file(  # noqa: C901
     async_clear_install_history(hass)
 
     def _pack_error(
-        package: str, component: str, config: ConfigType, message: str
+        hass: HomeAssistant,
+        package: str,
+        component: str,
+        config: ConfigType,
+        message: str,
     ) -> None:
-        """Handle errors from packages: _log_pkg_error."""
-        message = f"Package {package} setup failed. Component {component} {message}"
+        """Handle errors from packages."""
+        message = f"Setup of package '{package}' failed: {message}"
         domain = f"homeassistant.packages.{package}.{component}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
-        result.add_error(message, domain, pack_config)
+        result.add_warning(message, domain, pack_config)
 
-    def _comp_error(ex: Exception, domain: str, config: ConfigType) -> None:
-        """Handle errors from components: async_log_exception."""
-        result.add_error(_format_config_error(ex, domain, config)[0], domain, config)
+    def _comp_error(
+        ex: vol.Invalid | HomeAssistantError,
+        domain: str,
+        component_config: ConfigType,
+        config_to_attach: ConfigType,
+    ) -> None:
+        """Handle errors from components."""
+        if isinstance(ex, vol.Invalid):
+            message = format_schema_error(hass, ex, domain, component_config)
+        else:
+            message = format_homeassistant_error(hass, ex, domain, component_config)
+        if domain in frontend_dependencies:
+            result.add_error(message, domain, config_to_attach)
+        else:
+            result.add_warning(message, domain, config_to_attach)
+
+    async def _get_integration(
+        hass: HomeAssistant, domain: str
+    ) -> loader.Integration | None:
+        """Get an integration."""
+        integration: loader.Integration | None = None
+        try:
+            integration = await async_get_integration_with_requirements(hass, domain)
+        except loader.IntegrationNotFound as ex:
+            # We get this error if an integration is not found. In recovery mode and
+            # safe mode, this currently happens for all custom integrations. Don't
+            # show errors for a missing integration in recovery mode or safe mode to
+            # not confuse the user.
+            if not hass.config.recovery_mode and not hass.config.safe_mode:
+                result.add_warning(f"Integration error: {domain} - {ex}")
+        except RequirementsNotFound as ex:
+            result.add_warning(f"Integration error: {domain} - {ex}")
+        return integration
 
     # Load configuration.yaml
     config_path = hass.config.path(YAML_CONFIG_FILE)
     try:
         if not await hass.async_add_executor_job(os.path.isfile, config_path):
             return result.add_error("File configuration.yaml not found.")
-
-        assert hass.config.config_dir is not None
 
         config = await hass.async_add_executor_job(
             load_yaml_config_file,
@@ -113,7 +162,11 @@ async def async_check_ha_config_file(  # noqa: C901
         core_config = CORE_CONFIG_SCHEMA(core_config)
         result[CONF_CORE] = core_config
     except vol.Invalid as err:
-        result.add_error(err, CONF_CORE, core_config)
+        result.add_error(
+            format_schema_error(hass, err, CONF_CORE, core_config),
+            CONF_CORE,
+            core_config,
+        )
         core_config = {}
 
     # Merge packages
@@ -123,24 +176,24 @@ async def async_check_ha_config_file(  # noqa: C901
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
-    components = {key.partition(" ")[0] for key in config}
+    components = {cv.domain_key(key) for key in config}
+
+    frontend_dependencies: set[str] = set()
+    if "frontend" in components or "default_config" in components:
+        frontend = await _get_integration(hass, "frontend")
+        if frontend:
+            await frontend.resolve_dependencies()
+            frontend_dependencies = frontend.all_dependencies | {"frontend"}
 
     # Process and validate config
     for domain in components:
-        try:
-            integration = await async_get_integration_with_requirements(hass, domain)
-        except loader.IntegrationNotFound as ex:
-            if not hass.config.safe_mode:
-                result.add_error(f"Integration error: {domain} - {ex}")
-            continue
-        except RequirementsNotFound as ex:
-            result.add_error(f"Integration error: {domain} - {ex}")
+        if not (integration := await _get_integration(hass, domain)):
             continue
 
         try:
             component = integration.get_component()
         except ImportError as ex:
-            result.add_error(f"Component error: {domain} - {ex}")
+            result.add_warning(f"Component error: {domain} - {ex}")
             continue
 
         # Check if the integration has a custom config validator
@@ -164,7 +217,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 )[domain]
                 continue
             except (vol.Invalid, HomeAssistantError) as ex:
-                _comp_error(ex, domain, config)
+                _comp_error(ex, domain, config, config[domain])
                 continue
             except Exception as err:  # pylint: disable=broad-except
                 logging.getLogger(__name__).exception(
@@ -180,10 +233,12 @@ async def async_check_ha_config_file(  # noqa: C901
         config_schema = getattr(component, "CONFIG_SCHEMA", None)
         if config_schema is not None:
             try:
-                config = config_schema(config)
-                result[domain] = config[domain]
+                validated_config = config_schema(config)
+                # Don't fail if the validator removed the domain from the config
+                if domain in validated_config:
+                    result[domain] = validated_config[domain]
             except vol.Invalid as ex:
-                _comp_error(ex, domain, config)
+                _comp_error(ex, domain, config, config[domain])
                 continue
 
         component_platform_schema = getattr(
@@ -201,7 +256,7 @@ async def async_check_ha_config_file(  # noqa: C901
             try:
                 p_validated = component_platform_schema(p_config)
             except vol.Invalid as ex:
-                _comp_error(ex, domain, config)
+                _comp_error(ex, domain, p_config, p_config)
                 continue
 
             # Not all platform components follow same pattern for platforms
@@ -217,14 +272,22 @@ async def async_check_ha_config_file(  # noqa: C901
                 )
                 platform = p_integration.get_platform(domain)
             except loader.IntegrationNotFound as ex:
-                if not hass.config.safe_mode:
-                    result.add_error(f"Platform error {domain}.{p_name} - {ex}")
+                # We get this error if an integration is not found. In recovery mode and
+                # safe mode, this currently happens for all custom integrations. Don't
+                # show errors for a missing integration in recovery mode or safe mode to
+                # not confuse the user.
+                if not hass.config.recovery_mode and not hass.config.safe_mode:
+                    result.add_warning(
+                        f"Platform error '{domain}' from integration '{p_name}' - {ex}"
+                    )
                 continue
             except (
                 RequirementsNotFound,
                 ImportError,
             ) as ex:
-                result.add_error(f"Platform error {domain}.{p_name} - {ex}")
+                result.add_warning(
+                    f"Platform error '{domain}' from integration '{p_name}' - {ex}"
+                )
                 continue
 
             # Validate platform specific schema
@@ -233,7 +296,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 try:
                     p_validated = platform_schema(p_validated)
                 except vol.Invalid as ex:
-                    _comp_error(ex, f"{domain}.{p_name}", p_validated)
+                    _comp_error(ex, f"{domain}.{p_name}", p_config, p_config)
                     continue
 
             platforms.append(p_validated)

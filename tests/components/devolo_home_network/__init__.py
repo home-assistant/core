@@ -14,7 +14,7 @@ def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
         CONF_IP_ADDRESS: IP,
         CONF_PASSWORD: "test",
     }
-    entry = MockConfigEntry(domain=DOMAIN, data=config)
+    entry = MockConfigEntry(domain=DOMAIN, data=config, entry_id="123456")
     entry.add_to_hass(hass)
 
     return entry

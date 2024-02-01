@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
@@ -15,6 +16,10 @@ if TYPE_CHECKING:
     from matter_server.common.models import ServerInfoMessage
 
     from .adapter import MatterAdapter
+
+
+class MissingNode(HomeAssistantError):
+    """Exception raised when we can't find a node."""
 
 
 @dataclass
@@ -66,7 +71,18 @@ def get_device_id(
     return f"{operational_instance_id}-{postfix}"
 
 
-async def get_node_from_device_entry(
+@callback
+def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode | None:
+    """Get node id from ha device id."""
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get(ha_device_id)
+    if device is None:
+        raise MissingNode(f"Invalid device ID: {ha_device_id}")
+    return get_node_from_device_entry(hass, device)
+
+
+@callback
+def get_node_from_device_entry(
     hass: HomeAssistant, device: dr.DeviceEntry
 ) -> MatterNode | None:
     """Return MatterNode from device entry."""
@@ -83,7 +99,7 @@ async def get_node_from_device_entry(
     )
 
     if device_id_full is None:
-        raise ValueError(f"Device {device.id} is not a Matter device")
+        return None
 
     device_id = device_id_full.lstrip(device_id_type_prefix)
     matter_client = matter.matter_client
@@ -95,7 +111,7 @@ async def get_node_from_device_entry(
     node = next(
         (
             node
-            for node in await matter_client.get_nodes()
+            for node in matter_client.get_nodes()
             for endpoint in node.endpoints.values()
             if get_device_id(server_info, endpoint) == device_id
         ),

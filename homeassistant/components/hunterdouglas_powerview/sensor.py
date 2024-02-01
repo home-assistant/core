@@ -33,7 +33,7 @@ from .entity import ShadeEntity
 from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSensorDescriptionMixin:
     """Mixin to describe a Sensor entity."""
 
@@ -42,7 +42,7 @@ class PowerviewSensorDescriptionMixin:
     create_sensor_fn: Callable[[BaseShade], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSensorDescription(
     SensorEntityDescription, PowerviewSensorDescriptionMixin
 ):
@@ -55,7 +55,6 @@ class PowerviewSensorDescription(
 SENSORS: Final = [
     PowerviewSensorDescription(
         key="charge",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         native_value_fn=lambda shade: round(
@@ -69,8 +68,8 @@ SENSORS: Final = [
     ),
     PowerviewSensorDescription(
         key="signal",
-        name="Signal",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        translation_key="signal_strength",
+        icon="mdi:signal",
         native_unit_of_measurement=PERCENTAGE,
         native_value_fn=lambda shade: round(
             shade.raw_data[ATTR_SIGNAL_STRENGTH] / ATTR_SIGNAL_STRENGTH_MAX * 100
@@ -129,7 +128,6 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
         """Initialize the select entity."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self.entity_description = description
-        self._attr_name = f"{self._shade_name} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
@@ -138,6 +136,7 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
         """Get the current value in percentage."""
         return self.entity_description.native_value_fn(self._shade)
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(

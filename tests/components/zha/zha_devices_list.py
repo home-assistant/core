@@ -100,7 +100,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-5-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.bosch_isw_zpr1_wp13_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.bosch_isw_zpr1_wp13_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-5-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -126,6 +126,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.bosch_isw_zpr1_wp13_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-5-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.bosch_isw_zpr1_wp13_firmware",
             },
         },
     },
@@ -165,6 +170,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3130_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.centralite_3130_firmware",
+            },
         },
     },
     {
@@ -196,7 +206,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -206,12 +216,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -233,6 +243,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -242,6 +257,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.centralite_3210_l_firmware",
             },
         },
     },
@@ -291,6 +311,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Humidity",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3310_s_humidity",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.centralite_3310_s_firmware",
+            },
         },
     },
     {
@@ -319,7 +344,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3315_s_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3315_s_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -345,6 +370,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3315_s_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.centralite_3315_s_firmware",
             },
         },
     },
@@ -374,7 +404,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3320_l_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3320_l_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -400,6 +430,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3320_l_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.centralite_3320_l_firmware",
             },
         },
     },
@@ -429,7 +464,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3326_l_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_3326_l_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -455,6 +490,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3326_l_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.centralite_3326_l_firmware",
             },
         },
     },
@@ -484,7 +524,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_motion_sensor_a_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_motion_sensor_a_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -517,6 +557,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_ID: (
                     "binary_sensor.centralite_motion_sensor_a_occupancy"
                 ),
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.centralite_motion_sensor_a_firmware",
             },
         },
     },
@@ -571,6 +616,13 @@ DEVICES = [
                     "sensor.climaxtechnology_psmp5_00_00_02_02tc_summation_delivered"
                 ),
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.climaxtechnology_psmp5_00_00_02_02tc_summation_received"
+                ),
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -580,6 +632,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-4-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.climaxtechnology_psmp5_00_00_02_02tc_firmware",
             },
         },
     },
@@ -603,7 +660,7 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
                 DEV_SIG_ENT_MAP_ID: (
-                    "binary_sensor.climaxtechnology_sd8sc_00_00_03_12tc_iaszone"
+                    "binary_sensor.climaxtechnology_sd8sc_00_00_03_12tc_ias_zone"
                 ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -678,7 +735,7 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
                 DEV_SIG_ENT_MAP_ID: (
-                    "binary_sensor.climaxtechnology_ws15_00_00_03_03tc_iaszone"
+                    "binary_sensor.climaxtechnology_ws15_00_00_03_03tc_ias_zone"
                 ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -764,7 +821,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_smokesensor_em_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_smokesensor_em_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -786,30 +843,10 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.heiman_smokesensor_em_lqi",
             },
-            ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["ias_wd"],
-                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_siren_tone",
-            },
-            ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["ias_wd"],
-                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_siren_level",
-            },
-            ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["ias_wd"],
-                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_strobe_level",
-            },
-            ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["ias_wd"],
-                DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_strobe",
-            },
-            ("siren", "00:11:22:33:44:55:66:77-1-1282"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["ias_wd"],
-                DEV_SIG_ENT_MAP_CLASS: "ZHASiren",
-                DEV_SIG_ENT_MAP_ID: "siren.heiman_smokesensor_em_siren",
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.heiman_smokesensor_em_firmware",
             },
         },
     },
@@ -832,7 +869,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_co_v16_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_co_v16_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -848,6 +885,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.heiman_co_v16_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.heiman_co_v16_firmware",
             },
         },
     },
@@ -895,7 +937,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_warningdevice_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_warningdevice_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -911,6 +953,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.heiman_warningdevice_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.heiman_warningdevice_firmware",
             },
         },
     },
@@ -933,7 +980,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-6-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.hivehome_com_mot003_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.hivehome_com_mot003_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-6-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -964,6 +1011,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.hivehome_com_mot003_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-6-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.hivehome_com_mot003_firmware",
             },
         },
     },
@@ -1018,6 +1070,11 @@ DEVICES = [
                     "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_lqi"
                 ),
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_firmware",
+            },
         },
     },
     {
@@ -1063,6 +1120,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_ID: (
                     "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_lqi"
                 ),
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_firmware",
             },
         },
     },
@@ -1110,6 +1172,11 @@ DEVICES = [
                     "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_lqi"
                 ),
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_firmware",
+            },
         },
     },
     {
@@ -1155,6 +1222,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_ID: (
                     "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_lqi"
                 ),
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_firmware",
             },
         },
     },
@@ -1202,6 +1274,11 @@ DEVICES = [
                     "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_lqi"
                 ),
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_firmware",
+            },
         },
     },
     {
@@ -1243,6 +1320,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_control_outlet_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_control_outlet_firmware",
             },
         },
     },
@@ -1293,6 +1375,11 @@ DEVICES = [
                     "binary_sensor.ikea_of_sweden_tradfri_motion_sensor_motion"
                 ),
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_motion_sensor_firmware",
+            },
         },
     },
     {
@@ -1335,6 +1422,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_on_off_switch_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_on_off_switch_firmware",
+            },
         },
     },
     {
@@ -1376,6 +1468,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_remote_control_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_remote_control_firmware",
             },
         },
     },
@@ -1421,6 +1518,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_signal_repeater_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_signal_repeater_firmware",
+            },
         },
     },
     {
@@ -1465,6 +1567,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_wireless_dimmer_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ikea_of_sweden_tradfri_wireless_dimmer_firmware",
+            },
         },
     },
     {
@@ -1492,7 +1599,7 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off", "level"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
+                DEV_SIG_ENT_MAP_CLASS: "ForceOnLight",
                 DEV_SIG_ENT_MAP_ID: "light.jasco_products_45852_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1510,6 +1617,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -1519,6 +1631,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.jasco_products_45852_firmware",
             },
         },
     },
@@ -1547,7 +1664,7 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
+                DEV_SIG_ENT_MAP_CLASS: "ForceOnLight",
                 DEV_SIG_ENT_MAP_ID: "light.jasco_products_45856_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1565,6 +1682,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -1574,6 +1696,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.jasco_products_45856_firmware",
             },
         },
     },
@@ -1602,7 +1729,7 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off", "level"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
+                DEV_SIG_ENT_MAP_CLASS: "ForceOnLight",
                 DEV_SIG_ENT_MAP_ID: "light.jasco_products_45857_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1620,6 +1747,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -1629,6 +1761,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.jasco_products_45857_firmware",
             },
         },
     },
@@ -1683,6 +1820,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_610_mp_1_3_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.keen_home_inc_sv02_610_mp_1_3_firmware",
+            },
         },
     },
     {
@@ -1735,6 +1877,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_612_mp_1_2_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.keen_home_inc_sv02_612_mp_1_2_firmware",
             },
         },
     },
@@ -1789,6 +1936,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_612_mp_1_3_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.keen_home_inc_sv02_612_mp_1_3_firmware",
+            },
         },
     },
     {
@@ -1831,8 +1983,13 @@ DEVICES = [
             },
             ("fan", "00:11:22:33:44:55:66:77-1-514"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["fan"],
-                DEV_SIG_ENT_MAP_CLASS: "ZhaFan",
+                DEV_SIG_ENT_MAP_CLASS: "KofFan",
                 DEV_SIG_ENT_MAP_ID: "fan.king_of_fans_inc_hbuniversalcfremote_fan",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.king_of_fans_inc_hbuniversalcfremote_firmware",
             },
         },
     },
@@ -1872,6 +2029,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lds_zbt_cctswitch_d0001_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lds_zbt_cctswitch_d0001_firmware",
+            },
         },
     },
     {
@@ -1909,6 +2071,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.ledvance_a19_rgbw_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ledvance_a19_rgbw_firmware",
             },
         },
     },
@@ -1948,6 +2115,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.ledvance_flex_rgbw_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ledvance_flex_rgbw_firmware",
+            },
         },
     },
     {
@@ -1986,6 +2158,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.ledvance_plug_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ledvance_plug_firmware",
+            },
         },
     },
     {
@@ -2023,6 +2200,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.ledvance_rt_rgbw_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.ledvance_rt_rgbw_firmware",
             },
         },
     },
@@ -2081,17 +2263,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_rms_voltage",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_power_factor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
@@ -2112,6 +2289,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_summation_delivered",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_plug_maus01_firmware",
             },
         },
     },
@@ -2156,7 +2338,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -2166,12 +2348,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -2182,6 +2364,21 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_power_factor",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_summation_received",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
@@ -2197,6 +2394,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.lumi_lumi_relay_c2acn01_light_2",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_relay_c2acn01_firmware",
             },
         },
     },
@@ -2250,6 +2452,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b186acn01_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_remote_b186acn01_firmware",
+            },
         },
     },
     {
@@ -2301,6 +2508,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b286acn01_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_remote_b286acn01_firmware",
             },
         },
     },
@@ -2768,6 +2980,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_86sw1_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_sensor_86sw1_firmware",
+            },
         },
     },
     {
@@ -2819,6 +3036,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_cube_aqgl01_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_sensor_cube_aqgl01_firmware",
             },
         },
     },
@@ -2882,6 +3104,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Humidity",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_ht_humidity",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_sensor_ht_firmware",
+            },
         },
     },
     {
@@ -2924,6 +3151,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Opening",
                 DEV_SIG_ENT_MAP_ID: "binary_sensor.lumi_lumi_sensor_magnet_opening",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_sensor_magnet_firmware",
             },
         },
     },
@@ -3013,11 +3245,6 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Illuminance",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_motion_aq2_illuminance",
             },
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["power"],
-                DEV_SIG_ENT_MAP_CLASS: "Battery",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_motion_aq2_battery",
-            },
             ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["device_temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
@@ -3034,6 +3261,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_motion_aq2_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_sensor_motion_aq2_firmware",
             },
         },
     },
@@ -3085,6 +3317,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_smoke_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_sensor_smoke_firmware",
+            },
         },
     },
     {
@@ -3122,6 +3359,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_switch_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_sensor_switch_firmware",
             },
         },
     },
@@ -3210,7 +3452,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.lumi_lumi_sensor_wleak_aq1_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.lumi_lumi_sensor_wleak_aq1_ias_zone",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["device_temperature"],
@@ -3238,6 +3480,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_wleak_aq1_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_sensor_wleak_aq1_firmware",
             },
         },
     },
@@ -3308,6 +3555,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["device_temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_vibration_aq1_device_temperature",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.lumi_lumi_vibration_aq1_firmware",
             },
         },
     },
@@ -3383,7 +3635,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.nyce_3010_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.nyce_3010_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -3426,7 +3678,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.nyce_3014_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.nyce_3014_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -3527,6 +3779,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_a19_rgbw_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-3-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.osram_lightify_a19_rgbw_firmware",
+            },
         },
     },
     {
@@ -3564,6 +3821,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_dimming_switch_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.osram_lightify_dimming_switch_firmware",
             },
         },
     },
@@ -3603,6 +3865,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_flex_rgbw_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-3-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.osram_lightify_flex_rgbw_firmware",
+            },
         },
     },
     {
@@ -3634,9 +3901,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-3-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: (
-                    "sensor.osram_lightify_rt_tunable_white_active_power"
-                ),
+                DEV_SIG_ENT_MAP_ID: ("sensor.osram_lightify_rt_tunable_white_power"),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -3648,16 +3913,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: (
-                    "sensor.osram_lightify_rt_tunable_white_rms_current"
-                ),
+                DEV_SIG_ENT_MAP_ID: ("sensor.osram_lightify_rt_tunable_white_current"),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: (
-                    "sensor.osram_lightify_rt_tunable_white_rms_voltage"
-                ),
+                DEV_SIG_ENT_MAP_ID: ("sensor.osram_lightify_rt_tunable_white_voltage"),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -3682,6 +3943,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-3-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.osram_lightify_rt_tunable_white_firmware",
             },
         },
     },
@@ -3720,6 +3986,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-3-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.osram_plug_01_firmware",
             },
         },
     },
@@ -3815,6 +4086,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_switch_4x_lightify_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.osram_switch_4x_lightify_firmware",
+            },
         },
     },
     {
@@ -3865,6 +4141,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.philips_rwl020_battery",
             },
+            ("update", "00:11:22:33:44:55:66:77-2-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.philips_rwl020_firmware",
+            },
         },
     },
     {
@@ -3886,7 +4167,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_button_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_button_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -3913,6 +4194,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.samjin_button_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.samjin_button_firmware",
+            },
         },
     },
     {
@@ -3934,7 +4220,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_multi_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_multi_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -3966,6 +4252,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.samjin_multi_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.samjin_multi_firmware",
+            },
         },
     },
     {
@@ -3987,7 +4278,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_water_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_water_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4013,6 +4304,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.samjin_water_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.samjin_water_firmware",
             },
         },
     },
@@ -4040,7 +4336,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4050,12 +4346,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4082,6 +4378,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Switch",
                 DEV_SIG_ENT_MAP_ID: "switch.securifi_ltd_unk_model_switch",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.securifi_ltd_unk_model_firmware",
+            },
         },
     },
     {
@@ -4103,7 +4404,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.sercomm_corp_sz_dws04n_sf_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.sercomm_corp_sz_dws04n_sf_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4129,6 +4430,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_dws04n_sf_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.sercomm_corp_sz_dws04n_sf_firmware",
             },
         },
     },
@@ -4168,7 +4474,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4178,12 +4484,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4205,6 +4511,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -4214,6 +4525,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.sercomm_corp_sz_esw01_firmware",
             },
         },
     },
@@ -4236,7 +4552,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.sercomm_corp_sz_pir04_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.sercomm_corp_sz_pir04_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4268,6 +4584,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_pir04_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.sercomm_corp_sz_pir04_firmware",
+            },
         },
     },
     {
@@ -4294,7 +4615,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4306,12 +4627,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4337,6 +4658,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Switch",
                 DEV_SIG_ENT_MAP_ID: "switch.sinope_technologies_rm3250zb_switch",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.sinope_technologies_rm3250zb_firmware",
             },
         },
     },
@@ -4379,7 +4705,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4391,12 +4717,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4427,6 +4753,21 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
                 DEV_SIG_ENT_MAP_CLASS: "SinopeHVACAction",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_hvac_action",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-pi_heating_demand"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "PiHeatingDemand",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_pi_heating_demand",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-setpoint_change_source"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "SetpointChangeSource",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_setpoint_change_source",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.sinope_technologies_th1123zb_firmware",
             },
         },
     },
@@ -4469,7 +4810,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "PolledElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4481,12 +4822,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4517,6 +4858,21 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
                 DEV_SIG_ENT_MAP_CLASS: "SinopeHVACAction",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_hvac_action",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-pi_heating_demand"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "PiHeatingDemand",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_pi_heating_demand",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-setpoint_change_source"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "SetpointChangeSource",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_setpoint_change_source",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.sinope_technologies_th1124zb_firmware",
             },
         },
     },
@@ -4549,7 +4905,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_active_power",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4559,12 +4915,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_rms_current",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4590,6 +4946,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Switch",
                 DEV_SIG_ENT_MAP_ID: "switch.smartthings_outletv4_switch",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.smartthings_outletv4_firmware",
             },
         },
     },
@@ -4634,6 +4995,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.smartthings_tagv4_lqi",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.smartthings_tagv4_firmware",
+            },
         },
     },
     {
@@ -4671,6 +5037,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Switch",
                 DEV_SIG_ENT_MAP_ID: "switch.third_reality_inc_3rss007z_switch",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.third_reality_inc_3rss007z_firmware",
             },
         },
     },
@@ -4715,6 +5086,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Switch",
                 DEV_SIG_ENT_MAP_ID: "switch.third_reality_inc_3rss008z_switch",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.third_reality_inc_3rss008z_firmware",
+            },
         },
     },
     {
@@ -4736,7 +5112,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.visonic_mct_340_e_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.visonic_mct_340_e_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4762,6 +5138,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.visonic_mct_340_e_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.visonic_mct_340_e_firmware",
             },
         },
     },
@@ -4810,6 +5191,21 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
                 DEV_SIG_ENT_MAP_CLASS: "ThermostatHVACAction",
                 DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_hvac_action",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-pi_heating_demand"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "PiHeatingDemand",
+                DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_pi_heating_demand",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-setpoint_change_source"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "SetpointChangeSource",
+                DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_setpoint_change_source",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.zen_within_zen_01_firmware",
             },
         },
     },
@@ -4880,6 +5276,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.tyzb01_ns1ndbww_ts0004_light_4",
             },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.tyzb01_ns1ndbww_ts0004_firmware",
+            },
         },
     },
     {
@@ -4901,7 +5302,7 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.netvox_z308e3ed_iaszone",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.netvox_z308e3ed_ias_zone",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4961,6 +5362,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -4970,6 +5376,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.sengled_e11_g13_firmware",
             },
         },
     },
@@ -5009,6 +5420,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -5018,6 +5434,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.sengled_e12_n14_firmware",
             },
         },
     },
@@ -5057,6 +5478,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -5066,6 +5492,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_lqi",
+            },
+            ("update", "00:11:22:33:44:55:66:77-1-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.sengled_z01_a19nae26_firmware",
             },
         },
     },
@@ -5531,7 +5962,12 @@ DEVICES = [
             ("select", "00:11:22:33:44:55:66:77-2-1030-motion_sensitivity"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["philips_occupancy"],
                 DEV_SIG_ENT_MAP_CLASS: "HueV1MotionSensitivity",
-                DEV_SIG_ENT_MAP_ID: "select.philips_sml001_hue_motion_sensitivity",
+                DEV_SIG_ENT_MAP_ID: "select.philips_sml001_motion_sensitivity",
+            },
+            ("update", "00:11:22:33:44:55:66:77-2-25-firmware_update"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["ota"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAFirmwareUpdateEntity",
+                DEV_SIG_ENT_MAP_ID: "update.philips_sml001_firmware",
             },
         },
     },

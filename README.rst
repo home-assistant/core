@@ -21,8 +21,8 @@ If you run into issues while using Home Assistant or during development
 of a component, check the `Home Assistant help section <https://home-assistant.io/help/>`__ of our website for further help and information.
 
 .. |Chat Status| image:: https://img.shields.io/discord/330944238910963714.svg
-   :target: https://discord.gg/c5DvZ4e
-.. |screenshot-states| image:: https://raw.githubusercontent.com/home-assistant/core/master/docs/screenshots.png
+   :target: https://www.home-assistant.io/join-chat/
+.. |screenshot-states| image:: https://raw.githubusercontent.com/home-assistant/core/dev/.github/assets/screenshot-states.png
    :target: https://demo.home-assistant.io
-.. |screenshot-integrations| image:: https://raw.githubusercontent.com/home-assistant/core/dev/docs/screenshot-integrations.png
+.. |screenshot-integrations| image:: https://raw.githubusercontent.com/home-assistant/core/dev/.github/assets/screenshot-integrations.png
    :target: https://home-assistant.io/integrations/

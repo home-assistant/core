@@ -37,8 +37,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    async_get as async_get_dev_reg,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
 from homeassistant.helpers.typing import StateType
@@ -289,7 +291,9 @@ async def async_setup_entry(
             )
 
         # migrate to new device ids
-        device_entry = device_registry.async_get_device({(TIBBER_DOMAIN, old_id)})
+        device_entry = device_registry.async_get_device(
+            identifiers={(TIBBER_DOMAIN, old_id)}
+        )
         if device_entry and entry.entry_id in device_entry.config_entries:
             device_registry.async_update_device(
                 device_entry.id, new_identifiers={(TIBBER_DOMAIN, home.home_id)}
@@ -494,7 +498,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
         self.async_write_ha_state()
 
 
-class TibberRtDataCoordinator(DataUpdateCoordinator):
+class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Handle Tibber realtime data."""
 
     def __init__(
@@ -558,7 +562,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):
         return self.data.get("data", {}).get("liveMeasurement")
 
 
-class TibberDataCoordinator(DataUpdateCoordinator[None]):
+class TibberDataCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Handle Tibber data and insert statistics."""
 
     config_entry: ConfigEntry
@@ -606,7 +610,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                 )
 
                 last_stats = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics, self.hass, 1, statistic_id, True, {}
+                    get_last_statistics, self.hass, 1, statistic_id, True, set()
                 )
 
                 if not last_stats:

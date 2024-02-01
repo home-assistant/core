@@ -75,12 +75,12 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            bindkey = user_input["bindkey"]
+            bindkey: str = user_input["bindkey"]
 
             if len(bindkey) != 32:
                 errors["bindkey"] = "expected_32_characters"
             else:
-                self._discovered_device.bindkey = bytes.fromhex(bindkey)
+                self._discovered_device.set_bindkey(bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -173,23 +173,15 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         # Otherwise there wasn't actually encryption so abort
         return self.async_abort(reason="reauth_successful")
 
-    def _async_get_or_create_entry(self, bindkey=None):
-        data = {}
+    def _async_get_or_create_entry(self, bindkey: str | None = None) -> FlowResult:
+        data: dict[str, Any] = {}
         if bindkey:
             data["bindkey"] = bindkey
 
         if entry_id := self.context.get("entry_id"):
             entry = self.hass.config_entries.async_get_entry(entry_id)
             assert entry is not None
-
-            self.hass.config_entries.async_update_entry(entry, data=data)
-
-            # Reload the config entry to notify of updated config
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id)
-            )
-
-            return self.async_abort(reason="reauth_successful")
+            return self.async_update_reload_and_abort(entry, data=data)
 
         return self.async_create_entry(
             title=self.context["title_placeholders"]["name"],

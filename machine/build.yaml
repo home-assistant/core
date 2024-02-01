@@ -1,5 +1,4 @@
-image: homeassistant/{machine}-homeassistant
-shadow_repository: ghcr.io/home-assistant
+image: ghcr.io/home-assistant/{machine}-homeassistant
 build_from:
   aarch64: "ghcr.io/home-assistant/aarch64-homeassistant:"
   armv7: "ghcr.io/home-assistant/armv7-homeassistant:"
@@ -9,6 +8,9 @@ build_from:
 codenotary:
   signer: notary@home-assistant.io
   base_image: notary@home-assistant.io
+cosign:
+  base_identity: https://github.com/home-assistant/core/.*
+  identity: https://github.com/home-assistant/core/.*
 labels:
   io.hass.type: core
   org.opencontainers.image.source: https://github.com/home-assistant/core

@@ -48,5 +48,15 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "marginal_operating_emissions_rate": {
+        "name": "Marginal operating emissions rate"
+      },
+      "relative_marginal_emissions_intensity": {
+        "name": "Relative marginal emissions intensity"
+      }
+    }
   }
 }

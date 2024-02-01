@@ -1,129 +1,70 @@
 chart:
-  name: Display a chart
-  description: Display a chart on a LaMetric device.
   fields:
     device_id: &device_id
-      name: Device
-      description: The LaMetric device to display the chart on.
       required: true
       selector:
         device:
           integration: lametric
     data:
-      name: Data
-      description: The list of data points in the chart
       required: true
       example: "[1,2,3,4,5,4,3,2,1]"
       selector:
         object:
     sound: &sound
-      name: Sound
-      description: The notification sound to play.
       required: false
       selector:
         select:
           options:
-            - label: "Alarm 1"
-              value: "alarm1"
-            - label: "Alarm 2"
-              value: "alarm2"
-            - label: "Alarm 3"
-              value: "alarm3"
-            - label: "Alarm 4"
-              value: "alarm4"
-            - label: "Alarm 5"
-              value: "alarm5"
-            - label: "Alarm 6"
-              value: "alarm6"
-            - label: "Alarm 7"
-              value: "alarm7"
-            - label: "Alarm 8"
-              value: "alarm8"
-            - label: "Alarm 9"
-              value: "alarm9"
-            - label: "Alarm 10"
-              value: "alarm10"
-            - label: "Alarm 11"
-              value: "alarm11"
-            - label: "Alarm 12"
-              value: "alarm12"
-            - label: "Alarm 13"
-              value: "alarm13"
-            - label: "Bicycle"
-              value: "bicycle"
-            - label: "Car"
-              value: "car"
-            - label: "Cash"
-              value: "cash"
-            - label: "Cat"
-              value: "cat"
-            - label: "Dog 1"
-              value: "dog"
-            - label: "Dog 2"
-              value: "dog2"
-            - label: "Energy"
-              value: "energy"
-            - label: "Knock knock"
-              value: "knock-knock"
-            - label: "Letter email"
-              value: "letter_email"
-            - label: "Lose 1"
-              value: "lose1"
-            - label: "Lose 2"
-              value: "lose2"
-            - label: "Negative 1"
-              value: "negative1"
-            - label: "Negative 2"
-              value: "negative2"
-            - label: "Negative 3"
-              value: "negative3"
-            - label: "Negative 4"
-              value: "negative4"
-            - label: "Negative 5"
-              value: "negative5"
-            - label: "Notification 1"
-              value: "notification"
-            - label: "Notification 2"
-              value: "notification2"
-            - label: "Notification 3"
-              value: "notification3"
-            - label: "Notification 4"
-              value: "notification4"
-            - label: "Open door"
-              value: "open_door"
-            - label: "Positive 1"
-              value: "positive1"
-            - label: "Positive 2"
-              value: "positive2"
-            - label: "Positive 3"
-              value: "positive3"
-            - label: "Positive 4"
-              value: "positive4"
-            - label: "Positive 5"
-              value: "positive5"
-            - label: "Positive 6"
-              value: "positive6"
-            - label: "Statistic"
-              value: "statistic"
-            - label: "Thunder"
-              value: "thunder"
-            - label: "Water 1"
-              value: "water1"
-            - label: "Water 2"
-              value: "water2"
-            - label: "Win 1"
-              value: "win"
-            - label: "Win 2"
-              value: "win2"
-            - label: "Wind"
-              value: "wind"
-            - label: "Wind short"
-              value: "wind_short"
+            - "alarm1"
+            - "alarm2"
+            - "alarm3"
+            - "alarm4"
+            - "alarm5"
+            - "alarm6"
+            - "alarm7"
+            - "alarm8"
+            - "alarm9"
+            - "alarm10"
+            - "alarm11"
+            - "alarm12"
+            - "alarm13"
+            - "bicycle"
+            - "car"
+            - "cash"
+            - "cat"
+            - "dog"
+            - "dog2"
+            - "energy"
+            - "knock-knock"
+            - "letter_email"
+            - "lose1"
+            - "lose2"
+            - "negative1"
+            - "negative2"
+            - "negative3"
+            - "negative4"
+            - "negative5"
+            - "notification"
+            - "notification2"
+            - "notification3"
+            - "notification4"
+            - "open_door"
+            - "positive1"
+            - "positive2"
+            - "positive3"
+            - "positive4"
+            - "positive5"
+            - "positive6"
+            - "statistic"
+            - "thunder"
+            - "water1"
+            - "water2"
+            - "win"
+            - "win2"
+            - "wind"
+            - "wind_short"
+          translation_key: sound
     cycles: &cycles
-      name: Cycles
-      description: >-
-        The number of times to display the message. When set to 0, the message
-        will be displayed until dismissed.
       required: false
       default: 1
       selector:
@@ -132,56 +73,35 @@ chart:
           max: 10
           mode: slider
     icon_type: &icon_type
-      name: Icon type
-      description: >-
-        The type of icon to display, indicating the nature of the notification.
       required: false
       default: "none"
       selector:
         select:
           mode: dropdown
           options:
-            - label: "None"
-              value: "none"
-            - label: "Info"
-              value: "info"
-            - label: "Alert"
-              value: "alert"
+            - "none"
+            - "info"
+            - "alert"
+          translation_key: icon_type
     priority: &priority
-      name: Priority
-      description: >-
-        The priority of the notification. When the device is running in
-        screensaver or kiosk mode, only critical priority notifications
-        will be accepted.
       required: false
       default: "info"
       selector:
         select:
           mode: dropdown
           options:
-            - label: "Info"
-              value: "info"
-            - label: "Warning"
-              value: "warning"
-            - label: "Critical"
-              value: "critical"
-
+            - "info"
+            - "warning"
+            - "critical"
+          translation_key: priority
 message:
-  name: Display a message
-  description: Display a message with an optional icon on a LaMetric device.
   fields:
     device_id: *device_id
     message:
-      name: Message
-      description: The message to display.
       required: true
       selector:
         text:
     icon:
-      name: Icon
-      description: >-
-        The ID number of the icon or animation to display. List of all icons
-        and their IDs can be found at: https://developer.lametric.com/icons
       required: false
       selector:
         text:

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/gtfs",
   "iot_class": "local_polling",
   "loggers": ["pygtfs"],
-  "requirements": ["pygtfs==0.1.7"]
+  "requirements": ["pygtfs==0.1.9"]
 }

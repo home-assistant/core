@@ -4,52 +4,36 @@
 # flooding the ISY with requests. To control multiple devices with a service call
 # the recommendation is to add a scene in the ISY and control that scene.
 send_raw_node_command:
-  name: Send raw node command
-  description: Send a "raw" ISY REST Device Command to a Node using its Home Assistant Entity ID.
   target:
     entity:
       integration: isy994
   fields:
     command:
-      name: Command
-      description: The ISY REST Command to be sent to the device
       required: true
       example: "DON"
       selector:
         text:
     value:
-      name: Value
-      description: The integer value to be sent with the command.
       selector:
         number:
           min: 0
           max: 255
     parameters:
-      name: Parameters
-      description: A dict of parameters to be sent in the query string (e.g. for controlling colored bulbs).
       example: { GV2: 0, GV3: 0, GV4: 255 }
       default: {}
       selector:
         object:
     unit_of_measurement:
-      name: Unit of measurement
-      description: The ISY Unit of Measurement (UOM) to send with the command, if required.
       selector:
         number:
           min: 0
           max: 120
 send_node_command:
-  name: Send node command
-  description: >-
-    Send a command to an ISY Device using its Home Assistant entity ID. Valid commands are: beep, brighten, dim, disable,
-    enable, fade_down, fade_stop, fade_up, fast_off, fast_on, and query.
   target:
     entity:
       integration: isy994
   fields:
     command:
-      name: Command
-      description: The command to be sent to the device.
       required: true
       selector:
         select:
@@ -66,34 +50,22 @@ send_node_command:
             - "fast_on"
             - "query"
 get_zwave_parameter:
-  name: Get Z-Wave Parameter
-  description: >-
-    Request a Z-Wave Device parameter via the ISY. The parameter value will be returned as a entity extra state attribute with the name "ZW_#"
-    where "#" is the parameter number.
   target:
     entity:
       integration: isy994
   fields:
     parameter:
-      name: Parameter
-      description: The parameter number to retrieve from the device.
       example: 8
       selector:
         number:
           min: 1
           max: 255
 set_zwave_parameter:
-  name: Set Z-Wave Parameter
-  description: >-
-    Update a Z-Wave Device parameter via the ISY. The parameter value will also be returned as a entity extra state attribute with the name "ZW_#"
-    where "#" is the parameter number.
   target:
     entity:
       integration: isy994
   fields:
     parameter:
-      name: Parameter
-      description: The parameter number to set on the end device.
       required: true
       example: 8
       selector:
@@ -101,15 +73,11 @@ set_zwave_parameter:
           min: 1
           max: 255
     value:
-      name: Value
-      description: The value to set for the parameter. May be an integer or byte string (e.g. "0xFFFF").
       required: true
       example: 33491663
       selector:
         text:
     size:
-      name: Size
-      description: The size of the parameter, either 1, 2, or 4 bytes.
       required: true
       example: 4
       selector:
@@ -119,17 +87,12 @@ set_zwave_parameter:
             - "2"
             - "4"
 set_zwave_lock_user_code:
-  name: Set Z-Wave Lock User Code
-  description: >-
-    Set a Z-Wave Lock User Code via the ISY.
   target:
     entity:
       integration: isy994
       domain: lock
   fields:
     user_num:
-      name: User Number
-      description: The user slot number on the lock
       required: true
       example: 8
       selector:
@@ -137,8 +100,6 @@ set_zwave_lock_user_code:
           min: 1
           max: 255
     code:
-      name: Code
-      description: The code to set for the user.
       required: true
       example: 33491663
       selector:
@@ -147,17 +108,12 @@ set_zwave_lock_user_code:
           max: 99999999
           mode: box
 delete_zwave_lock_user_code:
-  name: Delete Z-Wave Lock User Code
-  description: >-
-    Delete a Z-Wave Lock User Code via the ISY.
   target:
     entity:
       integration: isy994
       domain: lock
   fields:
     user_num:
-      name: User Number
-      description: The user slot number on the lock
       required: true
       example: 8
       selector:
@@ -165,43 +121,26 @@ delete_zwave_lock_user_code:
           min: 1
           max: 255
 rename_node:
-  name: Rename Node on ISY
-  description: >-
-    Rename a node or group (scene) on the ISY. Note: this will not automatically change the Home Assistant Entity Name or Entity ID to match.
-    The entity name and ID will only be updated after calling `isy994.reload` or restarting Home Assistant, and ONLY IF you have not already customized the
-    name within Home Assistant.
   target:
     entity:
       integration: isy994
   fields:
     name:
-      name: New Name
-      description: The new name to use within the ISY.
       required: true
       example: "Front Door Light"
       selector:
         text:
 send_program_command:
-  name: Send program command
-  description: >-
-    Send a command to control an ISY program or folder. Valid commands are run, run_then, run_else, stop, enable, disable,
-    enable_run_at_startup, and disable_run_at_startup.
   fields:
     address:
-      name: Address
-      description: The address of the program to control (use either address or name).
       example: "04B1"
       selector:
         text:
     name:
-      name: Name
-      description: The name of the program to control (use either address or name).
       example: "My Program"
       selector:
         text:
     command:
-      name: Command
-      description: The ISY Program Command to be sent.
       required: true
       selector:
         select:
@@ -215,8 +154,6 @@ send_program_command:
             - "run_then"
             - "stop"
     isy:
-      name: ISY
-      description: If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same program name or address on multiple ISYs, omitting this will run the command on them all.
       example: "ISY"
       selector:
         text:

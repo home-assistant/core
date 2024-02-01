@@ -51,7 +51,10 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
@@ -73,7 +76,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         )
 
     @property
-    def hvac_action(self) -> str:
+    def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation."""
         return OVERKIZ_TO_HVAC_ACTION[
             cast(str, self.executor.select_state(OverkizState.CORE_OPEN_CLOSED_VALVE))

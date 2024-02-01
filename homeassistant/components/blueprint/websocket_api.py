@@ -1,9 +1,9 @@
 """Websocket API for blueprint."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any, cast
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -14,11 +14,11 @@ from homeassistant.util import yaml
 
 from . import importer, models
 from .const import DOMAIN
-from .errors import FileAlreadyExists
+from .errors import FailedToLoad, FileAlreadyExists
 
 
 @callback
-def async_setup(hass: HomeAssistant):
+def async_setup(hass: HomeAssistant) -> None:
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, ws_list_blueprints)
     websocket_api.async_register_command(hass, ws_import_blueprint)
@@ -72,14 +72,31 @@ async def ws_import_blueprint(
     msg: dict[str, Any],
 ) -> None:
     """Import a blueprint."""
-    async with async_timeout.timeout(10):
+    async with asyncio.timeout(10):
         imported_blueprint = await importer.fetch_blueprint_from_url(hass, msg["url"])
 
     if imported_blueprint is None:
-        connection.send_error(
+        connection.send_error(  # type: ignore[unreachable]
             msg["id"], websocket_api.ERR_NOT_SUPPORTED, "This url is not supported"
         )
         return
+
+    # Check it exists and if so, which automations are using it
+    domain = imported_blueprint.blueprint.metadata["domain"]
+    domain_blueprints: models.DomainBlueprints | None = hass.data.get(DOMAIN, {}).get(
+        domain
+    )
+    if domain_blueprints is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Unsupported domain"
+        )
+        return
+
+    suggested_path = f"{imported_blueprint.suggested_filename}.yaml"
+    try:
+        exists = bool(await domain_blueprints.async_get_blueprint(suggested_path))
+    except FailedToLoad:
+        exists = False
 
     connection.send_result(
         msg["id"],
@@ -90,6 +107,7 @@ async def ws_import_blueprint(
                 "metadata": imported_blueprint.blueprint.metadata,
             },
             "validation_errors": imported_blueprint.blueprint.validate(),
+            "exists": exists,
         },
     )
 
@@ -101,6 +119,7 @@ async def ws_import_blueprint(
         vol.Required("path"): cv.path,
         vol.Required("yaml"): cv.string,
         vol.Optional("source_url"): cv.url,
+        vol.Optional("allow_override"): bool,
     }
 )
 @websocket_api.async_response
@@ -130,8 +149,13 @@ async def ws_save_blueprint(
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
         return
 
+    if not path.endswith(".yaml"):
+        path = f"{path}.yaml"
+
     try:
-        await domain_blueprints[domain].async_add_blueprint(blueprint, path)
+        overrides_existing = await domain_blueprints[domain].async_add_blueprint(
+            blueprint, path, allow_override=msg.get("allow_override", False)
+        )
     except FileAlreadyExists:
         connection.send_error(msg["id"], "already_exists", "File already exists")
         return
@@ -141,6 +165,9 @@ async def ws_save_blueprint(
 
     connection.send_result(
         msg["id"],
+        {
+            "overrides_existing": overrides_existing,
+        },
     )
 
 

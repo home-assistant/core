@@ -1,4 +1,5 @@
 """Test the Xiaomi Miio config flow."""
+from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
 from construct.core import ChecksumError
@@ -9,7 +10,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import TEST_MAC
@@ -171,7 +172,7 @@ async def test_config_flow_gateway_success(hass: HomeAssistant) -> None:
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
         CONF_MODEL: TEST_MODEL,
-        const.CONF_MAC: TEST_MAC,
+        CONF_MAC: TEST_MAC,
     }
 
 
@@ -204,7 +205,7 @@ async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
         CONF_MODEL: TEST_MODEL,
-        const.CONF_MAC: TEST_MAC,
+        CONF_MAC: TEST_MAC,
     }
 
 
@@ -250,7 +251,7 @@ async def test_config_flow_gateway_cloud_multiple_success(hass: HomeAssistant) -
         CONF_HOST: TEST_HOST2,
         CONF_TOKEN: TEST_TOKEN,
         CONF_MODEL: TEST_MODEL,
-        const.CONF_MAC: TEST_MAC2,
+        CONF_MAC: TEST_MAC2,
     }
 
 
@@ -426,8 +427,8 @@ async def test_zeroconf_gateway_success(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name=TEST_ZEROCONF_NAME,
             port=None,
@@ -459,7 +460,7 @@ async def test_zeroconf_gateway_success(hass: HomeAssistant) -> None:
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
         CONF_MODEL: TEST_MODEL,
-        const.CONF_MAC: TEST_MAC,
+        CONF_MAC: TEST_MAC,
     }
 
 
@@ -469,8 +470,8 @@ async def test_zeroconf_unknown_device(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name="not-a-xiaomi-miio-device",
             port=None,
@@ -489,8 +490,8 @@ async def test_zeroconf_no_data(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=None,
-            addresses=[],
+            ip_address=None,
+            ip_addresses=[],
             hostname="mock_hostname",
             name=None,
             port=None,
@@ -509,8 +510,8 @@ async def test_zeroconf_missing_data(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name=TEST_ZEROCONF_NAME,
             port=None,
@@ -684,14 +685,14 @@ async def test_config_flow_step_device_manual_model_succes(hass: HomeAssistant) 
     assert result["type"] == "create_entry"
     assert result["title"] == overwrite_model
     assert result["data"] == {
-        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        const.CONF_FLOW_TYPE: CONF_DEVICE,
         const.CONF_CLOUD_USERNAME: None,
         const.CONF_CLOUD_PASSWORD: None,
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
         CONF_MODEL: overwrite_model,
-        const.CONF_MAC: None,
+        CONF_MAC: None,
     }
 
 
@@ -728,14 +729,14 @@ async def config_flow_device_success(hass, model_to_test):
     assert result["type"] == "create_entry"
     assert result["title"] == model_to_test
     assert result["data"] == {
-        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        const.CONF_FLOW_TYPE: CONF_DEVICE,
         const.CONF_CLOUD_USERNAME: None,
         const.CONF_CLOUD_PASSWORD: None,
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
         CONF_MODEL: model_to_test,
-        const.CONF_MAC: TEST_MAC,
+        CONF_MAC: TEST_MAC,
     }
 
 
@@ -774,14 +775,14 @@ async def config_flow_generic_roborock(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == dummy_model
     assert result["data"] == {
-        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        const.CONF_FLOW_TYPE: CONF_DEVICE,
         const.CONF_CLOUD_USERNAME: None,
         const.CONF_CLOUD_PASSWORD: None,
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
         CONF_MODEL: dummy_model,
-        const.CONF_MAC: TEST_MAC,
+        CONF_MAC: TEST_MAC,
     }
 
 
@@ -791,8 +792,8 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name=zeroconf_name_to_test,
             port=None,
@@ -828,14 +829,14 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
     assert result["type"] == "create_entry"
     assert result["title"] == model_to_test
     assert result["data"] == {
-        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        const.CONF_FLOW_TYPE: CONF_DEVICE,
         const.CONF_CLOUD_USERNAME: None,
         const.CONF_CLOUD_PASSWORD: None,
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
         CONF_MODEL: model_to_test,
-        const.CONF_MAC: TEST_MAC,
+        CONF_MAC: TEST_MAC,
     }
 
 
@@ -878,7 +879,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_HOST: TEST_HOST,
             CONF_TOKEN: TEST_TOKEN,
             CONF_MODEL: TEST_MODEL,
-            const.CONF_MAC: TEST_MAC,
+            CONF_MAC: TEST_MAC,
         },
         title=TEST_NAME,
     )
@@ -918,7 +919,7 @@ async def test_options_flow_incomplete(hass: HomeAssistant) -> None:
             CONF_HOST: TEST_HOST,
             CONF_TOKEN: TEST_TOKEN,
             CONF_MODEL: TEST_MODEL,
-            const.CONF_MAC: TEST_MAC,
+            CONF_MAC: TEST_MAC,
         },
         title=TEST_NAME,
     )
@@ -956,7 +957,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             CONF_HOST: TEST_HOST,
             CONF_TOKEN: TEST_TOKEN,
             CONF_MODEL: TEST_MODEL,
-            const.CONF_MAC: TEST_MAC,
+            CONF_MAC: TEST_MAC,
         },
         title=TEST_NAME,
     )
@@ -1004,5 +1005,5 @@ async def test_reauth(hass: HomeAssistant) -> None:
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
         CONF_MODEL: TEST_MODEL,
-        const.CONF_MAC: TEST_MAC,
+        CONF_MAC: TEST_MAC,
     }

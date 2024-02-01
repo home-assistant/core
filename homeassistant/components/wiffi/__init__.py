@@ -10,11 +10,12 @@ from homeassistant.const import CONF_PORT, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import utcnow
 
@@ -143,7 +144,8 @@ class WiffiEntity(Entity):
     def __init__(self, device, metric, options):
         """Initialize the base elements of a wiffi entity."""
         self._id = generate_unique_id(device, metric)
-        self._device_info = DeviceInfo(
+        self._attr_unique_id = self._id
+        self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)},
             identifiers={(DOMAIN, device.mac_address)},
             manufacturer="stall.biz",
@@ -152,7 +154,7 @@ class WiffiEntity(Entity):
             sw_version=device.sw_version,
             configuration_url=device.configuration_url,
         )
-        self._name = metric.description
+        self._attr_name = metric.description
         self._expiration_date = None
         self._value = None
         self._timeout = options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
@@ -171,26 +173,6 @@ class WiffiEntity(Entity):
                 self.hass, CHECK_ENTITIES_SIGNAL, self._check_expiration_date
             )
         )
-
-    @property
-    def device_info(self):
-        """Return wiffi device info which is shared between all entities of a device."""
-        return self._device_info
-
-    @property
-    def unique_id(self):
-        """Return unique id for entity."""
-        return self._id
-
-    @property
-    def name(self):
-        """Return entity name."""
-        return self._name
-
-    @property
-    def available(self):
-        """Return true if value is valid."""
-        return self._value is not None
 
     def reset_expiration_date(self):
         """Reset value expiration date.
@@ -220,8 +202,10 @@ class WiffiEntity(Entity):
 
     def _is_measurement_entity(self):
         """Measurement entities have a value in present time."""
-        return not self._name.endswith("_gestern") and not self._is_metered_entity()
+        return (
+            not self._attr_name.endswith("_gestern") and not self._is_metered_entity()
+        )
 
     def _is_metered_entity(self):
         """Metered entities have a value that keeps increasing until reset."""
-        return self._name.endswith("_pro_h") or self._name.endswith("_heute")
+        return self._attr_name.endswith("_pro_h") or self._attr_name.endswith("_heute")

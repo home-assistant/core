@@ -37,8 +37,8 @@ O3 = "ozone"
 CO = "carbon_monoxide"
 NO2 = "nitrogen_dioxide"
 SO2 = "sulphur_dioxide"
-PM25 = "particulate_matter_2_5_mm"
-PM10 = "particulate_matter_10_mm"
+PM25 = "pm2_5"
+PM10 = "pm10"
 MEP_AQI = "china_mep_air_quality_index"
 MEP_HEALTH_CONCERN = "china_mep_health_concern"
 MEP_PRIMARY_POLLUTANT = "china_mep_primary_pollutant"
@@ -51,15 +51,18 @@ WEED_POLLEN = "weed_pollen_index"
 TREE_POLLEN = "tree_pollen_index"
 FEELS_LIKE = "feels_like"
 DEW_POINT = "dew_point"
-PRESSURE_SURFACE_LEVEL = "pressure_surface_level"
+PRESSURE_SURFACE_LEVEL = "pressure"
 SNOW_ACCUMULATION = "snow_accumulation"
 ICE_ACCUMULATION = "ice_accumulation"
-GHI = "global_horizontal_irradiance"
+GHI = "irradiance"
 CLOUD_BASE = "cloud_base"
 CLOUD_COVER = "cloud_cover"
 CLOUD_CEILING = "cloud_ceiling"
 WIND_GUST = "wind_gust"
 PRECIPITATION_TYPE = "precipitation_type"
+UV_INDEX = "uv_index"
+UV_HEALTH_CONCERN = "uv_radiation_health_concern"
+
 
 V3_FIELDS = [
     O3,
@@ -91,6 +94,8 @@ V4_FIELDS = [
     CLOUD_CEILING,
     WIND_GUST,
     PRECIPITATION_TYPE,
+    UV_INDEX,
+    UV_HEALTH_CONCERN,
 ]
 
 
@@ -116,6 +121,7 @@ async def _setup(
         data = _get_config_schema(hass, SOURCE_USER)(config)
         data[CONF_NAME] = DEFAULT_NAME
         config_entry = MockConfigEntry(
+            title=DEFAULT_NAME,
             domain=DOMAIN,
             data=data,
             options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
@@ -171,6 +177,8 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, CLOUD_CEILING, "0.74")
     check_sensor_state(hass, WIND_GUST, "12.64")
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
+    check_sensor_state(hass, UV_INDEX, "3")
+    check_sensor_state(hass, UV_HEALTH_CONCERN, "moderate")
 
 
 async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
@@ -202,6 +210,8 @@ async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
     check_sensor_state(hass, CLOUD_CEILING, "0.46")
     check_sensor_state(hass, WIND_GUST, "28.27")
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
+    check_sensor_state(hass, UV_INDEX, "3")
+    check_sensor_state(hass, UV_HEALTH_CONCERN, "moderate")
 
 
 async def test_entity_description() -> None:

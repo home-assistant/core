@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast
 
 from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
@@ -17,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -42,11 +41,87 @@ LYRIC_SETPOINT_STATUS_NAMES = {
 }
 
 
-@dataclass
-class LyricSensorEntityDescription(SensorEntityDescription):
+@dataclass(frozen=True)
+class LyricSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[LyricDevice], StateType | datetime]
+    suitable_fn: Callable[[LyricDevice], bool]
+
+
+@dataclass(frozen=True)
+class LyricSensorEntityDescription(
+    SensorEntityDescription, LyricSensorEntityDescriptionMixin
+):
     """Class describing Honeywell Lyric sensor entities."""
 
-    value: Callable[[LyricDevice], StateType | datetime] = round
+
+DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
+    LyricSensorEntityDescription(
+        key="indoor_temperature",
+        translation_key="indoor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.indoorTemperature,
+        suitable_fn=lambda device: device.indoorTemperature,
+    ),
+    LyricSensorEntityDescription(
+        key="indoor_humidity",
+        translation_key="indoor_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda device: device.indoorHumidity,
+        suitable_fn=lambda device: device.indoorHumidity,
+    ),
+    LyricSensorEntityDescription(
+        key="outdoor_temperature",
+        translation_key="outdoor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.outdoorTemperature,
+        suitable_fn=lambda device: device.outdoorTemperature,
+    ),
+    LyricSensorEntityDescription(
+        key="outdoor_humidity",
+        translation_key="outdoor_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda device: device.displayedOutdoorHumidity,
+        suitable_fn=lambda device: device.displayedOutdoorHumidity,
+    ),
+    LyricSensorEntityDescription(
+        key="next_period_time",
+        translation_key="next_period_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda device: get_datetime_from_future_time(
+            device.changeableValues.nextPeriodTime
+        ),
+        suitable_fn=lambda device: (
+            device.changeableValues and device.changeableValues.nextPeriodTime
+        ),
+    ),
+    LyricSensorEntityDescription(
+        key="setpoint_status",
+        translation_key="setpoint_status",
+        icon="mdi:thermostat",
+        value_fn=lambda device: get_setpoint_status(
+            device.changeableValues.thermostatSetpointStatus,
+            device.changeableValues.nextPeriodTime,
+        ),
+        suitable_fn=lambda device: (
+            device.changeableValues and device.changeableValues.thermostatSetpointStatus
+        ),
+    ),
+]
+
+
+def get_setpoint_status(status: str, time: str) -> str | None:
+    """Get status of the setpoint."""
+    if status == PRESET_HOLD_UNTIL:
+        return f"Held until {time}"
+    return LYRIC_SETPOINT_STATUS_NAMES.get(status)
 
 
 def get_datetime_from_future_time(time_str: str) -> datetime:
@@ -68,119 +143,25 @@ async def async_setup_entry(
 
     entities = []
 
-    def get_setpoint_status(status: str, time: str) -> str | None:
-        if status == PRESET_HOLD_UNTIL:
-            return f"Held until {time}"
-        return LYRIC_SETPOINT_STATUS_NAMES.get(status, None)
-
     for location in coordinator.data.locations:
         for device in location.devices:
-            if device.indoorTemperature:
-                entities.append(
-                    LyricSensor(
-                        coordinator,
-                        LyricSensorEntityDescription(
-                            key=f"{device.macID}_indoor_temperature",
-                            name="Indoor Temperature",
-                            device_class=SensorDeviceClass.TEMPERATURE,
-                            state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement=hass.config.units.temperature_unit,
-                            value=lambda device: device.indoorTemperature,
-                        ),
-                        location,
-                        device,
-                    )
-                )
-            if device.indoorHumidity:
-                entities.append(
-                    LyricSensor(
-                        coordinator,
-                        LyricSensorEntityDescription(
-                            key=f"{device.macID}_indoor_humidity",
-                            name="Indoor Humidity",
-                            device_class=SensorDeviceClass.HUMIDITY,
-                            state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement=PERCENTAGE,
-                            value=lambda device: device.indoorHumidity,
-                        ),
-                        location,
-                        device,
-                    )
-                )
-            if device.outdoorTemperature:
-                entities.append(
-                    LyricSensor(
-                        coordinator,
-                        LyricSensorEntityDescription(
-                            key=f"{device.macID}_outdoor_temperature",
-                            name="Outdoor Temperature",
-                            device_class=SensorDeviceClass.TEMPERATURE,
-                            state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement=hass.config.units.temperature_unit,
-                            value=lambda device: device.outdoorTemperature,
-                        ),
-                        location,
-                        device,
-                    )
-                )
-            if device.displayedOutdoorHumidity:
-                entities.append(
-                    LyricSensor(
-                        coordinator,
-                        LyricSensorEntityDescription(
-                            key=f"{device.macID}_outdoor_humidity",
-                            name="Outdoor Humidity",
-                            device_class=SensorDeviceClass.HUMIDITY,
-                            state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement=PERCENTAGE,
-                            value=lambda device: device.displayedOutdoorHumidity,
-                        ),
-                        location,
-                        device,
-                    )
-                )
-            if device.changeableValues:
-                if device.changeableValues.nextPeriodTime:
+            for device_sensor in DEVICE_SENSORS:
+                if device_sensor.suitable_fn(device):
                     entities.append(
                         LyricSensor(
                             coordinator,
-                            LyricSensorEntityDescription(
-                                key=f"{device.macID}_next_period_time",
-                                name="Next Period Time",
-                                device_class=SensorDeviceClass.TIMESTAMP,
-                                value=lambda device: get_datetime_from_future_time(
-                                    device.changeableValues.nextPeriodTime
-                                ),
-                            ),
-                            location,
-                            device,
-                        )
-                    )
-                if device.changeableValues.thermostatSetpointStatus:
-                    entities.append(
-                        LyricSensor(
-                            coordinator,
-                            LyricSensorEntityDescription(
-                                key=f"{device.macID}_setpoint_status",
-                                name="Setpoint Status",
-                                icon="mdi:thermostat",
-                                value=lambda device: get_setpoint_status(
-                                    device.changeableValues.thermostatSetpointStatus,
-                                    device.changeableValues.nextPeriodTime,
-                                ),
-                            ),
+                            device_sensor,
                             location,
                             device,
                         )
                     )
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class LyricSensor(LyricDeviceEntity, SensorEntity):
     """Define a Honeywell Lyric sensor."""
 
-    coordinator: DataUpdateCoordinator[Lyric]
     entity_description: LyricSensorEntityDescription
 
     def __init__(
@@ -195,15 +176,16 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
             coordinator,
             location,
             device,
-            description.key,
+            f"{device.macID}_{description.key}",
         )
         self.entity_description = description
+        if description.device_class == SensorDeviceClass.TEMPERATURE:
+            if device.units == "Fahrenheit":
+                self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+            else:
+                self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state."""
-        device: LyricDevice = self.device
-        try:
-            return cast(StateType, self.entity_description.value(device))
-        except TypeError:
-            return None
+        return self.entity_description.value_fn(self.device)

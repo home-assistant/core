@@ -17,8 +17,8 @@ from homeassistant.components.camera import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
@@ -35,7 +35,7 @@ from .models import SynologyDSMData
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMCameraEntityDescription(
     CameraEntityDescription, SynologyDSMEntityDescription
 ):
@@ -128,7 +128,6 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
                 _LOGGER.debug("Update stream URL for camera %s", self.camera_data.name)
                 self.stream.update_source(url)
 
-        assert self.platform
         assert self.platform.config_entry
         self.async_on_remove(
             async_dispatcher_connect(
@@ -154,7 +153,9 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
         if not self.available:
             return None
         try:
-            return await self._api.surveillance_station.get_camera_image(self.entity_description.key, self.snapshot_quality)  # type: ignore[no-any-return]
+            return await self._api.surveillance_station.get_camera_image(  # type: ignore[no-any-return]
+                self.entity_description.key, self.snapshot_quality
+            )
         except (
             SynologyDSMAPIErrorException,
             SynologyDSMRequestException,

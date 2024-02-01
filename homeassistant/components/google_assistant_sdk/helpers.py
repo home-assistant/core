@@ -1,6 +1,7 @@
 """Helper classes for Google Assistant SDK integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -48,9 +49,16 @@ DEFAULT_LANGUAGE_CODES = {
 }
 
 
+@dataclass
+class CommandResponse:
+    """Response from a single command to Google Assistant Service."""
+
+    text: str
+
+
 async def async_send_text_commands(
     hass: HomeAssistant, commands: list[str], media_players: list[str] | None = None
-) -> None:
+) -> list[CommandResponse]:
     """Send text commands to Google Assistant Service."""
     # There can only be 1 entry (config_flow has single_instance_allowed)
     entry: ConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -68,6 +76,7 @@ async def async_send_text_commands(
     with TextAssistant(
         credentials, language_code, audio_out=bool(media_players)
     ) as assistant:
+        command_response_list = []
         for command in commands:
             resp = assistant.assist(command)
             text_response = resp[0]
@@ -91,9 +100,11 @@ async def async_send_text_commands(
                     },
                     blocking=True,
                 )
+            command_response_list.append(CommandResponse(text_response))
+        return command_response_list
 
 
-def default_language_code(hass: HomeAssistant):
+def default_language_code(hass: HomeAssistant) -> str:
     """Get default language code based on Home Assistant config."""
     language_code = f"{hass.config.language}-{hass.config.country}"
     if language_code in SUPPORTED_LANGUAGE_CODES:

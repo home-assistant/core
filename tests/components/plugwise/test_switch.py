@@ -173,7 +173,7 @@ async def test_unique_id_migration_plug_relay(
         DOMAIN,
         "675416a629f343c495449970e2ca37b5-relay",
         config_entry=mock_config_entry,
-        suggested_object_id="router",
+        suggested_object_id="ziggo_modem",
         disabled_by=None,
     )
 
@@ -181,12 +181,12 @@ async def test_unique_id_migration_plug_relay(
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.playstation_smart_plug") is not None
-    assert hass.states.get("switch.router") is not None
+    assert hass.states.get("switch.ziggo_modem") is not None
 
     entity_entry = registry.async_get("switch.playstation_smart_plug")
     assert entity_entry
     assert entity_entry.unique_id == "21f2b542c49845e6bb416884c55778d6-relay"
 
-    entity_entry = registry.async_get("switch.router")
+    entity_entry = registry.async_get("switch.ziggo_modem")
     assert entity_entry
     assert entity_entry.unique_id == "675416a629f343c495449970e2ca37b5-relay"

@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfTemperature,
@@ -57,6 +58,15 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+    ),
+    (
+        DeviceClass.PM25,
+        Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ): SensorEntityDescription(
+        key=f"{DeviceClass.PM25}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
@@ -110,7 +120,9 @@ async def async_setup_entry(
             GoveeBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class GoveeBluetoothSensorEntity(

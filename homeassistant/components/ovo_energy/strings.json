@@ -24,5 +24,33 @@
         "title": "Reauthentication"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "last_electricity_reading": {
+        "name": "Last electricity reading"
+      },
+      "last_electricity_cost": {
+        "name": "Last electricity cost"
+      },
+      "last_electricity_start_time": {
+        "name": "Last electricity start time"
+      },
+      "last_electricity_end_time": {
+        "name": "Last electricity end time"
+      },
+      "last_gas_reading": {
+        "name": "Last gas reading"
+      },
+      "last_gas_cost": {
+        "name": "Last gas cost"
+      },
+      "last_gas_start_time": {
+        "name": "Last gas start time"
+      },
+      "last_gas_end_time": {
+        "name": "Last gas end time"
+      }
+    }
   }
 }

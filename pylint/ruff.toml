@@ -1,0 +1,7 @@
+# This extend our general Ruff rules specifically for tests
+extend = "../pyproject.toml"
+
+[isort]
+known-third-party = [
+    "pylint",
+]

@@ -14,7 +14,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockPlatform, mock_platform
+from tests.common import MockPlatform, async_get_persistent_notifications, mock_platform
 
 
 class MockNotifyPlatform(MockPlatform):
@@ -139,7 +139,8 @@ async def test_warn_template(
     )
     # We should only log it once
     assert caplog.text.count("Passing templates to notify service is deprecated") == 1
-    assert hass.states.get("persistent_notification.notification") is not None
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
 
 
 async def test_invalid_platform(

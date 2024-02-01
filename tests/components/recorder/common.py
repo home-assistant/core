@@ -11,8 +11,9 @@ import importlib
 import sys
 import time
 from typing import Any, Literal, cast
-from unittest.mock import patch, sentinel
+from unittest.mock import MagicMock, patch, sentinel
 
+from freezegun import freeze_time
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import Session
 
@@ -282,9 +283,7 @@ def record_states(hass):
     four = three + timedelta(seconds=15 * 5)
 
     states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
-    ):
+    with freeze_time(one) as freezer:
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
@@ -293,25 +292,18 @@ def record_states(hass):
         states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=one + timedelta(microseconds=1),
-    ):
+        freezer.move_to(one + timedelta(microseconds=1))
         states[mp].append(
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+        freezer.move_to(two)
         states[sns1].append(set_state(sns1, "15", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "15", attributes=sns4_attr))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
-    ):
+        freezer.move_to(three)
         states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))
@@ -420,17 +412,11 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
         core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(
-        core, "EventData", old_db_schema.EventData
-    ), patch.object(
+    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
         core, "States", old_db_schema.States
-    ), patch.object(
-        core, "Events", old_db_schema.Events
-    ), patch.object(
+    ), patch.object(core, "Events", old_db_schema.Events), patch.object(
         core, "StateAttributes", old_db_schema.StateAttributes
-    ), patch.object(
-        core, "EntityIDMigrationTask", core.RecorderTask
-    ), patch(
+    ), patch.object(core, "EntityIDMigrationTask", core.RecorderTask), patch(
         CREATE_ENGINE_TARGET,
         new=partial(
             create_engine_test_for_schema_version_postfix,
@@ -438,3 +424,16 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
         ),
     ):
         yield
+
+
+async def async_attach_db_engine(hass: HomeAssistant) -> None:
+    """Attach a database engine to the recorder."""
+    instance = recorder.get_instance(hass)
+
+    def _mock_setup_recorder_connection():
+        with instance.engine.connect() as connection:
+            instance._setup_recorder_connection(
+                connection._dbapi_connection, MagicMock()
+            )
+
+    await instance.async_add_executor_job(_mock_setup_recorder_connection)

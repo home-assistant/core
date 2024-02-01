@@ -8,6 +8,8 @@ from .devolo_device import DevoloDeviceEntity
 class DevoloMultiLevelSwitchDeviceEntity(DevoloDeviceEntity):
     """Representation of a multi level switch device within devolo Home Control. Something like a dimmer or a thermostat."""
 
+    _attr_name = None
+
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:

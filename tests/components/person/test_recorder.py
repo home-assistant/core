@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
@@ -18,6 +18,8 @@ async def test_exclude_attributes(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     enable_custom_integrations: None,
+    hass_admin_user: MockUser,
+    storage_setup,
 ) -> None:
     """Test update attributes to be excluded."""
     now = dt_util.utcnow()

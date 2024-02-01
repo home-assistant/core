@@ -1,19 +1,8 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "Cannot connect to Eight Sleep cloud: {error}"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "Cannot connect to Eight Sleep cloud: {error}"
+  "issues": {
+    "integration_removed": {
+      "title": "The Eight Sleep integration has been removed",
+      "description": "The Eight Sleep integration has been removed from Home Assistant.\n\nThe Eight Sleep API has changed and now requires a unique secret which is inaccessible outside of their apps.\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Eight Sleep integration entries]({entries})."
     }
   }
 }

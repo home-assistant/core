@@ -72,9 +72,7 @@ def create_thermostat_service_min_max(accessory):
     char.maxValue = 1
 
 
-async def test_climate_respect_supported_op_modes_1(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_climate_respect_supported_op_modes_1(hass: HomeAssistant) -> None:
     """Test that climate respects minValue/maxValue hints."""
     helper = await setup_test_component(hass, create_thermostat_service_min_max)
     state = await helper.poll_and_get_state()
@@ -89,16 +87,14 @@ def create_thermostat_service_valid_vals(accessory):
     char.valid_values = [0, 1, 2]
 
 
-async def test_climate_respect_supported_op_modes_2(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_climate_respect_supported_op_modes_2(hass: HomeAssistant) -> None:
     """Test that climate respects validValue hints."""
     helper = await setup_test_component(hass, create_thermostat_service_valid_vals)
     state = await helper.poll_and_get_state()
     assert state.attributes["hvac_modes"] == ["off", "heat", "cool"]
 
 
-async def test_climate_change_thermostat_state(hass: HomeAssistant, utcnow) -> None:
+async def test_climate_change_thermostat_state(hass: HomeAssistant) -> None:
     """Test that we can turn a HomeKit thermostat on and off again."""
     helper = await setup_test_component(hass, create_thermostat_service)
 
@@ -181,9 +177,7 @@ async def test_climate_change_thermostat_state(hass: HomeAssistant, utcnow) -> N
     )
 
 
-async def test_climate_check_min_max_values_per_mode(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_climate_check_min_max_values_per_mode(hass: HomeAssistant) -> None:
     """Test that we we get the appropriate min/max values for each mode."""
     helper = await setup_test_component(hass, create_thermostat_service)
 
@@ -218,9 +212,7 @@ async def test_climate_check_min_max_values_per_mode(
     assert climate_state.attributes["max_temp"] == 40
 
 
-async def test_climate_change_thermostat_temperature(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_climate_change_thermostat_temperature(hass: HomeAssistant) -> None:
     """Test that we can turn a HomeKit thermostat on and off again."""
     helper = await setup_test_component(hass, create_thermostat_service)
 
@@ -251,9 +243,7 @@ async def test_climate_change_thermostat_temperature(
     )
 
 
-async def test_climate_change_thermostat_temperature_range(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_climate_change_thermostat_temperature_range(hass: HomeAssistant) -> None:
     """Test that we can set separate heat and cool setpoints in heat_cool mode."""
     helper = await setup_test_component(hass, create_thermostat_service)
 
@@ -287,7 +277,7 @@ async def test_climate_change_thermostat_temperature_range(
 
 
 async def test_climate_change_thermostat_temperature_range_iphone(
-    hass: HomeAssistant, utcnow
+    hass: HomeAssistant,
 ) -> None:
     """Test that we can set all three set points at once (iPhone heat_cool mode support)."""
     helper = await setup_test_component(hass, create_thermostat_service)
@@ -322,7 +312,7 @@ async def test_climate_change_thermostat_temperature_range_iphone(
 
 
 async def test_climate_cannot_set_thermostat_temp_range_in_wrong_mode(
-    hass: HomeAssistant, utcnow
+    hass: HomeAssistant,
 ) -> None:
     """Test that we cannot set range values when not in heat_cool mode."""
     helper = await setup_test_component(hass, create_thermostat_service)
@@ -381,7 +371,7 @@ def create_thermostat_single_set_point_auto(accessory):
 
 
 async def test_climate_check_min_max_values_per_mode_sspa_device(
-    hass: HomeAssistant, utcnow
+    hass: HomeAssistant,
 ) -> None:
     """Test appropriate min/max values for each mode on sspa devices."""
     helper = await setup_test_component(hass, create_thermostat_single_set_point_auto)
@@ -417,9 +407,7 @@ async def test_climate_check_min_max_values_per_mode_sspa_device(
     assert climate_state.attributes["max_temp"] == 35
 
 
-async def test_climate_set_thermostat_temp_on_sspa_device(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_climate_set_thermostat_temp_on_sspa_device(hass: HomeAssistant) -> None:
     """Test setting temperature in different modes on device with single set point in auto."""
     helper = await setup_test_component(hass, create_thermostat_single_set_point_auto)
 
@@ -473,7 +461,7 @@ async def test_climate_set_thermostat_temp_on_sspa_device(
     )
 
 
-async def test_climate_set_mode_via_temp(hass: HomeAssistant, utcnow) -> None:
+async def test_climate_set_mode_via_temp(hass: HomeAssistant) -> None:
     """Test setting temperature and mode at same tims."""
     helper = await setup_test_component(hass, create_thermostat_single_set_point_auto)
 
@@ -514,7 +502,7 @@ async def test_climate_set_mode_via_temp(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_climate_change_thermostat_humidity(hass: HomeAssistant, utcnow) -> None:
+async def test_climate_change_thermostat_humidity(hass: HomeAssistant) -> None:
     """Test that we can turn a HomeKit thermostat on and off again."""
     helper = await setup_test_component(hass, create_thermostat_service)
 
@@ -545,7 +533,7 @@ async def test_climate_change_thermostat_humidity(hass: HomeAssistant, utcnow) -
     )
 
 
-async def test_climate_read_thermostat_state(hass: HomeAssistant, utcnow) -> None:
+async def test_climate_read_thermostat_state(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit thermostat accessory."""
     helper = await setup_test_component(hass, create_thermostat_service)
 
@@ -602,7 +590,7 @@ async def test_climate_read_thermostat_state(hass: HomeAssistant, utcnow) -> Non
     assert state.state == HVACMode.HEAT_COOL
 
 
-async def test_hvac_mode_vs_hvac_action(hass: HomeAssistant, utcnow) -> None:
+async def test_hvac_mode_vs_hvac_action(hass: HomeAssistant) -> None:
     """Check that we haven't conflated hvac_mode and hvac_action."""
     helper = await setup_test_component(hass, create_thermostat_service)
 
@@ -639,9 +627,7 @@ async def test_hvac_mode_vs_hvac_action(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["hvac_action"] == "heating"
 
 
-async def test_hvac_mode_vs_hvac_action_current_mode_wrong(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_hvac_mode_vs_hvac_action_current_mode_wrong(hass: HomeAssistant) -> None:
     """Check that we cope with buggy HEATING_COOLING_CURRENT."""
     helper = await setup_test_component(hass, create_thermostat_service)
 
@@ -691,6 +677,9 @@ def create_heater_cooler_service(accessory):
     char = service.add_char(CharacteristicsTypes.SWING_MODE)
     char.value = 0
 
+    char = service.add_char(CharacteristicsTypes.ROTATION_SPEED)
+    char.value = 100
+
 
 # Test heater-cooler devices
 def create_heater_cooler_service_min_max(accessory):
@@ -702,9 +691,7 @@ def create_heater_cooler_service_min_max(accessory):
     char.maxValue = 2
 
 
-async def test_heater_cooler_respect_supported_op_modes_1(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_heater_cooler_respect_supported_op_modes_1(hass: HomeAssistant) -> None:
     """Test that climate respects minValue/maxValue hints."""
     helper = await setup_test_component(hass, create_heater_cooler_service_min_max)
     state = await helper.poll_and_get_state()
@@ -719,18 +706,14 @@ def create_theater_cooler_service_valid_vals(accessory):
     char.valid_values = [1, 2]
 
 
-async def test_heater_cooler_respect_supported_op_modes_2(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_heater_cooler_respect_supported_op_modes_2(hass: HomeAssistant) -> None:
     """Test that climate respects validValue hints."""
     helper = await setup_test_component(hass, create_theater_cooler_service_valid_vals)
     state = await helper.poll_and_get_state()
     assert state.attributes["hvac_modes"] == ["heat", "cool", "off"]
 
 
-async def test_heater_cooler_change_thermostat_state(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_heater_cooler_change_thermostat_state(hass: HomeAssistant) -> None:
     """Test that we can change the operational mode."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
 
@@ -787,7 +770,7 @@ async def test_heater_cooler_change_thermostat_state(
     )
 
 
-async def test_can_turn_on_after_off(hass: HomeAssistant, utcnow) -> None:
+async def test_can_turn_on_after_off(hass: HomeAssistant) -> None:
     """Test that we always force device from inactive to active when setting mode.
 
     This is a regression test for #81863.
@@ -822,9 +805,7 @@ async def test_can_turn_on_after_off(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_heater_cooler_change_thermostat_temperature(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_heater_cooler_change_thermostat_temperature(hass: HomeAssistant) -> None:
     """Test that we can change the target temperature."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
 
@@ -867,7 +848,104 @@ async def test_heater_cooler_change_thermostat_temperature(
     )
 
 
-async def test_heater_cooler_read_thermostat_state(hass: HomeAssistant, utcnow) -> None:
+async def test_heater_cooler_change_fan_speed(hass: HomeAssistant) -> None:
+    """Test that we can change the target fan speed."""
+    helper = await setup_test_component(hass, create_heater_cooler_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {"entity_id": "climate.testdevice", "fan_mode": "low"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 33,
+        },
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {"entity_id": "climate.testdevice", "fan_mode": "medium"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 66,
+        },
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {"entity_id": "climate.testdevice", "fan_mode": "high"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 100,
+        },
+    )
+
+
+async def test_heater_cooler_read_fan_speed(hass: HomeAssistant) -> None:
+    """Test that we can read the state of a HomeKit thermostat accessory."""
+    helper = await setup_test_component(hass, create_heater_cooler_service)
+
+    # Simulate that fan speed is off
+    await helper.async_update(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 0,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["fan_mode"] == "off"
+
+    # Simulate that fan speed is low
+    await helper.async_update(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 33,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["fan_mode"] == "low"
+
+    # Simulate that fan speed is medium
+    await helper.async_update(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 66,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["fan_mode"] == "medium"
+
+    # Simulate that fan speed is high
+    await helper.async_update(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 100,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["fan_mode"] == "high"
+
+
+async def test_heater_cooler_read_thermostat_state(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit thermostat accessory."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
 
@@ -921,9 +999,7 @@ async def test_heater_cooler_read_thermostat_state(hass: HomeAssistant, utcnow) 
     assert state.state == HVACMode.HEAT_COOL
 
 
-async def test_heater_cooler_hvac_mode_vs_hvac_action(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_heater_cooler_hvac_mode_vs_hvac_action(hass: HomeAssistant) -> None:
     """Check that we haven't conflated hvac_mode and hvac_action."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
 
@@ -962,7 +1038,7 @@ async def test_heater_cooler_hvac_mode_vs_hvac_action(
     assert state.attributes["hvac_action"] == "heating"
 
 
-async def test_heater_cooler_change_swing_mode(hass: HomeAssistant, utcnow) -> None:
+async def test_heater_cooler_change_swing_mode(hass: HomeAssistant) -> None:
     """Test that we can change the swing mode."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
 
@@ -993,7 +1069,7 @@ async def test_heater_cooler_change_swing_mode(hass: HomeAssistant, utcnow) -> N
     )
 
 
-async def test_heater_cooler_turn_off(hass: HomeAssistant, utcnow) -> None:
+async def test_heater_cooler_turn_off(hass: HomeAssistant) -> None:
     """Test that both hvac_action and hvac_mode return "off" when turned off."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
 
@@ -1012,9 +1088,10 @@ async def test_heater_cooler_turn_off(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["hvac_action"] == "off"
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a we can migrate a switch unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     climate_entry = entity_registry.async_get_or_create(
         "climate",

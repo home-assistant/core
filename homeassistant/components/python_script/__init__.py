@@ -20,14 +20,19 @@ from RestrictedPython.Guards import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import raise_if_invalid_filename
 import homeassistant.util.dt as dt_util
-from homeassistant.util.yaml.loader import load_yaml
+from homeassistant.util.yaml.loader import load_yaml_dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,9 +112,9 @@ def discover_scripts(hass):
         _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
         return False
 
-    def python_script_service_handler(call: ServiceCall) -> None:
+    def python_script_service_handler(call: ServiceCall) -> ServiceResponse:
         """Handle python script service calls."""
-        execute_script(hass, call.service, call.data)
+        return execute_script(hass, call.service, call.data, call.return_response)
 
     existing = hass.services.services.get(DOMAIN, {}).keys()
     for existing_service in existing:
@@ -120,13 +125,18 @@ def discover_scripts(hass):
     # Load user-provided service descriptions from python_scripts/services.yaml
     services_yaml = os.path.join(path, "services.yaml")
     if os.path.exists(services_yaml):
-        services_dict = load_yaml(services_yaml)
+        services_dict = load_yaml_dict(services_yaml)
     else:
         services_dict = {}
 
     for fil in glob.iglob(os.path.join(path, "*.py")):
         name = os.path.splitext(os.path.basename(fil))[0]
-        hass.services.register(DOMAIN, name, python_script_service_handler)
+        hass.services.register(
+            DOMAIN,
+            name,
+            python_script_service_handler,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
 
         service_desc = {
             CONF_NAME: services_dict.get(name, {}).get("name", name),
@@ -137,17 +147,17 @@ def discover_scripts(hass):
 
 
 @bind_hass
-def execute_script(hass, name, data=None):
+def execute_script(hass, name, data=None, return_response=False):
     """Execute a script."""
     filename = f"{name}.py"
     raise_if_invalid_filename(filename)
     with open(hass.config.path(FOLDER, filename), encoding="utf8") as fil:
         source = fil.read()
-    execute(hass, filename, source, data)
+    return execute(hass, filename, source, data, return_response=return_response)
 
 
 @bind_hass
-def execute(hass, filename, source, data=None):
+def execute(hass, filename, source, data=None, return_response=False):
     """Execute Python source."""
 
     compiled = compile_restricted_exec(source, filename=filename)
@@ -216,16 +226,39 @@ def execute(hass, filename, source, data=None):
         "hass": hass,
         "data": data or {},
         "logger": logger,
+        "output": {},
     }
 
     try:
         _LOGGER.info("Executing %s: %s", filename, data)
         # pylint: disable-next=exec-used
-        exec(compiled.code, restricted_globals)
+        exec(compiled.code, restricted_globals)  # noqa: S102
+        _LOGGER.debug(
+            "Output of python_script: `%s`:\n%s",
+            filename,
+            restricted_globals["output"],
+        )
+        # Ensure that we're always returning a dictionary
+        if not isinstance(restricted_globals["output"], dict):
+            output_type = type(restricted_globals["output"])
+            restricted_globals["output"] = {}
+            raise ScriptError(
+                f"Expected `output` to be a dictionary, was {output_type}"
+            )
     except ScriptError as err:
+        if return_response:
+            raise ServiceValidationError(f"Error executing script: {err}") from err
         logger.error("Error executing script: %s", err)
+        return None
     except Exception as err:  # pylint: disable=broad-except
+        if return_response:
+            raise HomeAssistantError(
+                f"Error executing script ({type(err).__name__}): {err}"
+            ) from err
         logger.exception("Error executing script: %s", err)
+        return None
+
+    return restricted_globals["output"]
 
 
 class StubPrinter:

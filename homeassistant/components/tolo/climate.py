@@ -47,12 +47,14 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_min_humidity = DEFAULT_MIN_HUMIDITY
     _attr_min_temp = DEFAULT_MIN_TEMP
-    _attr_name = "Sauna Climate"
+    _attr_name = None
     _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_HUMIDITY
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS

@@ -21,6 +21,15 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+COMMAND_TO_ATTRIBUTE = {
+    "wakeup": ("power", "turn_on"),
+    "suspend": ("power", "turn_off"),
+    "turn_on": ("power", "turn_on"),
+    "turn_off": ("power", "turn_off"),
+    "volume_up": ("audio", "volume_up"),
+    "volume_down": ("audio", "volume_down"),
+    "home_hold": ("remote_control", "home"),
+}
 
 
 async def async_setup_entry(
@@ -61,10 +70,16 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
 
         for _ in range(num_repeats):
             for single_command in command:
-                attr_value = getattr(self.atv.remote_control, single_command, None)
+                attr_value = None
+                if attributes := COMMAND_TO_ATTRIBUTE.get(single_command):
+                    attr_value = self.atv
+                    for attr_name in attributes:
+                        attr_value = getattr(attr_value, attr_name, None)
+                if not attr_value:
+                    attr_value = getattr(self.atv.remote_control, single_command, None)
                 if not attr_value:
                     raise ValueError("Command not found. Exiting sequence")
 
                 _LOGGER.info("Sending command %s", single_command)
-                await attr_value()
+                await attr_value()  # type: ignore[operator]
                 await asyncio.sleep(delay)

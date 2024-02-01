@@ -23,6 +23,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_GIID: "12345",
             CONF_PASSWORD: "SuperS3cr3t!",
         },
+        version=2,
     )
 
 

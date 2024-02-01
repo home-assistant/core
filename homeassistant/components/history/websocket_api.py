@@ -30,14 +30,16 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.json import JSON_DUMP
+from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.typing import EventType
 import homeassistant.util.dt as dt_util
 
 from .const import EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
-from .helpers import entities_may_have_state_changes_after
+from .helpers import entities_may_have_state_changes_after, has_recorder_run_after
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,9 +72,9 @@ def _ws_get_significant_states(
     significant_changes_only: bool,
     minimal_response: bool,
     no_attributes: bool,
-) -> str:
+) -> bytes:
     """Fetch history significant_states and convert them to json in the executor."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.result_message(
             msg_id,
             history.get_significant_states(
@@ -140,7 +142,8 @@ async def ws_get_history_during_period(
     no_attributes = msg["no_attributes"]
 
     if (
-        not include_start_time_state
+        (end_time and not has_recorder_run_after(hass, end_time))
+        or not include_start_time_state
         and entity_ids
         and not entities_may_have_state_changes_after(
             hass, entity_ids, start_time, no_attributes
@@ -198,9 +201,9 @@ def _generate_websocket_response(
     start_time: dt,
     end_time: dt,
     states: MutableMapping[str, list[dict[str, Any]]],
-) -> str:
+) -> bytes:
     """Generate a websocket response."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.event_message(
             msg_id, _generate_stream_message(states, start_time, end_time)
         )
@@ -218,7 +221,7 @@ def _generate_historical_response(
     minimal_response: bool,
     no_attributes: bool,
     send_empty: bool,
-) -> tuple[float, dt | None, str | None]:
+) -> tuple[float, dt | None, bytes | None]:
     """Generate a historical response."""
     states = cast(
         MutableMapping[str, list[dict[str, Any]]],
@@ -299,13 +302,9 @@ def _history_compressed_state(state: State, no_attributes: bool) -> dict[str, An
     comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state.state}
     if not no_attributes or state.domain in history.NEED_ATTRIBUTE_DOMAINS:
         comp_state[COMPRESSED_STATE_ATTRIBUTES] = state.attributes
-    comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
-        state.last_updated
-    )
+    comp_state[COMPRESSED_STATE_LAST_UPDATED] = state.last_updated_timestamp
     if state.last_changed != state.last_updated:
-        comp_state[COMPRESSED_STATE_LAST_CHANGED] = dt_util.utc_to_timestamp(
-            state.last_changed
-        )
+        comp_state[COMPRESSED_STATE_LAST_CHANGED] = state.last_changed_timestamp
     return comp_state
 
 
@@ -347,7 +346,7 @@ async def _async_events_consumer(
 
         if history_states := _events_to_compressed_states(events, no_attributes):
             connection.send_message(
-                JSON_DUMP(
+                json_bytes(
                     messages.event_message(
                         msg_id,
                         {"states": history_states},
@@ -373,14 +372,12 @@ def _async_subscribe_events(
     assert is_callback(target), "target must be a callback"
 
     @callback
-    def _forward_state_events_filtered(event: Event) -> None:
+    def _forward_state_events_filtered(event: EventType[EventStateChangedData]) -> None:
         """Filter state events and forward them."""
-        if (new_state := event.data.get("new_state")) is None or (
-            old_state := event.data.get("old_state")
+        if (new_state := event.data["new_state"]) is None or (
+            old_state := event.data["old_state"]
         ) is None:
             return
-        assert isinstance(new_state, State)
-        assert isinstance(old_state, State)
         if (
             (significant_changes_only or minimal_response)
             and new_state.state == old_state.state

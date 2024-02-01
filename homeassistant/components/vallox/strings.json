@@ -4,6 +4,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Vallox device."
         }
       }
     },
@@ -17,6 +20,102 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "post_heater": {
+        "name": "Post heater"
+      }
+    },
+    "number": {
+      "supply_air_target_home": {
+        "name": "Supply air temperature (Home)"
+      },
+      "supply_air_target_away": {
+        "name": "Supply air temperature (Away)"
+      },
+      "supply_air_target_boost": {
+        "name": "Supply air temperature (Boost)"
+      }
+    },
+    "sensor": {
+      "current_profile": {
+        "name": "Current profile"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "extract_fan_speed": {
+        "name": "Extract fan speed"
+      },
+      "supply_fan_speed": {
+        "name": "Supply fan speed"
+      },
+      "remaining_time_for_filter": {
+        "name": "Remaining time for filter"
+      },
+      "cell_state": {
+        "name": "Cell state"
+      },
+      "extract_air": {
+        "name": "Extract air"
+      },
+      "exhaust_air": {
+        "name": "Exhaust air"
+      },
+      "outdoor_air": {
+        "name": "Outdoor air"
+      },
+      "supply_air": {
+        "name": "Supply air"
+      },
+      "supply_cell_air": {
+        "name": "Supply cell air"
+      },
+      "optional_air": {
+        "name": "Optional air"
+      },
+      "efficiency": {
+        "name": "Efficiency"
+      }
+    },
+    "switch": {
+      "bypass_locked": {
+        "name": "Bypass locked"
+      }
+    }
+  },
+  "services": {
+    "set_profile_fan_speed_home": {
+      "name": "Set profile fan speed home",
+      "description": "Sets the fan speed of the Home profile.",
+      "fields": {
+        "fan_speed": {
+          "name": "Fan speed",
+          "description": "Fan speed."
+        }
+      }
+    },
+    "set_profile_fan_speed_away": {
+      "name": "Set profile fan speed away",
+      "description": "Sets the fan speed of the Away profile.",
+      "fields": {
+        "fan_speed": {
+          "name": "Fan speed",
+          "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
+        }
+      }
+    },
+    "set_profile_fan_speed_boost": {
+      "name": "Set profile fan speed boost",
+      "description": "Sets the fan speed of the Boost profile.",
+      "fields": {
+        "fan_speed": {
+          "name": "Fan speed",
+          "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
+        }
+      }
     }
   }
 }

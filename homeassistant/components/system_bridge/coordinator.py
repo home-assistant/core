@@ -7,27 +7,28 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.battery import Battery
-from systembridgeconnector.models.cpu import Cpu
-from systembridgeconnector.models.disk import Disk
-from systembridgeconnector.models.display import Display
-from systembridgeconnector.models.get_data import GetData
-from systembridgeconnector.models.gpu import Gpu
-from systembridgeconnector.models.media_directories import MediaDirectories
-from systembridgeconnector.models.media_files import File as MediaFile, MediaFiles
-from systembridgeconnector.models.media_get_file import MediaGetFile
-from systembridgeconnector.models.media_get_files import MediaGetFiles
-from systembridgeconnector.models.memory import Memory
-from systembridgeconnector.models.register_data_listener import RegisterDataListener
-from systembridgeconnector.models.system import System
 from systembridgeconnector.websocket_client import WebSocketClient
+from systembridgemodels.battery import Battery
+from systembridgemodels.cpu import Cpu
+from systembridgemodels.disk import Disk
+from systembridgemodels.display import Display
+from systembridgemodels.get_data import GetData
+from systembridgemodels.gpu import Gpu
+from systembridgemodels.media import Media
+from systembridgemodels.media_directories import MediaDirectories
+from systembridgemodels.media_files import File as MediaFile, MediaFiles
+from systembridgemodels.media_get_file import MediaGetFile
+from systembridgemodels.media_get_files import MediaGetFiles
+from systembridgemodels.memory import Memory
+from systembridgemodels.processes import Processes
+from systembridgemodels.register_data_listener import RegisterDataListener
+from systembridgemodels.system import System
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -51,7 +52,9 @@ class SystemBridgeCoordinatorData(BaseModel):
     disk: Disk = None
     display: Display = None
     gpu: Gpu = None
+    media: Media = None
     memory: Memory = None
+    processes: Processes = None
     system: System = None
 
 
@@ -183,7 +186,7 @@ class SystemBridgeDataUpdateCoordinator(
     async def _setup_websocket(self) -> None:
         """Use WebSocket for updates."""
         try:
-            async with async_timeout.timeout(20):
+            async with asyncio.timeout(20):
                 await self.websocket_client.connect(
                     session=async_get_clientsession(self.hass),
                 )

@@ -51,7 +51,7 @@ async def async_setup_platform(
     covers = []
     for cover in discovery_info[CONF_COVERS]:
         hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        covers.append(ModbusCover(hub, cover))
+        covers.append(ModbusCover(hass, hub, cover))
 
     async_add_entities(covers)
 
@@ -63,11 +63,12 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         hub: ModbusHub,
         config: dict[str, Any],
     ) -> None:
         """Initialize the modbus cover."""
-        super().__init__(hub, config)
+        super().__init__(hass, hub, config)
         self._state_closed = config[CONF_STATE_CLOSED]
         self._state_closing = config[CONF_STATE_CLOSING]
         self._state_open = config[CONF_STATE_OPEN]
@@ -120,7 +121,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._write_address, self._state_open, self._write_type
         )
         self._attr_available = result is not None
@@ -128,7 +129,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._write_address, self._state_closed, self._write_type
         )
         self._attr_available = result is not None
@@ -138,23 +139,13 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         """Update the state of the cover."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
-        # do not allow multiple active calls to the same platform
-        if self._call_active:
-            return
-        self._call_active = True
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._address, 1, self._input_type
         )
-        self._call_active = False
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
             return
-        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if self._input_type == CALL_TYPE_COIL:
             self._set_attr_state(bool(result.bits[0] & 1))

@@ -1,26 +1,22 @@
 """The tests for the Google Assistant component."""
 from http import HTTPStatus
 import json
+from unittest.mock import patch
 
 from aiohttp.hdrs import AUTHORIZATION
 import pytest
 
 from homeassistant import const, core, setup
 from homeassistant.components import (
-    alarm_control_panel,
-    climate,
-    cover,
-    fan,
     google_assistant as ga,
     humidifier,
     light,
-    lock,
     media_player,
-    switch,
 )
 from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     EntityCategory,
+    Platform,
     UnitOfTemperature,
 )
 from homeassistant.helpers import entity_registry as er
@@ -65,6 +61,26 @@ def assistant_client(event_loop, hass, hass_client_no_auth):
     return loop.run_until_complete(hass_client_no_auth())
 
 
+@pytest.fixture(autouse=True)
+async def wanted_platforms_only() -> None:
+    """Enable only the wanted demo platforms."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [
+            Platform.ALARM_CONTROL_PANEL,
+            Platform.CLIMATE,
+            Platform.COVER,
+            Platform.FAN,
+            Platform.HUMIDIFIER,
+            Platform.LIGHT,
+            Platform.LOCK,
+            Platform.MEDIA_PLAYER,
+            Platform.SWITCH,
+        ],
+    ):
+        yield
+
+
 @pytest.fixture
 def hass_fixture(event_loop, hass):
     """Set up a Home Assistant instance for these tests."""
@@ -73,55 +89,7 @@ def hass_fixture(event_loop, hass):
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(setup.async_setup_component(hass, core.DOMAIN, {}))
 
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, light.DOMAIN, {"light": [{"platform": "demo"}]}
-        )
-    )
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, switch.DOMAIN, {"switch": [{"platform": "demo"}]}
-        )
-    )
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, cover.DOMAIN, {"cover": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, media_player.DOMAIN, {"media_player": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(hass, fan.DOMAIN, {"fan": [{"platform": "demo"}]})
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(hass, lock.DOMAIN, {"lock": [{"platform": "demo"}]})
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass,
-            alarm_control_panel.DOMAIN,
-            {"alarm_control_panel": [{"platform": "demo"}]},
-        )
-    )
+    loop.run_until_complete(setup.async_setup_component(hass, "demo", {}))
 
     return hass
 
@@ -265,25 +233,28 @@ async def test_query_climate_request(
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": 20.0,
         "thermostatTemperatureAmbient": 25.0,
         "thermostatMode": "heat",
     }
     assert devices["climate.ecobee"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpointHigh": 24,
         "thermostatTemperatureAmbient": 23,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": 21,
-        "currentFanSpeedSetting": "Auto Low",
+        "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": 21,
         "thermostatTemperatureAmbient": 22,
         "thermostatMode": "cool",
         "thermostatHumidityAmbient": 54,
-        "currentFanSpeedSetting": "On High",
+        "currentFanSpeedSetting": "on_high",
     }
 
 
@@ -326,25 +297,28 @@ async def test_query_climate_request_f(
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": -6.7,
         "thermostatTemperatureAmbient": -3.9,
         "thermostatMode": "heat",
     }
     assert devices["climate.ecobee"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpointHigh": -4.4,
         "thermostatTemperatureAmbient": -5,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": -6.1,
-        "currentFanSpeedSetting": "Auto Low",
+        "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": -6.1,
         "thermostatTemperatureAmbient": -5.6,
         "thermostatMode": "cool",
         "thermostatHumidityAmbient": 54,
-        "currentFanSpeedSetting": "On High",
+        "currentFanSpeedSetting": "on_high",
     }
     hass_fixture.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -383,11 +357,13 @@ async def test_query_humidifier_request(
         "on": True,
         "online": True,
         "humiditySetpointPercent": 68,
+        "humidityAmbientPercent": 45,
     }
     assert devices["humidifier.dehumidifier"] == {
         "on": True,
         "online": True,
         "humiditySetpointPercent": 54,
+        "humidityAmbientPercent": 59,
     }
     assert devices["humidifier.hygrostat"] == {
         "on": True,

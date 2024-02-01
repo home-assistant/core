@@ -15,12 +15,15 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from .const import DOMAIN as SWITCH_DOMAIN
 
@@ -93,7 +96,9 @@ class LightSwitch(LightEntity):
         """Register callbacks."""
 
         @callback
-        def async_state_changed_listener(event: Event | None = None) -> None:
+        def async_state_changed_listener(
+            event: EventType[EventStateChangedData] | None = None,
+        ) -> None:
             """Handle child updates."""
             if (
                 state := self.hass.states.get(self._switch_entity_id)

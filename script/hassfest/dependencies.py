@@ -149,6 +149,7 @@ IGNORE_VIOLATIONS = {
     ("http", "network"),
     # This would be a circular dep
     ("zha", "homeassistant_hardware"),
+    ("zha", "homeassistant_sky_connect"),
     ("zha", "homeassistant_yellow"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),

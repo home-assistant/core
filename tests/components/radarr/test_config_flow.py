@@ -2,12 +2,13 @@
 from unittest.mock import patch
 
 from aiopyarr import exceptions
+import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     API_KEY,
@@ -33,7 +34,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
 
 async def test_cannot_connect(
@@ -48,7 +49,7 @@ async def test_cannot_connect(
         data=MOCK_USER_INPUT,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -62,7 +63,7 @@ async def test_invalid_auth(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=MOCK_USER_INPUT
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -79,7 +80,7 @@ async def test_wrong_app(hass: HomeAssistant) -> None:
             data={CONF_URL: URL, CONF_VERIFY_SSL: False},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "wrong_app"
 
@@ -96,7 +97,7 @@ async def test_zero_conf_failure(hass: HomeAssistant) -> None:
             data={CONF_URL: URL, CONF_VERIFY_SSL: False},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "zeroconf_failed"
 
@@ -113,7 +114,7 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
             data=MOCK_USER_INPUT,
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
@@ -130,11 +131,12 @@ async def test_zero_conf(hass: HomeAssistant) -> None:
             data={CONF_URL: URL, CONF_VERIFY_SSL: False},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
 
 
+@pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 async def test_full_reauth_flow_implementation(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -150,14 +152,14 @@ async def test_full_reauth_flow_implementation(
         data=entry.data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch_async_setup_entry() as mock_setup_entry:
@@ -166,7 +168,7 @@ async def test_full_reauth_flow_implementation(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert entry.data == CONF_DATA | {CONF_API_KEY: "test-api-key-reauth"}
@@ -185,7 +187,7 @@ async def test_full_user_flow_implementation(
         context={CONF_SOURCE: SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch_async_setup_entry():
@@ -194,7 +196,7 @@ async def test_full_user_flow_implementation(
             user_input=MOCK_USER_INPUT,
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
     assert result["data"][CONF_URL] == "http://192.168.1.189:7887/test"

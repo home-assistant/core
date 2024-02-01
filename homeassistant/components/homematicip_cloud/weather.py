@@ -72,6 +72,7 @@ class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_attribution = "Powered by Homematic IP"
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the weather sensor."""
@@ -96,11 +97,6 @@ class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self._device.windSpeed
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return "Powered by Homematic IP"
 
     @property
     def condition(self) -> str:
@@ -128,6 +124,7 @@ class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_attribution = "Powered by Homematic IP"
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the home weather."""
@@ -163,11 +160,6 @@ class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
     def wind_bearing(self) -> float:
         """Return the wind bearing."""
         return self._device.weather.windDirection
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return "Powered by Homematic IP"
 
     @property
     def condition(self) -> str | None:

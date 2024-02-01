@@ -1,0 +1,6 @@
+{
+  "domain": "coned",
+  "name": "Consolidated Edison (ConEd)",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

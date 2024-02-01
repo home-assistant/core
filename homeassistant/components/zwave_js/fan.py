@@ -6,6 +6,7 @@ from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
+from zwave_js_server.const.command_class.multilevel_switch import SET_TO_PREVIOUS_VALUE
 from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_FAN_OFF_PROPERTY,
     THERMOSTAT_FAN_STATE_PROPERTY,
@@ -17,7 +18,6 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     FanEntity,
     FanEntityFeature,
-    NotValidPresetModeError,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -88,6 +88,8 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         assert target_value
         self._target_value = target_value
 
+        self._use_optimistic_state: bool = False
+
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
@@ -97,7 +99,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
                 percentage_to_ranged_value(DEFAULT_SPEED_RANGE, percentage)
             )
 
-        await self.info.node.async_set_value(self._target_value, zwave_speed)
+        await self._async_set_value(self._target_value, zwave_speed)
 
     async def async_turn_on(
         self,
@@ -111,16 +113,28 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         elif preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
         else:
-            # Value 255 tells device to return to previous value
-            await self.info.node.async_set_value(self._target_value, 255)
+            if self.info.primary_value.command_class != CommandClass.SWITCH_MULTILEVEL:
+                raise HomeAssistantError(
+                    "`percentage` or `preset_mode` must be provided"
+                )
+            # If this is a Multilevel Switch CC value, we do an optimistic state update
+            # when setting to a previous value to avoid waiting for the value to be
+            # updated from the device which is typically delayed and causes a confusing
+            # UX.
+            await self._async_set_value(self._target_value, SET_TO_PREVIOUS_VALUE)
+            self._use_optimistic_state = True
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.info.node.async_set_value(self._target_value, 0)
+        await self._async_set_value(self._target_value, 0)
 
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on (speed above 0)."""
+        if self._use_optimistic_state:
+            self._use_optimistic_state = False
+            return True
         if self.info.primary_value.value is None:
             # guard missing value
             return None
@@ -157,19 +171,14 @@ class ValueMappingZwaveFan(ZwaveFan):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         zwave_speed = self.percentage_to_zwave_speed(percentage)
-        await self.info.node.async_set_value(self._target_value, zwave_speed)
+        await self._async_set_value(self._target_value, zwave_speed)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         for zwave_value, mapped_preset_mode in self.fan_value_mapping.presets.items():
             if preset_mode == mapped_preset_mode:
-                await self.info.node.async_set_value(self._target_value, zwave_value)
+                await self._async_set_value(self._target_value, zwave_value)
                 return
-
-        raise NotValidPresetModeError(
-            f"The preset_mode {preset_mode} is not a valid preset_mode:"
-            f" {self.preset_modes}"
-        )
 
     @property
     def available(self) -> bool:
@@ -325,13 +334,13 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         """Turn the device on."""
         if not self._fan_off:
             raise HomeAssistantError("Unhandled action turn_on")
-        await self.info.node.async_set_value(self._fan_off, False)
+        await self._async_set_value(self._fan_off, False)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if not self._fan_off:
             raise HomeAssistantError("Unhandled action turn_off")
-        await self.info.node.async_set_value(self._fan_off, True)
+        await self._async_set_value(self._fan_off, True)
 
     @property
     def is_on(self) -> bool | None:
@@ -360,7 +369,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         except StopIteration:
             raise ValueError(f"Received an invalid fan mode: {preset_mode}") from None
 
-        await self.info.node.async_set_value(self._fan_mode, new_state)
+        await self._async_set_value(self._fan_mode, new_state)
 
     @property
     def preset_modes(self) -> list[str] | None:

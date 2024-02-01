@@ -38,11 +38,45 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "title": "{name} uses an unknown service",
+            "title": "[%key:component::automation::issues::service_not_found::title%]",
             "description": "The automation \"{name}\" (`{entity_id}`) has an action that calls an unknown service: `{service}`.\n\nThis error prevents the automation from running correctly. Maybe this service is no longer available, or perhaps a typo caused it.\n\nTo fix this error, [edit the automation]({edit}) and remove the action that calls this service.\n\nClick on SUBMIT below to confirm you have fixed this automation."
           }
         }
       }
+    }
+  },
+  "services": {
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Enables an automation."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Disables an automation.",
+      "fields": {
+        "stop_actions": {
+          "name": "Stop actions",
+          "description": "Stops currently running actions."
+        }
+      }
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles (enable / disable) an automation."
+    },
+    "trigger": {
+      "name": "Trigger",
+      "description": "Triggers the actions of an automation.",
+      "fields": {
+        "skip_condition": {
+          "name": "Skip conditions",
+          "description": "Defines whether or not the conditions will be skipped."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads the automation configuration."
     }
   }
 }

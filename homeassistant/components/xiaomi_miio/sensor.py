@@ -28,6 +28,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_MODEL,
     CONF_TOKEN,
@@ -42,12 +43,12 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -149,7 +150,7 @@ ATTR_CONSUMABLE_STATUS_FILTER_LEFT = "filter_left"
 ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT = "sensor_dirty_left"
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioSensorDescription(SensorEntityDescription):
     """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
 
@@ -292,7 +293,7 @@ SENSOR_TYPES = {
     ),
     ATTR_FILTER_LIFE_REMAINING: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_LIFE_REMAINING,
-        name="Filter life remaining",
+        name="Filter lifetime remaining",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:air-filter",
         state_class=SensorStateClass.MEASUREMENT,
@@ -310,7 +311,7 @@ SENSOR_TYPES = {
     ),
     ATTR_FILTER_LEFT_TIME: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_LEFT_TIME,
-        name="Filter time left",
+        name="Filter lifetime left",
         native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.DURATION,
@@ -319,7 +320,7 @@ SENSOR_TYPES = {
     ),
     ATTR_DUST_FILTER_LIFE_REMAINING: XiaomiMiioSensorDescription(
         key=ATTR_DUST_FILTER_LIFE_REMAINING,
-        name="Dust filter life remaining",
+        name="Dust filter lifetime remaining",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:air-filter",
         state_class=SensorStateClass.MEASUREMENT,
@@ -328,7 +329,7 @@ SENSOR_TYPES = {
     ),
     ATTR_DUST_FILTER_LIFE_REMAINING_DAYS: XiaomiMiioSensorDescription(
         key=ATTR_DUST_FILTER_LIFE_REMAINING_DAYS,
-        name="Dust filter life remaining days",
+        name="Dust filter lifetime remaining days",
         native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.DURATION,
@@ -337,7 +338,7 @@ SENSOR_TYPES = {
     ),
     ATTR_UPPER_FILTER_LIFE_REMAINING: XiaomiMiioSensorDescription(
         key=ATTR_UPPER_FILTER_LIFE_REMAINING,
-        name="Upper filter life remaining",
+        name="Upper filter lifetime remaining",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:air-filter",
         state_class=SensorStateClass.MEASUREMENT,
@@ -346,7 +347,7 @@ SENSOR_TYPES = {
     ),
     ATTR_UPPER_FILTER_LIFE_REMAINING_DAYS: XiaomiMiioSensorDescription(
         key=ATTR_UPPER_FILTER_LIFE_REMAINING_DAYS,
-        name="Upper filter life remaining days",
+        name="Upper filter lifetime remaining days",
         native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.DURATION,
@@ -997,7 +998,9 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         """Initialize the entity."""
         self._attr_name = f"{gateway_name} {description.name}"
         self._attr_unique_id = f"{gateway_device_id}-{description.key}"
-        self._attr_device_info = {"identifiers": {(DOMAIN, gateway_device_id)}}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, gateway_device_id)},
+        )
         self._gateway = gateway_device
         self.entity_description = description
         self._available = False

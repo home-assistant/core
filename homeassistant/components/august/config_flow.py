@@ -4,12 +4,14 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+import aiohttp
 import voluptuous as vol
 from yalexs.authenticator import ValidationResult
 from yalexs.const import BRANDS, DEFAULT_BRAND
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
@@ -23,6 +25,7 @@ from .const import (
 )
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
+from .util import async_create_august_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,20 +80,24 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Store an AugustGateway()."""
         self._august_gateway: AugustGateway | None = None
+        self._aiohttp_session: aiohttp.ClientSession | None = None
         self._user_auth_details: dict[str, Any] = {}
         self._needs_reset = True
-        self._mode = None
+        self._mode: str | None = None
         super().__init__()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        self._august_gateway = AugustGateway(self.hass)
         return await self.async_step_user_validate()
 
-    async def async_step_user_validate(self, user_input=None):
+    async def async_step_user_validate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle authentication."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -151,15 +158,32 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @callback
+    def _async_get_gateway(self) -> AugustGateway:
+        """Set up the gateway."""
+        if self._august_gateway is not None:
+            return self._august_gateway
+        self._aiohttp_session = async_create_august_clientsession(self.hass)
+        self._august_gateway = AugustGateway(self.hass, self._aiohttp_session)
+        return self._august_gateway
+
+    @callback
+    def _async_shutdown_gateway(self) -> None:
+        """Shutdown the gateway."""
+        if self._aiohttp_session is not None:
+            self._aiohttp_session.detach()
+        self._august_gateway = None
+
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._user_auth_details = dict(entry_data)
         self._mode = "reauth"
         self._needs_reset = True
-        self._august_gateway = AugustGateway(self.hass)
         return await self.async_step_reauth_validate()
 
-    async def async_step_reauth_validate(self, user_input=None):
+    async def async_step_reauth_validate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle reauth and validation."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -206,7 +230,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_auth_or_validate(self) -> ValidateResult:
         """Authenticate or validate."""
         user_auth_details = self._user_auth_details
-        gateway = self._august_gateway
+        gateway = self._async_get_gateway()
         assert gateway is not None
         await self._async_reset_access_token_cache_if_needed(
             gateway,
@@ -239,12 +263,12 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_update_or_create_entry(self, info: dict[str, Any]) -> FlowResult:
         """Update existing entry or create a new one."""
+        self._async_shutdown_gateway()
+
         existing_entry = await self.async_set_unique_id(
             self._user_auth_details[CONF_USERNAME]
         )
         if not existing_entry:
             return self.async_create_entry(title=info["title"], data=info["data"])
 
-        self.hass.config_entries.async_update_entry(existing_entry, data=info["data"])
-        await self.hass.config_entries.async_reload(existing_entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(existing_entry, data=info["data"])

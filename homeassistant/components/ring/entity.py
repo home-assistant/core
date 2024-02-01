@@ -1,47 +1,71 @@
 """Base class for Ring entity."""
+from typing import TypeVar
+
+from ring_doorbell.generic import RingGeneric
+
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ATTRIBUTION, DOMAIN
+from .const import ATTRIBUTION, DOMAIN
+from .coordinator import (
+    RingDataCoordinator,
+    RingDeviceData,
+    RingNotificationsCoordinator,
+)
+
+_RingCoordinatorT = TypeVar(
+    "_RingCoordinatorT",
+    bound=(RingDataCoordinator | RingNotificationsCoordinator),
+)
 
 
-class RingEntityMixin(Entity):
+class RingEntity(CoordinatorEntity[_RingCoordinatorT]):
     """Base implementation for Ring device."""
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, config_entry_id, device):
+    def __init__(
+        self,
+        device: RingGeneric,
+        coordinator: _RingCoordinatorT,
+    ) -> None:
         """Initialize a sensor for Ring device."""
-        super().__init__()
-        self._config_entry_id = config_entry_id
+        super().__init__(coordinator, context=device.id)
         self._device = device
         self._attr_extra_state_attributes = {}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.device_id)},  # device_id is the mac
+            manufacturer="Ring",
+            model=device.model,
+            name=device.name,
+        )
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.ring_objects["device_data"].async_add_listener(self._update_callback)
+    def _get_coordinator_device_data(self) -> RingDeviceData | None:
+        if (data := self.coordinator.data) and (
+            device_data := data.get(self._device.id)
+        ):
+            return device_data
+        return None
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect callbacks."""
-        self.ring_objects["device_data"].async_remove_listener(self._update_callback)
+    def _get_coordinator_device(self) -> RingGeneric | None:
+        if (device_data := self._get_coordinator_device_data()) and (
+            device := device_data.device
+        ):
+            return device
+        return None
+
+    def _get_coordinator_history(self) -> list | None:
+        if (device_data := self._get_coordinator_device_data()) and (
+            history := device_data.history
+        ):
+            return history
+        return None
 
     @callback
-    def _update_callback(self) -> None:
-        """Call update method."""
-        self.async_write_ha_state()
-
-    @property
-    def ring_objects(self):
-        """Return the Ring API objects."""
-        return self.hass.data[DOMAIN][self._config_entry_id]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device.device_id)},
-            manufacturer="Ring",
-            model=self._device.model,
-            name=self._device.name,
-        )
+    def _handle_coordinator_update(self) -> None:
+        if device := self._get_coordinator_device():
+            self._device = device
+        super()._handle_coordinator_update()

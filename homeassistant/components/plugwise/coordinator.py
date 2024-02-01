@@ -1,9 +1,7 @@
 """DataUpdateCoordinator for Plugwise."""
 from datetime import timedelta
-from typing import NamedTuple, cast
 
-from plugwise import Smile
-from plugwise.constants import DeviceData, GatewayData
+from plugwise import PlugwiseData, Smile
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
@@ -21,13 +19,6 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_USERNAME, DOMAIN, LOGGER
-
-
-class PlugwiseData(NamedTuple):
-    """Plugwise data stored in the DataUpdateCoordinator."""
-
-    gateway: GatewayData
-    devices: dict[str, DeviceData]
 
 
 class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
@@ -65,13 +56,13 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         """Connect to the Plugwise Smile."""
         self._connected = await self.api.connect()
         self.api.get_all_devices()
-        self.name = self.api.smile_name
         self.update_interval = DEFAULT_SCAN_INTERVAL.get(
             str(self.api.smile_type), timedelta(seconds=60)
         )
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
+
         try:
             if not self._connected:
                 await self._connect()
@@ -87,7 +78,4 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             raise ConfigEntryError("Device with unsupported firmware") from err
         except ConnectionFailedError as err:
             raise UpdateFailed("Failed to connect to the Plugwise Smile") from err
-        return PlugwiseData(
-            gateway=cast(GatewayData, data[0]),
-            devices=cast(dict[str, DeviceData], data[1]),
-        )
+        return data

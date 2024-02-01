@@ -5,7 +5,6 @@ import asyncio
 from typing import Any
 from uuid import uuid4
 
-import async_timeout
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
@@ -123,7 +122,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if same_hub_entries:
             await asyncio.wait(
                 [
-                    self.hass.config_entries.async_remove(entry_id)
+                    asyncio.create_task(self.hass.config_entries.async_remove(entry_id))
                     for entry_id in same_hub_entries
                 ]
             )
@@ -141,7 +140,7 @@ async def authenticate(
     api_factory = await APIFactory.init(host, psk_id=identity)
 
     try:
-        async with async_timeout.timeout(5):
+        async with asyncio.timeout(5):
             key = await api_factory.generate_psk(security_code)
     except RequestError as err:
         raise AuthError("invalid_security_code") from err

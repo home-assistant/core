@@ -1,0 +1,18 @@
+{
+  "services": {
+    "play_media": {
+      "name": "Play media",
+      "description": "Downloads file from given URL.",
+      "fields": {
+        "media_content_id": {
+          "name": "Media content ID",
+          "description": "The ID of the content to play. Platform dependent."
+        },
+        "media_content_type": {
+          "name": "Media content type",
+          "description": "The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST MUSIC."
+        }
+      }
+    }
+  }
+}

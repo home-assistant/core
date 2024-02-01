@@ -8,8 +8,8 @@
       "hostname": "flume-gw-*"
     }
   ],
-  "documentation": "https://www.home-assistant.io/integrations/flume/",
+  "documentation": "https://www.home-assistant.io/integrations/flume",
   "iot_class": "cloud_polling",
   "loggers": ["pyflume"],
-  "requirements": ["pyflume==0.6.5"]
+  "requirements": ["PyFlume==0.6.5"]
 }

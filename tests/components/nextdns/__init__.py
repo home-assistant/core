@@ -119,6 +119,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
         title="Fake Profile",
         unique_id="xyz12",
         data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
+        entry_id="d9aa37407ddac7b964a99e86312288d6",
     )
 
     with patch(

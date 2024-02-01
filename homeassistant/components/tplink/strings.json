@@ -6,15 +6,46 @@
         "description": "If you leave the host empty, discovery will be used to find devices.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your TP-Link device."
         }
       },
       "pick_device": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "discovery_confirm": {
         "description": "Do you want to set up {name} {model} ({host})?"
+      },
+      "user_auth_confirm": {
+        "title": "Authenticate",
+        "description": "The device requires authentication, please input your credentials below.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "discovery_auth_confirm": {
+        "title": "Authenticate",
+        "description": "The device requires authentication, please input your credentials below.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The device needs updated credentials, please input your credentials below."
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The device needs updated credentials, please input your credentials below.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -22,7 +53,135 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_consumption": {
+        "name": "Current consumption"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      },
+      "today_consumption": {
+        "name": "Today's consumption"
+      },
+      "current_consumption_child": {
+        "name": "{device_name} current consumption"
+      },
+      "total_consumption_child": {
+        "name": "{device_name} total consumption"
+      },
+      "today_consumption_child": {
+        "name": "{device_name} today's consumption"
+      },
+      "current_child": {
+        "name": "{device_name} current"
+      },
+      "voltage_child": {
+        "name": "{device_name} voltage"
+      }
+    },
+    "switch": {
+      "led": {
+        "name": "LED"
+      }
+    }
+  },
+  "services": {
+    "sequence_effect": {
+      "name": "Sequence effect",
+      "description": "Sets a sequence effect.",
+      "fields": {
+        "sequence": {
+          "name": "Sequence",
+          "description": "List of HSV sequences (Max 16)."
+        },
+        "segments": {
+          "name": "Segments",
+          "description": "List of Segments (0 for all)."
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Initial brightness."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Duration."
+        },
+        "repeat_times": {
+          "name": "Repetitions",
+          "description": "Repetitions (0 for continuous)."
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "Transition."
+        },
+        "spread": {
+          "name": "Spread",
+          "description": "Speed of spread."
+        },
+        "direction": {
+          "name": "Direction",
+          "description": "Direction."
+        }
+      }
+    },
+    "random_effect": {
+      "name": "Random effect",
+      "description": "Sets a random effect.",
+      "fields": {
+        "init_states": {
+          "name": "Initial states",
+          "description": "Initial HSV sequence."
+        },
+        "backgrounds": {
+          "name": "Backgrounds",
+          "description": "[%key:component::tplink::services::sequence_effect::fields::sequence::description%]"
+        },
+        "segments": {
+          "name": "Segments",
+          "description": "List of segments (0 for all)."
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "[%key:component::tplink::services::sequence_effect::fields::brightness::description%]"
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "[%key:component::tplink::services::sequence_effect::fields::duration::description%]"
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "[%key:component::tplink::services::sequence_effect::fields::transition::description%]"
+        },
+        "fadeoff": {
+          "name": "Fade off",
+          "description": "Fade off."
+        },
+        "hue_range": {
+          "name": "Hue range",
+          "description": "Range of hue."
+        },
+        "saturation_range": {
+          "name": "Saturation range",
+          "description": "Range of saturation."
+        },
+        "brightness_range": {
+          "name": "Brightness range",
+          "description": "Range of brightness."
+        },
+        "transition_range": {
+          "name": "Transition range",
+          "description": "Range of transition."
+        },
+        "random_seed": {
+          "name": "Random seed",
+          "description": "Random seed."
+        }
+      }
     }
   }
 }

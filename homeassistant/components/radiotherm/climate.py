@@ -105,11 +105,11 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     _attr_hvac_modes = OPERATION_LIST
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_precision = PRECISION_HALVES
+    _attr_name = None
 
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:
         """Initialize the thermostat."""
         super().__init__(coordinator)
-        self._attr_name = self.init_data.name
         self._attr_unique_id = self.init_data.mac
         self._attr_fan_modes = CT30_FAN_OPERATION_LIST
         self._attr_supported_features = (

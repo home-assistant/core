@@ -12,6 +12,56 @@
     "maria_db_range_index_regression": {
       "title": "Update MariaDB to {min_version} or later resolve a significant performance issue",
       "description": "Older versions of MariaDB suffer from a significant performance regression when retrieving history data or purging the database. Update to MariaDB version {min_version} or later and restart Home Assistant. If you are using the MariaDB core add-on, make sure to update it to the latest version."
+    },
+    "backup_failed_out_of_resources": {
+      "title": "Database backup failed due to lack of resources",
+      "description": "The database backup stated at {start_time} failed due to lack of resources. The backup cannot be trusted and must be restarted. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter."
+    }
+  },
+  "services": {
+    "purge": {
+      "name": "Purge",
+      "description": "Starts purge task - to clean up old data from your database.",
+      "fields": {
+        "keep_days": {
+          "name": "Days to keep",
+          "description": "Number of days to keep the data in the database. Starting today, counting backward. A value of `7` means that everything older than a week will be purged."
+        },
+        "repack": {
+          "name": "Repack",
+          "description": "Attempt to save disk space by rewriting the entire database file."
+        },
+        "apply_filter": {
+          "name": "Apply filter",
+          "description": "Apply `entity_id` and `event_type` filters in addition to time-based purge."
+        }
+      }
+    },
+    "purge_entities": {
+      "name": "Purge entities",
+      "description": "Starts a purge task to remove the data related to specific entities from your database.",
+      "fields": {
+        "domains": {
+          "name": "Domains to remove",
+          "description": "List of domains for which the data needs to be removed from the recorder database."
+        },
+        "entity_globs": {
+          "name": "Entity globs to remove",
+          "description": "List of glob patterns used to select the entities for which the data is to be removed from the recorder database."
+        },
+        "keep_days": {
+          "name": "[%key:component::recorder::services::purge::fields::keep_days::name%]",
+          "description": "Number of days to keep the data for rows matching the filter. Starting today, counting backward. A value of `7` means that everything older than a week will be purged. The default of 0 days will remove all matching rows immediately."
+        }
+      }
+    },
+    "disable": {
+      "name": "[%key:common::action::disable%]",
+      "description": "Stops the recording of events and state changes."
+    },
+    "enable": {
+      "name": "[%key:common::action::enable%]",
+      "description": "Starts the recording of events and state changes."
     }
   }
 }

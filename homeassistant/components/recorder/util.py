@@ -1,7 +1,7 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable, Sequence
+from collections.abc import Callable, Collection, Generator, Iterable, Sequence
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -31,7 +31,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
+from .const import (
+    DATA_INSTANCE,
+    DEFAULT_MAX_BIND_VARS,
+    DOMAIN,
+    SQLITE_MAX_BIND_VARS,
+    SQLITE_MODERN_MAX_BIND_VARS,
+    SQLITE_URL_PREFIX,
+    SupportedDialect,
+)
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -87,6 +95,7 @@ MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.31.0")
+MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.32.0")
 
 
 # This is the maximum time after the recorder ends the session
@@ -132,7 +141,7 @@ def session_scope(
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.error("Error executing query: %s", err, exc_info=True)
+        _LOGGER.exception("Error executing query: %s", err)
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
@@ -278,9 +287,11 @@ def basic_sanity_check(cursor: SQLiteCursor) -> bool:
 
     for table in TABLES_TO_CHECK:
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
-            cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
+            cursor.execute(f"SELECT * FROM {table};")  # noqa: S608 # not injection
         else:
-            cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # nosec # not injection
+            cursor.execute(
+                f"SELECT * FROM {table} LIMIT 1;"  # noqa: S608 # not injection
+            )
 
     return True
 
@@ -424,7 +435,7 @@ def _datetime_or_none(value: str) -> datetime | None:
 def build_mysqldb_conv() -> dict:
     """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
     # Late imports since we only call this if they are using mysqldb
-    # pylint: disable=import-outside-toplevel,import-error
+    # pylint: disable=import-outside-toplevel
     from MySQLdb.constants import FIELD_TYPE
     from MySQLdb.converters import conversions
 
@@ -459,6 +470,24 @@ def _async_create_mariadb_range_index_regression_issue(
     )
 
 
+@callback
+def async_create_backup_failure_issue(
+    hass: HomeAssistant,
+    local_start_time: datetime,
+) -> None:
+    """Create an issue when the backup fails because we run out of resources."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "backup_failed_out_of_resources",
+        is_fixable=False,
+        severity=ir.IssueSeverity.CRITICAL,
+        learn_more_url="https://www.home-assistant.io/integrations/recorder",
+        translation_key="backup_failed_out_of_resources",
+        translation_placeholders={"start_time": local_start_time.strftime("%H:%M:%S")},
+    )
+
+
 def setup_connection_for_dialect(
     instance: Recorder,
     dialect_name: str,
@@ -469,6 +498,7 @@ def setup_connection_for_dialect(
     version: AwesomeVersion | None = None
     slow_range_in_select = False
     if dialect_name == SupportedDialect.SQLITE:
+        max_bind_vars = SQLITE_MAX_BIND_VARS
         if first_connection:
             old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
             dbapi_connection.isolation_level = None  # type: ignore[attr-defined]
@@ -485,6 +515,9 @@ def setup_connection_for_dialect(
                 _fail_unsupported_version(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
+
+            if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
+                max_bind_vars = SQLITE_MODERN_MAX_BIND_VARS
 
         # The upper bound on the cache size is approximately 16MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -16384")
@@ -504,6 +537,7 @@ def setup_connection_for_dialect(
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
 
     elif dialect_name == SupportedDialect.MYSQL:
+        max_bind_vars = DEFAULT_MAX_BIND_VARS
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
         if first_connection:
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
@@ -528,11 +562,10 @@ def setup_connection_for_dialect(
                         version,
                     )
 
-            else:
-                if not version or version < MIN_VERSION_MYSQL:
-                    _fail_unsupported_version(
-                        version or version_string, "MySQL", MIN_VERSION_MYSQL
-                    )
+            elif not version or version < MIN_VERSION_MYSQL:
+                _fail_unsupported_version(
+                    version or version_string, "MySQL", MIN_VERSION_MYSQL
+                )
 
             slow_range_in_select = bool(
                 not version
@@ -545,6 +578,7 @@ def setup_connection_for_dialect(
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
+        max_bind_vars = DEFAULT_MAX_BIND_VARS
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -565,6 +599,7 @@ def setup_connection_for_dialect(
         dialect=SupportedDialect(dialect_name),
         version=version,
         optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
+        max_bind_vars=max_bind_vars,
     )
 
 
@@ -641,7 +676,7 @@ def database_job_retry_wrapper(
     """
 
     def decorator(
-        job: _WrappedFuncType[_RecorderT, _P]
+        job: _WrappedFuncType[_RecorderT, _P],
     ) -> _WrappedFuncType[_RecorderT, _P]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
@@ -838,6 +873,20 @@ def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
     From more-itertools
     """
     return iter(partial(take, chunked_num, iter(iterable)), [])
+
+
+def chunked_or_all(iterable: Collection[Any], chunked_num: int) -> Iterable[Any]:
+    """Break *collection* into iterables of length *n*.
+
+    Returns the collection if its length is less than *n*.
+
+    Unlike chunked, this function requires a collection so it can
+    determine the length of the collection and return the collection
+    if it is less than *n*.
+    """
+    if len(iterable) <= chunked_num:
+        return (iterable,)
+    return chunked(iterable, chunked_num)
 
 
 def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:

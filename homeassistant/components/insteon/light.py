@@ -2,6 +2,7 @@
 from typing import Any
 
 from pyinsteon.config import ON_LEVEL
+from pyinsteon.device_types.device_base import Device as InsteonDevice
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
-from .utils import async_add_insteon_entities
+from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 MAX_BRIGHTNESS = 255
 
@@ -37,7 +38,12 @@ async def async_setup_entry(
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{Platform.LIGHT}"
     async_dispatcher_connect(hass, signal, async_add_insteon_light_entities)
-    async_add_insteon_light_entities()
+    async_add_insteon_devices(
+        hass,
+        Platform.LIGHT,
+        InsteonDimmerEntity,
+        async_add_entities,
+    )
 
 
 class InsteonDimmerEntity(InsteonEntity, LightEntity):
@@ -45,6 +51,13 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+    def __init__(self, device: InsteonDevice, group: int) -> None:
+        """Init the InsteonDimmerEntity entity."""
+        super().__init__(device=device, group=group)
+        if not self._insteon_device_group.is_dimmable:
+            self._attr_color_mode = ColorMode.ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
     def brightness(self):

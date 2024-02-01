@@ -1,4 +1,6 @@
 """Support for Harmony Hub devices."""
+from __future__ import annotations
+
 from collections.abc import Iterable
 import json
 import logging
@@ -36,6 +38,7 @@ from .const import (
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
+from .data import HarmonyData
 from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
 
@@ -56,12 +59,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Harmony config entry."""
 
-    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
+    data: HarmonyData = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
 
     _LOGGER.debug("HarmonyData : %s", data)
 
-    default_activity = entry.options.get(ATTR_ACTIVITY)
-    delay_secs = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+    default_activity: str | None = entry.options.get(ATTR_ACTIVITY)
+    delay_secs: float = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
     harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
     device = HarmonyRemote(data, default_activity, delay_secs, harmony_conf_file)
@@ -84,10 +87,12 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
 
     _attr_supported_features = RemoteEntityFeature.ACTIVITY
 
-    def __init__(self, data, activity, delay_secs, out_path):
+    def __init__(
+        self, data: HarmonyData, activity: str | None, delay_secs: float, out_path: str
+    ) -> None:
         """Initialize HarmonyRemote class."""
         super().__init__(data=data)
-        self._state = None
+        self._state: bool | None = None
         self._current_activity = ACTIVITY_POWER_OFF
         self.default_activity = activity
         self._activity_starting = None
@@ -99,7 +104,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         self._attr_device_info = self._data.device_info(DOMAIN)
         self._attr_name = data.name
 
-    async def _async_update_options(self, data):
+    async def _async_update_options(self, data: dict[str, Any]) -> None:
         """Change options when the options flow does."""
         if ATTR_DELAY_SECS in data:
             self.delay_secs = data[ATTR_DELAY_SECS]
@@ -170,7 +175,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         return self._data.activity_names
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Add platform specific attributes."""
         return {
             ATTR_ACTIVITY_STARTING: self._activity_starting,
@@ -179,7 +184,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         }
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return False if PowerOff is the current activity, otherwise True."""
         return self._current_activity not in [None, "PowerOff"]
 
@@ -201,7 +206,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         self._state = bool(activity_id != -1)
         self.async_write_ha_state()
 
-    async def async_new_config(self, _=None):
+    async def async_new_config(self, _: dict | None = None) -> None:
         """Call for updating the current activity."""
         _LOGGER.debug("%s: configuration has been updated", self.name)
         self.async_new_activity(self._data.current_activity)
@@ -216,9 +221,8 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         if not activity or activity == PREVIOUS_ACTIVE_ACTIVITY:
             if self._last_activity:
                 activity = self._last_activity
-            else:
-                if all_activities := self._data.activity_names:
-                    activity = all_activities[0]
+            elif all_activities := self._data.activity_names:
+                activity = all_activities[0]
 
         if activity:
             await self._data.async_start_activity(activity)
@@ -243,16 +247,16 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
             command, device, num_repeats, delay_secs, hold_secs
         )
 
-    async def change_channel(self, channel):
+    async def change_channel(self, channel: int) -> None:
         """Change the channel using Harmony remote."""
         await self._data.change_channel(channel)
 
-    async def sync(self):
+    async def sync(self) -> None:
         """Sync the Harmony device with the web service."""
         if await self._data.sync():
             await self.hass.async_add_executor_job(self.write_config_file)
 
-    def write_config_file(self):
+    def write_config_file(self) -> None:
         """Write Harmony configuration file.
 
         This is a handy way for users to figure out the available commands for automations.

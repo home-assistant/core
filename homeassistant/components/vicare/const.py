@@ -6,14 +6,16 @@ from homeassistant.const import Platform, UnitOfEnergy, UnitOfVolume
 DOMAIN = "vicare"
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SENSOR,
-    Platform.BINARY_SENSOR,
     Platform.WATER_HEATER,
 ]
 
 VICARE_DEVICE_CONFIG = "device_conf"
+VICARE_DEVICE_CONFIG_LIST = "device_config_list"
 VICARE_API = "api"
 VICARE_NAME = "ViCare"
 

@@ -45,7 +45,7 @@ OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
 PRESET_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODE.items()}
 
 # Map Overkiz HVAC modes to Home Assistant HVAC modes
-OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
+OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.ON: HVACMode.HEAT,
     OverkizCommandParam.OFF: HVACMode.OFF,
     OverkizCommandParam.AUTO: HVACMode.AUTO,
@@ -69,7 +69,10 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_translation_key = DOMAIN
 
@@ -83,7 +86,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         )
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         states = self.device.states
         if (state := states[OverkizState.CORE_OPERATING_MODE]) and state.value_as_str:

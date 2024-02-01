@@ -6,6 +6,9 @@
         "description": "Set up Nettigo Air Monitor integration.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Nettigo Air Monitor to control."
         }
       },
       "credentials": {
@@ -39,11 +42,6 @@
     }
   },
   "entity": {
-    "button": {
-      "restart": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
-      }
-    },
     "sensor": {
       "bme280_humidity": {
         "name": "BME280 humidity"
@@ -152,9 +150,6 @@
       },
       "dht22_temperature": {
         "name": "DHT22 temperature"
-      },
-      "signal_strength": {
-        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       },
       "last_restart": {
         "name": "Last restart"

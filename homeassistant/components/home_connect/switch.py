@@ -56,13 +56,6 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             )
         super().__init__(device, desc)
         self.program_name = program_name
-        self._state = None
-        self._remote_allowed = None
-
-    @property
-    def is_on(self):
-        """Return true if the switch is on."""
-        return bool(self._state)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start the program."""
@@ -88,10 +81,10 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         """Update the switch's status."""
         state = self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {})
         if state.get(ATTR_VALUE) == self.program_name:
-            self._state = True
+            self._attr_is_on = True
         else:
-            self._state = False
-        _LOGGER.debug("Updated, new state: %s", self._state)
+            self._attr_is_on = False
+        _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
 
 
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
@@ -100,12 +93,6 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     def __init__(self, device):
         """Inititialize the entity."""
         super().__init__(device, "Power")
-        self._state = None
-
-    @property
-    def is_on(self):
-        """Return true if the switch is on."""
-        return bool(self._state)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
@@ -116,7 +103,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn on device: %s", err)
-            self._state = False
+            self._attr_is_on = False
         self.async_entity_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -130,7 +117,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn off device: %s", err)
-            self._state = True
+            self._attr_is_on = True
         self.async_entity_update()
 
     async def async_update(self) -> None:
@@ -139,12 +126,12 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self.device.appliance.status.get(BSH_POWER_STATE, {}).get(ATTR_VALUE)
             == BSH_POWER_ON
         ):
-            self._state = True
+            self._attr_is_on = True
         elif (
             self.device.appliance.status.get(BSH_POWER_STATE, {}).get(ATTR_VALUE)
             == self.device.power_off_state
         ):
-            self._state = False
+            self._attr_is_on = False
         elif self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(
             ATTR_VALUE, None
         ) in [
@@ -156,12 +143,12 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             "BSH.Common.EnumType.OperationState.Aborting",
             "BSH.Common.EnumType.OperationState.Finished",
         ]:
-            self._state = True
+            self._attr_is_on = True
         elif (
             self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(ATTR_VALUE)
             == "BSH.Common.EnumType.OperationState.Inactive"
         ):
-            self._state = False
+            self._attr_is_on = False
         else:
-            self._state = None
-        _LOGGER.debug("Updated, new state: %s", self._state)
+            self._attr_is_on = None
+        _LOGGER.debug("Updated, new state: %s", self._attr_is_on)

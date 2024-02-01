@@ -30,10 +30,12 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevic
         """Initialize."""
         self.api: CentralUnitPolling | CentralUnitWsRPC = swb_api
         self._reconnect_counts: int = 0
-        self.mac_formatted: str | None = (
-            None if self.api.mac is None else format_mac(self.api.mac)
+        assert self.api.mac is not None
+        self.unique_id = (
+            self.api.unique_id
+            if self.api.unique_id is not None
+            else format_mac(self.api.mac)
         )
-
         super().__init__(
             hass,
             _LOGGER,
@@ -77,6 +79,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevic
                         DeviceType.Shutter,
                         DeviceType.Somfy,
                         DeviceType.Thermostat,
+                        DeviceType.VRFAC,
                     ]
                 )
             except SwitchBeeError as exp:

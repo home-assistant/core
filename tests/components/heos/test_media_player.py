@@ -249,6 +249,8 @@ async def test_updates_from_players_changed(
 
 async def test_updates_from_players_changed_new_ids(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     config_entry,
     config,
     controller,
@@ -257,13 +259,11 @@ async def test_updates_from_players_changed_new_ids(
 ) -> None:
     """Test player updates from changes to available players."""
     await setup_platform(hass, config_entry, config)
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
     player = controller.players[1]
     event = asyncio.Event()
 
     # Assert device registry matches current id
-    assert device_registry.async_get_device({(DOMAIN, 1)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, 1)})
     # Assert entity registry matches current id
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
@@ -284,7 +284,7 @@ async def test_updates_from_players_changed_new_ids(
 
     # Assert device registry identifiers were updated
     assert len(device_registry.devices) == 2
-    assert device_registry.async_get_device({(DOMAIN, 101)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, 101)})
     # Assert entity registry unique id was updated
     assert len(entity_registry.entities) == 2
     assert (

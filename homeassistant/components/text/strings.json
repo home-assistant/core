@@ -16,14 +16,26 @@
           "name": "Min length"
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "state": {
             "text": "Text",
-            "password": "Password"
+            "password": "[%key:common::config_flow::data::password%]"
           }
         },
         "pattern": {
           "name": "Pattern"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_value": {
+      "name": "Set value",
+      "description": "Sets the value.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "Enter your text."
         }
       }
     }

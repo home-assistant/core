@@ -5,19 +5,32 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, cast
 
-from asyncsleepiq import SleepIQActuator, SleepIQBed, SleepIQSleeper
+from asyncsleepiq import (
+    FootWarmingTemps,
+    SleepIQActuator,
+    SleepIQBed,
+    SleepIQFootWarmer,
+    SleepIQSleeper,
+)
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ACTUATOR, DOMAIN, ENTITY_TYPES, FIRMNESS, ICON_OCCUPIED
+from .const import (
+    ACTUATOR,
+    DOMAIN,
+    ENTITY_TYPES,
+    FIRMNESS,
+    FOOT_WARMING_TIMER,
+    ICON_OCCUPIED,
+)
 from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
-from .entity import SleepIQBedEntity
+from .entity import SleepIQBedEntity, sleeper_for_side
 
 
-@dataclass
+@dataclass(frozen=True)
 class SleepIQNumberEntityDescriptionMixin:
     """Mixin to describe a SleepIQ number entity."""
 
@@ -27,7 +40,7 @@ class SleepIQNumberEntityDescriptionMixin:
     get_unique_id_fn: Callable[[SleepIQBed, Any], str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SleepIQNumberEntityDescription(
     NumberEntityDescription, SleepIQNumberEntityDescriptionMixin
 ):
@@ -69,6 +82,25 @@ def _get_sleeper_unique_id(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
     return f"{sleeper.sleeper_id}_{FIRMNESS}"
 
 
+async def _async_set_foot_warmer_time(
+    foot_warmer: SleepIQFootWarmer, time: int
+) -> None:
+    temperature = FootWarmingTemps(foot_warmer.temperature)
+    if temperature != FootWarmingTemps.OFF:
+        await foot_warmer.turn_on(temperature, time)
+
+    foot_warmer.timer = time
+
+
+def _get_foot_warming_name(bed: SleepIQBed, foot_warmer: SleepIQFootWarmer) -> str:
+    sleeper = sleeper_for_side(bed, foot_warmer.side)
+    return f"SleepNumber {bed.name} {sleeper.name} {ENTITY_TYPES[FOOT_WARMING_TIMER]}"
+
+
+def _get_foot_warming_unique_id(bed: SleepIQBed, foot_warmer: SleepIQFootWarmer) -> str:
+    return f"{bed.id}_{foot_warmer.side.value}_{FOOT_WARMING_TIMER}"
+
+
 NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
     FIRMNESS: SleepIQNumberEntityDescription(
         key=FIRMNESS,
@@ -93,6 +125,18 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
         set_value_fn=_async_set_actuator_position,
         get_name_fn=_get_actuator_name,
         get_unique_id_fn=_get_actuator_unique_id,
+    ),
+    FOOT_WARMING_TIMER: SleepIQNumberEntityDescription(
+        key=FOOT_WARMING_TIMER,
+        native_min_value=30,
+        native_max_value=360,
+        native_step=30,
+        name=ENTITY_TYPES[FOOT_WARMING_TIMER],
+        icon="mdi:timer",
+        value_fn=lambda foot_warmer: foot_warmer.timer,
+        set_value_fn=_async_set_foot_warmer_time,
+        get_name_fn=_get_foot_warming_name,
+        get_unique_id_fn=_get_foot_warming_unique_id,
     ),
 }
 
@@ -125,6 +169,15 @@ async def async_setup_entry(
                     NUMBER_DESCRIPTIONS[ACTUATOR],
                 )
             )
+        for foot_warmer in bed.foundation.foot_warmers:
+            entities.append(
+                SleepIQNumberEntity(
+                    data.data_coordinator,
+                    bed,
+                    foot_warmer,
+                    NUMBER_DESCRIPTIONS[FOOT_WARMING_TIMER],
+                )
+            )
 
     async_add_entities(entities)
 
@@ -148,6 +201,8 @@ class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Number
 
         self._attr_name = description.get_name_fn(bed, device)
         self._attr_unique_id = description.get_unique_id_fn(bed, device)
+        if description.icon:
+            self._attr_icon = description.icon
 
         super().__init__(coordinator, bed)
 

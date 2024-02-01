@@ -16,11 +16,9 @@ from .const import DOMAIN
 from .coordinator import RidwellDataUpdateCoordinator
 from .entity import RidwellEntity
 
-SWITCH_TYPE_OPT_IN = "opt_in"
-
 SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key=SWITCH_TYPE_OPT_IN,
-    name="Opt-in to next pickup",
+    key="opt_in",
+    translation_key="opt_in",
     icon="mdi:calendar-check",
 )
 

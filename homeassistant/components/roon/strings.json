@@ -21,5 +21,31 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "event": {
+      "volume": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "volume_up": "Volume up",
+              "volume_down": "Volume down"
+            }
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "transfer": {
+      "name": "Transfer",
+      "description": "Transfers playback from one player to another.",
+      "fields": {
+        "transfer_id": {
+          "name": "Transfer ID",
+          "description": "ID of the destination player."
+        }
+      }
+    }
   }
 }

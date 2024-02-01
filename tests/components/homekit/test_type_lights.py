@@ -122,7 +122,8 @@ async def test_light_basic(hass: HomeAssistant, hk_driver, events) -> None:
 
 
 @pytest.mark.parametrize(
-    "supported_color_modes", [["brightness"], ["hs"], ["color_temp"]]
+    "supported_color_modes",
+    [[ColorMode.BRIGHTNESS], [ColorMode.HS], [ColorMode.COLOR_TEMP]],
 )
 async def test_light_brightness(
     hass: HomeAssistant, hk_driver, events, supported_color_modes
@@ -149,7 +150,11 @@ async def test_light_brightness(
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 100
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 102})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: supported_color_modes, ATTR_BRIGHTNESS: 102},
+    )
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 40
 
@@ -222,24 +227,48 @@ async def test_light_brightness(
 
     # 0 is a special case for homekit, see "Handle Brightness"
     # in update_state
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 0})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: supported_color_modes, ATTR_BRIGHTNESS: 0},
+    )
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 1
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 255})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: supported_color_modes, ATTR_BRIGHTNESS: 255},
+    )
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 100
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 0})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: supported_color_modes, ATTR_BRIGHTNESS: 0},
+    )
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 1
 
     # Ensure floats are handled
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 55.66})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: supported_color_modes, ATTR_BRIGHTNESS: 55.66},
+    )
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 22
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 108.4})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: supported_color_modes, ATTR_BRIGHTNESS: 108.4},
+    )
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 43
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 0.0})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: supported_color_modes, ATTR_BRIGHTNESS: 0.0},
+    )
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 1
 
@@ -490,7 +519,9 @@ async def test_light_color_temperature_and_rgb_color(
     assert acc.char_saturation.value == 100
 
 
-@pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
+@pytest.mark.parametrize(
+    "supported_color_modes", [[ColorMode.HS], [ColorMode.RGB], [ColorMode.XY]]
+)
 async def test_light_rgb_color(
     hass: HomeAssistant, hk_driver, events, supported_color_modes
 ) -> None:
@@ -545,14 +576,16 @@ async def test_light_rgb_color(
     assert events[-1].data[ATTR_VALUE] == "set color at (145, 75)"
 
 
-async def test_light_restore(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_light_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create("light", "hue", "1234", suggested_object_id="simple")
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
+        "light", "hue", "1234", suggested_object_id="simple"
+    )
+    entity_registry.async_get_or_create(
         "light",
         "hue",
         "9012",
@@ -1000,6 +1033,40 @@ async def test_light_rgb_with_white_switch_to_temp(
     assert acc.char_brightness.value == 100
 
 
+async def test_light_rgb_with_hs_color_none(
+    hass: HomeAssistant,
+    hk_driver,
+    events,
+) -> None:
+    """Test lights hs color set to None."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGB],
+            ATTR_RGBWW_COLOR: (128, 50, 0, 255, 255),
+            ATTR_RGB_COLOR: (128, 50, 0),
+            ATTR_HS_COLOR: None,
+            ATTR_BRIGHTNESS: 255,
+            ATTR_COLOR_MODE: ColorMode.RGB,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    assert acc.char_hue.value == 0
+    assert acc.char_saturation.value == 75
+
+    await acc.run()
+    await hass.async_block_till_done()
+    assert acc.char_hue.value == 0
+    assert acc.char_saturation.value == 75
+    assert acc.char_brightness.value == 100
+
+
 async def test_light_rgbww_with_color_temp_conversion(
     hass: HomeAssistant,
     hk_driver,
@@ -1221,7 +1288,7 @@ async def test_light_set_brightness_and_color(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: ["hs"],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
             ATTR_BRIGHTNESS: 255,
         },
     )
@@ -1241,11 +1308,19 @@ async def test_light_set_brightness_and_color(
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 100
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 102})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS], ATTR_BRIGHTNESS: 102},
+    )
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 40
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_HS_COLOR: (4.5, 9.2)})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS], ATTR_HS_COLOR: (4.5, 9.2)},
+    )
     await hass.async_block_till_done()
     assert acc.char_hue.value == 4
     assert acc.char_saturation.value == 9
@@ -1297,7 +1372,7 @@ async def test_light_min_max_mireds(hass: HomeAssistant, hk_driver, events) -> N
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: ["color_temp"],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
             ATTR_BRIGHTNESS: 255,
             ATTR_MAX_MIREDS: 500.5,
             ATTR_MIN_MIREDS: 100.5,
@@ -1319,7 +1394,7 @@ async def test_light_set_brightness_and_color_temp(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: ["color_temp"],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
             ATTR_BRIGHTNESS: 255,
         },
     )
@@ -1338,11 +1413,22 @@ async def test_light_set_brightness_and_color_temp(
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 100
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 102})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP], ATTR_BRIGHTNESS: 102},
+    )
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 40
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP_KELVIN: (4461)})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
+            ATTR_COLOR_TEMP_KELVIN: (4461),
+        },
+    )
     await hass.async_block_till_done()
     assert acc.char_color_temp.value == 224
 

@@ -129,7 +129,14 @@ async def test_fan_direction(hass: HomeAssistant, hk_driver, events) -> None:
     await hass.async_block_till_done()
     assert acc.char_direction.value == 0
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_DIRECTION: DIRECTION_REVERSE})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.DIRECTION,
+            ATTR_DIRECTION: DIRECTION_REVERSE,
+        },
+    )
     await hass.async_block_till_done()
     assert acc.char_direction.value == 1
 
@@ -197,7 +204,11 @@ async def test_fan_oscillate(hass: HomeAssistant, hk_driver, events) -> None:
     await hass.async_block_till_done()
     assert acc.char_swing.value == 0
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_OSCILLATING: True})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_FEATURES: FanEntityFeature.OSCILLATE, ATTR_OSCILLATING: True},
+    )
     await hass.async_block_till_done()
     assert acc.char_swing.value == 1
 
@@ -272,7 +283,15 @@ async def test_fan_speed(hass: HomeAssistant, hk_driver, events) -> None:
     await acc.run()
     await hass.async_block_till_done()
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_PERCENTAGE: 100})
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_PERCENTAGE_STEP: 25,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.SET_SPEED,
+            ATTR_PERCENTAGE: 100,
+        },
+    )
     await hass.async_block_till_done()
     assert acc.char_speed.value == 100
 
@@ -306,7 +325,15 @@ async def test_fan_speed(hass: HomeAssistant, hk_driver, events) -> None:
     assert events[-1].data[ATTR_VALUE] == 42
 
     # Verify speed is preserved from off to on
-    hass.states.async_set(entity_id, STATE_OFF, {ATTR_PERCENTAGE: 42})
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {
+            ATTR_PERCENTAGE_STEP: 25,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.SET_SPEED,
+            ATTR_PERCENTAGE: 42,
+        },
+    )
     await hass.async_block_till_done()
     assert acc.char_speed.value == 50
     assert acc.char_active.value == 0
@@ -526,19 +553,19 @@ async def test_fan_set_all_one_shot(hass: HomeAssistant, hk_driver, events) -> N
     assert len(call_set_direction) == 2
 
 
-async def test_fan_restore(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_fan_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fan",
         "generic",
         "1234",
         suggested_object_id="simple",
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fan",
         "generic",
         "9012",

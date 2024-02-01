@@ -1,181 +1,131 @@
 addon_start:
-  name: Start add-on
-  description: Start add-on.
   fields:
     addon:
-      name: Add-on
       required: true
-      description: The add-on slug.
       example: core_ssh
       selector:
         addon:
 
 addon_restart:
-  name: Restart add-on.
-  description: Restart add-on.
   fields:
     addon:
-      name: Add-on
       required: true
-      description: The add-on slug.
       example: core_ssh
       selector:
         addon:
 
 addon_stdin:
-  name: Write data to add-on stdin.
-  description: Write data to add-on stdin.
   fields:
     addon:
-      name: Add-on
       required: true
-      description: The add-on slug.
       example: core_ssh
       selector:
         addon:
 
 addon_stop:
-  name: Stop add-on.
-  description: Stop add-on.
   fields:
     addon:
-      name: Add-on
       required: true
-      description: The add-on slug.
       example: core_ssh
       selector:
         addon:
 
 addon_update:
-  name: Update add-on.
-  description: Update add-on. This service should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.
   fields:
     addon:
-      name: Add-on
       required: true
-      description: The add-on slug.
       example: core_ssh
       selector:
         addon:
 
 host_reboot:
-  name: Reboot the host system.
-  description: Reboot the host system.
-
 host_shutdown:
-  name: Poweroff the host system.
-  description: Poweroff the host system.
-
 backup_full:
-  name: Create a full backup.
-  description: Create a full backup.
   fields:
     name:
-      name: Name
-      description: Optional (default = current date and time).
       example: "Backup 1"
       selector:
         text:
     password:
-      name: Password
-      description: Optional password.
       example: "password"
       selector:
         text:
     compressed:
-      name: Compressed
-      description: Use compressed archives
       default: true
+      selector:
+        boolean:
+    location:
+      example: my_backup_mount
+      selector:
+        backup_location:
+    homeassistant_exclude_database:
+      default: false
       selector:
         boolean:
 
 backup_partial:
-  name: Create a partial backup.
-  description: Create a partial backup.
   fields:
     homeassistant:
-      name: Home Assistant settings
-      description: Backup Home Assistant settings
+      selector:
+        boolean:
+    homeassistant_exclude_database:
+      default: false
       selector:
         boolean:
     addons:
-      name: Add-ons
-      description: Optional list of add-on slugs.
       example: ["core_ssh", "core_samba", "core_mosquitto"]
       selector:
         object:
     folders:
-      name: Folders
-      description: Optional list of directories.
       example: ["homeassistant", "share"]
       selector:
         object:
     name:
-      name: Name
-      description: Optional (default = current date and time).
       example: "Partial backup 1"
       selector:
         text:
     password:
-      name: Password
-      description: Optional password.
       example: "password"
       selector:
         text:
     compressed:
-      name: Compressed
-      description: Use compressed archives
       default: true
       selector:
         boolean:
+    location:
+      example: my_backup_mount
+      selector:
+        backup_location:
 
 restore_full:
-  name: Restore from full backup.
-  description: Restore from full backup.
   fields:
     slug:
-      name: Slug
       required: true
-      description: Slug of backup to restore from.
       selector:
         text:
     password:
-      name: Password
-      description: Optional password.
       example: "password"
       selector:
         text:
 
 restore_partial:
-  name: Restore from partial backup.
-  description: Restore from partial backup.
   fields:
     slug:
-      name: Slug
       required: true
-      description: Slug of backup to restore from.
       selector:
         text:
     homeassistant:
-      name: Home Assistant settings
-      description: Restore Home Assistant
       selector:
         boolean:
     folders:
-      name: Folders
-      description: Optional list of directories.
       example: ["homeassistant", "share"]
       selector:
         object:
     addons:
-      name: Add-ons
-      description: Optional list of add-on slugs.
       example: ["core_ssh", "core_samba", "core_mosquitto"]
       selector:
         object:
     password:
-      name: Password
-      description: Optional password.
       example: "password"
       selector:
         text:

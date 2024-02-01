@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import logging
 
-# pylint: disable=import-error
 from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 

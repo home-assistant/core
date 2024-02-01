@@ -17,5 +17,23 @@
         }
       }
     }
+  },
+  "services": {
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles the helper on/off."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns off the helper."
+    },
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns on the helper."
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads helpers from the YAML-configuration."
+    }
   }
 }

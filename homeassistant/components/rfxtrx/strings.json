@@ -19,19 +19,22 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
+        "data_description": {
+          "host": "The hostname or IP address of your RFXCOM RFXtrx device."
+        },
         "title": "Select connection address"
       },
       "setup_serial": {
         "data": {
           "device": "Select device"
         },
-        "title": "Device"
+        "title": "[%key:common::config_flow::data::device%]"
       },
       "setup_serial_manual_path": {
         "data": {
           "device": "[%key:common::config_flow::data::usb_path%]"
         },
-        "title": "Path"
+        "title": "[%key:common::config_flow::data::path%]"
       }
     }
   },
@@ -77,6 +80,76 @@
     "trigger_type": {
       "status": "Received status: {subtype}",
       "command": "Received command: {subtype}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_ch_1": {
+        "name": "Current Ch. 1"
+      },
+      "current_ch_2": {
+        "name": "Current Ch. 2"
+      },
+      "current_ch_3": {
+        "name": "Current Ch. 3"
+      },
+      "instantaneous_power": {
+        "name": "Instantaneous power"
+      },
+      "temperature_2": {
+        "name": "Temperature 2"
+      },
+      "total_energy_usage": {
+        "name": "Total energy usage"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "sensor_status": {
+        "name": "Sensor status"
+      },
+      "count": {
+        "name": "Count"
+      },
+      "counter_value": {
+        "name": "Counter value"
+      },
+      "chill": {
+        "name": "Chill"
+      },
+      "wind_average_speed": {
+        "name": "Wind average speed"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "forecast_status": {
+        "name": "Forecast status"
+      },
+      "forecast": {
+        "name": "Forecast"
+      },
+      "humidity_status": {
+        "name": "Humidity status"
+      },
+      "uv_index": {
+        "name": "UV index"
+      }
+    }
+  },
+  "services": {
+    "send": {
+      "name": "Send",
+      "description": "Sends a raw event on radio.",
+      "fields": {
+        "event": {
+          "name": "Event",
+          "description": "A hexadecimal string to send."
+        }
+      }
     }
   }
 }

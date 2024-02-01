@@ -1,5 +1,6 @@
 """The tests for Climate device actions."""
 import pytest
+from pytest_unordered import unordered
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
@@ -17,11 +18,14 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.mark.parametrize(
@@ -59,7 +63,7 @@ async def test_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -78,7 +82,7 @@ async def test_get_actions(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for action in expected_action_types
@@ -87,7 +91,7 @@ async def test_get_actions(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 @pytest.mark.parametrize(
@@ -113,7 +117,7 @@ async def test_get_actions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -128,7 +132,7 @@ async def test_get_actions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for action in ["set_hvac_mode"]
@@ -136,13 +140,27 @@ async def test_get_actions_hidden_auxiliary(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
-async def test_action(hass: HomeAssistant) -> None:
+async def test_action(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for actions."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
     hass.states.async_set(
-        "climate.entity",
+        entry.entity_id,
         HVACMode.COOL,
         {
             const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
@@ -162,8 +180,8 @@ async def test_action(hass: HomeAssistant) -> None:
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
-                        "entity_id": "climate.entity",
+                        "device_id": device_entry.id,
+                        "entity_id": entry.id,
                         "type": "set_hvac_mode",
                         "hvac_mode": HVACMode.OFF,
                     },
@@ -175,8 +193,8 @@ async def test_action(hass: HomeAssistant) -> None:
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
-                        "entity_id": "climate.entity",
+                        "device_id": device_entry.id,
+                        "entity_id": entry.id,
                         "type": "set_preset_mode",
                         "preset_mode": const.PRESET_AWAY,
                     },
@@ -197,6 +215,80 @@ async def test_action(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(set_hvac_mode_calls) == 1
     assert len(set_preset_mode_calls) == 1
+
+    assert set_hvac_mode_calls[0].domain == DOMAIN
+    assert set_hvac_mode_calls[0].service == "set_hvac_mode"
+    assert set_hvac_mode_calls[0].data == {
+        "entity_id": entry.entity_id,
+        "hvac_mode": const.HVACMode.OFF,
+    }
+    assert set_preset_mode_calls[0].domain == DOMAIN
+    assert set_preset_mode_calls[0].service == "set_preset_mode"
+    assert set_preset_mode_calls[0].data == {
+        "entity_id": entry.entity_id,
+        "preset_mode": const.PRESET_AWAY,
+    }
+
+
+async def test_action_legacy(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for actions."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        entry.entity_id,
+        HVACMode.COOL,
+        {
+            const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+            const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY],
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_set_hvac_mode",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "entity_id": entry.entity_id,
+                        "type": "set_hvac_mode",
+                        "hvac_mode": HVACMode.OFF,
+                    },
+                },
+            ]
+        },
+    )
+
+    set_hvac_mode_calls = async_mock_service(hass, "climate", "set_hvac_mode")
+
+    hass.bus.async_fire("test_event_set_hvac_mode")
+    await hass.async_block_till_done()
+    assert len(set_hvac_mode_calls) == 1
+
+    assert set_hvac_mode_calls[0].domain == DOMAIN
+    assert set_hvac_mode_calls[0].service == "set_hvac_mode"
+    assert set_hvac_mode_calls[0].data == {
+        "entity_id": entry.entity_id,
+        "hvac_mode": const.HVACMode.OFF,
+    }
 
 
 @pytest.mark.parametrize(
@@ -283,7 +375,7 @@ async def test_capabilities(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -302,7 +394,125 @@ async def test_capabilities(
         {
             "domain": DOMAIN,
             "device_id": "abcdefgh",
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
+            "type": action,
+        },
+    )
+
+    assert capabilities and "extra_fields" in capabilities
+
+    assert (
+        voluptuous_serialize.convert(
+            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+        )
+        == expected_capabilities
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "set_state",
+        "capabilities_reg",
+        "capabilities_state",
+        "action",
+        "expected_capabilities",
+    ),
+    [
+        (
+            False,
+            {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
+            {},
+            "set_hvac_mode",
+            [
+                {
+                    "name": "hvac_mode",
+                    "options": [("cool", "cool"), ("off", "off")],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+        (
+            False,
+            {const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY]},
+            {},
+            "set_preset_mode",
+            [
+                {
+                    "name": "preset_mode",
+                    "options": [("home", "home"), ("away", "away")],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+        (
+            True,
+            {},
+            {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
+            "set_hvac_mode",
+            [
+                {
+                    "name": "hvac_mode",
+                    "options": [("cool", "cool"), ("off", "off")],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+        (
+            True,
+            {},
+            {const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY]},
+            "set_preset_mode",
+            [
+                {
+                    "name": "preset_mode",
+                    "options": [("home", "home"), ("away", "away")],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+    ],
+)
+async def test_capabilities_legacy(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    set_state,
+    capabilities_reg,
+    capabilities_state,
+    action,
+    expected_capabilities,
+) -> None:
+    """Test getting capabilities."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        capabilities=capabilities_reg,
+    )
+    if set_state:
+        hass.states.async_set(
+            f"{DOMAIN}.test_5678",
+            HVACMode.COOL,
+            capabilities_state,
+        )
+
+    capabilities = await device_action.async_get_action_capabilities(
+        hass,
+        {
+            "domain": DOMAIN,
+            "device_id": "abcdefgh",
+            "entity_id": entity_entry.entity_id,
             "type": action,
         },
     )

@@ -10,7 +10,6 @@ import logging
 import time
 from typing import Any, cast
 
-import async_timeout
 import defusedxml.ElementTree as ET
 from soco.core import SoCo
 from soco.events_base import Event as SonosEvent, SubscriptionBase
@@ -155,6 +154,7 @@ class SonosSpeaker:
         self.dialog_level: bool | None = None
         self.night_mode: bool | None = None
         self.sub_enabled: bool | None = None
+        self.sub_crossover: int | None = None
         self.sub_gain: int | None = None
         self.surround_enabled: bool | None = None
         self.surround_mode: bool | None = None
@@ -562,6 +562,7 @@ class SonosSpeaker:
             "audio_delay",
             "bass",
             "treble",
+            "sub_crossover",
             "sub_gain",
             "surround_level",
             "music_surround_level",
@@ -1122,7 +1123,7 @@ class SonosSpeaker:
             return True
 
         try:
-            async with async_timeout.timeout(5):
+            async with asyncio.timeout(5):
                 while not _test_groups(groups):
                     await hass.data[DATA_SONOS].topology_condition.wait()
         except asyncio.TimeoutError:

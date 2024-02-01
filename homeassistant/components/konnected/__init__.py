@@ -197,7 +197,6 @@ DEVICE_SCHEMA_YAML = vol.All(
     import_device_validator,
 )
 
-# pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(

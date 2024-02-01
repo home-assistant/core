@@ -1,4 +1,6 @@
 """Tests for Vallox switch platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
@@ -30,7 +32,9 @@ async def test_switch_entities(
     metrics = {metric_key: value}
 
     # Act
-    with patch_metrics(metrics=metrics):
+    with patch_metrics(metrics=metrics), patch(
+        "homeassistant.components.vallox.Vallox.set_settable_address"
+    ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -56,7 +60,9 @@ async def test_bypass_lock_switch_entitity_set(
 ) -> None:
     """Test bypass lock switch set."""
     # Act
-    with patch_metrics(metrics={}), patch_metrics_set() as metrics_set:
+    with patch_metrics(metrics={}), patch_metrics_set() as metrics_set, patch(
+        "homeassistant.components.vallox.Vallox.set_settable_address"
+    ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
         await hass.services.async_call(

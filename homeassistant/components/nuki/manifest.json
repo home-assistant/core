@@ -12,5 +12,5 @@
   "documentation": "https://www.home-assistant.io/integrations/nuki",
   "iot_class": "local_polling",
   "loggers": ["pynuki"],
-  "requirements": ["pynuki==1.6.1"]
+  "requirements": ["pynuki==1.6.2"]
 }

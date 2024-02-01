@@ -4,31 +4,32 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "Password (default: PIN code on the back)",
+          "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
           "use_legacy_protocol": "Use legacy protocol"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your D-Link device",
+          "password": "Default: PIN code on the back."
         }
       },
       "confirm_discovery": {
         "data": {
-          "password": "[%key:component::dlink::config::step::user::data::password%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
           "use_legacy_protocol": "[%key:component::dlink::config::step::user::data::use_legacy_protocol%]"
+        },
+        "data_description": {
+          "password": "[%key:component::dlink::config::step::user::data_description::password%]"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect/authenticate",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The D-Link Smart Plug YAML configuration is being removed",
-      "description": "Configuring D-Link Smart Plug using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the D-Link Power Plug YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }

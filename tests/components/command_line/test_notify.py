@@ -4,40 +4,51 @@ from __future__ import annotations
 import os
 import subprocess
 import tempfile
-from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.notify import DOMAIN
+from homeassistant.components.command_line import DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 
 
-async def setup_test_service(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
-    """Set up a test command line notify service."""
-    assert await setup.async_setup_component(
-        hass,
-        DOMAIN,
+@pytest.mark.parametrize(
+    "get_config",
+    [
         {
-            DOMAIN: [
-                {"platform": "command_line", "name": "Test", **config_dict},
+            "command_line": [
+                {
+                    "notify": {
+                        "command": "exit 0",
+                        "name": "Test2",
+                    }
+                }
             ]
-        },
-    )
-    await hass.async_block_till_done()
-
-
-async def test_setup(hass: HomeAssistant) -> None:
+        }
+    ],
+)
+async def test_setup_integration_yaml(
+    hass: HomeAssistant, load_yaml_integration: None
+) -> None:
     """Test sensor setup."""
-    await setup_test_service(hass, {"command": "exit 0"})
-    assert hass.services.has_service(DOMAIN, "test")
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test2")
 
 
 async def test_bad_config(hass: HomeAssistant) -> None:
     """Test set up the platform with bad/missing configuration."""
-    await setup_test_service(hass, {})
-    assert not hass.services.has_service(DOMAIN, "test")
+    assert await setup.async_setup_component(
+        hass,
+        NOTIFY_DOMAIN,
+        {
+            NOTIFY_DOMAIN: [
+                {"platform": "command_line"},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "test")
 
 
 async def test_command_line_output(hass: HomeAssistant) -> None:
@@ -45,58 +56,102 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
     with tempfile.TemporaryDirectory() as tempdirname:
         filename = os.path.join(tempdirname, "message.txt")
         message = "one, two, testing, testing"
-        await setup_test_service(
+        await setup.async_setup_component(
             hass,
+            DOMAIN,
             {
-                "command": f"cat > {filename}",
+                "command_line": [
+                    {
+                        "notify": {
+                            "command": f"cat > {filename}",
+                            "name": "Test3",
+                        }
+                    }
+                ]
             },
         )
+        await hass.async_block_till_done()
 
-        assert hass.services.has_service(DOMAIN, "test")
+        assert hass.services.has_service(NOTIFY_DOMAIN, "test3")
 
-        assert await hass.services.async_call(
-            DOMAIN, "test", {"message": message}, blocking=True
+        await hass.services.async_call(
+            NOTIFY_DOMAIN, "test3", {"message": message}, blocking=True
         )
-        with open(filename) as handle:
+        with open(filename, encoding="UTF-8") as handle:
             # the echo command adds a line break
             assert message == handle.read()
 
 
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "notify": {
+                        "command": "exit 1",
+                        "name": "Test4",
+                    }
+                }
+            ]
+        }
+    ],
+)
 async def test_error_for_none_zero_exit_code(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
 ) -> None:
     """Test if an error is logged for non zero exit codes."""
-    await setup_test_service(
-        hass,
-        {
-            "command": "exit 1",
-        },
-    )
 
-    assert await hass.services.async_call(
-        DOMAIN, "test", {"message": "error"}, blocking=True
+    await hass.services.async_call(
+        NOTIFY_DOMAIN, "test4", {"message": "error"}, blocking=True
     )
     assert "Command failed" in caplog.text
     assert "return code 1" in caplog.text
 
 
-async def test_timeout(caplog: pytest.LogCaptureFixture, hass: HomeAssistant) -> None:
-    """Test blocking is not forever."""
-    await setup_test_service(
-        hass,
+@pytest.mark.parametrize(
+    "get_config",
+    [
         {
-            "command": "sleep 10000",
-            "command_timeout": 0.0000001,
-        },
-    )
-    assert await hass.services.async_call(
-        DOMAIN, "test", {"message": "error"}, blocking=True
+            "command_line": [
+                {
+                    "notify": {
+                        "command": "sleep 10000",
+                        "command_timeout": 0.0000001,
+                        "name": "Test5",
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_timeout(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
+) -> None:
+    """Test blocking is not forever."""
+    await hass.services.async_call(
+        NOTIFY_DOMAIN, "test5", {"message": "error"}, blocking=True
     )
     assert "Timeout" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "notify": {
+                        "command": "exit 0",
+                        "name": "Test6",
+                    }
+                }
+            ]
+        }
+    ],
+)
 async def test_subprocess_exceptions(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
 ) -> None:
     """Test that notify subprocess exceptions are handled correctly."""
 
@@ -110,15 +165,14 @@ async def test_subprocess_exceptions(
             subprocess.SubprocessError(),
         ]
 
-        await setup_test_service(hass, {"command": "exit 0"})
-        assert await hass.services.async_call(
-            DOMAIN, "test", {"message": "error"}, blocking=True
+        await hass.services.async_call(
+            NOTIFY_DOMAIN, "test6", {"message": "error"}, blocking=True
         )
         assert check_output.call_count == 2
         assert "Timeout for command" in caplog.text
 
-        assert await hass.services.async_call(
-            DOMAIN, "test", {"message": "error"}, blocking=True
+        await hass.services.async_call(
+            NOTIFY_DOMAIN, "test6", {"message": "error"}, blocking=True
         )
         assert check_output.call_count == 4
         assert "Error trying to exec command" in caplog.text

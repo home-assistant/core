@@ -1,22 +1,16 @@
 capture_smartcam:
-  name: Capture SmartCam image
-  description: Capture a new image from a Verisure SmartCam
   target:
     entity:
       integration: verisure
       domain: camera
 
 enable_autolock:
-  name: Enable autolock
-  description: Enable autolock of a Verisure Lockguard Smartlock
   target:
     entity:
       integration: verisure
       domain: lock
 
 disable_autolock:
-  name: Disable autolock
-  description: Disable autolock of a Verisure Lockguard Smartlock
   target:
     entity:
       integration: verisure

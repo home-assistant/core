@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -17,7 +17,6 @@ from .const import DOMAIN, GATEWAY, NETWORK_COORDINATOR, SIGNAL_COORDINATOR, SMS
 SIGNAL_SENSORS = (
     SensorEntityDescription(
         key="SignalStrength",
-        translation_key="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,

@@ -7,7 +7,6 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import webhook
@@ -74,7 +73,7 @@ async def async_setup_platform(
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook POST with image files."""
     try:
-        async with async_timeout.timeout(5):
+        async with asyncio.timeout(5):
             data = dict(await request.post())
     except (asyncio.TimeoutError, aiohttp.web.HTTPException) as error:
         _LOGGER.error("Could not get information from POST <%s>", error)

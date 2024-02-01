@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/eddystone_temperature",
   "iot_class": "local_polling",
   "loggers": ["beacontools"],
-  "requirements": ["beacontools[scan]==2.1.0", "construct==2.10.56"]
+  "requirements": ["beacontools[scan]==2.1.0"]
 }

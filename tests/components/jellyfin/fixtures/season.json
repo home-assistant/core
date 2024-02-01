@@ -1,0 +1,23 @@
+{
+  "BackdropImageTags": [],
+  "ChannelId": "string",
+  "Id": "SEASON-UUID",
+  "ImageBlurHashes": {},
+  "ImageTags": {},
+  "IndexNumber": 0,
+  "IsFolder": true,
+  "LocationType": "FileSystem",
+  "Name": "SEASON",
+  "SeriesId": "SERIES-UUID",
+  "SeriesName": "SERIES",
+  "ServerId": "SEASON-UUID",
+  "Type": "Season",
+  "UserData": {
+    "IsFavorite": false,
+    "Key": "string",
+    "PlayCount": 0,
+    "PlaybackPositionTicks": 0,
+    "Played": false,
+    "UnplayedItemCount": 0
+  }
+}

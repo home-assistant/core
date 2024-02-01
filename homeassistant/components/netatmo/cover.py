@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_COVER
 from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoCover(NetatmoBase, CoverEntity):
+class NetatmoCover(NetatmoBaseEntity, CoverEntity):
     """Representation of a Netatmo cover device."""
 
     _attr_supported_features = (
@@ -51,6 +51,7 @@ class NetatmoCover(NetatmoBase, CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
+    _attr_device_class = CoverDeviceClass.SHUTTER
 
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize the Netatmo device."""
@@ -97,11 +98,6 @@ class NetatmoCover(NetatmoBase, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         await self._cover.async_set_target_position(kwargs[ATTR_POSITION])
-
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Return the device class."""
-        return CoverDeviceClass.SHUTTER
 
     @callback
     def async_update_callback(self) -> None:

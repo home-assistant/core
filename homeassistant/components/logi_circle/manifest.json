@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/logi_circle",
   "iot_class": "cloud_polling",
   "loggers": ["logi_circle"],
-  "requirements": ["logi_circle==0.2.3"]
+  "requirements": ["logi-circle==0.2.3"]
 }

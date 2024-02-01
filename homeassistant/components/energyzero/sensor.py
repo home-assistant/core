@@ -13,10 +13,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CURRENCY_EURO, PERCENTAGE, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import (
+    CURRENCY_EURO,
+    PERCENTAGE,
+    UnitOfEnergy,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -24,7 +29,7 @@ from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
 from .coordinator import EnergyZeroData, EnergyZeroDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnergyZeroSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -32,7 +37,7 @@ class EnergyZeroSensorEntityDescriptionMixin:
     service_type: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnergyZeroSensorEntityDescription(
     SensorEntityDescription, EnergyZeroSensorEntityDescriptionMixin
 ):
@@ -42,7 +47,7 @@ class EnergyZeroSensorEntityDescription(
 SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
     EnergyZeroSensorEntityDescription(
         key="current_hour_price",
-        name="Current hour",
+        translation_key="current_hour_price",
         service_type="today_gas",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
@@ -50,14 +55,14 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
     ),
     EnergyZeroSensorEntityDescription(
         key="next_hour_price",
-        name="Next hour",
+        translation_key="next_hour_price",
         service_type="today_gas",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         value_fn=lambda data: get_gas_price(data, 1),
     ),
     EnergyZeroSensorEntityDescription(
         key="current_hour_price",
-        name="Current hour",
+        translation_key="current_hour_price",
         service_type="today_energy",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
@@ -65,7 +70,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
     ),
     EnergyZeroSensorEntityDescription(
         key="next_hour_price",
-        name="Next hour",
+        translation_key="next_hour_price",
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.price_at_time(
@@ -74,46 +79,54 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
     ),
     EnergyZeroSensorEntityDescription(
         key="average_price",
-        name="Average - today",
+        translation_key="average_price",
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.average_price,
     ),
     EnergyZeroSensorEntityDescription(
         key="max_price",
-        name="Highest price - today",
+        translation_key="max_price",
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.extreme_prices[1],
     ),
     EnergyZeroSensorEntityDescription(
         key="min_price",
-        name="Lowest price - today",
+        translation_key="min_price",
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.extreme_prices[0],
     ),
     EnergyZeroSensorEntityDescription(
         key="highest_price_time",
-        name="Time of highest price - today",
+        translation_key="highest_price_time",
         service_type="today_energy",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.energy_today.highest_price_time,
     ),
     EnergyZeroSensorEntityDescription(
         key="lowest_price_time",
-        name="Time of lowest price - today",
+        translation_key="lowest_price_time",
         service_type="today_energy",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.energy_today.lowest_price_time,
     ),
     EnergyZeroSensorEntityDescription(
         key="percentage_of_max",
-        name="Current percentage of highest price - today",
+        translation_key="percentage_of_max",
         service_type="today_energy",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_price,
+    ),
+    EnergyZeroSensorEntityDescription(
+        key="hours_priced_equal_or_lower",
+        translation_key="hours_priced_equal_or_lower",
+        service_type="today_energy",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        icon="mdi:clock",
+        value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower,
     ),
 )
 
@@ -127,6 +140,7 @@ def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
 
     Returns:
         The gas market price value.
+
     """
     if data.gas_today is None:
         return None

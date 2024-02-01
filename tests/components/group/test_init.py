@@ -39,7 +39,14 @@ async def test_setup_group_with_mixed_groupable_states(hass: HomeAssistant) -> N
     assert await async_setup_component(hass, "group", {})
 
     await group.Group.async_create_group(
-        hass, "person_and_light", ["light.Bowl", "device_tracker.Paulus"]
+        hass,
+        "person_and_light",
+        created_by_service=False,
+        entity_ids=["light.Bowl", "device_tracker.Paulus"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     await hass.async_block_till_done()
@@ -54,7 +61,14 @@ async def test_setup_group_with_a_non_existing_state(hass: HomeAssistant) -> Non
     assert await async_setup_component(hass, "group", {})
 
     grp = await group.Group.async_create_group(
-        hass, "light_and_nothing", ["light.Bowl", "non.existing"]
+        hass,
+        "light_and_nothing",
+        created_by_service=False,
+        entity_ids=["light.Bowl", "non.existing"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     assert grp.state == STATE_ON
@@ -68,7 +82,14 @@ async def test_setup_group_with_non_groupable_states(hass: HomeAssistant) -> Non
     assert await async_setup_component(hass, "group", {})
 
     grp = await group.Group.async_create_group(
-        hass, "chromecasts", ["cast.living_room", "cast.bedroom"]
+        hass,
+        "chromecasts",
+        created_by_service=False,
+        entity_ids=["cast.living_room", "cast.bedroom"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     assert grp.state is None
@@ -76,7 +97,16 @@ async def test_setup_group_with_non_groupable_states(hass: HomeAssistant) -> Non
 
 async def test_setup_empty_group(hass: HomeAssistant) -> None:
     """Try to set up an empty group."""
-    grp = await group.Group.async_create_group(hass, "nothing", [])
+    grp = await group.Group.async_create_group(
+        hass,
+        "nothing",
+        created_by_service=False,
+        entity_ids=[],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
 
     assert grp.state is None
 
@@ -89,7 +119,14 @@ async def test_monitor_group(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     # Test if group setup in our init mode is ok
@@ -108,7 +145,14 @@ async def test_group_turns_off_if_all_off(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     await hass.async_block_till_done()
@@ -127,7 +171,14 @@ async def test_group_turns_on_if_all_are_off_and_one_turns_on(
     assert await async_setup_component(hass, "group", {})
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     # Turn one on
@@ -148,7 +199,14 @@ async def test_allgroup_stays_off_if_all_are_off_and_one_turns_on(
     assert await async_setup_component(hass, "group", {})
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False, mode=True
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling"],
+        icon=None,
+        mode=True,
+        object_id=None,
+        order=None,
     )
 
     # Turn one on
@@ -167,7 +225,14 @@ async def test_allgroup_turn_on_if_last_turns_on(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False, mode=True
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling"],
+        icon=None,
+        mode=True,
+        object_id=None,
+        order=None,
     )
 
     # Turn one on
@@ -186,7 +251,14 @@ async def test_expand_entity_ids(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     assert sorted(["light.ceiling", "light.bowl"]) == sorted(
@@ -204,7 +276,14 @@ async def test_expand_entity_ids_does_not_return_duplicates(
     assert await async_setup_component(hass, "group", {})
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     assert ["light.bowl", "light.ceiling"] == sorted(
@@ -226,8 +305,12 @@ async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
     test_group = await group.Group.async_create_group(
         hass,
         "init_group",
-        ["light.Bowl", "light.Ceiling", "group.init_group"],
-        False,
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling", "group.init_group"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     assert sorted(["light.ceiling", "light.bowl"]) == sorted(
@@ -248,7 +331,14 @@ async def test_get_entity_ids(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     assert ["light.bowl", "light.ceiling"] == sorted(
@@ -263,7 +353,14 @@ async def test_get_entity_ids_with_domain_filter(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
 
     mixed_group = await group.Group.async_create_group(
-        hass, "mixed_group", ["light.Bowl", "switch.AC"], False
+        hass,
+        "mixed_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "switch.AC"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     assert ["switch.ac"] == group.get_entity_ids(
@@ -293,7 +390,14 @@ async def test_group_being_init_before_first_tracked_state_is_set_to_on(
     assert await async_setup_component(hass, "group", {})
 
     test_group = await group.Group.async_create_group(
-        hass, "test group", ["light.not_there_1"]
+        hass,
+        "test group",
+        created_by_service=False,
+        entity_ids=["light.not_there_1"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     hass.states.async_set("light.not_there_1", STATE_ON)
@@ -314,7 +418,14 @@ async def test_group_being_init_before_first_tracked_state_is_set_to_off(
     """
     assert await async_setup_component(hass, "group", {})
     test_group = await group.Group.async_create_group(
-        hass, "test group", ["light.not_there_1"]
+        hass,
+        "test group",
+        created_by_service=False,
+        entity_ids=["light.not_there_1"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     hass.states.async_set("light.not_there_1", STATE_OFF)
@@ -330,8 +441,26 @@ async def test_groups_get_unique_names(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(hass, "group", {})
 
-    grp1 = await group.Group.async_create_group(hass, "Je suis Charlie")
-    grp2 = await group.Group.async_create_group(hass, "Je suis Charlie")
+    grp1 = await group.Group.async_create_group(
+        hass,
+        "Je suis Charlie",
+        created_by_service=False,
+        entity_ids=None,
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
+    grp2 = await group.Group.async_create_group(
+        hass,
+        "Je suis Charlie",
+        created_by_service=False,
+        entity_ids=None,
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
 
     assert grp1.entity_id != grp2.entity_id
 
@@ -342,13 +471,34 @@ async def test_expand_entity_ids_expands_nested_groups(hass: HomeAssistant) -> N
     assert await async_setup_component(hass, "group", {})
 
     await group.Group.async_create_group(
-        hass, "light", ["light.test_1", "light.test_2"]
+        hass,
+        "light",
+        created_by_service=False,
+        entity_ids=["light.test_1", "light.test_2"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
     await group.Group.async_create_group(
-        hass, "switch", ["switch.test_1", "switch.test_2"]
+        hass,
+        "switch",
+        created_by_service=False,
+        entity_ids=["switch.test_1", "switch.test_2"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
     await group.Group.async_create_group(
-        hass, "group_of_groups", ["group.light", "group.switch"]
+        hass,
+        "group_of_groups",
+        created_by_service=False,
+        entity_ids=["group.light", "group.switch"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     assert [
@@ -367,7 +517,14 @@ async def test_set_assumed_state_based_on_tracked(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling", "sensor.no_exist"]
+        hass,
+        "init_group",
+        created_by_service=False,
+        entity_ids=["light.Bowl", "light.Ceiling", "sensor.no_exist"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     state = hass.states.get(test_group.entity_id)
@@ -398,7 +555,14 @@ async def test_group_updated_after_device_tracker_zone_change(
     assert await async_setup_component(hass, "device_tracker", {})
 
     await group.Group.async_create_group(
-        hass, "peeps", ["device_tracker.Adam", "device_tracker.Eve"]
+        hass,
+        "peeps",
+        created_by_service=False,
+        entity_ids=["device_tracker.Adam", "device_tracker.Eve"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     hass.states.async_set("device_tracker.Adam", "cool_state_not_home")
@@ -417,7 +581,14 @@ async def test_is_on(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
     await hass.async_block_till_done()
 
@@ -446,7 +617,14 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     await group.Group.async_create_group(
-        hass, "all tests", ["test.one", "test.two"], user_defined=False
+        hass,
+        "all tests",
+        created_by_service=True,
+        entity_ids=["test.one", "test.two"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     await hass.async_block_till_done()
@@ -523,14 +701,24 @@ async def test_setup(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     test_group = await group.Group.async_create_group(
-        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=["light.Bowl", "light.Ceiling"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
     await group.Group.async_create_group(
         hass,
         "created_group",
-        ["light.Bowl", f"{test_group.entity_id}"],
-        True,
-        "mdi:work",
+        created_by_service=False,
+        entity_ids=["light.Bowl", f"{test_group.entity_id}"],
+        icon="mdi:work",
+        mode=None,
+        object_id=None,
+        order=None,
     )
     await hass.async_block_till_done()
 
@@ -616,7 +804,6 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     assert "person.one" not in list(group_state.attributes["entity_id"])
 
 
-# pylint: disable=invalid-name
 async def test_service_group_set_group_remove_group(hass: HomeAssistant) -> None:
     """Check if service are available."""
     with assert_setup_component(0, "group"):
@@ -952,7 +1139,7 @@ async def test_group_alarm(hass: HomeAssistant) -> None:
     hass.states.async_set("alarm_control_panel.one", "armed_away")
     hass.states.async_set("alarm_control_panel.two", "armed_home")
     hass.states.async_set("alarm_control_panel.three", "armed_away")
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     assert await async_setup_component(
         hass,
@@ -1000,7 +1187,7 @@ async def test_group_vacuum_off(hass: HomeAssistant) -> None:
     hass.states.async_set("vacuum.one", "docked")
     hass.states.async_set("vacuum.two", "off")
     hass.states.async_set("vacuum.three", "off")
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     assert await async_setup_component(
         hass,
@@ -1093,7 +1280,7 @@ async def test_switch_removed(hass: HomeAssistant) -> None:
     hass.states.async_set("switch.two", "off")
     hass.states.async_set("switch.three", "on")
 
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
     assert await async_setup_component(
         hass,
         "group",
@@ -1222,7 +1409,7 @@ async def test_group_that_references_a_group_of_lights(hass: HomeAssistant) -> N
         "light.living_front_ri",
         "light.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "off")
@@ -1256,7 +1443,7 @@ async def test_group_that_references_a_group_of_covers(hass: HomeAssistant) -> N
         "cover.living_front_ri",
         "cover.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1292,7 +1479,7 @@ async def test_group_that_references_two_groups_of_covers(hass: HomeAssistant) -
         "cover.living_front_ri",
         "cover.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1336,7 +1523,7 @@ async def test_group_that_references_two_types_of_groups(hass: HomeAssistant) ->
         "device_tracker.living_front_ri",
         "device_tracker.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in group_1_entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1454,13 +1641,12 @@ async def test_plant_group(hass: HomeAssistant) -> None:
 )
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     group_type: str,
     member_state: str,
     extra_options: dict[str, Any],
 ) -> None:
     """Test removing a config entry."""
-    registry = er.async_get(hass)
-
     members1 = [f"{group_type}.one", f"{group_type}.two"]
 
     for member in members1:
@@ -1485,7 +1671,7 @@ async def test_setup_and_remove_config_entry(
     # Check the state and entity registry entry are present
     state = hass.states.get(f"{group_type}.bed_room")
     assert state.attributes["entity_id"] == members1
-    assert registry.async_get(f"{group_type}.bed_room") is not None
+    assert entity_registry.async_get(f"{group_type}.bed_room") is not None
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(group_config_entry.entry_id)
@@ -1493,7 +1679,7 @@ async def test_setup_and_remove_config_entry(
 
     # Check the state and entity registry entry are removed
     assert hass.states.get(f"{group_type}.bed_room") is None
-    assert registry.async_get(f"{group_type}.bed_room") is None
+    assert entity_registry.async_get(f"{group_type}.bed_room") is None
 
 
 @pytest.mark.parametrize(
@@ -1519,6 +1705,7 @@ async def test_setup_and_remove_config_entry(
 )
 async def test_unhide_members_on_remove(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     group_type: str,
     extra_options: dict[str, Any],
     hide_members: bool,
@@ -1526,10 +1713,7 @@ async def test_unhide_members_on_remove(
     hidden_by: str,
 ) -> None:
     """Test removing a config entry."""
-    registry = er.async_get(hass)
-
-    registry = er.async_get(hass)
-    entry1 = registry.async_get_or_create(
+    entry1 = entity_registry.async_get_or_create(
         group_type,
         "test",
         "unique1",
@@ -1538,7 +1722,7 @@ async def test_unhide_members_on_remove(
     )
     assert entry1.entity_id == f"{group_type}.one"
 
-    entry3 = registry.async_get_or_create(
+    entry3 = entity_registry.async_get_or_create(
         group_type,
         "test",
         "unique3",
@@ -1547,7 +1731,7 @@ async def test_unhide_members_on_remove(
     )
     assert entry3.entity_id == f"{group_type}.three"
 
-    entry4 = registry.async_get_or_create(
+    entry4 = entity_registry.async_get_or_create(
         group_type,
         "test",
         "unique4",
@@ -1579,12 +1763,12 @@ async def test_unhide_members_on_remove(
 
     # Remove one entity registry entry, to make sure this does not trip up config entry
     # removal
-    registry.async_remove(entry4.entity_id)
+    entity_registry.async_remove(entry4.entity_id)
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(group_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Check the group members are unhidden
-    assert registry.async_get(f"{group_type}.one").hidden_by == hidden_by
-    assert registry.async_get(f"{group_type}.three").hidden_by == hidden_by
+    assert entity_registry.async_get(f"{group_type}.one").hidden_by == hidden_by
+    assert entity_registry.async_get(f"{group_type}.three").hidden_by == hidden_by

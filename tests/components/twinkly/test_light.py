@@ -4,19 +4,14 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, LightEntityFeature
-from homeassistant.components.twinkly.const import (
-    CONF_HOST,
-    CONF_ID,
-    CONF_NAME,
-    DOMAIN as TWINKLY_DOMAIN,
-)
-from homeassistant.const import CONF_MODEL
+from homeassistant.components.twinkly.const import DOMAIN as TWINKLY_DOMAIN
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from . import TEST_MODEL, TEST_NAME_ORIGINAL, ClientMock
+from . import TEST_MODEL, TEST_NAME, TEST_NAME_ORIGINAL, ClientMock
 
 from tests.common import MockConfigEntry
 
@@ -28,16 +23,16 @@ async def test_initial_state(hass: HomeAssistant) -> None:
     state = hass.states.get(entity.entity_id)
 
     # Basic state properties
-    assert state.name == entity.unique_id
+    assert state.name == TEST_NAME
     assert state.state == "on"
     assert state.attributes[ATTR_BRIGHTNESS] == 26
-    assert state.attributes["friendly_name"] == entity.unique_id
+    assert state.attributes["friendly_name"] == TEST_NAME
     assert state.attributes["icon"] == "mdi:string-lights"
 
-    assert entity.original_name == entity.unique_id
+    assert entity.original_name == TEST_NAME
     assert entity.original_icon == "mdi:string-lights"
 
-    assert device.name == entity.unique_id
+    assert device.name == TEST_NAME
     assert device.model == TEST_MODEL
     assert device.manufacturer == "LEDWORKS"
 
@@ -342,7 +337,7 @@ async def _create_entries(
 
     entity_id = entity_registry.async_get_entity_id("light", TWINKLY_DOMAIN, client.id)
     entity_entry = entity_registry.async_get(entity_id)
-    device = device_registry.async_get_device({(TWINKLY_DOMAIN, client.id)})
+    device = device_registry.async_get_device(identifiers={(TWINKLY_DOMAIN, client.id)})
 
     assert entity_entry is not None
     assert device is not None

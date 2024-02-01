@@ -60,21 +60,12 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         device_class: BinarySensorDeviceClass | None,
     ) -> None:
         """Initialize the EnOcean binary sensor."""
-        super().__init__(dev_id, dev_name)
-        self._device_class = device_class
+        super().__init__(dev_id)
+        self._attr_device_class = device_class
         self.which = -1
         self.onoff = -1
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
-
-    @property
-    def name(self):
-        """Return the default name for the binary sensor."""
-        return self.dev_name
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
+        self._attr_name = dev_name
 
     def value_changed(self, packet):
         """Fire an event with the data that have changed.

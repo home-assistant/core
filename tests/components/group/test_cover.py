@@ -1,7 +1,7 @@
 """The tests for the group cover platform."""
+import asyncio
 from datetime import timedelta
 
-import async_timeout
 import pytest
 
 from homeassistant.components.cover import (
@@ -249,7 +249,9 @@ async def test_state(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
+async def test_attributes(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp
+) -> None:
     """Test handling of state attributes."""
     state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_UNAVAILABLE
@@ -346,10 +348,10 @@ async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
     assert state.attributes[ATTR_CURRENT_POSITION] == 70
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 60
 
-    # ### Test assumed state ###
+    # ### Test state when group members have different states ###
     # ##########################
 
-    # For covers - assumed state set true if position differ
+    # Covers
     hass.states.async_set(
         DEMO_COVER, STATE_OPEN, {ATTR_SUPPORTED_FEATURES: 4, ATTR_CURRENT_POSITION: 100}
     )
@@ -357,7 +359,7 @@ async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
 
     state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
-    assert state.attributes[ATTR_ASSUMED_STATE] is True
+    assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 244
     assert state.attributes[ATTR_CURRENT_POSITION] == 85  # (70 + 100) / 2
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 60
@@ -373,7 +375,7 @@ async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 60
 
-    # For tilts - assumed state set true if tilt position differ
+    # Tilts
     hass.states.async_set(
         DEMO_TILT,
         STATE_OPEN,
@@ -383,7 +385,7 @@ async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
 
     state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
-    assert state.attributes[ATTR_ASSUMED_STATE] is True
+    assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 128
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 80  # (60 + 100) / 2
@@ -399,14 +401,14 @@ async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 
+    # Group member has set assumed_state
     hass.states.async_set(DEMO_TILT, STATE_CLOSED, {ATTR_ASSUMED_STATE: True})
     await hass.async_block_till_done()
 
     state = hass.states.get(COVER_GROUP)
-    assert state.attributes[ATTR_ASSUMED_STATE] is True
+    assert ATTR_ASSUMED_STATE not in state.attributes
 
     # Test entity registry integration
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(COVER_GROUP)
     assert entry
     assert entry.unique_id == "unique_identifier"
@@ -828,7 +830,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ENTITY_ID) == ["cover.bedroom_group"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio.timeout(0.5):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CLOSE_COVER,

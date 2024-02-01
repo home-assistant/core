@@ -9,7 +9,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,14 +19,14 @@ from .helper import Plenticore, SelectDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreRequiredKeysMixin:
     """A class that describes required properties for plenticore select entities."""
 
     module_id: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreSelectEntityDescription(
     SelectEntityDescription, PlenticoreRequiredKeysMixin
 ):
@@ -111,7 +111,7 @@ class PlenticoreDataSelect(
         self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
-        self._device_info = device_info
+        self._attr_device_info = device_info
         self._attr_unique_id = f"{entry_id}_{description.module_id}"
 
     @property

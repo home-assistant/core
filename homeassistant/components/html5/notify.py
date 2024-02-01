@@ -113,7 +113,6 @@ SUBSCRIPTION_SCHEMA = vol.All(
     dict,
     vol.Schema(
         {
-            # pylint: disable=no-value-for-parameter
             vol.Required(ATTR_ENDPOINT): vol.Url(),
             vol.Required(ATTR_KEYS): KEYS_SCHEMA,
             vol.Optional(ATTR_EXPIRATIONTIME): vol.Any(None, cv.positive_int),

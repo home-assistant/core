@@ -1,10 +1,11 @@
 """Config flow for Hunter Douglas PowerView integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
+from typing import Any
 
 from aiopvapi.helpers.aiorequest import AioRequest
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -34,7 +35,7 @@ async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str
     pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
 
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             device_info = await async_get_device_info(pv_request, hub_address)
     except HUB_EXCEPTIONS as err:
         raise CannotConnect from err
@@ -51,18 +52,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the powerview config flow."""
-        self.powerview_config = {}
-        self.discovered_ip = None
-        self.discovered_name = None
+        self.powerview_config: dict[str, str] = {}
+        self.discovered_ip: str | None = None
+        self.discovered_name: str | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, Any] = {}
         if user_input is not None:
             info, error = await self._async_validate_or_error(user_input[CONF_HOST])
-            if not error:
+            if info and not error:
                 await self.async_set_unique_id(info["unique_id"])
                 return self.async_create_entry(
                     title=info["title"], data={CONF_HOST: user_input[CONF_HOST]}
@@ -73,7 +76,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def _async_validate_or_error(self, host):
+    async def _async_validate_or_error(
+        self, host: str
+    ) -> tuple[dict[str, str], None] | tuple[None, str]:
         self._async_abort_entries_match({CONF_HOST: host})
 
         try:
@@ -110,21 +115,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovered_name = name
         return await self.async_step_discovery_confirm()
 
-    async def async_step_discovery_confirm(self):
+    async def async_step_discovery_confirm(self) -> FlowResult:
         """Confirm dhcp or homekit discovery."""
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
+        assert self.discovered_ip and self.discovered_name
         self.context[CONF_HOST] = self.discovered_ip
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == self.discovered_ip:
                 return self.async_abort(reason="already_in_progress")
 
         self._async_abort_entries_match({CONF_HOST: self.discovered_ip})
-
         info, error = await self._async_validate_or_error(self.discovered_ip)
         if error:
             return self.async_abort(reason=error)
 
+        assert info is not None
         await self.async_set_unique_id(info["unique_id"], raise_on_progress=False)
         self._abort_if_unique_id_configured({CONF_HOST: self.discovered_ip})
 
@@ -134,7 +140,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_link()
 
-    async def async_step_link(self, user_input=None):
+    async def async_step_link(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Attempt to link with Powerview."""
         if user_input is not None:
             return self.async_create_entry(

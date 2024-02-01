@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/zhong_hong",
   "iot_class": "local_push",
   "loggers": ["zhong_hong_hvac"],
-  "requirements": ["zhong_hong_hvac==1.0.9"]
+  "requirements": ["zhong-hong-hvac==1.0.9"]
 }

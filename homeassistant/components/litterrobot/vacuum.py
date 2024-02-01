@@ -42,7 +42,9 @@ LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.OFF: STATE_OFF,
 }
 
-LITTER_BOX_ENTITY = StateVacuumEntityDescription("litter_box", name="Litter box")
+LITTER_BOX_ENTITY = StateVacuumEntityDescription(
+    key="litter_box", translation_key="litter_box"
+)
 
 
 async def async_setup_entry(
@@ -73,11 +75,7 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     """Litter-Robot "Vacuum" Cleaner."""
 
     _attr_supported_features = (
-        VacuumEntityFeature.START
-        | VacuumEntityFeature.STATE
-        | VacuumEntityFeature.STATUS
-        | VacuumEntityFeature.TURN_OFF
-        | VacuumEntityFeature.TURN_ON
+        VacuumEntityFeature.START | VacuumEntityFeature.STATE | VacuumEntityFeature.STOP
     )
 
     @property
@@ -92,17 +90,14 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
             f"{self.robot.status.text}{' (Sleeping)' if self.robot.is_sleeping else ''}"
         )
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the cleaner on, starting a clean cycle."""
-        await self.robot.set_power_status(True)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the unit off, stopping any cleaning in progress as is."""
-        await self.robot.set_power_status(False)
-
     async def async_start(self) -> None:
         """Start a clean cycle."""
+        await self.robot.set_power_status(True)
         await self.robot.start_cleaning()
+
+    async def async_stop(self, **kwargs: Any) -> None:
+        """Stop the vacuum cleaner."""
+        await self.robot.set_power_status(False)
 
     async def async_set_sleep_mode(
         self, enabled: bool, start_time: str | None = None

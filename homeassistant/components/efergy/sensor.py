@@ -1,6 +1,7 @@
 """Support for Efergy sensors."""
 from __future__ import annotations
 
+import dataclasses
 from re import sub
 from typing import cast
 
@@ -25,14 +26,14 @@ from .const import CONF_CURRENT_VALUES, DOMAIN, LOGGER
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="instant_readings",
-        name="Power Usage",
+        translation_key="instant_readings",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="energy_day",
-        name="Daily Consumption",
+        translation_key="energy_day",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -40,7 +41,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="energy_week",
-        name="Weekly Consumption",
+        translation_key="energy_week",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -48,14 +49,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="energy_month",
-        name="Monthly Consumption",
+        translation_key="energy_month",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="energy_year",
-        name="Yearly Consumption",
+        translation_key="energy_year",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -63,39 +64,39 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="budget",
-        name="Energy Budget",
+        translation_key="budget",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="cost_day",
-        name="Daily Energy Cost",
+        translation_key="cost_day",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="cost_week",
-        name="Weekly Energy Cost",
+        translation_key="cost_week",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="cost_month",
-        name="Monthly Energy Cost",
+        translation_key="cost_month",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="cost_year",
-        name="Yearly Energy Cost",
+        translation_key="cost_year",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=CONF_CURRENT_VALUES,
-        name="Power Usage",
+        translation_key="power_usage",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -121,7 +122,10 @@ async def async_setup_entry(
                 )
             )
         else:
-            description.entity_registry_enabled_default = len(api.sids) > 1
+            description = dataclasses.replace(
+                description,
+                entity_registry_enabled_default=len(api.sids) > 1,
+            )
             for sid in api.sids:
                 sensors.append(
                     EfergySensor(
@@ -137,6 +141,8 @@ async def async_setup_entry(
 class EfergySensor(EfergyEntity, SensorEntity):
     """Implementation of an Efergy sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         api: Efergy,
@@ -150,7 +156,8 @@ class EfergySensor(EfergyEntity, SensorEntity):
         super().__init__(api, server_unique_id)
         self.entity_description = description
         if description.key == CONF_CURRENT_VALUES:
-            self._attr_name = f"{description.name}_{'' if sid is None else sid}"
+            assert sid is not None
+            self._attr_translation_placeholders = {"sid": str(sid)}
         self._attr_unique_id = (
             f"{server_unique_id}/{description.key}_{'' if sid is None else sid}"
         )

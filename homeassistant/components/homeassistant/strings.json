@@ -4,13 +4,52 @@
       "title": "The country has not been configured",
       "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below."
     },
+    "deprecated_yaml": {
+      "title": "The {integration_title} YAML configuration is being removed",
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
     "historic_currency": {
       "title": "The configured currency is no longer in use",
       "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration."
     },
+    "legacy_templates_false": {
+      "title": "`legacy_templates` config key is being removed",
+      "description": "Nothing will change with your templates.\n\nRemove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "legacy_templates_true": {
+      "title": "The support for legacy templates is being removed",
+      "description": "Please do the following steps:\n- Adopt your configuration to support template rendering to native python types.\n- Remove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file.\n- Restart Home Assistant to fix this issue."
+    },
     "python_version": {
       "title": "Support for Python {current_python_version} is being removed",
       "description": "Support for running Home Assistant in the current used Python version {current_python_version} is deprecated and will be removed in Home Assistant {breaks_in_ha_version}. Please upgrade Python to {required_python_version} to prevent your Home Assistant instance from breaking."
+    },
+    "config_entry_only": {
+      "title": "The {domain} integration does not support YAML configuration",
+      "description": "The {domain} integration does not support configuration via YAML file. You may not notice any obvious issues with the integration, but any configuration settings defined in YAML are not actually applied.\n\nTo resolve this:\n\n1. If you've not already done so, [set up the integration]({add_integration}).\n\n2. Remove `{domain}:` from your YAML configuration file.\n\n3. Restart Home Assistant."
+    },
+    "platform_only": {
+      "title": "The {domain} integration does not support YAML configuration under its own key",
+      "description": "The {domain} integration does not support configuration under its own key, it must be configured under its supported platforms.\n\nTo resolve this:\n\n1. Remove `{domain}:` from your YAML configuration file.\n\n2. Restart Home Assistant."
+    },
+    "no_platform_setup": {
+      "title": "Unused YAML configuration for the {platform} integration",
+      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}\n"
+    },
+    "storage_corruption": {
+      "title": "Storage corruption detected for `{storage_key}`",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::homeassistant::issues::storage_corruption::title%]",
+            "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nClick SUBMIT below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}"
+          }
+        }
+      }
+    },
+    "config_entry_reauth": {
+      "title": "[%key:common::config_flow::title::reauth%]",
+      "description": "Reauthentication is needed"
     }
   },
   "system_health": {
@@ -28,6 +67,121 @@
       "user": "User",
       "version": "Version",
       "virtualenv": "Virtual Environment"
+    }
+  },
+  "services": {
+    "check_config": {
+      "name": "Check configuration",
+      "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs."
+    },
+    "reload_core_config": {
+      "name": "Reload core configuration",
+      "description": "Reloads the core configuration from the YAML-configuration."
+    },
+    "restart": {
+      "name": "[%key:common::action::restart%]",
+      "description": "Restarts Home Assistant.",
+      "fields": {
+        "safe_mode": {
+          "name": "Safe mode",
+          "description": "Disable custom integrations and custom cards."
+        }
+      }
+    },
+    "set_location": {
+      "name": "Set location",
+      "description": "Updates the Home Assistant location.",
+      "fields": {
+        "latitude": {
+          "name": "[%key:common::config_flow::data::latitude%]",
+          "description": "Latitude of your location."
+        },
+        "longitude": {
+          "name": "[%key:common::config_flow::data::longitude%]",
+          "description": "Longitude of your location."
+        },
+        "elevation": {
+          "name": "[%key:common::config_flow::data::elevation%]",
+          "description": "Elevation of your location."
+        }
+      }
+    },
+    "stop": {
+      "name": "[%key:common::action::stop%]",
+      "description": "Stops Home Assistant."
+    },
+    "toggle": {
+      "name": "Generic toggle",
+      "description": "Generic service to toggle devices on/off under any domain."
+    },
+    "turn_on": {
+      "name": "Generic turn on",
+      "description": "Generic service to turn devices on under any domain."
+    },
+    "turn_off": {
+      "name": "Generic turn off",
+      "description": "Generic service to turn devices off under any domain."
+    },
+    "update_entity": {
+      "name": "Update entity",
+      "description": "Forces one or more entities to update its data."
+    },
+    "reload_custom_templates": {
+      "name": "Reload custom Jinja2 templates",
+      "description": "Reloads Jinja2 templates found in the `custom_templates` folder in your config. New values will be applied on the next render of the template."
+    },
+    "reload_config_entry": {
+      "name": "Reload config entry",
+      "description": "Reloads the specified config entry.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry ID",
+          "description": "The configuration entry ID of the entry to be reloaded."
+        }
+      }
+    },
+    "save_persistent_states": {
+      "name": "Save persistent states",
+      "description": "Saves the persistent states immediately. Maintains the normal periodic saving interval."
+    },
+    "reload_all": {
+      "name": "Reload all",
+      "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant."
+    }
+  },
+  "exceptions": {
+    "component_import_err": {
+      "message": "Unable to import {domain}: {error}"
+    },
+    "config_platform_import_err": {
+      "message": "Error importing config platform {domain}: {error}"
+    },
+    "config_validation_err": {
+      "message": "Invalid config for integration {domain} at {config_file}, line {line}: {error}. Check the logs for more information."
+    },
+    "config_validator_unknown_err": {
+      "message": "Unknown error calling {domain} config validator. Check the logs for more information."
+    },
+    "config_schema_unknown_err": {
+      "message": "Unknown error calling {domain} CONFIG_SCHEMA. Check the logs for more information."
+    },
+    "integration_config_error": {
+      "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
+    },
+    "platform_component_load_err": {
+      "message": "Platform error: {domain} - {error}. Check the logs for more information."
+    },
+    "platform_component_load_exc": {
+      "message": "Platform error: {domain} - {error}. Check the logs for more information."
+    },
+    "platform_config_validation_err": {
+      "message": "Invalid config for {domain} from integration {p_name} at file {config_file}, line {line}: {error}. Check the logs for more information."
+    },
+    "platform_schema_validator_err": {
+      "message": "Unknown error when validating config for {domain} from integration {p_name}"
+    },
+    "service_not_found": {
+      "message": "Service {domain}.{service} not found."
     }
   }
 }

@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import logging
 
+from aiotankerkoenig import GasType, PriceInfo, Station
+
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CURRENCY_EURO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TankerkoenigCoordinatorEntity, TankerkoenigDataUpdateCoordinator
 from .const import (
     ATTR_BRAND,
     ATTR_CITY,
@@ -20,8 +21,9 @@ from .const import (
     ATTR_STREET,
     ATTRIBUTION,
     DOMAIN,
-    FUEL_TYPES,
 )
+from .coordinator import TankerkoenigDataUpdateCoordinator
+from .entity import TankerkoenigCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,26 +32,28 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the tankerkoenig sensors."""
-
     coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    stations = coordinator.stations.values()
     entities = []
-    for station in stations:
-        for fuel in coordinator.fuel_types:
-            if fuel not in station:
-                _LOGGER.warning(
-                    "Station %s does not offer %s fuel", station["id"], fuel
+    for station in coordinator.stations.values():
+        for fuel in (GasType.E10, GasType.E5, GasType.DIESEL):
+            if getattr(station, fuel) is None:
+                _LOGGER.debug(
+                    "Station %s %s (%s) does not offer %s fuel, skipping",
+                    station.brand,
+                    station.name,
+                    station.id,
+                    fuel,
                 )
                 continue
-            sensor = FuelPriceSensor(
-                fuel,
-                station,
-                coordinator,
-                coordinator.show_on_map,
+
+            entities.append(
+                FuelPriceSensor(
+                    fuel,
+                    station,
+                    coordinator,
+                )
             )
-            entities.append(sensor)
-    _LOGGER.debug("Added sensors %s", entities)
 
     async_add_entities(entities)
 
@@ -59,34 +63,37 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_icon = "mdi:gas-station"
+    _attr_native_unit_of_measurement = CURRENCY_EURO
 
-    def __init__(self, fuel_type, station, coordinator, show_on_map):
+    def __init__(
+        self,
+        fuel_type: GasType,
+        station: Station,
+        coordinator: TankerkoenigDataUpdateCoordinator,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, station)
-        self._station_id = station["id"]
+        self._station_id = station.id
         self._fuel_type = fuel_type
-        self._attr_name = f"{station['brand']} {station['street']} {station['houseNumber']} {FUEL_TYPES[fuel_type]}"
-        self._attr_native_unit_of_measurement = CURRENCY_EURO
-        self._attr_unique_id = f"{station['id']}_{fuel_type}"
+        self._attr_translation_key = fuel_type
+        self._attr_unique_id = f"{station.id}_{fuel_type}"
         attrs = {
-            ATTR_BRAND: station["brand"],
+            ATTR_BRAND: station.brand,
             ATTR_FUEL_TYPE: fuel_type,
-            ATTR_STATION_NAME: station["name"],
-            ATTR_STREET: station["street"],
-            ATTR_HOUSE_NUMBER: station["houseNumber"],
-            ATTR_POSTCODE: station["postCode"],
-            ATTR_CITY: station["place"],
+            ATTR_STATION_NAME: station.name,
+            ATTR_STREET: station.street,
+            ATTR_HOUSE_NUMBER: station.house_number,
+            ATTR_POSTCODE: station.post_code,
+            ATTR_CITY: station.place,
         }
 
-        if show_on_map:
-            attrs[ATTR_LATITUDE] = station["lat"]
-            attrs[ATTR_LONGITUDE] = station["lng"]
+        if coordinator.show_on_map:
+            attrs[ATTR_LATITUDE] = str(station.lat)
+            attrs[ATTR_LONGITUDE] = str(station.lng)
         self._attr_extra_state_attributes = attrs
 
     @property
-    def native_value(self):
-        """Return the state of the device."""
-        # key Fuel_type is not available when the fuel station is closed,
-        # use "get" instead of "[]" to avoid exceptions
-        return self.coordinator.data[self._station_id].get(self._fuel_type)
+    def native_value(self) -> float:
+        """Return the current price for the fuel type."""
+        info: PriceInfo = self.coordinator.data[self._station_id]
+        return getattr(info, self._fuel_type)

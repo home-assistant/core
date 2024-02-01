@@ -28,7 +28,7 @@ async def test_ping_entity(
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.ping"
@@ -47,7 +47,7 @@ async def test_ping_entity(
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert "There is no value to refresh for this entity" in caplog.text
 
     # Assert a node ping button entity is not created for the controller
@@ -67,17 +67,20 @@ async def test_notification_idle_button(
 ) -> None:
     """Test Notification idle button."""
     node = multisensor_6
-    state = hass.states.get("button.multisensor_6_idle_cover_status")
+    state = hass.states.get("button.multisensor_6_idle_home_security_cover_status")
     assert state
     assert state.state == "unknown"
-    assert state.attributes["friendly_name"] == "Multisensor 6 Idle Cover status"
+    assert (
+        state.attributes["friendly_name"]
+        == "Multisensor 6 Idle Home Security Cover status"
+    )
 
     # Test successful idle call
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.multisensor_6_idle_cover_status",
+            ATTR_ENTITY_ID: "button.multisensor_6_idle_home_security_cover_status",
         },
         blocking=True,
     )

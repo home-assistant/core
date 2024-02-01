@@ -56,6 +56,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             return False
         raise ConfigEntryNotReady(f"Error from Nexia service: {http_ex}") from http_ex
+    except aiohttp.ClientOSError as os_error:
+        raise ConfigEntryNotReady(
+            f"Error connecting to Nexia service: {os_error}"
+        ) from os_error
 
     coordinator = NexiaDataUpdateCoordinator(hass, nexia_home)
     await coordinator.async_config_entry_first_refresh()

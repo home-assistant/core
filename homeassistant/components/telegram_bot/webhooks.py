@@ -3,6 +3,8 @@ import datetime as dt
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
+import secrets
+import string
 
 from telegram import Update
 from telegram.error import TimedOut
@@ -18,11 +20,17 @@ _LOGGER = logging.getLogger(__name__)
 
 TELEGRAM_WEBHOOK_URL = "/api/telegram_webhooks"
 REMOVE_WEBHOOK_URL = ""
+SECRET_TOKEN_LENGTH = 32
 
 
 async def async_setup_platform(hass, bot, config):
     """Set up the Telegram webhooks platform."""
-    pushbot = PushBot(hass, bot, config)
+
+    # Generate an ephemeral secret token
+    alphabet = string.ascii_letters + string.digits + "-_"
+    secret_token = "".join(secrets.choice(alphabet) for _ in range(SECRET_TOKEN_LENGTH))
+
+    pushbot = PushBot(hass, bot, config, secret_token)
 
     if not pushbot.webhook_url.startswith("https"):
         _LOGGER.error("Invalid telegram webhook %s must be https", pushbot.webhook_url)
@@ -34,7 +42,13 @@ async def async_setup_platform(hass, bot, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.deregister_webhook)
     hass.http.register_view(
-        PushBotView(hass, bot, pushbot.dispatcher, config[CONF_TRUSTED_NETWORKS])
+        PushBotView(
+            hass,
+            bot,
+            pushbot.dispatcher,
+            config[CONF_TRUSTED_NETWORKS],
+            secret_token,
+        )
     )
     return True
 
@@ -42,10 +56,11 @@ async def async_setup_platform(hass, bot, config):
 class PushBot(BaseTelegramBotEntity):
     """Handles all the push/webhook logic and passes telegram updates to `self.handle_update`."""
 
-    def __init__(self, hass, bot, config):
+    def __init__(self, hass, bot, config, secret_token):
         """Create Dispatcher before calling super()."""
         self.bot = bot
         self.trusted_networks = config[CONF_TRUSTED_NETWORKS]
+        self.secret_token = secret_token
         # Dumb dispatcher that just gets our updates to our handler callback (self.handle_update)
         self.dispatcher = Dispatcher(bot, None)
         self.dispatcher.add_handler(TypeHandler(Update, self.handle_update))
@@ -61,7 +76,11 @@ class PushBot(BaseTelegramBotEntity):
         retry_num = 0
         while retry_num < 3:
             try:
-                return self.bot.set_webhook(self.webhook_url, timeout=5)
+                return self.bot.set_webhook(
+                    self.webhook_url,
+                    api_kwargs={"secret_token": self.secret_token},
+                    timeout=5,
+                )
             except TimedOut:
                 retry_num += 1
                 _LOGGER.warning("Timeout trying to set webhook (retry #%d)", retry_num)
@@ -108,18 +127,23 @@ class PushBotView(HomeAssistantView):
     url = TELEGRAM_WEBHOOK_URL
     name = "telegram_webhooks"
 
-    def __init__(self, hass, bot, dispatcher, trusted_networks):
+    def __init__(self, hass, bot, dispatcher, trusted_networks, secret_token):
         """Initialize by storing stuff needed for setting up our webhook endpoint."""
         self.hass = hass
         self.bot = bot
         self.dispatcher = dispatcher
         self.trusted_networks = trusted_networks
+        self.secret_token = secret_token
 
     async def post(self, request):
         """Accept the POST from telegram."""
         real_ip = ip_address(request.remote)
         if not any(real_ip in net for net in self.trusted_networks):
             _LOGGER.warning("Access denied from %s", real_ip)
+            return self.json_message("Access denied", HTTPStatus.UNAUTHORIZED)
+        secret_token_header = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+        if secret_token_header is None or self.secret_token != secret_token_header:
+            _LOGGER.warning("Invalid secret token from %s", real_ip)
             return self.json_message("Access denied", HTTPStatus.UNAUTHORIZED)
 
         try:

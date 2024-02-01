@@ -4,14 +4,14 @@ import logging
 
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.helpers import is_valid_warning_department
+from meteofrance_api.model import CurrentPhenomenons, Forecast, Rain
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -32,29 +32,6 @@ SCAN_INTERVAL = timedelta(minutes=15)
 
 CITY_SCHEMA = vol.Schema({vol.Required(CONF_CITY): cv.string})
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CITY_SCHEMA]))},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Meteo-France from legacy config file."""
-    if not (conf := config.get(DOMAIN)):
-        return True
-
-    for city_conf in conf:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=city_conf
-            )
-        )
-
-    return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Meteo-France account from a config entry."""
@@ -64,17 +41,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
-    async def _async_update_data_forecast_forecast():
+    async def _async_update_data_forecast_forecast() -> Forecast:
         """Fetch data from API endpoint."""
         return await hass.async_add_executor_job(
             client.get_forecast, latitude, longitude
         )
 
-    async def _async_update_data_rain():
+    async def _async_update_data_rain() -> Rain:
         """Fetch data from API endpoint."""
         return await hass.async_add_executor_job(client.get_rain, latitude, longitude)
 
-    async def _async_update_data_alert():
+    async def _async_update_data_alert() -> CurrentPhenomenons:
         """Fetch data from API endpoint."""
         return await hass.async_add_executor_job(
             client.get_warning_current_phenomenoms, department, 0, True
@@ -121,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.title,
         department,
     )
-    if is_valid_warning_department(department):
+    if department is not None and is_valid_warning_department(department):
         if not hass.data[DOMAIN].get(department):
             coordinator_alert = DataUpdateCoordinator(
                 hass,
@@ -133,10 +110,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             await coordinator_alert.async_refresh()
 
-            if not coordinator_alert.last_update_success:
-                raise ConfigEntryNotReady
-
-            hass.data[DOMAIN][department] = True
+            if coordinator_alert.last_update_success:
+                hass.data[DOMAIN][department] = True
         else:
             _LOGGER.warning(
                 (
@@ -158,11 +133,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_UPDATE_LISTENER: undo_listener,
         COORDINATOR_FORECAST: coordinator_forecast,
         COORDINATOR_RAIN: coordinator_rain,
-        COORDINATOR_ALERT: coordinator_alert,
-        UNDO_UPDATE_LISTENER: undo_listener,
     }
+    if coordinator_alert and coordinator_alert.last_update_success:
+        hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT] = coordinator_alert
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

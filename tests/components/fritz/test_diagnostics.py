@@ -50,7 +50,7 @@ async def test_entry_diagnostics(
                 for _, device in avm_wrapper.devices.items()
             ],
             "connection_type": "WANPPPConnection",
-            "current_firmware": "256.07.29",
+            "current_firmware": "7.29",
             "discovered_services": [
                 "DeviceInfo1",
                 "Hosts1",
@@ -62,6 +62,7 @@ async def test_entry_diagnostics(
                 "WANDSLInterfaceConfig1",
                 "WANIPConn1",
                 "WANPPPConnection1",
+                "WLANConfiguration1",
                 "X_AVM-DE_Homeauto1",
                 "X_AVM-DE_HostFilter1",
             ],

@@ -1,0 +1,25 @@
+{
+  "essid": "wifi",
+  "wifiBitrate": "39",
+  "proxy_port": "5683",
+  "wifiLinkQuality": "43",
+  "port": "5683",
+  "mac": "ff:ff:ff:ff:ff:ff",
+  "serialNo": "0123456789",
+  "wifiTxPwrEeprom": "12",
+  "region": "us-west-2",
+  "hardwareRevision": "SKYBELL_TRIMPLUS_1000030-F",
+  "proxy_address": "34.209.204.201",
+  "wifiSignalLevel": "-67",
+  "localHostname": "ip-10-0-0-67.us-west-2.compute.internal",
+  "wifiNoise": "0",
+  "address": "1.2.3.4",
+  "clientId": "1234567890abcdef1234567890abcdef1234567890abcdef",
+  "timestamp": "60000000000",
+  "deviceId": "01234567890abcdef1234567",
+  "firmwareVersion": "7082",
+  "checkedInAt": "2020-03-31T04:13:37.000Z",
+  "status": {
+    "wifiLink": "poor"
+  }
+}

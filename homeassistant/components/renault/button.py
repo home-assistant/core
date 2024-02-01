@@ -15,14 +15,14 @@ from .entity import RenaultEntity
 from .renault_hub import RenaultHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultButtonRequiredKeysMixin:
     """Mixin for required keys."""
 
     async_press: Callable[[RenaultButtonEntity], Coroutine[Any, Any, Any]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultButtonEntityDescription(
     ButtonEntityDescription, RenaultButtonRequiredKeysMixin
 ):

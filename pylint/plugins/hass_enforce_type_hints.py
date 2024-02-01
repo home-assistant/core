@@ -140,6 +140,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "recorder_mock": "Recorder",
     "requests_mock": "requests_mock.Mocker",
     "snapshot": "SnapshotAssertion",
+    "stub_blueprint_populate": "None",
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
 }
@@ -572,7 +573,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="name",
-        return_type=["str", None],
+        return_type=["str", "UndefinedType", None],
     ),
     TypeHintMatch(
         function_name="state",
@@ -585,10 +586,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="state_attributes",
         return_type=["dict[str, Any]", None],
-    ),
-    TypeHintMatch(
-        function_name="device_state_attributes",
-        return_type=["Mapping[str, Any]", None],
     ),
     TypeHintMatch(
         function_name="extra_state_attributes",
@@ -629,10 +626,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="supported_features",
         return_type=["int", None],
-    ),
-    TypeHintMatch(
-        function_name="context_recent_time",
-        return_type="timedelta",
     ),
     TypeHintMatch(
         function_name="entity_registry_enabled_default",
@@ -1022,15 +1015,15 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="hvac_mode",
-                    return_type=["HVACMode", "str", None],
+                    return_type=["HVACMode", None],
                 ),
                 TypeHintMatch(
                     function_name="hvac_modes",
-                    return_type=["list[HVACMode]", "list[str]"],
+                    return_type="list[HVACMode]",
                 ),
                 TypeHintMatch(
                     function_name="hvac_action",
-                    return_type=["HVACAction", "str", None],
+                    return_type=["HVACAction", None],
                 ),
                 TypeHintMatch(
                     function_name="current_temperature",
@@ -2427,6 +2420,54 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "todo": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="TodoListEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="todo_items",
+                    return_type=["list[TodoItem]", None],
+                ),
+                TypeHintMatch(
+                    function_name="async_create_todo_item",
+                    arg_types={
+                        1: "TodoItem",
+                    },
+                    return_type="None",
+                ),
+                TypeHintMatch(
+                    function_name="async_update_todo_item",
+                    arg_types={
+                        1: "TodoItem",
+                    },
+                    return_type="None",
+                ),
+                TypeHintMatch(
+                    function_name="async_delete_todo_items",
+                    arg_types={
+                        1: "list[str]",
+                    },
+                    return_type="None",
+                ),
+                TypeHintMatch(
+                    function_name="async_move_todo_item",
+                    arg_types={
+                        1: "str",
+                        2: "str | None",
+                    },
+                    return_type="None",
+                ),
+            ],
+        ),
+    ],
     "tts": [
         ClassTypeHintMatch(
             base_class="Provider",
@@ -2449,7 +2490,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="get_tts_audio",
-                    arg_types={1: "str", 2: "str", 3: "dict[str, Any] | None"},
+                    arg_types={1: "str", 2: "str", 3: "dict[str, Any]"},
                     return_type="TtsAudioType",
                     has_async_counterpart=True,
                 ),
@@ -3013,7 +3054,7 @@ def _is_test_function(module_name: str, node: nodes.FunctionDef) -> bool:
     return module_name.startswith("tests.") and node.name.startswith("test_")
 
 
-class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
+class HassTypeHintChecker(BaseChecker):
     """Checker for setup type hints."""
 
     name = "hass_enforce_type_hints"

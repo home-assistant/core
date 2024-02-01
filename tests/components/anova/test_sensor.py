@@ -8,7 +8,7 @@ from anova_wifi import AnovaApi, AnovaOffline
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import async_init_integration
 
@@ -54,7 +54,7 @@ async def test_update_failed(hass: HomeAssistant, anova_api: AnovaApi) -> None:
         "homeassistant.components.anova.AnovaPrecisionCooker.update",
         side_effect=AnovaOffline(),
     ):
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=61))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.anova_precision_cooker_water_temperature")

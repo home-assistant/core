@@ -1,14 +1,10 @@
 select_cmode:
-  name: Select color mode
-  description: Select Color mode of Epson projector
   target:
     entity:
       integration: epson
       domain: media_player
   fields:
     cmode:
-      name: Color mode
-      description: Name of Cmode
       required: true
       example: "cinema"
       selector:

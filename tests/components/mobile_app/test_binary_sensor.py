@@ -9,7 +9,10 @@ from homeassistant.helpers import device_registry as dr
 
 
 async def test_sensor(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_registrations,
+    webhook_client,
 ) -> None:
     """Test that sensors can be registered and updated."""
     webhook_id = create_registrations[1]["webhook_id"]
@@ -77,8 +80,7 @@ async def test_sensor(
     assert updated_entity.state == "off"
     assert "foo" not in updated_entity.attributes
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == len(create_registrations)
+    assert len(device_registry.devices) == len(create_registrations)
 
     # Reload to verify state is restored
     config_entry = hass.config_entries.async_entries("mobile_app")[1]

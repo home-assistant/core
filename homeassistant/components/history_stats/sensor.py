@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import datetime
+from typing import Any, TypeVar
 
 import voluptuous as vol
 
@@ -53,8 +54,10 @@ UNITS: dict[str, str] = {
 }
 ICON = "mdi:chart-line"
 
+_T = TypeVar("_T", bound=dict[str, Any])
 
-def exactly_two_period_keys(conf):
+
+def exactly_two_period_keys(conf: _T) -> _T:
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
     if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
         raise vol.Invalid(
@@ -163,6 +166,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         self._process_update()
         if self._type == CONF_TYPE_TIME:
             self._attr_device_class = SensorDeviceClass.DURATION
+            self._attr_suggested_display_precision = 2
 
     @callback
     def _process_update(self) -> None:
@@ -173,7 +177,10 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
             return
 
         if self._type == CONF_TYPE_TIME:
-            self._attr_native_value = round(state.seconds_matched / 3600, 2)
+            value = state.seconds_matched / 3600
+            if self._attr_unique_id is None:
+                value = round(value, 2)
+            self._attr_native_value = value
         elif self._type == CONF_TYPE_RATIO:
             self._attr_native_value = pretty_ratio(state.seconds_matched, state.period)
         elif self._type == CONF_TYPE_COUNT:

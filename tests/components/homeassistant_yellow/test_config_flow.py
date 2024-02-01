@@ -1,4 +1,5 @@
 """Test the Home Assistant Yellow config flow."""
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,6 +10,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
+
+
+@pytest.fixture(autouse=True)
+def config_flow_handler(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Fixture for a test config flow."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
+    ):
+        yield
 
 
 @pytest.fixture(name="get_yellow_settings")
@@ -133,9 +143,7 @@ async def test_option_flow_install_multi_pan_addon(
     assert result["step_id"] == "install_addon"
     assert result["progress_action"] == "install_addon"
 
-    result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "configure_addon"
+    await hass.async_block_till_done()
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
@@ -154,9 +162,7 @@ async def test_option_flow_install_multi_pan_addon(
         },
     )
 
-    result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "finish_addon_setup"
+    await hass.async_block_till_done()
     start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
@@ -215,9 +221,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
     assert result["step_id"] == "install_addon"
     assert result["progress_action"] == "install_addon"
 
-    result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "configure_addon"
+    await hass.async_block_till_done()
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
@@ -239,15 +243,13 @@ async def test_option_flow_install_multi_pan_addon_zha(
     assert zha_config_entry.data == {
         "device": {
             "path": "socket://core-silabs-multiprotocol:9999",
-            "baudrate": 57600,  # ZHA default
-            "flow_control": "software",  # ZHA default
+            "baudrate": 115200,
+            "flow_control": None,
         },
         "radio_type": "ezsp",
     }
 
-    result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "finish_addon_setup"
+    await hass.async_block_till_done()
     start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])

@@ -66,7 +66,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "7.03"
 
-    state = hass.states.get("sensor.flipr_myfliprid_water_temp")
+    state = hass.states.get("sensor.flipr_myfliprid_water_temperature")
     assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
@@ -94,7 +94,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "0.23654886"
 
-    state = hass.states.get("sensor.flipr_myfliprid_battery_level")
+    state = hass.states.get("sensor.flipr_myfliprid_battery")
     assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE

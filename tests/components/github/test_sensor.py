@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant.components.github.const import DOMAIN, FALLBACK_UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import TEST_REPOSITORY
 
@@ -42,7 +42,7 @@ async def test_sensor_updates_with_empty_release_array(
         headers=headers,
     )
 
-    async_fire_time_changed(hass, dt.utcnow() + FALLBACK_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + FALLBACK_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     new_state = hass.states.get(TEST_SENSOR_ENTITY)

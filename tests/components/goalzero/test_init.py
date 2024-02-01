@@ -66,13 +66,14 @@ async def test_update_failed(
 
 
 async def test_device_info(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test device info."""
     entry = await async_init_integration(hass, aioclient_mock)
-    device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     assert device.connections == {("mac", "12:34:56:78:90:12")}
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

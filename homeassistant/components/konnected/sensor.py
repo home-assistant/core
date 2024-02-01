@@ -17,8 +17,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
@@ -111,9 +111,9 @@ class KonnectedSensor(SensorEntity):
         self._attr_unique_id = addr or f"{device_id}-{self._zone_num}-{description.key}"
 
         # set initial state if known at initialization
-        self._state = initial_state
-        if self._state:
-            self._state = round(float(self._state), 1)
+        self._attr_native_value = initial_state
+        if initial_state:
+            self._attr_native_value = round(float(initial_state), 1)
 
         # set entity name if given
         if name := self._data.get(CONF_NAME):
@@ -121,11 +121,6 @@ class KonnectedSensor(SensorEntity):
         self._attr_name = name
 
         self._attr_device_info = DeviceInfo(identifiers={(KONNECTED_DOMAIN, device_id)})
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
 
     async def async_added_to_hass(self) -> None:
         """Store entity_id and register state change callback."""
@@ -139,7 +134,7 @@ class KonnectedSensor(SensorEntity):
     def async_set_state(self, state):
         """Update the sensor's state."""
         if self.entity_description.key == "humidity":
-            self._state = int(float(state))
+            self._attr_native_value = int(float(state))
         else:
-            self._state = round(float(state), 1)
+            self._attr_native_value = round(float(state), 1)
         self.async_write_ha_state()

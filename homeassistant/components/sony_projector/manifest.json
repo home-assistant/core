@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sony_projector",
   "iot_class": "local_polling",
   "loggers": ["pysdcp"],
-  "requirements": ["pysdcp==1"]
+  "requirements": ["pySDCP==1"]
 }

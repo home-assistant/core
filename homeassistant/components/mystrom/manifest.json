@@ -2,6 +2,7 @@
   "domain": "mystrom",
   "name": "myStrom",
   "codeowners": ["@fabaff"],
+  "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/mystrom",
   "iot_class": "local_polling",

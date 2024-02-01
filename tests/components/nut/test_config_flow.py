@@ -1,4 +1,5 @@
 """Test the Network UPS Tools (NUT) config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from pynut2.nut2 import PyNUTError
@@ -36,8 +37,8 @@ async def test_form_zeroconf(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.5",
-            addresses=["192.168.1.5"],
+            ip_address=ip_address("192.168.1.5"),
+            ip_addresses=[ip_address("192.168.1.5")],
             hostname="mock_hostname",
             name="mock_name",
             port=1234,

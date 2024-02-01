@@ -185,7 +185,24 @@ async def test_no_lights_or_groups(
                 "entity_id": "light.lidl_xmas_light",
                 "state": STATE_ON,
                 "attributes": {
-                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
+                    ATTR_EFFECT_LIST: [
+                        "carnival",
+                        "collide",
+                        "fading",
+                        "fireworks",
+                        "flag",
+                        "glow",
+                        "rainbow",
+                        "snake",
+                        "snow",
+                        "sparkles",
+                        "steady",
+                        "strobe",
+                        "twinkle",
+                        "updown",
+                        "vintage",
+                        "waves",
+                    ],
                     ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
                     ATTR_COLOR_MODE: ColorMode.HS,
                     ATTR_BRIGHTNESS: 25,
@@ -1162,9 +1179,19 @@ async def test_non_color_light_reports_color(
         await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 3
+    assert hass.states.get("light.group").attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+        ColorMode.XY,
+    ]
+    assert (
+        hass.states.get("light.group").attributes[ATTR_COLOR_MODE]
+        == ColorMode.COLOR_TEMP
+    )
     assert hass.states.get("light.group").attributes[ATTR_COLOR_TEMP] == 250
 
-    # Updating a scene will return a faulty color value for a non-color light causing an exception in hs_color
+    # Updating a scene will return a faulty color value
+    # for a non-color light causing an exception in hs_color
     event_changed_light = {
         "e": "changed",
         "id": "1",
@@ -1183,10 +1210,12 @@ async def test_non_color_light_reports_color(
     await mock_deconz_websocket(data=event_changed_light)
     await hass.async_block_till_done()
 
-    # Bug is fixed if we reach this point, but device won't have neither color temp nor color
-    with pytest.raises(KeyError):
-        assert hass.states.get("light.group").attributes[ATTR_COLOR_TEMP]
-        assert hass.states.get("light.group").attributes[ATTR_HS_COLOR]
+    assert hass.states.get("light.group").attributes[ATTR_COLOR_MODE] == ColorMode.XY
+    # Bug is fixed if we reach this point
+    # device won't have neither color temp nor color
+    with pytest.raises(AssertionError):
+        assert hass.states.get("light.group").attributes.get(ATTR_COLOR_TEMP) is None
+        assert hass.states.get("light.group").attributes.get(ATTR_HS_COLOR) is None
 
 
 async def test_verify_group_supported_features(

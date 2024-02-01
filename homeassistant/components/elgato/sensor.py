@@ -26,26 +26,17 @@ from .coordinator import ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 
-@dataclass
-class ElgatoEntityDescriptionMixin:
-    """Mixin values for Elgato entities."""
-
-    value_fn: Callable[[ElgatoData], float | int | None]
-
-
-@dataclass
-class ElgatoSensorEntityDescription(
-    SensorEntityDescription, ElgatoEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class ElgatoSensorEntityDescription(SensorEntityDescription):
     """Class describing Elgato sensor entities."""
 
     has_fn: Callable[[ElgatoData], bool] = lambda _: True
+    value_fn: Callable[[ElgatoData], float | int | None]
 
 
 SENSORS = [
     ElgatoSensorEntityDescription(
         key="battery",
-        translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,

@@ -30,7 +30,7 @@
         ],
         "headline": "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen",
         "description": "Die Zahl der mit dem Corona-Virus infizierten Menschen steigt gegenwärtig stark an. Es wächst daher die Gefahr einer weiteren Verbreitung der Infektion und - je nach Einzelfall - auch von schweren Erkrankungen.",
-        "instruction": "Waschen Sie sich regelmäßig und gründlich die Hände.<br/>- Beachten Sie die AHA + A + L - Regeln:<br/>Abstand halten - 1,5 m Mindestabstand beachten, Körperkontakt vermeiden!<br/>Hygiene - regelmäßiges Händewaschen, Husten- und Nieshygiene beachten!<br/>Alltagsmaske (Mund-Nase-Bedeckung) tragen!<br/>App - installieren und nutzen Sie die Corona-Warn-App!<br/>Lüften: Sorgen Sie für eine regelmäßige und gründliche Lüftung von Räumen - auch und gerade in der kommenden kalten Jahreszeit!<br/>- Bitte folgen Sie den behördlichen Anordnungen.<br/>- Husten und niesen Sie in ein Taschentuch oder in die Armbeuge.<br/>- Bleiben Sie bei Erkältungssymptomen nach Möglichkeit zu Hause. Kontaktieren Sie Ihre Hausarztpraxis per Telefon oder wenden sich an die Telefonnummer 116117 des Ärztlichen Bereitschaftsdienstes und besprechen Sie das weitere Vorgehen. Gehen Sie nicht unaufgefordert in eine Arztpraxis oder ins Krankenhaus.<br/>- Seien Sie kritisch: Informieren Sie sich nur aus gesicherten Quellen.",
+        "instruction": "Waschen sich regelmäßig und gründlich die Hände.",
         "contact": "Weitere Informationen und Empfehlungen finden Sie im Corona-Informations-Bereich der Warn-App NINA. Beachten Sie auch die Internetseiten der örtlichen Gesundheitsbehörde (Stadt- bzw. Kreisverwaltung) Ihres Aufenthaltsortes",
         "parameter": [
           {
@@ -125,7 +125,6 @@
         "senderName": "Deutscher Wetterdienst",
         "headline": "Ausfall Notruf 112",
         "description": "Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden.",
-        "instruction": "ACHTUNG! Hinweis auf mögliche Gefahren: Es können zum Beispiel einzelne Äste herabstürzen. Achten Sie besonders auf herabfallende Gegenstände.",
         "web": "https://www.wettergefahren.de",
         "contact": "Deutscher Wetterdienst",
         "parameter": [

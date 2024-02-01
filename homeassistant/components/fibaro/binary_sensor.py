@@ -16,7 +16,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroController, FibaroDevice
 from .const import DOMAIN
 
 SENSOR_TYPES = {
@@ -45,12 +45,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
+    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             FibaroBinarySensor(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
-                Platform.BINARY_SENSOR
-            ]
+            for device in controller.fibaro_devices[Platform.BINARY_SENSOR]
         ],
         True,
     )
@@ -82,6 +81,7 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
 
     def update(self) -> None:
         """Get the latest data and update the state."""
+        super().update()
         if self._fibaro_sensor_type == "com.fibaro.accelerometer":
             # Accelerator sensors have values for the three axis x, y and z
             moving_values = self._get_moving_values()

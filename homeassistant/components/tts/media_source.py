@@ -18,7 +18,6 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.network import get_url
 
 from .const import DATA_TTS_MANAGER, DOMAIN
 from .helper import get_engine_instance
@@ -104,7 +103,7 @@ def media_source_id_to_kwargs(media_source_id: str) -> MediaSourceOptions:
 class TTSMediaSource(MediaSource):
     """Provide text-to-speech providers as media sources."""
 
-    name: str = "Text to Speech"
+    name: str = "Text-to-speech"
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize TTSMediaSource."""
@@ -123,9 +122,6 @@ class TTSMediaSource(MediaSource):
             raise Unresolvable(str(err)) from err
 
         mime_type = mimetypes.guess_type(url)[0] or "audio/mpeg"
-
-        if manager.base_url and manager.base_url != get_url(self.hass):
-            url = f"{manager.base_url}{url}"
 
         return PlayMedia(url, mime_type)
 
@@ -165,7 +161,6 @@ class TTSMediaSource(MediaSource):
             raise BrowseError("Unknown provider")
 
         if isinstance(engine_instance, TextToSpeechEntity):
-            assert engine_instance.platform is not None
             engine_domain = engine_instance.platform.domain
         else:
             engine_domain = engine

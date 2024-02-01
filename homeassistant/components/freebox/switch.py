@@ -48,10 +48,10 @@ class FreeboxSwitch(SwitchEntity):
         """Initialize the switch."""
         self.entity_description = entity_description
         self._router = router
-        self._attr_device_info = self._router.device_info
-        self._attr_unique_id = f"{self._router.mac} {self.entity_description.name}"
+        self._attr_device_info = router.device_info
+        self._attr_unique_id = f"{router.mac} {entity_description.name}"
 
-    async def _async_set_state(self, enabled: bool):
+    async def _async_set_state(self, enabled: bool) -> None:
         """Turn the switch on or off."""
         try:
             await self._router.wifi.set_global_config({"enabled": enabled})

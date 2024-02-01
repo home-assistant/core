@@ -11,7 +11,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, CoilEntity, Coordinator
+from .const import DOMAIN
+from .coordinator import CoilEntity, Coordinator
 
 
 async def async_setup_entry(
@@ -38,7 +39,6 @@ class Switch(CoilEntity, SwitchEntity):
     def __init__(self, coordinator: Coordinator, coil: Coil) -> None:
         """Initialize entity."""
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
-        self._attr_is_on = None
 
     def _async_read_coil(self, data: CoilData) -> None:
         self._attr_is_on = data.value == "ON"

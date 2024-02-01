@@ -8,8 +8,8 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_VERIFY,
@@ -54,7 +54,6 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
-                    CONF_LAZY_ERROR: 10,
                 }
             ]
         },
@@ -64,6 +63,23 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: 0,
+                        CONF_STATE_ON: 1,
+                    },
+                }
+            ]
+        },
+        {
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_DEVICE_ADDRESS: 1,
                     CONF_COMMAND_OFF: 0x00,
                     CONF_COMMAND_ON: 0x01,
                     CONF_VERIFY: {
@@ -242,7 +258,10 @@ async def test_restore_state_light(
     ],
 )
 async def test_light_service_turn(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_modbus,
+    mock_pymodbus_return,
 ) -> None:
     """Run test for service turn_on/turn_off."""
 

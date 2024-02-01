@@ -1,14 +1,10 @@
 assume_state:
-  name: Assume state
-  description: Set Sensibo device to external state
   target:
     entity:
       integration: sensibo
       domain: climate
   fields:
     state:
-      name: State
-      description: State to set
       required: true
       example: "on"
       selector:
@@ -17,16 +13,12 @@ assume_state:
             - "on"
             - "off"
 enable_timer:
-  name: Enable Timer
-  description: Enable the timer with custom time
   target:
     entity:
       integration: sensibo
       domain: climate
   fields:
     minutes:
-      name: Minutes
-      description: Countdown for timer (for timer state on)
       required: false
       example: 30
       selector:
@@ -35,44 +27,32 @@ enable_timer:
           step: 1
           mode: box
 enable_pure_boost:
-  name: Enable Pure Boost
-  description: Enable and configure Pure Boost settings
   target:
     entity:
       integration: sensibo
       domain: climate
   fields:
     ac_integration:
-      name: AC Integration
-      description: Integrate with Air Conditioner
       required: true
       example: true
       selector:
         boolean:
     geo_integration:
-      name: Geo Integration
-      description: Integrate with Presence
       required: true
       example: true
       selector:
         boolean:
     indoor_integration:
-      name: Indoor Air Quality
-      description: Integrate with checking indoor air quality
       required: true
       example: true
       selector:
         boolean:
     outdoor_integration:
-      name: Outdoor Air Quality
-      description: Integrate with checking outdoor air quality
       required: true
       example: true
       selector:
         boolean:
     sensitivity:
-      name: Sensitivity
-      description: Set the sensitivity for Pure Boost
       required: true
       example: "Normal"
       selector:
@@ -81,16 +61,12 @@ enable_pure_boost:
             - "Normal"
             - "Sensitive"
 full_state:
-  name: Set full state
-  description: Set full state for Sensibo device
   target:
     entity:
       integration: sensibo
       domain: climate
   fields:
     mode:
-      name: HVAC mode
-      description: HVAC mode to set
       required: true
       example: "heat"
       selector:
@@ -103,8 +79,6 @@ full_state:
             - "dry"
             - "off"
     target_temperature:
-      name: Target Temperature
-      description: Optionally set target temperature
       required: false
       example: 23
       selector:
@@ -113,32 +87,24 @@ full_state:
           step: 1
           mode: box
     fan_mode:
-      name: Fan mode
-      description: Optionally set fan mode
       required: false
       example: "low"
       selector:
         text:
           type: text
     swing_mode:
-      name: swing mode
-      description: Optionally set swing mode
       required: false
       example: "fixedBottom"
       selector:
         text:
           type: text
     horizontal_swing_mode:
-      name: Horizontal swing mode
-      description: Optionally set horizontal swing mode
       required: false
       example: "fixedLeft"
       selector:
         text:
           type: text
     light:
-      name: Light
-      description: Set light on or off
       required: false
       example: "on"
       selector:
@@ -146,17 +112,14 @@ full_state:
           options:
             - "on"
             - "off"
+            - "dim"
 enable_climate_react:
-  name: Enable Climate React
-  description: Enable and configure Climate React
   target:
     entity:
       integration: sensibo
       domain: climate
   fields:
     high_temperature_threshold:
-      name: Threshold high
-      description: When temp/humidity goes above
       required: true
       example: 24
       selector:
@@ -166,14 +129,10 @@ enable_climate_react:
           step: 0.1
           mode: box
     high_temperature_state:
-      name: State high threshold
-      description: What should happen at high threshold. Requires full state
       required: true
       selector:
         object:
     low_temperature_threshold:
-      name: Threshold low
-      description: When temp/humidity goes below
       required: true
       example: 19
       selector:
@@ -183,14 +142,10 @@ enable_climate_react:
           step: 0.1
           mode: box
     low_temperature_state:
-      name: State low threshold
-      description: What should happen at low threshold. Requires full state
       required: true
       selector:
         object:
     smart_type:
-      name: Trigger type
-      description: Choose between temperature/feels like/humidity
       required: true
       example: "temperature"
       selector:

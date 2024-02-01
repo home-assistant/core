@@ -3,19 +3,32 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterable, Callable
+import io
 import logging
 import socket
 from typing import cast
+import wave
 
-from aioesphomeapi import VoiceAssistantEventType
-import async_timeout
+from aioesphomeapi import (
+    VoiceAssistantAudioSettings,
+    VoiceAssistantCommandFlag,
+    VoiceAssistantEventType,
+)
 
 from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import (
+    AudioSettings,
     PipelineEvent,
     PipelineEventType,
+    PipelineNotFound,
+    PipelineStage,
+    WakeWordSettings,
     async_pipeline_from_audio_stream,
     select as pipeline_select,
+)
+from homeassistant.components.assist_pipeline.error import (
+    WakeWordDetectionAborted,
+    WakeWordDetectionError,
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, HomeAssistant, callback
@@ -42,6 +55,10 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
         VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: PipelineEventType.INTENT_END,
         VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: PipelineEventType.TTS_START,
         VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: PipelineEventType.TTS_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_START: PipelineEventType.WAKE_WORD_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: PipelineEventType.WAKE_WORD_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: PipelineEventType.STT_VAD_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_END: PipelineEventType.STT_VAD_END,
     }
 )
 
@@ -50,7 +67,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     """Receive UDP packets and forward them to the voice assistant."""
 
     started = False
-    queue: asyncio.Queue[bytes] | None = None
+    stopped = False
     transport: asyncio.DatagramTransport | None = None
     remote_addr: tuple[str, int] | None = None
 
@@ -66,12 +83,14 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         self.hass = hass
 
         assert entry_data.device_info is not None
+        self.entry_data = entry_data
         self.device_info = entry_data.device_info
 
-        self.queue = asyncio.Queue()
+        self.queue: asyncio.Queue[bytes] = asyncio.Queue()
         self.handle_event = handle_event
         self.handle_finished = handle_finished
         self._tts_done = asyncio.Event()
+        self._tts_task: asyncio.Task | None = None
 
     async def start_server(self) -> int:
         """Start accepting connections."""
@@ -80,7 +99,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             """Accept connection."""
             if self.started:
                 raise RuntimeError("Can only start once")
-            if self.queue is None:
+            if self.stopped:
                 raise RuntimeError("No longer accepting connections")
 
             self.started = True
@@ -105,12 +124,11 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     @callback
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Handle incoming UDP packet."""
-        if not self.started:
+        if not self.started or self.stopped:
             return
         if self.remote_addr is None:
             self.remote_addr = addr
-        if self.queue is not None:
-            self.queue.put_nowait(data)
+        self.queue.put_nowait(data)
 
     def error_received(self, exc: Exception) -> None:
         """Handle when a send or receive operation raises an OSError.
@@ -123,21 +141,21 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     @callback
     def stop(self) -> None:
         """Stop the receiver."""
-        if self.queue is not None:
-            self.queue.put_nowait(b"")
+        self.queue.put_nowait(b"")
         self.started = False
+        self.stopped = True
 
     def close(self) -> None:
         """Close the receiver."""
-        if self.queue is not None:
-            self.queue = None
+        self.started = False
+        self.stopped = True
         if self.transport is not None:
             self.transport.close()
 
     async def _iterate_packets(self) -> AsyncIterable[bytes]:
         """Iterate over incoming packets."""
-        if self.queue is None:
-            raise RuntimeError("Already stopped")
+        if not self.started or self.stopped:
+            raise RuntimeError("Not running")
 
         while data := await self.queue.get():
             yield data
@@ -148,74 +166,138 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         try:
             event_type = _VOICE_ASSISTANT_EVENT_TYPES.from_hass(event.type)
         except KeyError:
-            _LOGGER.warning("Received unknown pipeline event type: %s", event.type)
+            _LOGGER.debug("Received unknown pipeline event type: %s", event.type)
             return
 
         data_to_send = None
-        if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
+        error = False
+        if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_START:
+            self.entry_data.async_set_assist_pipeline_state(True)
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
             assert event.data is not None
             data_to_send = {"text": event.data["stt_output"]["text"]}
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
+            assert event.data is not None
+            data_to_send = {
+                "conversation_id": event.data["intent_output"]["conversation_id"] or "",
+            }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None
             data_to_send = {"text": event.data["tts_input"]}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
             assert event.data is not None
-            path = event.data["tts_output"]["url"]
-            url = async_process_play_media_url(self.hass, path)
-            data_to_send = {"url": url}
+            tts_output = event.data["tts_output"]
+            if tts_output:
+                path = tts_output["url"]
+                url = async_process_play_media_url(self.hass, path)
+                data_to_send = {"url": url}
 
-            if self.device_info.voice_assistant_version >= 2:
-                media_id = event.data["tts_output"]["media_id"]
-                self.hass.async_create_background_task(
-                    self._send_tts(media_id), "esphome_voice_assistant_tts"
-                )
+                if self.device_info.voice_assistant_version >= 2:
+                    media_id = tts_output["media_id"]
+                    self._tts_task = self.hass.async_create_background_task(
+                        self._send_tts(media_id), "esphome_voice_assistant_tts"
+                    )
+                else:
+                    self._tts_done.set()
             else:
+                # Empty TTS response
+                data_to_send = {}
                 self._tts_done.set()
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END:
+            assert event.data is not None
+            if not event.data["wake_word_output"]:
+                event_type = VoiceAssistantEventType.VOICE_ASSISTANT_ERROR
+                data_to_send = {
+                    "code": "no_wake_word",
+                    "message": "No wake word detected",
+                }
+                error = True
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
             assert event.data is not None
             data_to_send = {
                 "code": event.data["code"],
                 "message": event.data["message"],
             }
-            self.handle_finished()
+            error = True
 
         self.handle_event(event_type, data_to_send)
+        if error:
+            self._tts_done.set()
+            self.handle_finished()
 
     async def run_pipeline(
         self,
-        pipeline_timeout: float = 30.0,
+        device_id: str,
+        conversation_id: str | None,
+        flags: int = 0,
+        audio_settings: VoiceAssistantAudioSettings | None = None,
     ) -> None:
         """Run the Voice Assistant pipeline."""
-        try:
-            tts_audio_output = (
-                "raw" if self.device_info.voice_assistant_version >= 2 else "mp3"
-            )
-            async with async_timeout.timeout(pipeline_timeout):
-                await async_pipeline_from_audio_stream(
-                    self.hass,
-                    context=self.context,
-                    event_callback=self._event_callback,
-                    stt_metadata=stt.SpeechMetadata(
-                        language="",  # set in async_pipeline_from_audio_stream
-                        format=stt.AudioFormats.WAV,
-                        codec=stt.AudioCodecs.PCM,
-                        bit_rate=stt.AudioBitRates.BITRATE_16,
-                        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                        channel=stt.AudioChannels.CHANNEL_MONO,
-                    ),
-                    stt_stream=self._iterate_packets(),
-                    pipeline_id=pipeline_select.get_chosen_pipeline(
-                        self.hass, DOMAIN, self.device_info.mac_address
-                    ),
-                    tts_audio_output=tts_audio_output,
-                )
+        if audio_settings is None or audio_settings.volume_multiplier == 0:
+            audio_settings = VoiceAssistantAudioSettings()
 
-                # Block until TTS is done sending
-                await self._tts_done.wait()
+        tts_audio_output = (
+            "wav" if self.device_info.voice_assistant_version >= 2 else "mp3"
+        )
+
+        _LOGGER.debug("Starting pipeline")
+        if flags & VoiceAssistantCommandFlag.USE_WAKE_WORD:
+            start_stage = PipelineStage.WAKE_WORD
+        else:
+            start_stage = PipelineStage.STT
+        try:
+            await async_pipeline_from_audio_stream(
+                self.hass,
+                context=self.context,
+                event_callback=self._event_callback,
+                stt_metadata=stt.SpeechMetadata(
+                    language="",  # set in async_pipeline_from_audio_stream
+                    format=stt.AudioFormats.WAV,
+                    codec=stt.AudioCodecs.PCM,
+                    bit_rate=stt.AudioBitRates.BITRATE_16,
+                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                    channel=stt.AudioChannels.CHANNEL_MONO,
+                ),
+                stt_stream=self._iterate_packets(),
+                pipeline_id=pipeline_select.get_chosen_pipeline(
+                    self.hass, DOMAIN, self.device_info.mac_address
+                ),
+                conversation_id=conversation_id,
+                device_id=device_id,
+                tts_audio_output=tts_audio_output,
+                start_stage=start_stage,
+                wake_word_settings=WakeWordSettings(timeout=5),
+                audio_settings=AudioSettings(
+                    noise_suppression_level=audio_settings.noise_suppression_level,
+                    auto_gain_dbfs=audio_settings.auto_gain,
+                    volume_multiplier=audio_settings.volume_multiplier,
+                    is_vad_enabled=bool(flags & VoiceAssistantCommandFlag.USE_VAD),
+                ),
+            )
+
+            # Block until TTS is done sending
+            await self._tts_done.wait()
 
             _LOGGER.debug("Pipeline finished")
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Pipeline timeout")
+        except PipelineNotFound:
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
+                {
+                    "code": "pipeline not found",
+                    "message": "Selected pipeline not found",
+                },
+            )
+            _LOGGER.warning("Pipeline not found")
+        except WakeWordDetectionAborted:
+            pass  # Wake word detection was aborted and `handle_finished` is enough.
+        except WakeWordDetectionError as e:
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
+                {
+                    "code": e.code,
+                    "message": e.message,
+                },
+            )
         finally:
             self.handle_finished()
 
@@ -225,16 +307,43 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             if self.transport is None:
                 return
 
-            _extension, audio_bytes = await tts.async_get_media_source_audio(
+            extension, data = await tts.async_get_media_source_audio(
                 self.hass,
                 media_id,
             )
 
-            _LOGGER.debug("Sending %d bytes of audio", len(audio_bytes))
+            if extension != "wav":
+                raise ValueError(f"Only WAV audio can be streamed, got {extension}")
+
+            with io.BytesIO(data) as wav_io:
+                with wave.open(wav_io, "rb") as wav_file:
+                    sample_rate = wav_file.getframerate()
+                    sample_width = wav_file.getsampwidth()
+                    sample_channels = wav_file.getnchannels()
+
+                    if (
+                        (sample_rate != 16000)
+                        or (sample_width != 2)
+                        or (sample_channels != 1)
+                    ):
+                        raise ValueError(
+                            "Expected rate/width/channels as 16000/2/1,"
+                            " got {sample_rate}/{sample_width}/{sample_channels}}"
+                        )
+
+                audio_bytes = wav_file.readframes(wav_file.getnframes())
+
+            audio_bytes_size = len(audio_bytes)
+
+            _LOGGER.debug("Sending %d bytes of audio", audio_bytes_size)
+
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
+            )
 
             bytes_per_sample = stt.AudioBitRates.BITRATE_16 // 8
             sample_offset = 0
-            samples_left = len(audio_bytes) // bytes_per_sample
+            samples_left = audio_bytes_size // bytes_per_sample
 
             while samples_left > 0:
                 bytes_offset = sample_offset * bytes_per_sample
@@ -244,10 +353,14 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
                 self.transport.sendto(chunk, self.remote_addr)
                 await asyncio.sleep(
-                    samples_in_chunk / stt.AudioSampleRates.SAMPLERATE_16000 * 0.99
+                    samples_in_chunk / stt.AudioSampleRates.SAMPLERATE_16000 * 0.9
                 )
 
                 sample_offset += samples_in_chunk
 
         finally:
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
+            )
+            self._tts_task = None
             self._tts_done.set()

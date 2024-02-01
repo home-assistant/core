@@ -9,13 +9,12 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import (
     CONF_CAT,
-    CONF_DEV_PATH,
     CONF_DIM_STEPS,
     CONF_HOUSECODE,
     CONF_OVERRIDE,
@@ -25,7 +24,6 @@ from .const import (
     DOMAIN,
     INSTEON_PLATFORMS,
 )
-from .schemas import convert_yaml_to_config_flow
 from .utils import (
     add_insteon_events,
     async_register_services,
@@ -35,6 +33,8 @@ from .utils import (
 
 _LOGGER = logging.getLogger(__name__)
 OPTIONS = "options"
+
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_get_device_config(hass, config_entry):
@@ -77,26 +77,6 @@ async def close_insteon_connection(*args):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Insteon platform."""
-    hass.data[DOMAIN] = {}
-    if DOMAIN not in config:
-        return True
-
-    conf = dict(config[DOMAIN])
-    hass.data[DOMAIN][CONF_DEV_PATH] = conf.pop(CONF_DEV_PATH, None)
-
-    if not conf:
-        return True
-
-    data, options = convert_yaml_to_config_flow(conf)
-
-    if options:
-        hass.data[DOMAIN][OPTIONS] = options
-    # Create a config entry with the connection data
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-    )
     return True
 
 

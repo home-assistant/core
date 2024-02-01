@@ -17,7 +17,7 @@ async def test_qnap_qsw_create_binary_sensors(
 
     await async_init_integration(hass)
 
-    state = hass.states.get("binary_sensor.qsw_m408_4c_anomaly")
+    state = hass.states.get("binary_sensor.qsw_m408_4c_problem")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_MESSAGE) is None
 

@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,12 +58,6 @@ WEBHOOK_SCHEMA = vol.All(
     ),
     _validate_test_mode,
 )
-
-
-async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
-    """Set up the Locative component."""
-    hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
-    return True
 
 
 async def handle_webhook(hass, webhook_id, request):
@@ -117,6 +110,8 @@ async def handle_webhook(hass, webhook_id, request):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
     webhook.async_register(
         hass, DOMAIN, "Locative", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )

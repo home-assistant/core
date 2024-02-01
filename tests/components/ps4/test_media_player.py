@@ -325,6 +325,7 @@ async def test_device_info_is_assummed(
 ) -> None:
     """Test that device info is assumed if device is unavailable."""
     # Create a device registry entry with device info.
+    MOCK_CONFIG.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=MOCK_ENTRY_ID,
         name=MOCK_HOST_NAME,

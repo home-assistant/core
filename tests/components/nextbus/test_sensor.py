@@ -1,15 +1,23 @@
 """The tests for the nexbus sensor component."""
+from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+from urllib.error import HTTPError
 
+from py_nextbus.client import NextBusFormatError, NextBusHTTPError, RouteStop
 import pytest
 
-import homeassistant.components.nextbus.sensor as nextbus
-import homeassistant.components.sensor as sensor
-from homeassistant.core import HomeAssistant
+from homeassistant.components import sensor
+from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
+from homeassistant.components.nextbus.coordinator import NextBusDataUpdateCoordinator
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_NAME, CONF_STOP
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component
+from tests.common import MockConfigEntry
 
 VALID_AGENCY = "sf-muni"
 VALID_ROUTE = "F"
@@ -17,24 +25,34 @@ VALID_STOP = "5650"
 VALID_AGENCY_TITLE = "San Francisco Muni"
 VALID_ROUTE_TITLE = "F-Market & Wharves"
 VALID_STOP_TITLE = "Market St & 7th St"
-SENSOR_ID_SHORT = "sensor.sf_muni_f"
+SENSOR_ID = "sensor.san_francisco_muni_f_market_wharves_market_st_7th_st"
 
-CONFIG_BASIC = {
-    "sensor": {
-        "platform": "nextbus",
-        "agency": VALID_AGENCY,
-        "route": VALID_ROUTE,
-        "stop": VALID_STOP,
-    }
+PLATFORM_CONFIG = {
+    sensor.DOMAIN: {
+        "platform": DOMAIN,
+        CONF_AGENCY: VALID_AGENCY,
+        CONF_ROUTE: VALID_ROUTE,
+        CONF_STOP: VALID_STOP,
+    },
 }
 
-CONFIG_INVALID_MISSING = {"sensor": {"platform": "nextbus"}}
+
+CONFIG_BASIC = {
+    DOMAIN: {
+        CONF_AGENCY: VALID_AGENCY,
+        CONF_ROUTE: VALID_ROUTE,
+        CONF_STOP: VALID_STOP,
+    }
+}
 
 BASIC_RESULTS = {
     "predictions": {
         "agencyTitle": VALID_AGENCY_TITLE,
+        "agencyTag": VALID_AGENCY,
         "routeTitle": VALID_ROUTE_TITLE,
+        "routeTag": VALID_ROUTE,
         "stopTitle": VALID_STOP_TITLE,
+        "stopTag": VALID_STOP,
         "direction": {
             "title": "Outbound",
             "prediction": [
@@ -48,24 +66,17 @@ BASIC_RESULTS = {
 }
 
 
-async def assert_setup_sensor(hass, config, count=1):
-    """Set up the sensor and assert it's been created."""
-    with assert_setup_component(count):
-        assert await async_setup_component(hass, sensor.DOMAIN, config)
-        await hass.async_block_till_done()
-
-
 @pytest.fixture
-def mock_nextbus():
+def mock_nextbus() -> Generator[MagicMock, None, None]:
     """Create a mock py_nextbus module."""
-    with patch(
-        "homeassistant.components.nextbus.sensor.NextBusClient"
-    ) as NextBusClient:
-        yield NextBusClient
+    with patch("homeassistant.components.nextbus.coordinator.NextBusClient") as client:
+        yield client
 
 
 @pytest.fixture
-def mock_nextbus_predictions(mock_nextbus):
+def mock_nextbus_predictions(
+    mock_nextbus: MagicMock,
+) -> Generator[MagicMock, None, None]:
     """Create a mock of NextBusClient predictions."""
     instance = mock_nextbus.return_value
     instance.get_predictions_for_multi_stops.return_value = BASIC_RESULTS
@@ -73,63 +84,71 @@ def mock_nextbus_predictions(mock_nextbus):
     return instance.get_predictions_for_multi_stops
 
 
-@pytest.fixture
-def mock_nextbus_lists(mock_nextbus):
-    """Mock all list functions in nextbus to test validate logic."""
-    instance = mock_nextbus.return_value
-    instance.get_agency_list.return_value = {
-        "agency": [{"tag": "sf-muni", "title": "San Francisco Muni"}]
-    }
-    instance.get_route_list.return_value = {
-        "route": [{"tag": "F", "title": "F - Market & Wharves"}]
-    }
-    instance.get_route_config.return_value = {
-        "route": {"stop": [{"tag": "5650", "title": "Market St & 7th St"}]}
-    }
+async def assert_setup_sensor(
+    hass: HomeAssistant,
+    config: dict[str, dict[str, str]],
+    expected_state=ConfigEntryState.LOADED,
+) -> MockConfigEntry:
+    """Set up the sensor and assert it's been created."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config[DOMAIN],
+        title=f"{VALID_AGENCY_TITLE} {VALID_ROUTE_TITLE} {VALID_STOP_TITLE}",
+        unique_id=f"{VALID_AGENCY}_{VALID_ROUTE}_{VALID_STOP}",
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is expected_state
+
+    return config_entry
+
+
+async def test_legacy_yaml_setup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test config setup and yaml deprecation."""
+    with patch(
+        "homeassistant.components.nextbus.config_flow.NextBusClient",
+    ) as NextBusClient:
+        NextBusClient.return_value.get_predictions_for_multi_stops.return_value = (
+            BASIC_RESULTS
+        )
+        await async_setup_component(hass, sensor.DOMAIN, PLATFORM_CONFIG)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue
 
 
 async def test_valid_config(
-    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists
+    hass: HomeAssistant, mock_nextbus: MagicMock, mock_nextbus_lists: MagicMock
 ) -> None:
     """Test that sensor is set up properly with valid config."""
     await assert_setup_sensor(hass, CONFIG_BASIC)
 
 
-async def test_invalid_config(
-    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists
-) -> None:
-    """Checks that component is not setup when missing information."""
-    await assert_setup_sensor(hass, CONFIG_INVALID_MISSING, count=0)
-
-
-async def test_validate_tags(
-    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists
-) -> None:
-    """Test that additional validation against the API is successful."""
-    # with self.subTest('Valid everything'):
-    assert nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, VALID_ROUTE, VALID_STOP)
-    # with self.subTest('Invalid agency'):
-    assert not nextbus.validate_tags(
-        mock_nextbus(), "not-valid", VALID_ROUTE, VALID_STOP
-    )
-
-    # with self.subTest('Invalid route'):
-    assert not nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, "0", VALID_STOP)
-
-    # with self.subTest('Invalid stop'):
-    assert not nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, VALID_ROUTE, 0)
-
-
 async def test_verify_valid_state(
-    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    mock_nextbus_predictions: MagicMock,
 ) -> None:
     """Verify all attributes are set from a valid response."""
     await assert_setup_sensor(hass, CONFIG_BASIC)
+    entity = er.async_get(hass).async_get(SENSOR_ID)
+    assert entity
+
     mock_nextbus_predictions.assert_called_once_with(
-        [{"stop_tag": VALID_STOP, "route_tag": VALID_ROUTE}], VALID_AGENCY
+        {RouteStop(VALID_ROUTE, VALID_STOP)}
     )
 
-    state = hass.states.get(SENSOR_ID_SHORT)
+    state = hass.states.get(SENSOR_ID)
     assert state is not None
     assert state.state == "2019-03-28T21:09:31+00:00"
     assert state.attributes["agency"] == VALID_AGENCY_TITLE
@@ -140,14 +159,20 @@ async def test_verify_valid_state(
 
 
 async def test_message_dict(
-    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    mock_nextbus_predictions: MagicMock,
 ) -> None:
     """Verify that a single dict message is rendered correctly."""
     mock_nextbus_predictions.return_value = {
         "predictions": {
             "agencyTitle": VALID_AGENCY_TITLE,
+            "agencyTag": VALID_AGENCY,
             "routeTitle": VALID_ROUTE_TITLE,
+            "routeTag": VALID_ROUTE,
             "stopTitle": VALID_STOP_TITLE,
+            "stopTag": VALID_STOP,
             "message": {"text": "Message"},
             "direction": {
                 "title": "Outbound",
@@ -162,20 +187,26 @@ async def test_message_dict(
 
     await assert_setup_sensor(hass, CONFIG_BASIC)
 
-    state = hass.states.get(SENSOR_ID_SHORT)
+    state = hass.states.get(SENSOR_ID)
     assert state is not None
     assert state.attributes["message"] == "Message"
 
 
 async def test_message_list(
-    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    mock_nextbus_predictions: MagicMock,
 ) -> None:
     """Verify that a list of messages are rendered correctly."""
     mock_nextbus_predictions.return_value = {
         "predictions": {
             "agencyTitle": VALID_AGENCY_TITLE,
+            "agencyTag": VALID_AGENCY,
             "routeTitle": VALID_ROUTE_TITLE,
+            "routeTag": VALID_ROUTE,
             "stopTitle": VALID_STOP_TITLE,
+            "stopTag": VALID_STOP,
             "message": [{"text": "Message 1"}, {"text": "Message 2"}],
             "direction": {
                 "title": "Outbound",
@@ -190,20 +221,26 @@ async def test_message_list(
 
     await assert_setup_sensor(hass, CONFIG_BASIC)
 
-    state = hass.states.get(SENSOR_ID_SHORT)
+    state = hass.states.get(SENSOR_ID)
     assert state is not None
     assert state.attributes["message"] == "Message 1 -- Message 2"
 
 
 async def test_direction_list(
-    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    mock_nextbus_predictions: MagicMock,
 ) -> None:
     """Verify that a list of messages are rendered correctly."""
     mock_nextbus_predictions.return_value = {
         "predictions": {
             "agencyTitle": VALID_AGENCY_TITLE,
+            "agencyTag": VALID_AGENCY,
             "routeTitle": VALID_ROUTE_TITLE,
+            "routeTag": VALID_ROUTE,
             "stopTitle": VALID_STOP_TITLE,
+            "stopTag": VALID_STOP,
             "message": [{"text": "Message 1"}, {"text": "Message 2"}],
             "direction": [
                 {
@@ -224,7 +261,7 @@ async def test_direction_list(
 
     await assert_setup_sensor(hass, CONFIG_BASIC)
 
-    state = hass.states.get(SENSOR_ID_SHORT)
+    state = hass.states.get(SENSOR_ID)
     assert state is not None
     assert state.state == "2019-03-28T21:09:31+00:00"
     assert state.attributes["agency"] == VALID_AGENCY_TITLE
@@ -234,47 +271,90 @@ async def test_direction_list(
     assert state.attributes["upcoming"] == "0, 1, 2, 3"
 
 
+@pytest.mark.parametrize(
+    "client_exception",
+    (
+        NextBusHTTPError("failed", HTTPError("url", 500, "error", MagicMock(), None)),
+        NextBusFormatError("failed"),
+    ),
+)
+async def test_prediction_exceptions(
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    mock_nextbus_predictions: MagicMock,
+    client_exception: Exception,
+) -> None:
+    """Test that some coodinator exceptions raise UpdateFailed exceptions."""
+    await assert_setup_sensor(hass, CONFIG_BASIC)
+    coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN][VALID_AGENCY]
+    mock_nextbus_predictions.side_effect = client_exception
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+
 async def test_custom_name(
-    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    mock_nextbus_predictions: MagicMock,
 ) -> None:
     """Verify that a custom name can be set via config."""
     config = deepcopy(CONFIG_BASIC)
-    config["sensor"]["name"] = "Custom Name"
+    config[DOMAIN][CONF_NAME] = "Custom Name"
 
     await assert_setup_sensor(hass, config)
     state = hass.states.get("sensor.custom_name")
     assert state is not None
+    assert state.name == "Custom Name"
 
 
+@pytest.mark.parametrize(
+    "prediction_results",
+    (
+        {},
+        {"Error": "Failed"},
+    ),
+)
 async def test_no_predictions(
-    hass: HomeAssistant, mock_nextbus, mock_nextbus_predictions, mock_nextbus_lists
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_predictions: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    prediction_results: dict[str, str],
 ) -> None:
     """Verify there are no exceptions when no predictions are returned."""
-    mock_nextbus_predictions.return_value = {}
+    mock_nextbus_predictions.return_value = prediction_results
 
     await assert_setup_sensor(hass, CONFIG_BASIC)
 
-    state = hass.states.get(SENSOR_ID_SHORT)
+    state = hass.states.get(SENSOR_ID)
     assert state is not None
     assert state.state == "unknown"
 
 
 async def test_verify_no_upcoming(
-    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    mock_nextbus_predictions: MagicMock,
 ) -> None:
     """Verify attributes are set despite no upcoming times."""
     mock_nextbus_predictions.return_value = {
         "predictions": {
             "agencyTitle": VALID_AGENCY_TITLE,
+            "agencyTag": VALID_AGENCY,
             "routeTitle": VALID_ROUTE_TITLE,
+            "routeTag": VALID_ROUTE,
             "stopTitle": VALID_STOP_TITLE,
+            "stopTag": VALID_STOP,
             "direction": {"title": "Outbound", "prediction": []},
         }
     }
 
     await assert_setup_sensor(hass, CONFIG_BASIC)
 
-    state = hass.states.get(SENSOR_ID_SHORT)
+    state = hass.states.get(SENSOR_ID)
     assert state is not None
     assert state.state == "unknown"
     assert state.attributes["upcoming"] == "No upcoming predictions"

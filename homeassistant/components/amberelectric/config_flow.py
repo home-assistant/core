@@ -28,10 +28,10 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _fetch_sites(self, token: str) -> list[Site] | None:
         configuration = amberelectric.Configuration(access_token=token)
-        api = amber_api.AmberApi.create(configuration)
+        api: amber_api.AmberApi = amber_api.AmberApi.create(configuration)
 
         try:
-            sites = api.get_sites()
+            sites: list[Site] = api.get_sites()
             if len(sites) == 0:
                 self._errors[CONF_API_TOKEN] = "no_site"
                 return None

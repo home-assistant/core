@@ -4,9 +4,9 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 from typing import Any
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -84,7 +84,7 @@ def key_exists(data: dict[str, Any], search_key: str) -> bool:
     return False
 
 
-class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
+class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):  # pylint: disable=hass-enforce-coordinator-module
     """Define an extended DataUpdateCoordinator."""
 
     config_entry: ConfigEntry
@@ -106,6 +106,7 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             name=name,
             update_interval=update_interval,
             update_method=update_method,
+            always_update=False,
         )
 
         self._rebooting = False

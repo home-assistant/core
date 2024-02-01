@@ -9,8 +9,8 @@ from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.zigbee_connectivity import ConnectivityServiceStatus
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from ..bridge import HueBridge
@@ -69,24 +69,6 @@ class HueBaseEntity(Entity):
         self._ignore_availability = None
         self._last_state = None
 
-    @property
-    def name(self) -> str:
-        """Return name for the entity."""
-        if self.device is None:
-            # this is just a guard
-            # creating a pretty name for device-less entities (e.g. groups/scenes)
-            # should be handled in the platform instead
-            return self.resource.type.value
-        dev_name = self.device.metadata.name
-        # if resource is a light, use the device name itself
-        if self.resource.type == ResourceTypes.LIGHT:
-            return dev_name
-        # for sensors etc, use devicename + pretty name of type
-        type_title = RESOURCE_TYPE_NAMES.get(
-            self.resource.type, self.resource.type.value.replace("_", " ").title()
-        )
-        return f"{dev_name} {type_title}"
-
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         self._check_availability()
@@ -143,17 +125,12 @@ class HueBaseEntity(Entity):
     def _handle_event(self, event_type: EventType, resource: HueResource) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_DELETED:
-            # handle removal of room and zone 'virtual' devices/services
-            # regular devices are removed automatically by the logic in device.py.
-            if resource.type in (ResourceTypes.ROOM, ResourceTypes.ZONE):
-                dev_reg = async_get_device_registry(self.hass)
-                if device := dev_reg.async_get_device({(DOMAIN, resource.id)}):
-                    dev_reg.async_remove_device(device.id)
             # cleanup entities that are not strictly device-bound and have the bridge as parent
-            if self.device is None:
+            if self.device is None and resource.id == self.resource.id:
                 ent_reg = async_get_entity_registry(self.hass)
                 ent_reg.async_remove(self.entity_id)
             return
+
         self.logger.debug("Received status update for %s", self.entity_id)
         self._check_availability()
         self.on_update()

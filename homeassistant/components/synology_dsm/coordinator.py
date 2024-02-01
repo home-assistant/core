@@ -99,7 +99,6 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator[None]):
             await self.api.async_update()
         except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        return None
 
 
 class SynologyDSMCameraUpdateCoordinator(

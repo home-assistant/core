@@ -12,6 +12,9 @@
         "data": {
           "ip_address": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "ip_address": "The hostname or IP address of your AirVisual Pro device."
         }
       }
     },
@@ -23,6 +26,16 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pm01": {
+        "name": "PM0.1"
+      },
+      "outdoor_air_quality_index": {
+        "name": "Outdoor air quality index"
+      }
     }
   }
 }

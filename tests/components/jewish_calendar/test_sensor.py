@@ -496,6 +496,7 @@ SHABBAT_TEST_IDS = [
 )
 async def test_shabbat_times_sensor(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     language,
     now,
     candle_lighting,
@@ -513,8 +514,6 @@ async def test_shabbat_times_sensor(
     hass.config.set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-
-    registry = er.async_get(hass)
 
     with alter_time(test_time):
         assert await async_setup_component(
@@ -552,7 +551,7 @@ async def test_shabbat_times_sensor(
             result_value
         ), f"Value for {sensor_type}"
 
-        entity = registry.async_get(f"sensor.test_{sensor_type}")
+        entity = entity_registry.async_get(f"sensor.test_{sensor_type}")
         target_sensor_type = sensor_type.replace("parshat_hashavua", "weekly_portion")
         target_uid = "_".join(
             map(

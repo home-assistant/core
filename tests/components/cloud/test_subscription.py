@@ -16,7 +16,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="mocked_cloud")
-def mocked_cloud_object(hass: HomeAssistant) -> Cloud:
+async def mocked_cloud_object(hass: HomeAssistant) -> Cloud:
     """Mock cloud object."""
     return Mock(
         accounts_server="accounts.nabucasa.com",
