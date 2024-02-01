@@ -141,27 +141,7 @@ async def light(hass, zigpy_device_mock):
                     general.OnOff.cluster_id,
                 ],
                 SIG_EP_OUTPUT: [general.Ota.cluster_id],
-            },
-            2: {
-                SIG_EP_PROFILE: zha.PROFILE_ID,
-                SIG_EP_TYPE: zha.DeviceType.ON_OFF_LIGHT,
-                SIG_EP_INPUT: [
-                    general.Basic.cluster_id,
-                    general.Identify.cluster_id,
-                    general.OnOff.cluster_id,
-                ],
-                SIG_EP_OUTPUT: [general.Ota.cluster_id],
-            },
-            3: {
-                SIG_EP_PROFILE: zha.PROFILE_ID,
-                SIG_EP_TYPE: zha.DeviceType.ON_OFF_LIGHT,
-                SIG_EP_INPUT: [
-                    general.Basic.cluster_id,
-                    general.Identify.cluster_id,
-                    general.OnOff.cluster_id,
-                ],
-                SIG_EP_OUTPUT: [general.Ota.cluster_id],
-            },
+            }
         },
         node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
     )
