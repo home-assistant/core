@@ -25,8 +25,8 @@
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'mop_attached',
-    'unique_id': 'E1234567890000000001_mop_attached',
+    'translation_key': 'water_mop_attached',
+    'unique_id': 'E1234567890000000001_water_mop_attached',
     'unit_of_measurement': None,
   })
 # ---
@@ -56,8 +56,8 @@
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'mop_attached',
-    'unique_id': 'E1234567890000000001_mop_attached',
+    'translation_key': 'water_mop_attached',
+    'unique_id': 'E1234567890000000001_water_mop_attached',
     'unit_of_measurement': None,
   })
 # ---

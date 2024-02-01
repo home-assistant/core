@@ -172,23 +172,6 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def number_validator(value: Any) -> int | float:
-    """Coerce a value to number without losing precision."""
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return value
-
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        pass
-    try:
-        return float(value)
-    except (TypeError, ValueError) as err:
-        raise vol.Invalid(f"invalid number {value}") from err
-
-
 def nan_validator(value: Any) -> int:
     """Convert nan string to number (can be hex string or int)."""
     if isinstance(value, int):

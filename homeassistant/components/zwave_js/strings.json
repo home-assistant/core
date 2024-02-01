@@ -1,4 +1,26 @@
 {
+  "entity": {
+    "sensor": {
+      "node_status": {
+        "name": "Node status",
+        "state": {
+          "alive": "Alive",
+          "asleep": "Asleep",
+          "awake": "Awake",
+          "dead": "Dead",
+          "unknown": "Unknown"
+        }
+      },
+      "controller_status": {
+        "name": "Status",
+        "state": {
+          "ready": "Ready",
+          "unresponsive": "Unresponsive",
+          "jammed": "Jammed"
+        }
+      }
+    }
+  },
   "config": {
     "flow_title": "{name}",
     "step": {
@@ -155,13 +177,18 @@
       "title": "Device configuration file changed: {device_name}",
       "fix_flow": {
         "step": {
-          "confirm": {
+          "init": {
+            "menu_options": {
+              "confirm": "Re-interview device",
+              "ignore": "Ignore device config update"
+            },
             "title": "Device configuration file changed: {device_name}",
-            "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave JS discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and and the device must be re-interviewed to pick up the changes.\n\n This is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you'd like to proceed, click on SUBMIT below. The re-interview will take place in the background."
+            "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave JS discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and and the device must be re-interviewed to pick up the changes.\n\n This is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you decide to proceed with the re-interview, it will take place in the background."
           }
         },
         "abort": {
-          "cannot_connect": "Cannot connect to {device_name}. Please try again later after confirming that your Z-Wave network is up and connected to Home Assistant."
+          "cannot_connect": "Cannot connect to {device_name}. Please try again later after confirming that your Z-Wave network is up and connected to Home Assistant.",
+          "issue_ignored": "Device config file update for {device_name} ignored."
         }
       }
     }

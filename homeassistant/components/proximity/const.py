@@ -13,6 +13,7 @@ ATTR_PROXIMITY_DATA: Final = "proximity_data"
 
 CONF_IGNORED_ZONES = "ignored_zones"
 CONF_TOLERANCE = "tolerance"
+CONF_TRACKED_ENTITIES = "tracked_entities"
 
 DEFAULT_DIR_OF_TRAVEL = "not set"
 DEFAULT_DIST_TO_ZONE = "not set"

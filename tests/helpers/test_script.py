@@ -1341,7 +1341,7 @@ async def test_wait_continue_on_timeout(
     }
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
-        expected_trace["0"][0]["error"] = ""
+        expected_trace["0"][0]["error"] = "TimeoutError"
         expected_script_execution = "aborted"
     else:
         expected_trace["1"] = [{"result": {"event": "test_event", "event_data": {}}}]

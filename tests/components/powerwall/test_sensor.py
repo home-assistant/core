@@ -132,6 +132,67 @@ async def test_sensors(
     assert hass.states.get("sensor.mysite_load_frequency").state == STATE_UNKNOWN
     assert hass.states.get("sensor.mysite_backup_reserve").state == STATE_UNKNOWN
 
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_capacity").state)
+        == 14.715
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_voltage").state)
+        == 245.7
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_frequency").state) == 50.0
+    )
+    assert float(hass.states.get("sensor.mysite_tg0123456789ab_current").state) == 0.3
+    assert int(hass.states.get("sensor.mysite_tg0123456789ab_power").state) == -100
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_export").state)
+        == 2358.235
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_import").state)
+        == 2693.355
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_remaining").state)
+        == 14.715
+    )
+    assert float(hass.states.get("sensor.mysite_tg0123456789ab_charge").state) == 100.0
+    assert (
+        str(hass.states.get("sensor.mysite_tg0123456789ab_grid_state").state)
+        == "grid_compliant"
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_capacity").state)
+        == 15.137
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_voltage").state)
+        == 245.6
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_frequency").state) == 50.0
+    )
+    assert float(hass.states.get("sensor.mysite_tg9876543210ba_current").state) == 0.1
+    assert int(hass.states.get("sensor.mysite_tg9876543210ba_power").state) == -100
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_export").state)
+        == 509.907
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_import").state)
+        == 610.483
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_remaining").state)
+        == 15.137
+    )
+    assert float(hass.states.get("sensor.mysite_tg9876543210ba_charge").state) == 100.0
+    assert (
+        str(hass.states.get("sensor.mysite_tg9876543210ba_grid_state").state)
+        == "grid_compliant"
+    )
+
 
 async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
     """Confirm that backup reserve sensor is not added if data is unavailable from the device."""

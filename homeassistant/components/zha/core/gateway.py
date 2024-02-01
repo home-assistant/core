@@ -223,7 +223,7 @@ class ZHAGateway:
         zha_data.gateway = self
 
         self.coordinator_zha_device = self._async_get_or_create_device(
-            self._find_coordinator_device(), restored=True
+            self._find_coordinator_device()
         )
 
         self.async_load_devices()
@@ -264,11 +264,10 @@ class ZHAGateway:
         """Restore ZHA devices from zigpy application state."""
 
         for zigpy_device in self.application_controller.devices.values():
-            zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
+            zha_device = self._async_get_or_create_device(zigpy_device)
             delta_msg = "not known"
             if zha_device.last_seen is not None:
                 delta = round(time.time() - zha_device.last_seen)
-                zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
                 (
@@ -622,11 +621,11 @@ class ZHAGateway:
 
     @callback
     def _async_get_or_create_device(
-        self, zigpy_device: zigpy.device.Device, restored: bool = False
+        self, zigpy_device: zigpy.device.Device
     ) -> ZHADevice:
         """Get or create a ZHA device."""
         if (zha_device := self._devices.get(zigpy_device.ieee)) is None:
-            zha_device = ZHADevice.new(self.hass, zigpy_device, self, restored)
+            zha_device = ZHADevice.new(self.hass, zigpy_device, self)
             self._devices[zigpy_device.ieee] = zha_device
 
             device_registry = dr.async_get(self.hass)

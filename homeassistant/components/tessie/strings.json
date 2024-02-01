@@ -142,7 +142,7 @@
       "drive_state_active_route_miles_to_arrival": {
         "name": "Distance to arrival"
       },
-      "drive_state_active_route_time_to_arrival": {
+      "drive_state_active_route_minutes_to_arrival": {
         "name": "Time to arrival"
       },
       "drive_state_active_route_destination": {
@@ -249,6 +249,9 @@
       "charge_state_trip_charging": {
         "name": "Trip charging"
       },
+      "charge_state_conn_charge_cable": {
+        "name": "Charge cable"
+      },
       "climate_state_auto_seat_climate_left": {
         "name": "Auto seat climate left"
       },
@@ -293,6 +296,18 @@
       },
       "vehicle_state_rp_window": {
         "name": "Rear passenger window"
+      },
+      "vehicle_state_df": {
+        "name": "Front driver door"
+      },
+      "vehicle_state_pf": {
+        "name": "Front passenger door"
+      },
+      "vehicle_state_dr": {
+        "name": "Rear driver door"
+      },
+      "vehicle_state_pr": {
+        "name": "Rear passenger door"
       }
     },
     "button": {
