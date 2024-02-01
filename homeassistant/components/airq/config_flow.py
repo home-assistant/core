@@ -9,11 +9,20 @@ from aioairq import AirQ, InvalidAuth
 from aiohttp.client_exceptions import ClientConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import BooleanSelector
 
-from .const import DOMAIN
+from .const import CONF_CLIP_NEGATIVE, CONF_RETURN_AVERAGE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,4 +80,41 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Return the options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Handle options flow for air-Q."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return self.async_create_entry(title="", data=self.options)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_RETURN_AVERAGE,
+                        default=self.config_entry.options.get(
+                            CONF_RETURN_AVERAGE, True
+                        ),
+                    ): BooleanSelector(),
+                    vol.Optional(
+                        CONF_CLIP_NEGATIVE,
+                        default=self.config_entry.options.get(CONF_CLIP_NEGATIVE, True),
+                    ): BooleanSelector(),
+                }
+            ),
         )
