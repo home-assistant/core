@@ -93,10 +93,9 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             skip_accuracy_filter = False
 
             for custom_attr in self.custom_attributes:
-                attr[custom_attr] = getattr(
-                    device["attributes"],
+                attr[custom_attr] = device["attributes"].get(
                     custom_attr,
-                    getattr(position["attributes"], custom_attr, None),
+                    position["attributes"].get(custom_attr, None),
                 )
                 if custom_attr in self.skip_accuracy_filter_for:
                     skip_accuracy_filter = True
@@ -151,13 +150,16 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             device = get_device(event["deviceId"], devices)
             self.hass.bus.async_fire(
                 # This goes against two of the HA core guidelines:
-                # 1. Event names should be prefixed with the domain name of the integration
+                # 1. Event names should be prefixed with the domain name of
+                #    the integration
                 # 2. This should be event entities
-                # However, to not break it for those who currently use the "old" integration, this is kept as is.
+                #
+                # However, to not break it for those who currently use
+                # the "old" integration, this is kept as is.
                 f"traccar_{EVENTS[event['type']]}",
                 {
                     "device_traccar_id": event["deviceId"],
-                    "device_name": getattr(device, "name", None),
+                    "device_name": device["name"] if device else None,
                     "type": event["type"],
                     "serverTime": event["eventTime"],
                     "attributes": event["attributes"],
