@@ -76,7 +76,29 @@ async def multiterm_zc0101_binary_output(hass, zigpy_device_mock):
                 ],
                 SIG_EP_TYPE: zha.DeviceType.HEATING_COOLING_UNIT,
                 SIG_EP_PROFILE: zha.PROFILE_ID,
-            }
+            },
+            2: {
+                SIG_EP_INPUT: [
+                    # general.Basic.cluster_id,
+                    general.BinaryOutput.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    # general.Basic.cluster_id
+                ],
+                SIG_EP_TYPE: zha.DeviceType.HEATING_COOLING_UNIT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            },
+            3: {
+                SIG_EP_INPUT: [
+                    # general.Basic.cluster_id,
+                    general.BinaryOutput.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    # general.Basic.cluster_id
+                ],
+                SIG_EP_TYPE: zha.DeviceType.HEATING_COOLING_UNIT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            },
         },
         manufacturer="MultiTerm",
         model="ZC0101",
