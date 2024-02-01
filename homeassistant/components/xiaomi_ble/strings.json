@@ -48,6 +48,9 @@
     },
     "trigger_type": {
       "button": "Button \"{subtype}\"",
+      "button_left": "Button Left \"{subtype}\"",
+      "button_middle": "Button Middle \"{subtype}\"",
+      "button_right": "Button Right \"{subtype}\"",
       "motion": "{subtype}"
     }
   },
