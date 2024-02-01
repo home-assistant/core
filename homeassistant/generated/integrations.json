@@ -1646,6 +1646,12 @@
         }
       }
     },
+    "eq3btsmart": {
+      "name": "eQ-3 Bluetooth Smart Thermostats",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "escea": {
       "name": "Escea",
       "integration_type": "hub",

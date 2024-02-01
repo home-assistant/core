@@ -1,0 +1,101 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect"
+    },
+    "flow_title": "{name} [{mac}] {rssi}dB",
+    "step": {
+      "user": {
+        "title": "Fill in your EQ3 information",
+        "data": {
+          "name": "Name given to the thermostat",
+          "mac": "MAC address"
+        }
+      },
+      "init": {
+        "title": "Fill in your EQ3 information",
+        "description": "{name} [{mac}] {rssi}dB",
+        "data": {
+          "name": "Name given to the thermostat"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "EQ-3 Options",
+        "description": "Increasing the scan interval to 10 minutes and disabling persistant connections may save battery. Set the bluetooth adapter to 'local' avoid using BTProxy, or pick manually if you have multiple available and want to distribute connection across them.",
+        "data": {
+          "scan_interval": "Scan interval in seconds",
+          "conf_current_temp_selector": "What to show as current temperature",
+          "conf_target_temp_selector": "What to show as target temperature",
+          "conf_external_temp_sensor": "External temperature sensor",
+          "conf_adapter": "Bluetooth adapter",
+          "conf_stay_connected": "Keep bluetooth connection open",
+          "conf_debug_mode": "Debug mode. Adds extra entities for debugging."
+        }
+      }
+    }
+  },
+  "services": {
+    "set_schedule": {
+      "name": "Set EQ3 Schedule",
+      "description": "Set EQ3 Schedule",
+      "fields": {
+        "days": {
+          "name": "Days to set",
+          "description": "Days to set"
+        },
+        "target_temp_0": {
+          "name": "Starting Temperature",
+          "description": "Starting Temperature"
+        },
+        "next_change_at_0": { "name": "Until", "description": "Until" },
+        "target_temp_1": {
+          "name": "Then change to",
+          "description": "Then change to"
+        },
+        "next_change_at_1": { "name": "Until", "description": "Until" },
+        "target_temp_2": {
+          "name": "Then change to",
+          "description": "Then change to"
+        },
+        "next_change_at_2": { "name": "Until", "description": "Until" },
+        "target_temp_3": {
+          "name": "Then change to",
+          "description": "Then change to"
+        },
+        "next_change_at_3": { "name": "Until", "description": "Until" },
+        "target_temp_4": {
+          "name": "Then change to",
+          "description": "Then change to"
+        },
+        "next_change_at_4": { "name": "Until", "description": "Until" },
+        "target_temp_5": {
+          "name": "Then change to",
+          "description": "Then change to"
+        },
+        "next_change_at_5": { "name": "Until", "description": "Until" },
+        "target_temp_6": {
+          "name": "Then change to",
+          "description": "Then change to"
+        }
+      }
+    },
+    "set_away_until": {
+      "name": "Set Away until",
+      "description": "Set Away until",
+      "fields": {
+        "away_until": { "name": "Away until", "description": "Away until" },
+        "temperature": {
+          "name": "Target temperature while away",
+          "description": "Target temperature while away"
+        }
+      }
+    }
+  }
+}

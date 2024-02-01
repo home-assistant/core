@@ -148,6 +148,7 @@ FLOWS = {
         "environment_canada",
         "epion",
         "epson",
+        "eq3btsmart",
         "escea",
         "esphome",
         "eufylife_ble",

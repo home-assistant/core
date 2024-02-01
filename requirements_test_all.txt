@@ -462,6 +462,7 @@ bellows==0.37.6
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
 
+# homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
 bleak-esphome==0.4.1
 

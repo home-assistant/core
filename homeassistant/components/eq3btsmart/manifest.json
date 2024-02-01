@@ -1,0 +1,21 @@
+{
+  "domain": "eq3btsmart",
+  "name": "eQ-3 Bluetooth Smart Thermostats",
+  "after_dependencies": ["bluetooth"],
+  "bluetooth": [
+    {
+      "local_name": "CC-RT-BLE"
+    },
+    {
+      "local_name": "CC-RT-M-BLE"
+    }
+  ],
+  "codeowners": ["@eulemitkeule", "@dbuezas"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://github.com/eulemitkeule/eq3btsmart",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/eulemitkeule/eq3btsmart/issues",
+  "quality_scale": "silver",
+  "requirements": ["eq3btsmart==1.0.1", "bleak-esphome==0.4.1"]
+}
