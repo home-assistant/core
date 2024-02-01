@@ -272,7 +272,7 @@
         "name": "Solar state",
         "state": {
           "ready": "Standby",
-          "production": "Production"
+          "production": "Producing"
         }
       },
       "supply_temperature": {
