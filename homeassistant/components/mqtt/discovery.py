@@ -362,8 +362,6 @@ async def async_start(  # noqa: C901
                 }
                 setattr(discovery_payload, "discovery_data", discovery_data)
 
-                discovery_payload[CONF_PLATFORM] = "mqtt"
-
             if discovery_hash in mqtt_data.discovery_pending_discovered:
                 pending = mqtt_data.discovery_pending_discovered[discovery_hash][
                     "pending"

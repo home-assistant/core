@@ -3028,7 +3028,6 @@ async def test_mqtt_ws_get_device_debug_info(
     }
     data_sensor = json.dumps(config_sensor)
     data_trigger = json.dumps(config_trigger)
-    config_sensor["platform"] = config_trigger["platform"] = mqtt.DOMAIN
 
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data_sensor)
     async_fire_mqtt_message(
@@ -3085,7 +3084,6 @@ async def test_mqtt_ws_get_device_debug_info_binary(
         "unique_id": "unique",
     }
     data = json.dumps(config)
-    config["platform"] = mqtt.DOMAIN
 
     async_fire_mqtt_message(hass, "homeassistant/camera/bla/config", data)
     await hass.async_block_till_done()
