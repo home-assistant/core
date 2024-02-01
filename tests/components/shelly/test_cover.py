@@ -173,6 +173,7 @@ async def test_rpc_device_update(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device update."""
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
     await init_integration(hass, 2)
     assert hass.states.get("cover.test_cover_0").state == CoverState.CLOSED
 
@@ -185,6 +186,9 @@ async def test_rpc_device_no_position_control(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device with no position control."""
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "pos_control", False
+    )
     await init_integration(hass, 2)
     assert hass.states.get("cover.test_cover_0").state == CoverState.OPEN
 
