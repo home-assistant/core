@@ -47,7 +47,7 @@ class HeatingProgram(enum.StrEnum):
     # COMFORT_ECO = "comfortEnergySaving"
     COMFORT_HEATING = "comfortHeating"
     # DHW_PRECEDENCE = "dhwPrecedence"
-    # ECO = "eco"
+    ECO = "eco"
     # EXTERNAL = "external"
     # FIXED = "fixed"
     # FORCED = "forcedLastFromSchedule"
@@ -65,7 +65,7 @@ class HeatingProgram(enum.StrEnum):
     # REDUCED_COOLING_ECO = "reducedCoolingEnergySaving"
     # REDUCED_ECO = "reducedEnergySaving"
     REDUCED_HEATING = "reducedHeating"
-    # STANDBY = "standby"
+    STANDBY = "standby"
     # SUMMER_ECO = "summerEco"
 
 
