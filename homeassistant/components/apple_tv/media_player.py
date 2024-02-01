@@ -153,11 +153,13 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         except exceptions.ProtocolError:
             _LOGGER.exception("Failed to update app list")
         else:
-            self._app_list = {
-                app_name: app.identifier
-                for app in sorted(apps, key=lambda app: app_name.lower())
-                if (app_name := app.name) is not None
-            }
+            self._app_list = dict(
+                sorted(
+                    (app_name, app.identifier)
+                    for app in apps
+                    if (app_name := app.name) is not None
+                )
+            )
             self.async_write_ha_state()
 
     @callback
