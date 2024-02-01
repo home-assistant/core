@@ -559,7 +559,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                     "entity_id": self.entity_id,
                     "device_class": device_class,
                     "source_entities": ", ".join(self._entity_ids),
-                    "uoms:": ", ".join(unit_of_measurements),
+                    "uoms": ", ".join(unit_of_measurements),
                 },
             )
         else:
@@ -574,7 +574,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                 translation_placeholders={
                     "entity_id": self.entity_id,
                     "source_entities": ", ".join(self._entity_ids),
-                    "uoms:": ", ".join(unit_of_measurements),
+                    "uoms": ", ".join(unit_of_measurements),
                 },
             )
         return None
