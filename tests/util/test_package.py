@@ -21,6 +21,8 @@ TEST_ZIP_REQ = "file://{}#{}".format(
     os.path.join(RESOURCE_DIR, "pyhelloworld3.zip"), TEST_NEW_REQ
 )
 
+TEST_GIT_REQ = "git+https://github.com/pypa/pip#pip>=1"
+
 
 @pytest.fixture
 def mock_sys():
@@ -230,9 +232,10 @@ def test_check_package_global() -> None:
     assert not package.is_installed(f"{installed_package}<{installed_version}")
 
 
-def test_check_package_zip() -> None:
-    """Test for an installed zip package."""
+def test_check_package_fragment() -> None:
+    """Test for an installed package with a fragment."""
     assert not package.is_installed(TEST_ZIP_REQ)
+    assert package.is_installed(TEST_GIT_REQ)
 
 
 def test_get_is_installed() -> None:

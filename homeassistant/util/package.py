@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 from subprocess import PIPE, Popen
 import sys
+from urllib.parse import urlparse
 
 from packaging.requirements import InvalidRequirement, Requirement
 
@@ -46,8 +47,11 @@ def is_installed(requirement_str: str) -> bool:
     try:
         req = Requirement(requirement_str)
     except InvalidRequirement:
-        _LOGGER.error("Invalid requirement '%s'", requirement_str)
-        return False
+        try:
+            req = Requirement(urlparse(requirement_str).fragment)
+        except InvalidRequirement:
+            _LOGGER.error("Invalid requirement '%s'", requirement_str)
+            return False
 
     try:
         if (installed_version := version(req.name)) is None:
