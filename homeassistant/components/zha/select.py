@@ -83,7 +83,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     ) -> None:
         """Init this select entity."""
         self._attribute_name = self._enum.__name__
-        self._attr_options = [entry.name.lower() for entry in self._enum]
+        self._attr_options = [entry.name for entry in self._enum]
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
@@ -93,14 +93,11 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         option = self._cluster_handler.data_cache.get(self._attribute_name)
         if option is None:
             return None
-        # Remove first capital to get snake_case for translations
-        return option.name.lower()
+        return option.name
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._cluster_handler.data_cache[self._attribute_name] = self._enum[
-            option.replace(" ", "_")
-        ]
+        self._cluster_handler.data_cache[self._attribute_name] = self._enum[option]
         self.async_write_ha_state()
 
     @callback
@@ -108,7 +105,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         """Restore previous state."""
         if last_state.state and last_state.state != STATE_UNKNOWN:
             self._cluster_handler.data_cache[self._attribute_name] = self._enum[
-                last_state.state.replace(" ", "_")
+                last_state.state
             ]
 
 
