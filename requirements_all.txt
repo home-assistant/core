@@ -2163,7 +2163,7 @@ pyswitchbee==1.8.0
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.12
+pytedee-async==0.2.13
 
 # homeassistant.components.tfiac
 pytfiac==0.4
