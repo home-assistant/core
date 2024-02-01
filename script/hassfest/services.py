@@ -69,9 +69,7 @@ CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
 CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
     vol.Schema(
         {
-            vol.Optional("status", default="active"): vol.In(
-                ("active", "legacy", "deprecated")
-            ),
+            vol.Optional("status"): vol.In({"active", "legacy", "deprecated"}),
             vol.Optional("description"): str,
             vol.Optional("name"): str,
             vol.Optional("target"): vol.Any(
