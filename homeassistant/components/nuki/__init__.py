@@ -332,6 +332,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enfo
 
         Returns:
             A dict with the events to be fired. The event type is the key and the device ids are the value
+
         """
 
         events: dict[str, set[str]] = defaultdict(set)
