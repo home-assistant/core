@@ -82,7 +82,7 @@
           "off": "mdi:alarm-off"
         }
       },
-      "steam_boiler_enable": {
+      "steam_boiler": {
         "default": "mdi:water-boiler",
         "state": {
           "on": "mdi:water-boiler",

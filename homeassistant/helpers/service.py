@@ -608,6 +608,11 @@ async def async_get_all_descriptions(
 
     # Files we loaded for missing descriptions
     loaded: dict[str, JSON_TYPE] = {}
+    # We try to avoid making a copy in the event the cache is good,
+    # but now we must make a copy in case new services get added
+    # while we are loading the missing ones so we do not
+    # add the new ones to the cache without their descriptions
+    services = {domain: service.copy() for domain, service in services.items()}
 
     if domains_with_missing_services:
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)

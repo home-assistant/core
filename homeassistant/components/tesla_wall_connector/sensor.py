@@ -29,6 +29,19 @@ from .const import DOMAIN, WALLCONNECTOR_DATA_LIFETIME, WALLCONNECTOR_DATA_VITAL
 
 _LOGGER = logging.getLogger(__name__)
 
+EVSE_STATE = {
+    0: "booting",
+    1: "not_connected",
+    2: "connected",
+    4: "ready",
+    6: "negotiating",
+    7: "error",
+    8: "charging_finished",
+    9: "waiting_car",
+    10: "charging_reduced",
+    11: "charging",
+}
+
 
 @dataclass(frozen=True)
 class WallConnectorSensorDescription(
@@ -40,9 +53,20 @@ class WallConnectorSensorDescription(
 WALL_CONNECTOR_SENSORS = [
     WallConnectorSensorDescription(
         key="evse_state",
-        translation_key="evse_state",
+        translation_key="status_code",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].evse_state,
+        entity_registry_enabled_default=False,
+    ),
+    WallConnectorSensorDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda data: EVSE_STATE.get(
+            data[WALLCONNECTOR_DATA_VITALS].evse_state
+        ),
+        options=list(EVSE_STATE.values()),
+        icon="mdi:ev-station",
     ),
     WallConnectorSensorDescription(
         key="handle_temp_c",

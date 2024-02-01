@@ -1190,17 +1190,14 @@ class AqaraFeedingSource(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class AqaraPetFeederLastFeedingSource(Sensor):
+class AqaraPetFeederLastFeedingSource(EnumSensor):
     """Sensor that displays the last feeding source of pet feeder."""
 
     _attribute_name = "last_feeding_source"
     _unique_id_suffix = "last_feeding_source"
     _attr_translation_key: str = "last_feeding_source"
     _attr_icon = "mdi:devices"
-
-    def formatter(self, value: int) -> int | float | None:
-        """Numeric pass-through formatter."""
-        return AqaraFeedingSource(value).name
+    _enum = AqaraFeedingSource
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -1262,17 +1259,14 @@ class SonoffIlluminationStates(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names="sonoff_manufacturer", models={"SNZB-06P"})
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SonoffPresenceSenorIlluminationStatus(Sensor):
+class SonoffPresenceSenorIlluminationStatus(EnumSensor):
     """Sensor that displays the illumination status the last time peresence was detected."""
 
     _attribute_name = "last_illumination_state"
     _unique_id_suffix = "last_illumination"
     _attr_translation_key: str = "last_illumination_state"
     _attr_icon: str = "mdi:theme-light-dark"
-
-    def formatter(self, value: int) -> int | float | None:
-        """Numeric pass-through formatter."""
-        return SonoffIlluminationStates(value).name
+    _enum = SonoffIlluminationStates
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
