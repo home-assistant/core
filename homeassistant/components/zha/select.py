@@ -84,7 +84,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     ) -> None:
         """Init this select entity."""
         self._attribute_name = self._enum.__name__
-        # TODO: Change all enums to uncapitalized snake_case
+        # needs fixing: Change all enums to uncapitalized snake_case
         self._translation_keys = {
             entry.name.lower(): entry.name for entry in self._enum
         }
