@@ -98,7 +98,6 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         option = self._cluster_handler.data_cache.get(self._attribute_name)
         if option is None:
             return None
-        # convert old style CamelCase to snake_case for translations (however try to use snake_case in enums)
         return option.name.replace("_", " ")
 
     async def async_select_option(self, option: str) -> None:
