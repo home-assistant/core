@@ -4,6 +4,7 @@ import logging
 from unittest.mock import patch
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
+from azure.kusto.ingest import StreamDescriptor
 import pytest
 
 from homeassistant.components import azure_data_explorer
@@ -26,8 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
 @pytest.mark.parametrize(
-    ("sideeffect"),
-    [None, KustoServiceError("test"), KustoAuthenticationError("test", Exception)],
+    ("sideeffect", "log_message"),
+    [
+        (None, ""),
+        (KustoServiceError("test"), "Could not find database or table"),
+        (
+            KustoAuthenticationError("test", Exception),
+            ("Could not authenticate to Azure Data Explorer"),
+        ),
+    ],
     ids=["No_error", "KustoServiceError", "KustoAuthenticationError"],
 )
 async def test_put_event_on_queue_with_managed_client(
@@ -35,6 +43,8 @@ async def test_put_event_on_queue_with_managed_client(
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
     sideeffect,
+    log_message,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
@@ -44,10 +54,23 @@ async def test_put_event_on_queue_with_managed_client(
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
 
-    async_fire_time_changed(hass, datetime(2024, 2, 1, 0, 0, 0))
+    async_fire_time_changed(hass, datetime(2024, 1, 1, 0, 0, 0))
 
     await hass.async_block_till_done()
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.assert_called_once()
+
+    if sideeffect:
+        # Test if logs have been written to capture error message if an error occurered
+        assert log_message in caplog.text
+    else:
+        # Test if the ingest_data function has been called
+        assert (
+            type(
+                mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.call_args.args[
+                    0
+                ]
+            )
+            is StreamDescriptor
+        )
 
 
 async def test_put_event_on_queue_with_queueing_client(
@@ -65,6 +88,10 @@ async def test_put_event_on_queue_with_queueing_client(
 
     await hass.async_block_till_done()
     mock_azure_data_explorer_QueuedIngestClient_ingest_data.assert_called_once()
+    assert (
+        type(mock_azure_data_explorer_QueuedIngestClient_ingest_data.call_args.args[0])
+        is StreamDescriptor
+    )
 
 
 async def test_import(hass) -> None:
@@ -104,6 +131,7 @@ async def test_unload_entry(
     assert entry_managed.state == ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.freeze_time("2024-01-01 00:00:00")
 async def test_late_event(
     hass,
     entry_with_one_event,
@@ -114,11 +142,7 @@ async def test_late_event(
         f"{AZURE_DATA_EXPLORER_PATH}.utcnow",
         return_value=utcnow() + timedelta(hours=1),
     ):
-        async_fire_time_changed(
-            hass,
-            utcnow()
-            + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
-        )
+        async_fire_time_changed(hass, datetime(2024, 1, 2, 00, 00, 00))
         await hass.async_block_till_done()
         mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.assert_not_called()
 
@@ -214,7 +238,9 @@ async def test_filter(
         )
         await hass.async_block_till_done()
         assert (
-            mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.call_count
+            len(
+                mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.call_args_list
+            )
             == count
         )
         mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.reset_mock()
