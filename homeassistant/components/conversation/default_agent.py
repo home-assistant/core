@@ -929,13 +929,13 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
     if unmatched_name := unmatched_text.get("name"):
         if matched_area:
             # device in area
-            return ErrorKey.NO_DEVICE_IN_AREA, {
-                "device": unmatched_name,
+            return ErrorKey.NO_ENTITY_IN_AREA, {
+                "entity": unmatched_name,
                 "area": matched_area,
             }
 
         # device only
-        return ErrorKey.NO_DEVICE, {"device": unmatched_name}
+        return ErrorKey.NO_ENTITY, {"entity": unmatched_name}
 
     # Default error
     return ErrorKey.NO_INTENT, {}
