@@ -343,6 +343,7 @@ class ZWaveJSStatisticsSensorEntityDescription(SensorEntityDescription):
     convert: Callable[
         [ControllerStatisticsDataType | NodeStatisticsDataType, str], Any
     ] = lambda statistics, key: statistics.get(key)
+    entity_registry_enabled_default: bool = False
 
 
 # Controller statistics descriptions
@@ -487,6 +488,7 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
                 else None
             )
         ),
+        entity_registry_enabled_default=True,
     ),
 ]
 
@@ -930,7 +932,6 @@ class ZWaveStatisticsSensor(SensorEntity):
     entity_description: ZWaveJSStatisticsSensorEntityDescription
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_entity_registry_enabled_default = False
     _attr_has_entity_name = True
 
     def __init__(
