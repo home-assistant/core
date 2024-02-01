@@ -37,7 +37,7 @@ from .helpers import (
     template,
 )
 from .helpers.dispatcher import async_dispatcher_send
-from .helpers.translation import async_setup_load_listeners
+from .helpers.translation import async_setup as async_setup_translations
 from .helpers.typing import ConfigType
 from .setup import (
     DATA_SETUP_STARTED,
@@ -316,7 +316,7 @@ async def async_from_config_dict(
     """
     start = monotonic()
 
-    async_setup_load_listeners(hass)
+    async_setup_translations(hass)
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await async_load_base_functionality(hass)

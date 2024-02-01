@@ -919,7 +919,7 @@ class StateTranslated:
             device_class = state.attributes["device_class"]
 
         translations_entity_component = async_get_cached_translations(
-            self._hass, language, "entity_component", (domain,)
+            self._hass, language, "entity_component", domain
         )
         if len(translations_entity_component) > 0:
             key = f"component.{domain}.entity_component.{device_class}.state.{state.state}"

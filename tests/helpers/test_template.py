@@ -1972,7 +1972,7 @@ async def test_state_translated(
         },
     )
     await hass.async_block_till_done()
-    await translation.async_load_state_translations_to_cache(hass, "en")
+    await translation._async_load_state_translations_to_cache(hass, "en", None)
 
     hass.states.async_set("switch.without_translations", "on", attributes={})
     hass.states.async_set("binary_sensor.without_device_class", "on", attributes={})
