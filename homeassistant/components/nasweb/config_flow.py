@@ -16,7 +16,11 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, NASWEB_SCHEMA_IMG_URL, NOTIFY_COORDINATOR
 from .coordinator import NASwebCoordinator, NotificationCoordinator
-from .helper import get_integration_webhook_url, initialize_notification_coordinator
+from .helper import (
+    deinitialize_notification_coordinator_if_empty,
+    get_integration_webhook_url,
+    initialize_notification_coordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +109,8 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
+            finally:
+                deinitialize_notification_coordinator_if_empty(self.hass)
 
         return self.async_show_form(
             step_id="user",

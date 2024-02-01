@@ -7,6 +7,7 @@ from aiohttp.hdrs import METH_POST
 from homeassistant.components.webhook import (
     async_generate_id,
     async_register as webhook_register,
+    async_unregister as webhook_unregister,
 )
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
@@ -43,3 +44,15 @@ def initialize_notification_coordinator(hass: HomeAssistant) -> NotificationCoor
         )
         _LOGGER.debug("Registered webhook: %s", hass.data[DOMAIN][CONF_WEBHOOK_ID])
     return notify_coordinator
+
+
+def deinitialize_notification_coordinator_if_empty(hass: HomeAssistant) -> None:
+    """Deinitialize NotificationCoordinator instance when no longer needed."""
+    notify_coordinator: NotificationCoordinator | None = hass.data[DOMAIN].get(
+        NOTIFY_COORDINATOR
+    )
+    if notify_coordinator is not None and not notify_coordinator.has_coordinators():
+        hass.data[DOMAIN].pop(NOTIFY_COORDINATOR)
+        webhook_id: str = hass.data[DOMAIN].pop(CONF_WEBHOOK_ID)
+        webhook_unregister(hass, webhook_id)
+        _LOGGER.debug("Deinitialized Notification Coordinator")

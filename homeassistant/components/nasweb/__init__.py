@@ -12,7 +12,11 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, MANUFACTURER, NASWEB_CONFIG_URL, NOTIFY_COORDINATOR
 from .coordinator import NASwebCoordinator, NotificationCoordinator
-from .helper import get_integration_webhook_url, initialize_notification_coordinator
+from .helper import (
+    deinitialize_notification_coordinator_if_empty,
+    get_integration_webhook_url,
+    initialize_notification_coordinator,
+)
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
@@ -73,14 +77,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        notify_coordinator: NotificationCoordinator = hass.data[DOMAIN].get(
+        notify_coordinator: NotificationCoordinator = hass.data[DOMAIN][
             NOTIFY_COORDINATOR
-        )
+        ]
         coordinator: NASwebCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        webhook_url = get_integration_webhook_url(hass)
+        await coordinator.webio_api.status_subscription(webhook_url, False)
         serial = coordinator.webio_api.get_serial_number()
-        if notify_coordinator is not None and serial is not None:
+        if serial is not None:
             notify_coordinator.remove_coordinator(serial)
-            webhook_url = get_integration_webhook_url(hass)
-            await coordinator.webio_api.status_subscription(webhook_url, False)
+        deinitialize_notification_coordinator_if_empty(hass)
 
     return unload_ok
