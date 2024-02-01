@@ -21,7 +21,7 @@ say:
       selector:
         text:
     options:
-      advanced: true
+      status: passive
       example: platform specific
       selector:
         object:
@@ -50,7 +50,7 @@ speak:
       selector:
         text:
     options:
-      advanced: true
+      status: passive
       example: platform specific
       selector:
         object:

@@ -12,12 +12,12 @@ publish:
       selector:
         text:
     payload_template:
-      advanced: true
+      status: passive
       example: "{{ states('sensor.temperature') }}"
       selector:
         template:
     qos:
-      advanced: true
+      status: passive
       default: 0
       selector:
         select:

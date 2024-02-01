@@ -1,4 +1,5 @@
 get_forecast:
+  status: deprecated
   target:
     entity:
       domain: weather

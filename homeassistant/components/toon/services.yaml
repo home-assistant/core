@@ -1,7 +1,7 @@
 update:
   fields:
     display:
-      advanced: true
+      status: passive
       example: eneco-001-123456
       selector:
         text:

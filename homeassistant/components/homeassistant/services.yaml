@@ -53,7 +53,6 @@ reload_config_entry:
     device: {}
   fields:
     entry_id:
-      advanced: true
       required: false
       example: 8955375327824e14ba89e4b29cc3ec9a
       selector:

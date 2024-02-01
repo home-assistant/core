@@ -32,13 +32,13 @@ activate_scene:
       selector:
         boolean:
     speed:
-      advanced: true
+      status: passive
       selector:
         number:
           min: 0
           max: 100
     brightness:
-      advanced: true
+      status: passive
       selector:
         number:
           min: 1

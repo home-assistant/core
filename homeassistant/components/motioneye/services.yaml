@@ -6,8 +6,8 @@ set_text_overlay:
       integration: motioneye
   fields:
     left_text:
+      status: passive
       required: false
-      advanced: false
       example: "timestamp"
       default: ""
       selector:
@@ -18,16 +18,16 @@ set_text_overlay:
             - "timestamp"
             - "custom-text"
     custom_left_text:
+      status: passive
       required: false
-      advanced: false
       example: "Hello on the left!"
       default: ""
       selector:
         text:
           multiline: true
     right_text:
+      status: passive
       required: false
-      advanced: false
       example: "timestamp"
       default: ""
       selector:
@@ -38,8 +38,8 @@ set_text_overlay:
             - "timestamp"
             - "custom-text"
     custom_right_text:
+      status: passive
       required: false
-      advanced: false
       example: "Hello on the right!"
       default: ""
       selector:
@@ -54,8 +54,8 @@ action:
       integration: motioneye
   fields:
     action:
+      status: passive
       required: true
-      advanced: false
       example: "snapshot"
       default: ""
       selector:

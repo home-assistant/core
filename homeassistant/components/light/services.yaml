@@ -6,6 +6,7 @@ turn_on:
       domain: light
   fields:
     transition:
+      status: passive
       filter:
         supported_features:
           - light.LightEntityFeature.TRANSITION
@@ -26,6 +27,7 @@ turn_on:
       selector:
         color_rgb:
     rgbw_color:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -34,11 +36,11 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       example: "[255, 100, 100, 50]"
       selector:
         object:
     rgbww_color:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -47,11 +49,11 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       example: "[255, 100, 100, 50, 70]"
       selector:
         object:
     color_name:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -60,7 +62,6 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       selector:
         select:
           translation_key: color_name
@@ -215,6 +216,7 @@ turn_on:
             - "yellow"
             - "yellowgreen"
     hs_color:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -223,11 +225,11 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       example: "[300, 70]"
       selector:
         object:
     xy_color:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -236,11 +238,11 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       example: "[0.52, 0.43]"
       selector:
         object:
     color_temp:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -265,13 +267,13 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       selector:
         color_temp:
           unit: "kelvin"
           min: 2000
           max: 6500
     brightness:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -282,7 +284,6 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       selector:
         number:
           min: 0
@@ -304,6 +305,7 @@ turn_on:
           max: 100
           unit_of_measurement: "%"
     brightness_step:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -314,12 +316,12 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       selector:
         number:
           min: -225
           max: 255
     brightness_step_pct:
+      status: passive
       filter:
         attribute:
           supported_color_modes:
@@ -336,25 +338,25 @@ turn_on:
           max: 100
           unit_of_measurement: "%"
     white:
+      status: passive
       filter:
         attribute:
           supported_color_modes:
             - light.ColorMode.WHITE
-      advanced: true
       selector:
         constant:
           value: true
           label: Enabled
     profile:
-      advanced: true
+      status: legacy
       example: relax
       selector:
         text:
     flash:
+      status: passive
       filter:
         supported_features:
           - light.LightEntityFeature.FLASH
-      advanced: true
       selector:
         select:
           options:
@@ -363,6 +365,7 @@ turn_on:
             - label: "Short"
               value: "short"
     effect:
+      status: passive
       filter:
         supported_features:
           - light.LightEntityFeature.EFFECT
@@ -375,6 +378,7 @@ turn_off:
       domain: light
   fields:
     transition:
+      status: passive
       filter:
         supported_features:
           - light.LightEntityFeature.TRANSITION
@@ -384,10 +388,10 @@ turn_off:
           max: 300
           unit_of_measurement: seconds
     flash:
+      status: passive
       filter:
         supported_features:
           - light.LightEntityFeature.FLASH
-      advanced: true
       selector:
         select:
           options:
@@ -402,6 +406,7 @@ toggle:
       domain: light
   fields:
     transition:
+      status: passive
       filter:
         supported_features:
           - light.LightEntityFeature.TRANSITION
@@ -419,11 +424,11 @@ toggle:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       example: "[255, 100, 100]"
       selector:
         color_rgb:
     color_name:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -432,7 +437,6 @@ toggle:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       selector:
         select:
           translation_key: color_name
@@ -587,6 +591,7 @@ toggle:
             - "yellow"
             - "yellowgreen"
     hs_color:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -595,11 +600,11 @@ toggle:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       example: "[300, 70]"
       selector:
         object:
     xy_color:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -608,11 +613,11 @@ toggle:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       example: "[0.52, 0.43]"
       selector:
         object:
     color_temp:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -622,7 +627,6 @@ toggle:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       selector:
         color_temp:
     kelvin:
@@ -635,13 +639,13 @@ toggle:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       selector:
         color_temp:
           unit: "kelvin"
           min: 2000
           max: 6500
     brightness:
+      status: legacy
       filter:
         attribute:
           supported_color_modes:
@@ -652,7 +656,6 @@ toggle:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       selector:
         number:
           min: 0
@@ -674,25 +677,25 @@ toggle:
           max: 100
           unit_of_measurement: "%"
     white:
+      status: passive
       filter:
         attribute:
           supported_color_modes:
             - light.ColorMode.WHITE
-      advanced: true
       selector:
         constant:
           value: true
           label: Enabled
     profile:
-      advanced: true
+      status: legacy
       example: relax
       selector:
         text:
     flash:
+      status: passive
       filter:
         supported_features:
           - light.LightEntityFeature.FLASH
-      advanced: true
       selector:
         select:
           options:
@@ -701,6 +704,7 @@ toggle:
             - label: "Short"
               value: "short"
     effect:
+      status: passive
       filter:
         supported_features:
           - light.LightEntityFeature.EFFECT

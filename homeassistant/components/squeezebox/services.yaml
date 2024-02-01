@@ -10,8 +10,8 @@ call_method:
       selector:
         text:
     parameters:
+      status: passive
       example: '["loadtracks", "album.titlesearch=Revolver"]'
-      advanced: true
       selector:
         object:
 call_query:
@@ -26,8 +26,8 @@ call_query:
       selector:
         text:
     parameters:
+      status: passive
       example: '["0", "20", "search:Revolver"]'
-      advanced: true
       selector:
         object:
 sync:
