@@ -1,0 +1,13 @@
+{
+  "domain": "fujitsu_hvac",
+  "name": "Fujitsu HVAC (based on Ayla IOT platform)",
+  "codeowners": ["@crevetor"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/fujitsu_hvac",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["ayla-iot-unofficial==1.3.0", "bidict==0.22.1"],
+  "ssdp": [],
+  "zeroconf": []
+}
