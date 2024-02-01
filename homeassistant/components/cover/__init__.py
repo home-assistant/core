@@ -449,56 +449,35 @@ class CoverEntity(Entity):
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Return expected state when action is start/complete."""
-        print(action)  # noqa: T201
 
-        def _target_start_state(
-            target_complete_state: str,
-        ) -> Callable[[str], bool]:
-            def match(value: str) -> bool:
-                if target_complete_state == STATE_OPEN:
-                    return value == STATE_OPENING
-                if target_complete_state == STATE_CLOSED:
-                    return value == STATE_CLOSING
-                return False
-
-            return match
-
-        def _target_complete_state(
-            target_complete_state: str,
-        ) -> Callable[[str], bool]:
-            def match(value: str) -> bool:
+        def _target_state(
+            target_complete_state: bool,
+        ) -> Callable[[bool], bool]:
+            def match(value: bool) -> bool:
                 return value == target_complete_state
 
             return match
 
         target: dict[str, Any] = {}
 
-        complete_state = (
-            STATE_OPEN if action[CONF_SERVICE] == "open_cover" else STATE_CLOSED
-        )
-
-        if action[CONF_EVENT] == RASC_START:
-            target["state"] = _target_start_state(complete_state)
-        else:
-            target["state"] = _target_complete_state(complete_state)
-
+        if action[CONF_SERVICE] == SERVICE_OPEN_COVER:
+            if action[CONF_EVENT] == RASC_START:
+                target["is_closed"] = _target_state(False)
+                target["is_opening"] = _target_state(True)
+                target["is_closing"] = _target_state(False)
+            else:
+                target["is_closed"] = _target_state(False)
+                target["is_opening"] = _target_state(False)
+                target["is_closing"] = _target_state(False)
+        elif action[CONF_SERVICE] == SERVICE_CLOSE_COVER:
+            if action[CONF_EVENT] == RASC_START:
+                target["is_closed"] = _target_state(False)
+                target["is_opening"] = _target_state(False)
+                target["is_closing"] = _target_state(True)
+            else:
+                target["is_closed"] = _target_state(True)
+                target["is_opening"] = _target_state(False)
+                target["is_closing"] = _target_state(False)
+        elif action[CONF_SERVICE] == SERVICE_STOP_COVER:
+            target["is_closed"] = lambda _: True
         return target
-
-    @classmethod
-    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
-        """Return expected state when action is complete."""
-        if action == "open":
-            to_state = "opened"
-        elif action == "close":
-            to_state = "closed"
-        elif action == "open_tilt":
-            to_state = "tilt_position"
-        elif action == "close_tilt":
-            to_state = "tilt_position"
-        elif action == "set_position":
-            to_state = "position"
-        elif action == "set_tilt_position":
-            to_state = "tilt_position"
-        else:
-            to_state = None
-        return to_state

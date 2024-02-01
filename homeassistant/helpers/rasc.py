@@ -25,7 +25,9 @@ from homeassistant.const import (
     RASC_RESPONSE,
     RASC_START,
 )
-from homeassistant.core import Event, HomeAssistant
+
+if TYPE_CHECKING:
+    from homeassistant.core import Event, HomeAssistant
 
 from .entity import Entity
 from .storage import Store
@@ -205,19 +207,19 @@ def rasc_on_update(
 def rasc_fire(
     hass: HomeAssistant,
     rasc_type: str,
-    entity: Entity,
+    entity_id: str,
     action: str,
     data: dict | None = None,
 ) -> None:
     """Fire a rasc response."""
     data = data or {}
-    _LOGGER.info("%s %s: %s", entity.entity_id, action, rasc_type)
+    _LOGGER.info("%s %s: %s", entity_id, action, rasc_type)
     hass.bus.async_fire(
         RASC_RESPONSE,
         {
             "type": rasc_type,
             ATTR_SERVICE: action,
-            ATTR_ENTITY_ID: entity.entity_id,
+            ATTR_ENTITY_ID: entity_id,
             **data,
         },
     )
@@ -260,16 +262,16 @@ def _get_target_entities(
     """Get target entities from Event e."""
     entities: list[str] = []
     if ATTR_DEVICE_ID in e.data[ATTR_SERVICE_DATA]:
-        entities = entities + [
+        entities += [
             entity
             for _device_id in e.data[ATTR_SERVICE_DATA][ATTR_DEVICE_ID]
             for entity in device_entities(hass, _device_id)
         ]
     if ATTR_ENTITY_ID in e.data[ATTR_SERVICE_DATA]:
         if isinstance(e.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID], str):
-            entities = entities + [e.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID]]
+            entities += [e.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID]]
         else:
-            entities = entities + e.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID]
+            entities += e.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID]
 
     return [entity for entity in own_entities if entity.entity_id in entities]
 
@@ -304,8 +306,16 @@ def _update_rasc_state(hass: HomeAssistant, state: RASCState) -> bool:
 
     # check complete state
     complete_state_matched = True
+    if not state.complete_state.items():
+        raise ValueError("no entry in complete state.")
     for attr, match in state.complete_state.items():
-        if not match(getattr(state.entity, attr)):
+        entity_attr = getattr(state.entity, attr)
+        if entity_attr is None:
+            _LOGGER.warning(
+                "Entity %s does not have attribute %s", state.entity.entity_id, attr
+            )
+            continue
+        if not match(entity_attr):
             complete_state_matched = False
             break
     # prevent hazardous changes
@@ -317,7 +327,7 @@ def _update_rasc_state(hass: HomeAssistant, state: RASCState) -> bool:
             rasc_fire(
                 hass,
                 RASC_START,
-                state.entity,
+                state.entity.entity_id,
                 state.event.data[ATTR_SERVICE],
                 {
                     ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
@@ -328,7 +338,7 @@ def _update_rasc_state(hass: HomeAssistant, state: RASCState) -> bool:
         rasc_fire(
             hass,
             RASC_COMPLETE,
-            state.entity,
+            state.entity.entity_id,
             state.event.data[ATTR_SERVICE],
             {
                 ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
@@ -350,15 +360,23 @@ def _update_rasc_state(hass: HomeAssistant, state: RASCState) -> bool:
         return True
 
     start_state_matched = True
+    if not state.start_state.items():
+        raise ValueError("no entry in start state.")
     for attr, match in state.start_state.items():
-        if not match(getattr(state.entity, attr)):
+        entity_attr = getattr(state.entity, attr)
+        if entity_attr is None:
+            _LOGGER.warning(
+                "Entity %s does not have attribute %s", state.entity.entity_id, attr
+            )
+            continue
+        if not match(entity_attr):
             start_state_matched = False
             break
     if start_state_matched and state.next_response == RASC_START:
         rasc_fire(
             hass,
             RASC_START,
-            state.entity,
+            state.entity.entity_id,
             state.event.data[ATTR_SERVICE],
             {
                 ATTR_GROUP_ID: state.event.data.get(ATTR_SERVICE_DATA, {}).get(
@@ -464,7 +482,7 @@ def get_polls(
         L = _get_polling_interval(dist, N, upper_bound)
         valid = _examinate_2nd_derivate(dist, L)
         if not valid:
-            print("The result for", name, "is probably not minimized.")  # noqa: T201
+            _LOGGER.warning("The result for %s is probably not minimized", name)
         valid = _examinate_delta(dist, L, worst_case_delta)
         if valid:
             break

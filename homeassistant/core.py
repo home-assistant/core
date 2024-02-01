@@ -2010,7 +2010,16 @@ class ServiceRegistry:
             return None
 
         response_data = await coro
-        # rasc_fire(self._hass, RASC_ACK, ,service)
+
+        # self._hass.bus.async_fire(
+        #     RASC_RESPONSE,
+        #     {
+        #         "type": RASC_ACK,
+        #         ATTR_SERVICE: service,
+        #         ATTR_ENTITY_ID: str(service_data[ATTR_ENTITY_ID]),
+        #     },
+        #     context=context,
+        # )
         if not return_response:
             return None
         if not isinstance(response_data, dict):

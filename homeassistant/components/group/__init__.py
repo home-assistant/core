@@ -483,11 +483,13 @@ class GroupEntity(Entity):
     _attr_should_poll = False
     _entity_ids: list[str]
     _action_tracker: dict[str, str] = {}
+    _action_started: bool = False
 
     # rasc
     def _async_call(self) -> None:
         for entity_id in self._entity_ids:
             self._action_tracker[entity_id] = RASC_ACK
+        self._action_started = False
 
     @callback
     def _handle_rasc_response(self, e: Event) -> None:
@@ -499,16 +501,17 @@ class GroupEntity(Entity):
         s_cnt = 0
         c_cnt = 0
         for state in self._action_tracker.values():
-            if state != RASC_START:
+            if state != RASC_ACK:
                 s_cnt += 1
             if state == RASC_COMPLETE:
                 c_cnt += 1
         if c_cnt == len(self._action_tracker):
             self._action_tracker.clear()
-            rasc_fire(self.hass, RASC_COMPLETE, self, e.data[ATTR_SERVICE])
+            rasc_fire(self.hass, RASC_COMPLETE, self.entity_id, e.data[ATTR_SERVICE])
             return
-        if s_cnt == len(self._action_tracker):
-            rasc_fire(self.hass, RASC_START, self, e.data[ATTR_SERVICE])
+        if s_cnt == len(self._action_tracker) and not self._action_started:
+            self._action_started = True
+            rasc_fire(self.hass, RASC_START, self.entity_id, e.data[ATTR_SERVICE])
 
     @callback
     def async_start_preview(

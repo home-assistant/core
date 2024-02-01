@@ -292,35 +292,33 @@ class LockEntity(Entity):
     ) -> dict[str, Any] | None:
         """Return expected state when action is complete."""
 
-        def _target_start_state(
-            target_complete_state: str,
-        ) -> Callable[[str], bool]:
-            def match(value: str) -> bool:
-                if target_complete_state == STATE_UNLOCKED:
-                    return value == STATE_UNLOCKING
-                if target_complete_state == STATE_LOCKED:
-                    return value == STATE_LOCKING
-                return False
-
-            return match
-
-        def _target_complete_state(
-            target_complete_state: str,
-        ) -> Callable[[str], bool]:
-            def match(value: str) -> bool:
+        def _target_state(
+            target_complete_state: bool,
+        ) -> Callable[[bool], bool]:
+            def match(value: bool) -> bool:
                 return value == target_complete_state
 
             return match
 
         target: dict[str, Any] = {}
 
-        complete_state = (
-            STATE_UNLOCKED if action[CONF_SERVICE] == "unlock" else STATE_LOCKED
-        )
-
-        if action[CONF_EVENT] == RASC_START:
-            target["state"] = _target_start_state(complete_state)
-        else:
-            target["state"] = _target_complete_state(complete_state)
+        if action[CONF_SERVICE] == SERVICE_UNLOCK:
+            if action[CONF_EVENT] == RASC_START:
+                target["is_locked"] = _target_state(False)
+                target["is_unlocking"] = _target_state(True)
+                target["is_locking"] = _target_state(False)
+            else:
+                target["is_locked"] = _target_state(False)
+                target["is_unlocking"] = _target_state(False)
+                target["is_locking"] = _target_state(False)
+        elif action[CONF_SERVICE] == SERVICE_LOCK:
+            if action[CONF_EVENT] == RASC_START:
+                target["is_locked"] = _target_state(False)
+                target["is_unlocking"] = _target_state(False)
+                target["is_locking"] = _target_state(True)
+            else:
+                target["is_locked"] = _target_state(True)
+                target["is_unlocking"] = _target_state(False)
+                target["is_locking"] = _target_state(False)
 
         return target

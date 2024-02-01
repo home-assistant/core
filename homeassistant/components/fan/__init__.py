@@ -14,6 +14,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_EVENT,
+    CONF_SERVICE,
+    CONF_SERVICE_DATA,
+    RASC_START,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -72,6 +76,7 @@ ATTR_PERCENTAGE = "percentage"
 ATTR_PERCENTAGE_STEP = "percentage_step"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
+ATTR_CURRENT_DIRECTION = "current_direction"
 ATTR_PRESET_MODE = "preset_mode"
 ATTR_PRESET_MODES = "preset_modes"
 
@@ -393,7 +398,6 @@ class FanEntity(ToggleEntity):
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Return expected state when action is start/complete."""
-        print(action)  # noqa: T201
 
         def _target_start_state(
             current: int | float | None, target_complete_state: int | float
@@ -411,10 +415,16 @@ class FanEntity(ToggleEntity):
 
             return match
 
+        def _target_direct_start_state(current: str | None) -> Callable[[str], bool]:
+            def match(value: str) -> bool:
+                return value != current
+
+            return match
+
         def _target_complete_state(
-            target_complete_state: int | float,
-        ) -> Callable[[int | float], bool]:
-            def match(value: int | float) -> bool:
+            target_complete_state: int,
+        ) -> Callable[[int], bool]:
+            def match(value: int) -> bool:
                 return value == target_complete_state
 
             return match
@@ -422,5 +432,25 @@ class FanEntity(ToggleEntity):
         target: dict[str, Any] = (
             await super().async_get_action_completed_state(action) or {}
         )
+
+        service_data = action[CONF_SERVICE_DATA]
+        if action[CONF_SERVICE] == SERVICE_SET_PERCENTAGE:
+            if action[CONF_EVENT] == RASC_START:
+                target[ATTR_PERCENTAGE] = _target_start_state(
+                    self.percentage, service_data[ATTR_PERCENTAGE]
+                )
+            else:
+                target[ATTR_PERCENTAGE] = _target_complete_state(
+                    service_data[ATTR_PERCENTAGE]
+                )
+        elif action[CONF_SERVICE] == SERVICE_SET_DIRECTION:
+            if action[CONF_EVENT] == RASC_START:
+                target[ATTR_CURRENT_DIRECTION] = _target_direct_start_state(
+                    self.current_direction
+                )
+            else:
+                target[ATTR_CURRENT_DIRECTION] = _target_complete_state(
+                    service_data[ATTR_DIRECTION]
+                )
 
         return target
