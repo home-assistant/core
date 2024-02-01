@@ -34,11 +34,13 @@ async def test_create_floor(
     floor = floor_registry.async_create(
         name="First floor",
         icon="mdi:home-floor-1",
+        aliases={"first", "ground", "ground floor"},
     )
 
     assert floor.floor_id == "first_floor"
     assert floor.name == "First floor"
     assert floor.icon == "mdi:home-floor-1"
+    assert floor.aliases == {"first", "ground", "ground floor"}
 
     assert len(floor_registry.floors) == 1
 
@@ -132,17 +134,20 @@ async def test_update_floor(
     assert floor.floor_id == "first_floor"
     assert floor.name == "First floor"
     assert floor.icon is None
+    assert floor.aliases == set()
 
     updated_floor = floor_registry.async_update(
         floor.floor_id,
         name="Second floor",
         icon="mdi:home-floor-2",
+        aliases={"ground", "downstairs"},
     )
 
     assert updated_floor != floor
     assert updated_floor.floor_id == "first_floor"
     assert updated_floor.name == "Second floor"
     assert updated_floor.icon == "mdi:home-floor-2"
+    assert updated_floor.aliases == {"ground", "downstairs"}
 
     assert len(floor_registry.floors) == 1
 
@@ -242,10 +247,12 @@ async def test_load_floors(
     floor1 = floor_registry.async_create(
         "First floor",
         icon="mdi:home-floor-1",
+        aliases={"first", "ground"},
     )
     floor2 = floor_registry.async_create(
         "Second floor",
         icon="mdi:home-floor-2",
+        aliases={"first", "ground"},
     )
 
     assert len(floor_registry.floors) == 2
@@ -261,12 +268,14 @@ async def test_load_floors(
     assert floor1_registry2.floor_id == floor1.floor_id
     assert floor1_registry2.name == floor1.name
     assert floor1_registry2.icon == floor1.icon
+    assert floor1_registry2.aliases == floor1.aliases
     assert floor1_registry2.normalized_name == floor1.normalized_name
 
     floor2_registry2 = registry2.async_get_floor_by_name("Second floor")
     assert floor2_registry2.floor_id == floor2.floor_id
     assert floor2_registry2.name == floor2.name
     assert floor2_registry2.icon == floor2.icon
+    assert floor2_registry2.aliases == floor2.aliases
     assert floor2_registry2.normalized_name == floor2.normalized_name
 
 
@@ -283,6 +292,7 @@ async def test_loading_floors_from_storage(
                     "icon": "mdi:home-floor-1",
                     "floor_id": "first_floor",
                     "name": "First floor",
+                    "aliases": ["first", "ground"],
                 }
             ]
         },

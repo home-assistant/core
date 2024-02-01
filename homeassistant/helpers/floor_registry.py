@@ -24,6 +24,7 @@ SAVE_DELAY = 10
 class FloorEntry:
     """Floor registry entry."""
 
+    aliases: set[str]
     floor_id: str
     name: str
     normalized_name: str
@@ -125,6 +126,7 @@ class FloorRegistry:
         self,
         name: str,
         *,
+        aliases: set[str] | None = None,
         icon: str | None = None,
     ) -> FloorEntry:
         """Create a new floor."""
@@ -136,6 +138,7 @@ class FloorRegistry:
         normalized_name = _normalize_floor_name(name)
 
         floor = FloorEntry(
+            aliases=aliases or set(),
             icon=icon,
             floor_id=self._generate_id(name),
             name=name,
@@ -167,6 +170,8 @@ class FloorRegistry:
     def async_update(
         self,
         floor_id: str,
+        *,
+        aliases: set[str] | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
     ) -> FloorEntry:
@@ -174,8 +179,12 @@ class FloorRegistry:
         old = self.floors[floor_id]
         changes = {}
 
-        if icon is not UNDEFINED and old.icon != icon:
-            changes["icon"] = icon
+        for attr_name, value in (
+            ("aliases", aliases),
+            ("icon", icon),
+        ):
+            if value is not UNDEFINED and value != getattr(old, attr_name):
+                changes[attr_name] = value
 
         if name is not UNDEFINED and name != old.name:
             changes["name"] = name
@@ -202,6 +211,7 @@ class FloorRegistry:
             for floor in data["floors"]:
                 normalized_name = _normalize_floor_name(floor["name"])
                 floors[floor["floor_id"]] = FloorEntry(
+                    aliases=set(floor["aliases"]),
                     icon=floor["icon"],
                     floor_id=floor["floor_id"],
                     name=floor["name"],
@@ -217,11 +227,12 @@ class FloorRegistry:
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
+    def _data_to_save(self) -> dict[str, list[dict[str, str | list[str] | None]]]:
         """Return data of floor registry to store in a file."""
         return {
             "floors": [
                 {
+                    "aliases": list(entry.aliases),
                     "icon": entry.icon,
                     "floor_id": entry.floor_id,
                     "name": entry.name,
