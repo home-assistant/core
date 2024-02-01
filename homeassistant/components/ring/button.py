@@ -8,8 +8,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN
-from .entity import RingEntityMixin
+from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
+from .coordinator import RingDataCoordinator
+from .entity import RingEntity
 
 BUTTON_DESCRIPTION = ButtonEntityDescription(
     key="open_door",
@@ -25,31 +26,38 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the buttons for the Ring devices."""
-    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
+    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        RING_DEVICES_COORDINATOR
+    ]
+    buttons = []
 
     # Some accounts returned data without intercom devices
     devices.setdefault("other", [])
-
-    buttons = []
-
     for device in devices["other"]:
         if device.has_capability("open"):
             buttons.append(
-                RingDoorButton(config_entry.entry_id, device, BUTTON_DESCRIPTION)
+                RingDoorButton(device, devices_coordinator, BUTTON_DESCRIPTION)
             )
 
     async_add_entities(buttons)
 
 
-class RingDoorButton(RingEntityMixin, ButtonEntity):
+class RingDoorButton(RingEntity, ButtonEntity):
     """Creates a button to open the ring intercom door."""
 
-    def __init__(self, config_entry_id, device, description) -> None:
+    def __init__(
+        self,
+        device,
+        coordinator,
+        description: ButtonEntityDescription,
+    ) -> None:
         """Initialize the button."""
-        super().__init__(config_entry_id, device)
+        super().__init__(
+            device,
+            coordinator,
+        )
         self.entity_description = description
-        self._extra = None
-        self._attr_name = f"{device.name} {description.name}"
         self._attr_unique_id = f"{device.id}-{description.key}"
 
     def press(self) -> None:
