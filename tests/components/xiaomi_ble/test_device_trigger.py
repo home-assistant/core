@@ -164,8 +164,8 @@ async def test_get_triggers_double_button(hass: HomeAssistant) -> None:
         CONF_PLATFORM: "device",
         CONF_DOMAIN: DOMAIN,
         CONF_DEVICE_ID: device.id,
-        CONF_TYPE: "button",
-        CONF_SUBTYPE: "press",
+        CONF_TYPE: "button_right",
+        CONF_SUBTYPE: "long_press",
         "metadata": {},
     }
     triggers = await async_get_device_automations(
@@ -329,6 +329,66 @@ async def test_if_fires_on_button_press(hass: HomeAssistant, calls) -> None:
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "test_trigger_button_press"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_if_fires_on_double_button_long_press(hass: HomeAssistant, calls) -> None:
+    """Test for button press event trigger firing."""
+    mac = "DC:ED:83:87:12:73"
+    data = {"bindkey": "b93eb3787eabda352edd94b667f5d5a9"}
+    entry = await _async_setup_xiaomi_device(hass, mac, data)
+
+    # Emit left button press event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            mac,
+            b"XYI\x19Ks\x12\x87\x83\xed\xdc!\xad\xb4\xcd\x02\x00\x00,\xf3\xd9\x83",
+        ),
+    )
+
+    # wait for the device being created
+    await hass.async_block_till_done()
+
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
+    device_id = device.id
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: device_id,
+                        CONF_TYPE: "button_right",
+                        CONF_SUBTYPE: "press",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_right_button_press"},
+                    },
+                },
+            ]
+        },
+    )
+    # Emit right button press event
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            mac,
+            b"XYI\x19Ps\x12\x87\x83\xed\xdc\x13~~\xbe\x02\x00\x00\xf0\\;4",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "test_trigger_right_button_press"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
