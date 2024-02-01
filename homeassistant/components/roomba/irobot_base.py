@@ -13,9 +13,10 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
-from homeassistant.const import STATE_IDLE, STATE_PAUSED
+from homeassistant.const import ATTR_CONNECTIONS, STATE_IDLE, STATE_PAUSED
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -39,7 +40,6 @@ SUPPORT_IROBOT = (
     | VacuumEntityFeature.SEND_COMMAND
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STATE
-    | VacuumEntityFeature.STATUS
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.LOCATE
 )
@@ -62,15 +62,30 @@ class IRobotEntity(Entity):
     """Base class for iRobot Entities."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
         self.vacuum = roomba
         self._blid = blid
         self.vacuum_state = roomba_reported_state(roomba)
-        self._name = self.vacuum_state.get("name")
-        self._version = self.vacuum_state.get("softwareVer")
-        self._sku = self.vacuum_state.get("sku")
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.robot_unique_id)},
+            serial_number=self.vacuum_state.get("hwPartsRev", {}).get("navSerialNo"),
+            manufacturer="iRobot",
+            model=self.vacuum_state.get("sku"),
+            name=str(self.vacuum_state.get("name")),
+            sw_version=self.vacuum_state.get("softwareVer"),
+            hw_version=self.vacuum_state.get("hardwareRev"),
+        )
+
+        if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
+            "wlan0HwAddr", self.vacuum_state.get("mac")
+        ):
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_NETWORK_MAC, mac_address)
+            }
 
     @property
     def robot_unique_id(self):
@@ -83,26 +98,24 @@ class IRobotEntity(Entity):
         return self.robot_unique_id
 
     @property
-    def device_info(self):
-        """Return the device info of the vacuum cleaner."""
-        connections = None
-        if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
-            "wlan0HwAddr", self.vacuum_state.get("mac")
-        ):
-            connections = {(dr.CONNECTION_NETWORK_MAC, mac_address)}
-        return DeviceInfo(
-            connections=connections,
-            identifiers={(DOMAIN, self.robot_unique_id)},
-            manufacturer="iRobot",
-            model=self._sku,
-            name=str(self._name),
-            sw_version=self._version,
-        )
-
-    @property
-    def _battery_level(self):
+    def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
         return self.vacuum_state.get("batPct")
+
+    @property
+    def run_stats(self):
+        """Return the run stats."""
+        return self.vacuum_state.get("bbrun", {})
+
+    @property
+    def mission_stats(self):
+        """Return the mission stats."""
+        return self.vacuum_state.get("bbmssn", {})
+
+    @property
+    def battery_stats(self):
+        """Return the battery stats."""
+        return self.vacuum_state.get("bbchg3", {})
 
     @property
     def _robot_state(self):
@@ -136,35 +149,19 @@ class IRobotEntity(Entity):
 class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     """Base class for iRobot robots."""
 
+    _attr_name = None
+    _attr_supported_features = SUPPORT_IROBOT
+    _attr_available = True  # Always available, otherwise setup will fail
+
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
         super().__init__(roomba, blid)
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
-    def supported_features(self):
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_IROBOT
-
-    @property
-    def battery_level(self):
-        """Return the battery level of the vacuum cleaner."""
-        return self._battery_level
-
-    @property
     def state(self):
         """Return the state of the vacuum cleaner."""
         return self._robot_state
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return True  # Always available, otherwise setup will fail
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def extra_state_attributes(self):

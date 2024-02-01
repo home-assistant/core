@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Final
 import orjson
 
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
-from homeassistant.util.json import (  # pylint: disable=unused-import # noqa: F401
+from homeassistant.util.json import (  # noqa: F401
     JSON_DECODE_EXCEPTIONS,
     JSON_ENCODE_EXCEPTIONS,
     SerializationError,
@@ -45,6 +45,8 @@ def json_encoder_default(obj: Any) -> Any:
 
     Hand other objects to the original method.
     """
+    if hasattr(obj, "json_fragment"):
+        return obj.json_fragment
     if isinstance(obj, (set, tuple)):
         return list(obj)
     if isinstance(obj, float):
@@ -53,6 +55,8 @@ def json_encoder_default(obj: Any) -> Any:
         return obj.as_dict()
     if isinstance(obj, Path):
         return obj.as_posix()
+    if isinstance(obj, datetime.datetime):
+        return obj.isoformat()
     raise TypeError
 
 
@@ -112,8 +116,11 @@ def json_bytes_strip_null(data: Any) -> bytes:
     return json_bytes(_strip_null(orjson.loads(result)))
 
 
+json_fragment = orjson.Fragment
+
+
 def json_dumps(data: Any) -> str:
-    """Dump json string.
+    r"""Dump json string.
 
     orjson supports serializing dataclasses natively which
     eliminates the need to implement as_dict in many places
@@ -122,7 +129,7 @@ def json_dumps(data: Any) -> str:
     be serialized.
 
     If it turns out to be a problem we can disable this
-    with option |= orjson.OPT_PASSTHROUGH_DATACLASS and it
+    with option \|= orjson.OPT_PASSTHROUGH_DATACLASS and it
     will fallback to as_dict
     """
     return json_bytes(data).decode("utf-8")

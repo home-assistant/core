@@ -38,7 +38,9 @@ async def _async_reproduce_states(
 ) -> None:
     """Reproduce component states."""
 
-    async def call_service(service: str, keys: Iterable, data=None):
+    async def call_service(
+        service: str, keys: Iterable, data: dict[str, Any] | None = None
+    ) -> None:
         """Call service with set of attributes given."""
         data = data or {}
         data["entity_id"] = state.entity_id

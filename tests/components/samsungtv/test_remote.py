@@ -46,7 +46,7 @@ async def test_main_services(
 
     remoteencws.send_commands.reset_mock()
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
@@ -64,7 +64,7 @@ async def test_main_services(
 
     # commands not sent : power off in progress
     remoteencws.send_commands.reset_mock()
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["dash"]},
@@ -79,7 +79,7 @@ async def test_send_command_service(hass: HomeAssistant, remoteencws: Mock) -> N
     """Test the send command."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["dash"]},

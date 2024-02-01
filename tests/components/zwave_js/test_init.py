@@ -1,6 +1,7 @@
 """Test the Z-Wave JS init module."""
 import asyncio
 from copy import deepcopy
+import logging
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -11,6 +12,8 @@ from zwave_js_server.model.node import Node
 from zwave_js_server.model.version import VersionInfo
 
 from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
+from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
@@ -22,10 +25,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.setup import async_setup_component
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_get_persistent_notifications
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="connect_timeout")
@@ -204,7 +209,7 @@ async def test_on_node_added_not_ready(
     dev_reg = dr.async_get(hass)
     device_id = f"{client.driver.controller.home_id}-{zp3111_not_ready_state['nodeId']}"
 
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all()) == 1
     assert len(dev_reg.devices) == 1
 
     node_state = deepcopy(zp3111_not_ready_state)
@@ -222,13 +227,15 @@ async def test_on_node_added_not_ready(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    # the only entities are the node status sensor and ping button
-    assert len(hass.states.async_all()) == 2
-
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     # no extended device identifier yet
     assert len(device.identifiers) == 1
+
+    ent_reg = er.async_get(hass)
+    entities = er.async_entries_for_device(ent_reg, device.id)
+    # the only entities are the node status sensor, last_seen sensor, and ping button
+    assert len(entities) == 3
 
 
 async def test_existing_node_ready(
@@ -324,13 +331,15 @@ async def test_existing_node_not_ready(
     assert not device.model
     assert not device.sw_version
 
-    # the only entities are the node status sensor and ping button
-    assert len(hass.states.async_all()) == 2
-
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     # no extended device identifier yet
     assert len(device.identifiers) == 1
+
+    ent_reg = er.async_get(hass)
+    entities = er.async_entries_for_device(ent_reg, device.id)
+    # the only entities are the node status sensor, last_seen sensor, and ping button
+    assert len(entities) == 3
 
 
 async def test_existing_node_not_replaced_when_not_ready(
@@ -960,23 +969,17 @@ async def test_removed_device(
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 3
 
-    # Check how many entities there are
-    ent_reg = er.async_get(hass)
-    entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 36
-
     # Remove a node and reload the entry
     old_node = driver.controller.nodes.pop(13)
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
-    # Assert that the node and all of it's entities were removed from the device and
-    # entity registry
+    # Assert that the node was removed from the device registry
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 2
-    entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 23
-    assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None
+    assert (
+        dev_reg.async_get_device(identifiers={get_device_id(driver, old_node)}) is None
+    )
 
 
 async def test_suggested_area(hass: HomeAssistant, client, eaton_rf9640_dimmer) -> None:
@@ -1003,16 +1006,17 @@ async def test_node_removed(
     event = {
         "source": "controller",
         "event": "node added",
-        "node": node.data,
+        "node": multisensor_6_state,
         "result": {},
     }
 
     client.driver.controller.receive_event(Event("node added", event))
     await hass.async_block_till_done()
     old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device
     assert old_device.id
 
-    event = {"node": node, "replaced": False}
+    event = {"node": node, "reason": 0}
 
     client.driver.controller.emit("node removed", event)
     await hass.async_block_till_done()
@@ -1045,14 +1049,14 @@ async def test_replace_same_node(
 
     assert hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    # A replace node event has the extra field "replaced" set to True
+    # A replace node event has the extra field "reason"
     # to distinguish it from an exclusion
     event = Event(
         type="node removed",
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": True,
+            "reason": 3,
             "node": multisensor_6_state,
         },
     )
@@ -1133,28 +1137,29 @@ async def test_replace_different_node(
     hank_binary_switch_state,
     client,
     integration,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test when a node is replaced with a different node."""
     dev_reg = dr.async_get(hass)
     node_id = multisensor_6.node_id
-    hank_binary_switch_state = deepcopy(hank_binary_switch_state)
-    hank_binary_switch_state["nodeId"] = node_id
+    state = deepcopy(hank_binary_switch_state)
+    state["nodeId"] = node_id
 
     device_id = f"{client.driver.controller.home_id}-{node_id}"
-    multisensor_6_device_id = (
+    multisensor_6_device_id_ext = (
         f"{device_id}-{multisensor_6.manufacturer_id}:"
         f"{multisensor_6.product_type}:{multisensor_6.product_id}"
     )
-    hank_device_id = (
-        f"{device_id}-{hank_binary_switch_state['manufacturerId']}:"
-        f"{hank_binary_switch_state['productType']}:"
-        f"{hank_binary_switch_state['productId']}"
+    hank_device_id_ext = (
+        f"{device_id}-{state['manufacturerId']}:"
+        f"{state['productType']}:"
+        f"{state['productId']}"
     )
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     assert device == dev_reg.async_get_device(
-        identifiers={(DOMAIN, multisensor_6_device_id)}
+        identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
     assert device.manufacturer == "AEON Labs"
     assert device.model == "ZW100"
@@ -1162,14 +1167,13 @@ async def test_replace_different_node(
 
     assert hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    # A replace node event has the extra field "replaced" set to True
-    # to distinguish it from an exclusion
+    # Remove existing node
     event = Event(
         type="node removed",
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": True,
+            "reason": 3,
             "node": multisensor_6_state,
         },
     )
@@ -1177,8 +1181,11 @@ async def test_replace_different_node(
     await hass.async_block_till_done()
 
     # Device should still be there after the node was removed
-    device = dev_reg.async_get(dev_id)
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, multisensor_6_device_id_ext)}
+    )
     assert device
+    assert len(device.identifiers) == 2
 
     # When the node is replaced, a non-ready node added event is emitted
     event = Event(
@@ -1226,23 +1233,169 @@ async def test_replace_different_node(
             "source": "node",
             "event": "ready",
             "nodeId": node_id,
-            "nodeState": hank_binary_switch_state,
+            "nodeState": state,
         },
     )
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    # Old device and entities were removed, but the ID is re-used
-    device = dev_reg.async_get(dev_id)
-    assert device
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id)})
-    assert not dev_reg.async_get_device(identifiers={(DOMAIN, multisensor_6_device_id)})
-    assert device.manufacturer == "HANK Electronics Ltd."
-    assert device.model == "HKZW-SO01"
+    # node ID based device identifier should be moved from the old multisensor device
+    # to the new hank device and both the old and new devices should exist.
+    new_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert new_device
+    hank_device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    assert hank_device
+    assert hank_device == new_device
+    assert hank_device.identifiers == {
+        (DOMAIN, device_id),
+        (DOMAIN, hank_device_id_ext),
+    }
+    multisensor_6_device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, multisensor_6_device_id_ext)}
+    )
+    assert multisensor_6_device
+    assert multisensor_6_device != new_device
+    assert multisensor_6_device.identifiers == {(DOMAIN, multisensor_6_device_id_ext)}
 
-    assert not hass.states.get(AIR_TEMPERATURE_SENSOR)
+    assert new_device.manufacturer == "HANK Electronics Ltd."
+    assert new_device.model == "HKZW-SO01"
+
+    # We keep the old entities in case there are customizations that a user wants to
+    # keep. They can always delete the device and that will remove the entities as well.
+    assert hass.states.get(AIR_TEMPERATURE_SENSOR)
     assert hass.states.get("switch.smart_plug_with_two_usb_ports")
+
+    # Try to add back the first node to see if the device IDs are correct
+
+    # Remove existing node
+    event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "reason": 3,
+            "node": state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Device should still be there after the node was removed
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    assert device
+    assert len(device.identifiers) == 2
+
+    # When the node is replaced, a non-ready node added event is emitted
+    event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": {
+                "nodeId": multisensor_6.node_id,
+                "index": 0,
+                "status": 4,
+                "ready": False,
+                "isSecure": False,
+                "interviewAttempts": 1,
+                "endpoints": [
+                    {"nodeId": multisensor_6.node_id, "index": 0, "deviceClass": None}
+                ],
+                "values": [],
+                "deviceClass": None,
+                "commandClasses": [],
+                "interviewStage": "None",
+                "statistics": {
+                    "commandsTX": 0,
+                    "commandsRX": 0,
+                    "commandsDroppedRX": 0,
+                    "commandsDroppedTX": 0,
+                    "timeoutResponse": 0,
+                },
+                "isControllerNode": False,
+            },
+            "result": {},
+        },
+    )
+
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Mark node as ready
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": node_id,
+            "nodeState": multisensor_6_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "config", {})
+
+    # node ID based device identifier should be moved from the new hank device
+    # to the old multisensor device and both the old and new devices should exist.
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device
+    hank_device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    assert hank_device
+    assert hank_device != old_device
+    assert hank_device.identifiers == {(DOMAIN, hank_device_id_ext)}
+    multisensor_6_device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, multisensor_6_device_id_ext)}
+    )
+    assert multisensor_6_device
+    assert multisensor_6_device == old_device
+    assert multisensor_6_device.identifiers == {
+        (DOMAIN, device_id),
+        (DOMAIN, multisensor_6_device_id_ext),
+    }
+
+    ws_client = await hass_ws_client(hass)
+
+    # Simulate the driver not being ready to ensure that the device removal handler
+    # does not crash
+    driver = client.driver
+    client.driver = None
+
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": integration.entry_id,
+            "device_id": hank_device.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+
+    client.driver = driver
+
+    # Attempting to remove the hank device should pass, but removing the multisensor should not
+    await ws_client.send_json(
+        {
+            "id": 2,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": integration.entry_id,
+            "device_id": hank_device.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+
+    await ws_client.send_json(
+        {
+            "id": 3,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": integration.entry_id,
+            "device_id": multisensor_6_device.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
 
 
 async def test_node_model_change(
@@ -1343,7 +1496,7 @@ async def test_disabled_node_status_entity_on_node_replaced(
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": True,
+            "reason": 3,
             "node": zp3111_state,
         },
     )
@@ -1499,3 +1652,219 @@ async def test_disabled_entity_on_value_removed(
         }
         == new_unavailable_entities
     )
+
+
+async def test_identify_event(
+    hass: HomeAssistant, client, multisensor_6, integration
+) -> None:
+    """Test controller identify event."""
+    # One config entry scenario
+    event = Event(
+        type="identify",
+        data={
+            "source": "controller",
+            "event": "identify",
+            "nodeId": multisensor_6.node_id,
+        },
+    )
+    dev_id = get_device_id(client.driver, multisensor_6)
+    msg_id = f"{DOMAIN}.identify_controller.{dev_id[1]}"
+
+    client.driver.controller.receive_event(event)
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert list(notifications)[0] == msg_id
+    assert notifications[msg_id]["message"].startswith("`Multisensor 6`")
+    assert "with the home ID" not in notifications[msg_id]["message"]
+    async_dismiss(hass, msg_id)
+
+    # Add mock config entry to simulate having multiple entries
+    new_entry = MockConfigEntry(domain=DOMAIN)
+    new_entry.add_to_hass(hass)
+
+    # Test case where config entry title and home ID don't match
+    client.driver.controller.receive_event(event)
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert list(notifications)[0] == msg_id
+    assert (
+        "network `Mock Title`, with the home ID `3245146787`"
+        in notifications[msg_id]["message"]
+    )
+    async_dismiss(hass, msg_id)
+
+    # Test case where config entry title and home ID do match
+    hass.config_entries.async_update_entry(integration, title="3245146787")
+    client.driver.controller.receive_event(event)
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert list(notifications)[0] == msg_id
+    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+
+
+async def test_server_logging(hass: HomeAssistant, client) -> None:
+    """Test automatic server logging functionality."""
+
+    def _reset_mocks():
+        client.async_send_command.reset_mock()
+        client.enable_server_logging.reset_mock()
+        client.disable_server_logging.reset_mock()
+
+    # Set server logging to disabled
+    client.server_logging_enabled = False
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Setup logger and set log level to debug to trigger event listener
+    assert await async_setup_component(hass, "logger", {"logger": {}})
+    assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.INFO
+    client.async_send_command.reset_mock()
+    await hass.services.async_call(
+        LOGGER_DOMAIN, SERVICE_SET_LEVEL, {"zwave_js_server": "debug"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.DEBUG
+
+    # Validate that the server logging was enabled
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "driver.update_log_config",
+        "config": {"level": "debug"},
+    }
+    assert client.enable_server_logging.called
+    assert not client.disable_server_logging.called
+
+    _reset_mocks()
+
+    # Emulate server by setting log level to debug
+    event = Event(
+        type="log config updated",
+        data={
+            "source": "driver",
+            "event": "log config updated",
+            "config": {
+                "enabled": False,
+                "level": "debug",
+                "logToFile": True,
+                "filename": "test",
+                "forceConsole": True,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+
+    # "Enable" server logging and unload the entry
+    client.server_logging_enabled = True
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    # Validate that the server logging was disabled
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "driver.update_log_config",
+        "config": {"level": "info"},
+    }
+    assert not client.enable_server_logging.called
+    assert client.disable_server_logging.called
+
+    _reset_mocks()
+
+    # Validate that the server logging doesn't get enabled because HA thinks it already
+    # is enabled
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(client.async_send_command.call_args_list) == 0
+    assert not client.enable_server_logging.called
+    assert not client.disable_server_logging.called
+
+    _reset_mocks()
+
+    # "Disable" server logging and unload the entry
+    client.server_logging_enabled = False
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    # Validate that the server logging was not disabled because HA thinks it is already
+    # is disabled
+    assert len(client.async_send_command.call_args_list) == 0
+    assert not client.enable_server_logging.called
+    assert not client.disable_server_logging.called
+
+
+async def test_factory_reset_node(
+    hass: HomeAssistant, client, multisensor_6, multisensor_6_state, integration
+) -> None:
+    """Test when a node is removed because it was reset."""
+    dev_reg = dr.async_get(hass)
+    # One config entry scenario
+    remove_event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "reason": 5,
+            "node": deepcopy(multisensor_6_state),
+        },
+    )
+    dev_id = get_device_id(client.driver, multisensor_6)
+    msg_id = f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}"
+
+    client.driver.controller.receive_event(remove_event)
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert list(notifications)[0] == msg_id
+    assert notifications[msg_id]["message"].startswith("`Multisensor 6`")
+    assert "with the home ID" not in notifications[msg_id]["message"]
+    async_dismiss(hass, msg_id)
+    await hass.async_block_till_done()
+    assert not dev_reg.async_get_device(identifiers={dev_id})
+
+    # Add mock config entry to simulate having multiple entries
+    new_entry = MockConfigEntry(domain=DOMAIN)
+    new_entry.add_to_hass(hass)
+
+    # Re-add the node then remove it again
+    add_event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": deepcopy(multisensor_6_state),
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(add_event)
+    await hass.async_block_till_done()
+    remove_event.data["node"] = deepcopy(multisensor_6_state)
+    client.driver.controller.receive_event(remove_event)
+    # Test case where config entry title and home ID don't match
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert list(notifications)[0] == msg_id
+    assert (
+        "network `Mock Title`, with the home ID `3245146787`"
+        in notifications[msg_id]["message"]
+    )
+    async_dismiss(hass, msg_id)
+
+    # Test case where config entry title and home ID do match
+    hass.config_entries.async_update_entry(integration, title="3245146787")
+    add_event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": deepcopy(multisensor_6_state),
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(add_event)
+    await hass.async_block_till_done()
+    remove_event.data["node"] = deepcopy(multisensor_6_state)
+    client.driver.controller.receive_event(remove_event)
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert list(notifications)[0] == msg_id
+    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]

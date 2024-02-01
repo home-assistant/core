@@ -15,7 +15,7 @@ from renault_api.renault_vehicle import RenaultVehicle
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
 from .coordinator import RenaultDataUpdateCoordinator
@@ -26,7 +26,7 @@ _P = ParamSpec("_P")
 
 
 def with_error_wrapping(
-    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_T]]
+    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_T]],
 ) -> Callable[Concatenate[RenaultVehicleProxy, _P], Coroutine[Any, Any, _T]]:
     """Catch Renault errors."""
 

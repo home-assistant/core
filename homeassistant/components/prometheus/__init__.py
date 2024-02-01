@@ -1,10 +1,15 @@
 """Support for Prometheus metrics export."""
+from __future__ import annotations
+
+from collections.abc import Callable
 from contextlib import suppress
 import logging
 import string
+from typing import Any, TypeVar, cast
 
 from aiohttp import web
 import prometheus_client
+from prometheus_client.metrics import MetricWrapperBase
 import voluptuous as vol
 
 from homeassistant import core as hacore
@@ -19,6 +24,8 @@ from homeassistant.components.climate import (
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
+from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
@@ -38,20 +45,27 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
+from homeassistant.helpers.entity_registry import (
+    EVENT_ENTITY_REGISTRY_UPDATED,
+    EventEntityRegistryUpdatedData,
+)
 from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.event import EventStateChangedData
+from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.util.dt import as_timestamp
 from homeassistant.util.unit_conversion import TemperatureConverter
 
+_MetricBaseT = TypeVar("_MetricBaseT", bound=MetricWrapperBase)
 _LOGGER = logging.getLogger(__name__)
 
 API_ENDPOINT = "/api/prometheus"
 
 DOMAIN = "prometheus"
 CONF_FILTER = "filter"
+CONF_REQUIRES_AUTH = "requires_auth"
 CONF_PROM_NAMESPACE = "namespace"
 CONF_COMPONENT_CONFIG = "component_config"
 CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
@@ -70,6 +84,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
                 vol.Optional(CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE): cv.string,
+                vol.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
                 vol.Optional(CONF_DEFAULT_METRIC): cv.string,
                 vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
                 vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
@@ -90,14 +105,14 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
-    hass.http.register_view(PrometheusView(prometheus_client))
+    hass.http.register_view(PrometheusView(config[DOMAIN][CONF_REQUIRES_AUTH]))
 
-    conf = config[DOMAIN]
-    entity_filter = conf[CONF_FILTER]
-    namespace = conf.get(CONF_PROM_NAMESPACE)
+    conf: dict[str, Any] = config[DOMAIN]
+    entity_filter: entityfilter.EntityFilter = conf[CONF_FILTER]
+    namespace: str = conf[CONF_PROM_NAMESPACE]
     climate_units = hass.config.units.temperature_unit
-    override_metric = conf.get(CONF_OVERRIDE_METRIC)
-    default_metric = conf.get(CONF_DEFAULT_METRIC)
+    override_metric: str | None = conf.get(CONF_OVERRIDE_METRIC)
+    default_metric: str | None = conf.get(CONF_DEFAULT_METRIC)
     component_config = EntityValues(
         conf[CONF_COMPONENT_CONFIG],
         conf[CONF_COMPONENT_CONFIG_DOMAIN],
@@ -105,7 +120,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     metrics = PrometheusMetrics(
-        prometheus_client,
         entity_filter,
         namespace,
         climate_units,
@@ -114,10 +128,16 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         default_metric,
     )
 
-    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed)
+    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)  # type: ignore[arg-type]
     hass.bus.listen(
-        EVENT_ENTITY_REGISTRY_UPDATED, metrics.handle_entity_registry_updated
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        metrics.handle_entity_registry_updated,  # type: ignore[arg-type]
     )
+
+    for state in hass.states.all():
+        if entity_filter(state.entity_id):
+            metrics.handle_state(state)
+
     return True
 
 
@@ -126,23 +146,24 @@ class PrometheusMetrics:
 
     def __init__(
         self,
-        prometheus_cli,
-        entity_filter,
-        namespace,
-        climate_units,
-        component_config,
-        override_metric,
-        default_metric,
-    ):
+        entity_filter: entityfilter.EntityFilter,
+        namespace: str,
+        climate_units: UnitOfTemperature,
+        component_config: EntityValues,
+        override_metric: str | None,
+        default_metric: str | None,
+    ) -> None:
         """Initialize Prometheus Metrics."""
-        self.prometheus_cli = prometheus_cli
         self._component_config = component_config
         self._override_metric = override_metric
         self._default_metric = default_metric
         self._filter = entity_filter
-        self._sensor_metric_handlers = [
+        self._sensor_metric_handlers: list[
+            Callable[[State, str | None], str | None]
+        ] = [
             self._sensor_override_component_metric,
             self._sensor_override_metric,
+            self._sensor_timestamp_metric,
             self._sensor_attribute_metric,
             self._sensor_default_metric,
             self._sensor_fallback_metric,
@@ -152,25 +173,32 @@ class PrometheusMetrics:
             self.metrics_prefix = f"{namespace}_"
         else:
             self.metrics_prefix = ""
-        self._metrics = {}
+        self._metrics: dict[str, MetricWrapperBase] = {}
         self._climate_units = climate_units
 
-    def handle_state_changed(self, event):
-        """Listen for new messages on the bus, and add them to Prometheus."""
+    def handle_state_changed_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
+        """Handle new messages from the bus."""
         if (state := event.data.get("new_state")) is None:
             return
 
-        entity_id = state.entity_id
-        _LOGGER.debug("Handling state update for %s", entity_id)
-        domain, _ = hacore.split_entity_id(entity_id)
-
         if not self._filter(state.entity_id):
+            _LOGGER.debug("Filtered out entity %s", state.entity_id)
             return
 
         if (old_state := event.data.get("old_state")) is not None and (
             old_friendly_name := old_state.attributes.get(ATTR_FRIENDLY_NAME)
         ) != state.attributes.get(ATTR_FRIENDLY_NAME):
             self._remove_labelsets(old_state.entity_id, old_friendly_name)
+
+        self.handle_state(state)
+
+    def handle_state(self, state: State) -> None:
+        """Add/update a state in Prometheus."""
+        entity_id = state.entity_id
+        _LOGGER.debug("Handling state update for %s", entity_id)
+        domain, _ = hacore.split_entity_id(entity_id)
 
         ignored_states = (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
@@ -181,38 +209,40 @@ class PrometheusMetrics:
 
         labels = self._labels(state)
         state_change = self._metric(
-            "state_change", self.prometheus_cli.Counter, "The number of state changes"
+            "state_change", prometheus_client.Counter, "The number of state changes"
         )
         state_change.labels(**labels).inc()
 
         entity_available = self._metric(
             "entity_available",
-            self.prometheus_cli.Gauge,
+            prometheus_client.Gauge,
             "Entity is available (not in the unavailable or unknown state)",
         )
         entity_available.labels(**labels).set(float(state.state not in ignored_states))
 
         last_updated_time_seconds = self._metric(
             "last_updated_time_seconds",
-            self.prometheus_cli.Gauge,
+            prometheus_client.Gauge,
             "The last_updated timestamp",
         )
         last_updated_time_seconds.labels(**labels).set(state.last_updated.timestamp())
 
-    def handle_entity_registry_updated(self, event):
+    def handle_entity_registry_updated(
+        self, event: EventType[EventEntityRegistryUpdatedData]
+    ) -> None:
         """Listen for deleted, disabled or renamed entities and remove them from the Prometheus Registry."""
-        if (action := event.data.get("action")) in (None, "create"):
+        if event.data["action"] in (None, "create"):
             return
 
         entity_id = event.data.get("entity_id")
         _LOGGER.debug("Handling entity update for %s", entity_id)
 
-        metrics_entity_id = None
+        metrics_entity_id: str | None = None
 
-        if action == "remove":
+        if event.data["action"] == "remove":
             metrics_entity_id = entity_id
-        elif action == "update":
-            changes = event.data.get("changes")
+        elif event.data["action"] == "update":
+            changes = event.data["changes"]
 
             if "entity_id" in changes:
                 metrics_entity_id = changes["entity_id"]
@@ -222,10 +252,14 @@ class PrometheusMetrics:
         if metrics_entity_id:
             self._remove_labelsets(metrics_entity_id)
 
-    def _remove_labelsets(self, entity_id, friendly_name=None):
+    def _remove_labelsets(
+        self, entity_id: str, friendly_name: str | None = None
+    ) -> None:
         """Remove labelsets matching the given entity id from all metrics."""
         for _, metric in self._metrics.items():
-            for sample in metric.collect()[0].samples:
+            for sample in cast(list[prometheus_client.Metric], metric.collect())[
+                0
+            ].samples:
                 if sample.labels["entity"] == entity_id and (
                     not friendly_name or sample.labels["friendly_name"] == friendly_name
                 ):
@@ -237,11 +271,11 @@ class PrometheusMetrics:
                     with suppress(KeyError):
                         metric.remove(*sample.labels.values())
 
-    def _handle_attributes(self, state):
+    def _handle_attributes(self, state: State) -> None:
         for key, value in state.attributes.items():
             metric = self._metric(
                 f"{state.domain}_attr_{key.lower()}",
-                self.prometheus_cli.Gauge,
+                prometheus_client.Gauge,
                 f"{key} attribute of {state.domain} entity",
             )
 
@@ -251,13 +285,19 @@ class PrometheusMetrics:
             except (ValueError, TypeError):
                 pass
 
-    def _metric(self, metric, factory, documentation, extra_labels=None):
+    def _metric(
+        self,
+        metric: str,
+        factory: type[_MetricBaseT],
+        documentation: str,
+        extra_labels: list[str] | None = None,
+    ) -> _MetricBaseT:
         labels = ["entity", "friendly_name", "domain"]
         if extra_labels is not None:
             labels.extend(extra_labels)
 
         try:
-            return self._metrics[metric]
+            return cast(_MetricBaseT, self._metrics[metric])
         except KeyError:
             full_metric_name = self._sanitize_metric_name(
                 f"{self.metrics_prefix}{metric}"
@@ -266,9 +306,9 @@ class PrometheusMetrics:
                 full_metric_name,
                 documentation,
                 labels,
-                registry=self.prometheus_cli.REGISTRY,
+                registry=prometheus_client.REGISTRY,
             )
-            return self._metrics[metric]
+            return cast(_MetricBaseT, self._metrics[metric])
 
     @staticmethod
     def _sanitize_metric_name(metric: str) -> str:
@@ -285,66 +325,69 @@ class PrometheusMetrics:
         )
 
     @staticmethod
-    def state_as_number(state):
+    def state_as_number(state: State) -> float:
         """Return a state casted to a float."""
         try:
-            value = state_helper.state_as_number(state)
+            if state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP:
+                value = as_timestamp(state.state)
+            else:
+                value = state_helper.state_as_number(state)
         except ValueError:
             _LOGGER.debug("Could not convert %s to float", state)
             value = 0
         return value
 
     @staticmethod
-    def _labels(state):
+    def _labels(state: State) -> dict[str, Any]:
         return {
             "entity": state.entity_id,
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
         }
 
-    def _battery(self, state):
-        if "battery_level" in state.attributes:
+    def _battery(self, state: State) -> None:
+        if (battery_level := state.attributes.get(ATTR_BATTERY_LEVEL)) is not None:
             metric = self._metric(
                 "battery_level_percent",
-                self.prometheus_cli.Gauge,
+                prometheus_client.Gauge,
                 "Battery level as a percentage of its capacity",
             )
             try:
-                value = float(state.attributes[ATTR_BATTERY_LEVEL])
+                value = float(battery_level)
                 metric.labels(**self._labels(state)).set(value)
             except ValueError:
                 pass
 
-    def _handle_binary_sensor(self, state):
+    def _handle_binary_sensor(self, state: State) -> None:
         metric = self._metric(
             "binary_sensor_state",
-            self.prometheus_cli.Gauge,
+            prometheus_client.Gauge,
             "State of the binary sensor (0/1)",
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _handle_input_boolean(self, state):
+    def _handle_input_boolean(self, state: State) -> None:
         metric = self._metric(
             "input_boolean_state",
-            self.prometheus_cli.Gauge,
+            prometheus_client.Gauge,
             "State of the input boolean (0/1)",
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _handle_input_number(self, state):
+    def _numeric_handler(self, state: State, domain: str, title: str) -> None:
         if unit := self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
             metric = self._metric(
-                f"input_number_state_{unit}",
-                self.prometheus_cli.Gauge,
-                f"State of the input number measured in {unit}",
+                f"{domain}_state_{unit}",
+                prometheus_client.Gauge,
+                f"State of the {title} measured in {unit}",
             )
         else:
             metric = self._metric(
-                "input_number_state",
-                self.prometheus_cli.Gauge,
-                "State of the input number",
+                f"{domain}_state",
+                prometheus_client.Gauge,
+                f"State of the {title}",
             )
 
         with suppress(ValueError):
@@ -358,26 +401,32 @@ class PrometheusMetrics:
                 )
             metric.labels(**self._labels(state)).set(value)
 
-    def _handle_device_tracker(self, state):
+    def _handle_input_number(self, state: State) -> None:
+        self._numeric_handler(state, "input_number", "input number")
+
+    def _handle_number(self, state: State) -> None:
+        self._numeric_handler(state, "number", "number")
+
+    def _handle_device_tracker(self, state: State) -> None:
         metric = self._metric(
             "device_tracker_state",
-            self.prometheus_cli.Gauge,
+            prometheus_client.Gauge,
             "State of the device tracker (0/1)",
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _handle_person(self, state):
+    def _handle_person(self, state: State) -> None:
         metric = self._metric(
-            "person_state", self.prometheus_cli.Gauge, "State of the person (0/1)"
+            "person_state", prometheus_client.Gauge, "State of the person (0/1)"
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _handle_cover(self, state):
+    def _handle_cover(self, state: State) -> None:
         metric = self._metric(
             "cover_state",
-            self.prometheus_cli.Gauge,
+            prometheus_client.Gauge,
             "State of the cover (0/1)",
             ["state"],
         )
@@ -392,7 +441,7 @@ class PrometheusMetrics:
         if position is not None:
             position_metric = self._metric(
                 "cover_position",
-                self.prometheus_cli.Gauge,
+                prometheus_client.Gauge,
                 "Position of the cover (0-100)",
             )
             position_metric.labels(**self._labels(state)).set(float(position))
@@ -401,21 +450,22 @@ class PrometheusMetrics:
         if tilt_position is not None:
             tilt_position_metric = self._metric(
                 "cover_tilt_position",
-                self.prometheus_cli.Gauge,
+                prometheus_client.Gauge,
                 "Tilt Position of the cover (0-100)",
             )
             tilt_position_metric.labels(**self._labels(state)).set(float(tilt_position))
 
-    def _handle_light(self, state):
+    def _handle_light(self, state: State) -> None:
         metric = self._metric(
             "light_brightness_percent",
-            self.prometheus_cli.Gauge,
+            prometheus_client.Gauge,
             "Light brightness percentage (0..100)",
         )
 
         try:
-            if "brightness" in state.attributes and state.state == STATE_ON:
-                value = state.attributes["brightness"] / 255.0
+            brightness = state.attributes.get(ATTR_BRIGHTNESS)
+            if state.state == STATE_ON and brightness is not None:
+                value = brightness / 255.0
             else:
                 value = self.state_as_number(state)
             value = value * 100
@@ -423,14 +473,16 @@ class PrometheusMetrics:
         except ValueError:
             pass
 
-    def _handle_lock(self, state):
+    def _handle_lock(self, state: State) -> None:
         metric = self._metric(
-            "lock_state", self.prometheus_cli.Gauge, "State of the lock (0/1)"
+            "lock_state", prometheus_client.Gauge, "State of the lock (0/1)"
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _handle_climate_temp(self, state, attr, metric_name, metric_description):
+    def _handle_climate_temp(
+        self, state: State, attr: str, metric_name: str, metric_description: str
+    ) -> None:
         if (temp := state.attributes.get(attr)) is not None:
             if self._climate_units == UnitOfTemperature.FAHRENHEIT:
                 temp = TemperatureConverter.convert(
@@ -438,12 +490,12 @@ class PrometheusMetrics:
                 )
             metric = self._metric(
                 metric_name,
-                self.prometheus_cli.Gauge,
+                prometheus_client.Gauge,
                 metric_description,
             )
             metric.labels(**self._labels(state)).set(temp)
 
-    def _handle_climate(self, state):
+    def _handle_climate(self, state: State) -> None:
         self._handle_climate_temp(
             state,
             ATTR_TEMPERATURE,
@@ -472,7 +524,7 @@ class PrometheusMetrics:
         if current_action := state.attributes.get(ATTR_HVAC_ACTION):
             metric = self._metric(
                 "climate_action",
-                self.prometheus_cli.Gauge,
+                prometheus_client.Gauge,
                 "HVAC action",
                 ["action"],
             )
@@ -486,7 +538,7 @@ class PrometheusMetrics:
         if current_mode and available_modes:
             metric = self._metric(
                 "climate_mode",
-                self.prometheus_cli.Gauge,
+                prometheus_client.Gauge,
                 "HVAC mode",
                 ["mode"],
             )
@@ -495,19 +547,19 @@ class PrometheusMetrics:
                     float(mode == current_mode)
                 )
 
-    def _handle_humidifier(self, state):
+    def _handle_humidifier(self, state: State) -> None:
         humidifier_target_humidity_percent = state.attributes.get(ATTR_HUMIDITY)
         if humidifier_target_humidity_percent:
             metric = self._metric(
                 "humidifier_target_humidity_percent",
-                self.prometheus_cli.Gauge,
+                prometheus_client.Gauge,
                 "Target Relative Humidity",
             )
             metric.labels(**self._labels(state)).set(humidifier_target_humidity_percent)
 
         metric = self._metric(
             "humidifier_state",
-            self.prometheus_cli.Gauge,
+            prometheus_client.Gauge,
             "State of the humidifier (0/1)",
         )
         try:
@@ -521,7 +573,7 @@ class PrometheusMetrics:
         if current_mode and available_modes:
             metric = self._metric(
                 "humidifier_mode",
-                self.prometheus_cli.Gauge,
+                prometheus_client.Gauge,
                 "Humidifier Mode",
                 ["mode"],
             )
@@ -530,7 +582,7 @@ class PrometheusMetrics:
                     float(mode == current_mode)
                 )
 
-    def _handle_sensor(self, state):
+    def _handle_sensor(self, state: State) -> None:
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
         for metric_handler in self._sensor_metric_handlers:
@@ -543,7 +595,7 @@ class PrometheusMetrics:
             if unit:
                 documentation = f"Sensor data measured in {unit}"
 
-            _metric = self._metric(metric, self.prometheus_cli.Gauge, documentation)
+            _metric = self._metric(metric, prometheus_client.Gauge, documentation)
 
             try:
                 value = self.state_as_number(state)
@@ -560,30 +612,40 @@ class PrometheusMetrics:
 
         self._battery(state)
 
-    def _sensor_default_metric(self, state, unit):
+    def _sensor_default_metric(self, state: State, unit: str | None) -> str | None:
         """Get default metric."""
         return self._default_metric
 
     @staticmethod
-    def _sensor_attribute_metric(state, unit):
+    def _sensor_attribute_metric(state: State, unit: str | None) -> str | None:
         """Get metric based on device class attribute."""
         metric = state.attributes.get(ATTR_DEVICE_CLASS)
         if metric is not None:
             return f"sensor_{metric}_{unit}"
         return None
 
-    def _sensor_override_metric(self, state, unit):
+    @staticmethod
+    def _sensor_timestamp_metric(state: State, unit: str | None) -> str | None:
+        """Get metric for timestamp sensors, which have no unit of measurement attribute."""
+        metric = state.attributes.get(ATTR_DEVICE_CLASS)
+        if metric == SensorDeviceClass.TIMESTAMP:
+            return f"sensor_{metric}_seconds"
+        return None
+
+    def _sensor_override_metric(self, state: State, unit: str | None) -> str | None:
         """Get metric from override in configuration."""
         if self._override_metric:
             return self._override_metric
         return None
 
-    def _sensor_override_component_metric(self, state, unit):
+    def _sensor_override_component_metric(
+        self, state: State, unit: str | None
+    ) -> str | None:
         """Get metric from override in component confioguration."""
         return self._component_config.get(state.entity_id).get(CONF_OVERRIDE_METRIC)
 
     @staticmethod
-    def _sensor_fallback_metric(state, unit):
+    def _sensor_fallback_metric(state: State, unit: str | None) -> str | None:
         """Get metric from fallback logic for compatibility."""
         if unit in (None, ""):
             try:
@@ -595,10 +657,10 @@ class PrometheusMetrics:
         return f"sensor_unit_{unit}"
 
     @staticmethod
-    def _unit_string(unit):
+    def _unit_string(unit: str | None) -> str | None:
         """Get a formatted string of the unit."""
         if unit is None:
-            return
+            return None
 
         units = {
             UnitOfTemperature.CELSIUS: "celsius",
@@ -609,9 +671,9 @@ class PrometheusMetrics:
         default = default.lower()
         return units.get(unit, default)
 
-    def _handle_switch(self, state):
+    def _handle_switch(self, state: State) -> None:
         metric = self._metric(
-            "switch_state", self.prometheus_cli.Gauge, "State of the switch (0/1)"
+            "switch_state", prometheus_client.Gauge, "State of the switch (0/1)"
         )
 
         try:
@@ -622,26 +684,35 @@ class PrometheusMetrics:
 
         self._handle_attributes(state)
 
-    def _handle_zwave(self, state):
+    def _handle_zwave(self, state: State) -> None:
         self._battery(state)
 
-    def _handle_automation(self, state):
+    def _handle_automation(self, state: State) -> None:
         metric = self._metric(
             "automation_triggered_count",
-            self.prometheus_cli.Counter,
+            prometheus_client.Counter,
             "Count of times an automation has been triggered",
         )
 
         metric.labels(**self._labels(state)).inc()
 
-    def _handle_counter(self, state):
+    def _handle_counter(self, state: State) -> None:
         metric = self._metric(
             "counter_value",
-            self.prometheus_cli.Gauge,
+            prometheus_client.Gauge,
             "Value of counter entities",
         )
 
         metric.labels(**self._labels(state)).set(self.state_as_number(state))
+
+    def _handle_update(self, state: State) -> None:
+        metric = self._metric(
+            "update_state",
+            prometheus_client.Gauge,
+            "Update state, indicating if an update is available (0/1)",
+        )
+        value = self.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
 
 
 class PrometheusView(HomeAssistantView):
@@ -650,15 +721,15 @@ class PrometheusView(HomeAssistantView):
     url = API_ENDPOINT
     name = "api:prometheus"
 
-    def __init__(self, prometheus_cli):
+    def __init__(self, requires_auth: bool) -> None:
         """Initialize Prometheus view."""
-        self.prometheus_cli = prometheus_cli
+        self.requires_auth = requires_auth
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Handle request for Prometheus metrics."""
         _LOGGER.debug("Received Prometheus metrics request")
 
         return web.Response(
-            body=self.prometheus_cli.generate_latest(self.prometheus_cli.REGISTRY),
+            body=prometheus_client.generate_latest(prometheus_client.REGISTRY),
             content_type=CONTENT_TYPE_TEXT_PLAIN,
         )

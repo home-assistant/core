@@ -16,7 +16,6 @@ async def test_hit(hass: HomeAssistant) -> None:
     def _refresh():
         nonlocal refresh_called
         refresh_called = True
-        return
 
     rate_limiter = ratelimit.KeyedRateLimit(hass)
     rate_limiter.async_triggered("key1", dt_util.utcnow())
@@ -53,7 +52,6 @@ async def test_miss(hass: HomeAssistant) -> None:
     def _refresh():
         nonlocal refresh_called
         refresh_called = True
-        return
 
     rate_limiter = ratelimit.KeyedRateLimit(hass)
     assert (
@@ -85,7 +83,6 @@ async def test_no_limit(hass: HomeAssistant) -> None:
     def _refresh():
         nonlocal refresh_called
         refresh_called = True
-        return
 
     rate_limiter = ratelimit.KeyedRateLimit(hass)
     rate_limiter.async_triggered("key1", dt_util.utcnow())

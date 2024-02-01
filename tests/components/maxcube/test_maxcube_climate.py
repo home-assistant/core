@@ -50,6 +50,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
 
@@ -60,9 +61,10 @@ WALL_ENTITY_ID = "climate.testroom_testwallthermostat"
 VALVE_POSITION = "valve_position"
 
 
-async def test_setup_thermostat(hass: HomeAssistant, cube: MaxCube) -> None:
+async def test_setup_thermostat(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, cube: MaxCube
+) -> None:
     """Test a successful setup of a thermostat device."""
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_is_registered(ENTITY_ID)
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity.unique_id == "AABBCCDD01"
@@ -87,7 +89,10 @@ async def test_setup_thermostat(hass: HomeAssistant, cube: MaxCube) -> None:
     assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_NONE
     assert (
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes.get(ATTR_MAX_TEMP) == MAX_TEMPERATURE
     assert state.attributes.get(ATTR_MIN_TEMP) == 5.0
@@ -96,9 +101,10 @@ async def test_setup_thermostat(hass: HomeAssistant, cube: MaxCube) -> None:
     assert state.attributes.get(VALVE_POSITION) == 25
 
 
-async def test_setup_wallthermostat(hass: HomeAssistant, cube: MaxCube) -> None:
+async def test_setup_wallthermostat(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, cube: MaxCube
+) -> None:
     """Test a successful setup of a wall thermostat device."""
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_is_registered(WALL_ENTITY_ID)
     entity = entity_registry.async_get(WALL_ENTITY_ID)
     assert entity.unique_id == "AABBCCDD02"
@@ -368,7 +374,7 @@ async def test_thermostat_set_invalid_preset(
     hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
 ) -> None:
     """Set hvac mode to heat."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,

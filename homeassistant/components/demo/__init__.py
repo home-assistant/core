@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -25,9 +26,12 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.CALENDAR,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DATE,
+    Platform.DATETIME,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
@@ -44,30 +48,31 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,
+    Platform.WEATHER,
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.TTS,
-    Platform.STT,
     Platform.MAILBOX,
     Platform.NOTIFY,
     Platform.IMAGE_PROCESSING,
-    Platform.CALENDAR,
     Platform.DEVICE_TRACKER,
 ]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the demo environment."""
-    if DOMAIN not in config:
-        return True
-
     if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
             )
         )
+
+    if DOMAIN not in config:
+        return True
 
     # Set up demo platforms
     for platform in COMPONENTS_WITH_DEMO_PLATFORM:

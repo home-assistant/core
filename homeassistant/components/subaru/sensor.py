@@ -55,9 +55,9 @@ KM_PER_MI = DistanceConverter.convert(1, UnitOfLength.MILES, UnitOfLength.KILOME
 SAFETY_SENSORS = [
     SensorEntityDescription(
         key=sc.ODOMETER,
+        translation_key="odometer",
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:road-variant",
-        name="Odometer",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -67,44 +67,44 @@ SAFETY_SENSORS = [
 API_GEN_2_SENSORS = [
     SensorEntityDescription(
         key=sc.AVG_FUEL_CONSUMPTION,
+        translation_key="average_fuel_consumption",
         icon="mdi:leaf",
-        name="Avg fuel consumption",
         native_unit_of_measurement=FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.DIST_TO_EMPTY,
+        translation_key="range",
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:gas-station",
-        name="Range",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FL,
+        translation_key="tire_pressure_front_left",
         device_class=SensorDeviceClass.PRESSURE,
-        name="Tire pressure FL",
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FR,
+        translation_key="tire_pressure_front_right",
         device_class=SensorDeviceClass.PRESSURE,
-        name="Tire pressure FR",
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RL,
+        translation_key="tire_pressure_rear_left",
         device_class=SensorDeviceClass.PRESSURE,
-        name="Tire pressure RL",
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RR,
+        translation_key="tire_pressure_rear_right",
         device_class=SensorDeviceClass.PRESSURE,
-        name="Tire pressure RR",
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -114,8 +114,8 @@ API_GEN_2_SENSORS = [
 API_GEN_3_SENSORS = [
     SensorEntityDescription(
         key=sc.REMAINING_FUEL_PERCENT,
+        translation_key="fuel_level",
         icon="mdi:gas-station",
-        name="Fuel level",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -125,23 +125,23 @@ API_GEN_3_SENSORS = [
 EV_SENSORS = [
     SensorEntityDescription(
         key=sc.EV_DISTANCE_TO_EMPTY,
+        translation_key="ev_range",
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:ev-station",
-        name="EV range",
         native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.EV_STATE_OF_CHARGE_PERCENT,
+        translation_key="ev_battery_level",
         device_class=SensorDeviceClass.BATTERY,
-        name="EV battery level",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.EV_TIME_TO_FULLY_CHARGED_UTC,
+        translation_key="ev_time_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="EV time to full charge",
     ),
 ]
 
@@ -276,14 +276,19 @@ async def _async_migrate_entries(
     """Migrate sensor entries from HA<=2022.10 to use preferred unique_id."""
     entity_registry = er.async_get(hass)
 
-    all_sensors = []
-    all_sensors.extend(EV_SENSORS)
-    all_sensors.extend(API_GEN_2_SENSORS)
-    all_sensors.extend(SAFETY_SENSORS)
-
-    # Old unique_id is (previously title-cased) sensor name
-    # (e.g. "VIN_Avg Fuel Consumption")
-    replacements = {str(s.name).upper(): s.key for s in all_sensors}
+    replacements = {
+        "ODOMETER": sc.ODOMETER,
+        "AVG FUEL CONSUMPTION": sc.AVG_FUEL_CONSUMPTION,
+        "RANGE": sc.DIST_TO_EMPTY,
+        "TIRE PRESSURE FL": sc.TIRE_PRESSURE_FL,
+        "TIRE PRESSURE FR": sc.TIRE_PRESSURE_FR,
+        "TIRE PRESSURE RL": sc.TIRE_PRESSURE_RL,
+        "TIRE PRESSURE RR": sc.TIRE_PRESSURE_RR,
+        "FUEL LEVEL": sc.REMAINING_FUEL_PERCENT,
+        "EV RANGE": sc.EV_DISTANCE_TO_EMPTY,
+        "EV BATTERY LEVEL": sc.EV_STATE_OF_CHARGE_PERCENT,
+        "EV TIME TO FULL CHARGE": sc.EV_TIME_TO_FULLY_CHARGED_UTC,
+    }
 
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, Any] | None:

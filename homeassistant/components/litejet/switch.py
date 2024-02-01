@@ -7,7 +7,7 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -49,10 +49,10 @@ class LiteJetSwitch(SwitchEntity):
         self._attr_name = name
 
         # Keypad #1 has switches 1-6, #2 has 7-12, ...
-        keypad_number = int((i - 1) / 6) + 1
+        keypad_number = system.get_switch_keypad_number(i)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry_id}_keypad_{keypad_number}")},
-            name=f"Keypad #{keypad_number}",
+            name=system.get_switch_keypad_name(i),
             manufacturer="Centralite",
             via_device=(DOMAIN, f"{entry_id}_mcp"),
         )

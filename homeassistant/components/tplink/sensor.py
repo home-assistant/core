@@ -33,9 +33,10 @@ from .const import (
 )
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity
+from .models import TPLinkData
 
 
-@dataclass
+@dataclass(frozen=True)
 class TPLinkSensorEntityDescription(SensorEntityDescription):
     """Describes TPLink sensor entity."""
 
@@ -46,28 +47,28 @@ class TPLinkSensorEntityDescription(SensorEntityDescription):
 ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key=ATTR_CURRENT_POWER_W,
+        translation_key="current_consumption",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Current Consumption",
         emeter_attr="power",
         precision=1,
     ),
     TPLinkSensorEntityDescription(
         key=ATTR_TOTAL_ENERGY_KWH,
+        translation_key="total_consumption",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        name="Total Consumption",
         emeter_attr="total",
         precision=3,
     ),
     TPLinkSensorEntityDescription(
         key=ATTR_TODAY_ENERGY_KWH,
+        translation_key="today_consumption",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        name="Today's Consumption",
         precision=3,
     ),
     TPLinkSensorEntityDescription(
@@ -75,7 +76,6 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Voltage",
         emeter_attr="voltage",
         precision=1,
     ),
@@ -84,7 +84,6 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Current",
         emeter_attr="current",
         precision=2,
     ),
@@ -108,31 +107,41 @@ def async_emeter_from_device(
     return None if device.is_bulb else 0.0
 
 
+def _async_sensors_for_device(
+    device: SmartDevice,
+    coordinator: TPLinkDataUpdateCoordinator,
+    has_parent: bool = False,
+) -> list[SmartPlugSensor]:
+    """Generate the sensors for the device."""
+    return [
+        SmartPlugSensor(device, coordinator, description, has_parent)
+        for description in ENERGY_SENSORS
+        if async_emeter_from_device(device, description) is not None
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    parent_coordinator = data.parent_coordinator
+    children_coordinators = data.children_coordinators
     entities: list[SmartPlugSensor] = []
-    parent = coordinator.device
+    parent = parent_coordinator.device
     if not parent.has_emeter:
         return
 
-    def _async_sensors_for_device(device: SmartDevice) -> list[SmartPlugSensor]:
-        return [
-            SmartPlugSensor(device, coordinator, description)
-            for description in ENERGY_SENSORS
-            if async_emeter_from_device(device, description) is not None
-        ]
-
     if parent.is_strip:
         # Historically we only add the children if the device is a strip
-        for child in parent.children:
-            entities.extend(_async_sensors_for_device(child))
+        for idx, child in enumerate(parent.children):
+            entities.extend(
+                _async_sensors_for_device(child, children_coordinators[idx], True)
+            )
     else:
-        entities.extend(_async_sensors_for_device(parent))
+        entities.extend(_async_sensors_for_device(parent, parent_coordinator))
 
     async_add_entities(entities)
 
@@ -147,21 +156,20 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         device: SmartDevice,
         coordinator: TPLinkDataUpdateCoordinator,
         description: TPLinkSensorEntityDescription,
+        has_parent: bool = False,
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, coordinator)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{legacy_device_id(self.device)}_{self.entity_description.key}"
-        )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the Smart Plug.
-
-        Overridden to include the description.
-        """
-        return f"{self.device.alias} {self.entity_description.name}"
+        self._attr_unique_id = f"{legacy_device_id(device)}_{description.key}"
+        if has_parent:
+            assert device.alias
+            self._attr_translation_placeholders = {"device_name": device.alias}
+            if description.translation_key:
+                self._attr_translation_key = f"{description.translation_key}_child"
+            else:
+                assert description.device_class
+                self._attr_translation_key = f"{description.device_class.value}_child"
 
     @property
     def native_value(self) -> float | None:

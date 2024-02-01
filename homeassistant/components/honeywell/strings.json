@@ -31,5 +31,28 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "outdoor_humidity": {
+        "name": "Outdoor humidity"
+      }
+    },
+    "climate": {
+      "honeywell": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "hold": "Hold",
+              "away": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
+              "none": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::none%]"
+            }
+          }
+        }
+      }
+    }
   }
 }

@@ -8,13 +8,20 @@ from blebox_uniapi.feature import Feature
 from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
+from .helpers import get_maybe_authenticated_session
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,11 +42,15 @@ _FeatureT = TypeVar("_FeatureT", bound=Feature)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BleBox devices from a config entry."""
-    websession = async_get_clientsession(hass)
-
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
+
+    username = entry.data.get(CONF_USERNAME)
+    password = entry.data.get(CONF_PASSWORD)
+
     timeout = DEFAULT_SETUP_TIMEOUT
+
+    websession = get_maybe_authenticated_session(hass, password, username)
 
     api_host = ApiHost(host, port, timeout, websession, hass.loop)
 

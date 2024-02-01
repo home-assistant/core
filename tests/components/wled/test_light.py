@@ -2,6 +2,7 @@
 import json
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
@@ -14,7 +15,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.wled.const import CONF_KEEP_MASTER_LIGHT, SCAN_INTERVAL
+from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -27,7 +28,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
@@ -43,7 +43,7 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_BRIGHTNESS) == 127
     assert state.attributes.get(ATTR_EFFECT) == "Solid"
     assert state.attributes.get(ATTR_HS_COLOR) == (37.412, 100.0)
-    assert state.attributes.get(ATTR_ICON) == "mdi:led-strip-variant"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.state == STATE_ON
 
     assert (entry := entity_registry.async_get("light.wled_rgb_light"))
@@ -54,18 +54,18 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_BRIGHTNESS) == 127
     assert state.attributes.get(ATTR_EFFECT) == "Blink"
     assert state.attributes.get(ATTR_HS_COLOR) == (148.941, 100.0)
-    assert state.attributes.get(ATTR_ICON) == "mdi:led-strip-variant"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.state == STATE_ON
 
     assert (entry := entity_registry.async_get("light.wled_rgb_light_segment_1"))
     assert entry.unique_id == "aabbccddeeff_1"
 
-    # Test master control of the lightstrip
-    assert (state := hass.states.get("light.wled_rgb_light_master"))
+    # Test main control of the lightstrip
+    assert (state := hass.states.get("light.wled_rgb_light_main"))
     assert state.attributes.get(ATTR_BRIGHTNESS) == 127
     assert state.state == STATE_ON
 
-    assert (entry := entity_registry.async_get("light.wled_rgb_light_master"))
+    assert (entry := entity_registry.async_get("light.wled_rgb_light_main"))
     assert entry.unique_id == "aabbccddeeff"
 
 
@@ -110,15 +110,15 @@ async def test_segment_change_state(
     )
 
 
-async def test_master_change_state(
+async def test_main_change_state(
     hass: HomeAssistant,
     mock_wled: MagicMock,
 ) -> None:
-    """Test the change of state of the WLED master light control."""
+    """Test the change of state of the WLED main light control."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light_master", ATTR_TRANSITION: 5},
+        {ATTR_ENTITY_ID: "light.wled_rgb_light_main", ATTR_TRANSITION: 5},
         blocking=True,
     )
     assert mock_wled.master.call_count == 1
@@ -132,7 +132,7 @@ async def test_master_change_state(
         SERVICE_TURN_ON,
         {
             ATTR_BRIGHTNESS: 42,
-            ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+            ATTR_ENTITY_ID: "light.wled_rgb_light_main",
             ATTR_TRANSITION: 5,
         },
         blocking=True,
@@ -147,7 +147,7 @@ async def test_master_change_state(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light_master", ATTR_TRANSITION: 5},
+        {ATTR_ENTITY_ID: "light.wled_rgb_light_main", ATTR_TRANSITION: 5},
         blocking=True,
     )
     assert mock_wled.master.call_count == 3
@@ -161,7 +161,7 @@ async def test_master_change_state(
         SERVICE_TURN_ON,
         {
             ATTR_BRIGHTNESS: 42,
-            ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+            ATTR_ENTITY_ID: "light.wled_rgb_light_main",
             ATTR_TRANSITION: 5,
         },
         blocking=True,
@@ -177,12 +177,13 @@ async def test_master_change_state(
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_dynamically_handle_segments(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
     assert (segment0 := hass.states.get("light.wled_rgb_light"))
     assert segment0.state == STATE_ON
-    assert not hass.states.get("light.wled_rgb_light_master")
+    assert not hass.states.get("light.wled_rgb_light_main")
     assert not hass.states.get("light.wled_rgb_light_segment_1")
 
     return_value = mock_wled.update.return_value
@@ -190,23 +191,25 @@ async def test_dynamically_handle_segments(
         json.loads(load_fixture("wled/rgb.json"))
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (master := hass.states.get("light.wled_rgb_light_master"))
-    assert master.state == STATE_ON
+    assert (main := hass.states.get("light.wled_rgb_light_main"))
+    assert main.state == STATE_ON
     assert (segment0 := hass.states.get("light.wled_rgb_light"))
     assert segment0.state == STATE_ON
     assert (segment1 := hass.states.get("light.wled_rgb_light_segment_1"))
     assert segment1.state == STATE_ON
 
-    # Test adding if segment shows up again, including the master entity
+    # Test adding if segment shows up again, including the main entity
     mock_wled.update.return_value = return_value
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (master := hass.states.get("light.wled_rgb_light_master"))
-    assert master.state == STATE_UNAVAILABLE
+    assert (main := hass.states.get("light.wled_rgb_light_main"))
+    assert main.state == STATE_UNAVAILABLE
     assert (segment0 := hass.states.get("light.wled_rgb_light"))
     assert segment0.state == STATE_ON
     assert (segment1 := hass.states.get("light.wled_rgb_light_segment_1"))
@@ -216,33 +219,36 @@ async def test_dynamically_handle_segments(
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_single_segment_behavior(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Test the behavior of the integration with a single segment."""
     device = mock_wled.update.return_value
 
-    assert not hass.states.get("light.wled_rgb_light_master")
+    assert not hass.states.get("light.wled_rgb_light_main")
     assert (state := hass.states.get("light.wled_rgb_light"))
     assert state.state == STATE_ON
 
-    # Test segment brightness takes master into account
+    # Test segment brightness takes main into account
     device.state.brightness = 100
     device.state.segments[0].brightness = 255
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("light.wled_rgb_light"))
     assert state.attributes.get(ATTR_BRIGHTNESS) == 100
 
-    # Test segment is off when master is off
+    # Test segment is off when main is off
     device.state.on = False
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("light.wled_rgb_light")
     assert state
     assert state.state == STATE_OFF
 
-    # Test master is turned off when turning off a single segment
+    # Test main is turned off when turning off a single segment
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
@@ -255,7 +261,7 @@ async def test_single_segment_behavior(
         transition=50,
     )
 
-    # Test master is turned on when turning on a single segment, and segment
+    # Test main is turned on when turning on a single segment, and segment
     # brightness is set to 255.
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -340,18 +346,18 @@ async def test_rgbw_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
-async def test_single_segment_with_keep_master_light(
+async def test_single_segment_with_keep_main_light(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test the behavior of the integration with a single segment."""
-    assert not hass.states.get("light.wled_rgb_light_master")
+    assert not hass.states.get("light.wled_rgb_light_main")
 
     hass.config_entries.async_update_entry(
-        init_integration, options={CONF_KEEP_MASTER_LIGHT: True}
+        init_integration, options={CONF_KEEP_MAIN_LIGHT: True}
     )
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("light.wled_rgb_light_master"))
+    assert (state := hass.states.get("light.wled_rgb_light_main"))
     assert state.state == STATE_ON

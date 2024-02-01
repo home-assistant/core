@@ -46,7 +46,7 @@ from . import (
     setup_mock_motioneye_config_entry,
 )
 
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 WEB_HOOK_MOTION_DETECTED_QUERY_STRING = (
@@ -63,12 +63,13 @@ WEB_HOOK_FILE_STORED_QUERY_STRING = (
 )
 
 
-async def test_setup_camera_without_webhook(hass: HomeAssistant) -> None:
+async def test_setup_camera_without_webhook(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test a camera with no webhook."""
     client = create_mock_motioneye_client()
     config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
     )
@@ -95,6 +96,7 @@ async def test_setup_camera_without_webhook(hass: HomeAssistant) -> None:
 
 async def test_setup_camera_with_wrong_webhook(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test camera with wrong web hook."""
     wrong_url = "http://wrong-url"
@@ -123,7 +125,6 @@ async def test_setup_camera_with_wrong_webhook(
         )
         await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
     )
@@ -151,6 +152,7 @@ async def test_setup_camera_with_wrong_webhook(
 
 async def test_setup_camera_with_old_webhook(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Verify that webhooks are overwritten if they are from this integration.
 
@@ -176,7 +178,6 @@ async def test_setup_camera_with_old_webhook(
     )
     assert client.async_set_camera.called
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
     )
@@ -204,6 +205,7 @@ async def test_setup_camera_with_old_webhook(
 
 async def test_setup_camera_with_correct_webhook(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Verify that webhooks are not overwritten if they are already correct."""
 
@@ -212,7 +214,6 @@ async def test_setup_camera_with_correct_webhook(
         hass, data={CONF_URL: TEST_URL, CONF_WEBHOOK_ID: "webhook_secret_id"}
     )
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -278,12 +279,13 @@ async def test_setup_camera_with_no_home_assistant_urls(
 
 
 async def test_good_query(
-    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test good callbacks."""
     await async_setup_component(hass, "http", {"http": {}})
 
-    device_registry = dr.async_get(hass)
     client = create_mock_motioneye_client()
     config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
 
@@ -377,12 +379,13 @@ async def test_bad_query_cannot_decode(
 
 
 async def test_event_media_data(
-    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test an event with a file path generates media data."""
     await async_setup_component(hass, "http", {"http": {}})
 
-    device_registry = dr.async_get(hass)
     client = create_mock_motioneye_client()
     config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
 
@@ -469,8 +472,10 @@ async def test_event_media_data(
     assert "media_content_id" not in events[-1].data
 
     # Test: Not a loaded motionEye config entry.
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
     wrong_device = device_registry.async_get_or_create(
-        config_entry_id="wrong_config_id", identifiers={("motioneye", "a_1")}
+        config_entry_id=other_config_entry.entry_id, identifiers={("motioneye", "a_1")}
     )
     resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),

@@ -2,6 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
+
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -42,7 +44,7 @@ async def test_setup_with_config(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ), patch(
-        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=future_timestamp(1),
     ):
         await hass.async_block_till_done()
@@ -63,7 +65,7 @@ async def test_update_unique_id(hass: HomeAssistant) -> None:
     assert not entry.unique_id
 
     with patch(
-        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=future_timestamp(1),
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
@@ -73,8 +75,8 @@ async def test_update_unique_id(hass: HomeAssistant) -> None:
     assert entry.unique_id == f"{HOST}:{PORT}"
 
 
-@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
-async def test_unload_config_entry(mock_now, hass: HomeAssistant) -> None:
+@freeze_time(static_datetime())
+async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test unloading a config entry."""
     assert hass.state is CoreState.running
 
@@ -91,7 +93,7 @@ async def test_unload_config_entry(mock_now, hass: HomeAssistant) -> None:
 
     timestamp = future_timestamp(100)
     with patch(
-        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=timestamp,
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
@@ -99,7 +101,7 @@ async def test_unload_config_entry(mock_now, hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
+    state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == timestamp.isoformat()
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
@@ -107,18 +109,18 @@ async def test_unload_config_entry(mock_now, hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(entry.entry_id)
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
+    state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
+    state = hass.states.get("sensor.example_com_cert_expiry")
     assert state is None
 
 
 async def test_delay_load_during_startup(hass: HomeAssistant) -> None:
     """Test delayed loading of a config entry during startup."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT})
     entry.add_to_hass(hass)
@@ -129,12 +131,12 @@ async def test_delay_load_during_startup(hass: HomeAssistant) -> None:
     assert hass.state is CoreState.not_running
     assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
+    state = hass.states.get("sensor.example_com_cert_expiry")
     assert state is None
 
     timestamp = future_timestamp(100)
     with patch(
-        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=timestamp,
     ):
         await hass.async_start()
@@ -142,7 +144,7 @@ async def test_delay_load_during_startup(hass: HomeAssistant) -> None:
 
     assert hass.state is CoreState.running
 
-    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
+    state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == timestamp.isoformat()
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")

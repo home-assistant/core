@@ -10,8 +10,8 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import aiohttp
-import async_timeout
 from hass_nabucasa import Cloud, cloud_api
+from yarl import URL
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.alexa import (
@@ -149,7 +149,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         self._token_valid: datetime | None = None
         self._cur_entity_prefs = async_get_assistant_settings(hass, CLOUD_ALEXA)
         self._alexa_sync_unsub: Callable[[], None] | None = None
-        self._endpoint: Any = None
+        self._endpoint: str | URL | None = None
 
     @property
     def enabled(self) -> bool:
@@ -175,7 +175,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         )
 
     @property
-    def endpoint(self) -> Any | None:
+    def endpoint(self) -> str | URL | None:
         """Endpoint for report state."""
         if self._endpoint is None:
             raise ValueError("No endpoint available. Fetch access token first")
@@ -221,6 +221,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         async def on_hass_started(hass: HomeAssistant) -> None:
             if self._prefs.alexa_settings_version != ALEXA_SETTINGS_VERSION:
+                _LOGGER.info(
+                    "Start migration of Alexa settings from v%s to v%s",
+                    self._prefs.alexa_settings_version,
+                    ALEXA_SETTINGS_VERSION,
+                )
                 if self._prefs.alexa_settings_version < 2 or (
                     # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
                     self._prefs.alexa_settings_version < 3
@@ -233,6 +238,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 ):
                     self._migrate_alexa_entity_settings_v1()
 
+                _LOGGER.info(
+                    "Finished migration of Alexa settings from v%s to v%s",
+                    self._prefs.alexa_settings_version,
+                    ALEXA_SETTINGS_VERSION,
+                )
                 await self._prefs.async_update(
                     alexa_settings_version=ALEXA_SETTINGS_VERSION
                 )
@@ -299,7 +309,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         """Invalidate access token."""
         self._token_valid = None
 
-    async def async_get_access_token(self) -> Any:
+    async def async_get_access_token(self) -> str | None:
         """Get an access token."""
         if self._token_valid is not None and self._token_valid > utcnow():
             return self._token
@@ -490,7 +500,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             )
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
 
             return True

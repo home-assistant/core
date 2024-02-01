@@ -11,7 +11,6 @@ from homeassistant.components import dhcp
 from homeassistant.components.verisure.const import (
     CONF_GIID,
     CONF_LOCK_CODE_DIGITS,
-    CONF_LOCK_DEFAULT_CODE,
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
 )
@@ -561,39 +560,9 @@ async def test_reauth_flow_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    ("input", "output"),
-    [
-        (
-            {
-                CONF_LOCK_CODE_DIGITS: 5,
-                CONF_LOCK_DEFAULT_CODE: "12345",
-            },
-            {
-                CONF_LOCK_CODE_DIGITS: 5,
-                CONF_LOCK_DEFAULT_CODE: "12345",
-            },
-        ),
-        (
-            {
-                CONF_LOCK_DEFAULT_CODE: "",
-            },
-            {
-                CONF_LOCK_DEFAULT_CODE: "",
-                CONF_LOCK_CODE_DIGITS: DEFAULT_LOCK_CODE_DIGITS,
-            },
-        ),
-    ],
-)
-async def test_options_flow(
-    hass: HomeAssistant, input: dict[str, int | str], output: dict[str, int | str]
-) -> None:
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options config flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="12345",
-        data={},
-    )
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="12345", data={}, version=2)
     entry.add_to_hass(hass)
 
     with patch(
@@ -610,43 +579,8 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=input,
+        user_input={CONF_LOCK_CODE_DIGITS: 4},
     )
 
     assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("data") == output
-
-
-async def test_options_flow_code_format_mismatch(hass: HomeAssistant) -> None:
-    """Test options config flow with a code format mismatch."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="12345",
-        data={},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.verisure.async_setup_entry",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "init"
-    assert result.get("errors") == {}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_LOCK_CODE_DIGITS: 5,
-            CONF_LOCK_DEFAULT_CODE: "123",
-        },
-    )
-
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "init"
-    assert result.get("errors") == {"base": "code_format_mismatch"}
+    assert result.get("data") == {CONF_LOCK_CODE_DIGITS: DEFAULT_LOCK_CODE_DIGITS}

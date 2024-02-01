@@ -1,6 +1,7 @@
 """Test the Fully Kiosk Browser binary sensors."""
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from fullykiosk import FullyKioskError
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -15,20 +16,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_binary_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test standard Fully Kiosk binary sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("binary_sensor.amazon_fire_plugged_in")
     assert state
     assert state.state == STATE_ON
@@ -76,7 +76,8 @@ async def test_binary_sensors(
 
     # Test unknown/missing data
     mock_fully_kiosk.getDeviceInfo.return_value = {}
-    async_fire_time_changed(hass, dt.utcnow() + UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.amazon_fire_plugged_in")
@@ -85,7 +86,8 @@ async def test_binary_sensors(
 
     # Test failed update
     mock_fully_kiosk.getDeviceInfo.side_effect = FullyKioskError("error", "status")
-    async_fire_time_changed(hass, dt.utcnow() + UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.amazon_fire_plugged_in")

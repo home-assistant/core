@@ -48,7 +48,10 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     _attr_preset_modes = [PRESET_AUTO, PRESET_PROG, PRESET_MANUAL]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_translation_key = DOMAIN
 

@@ -29,7 +29,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_hs_to_xy
 
@@ -38,7 +38,27 @@ from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 DECONZ_GROUP = "is_deconz_group"
-EFFECT_TO_DECONZ = {EFFECT_COLORLOOP: LightEffect.COLOR_LOOP, "None": LightEffect.NONE}
+EFFECT_TO_DECONZ = {
+    EFFECT_COLORLOOP: LightEffect.COLOR_LOOP,
+    "None": LightEffect.NONE,
+    # Specific to Lidl christmas light
+    "carnival": LightEffect.CARNIVAL,
+    "collide": LightEffect.COLLIDE,
+    "fading": LightEffect.FADING,
+    "fireworks": LightEffect.FIREWORKS,
+    "flag": LightEffect.FLAG,
+    "glow": LightEffect.GLOW,
+    "rainbow": LightEffect.RAINBOW,
+    "snake": LightEffect.SNAKE,
+    "snow": LightEffect.SNOW,
+    "sparkles": LightEffect.SPARKLES,
+    "steady": LightEffect.STEADY,
+    "strobe": LightEffect.STROBE,
+    "twinkle": LightEffect.TWINKLE,
+    "updown": LightEffect.UPDOWN,
+    "vintage": LightEffect.VINTAGE,
+    "waves": LightEffect.WAVES,
+}
 FLASH_TO_DECONZ = {FLASH_SHORT: LightAlert.SHORT, FLASH_LONG: LightAlert.LONG}
 
 DECONZ_TO_COLOR_MODE = {
@@ -46,6 +66,25 @@ DECONZ_TO_COLOR_MODE = {
     LightColorMode.HS: ColorMode.HS,
     LightColorMode.XY: ColorMode.XY,
 }
+
+XMAS_LIGHT_EFFECTS = [
+    "carnival",
+    "collide",
+    "fading",
+    "fireworks",
+    "flag",
+    "glow",
+    "rainbow",
+    "snake",
+    "snow",
+    "sparkles",
+    "steady",
+    "strobe",
+    "twinkle",
+    "updown",
+    "vintage",
+    "waves",
+]
 
 _LightDeviceT = TypeVar("_LightDeviceT", bound=Group | Light)
 
@@ -154,12 +193,15 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
             self._attr_supported_color_modes.add(ColorMode.ONOFF)
 
         if device.brightness is not None:
-            self._attr_supported_features |= LightEntityFeature.FLASH
-            self._attr_supported_features |= LightEntityFeature.TRANSITION
+            self._attr_supported_features |= (
+                LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
+            )
 
         if device.effect is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
             self._attr_effect_list = [EFFECT_COLORLOOP]
+            if device.model_id in ("HG06467", "TS0601"):
+                self._attr_effect_list = XMAS_LIGHT_EFFECTS
 
     @property
     def color_mode(self) -> str | None:
@@ -170,6 +212,10 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
             color_mode = ColorMode.BRIGHTNESS
         else:
             color_mode = ColorMode.ONOFF
+        if color_mode not in self._attr_supported_color_modes:
+            # Some lights controlled by ZigBee scenes can get unsupported color mode
+            return self._attr_color_mode
+        self._attr_color_mode = color_mode
         return color_mode
 
     @property

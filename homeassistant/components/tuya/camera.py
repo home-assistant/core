@@ -1,7 +1,7 @@
 """Support for Tuya cameras."""
 from __future__ import annotations
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera as CameraEntity, CameraEntityFeature
@@ -34,13 +34,13 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya camera."""
         entities: list[TuyaCameraEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if device.category in CAMERAS:
-                entities.append(TuyaCameraEntity(device, hass_data.device_manager))
+                entities.append(TuyaCameraEntity(device, hass_data.manager))
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -52,11 +52,12 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
 
     _attr_supported_features = CameraEntityFeature.STREAM
     _attr_brand = "Tuya"
+    _attr_name = None
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
     ) -> None:
         """Init Tuya Camera."""
         super().__init__(device, device_manager)

@@ -7,7 +7,7 @@ from homeassistant.setup import async_setup_component
 from . import (
     DEFAULT_ENTRY_TITLE,
     IP_ADDRESS,
-    MAC_ADDRESS,
+    SERIAL,
     _mocked_bulb,
     _mocked_clean_bulb,
     _mocked_infrared_bulb,
@@ -30,7 +30,7 @@ async def test_bulb_diagnostics(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -77,7 +77,7 @@ async def test_clean_bulb_diagnostics(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_clean_bulb()
@@ -129,7 +129,7 @@ async def test_infrared_bulb_diagnostics(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_infrared_bulb()
@@ -177,7 +177,7 @@ async def test_legacy_multizone_bulb_diagnostics(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_light_strip()
@@ -288,7 +288,7 @@ async def test_multizone_bulb_diagnostics(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_light_strip()

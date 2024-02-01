@@ -21,7 +21,6 @@ class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
 
     entity_description: ValloxBinarySensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -42,14 +41,14 @@ class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
         return self.coordinator.data.get_metric(self.entity_description.metric_key) == 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxMetricKeyMixin:
     """Dataclass to allow defining metric_key without a default value."""
 
     metric_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxBinarySensorEntityDescription(
     BinarySensorEntityDescription, ValloxMetricKeyMixin
 ):
@@ -59,7 +58,7 @@ class ValloxBinarySensorEntityDescription(
 BINARY_SENSOR_ENTITIES: tuple[ValloxBinarySensorEntityDescription, ...] = (
     ValloxBinarySensorEntityDescription(
         key="post_heater",
-        name="Post heater",
+        translation_key="post_heater",
         icon="mdi:radiator",
         metric_key="A_CYC_IO_HEATER",
     ),

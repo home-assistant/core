@@ -5,11 +5,11 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Coroutine
 from contextlib import suppress
+import logging
 from typing import Any
 
-from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import CommandClass, RemoveNodeReason
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -22,6 +22,7 @@ from zwave_js_server.model.notification import (
 from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.persistent_notification import async_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -29,11 +30,16 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.issue_registry import (
@@ -89,6 +95,7 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    LIB_LOGGER,
     LOGGER,
     USER_AGENT,
     ZWAVE_JS_NOTIFICATION_EVENT,
@@ -101,9 +108,12 @@ from .discovery import (
     async_discover_single_value,
 )
 from .helpers import (
+    async_disable_server_logging_if_needed,
+    async_enable_server_logging_if_needed,
     async_enable_statistics,
     get_device_id,
     get_device_id_ext,
+    get_network_identifier_for_notification,
     get_unique_id,
     get_valueless_base_unique_id,
 )
@@ -114,6 +124,8 @@ CONNECT_TIMEOUT = 10
 DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 DATA_DRIVER_EVENTS = "driver_events"
 DATA_START_CLIENT_TASK = "start_client_task"
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -140,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # connect and throw error if connection failed
     try:
-        async with timeout(CONNECT_TIMEOUT):
+        async with asyncio.timeout(CONNECT_TIMEOUT):
             await client.connect()
     except InvalidServerVersion as err:
         if use_addon:
@@ -209,6 +221,9 @@ async def start_client(
     LOGGER.info("Connection to Zwave JS Server initialized")
 
     assert client.driver
+    async_dispatcher_send(
+        hass, f"{DOMAIN}_{client.driver.controller.home_id}_connected_to_server"
+    )
 
     await driver_events.setup(client.driver)
 
@@ -240,16 +255,35 @@ class DriverEvents:
         elif opted_in is False:
             await driver.async_disable_statistics()
 
+        async def handle_logging_changed(_: Event | None = None) -> None:
+            """Handle logging changed event."""
+            if LIB_LOGGER.isEnabledFor(logging.DEBUG):
+                await async_enable_server_logging_if_needed(
+                    self.hass, self.config_entry, driver
+                )
+            else:
+                await async_disable_server_logging_if_needed(
+                    self.hass, self.config_entry, driver
+                )
+
+        # Set up server logging on setup if needed
+        await handle_logging_changed()
+
+        self.config_entry.async_on_unload(
+            self.hass.bus.async_listen(EVENT_LOGGING_CHANGED, handle_logging_changed)
+        )
+
         # Check for nodes that no longer exist and remove them
         stored_devices = dr.async_entries_for_config_entry(
             self.dev_reg, self.config_entry.entry_id
         )
         known_devices = [
-            self.dev_reg.async_get_device({get_device_id(driver, node)})
+            self.dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
             for node in controller.nodes.values()
         ]
 
-        # Devices that are in the device registry that are not known by the controller can be removed
+        # Devices that are in the device registry that are not known by the controller
+        # can be removed
         for device in stored_devices:
             if device not in known_devices:
                 self.dev_reg.async_remove_device(device.id)
@@ -282,6 +316,11 @@ class DriverEvents:
             controller.on("node removed", self.controller_events.async_on_node_removed)
         )
 
+        # listen for identify events for the controller
+        self.config_entry.async_on_unload(
+            controller.on("identify", self.controller_events.async_on_identify)
+        )
+
     async def async_setup_platform(self, platform: Platform) -> None:
         """Set up platform if needed."""
         if platform not in self.platform_setup_tasks:
@@ -308,7 +347,9 @@ class ControllerEvents:
         self.discovered_value_ids: dict[str, set[str]] = defaultdict(set)
         self.driver_events = driver_events
         self.dev_reg = driver_events.dev_reg
-        self.registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
+        self.registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(
+            lambda: defaultdict(set)
+        )
         self.node_events = NodeEvents(hass, self)
 
     @callback
@@ -321,6 +362,9 @@ class ControllerEvents:
 
     async def async_on_node_added(self, node: ZwaveNode) -> None:
         """Handle node added event."""
+        # Every node including the controller will have at least one sensor
+        await self.driver_events.async_setup_platform(Platform.SENSOR)
+
         # Remove stale entities that may exist from a previous interview when an
         # interview is started.
         base_unique_id = get_valueless_base_unique_id(self.driver_events.driver, node)
@@ -334,10 +378,14 @@ class ControllerEvents:
             )
         )
 
-        # No need for a ping button or node status sensor for controller nodes
-        if not node.is_controller_node:
+        if node.is_controller_node:
+            # Create a controller status sensor for each device
+            async_dispatcher_send(
+                self.hass,
+                f"{DOMAIN}_{self.config_entry.entry_id}_add_controller_status_sensor",
+            )
+        else:
             # Create a node status sensor for each device
-            await self.driver_events.async_setup_platform(Platform.SENSOR)
             async_dispatcher_send(
                 self.hass,
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_node_status_sensor",
@@ -351,6 +399,13 @@ class ControllerEvents:
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_ping_button_entity",
                 node,
             )
+
+        # Create statistics sensors for each device
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self.config_entry.entry_id}_add_statistics_sensors",
+            node,
+        )
 
         LOGGER.debug("Node added: %s", node.node_id)
 
@@ -378,13 +433,13 @@ class ControllerEvents:
     def async_on_node_removed(self, event: dict) -> None:
         """Handle node removed event."""
         node: ZwaveNode = event["node"]
-        replaced: bool = event.get("replaced", False)
+        reason: RemoveNodeReason = event["reason"]
         # grab device in device registry attached to this node
         dev_id = get_device_id(self.driver_events.driver, node)
-        device = self.dev_reg.async_get_device({dev_id})
+        device = self.dev_reg.async_get_device(identifiers={dev_id})
         # We assert because we know the device exists
         assert device
-        if replaced:
+        if reason in (RemoveNodeReason.REPLACED, RemoveNodeReason.PROXY_REPLACED):
             self.discovered_value_ids.pop(device.id, None)
 
             async_dispatcher_send(
@@ -395,8 +450,59 @@ class ControllerEvents:
                     "remove_entity"
                 ),
             )
-        else:
-            self.remove_device(device)
+            # We don't want to remove the device so we can keep the user customizations
+            return
+
+        if reason == RemoveNodeReason.RESET:
+            device_name = device.name_by_user or device.name or f"Node {node.node_id}"
+            identifier = get_network_identifier_for_notification(
+                self.hass, self.config_entry, self.driver_events.driver.controller
+            )
+            notification_msg = (
+                f"`{device_name}` has been factory reset "
+                "and removed from the Z-Wave network"
+            )
+            if identifier:
+                # Remove trailing comma if it's there
+                if identifier[-1] == ",":
+                    identifier = identifier[:-1]
+                notification_msg = f"{notification_msg} {identifier}."
+            else:
+                notification_msg = f"{notification_msg}."
+            async_create(
+                self.hass,
+                notification_msg,
+                "Device Was Factory Reset!",
+                f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}",
+            )
+
+        self.remove_device(device)
+
+    @callback
+    def async_on_identify(self, event: dict) -> None:
+        """Handle identify event."""
+        # Get node device
+        node: ZwaveNode = event["node"]
+        dev_id = get_device_id(self.driver_events.driver, node)
+        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        assert device
+        device_name = device.name_by_user or device.name or f"Node {node.node_id}"
+        # In case the user has multiple networks, we should give them more information
+        # about the network for the controller being identified.
+        identifier = get_network_identifier_for_notification(
+            self.hass, self.config_entry, self.driver_events.driver.controller
+        )
+        async_create(
+            self.hass,
+            (
+                f"`{device_name}` has just requested the controller for your Z-Wave "
+                f"network {identifier} to identify itself. No action is needed from "
+                "you other than to note the source of the request, and you can safely "
+                "dismiss this notification when ready."
+            ),
+            "New Z-Wave Identify Controller Request",
+            f"{DOMAIN}.identify_controller.{dev_id[1]}",
+        )
 
     @callback
     def register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
@@ -404,25 +510,46 @@ class ControllerEvents:
         driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
-        device = self.dev_reg.async_get_device({device_id})
+        node_id_device = self.dev_reg.async_get_device(identifiers={device_id})
         via_device_id = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
             via_device_id = get_device_id(driver, controller.own_node)
 
-        # Replace the device if it can be determined that this node is not the
-        # same product as it was previously.
-        if (
-            device_id_ext
-            and device
-            and len(device.identifiers) == 2
-            and device_id_ext not in device.identifiers
-        ):
-            self.remove_device(device)
-            device = None
-
         if device_id_ext:
+            # If there is a device with this node ID but with a different hardware
+            # signature, remove the node ID based identifier from it. The hardware
+            # signature can be different for one of two reasons: 1) in the ideal
+            # scenario, the node was replaced with a different node that's a different
+            # device entirely, or 2) the device erroneously advertised the wrong
+            # hardware identifiers (this is known to happen due to poor RF conditions).
+            # While we would like to remove the old device automatically for case 1, we
+            # have no way to distinguish between these reasons so we leave it up to the
+            # user to remove the old device manually.
+            if (
+                node_id_device
+                and len(node_id_device.identifiers) == 2
+                and device_id_ext not in node_id_device.identifiers
+            ):
+                new_identifiers = node_id_device.identifiers.copy()
+                new_identifiers.remove(device_id)
+                self.dev_reg.async_update_device(
+                    node_id_device.id, new_identifiers=new_identifiers
+                )
+            # If there is an orphaned device that already exists with this hardware
+            # based identifier, add the node ID based identifier to the orphaned
+            # device.
+            if (
+                hardware_device := self.dev_reg.async_get_device(
+                    identifiers={device_id_ext}
+                )
+            ) and len(hardware_device.identifiers) == 1:
+                new_identifiers = hardware_device.identifiers.copy()
+                new_identifiers.add(device_id)
+                self.dev_reg.async_update_device(
+                    hardware_device.id, new_identifiers=new_identifiers
+                )
             ids = {device_id, device_id_ext}
         else:
             ids = {device_id}
@@ -470,9 +597,6 @@ class NodeEvents:
         LOGGER.debug("Processing node %s", node)
         # register (or update) node in device registry
         device = self.controller_events.register_node_in_dev_reg(node)
-        # We only want to create the defaultdict once, even on reinterviews
-        if device.id not in self.controller_events.registered_unique_ids:
-            self.controller_events.registered_unique_ids[device.id] = defaultdict(set)
 
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
@@ -534,6 +658,23 @@ class NodeEvents:
                 node,
             )
 
+        # After ensuring the node is set up in HA, we should check if the node's
+        # device config has changed, and if so, issue a repair registry entry for a
+        # possible reinterview
+        if not node.is_controller_node and await node.async_has_device_config_changed():
+            device_name = device.name_by_user or device.name or "Unnamed device"
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"device_config_file_changed.{device.id}",
+                data={"device_id": device.id, "device_name": device_name},
+                is_fixable=True,
+                is_persistent=False,
+                translation_key="device_config_file_changed",
+                translation_placeholders={"device_name": device_name},
+                severity=IssueSeverity.WARNING,
+            )
+
     async def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
@@ -593,7 +734,7 @@ class NodeEvents:
         )
         if (
             not value.node.ready
-            or not (device := self.dev_reg.async_get_device({device_id}))
+            or not (device := self.dev_reg.async_get_device(identifiers={device_id}))
             or value.value_id in self.controller_events.discovered_value_ids[device.id]
         ):
             return
@@ -615,7 +756,7 @@ class NodeEvents:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         driver = self.controller_events.driver_events.driver
         device = self.dev_reg.async_get_device(
-            {get_device_id(driver, notification.node)}
+            identifiers={get_device_id(driver, notification.node)}
         )
         # We assert because we know the device exists
         assert device
@@ -650,11 +791,14 @@ class NodeEvents:
             return
 
         driver = self.controller_events.driver_events.driver
-        notification: EntryControlNotification | NotificationNotification | PowerLevelNotification | MultilevelSwitchNotification = event[
-            "notification"
-        ]
+        notification: (
+            EntryControlNotification
+            | NotificationNotification
+            | PowerLevelNotification
+            | MultilevelSwitchNotification
+        ) = event["notification"]
         device = self.dev_reg.async_get_device(
-            {get_device_id(driver, notification.node)}
+            identifiers={get_device_id(driver, notification.node)}
         )
         # We assert because we know the device exists
         assert device
@@ -662,6 +806,7 @@ class NodeEvents:
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: driver.controller.home_id,
+            ATTR_ENDPOINT: notification.endpoint_idx,
             ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
         }
@@ -724,7 +869,9 @@ class NodeEvents:
         driver = self.controller_events.driver_events.driver
         disc_info = value_updates_disc_info[value.value_id]
 
-        device = self.dev_reg.async_get_device({get_device_id(driver, value.node)})
+        device = self.dev_reg.async_get_device(
+            identifiers={get_device_id(driver, value.node)}
+        )
         # We assert because we know the device exists
         assert device
 
@@ -810,6 +957,7 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     info = hass.data[DOMAIN][entry.entry_id]
+    client: ZwaveClient = info[DATA_CLIENT]
     driver_events: DriverEvents = info[DATA_DRIVER_EVENTS]
 
     tasks: list[Coroutine] = [
@@ -820,6 +968,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = all(await asyncio.gather(*tasks)) if tasks else True
 
+    if client.connected and client.driver:
+        await async_disable_server_logging_if_needed(hass, entry, client.driver)
     if DATA_CLIENT_LISTEN_TASK in info:
         await disconnect_client(hass, entry)
 
@@ -857,6 +1007,39 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await addon_manager.async_uninstall_addon()
     except AddonError as err:
         LOGGER.error(err)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    entry_hass_data = hass.data[DOMAIN][config_entry.entry_id]
+    client: ZwaveClient = entry_hass_data[DATA_CLIENT]
+
+    # Driver may not be ready yet so we can't allow users to remove a device since
+    # we need to check if the device is still known to the controller
+    if (driver := client.driver) is None:
+        LOGGER.error("Driver for %s is not ready", config_entry.title)
+        return False
+
+    # If a node is found on the controller that matches the hardware based identifier
+    # on the device, prevent the device from being removed.
+    if next(
+        (
+            node
+            for node in driver.controller.nodes.values()
+            if get_device_id_ext(driver, node) in device_entry.identifiers
+        ),
+        None,
+    ):
+        return False
+
+    controller_events: ControllerEvents = entry_hass_data[
+        DATA_DRIVER_EVENTS
+    ].controller_events
+    controller_events.registered_unique_ids.pop(device_entry.id, None)
+    controller_events.discovered_value_ids.pop(device_entry.id, None)
+    return True
 
 
 async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:

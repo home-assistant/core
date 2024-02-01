@@ -6,5 +6,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aio_geojson_nsw_rfs_incidents"],
-  "requirements": ["aio_geojson_nsw_rfs_incidents==0.6"]
+  "requirements": ["aio-geojson-nsw-rfs-incidents==0.7"]
 }

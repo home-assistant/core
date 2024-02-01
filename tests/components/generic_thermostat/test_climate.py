@@ -41,6 +41,7 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -131,6 +132,7 @@ async def test_heater_input_boolean(hass: HomeAssistant, setup_comp_1) -> None:
     _setup_sensor(hass, 18)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 23)
+    await hass.async_block_till_done()
 
     assert hass.states.get(heater_switch).state == STATE_ON
 
@@ -172,8 +174,10 @@ async def test_heater_switch(
     assert hass.states.get(heater_switch).state == STATE_ON
 
 
-async def test_unique_id(hass: HomeAssistant, setup_comp_1) -> None:
-    """Test heater switching input_boolean."""
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp_1
+) -> None:
+    """Test setting a unique ID."""
     unique_id = "some_unique_id"
     _setup_sensor(hass, 18)
     _setup_switch(hass, True)
@@ -191,8 +195,6 @@ async def test_unique_id(hass: HomeAssistant, setup_comp_1) -> None:
         },
     )
     await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(ENTITY)
     assert entry
@@ -387,7 +389,7 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, setup_comp_2) -> Non
     await common.async_set_preset_mode(hass, "none")
     state = hass.states.get(ENTITY)
     assert state.attributes.get("preset_mode") == "none"
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await common.async_set_preset_mode(hass, "Sleep")
     state = hass.states.get(ENTITY)
     assert state.attributes.get("preset_mode") == "none"
@@ -1315,7 +1317,7 @@ async def test_restore_state(hass: HomeAssistant, hvac_mode) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1353,7 +1355,7 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1430,7 +1432,7 @@ async def test_restore_will_turn_off_(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(
         hass, input_boolean.DOMAIN, {"input_boolean": {"test": None}}
@@ -1478,7 +1480,7 @@ async def test_restore_will_turn_off_when_loaded_second(hass: HomeAssistant) -> 
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await hass.async_block_till_done()
     assert hass.states.get(heater_switch) is None

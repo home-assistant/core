@@ -30,11 +30,39 @@
       }
     },
     "sensor": {
+      "activity": {
+        "name": "Activity",
+        "state": {
+          "good": "Good",
+          "low": "Low",
+          "ok": "OK"
+        }
+      },
+      "activity_time": {
+        "name": "Activity time"
+      },
+      "calories": {
+        "name": "Calories burned"
+      },
       "daily_goal": {
         "name": "Daily goal"
       },
-      "minutes_active": {
-        "name": "Minutes active"
+      "minutes_day_sleep": {
+        "name": "Day sleep"
+      },
+      "minutes_night_sleep": {
+        "name": "Night sleep"
+      },
+      "rest_time": {
+        "name": "Rest time"
+      },
+      "sleep": {
+        "name": "Sleep",
+        "state": {
+          "good": "[%key:component::tractive::entity::sensor::activity::state::good%]",
+          "low": "[%key:component::tractive::entity::sensor::activity::state::low%]",
+          "ok": "[%key:component::tractive::entity::sensor::activity::state::ok%]"
+        }
       },
       "tracker_battery_level": {
         "name": "Tracker battery"

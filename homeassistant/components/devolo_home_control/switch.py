@@ -41,10 +41,12 @@ async def async_setup_entry(
 class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
     """Representation of a switch."""
 
+    _attr_name = None
+
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
-        """Initialize an devolo Switch."""
+        """Initialize a devolo Switch."""
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,

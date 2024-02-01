@@ -1,0 +1,30 @@
+{
+  "config": {
+    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      }
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cpm": {
+        "name": "Counts per minute"
+      }
+    }
+  }
+}

@@ -34,6 +34,8 @@ class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot switch."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_translation_key = "bot"
+    _attr_name = None
     _device: switchbot.Switchbot
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:

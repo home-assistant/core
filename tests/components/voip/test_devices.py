@@ -19,7 +19,9 @@ async def test_device_registry_info(
     voip_device = voip_devices.async_get_or_create(call_info)
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, call_info.caller_ip)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, call_info.caller_ip)}
+    )
     assert device is not None
     assert device.name == call_info.caller_ip
     assert device.manufacturer == "Grandstream"
@@ -32,7 +34,9 @@ async def test_device_registry_info(
 
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, call_info.caller_ip)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, call_info.caller_ip)}
+    )
     assert device.sw_version == "2.0.0.0"
 
 
@@ -47,7 +51,9 @@ async def test_device_registry_info_from_unknown_phone(
     voip_device = voip_devices.async_get_or_create(call_info)
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, call_info.caller_ip)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, call_info.caller_ip)}
+    )
     assert device.manufacturer is None
     assert device.model == "Unknown"
     assert device.sw_version is None

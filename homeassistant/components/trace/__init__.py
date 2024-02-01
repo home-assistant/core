@@ -37,12 +37,14 @@ TRACE_CONFIG_SCHEMA = {
     vol.Optional(CONF_STORED_TRACES, default=DEFAULT_STORED_TRACES): cv.positive_int
 }
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 
 @callback
 def _get_data(hass: HomeAssistant) -> TraceData:
-    return hass.data[DATA_TRACE]
+    return hass.data[DATA_TRACE]  # type: ignore[no-any-return]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -10,6 +10,7 @@ from zhaquirks.const import (
     OUTPUT_CLUSTERS,
     PROFILE_ID,
 )
+from zhaquirks.tuya.ts0601_valve import ParksideTuyaValveManufCluster
 from zigpy.const import SIG_EP_PROFILE
 from zigpy.exceptions import ZigbeeException
 import zigpy.profiles.zha as zha
@@ -29,12 +30,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
-
-from tests.common import mock_coro
 
 
 @pytest.fixture(autouse=True)
@@ -49,6 +49,7 @@ def button_platform_only():
             Platform.NUMBER,
             Platform.SELECT,
             Platform.SENSOR,
+            Platform.SWITCH,
         ),
     ):
         yield
@@ -107,13 +108,21 @@ async def tuya_water_valve(hass, zigpy_device_mock, zha_device_joined_restored):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                SIG_EP_INPUT: [general.Basic.cluster_id],
-                SIG_EP_OUTPUT: [],
-                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
-            }
+                PROFILE_ID: zha.PROFILE_ID,
+                DEVICE_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                INPUT_CLUSTERS: [
+                    general.Basic.cluster_id,
+                    general.Identify.cluster_id,
+                    general.Groups.cluster_id,
+                    general.Scenes.cluster_id,
+                    general.OnOff.cluster_id,
+                    ParksideTuyaValveManufCluster.cluster_id,
+                ],
+                OUTPUT_CLUSTERS: [general.Time.cluster_id, general.Ota.cluster_id],
+            },
         },
         manufacturer="_TZE200_htnnfasr",
-        quirk=FrostLockQuirk,
+        model="TS0601",
     )
 
     zha_device = await zha_device_joined_restored(zigpy_device)
@@ -127,13 +136,13 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
     entity_registry = er.async_get(hass)
     zha_device, cluster = contact_sensor
     assert cluster is not None
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
+    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.IDENTIFY
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -141,7 +150,7 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
 
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -158,7 +167,7 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "2021-11-04T16:37:00+00:00"
-    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
+    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.IDENTIFY
 
 
 async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
@@ -167,7 +176,7 @@ async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
     entity_registry = er.async_get(hass)
     zha_device, cluster = tuya_water_valve
     assert cluster is not None
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = find_entity_id(DOMAIN, zha_device, hass, qualifier="frost_lock_reset")
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
@@ -181,7 +190,7 @@ async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
 
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -190,8 +199,9 @@ async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
             blocking=True,
         )
         await hass.async_block_till_done()
-        assert len(cluster.write_attributes.mock_calls) == 1
-        assert cluster.write_attributes.call_args == call({"frost_lock_reset": 0})
+        assert cluster.write_attributes.mock_calls == [
+            call({"frost_lock_reset": 0}, manufacturer=None)
+        ]
 
     state = hass.states.get(entity_id)
     assert state
@@ -200,11 +210,17 @@ async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
     cluster.write_attributes.reset_mock()
     cluster.write_attributes.side_effect = ZigbeeException
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call({"frost_lock_reset": 0})
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    # There are three retries
+    assert cluster.write_attributes.mock_calls == [
+        call({"frost_lock_reset": 0}, manufacturer=None),
+        call({"frost_lock_reset": 0}, manufacturer=None),
+        call({"frost_lock_reset": 0}, manufacturer=None),
+    ]

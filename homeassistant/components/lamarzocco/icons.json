@@ -1,0 +1,102 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "water_tank": {
+        "default": "mdi:water",
+        "state": {
+          "on": "mdi:water-alert",
+          "off": "mdi:water-check"
+        }
+      },
+      "brew_active": {
+        "default": "mdi:cup",
+        "state": {
+          "on": "mdi:cup-water",
+          "off": "mdi:cup-off"
+        }
+      }
+    },
+    "button": {
+      "start_backflush": {
+        "default": "mdi:water-sync"
+      }
+    },
+    "number": {
+      "coffee_temp": {
+        "default": "mdi:thermometer-water"
+      },
+      "steam_temp": {
+        "default": "mdi:thermometer-water"
+      },
+      "tea_water_duration": {
+        "default": "mdi:timer-sand"
+      }
+    },
+    "select": {
+      "steam_temp_select": {
+        "default": "mdi:thermometer",
+        "state": {
+          "1": "mdi:thermometer-low",
+          "2": "mdi:thermometer",
+          "3": "mdi:thermometer-high"
+        }
+      },
+      "prebrew_infusion_select": {
+        "default": "mdi:water-pump-off",
+        "state": {
+          "disabled": "mdi:water-pump-off",
+          "prebrew": "mdi:water-pump",
+          "preinfusion": "mdi:water-pump"
+        }
+      }
+    },
+    "sensor": {
+      "drink_stats_coffee": {
+        "default": "mdi:chart-line"
+      },
+      "drink_stats_flushing": {
+        "default": "mdi:chart-line"
+      },
+      "shot_timer": {
+        "default": "mdi:timer"
+      },
+      "current_temp_coffee": {
+        "default": "mdi:thermometer"
+      },
+      "current_temp_steam": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "switch": {
+      "main": {
+        "default": "mdi:power",
+        "state": {
+          "on": "mdi:power",
+          "off": "mdi:power-off"
+        }
+      },
+      "auto_on_off": {
+        "default": "mdi:alarm",
+        "state": {
+          "on": "mdi:alarm",
+          "off": "mdi:alarm-off"
+        }
+      },
+      "steam_boiler": {
+        "default": "mdi:water-boiler",
+        "state": {
+          "on": "mdi:water-boiler",
+          "off": "mdi:water-boiler-off"
+        }
+      }
+    },
+    "update": {
+      "machine_firmware": {
+        "default": "mdi:cloud-download"
+      },
+      "gateway_firmware": {
+        "default": "mdi:cloud-download"
+      }
+    }
+  }
+}

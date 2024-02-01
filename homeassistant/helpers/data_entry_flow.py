@@ -90,7 +90,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 class FlowManagerResourceView(_BaseFlowManagerView):
     """View to interact with the flow manager."""
 
-    async def get(self, request: web.Request, flow_id: str) -> web.Response:
+    async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         try:
             result = await self._flow_mgr.async_configure(flow_id)
@@ -110,10 +110,8 @@ class FlowManagerResourceView(_BaseFlowManagerView):
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
-        except vol.Invalid as ex:
-            return self.json_message(
-                f"User input malformed: {ex}", HTTPStatus.BAD_REQUEST
-            )
+        except data_entry_flow.InvalidData as ex:
+            return self.json({"errors": ex.schema_errors}, HTTPStatus.BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 

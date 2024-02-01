@@ -9,7 +9,7 @@ from datetime import (
     time as time_sys,
     timedelta,
 )
-from enum import Enum
+from enum import Enum, StrEnum
 import inspect
 import logging
 from numbers import Number
@@ -59,6 +59,7 @@ from homeassistant.const import (
     CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
+    CONF_RESPONSE_VARIABLE,
     CONF_SCAN_INTERVAL,
     CONF_SCENE,
     CONF_SEQUENCE,
@@ -66,6 +67,7 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
+    CONF_SET_CONVERSATION_RESPONSE,
     CONF_STATE,
     CONF_STOP,
     CONF_TARGET,
@@ -86,23 +88,39 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
     async_get_hass,
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.generated import currencies
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.generated.languages import LANGUAGES
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
 
-# pylint: disable=invalid-name
-
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+
+
+class UrlProtocolSchema(StrEnum):
+    """Valid URL protocol schema values."""
+
+    HTTP = "http"
+    HTTPS = "https"
+    HOMEASSISTANT = "homeassistant"
+
+
+EXTERNAL_URL_PROTOCOL_SCHEMA_LIST = frozenset(
+    {UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
+)
+CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST = frozenset(
+    {UrlProtocolSchema.HOMEASSISTANT, UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
+)
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -187,12 +205,9 @@ def boolean(value: Any) -> bool:
     raise vol.Invalid(f"invalid boolean value {value}")
 
 
-_WS = re.compile("\\s*")
-
-
 def whitespace(value: Any) -> str:
     """Validate result contains only whitespace."""
-    if isinstance(value, str) and _WS.fullmatch(value):
+    if isinstance(value, str) and (value == "" or value.isspace()):
         return value
 
     raise vol.Invalid(f"contains non-whitespace: {value}")
@@ -335,6 +350,30 @@ comp_entity_ids_or_uuids = vol.Any(
     vol.All(vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
     entity_ids_or_uuids,
 )
+
+
+def domain_key(config_key: Any) -> str:
+    """Validate a top level config key with an optional label and return the domain.
+
+    A domain is separated from a label by one or more spaces, empty labels are not
+    allowed.
+
+    Examples:
+    'hue' returns 'hue'
+    'hue 1' returns 'hue'
+    'hue  1' returns 'hue'
+    'hue ' raises
+    'hue  ' raises
+    """
+    if not isinstance(config_key, str):
+        raise vol.Invalid("invalid domain", path=[config_key])
+
+    parts = config_key.partition(" ")
+    _domain = parts[0] if parts[2].strip(" ") else config_key
+    if not _domain or _domain.strip(" ") != _domain:
+        raise vol.Invalid("invalid domain", path=[config_key])
+
+    return _domain
 
 
 def entity_domain(domain: str | list[str]) -> Callable[[Any], str]:
@@ -568,7 +607,11 @@ def string(value: Any) -> str:
         raise vol.Invalid("string value is None")
 
     # This is expected to be the most common case, so check it first.
-    if type(value) is str:  # pylint: disable=unidiomatic-typecheck
+    if (
+        type(value) is str  # noqa: E721
+        or type(value) is NodeStrClass  # noqa: E721
+        or isinstance(value, str)
+    ):
         return value
 
     if isinstance(value, template_helper.ResultWrapper):
@@ -583,7 +626,7 @@ def string(value: Any) -> str:
 def string_with_no_html(value: Any) -> str:
     """Validate that the value is a string without HTML."""
     value = string(value)
-    regex = re.compile(r"<[a-z][\s\S]*>")
+    regex = re.compile(r"<[a-z].*?>", re.IGNORECASE)
     if regex.search(value):
         raise vol.Invalid("the string should not contain HTML")
     return str(value)
@@ -607,7 +650,7 @@ def template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value should be a string")
 
     hass: HomeAssistant | None = None
-    with contextlib.suppress(LookupError):
+    with contextlib.suppress(HomeAssistantError):
         hass = async_get_hass()
 
     template_value = template_helper.Template(str(value), hass)
@@ -629,7 +672,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value does not contain a dynamic template")
 
     hass: HomeAssistant | None = None
-    with contextlib.suppress(LookupError):
+    with contextlib.suppress(HomeAssistantError):
         hass = async_get_hass()
 
     template_value = template_helper.Template(str(value), hass)
@@ -722,18 +765,25 @@ def socket_timeout(value: Any | None) -> object:
             return float_value
         raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
     except Exception as err:
-        raise vol.Invalid(f"Invalid socket timeout: {err}")
+        raise vol.Invalid(f"Invalid socket timeout: {err}") from err
 
 
-# pylint: disable=no-value-for-parameter
-def url(value: Any) -> str:
+def url(
+    value: Any,
+    _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
+) -> str:
     """Validate an URL."""
     url_in = str(value)
 
-    if urlparse(url_in).scheme in ["http", "https"]:
+    if urlparse(url_in).scheme in _schema_list:
         return cast(str, vol.Schema(vol.Url())(url_in))
 
     raise vol.Invalid("invalid url")
+
+
+def configuration_url(value: Any) -> str:
+    """Validate an URL that allows the homeassistant schema."""
+    return url(value, CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST)
 
 
 def url_no_path(value: Any) -> str:
@@ -759,7 +809,7 @@ def uuid4_hex(value: Any) -> str:
     try:
         result = UUID(value, version=4)
     except (ValueError, AttributeError, TypeError) as error:
-        raise vol.Invalid("Invalid Version4 UUID", error_message=str(error))
+        raise vol.Invalid("Invalid Version4 UUID", error_message=str(error)) from error
 
     if result.hex != value.lower():
         # UUID() will create a uuid4 if input is invalid
@@ -866,7 +916,7 @@ def _deprecated_or_removed(
 
             logger_func(warning, *arguments)
             value = config[key]
-            if replacement_key:
+            if replacement_key or option_removed:
                 config.pop(key)
         else:
             value = default
@@ -1074,6 +1124,87 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     return validator
 
 
+def _no_yaml_config_schema(
+    domain: str,
+    issue_base: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+    logger_func = logging.getLogger(module_name).error
+
+    def raise_issue() -> None:
+        # pylint: disable-next=import-outside-toplevel
+        from .issue_registry import IssueSeverity, async_create_issue
+
+        # HomeAssistantError is raised if called from the wrong thread
+        with contextlib.suppress(HomeAssistantError):
+            hass = async_get_hass()
+            async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"{issue_base}_{domain}",
+                is_fixable=False,
+                issue_domain=domain,
+                severity=IssueSeverity.ERROR,
+                translation_key=translation_key,
+                translation_placeholders={"domain": domain} | translation_placeholders,
+            )
+
+    def validator(config: dict) -> dict:
+        if domain in config:
+            logger_func(
+                (
+                    "The %s integration does not support YAML setup, please remove it "
+                    "from your configuration file"
+                ),
+                domain,
+            )
+            raise_issue()
+        return config
+
+    return validator
+
+
+def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML.
+
+    Use this when an integration's __init__.py defines setup or async_setup
+    but setup from yaml is not supported.
+    """
+
+    return _no_yaml_config_schema(
+        domain,
+        "config_entry_only",
+        "config_entry_only",
+        {"add_integration": f"/config/integrations/dashboard/add?domain={domain}"},
+    )
+
+
+def platform_only_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML.
+
+    Use this when an integration's __init__.py defines setup or async_setup
+    but setup from the integration key is not supported.
+    """
+
+    return _no_yaml_config_schema(
+        domain,
+        "platform_only",
+        "platform_only",
+        {},
+    )
+
+
 PLATFORM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): string,
@@ -1137,6 +1268,9 @@ def make_entity_service_schema(
     )
 
 
+SCRIPT_CONVERSATION_RESPONSE_SCHEMA = vol.Any(template, None)
+
+
 SCRIPT_VARIABLES_SCHEMA = vol.All(
     vol.Schema({str: template_complex}),
     # pylint: disable-next=unnecessary-lambda
@@ -1152,7 +1286,7 @@ def script_action(value: Any) -> dict:
     try:
         action = determine_script_action(value)
     except ValueError as err:
-        raise vol.Invalid(str(err))
+        raise vol.Invalid(str(err)) from err
 
     return ACTION_TYPE_SCHEMAS[action](value)
 
@@ -1192,6 +1326,7 @@ SERVICE_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(TARGET_SERVICE_FIELDS, dynamic_template),
+            vol.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.
             vol.Remove("metadata"): dict,
         }
@@ -1252,7 +1387,7 @@ STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
 )
 
 
-def STATE_CONDITION_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
+def STATE_CONDITION_SCHEMA(value: Any) -> dict:
     """Validate a state condition."""
     if not isinstance(value, dict):
         raise vol.Invalid("Expected a dictionary")
@@ -1452,6 +1587,7 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+CONDITIONS_SCHEMA = vol.All(ensure_list, [CONDITION_SCHEMA])
 
 dynamic_template_condition_action = vol.All(
     # Wrap a shorthand template condition action in a template condition
@@ -1610,11 +1746,25 @@ _SCRIPT_SET_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(
+            CONF_SET_CONVERSATION_RESPONSE
+        ): SCRIPT_CONVERSATION_RESPONSE_SCHEMA,
+    }
+)
+
 _SCRIPT_STOP_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_STOP): vol.Any(None, string),
-        vol.Optional(CONF_ERROR, default=False): boolean,
+        vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
+        vol.Exclusive(
+            CONF_RESPONSE_VARIABLE,
+            "error_or_response",
+            msg="not allowed to add a response to an error stop action",
+        ): str,
     }
 )
 
@@ -1643,20 +1793,21 @@ _SCRIPT_PARALLEL_SCHEMA = vol.Schema(
 )
 
 
-SCRIPT_ACTION_DELAY = "delay"
-SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
-SCRIPT_ACTION_CHECK_CONDITION = "condition"
-SCRIPT_ACTION_FIRE_EVENT = "event"
-SCRIPT_ACTION_CALL_SERVICE = "call_service"
-SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
 SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
-SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_CALL_SERVICE = "call_service"
+SCRIPT_ACTION_CHECK_CONDITION = "condition"
 SCRIPT_ACTION_CHOOSE = "choose"
-SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
-SCRIPT_ACTION_VARIABLES = "variables"
-SCRIPT_ACTION_STOP = "stop"
+SCRIPT_ACTION_DELAY = "delay"
+SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
+SCRIPT_ACTION_FIRE_EVENT = "event"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
+SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_SET_CONVERSATION_RESPONSE = "set_conversation_response"
+SCRIPT_ACTION_STOP = "stop"
+SCRIPT_ACTION_VARIABLES = "variables"
+SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
+SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1703,24 +1854,28 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_PARALLEL in action:
         return SCRIPT_ACTION_PARALLEL
 
+    if CONF_SET_CONVERSATION_RESPONSE in action:
+        return SCRIPT_ACTION_SET_CONVERSATION_RESPONSE
+
     raise ValueError("Unable to determine action")
 
 
 ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
-    SCRIPT_ACTION_CALL_SERVICE: SERVICE_SCHEMA,
-    SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
-    SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
-    SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
-    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
-    SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
-    SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_CALL_SERVICE: SERVICE_SCHEMA,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
     SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
-    SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
-    SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
-    SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
+    SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
+    SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
+    SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
+    SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA,
+    SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
+    SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
+    SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
+    SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
 }
 
 

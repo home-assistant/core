@@ -1,10 +1,8 @@
 """The tests the History component websocket_api."""
-# pylint: disable=protected-access,invalid-name
 import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
-import async_timeout
 from freezegun import freeze_time
 import pytest
 
@@ -560,12 +558,12 @@ async def test_history_stream_significant_domain_historical_only(
             "no_attributes": True,
         }
     )
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 1
     assert response["type"] == "result"
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response == {
         "event": {
@@ -591,13 +589,13 @@ async def test_history_stream_significant_domain_historical_only(
             "minimal_response": True,
         }
     )
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 2
     assert response["type"] == "result"
 
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     sensor_test_history = response["event"]["states"]["climate.test"]
     assert len(sensor_test_history) == 5
@@ -626,13 +624,13 @@ async def test_history_stream_significant_domain_historical_only(
             "no_attributes": False,
         }
     )
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 3
     assert response["type"] == "result"
 
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     sensor_test_history = response["event"]["states"]["climate.test"]
 
@@ -663,13 +661,13 @@ async def test_history_stream_significant_domain_historical_only(
             "no_attributes": False,
         }
     )
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 4
     assert response["type"] == "result"
 
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     sensor_test_history = response["event"]["states"]["climate.test"]
 
@@ -708,13 +706,13 @@ async def test_history_stream_significant_domain_historical_only(
             "no_attributes": False,
         }
     )
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 5
     assert response["type"] == "result"
 
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     sensor_test_history = response["event"]["states"]["climate.test"]
 

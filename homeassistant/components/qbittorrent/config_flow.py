@@ -9,13 +9,7 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
@@ -61,16 +55,3 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = self.add_suggested_values_to_schema(USER_DATA_SCHEMA, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        self._async_abort_entries_match({CONF_URL: config[CONF_URL]})
-        return self.async_create_entry(
-            title=config.get(CONF_NAME, DEFAULT_NAME),
-            data={
-                CONF_URL: config[CONF_URL],
-                CONF_USERNAME: config[CONF_USERNAME],
-                CONF_PASSWORD: config[CONF_PASSWORD],
-                CONF_VERIFY_SSL: True,
-            },
-        )

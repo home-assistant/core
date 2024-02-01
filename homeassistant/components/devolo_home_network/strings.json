@@ -48,6 +48,11 @@
         "name": "Start WPS"
       }
     },
+    "image": {
+      "image_guest_wifi": {
+        "name": "Guest Wifi credentials as QR code"
+      }
+    },
     "sensor": {
       "connected_plc_devices": {
         "name": "Connected PLC devices"
@@ -57,6 +62,12 @@
       },
       "neighboring_wifi_networks": {
         "name": "Neighboring Wifi networks"
+      },
+      "plc_rx_rate": {
+        "name": "PLC downlink PHY rate"
+      },
+      "plc_tx_rate": {
+        "name": "PLC uplink PHY rate"
       }
     },
     "switch": {

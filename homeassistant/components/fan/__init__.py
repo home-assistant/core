@@ -1,13 +1,12 @@
 """Provides functionality to interact with fans."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
 import math
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -18,11 +17,18 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -32,6 +38,12 @@ from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,10 +64,18 @@ class FanEntityFeature(IntFlag):
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the FanEntityFeature enum instead.
-SUPPORT_SET_SPEED = 1
-SUPPORT_OSCILLATE = 2
-SUPPORT_DIRECTION = 4
-SUPPORT_PRESET_MODE = 8
+_DEPRECATED_SUPPORT_SET_SPEED = DeprecatedConstantEnum(
+    FanEntityFeature.SET_SPEED, "2025.1"
+)
+_DEPRECATED_SUPPORT_OSCILLATE = DeprecatedConstantEnum(
+    FanEntityFeature.OSCILLATE, "2025.1"
+)
+_DEPRECATED_SUPPORT_DIRECTION = DeprecatedConstantEnum(
+    FanEntityFeature.DIRECTION, "2025.1"
+)
+_DEPRECATED_SUPPORT_PRESET_MODE = DeprecatedConstantEnum(
+    FanEntityFeature.PRESET_MODE, "2025.1"
+)
 
 SERVICE_INCREASE_SPEED = "increase_speed"
 SERVICE_DECREASE_SPEED = "decrease_speed"
@@ -77,8 +97,19 @@ ATTR_PRESET_MODES = "preset_modes"
 # mypy: disallow-any-generics
 
 
-class NotValidPresetModeError(ValueError):
-    """Exception class when the preset_mode in not in the preset_modes list."""
+class NotValidPresetModeError(ServiceValidationError):
+    """Raised when the preset_mode is not in the preset_modes list."""
+
+    def __init__(
+        self, *args: object, translation_placeholders: dict[str, str] | None = None
+    ) -> None:
+        """Initialize the exception."""
+        super().__init__(
+            *args,
+            translation_domain=DOMAIN,
+            translation_key="not_valid_preset_mode",
+            translation_placeholders=translation_placeholders,
+        )
 
 
 @bind_hass
@@ -107,7 +138,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             vol.Optional(ATTR_PRESET_MODE): cv.string,
         },
-        "async_turn_on",
+        "async_handle_turn_on_service",
     )
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
@@ -156,7 +187,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
         {vol.Required(ATTR_PRESET_MODE): cv.string},
-        "async_set_preset_mode",
+        "async_handle_set_preset_mode_service",
         [FanEntityFeature.SET_SPEED, FanEntityFeature.PRESET_MODE],
     )
 
@@ -175,13 +206,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class FanEntityDescription(ToggleEntityDescription):
+class FanEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
     """A class that describes fan entities."""
 
 
-class FanEntity(ToggleEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "percentage",
+    "speed_count",
+    "current_direction",
+    "oscillating",
+    "supported_features",
+    "preset_mode",
+    "preset_modes",
+}
+
+
+class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for fan entities."""
+
+    _entity_component_unrecorded_attributes = frozenset({ATTR_PRESET_MODES})
 
     entity_description: FanEntityDescription
     _attr_current_direction: str | None = None
@@ -235,17 +278,30 @@ class FanEntity(ToggleEntity):
         """Set new preset mode."""
         raise NotImplementedError()
 
+    @final
+    async def async_handle_set_preset_mode_service(self, preset_mode: str) -> None:
+        """Validate and set new preset mode."""
+        self._valid_preset_mode_or_raise(preset_mode)
+        await self.async_set_preset_mode(preset_mode)
+
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
 
+    @final
+    @callback
     def _valid_preset_mode_or_raise(self, preset_mode: str) -> None:
         """Raise NotValidPresetModeError on invalid preset_mode."""
         preset_modes = self.preset_modes
         if not preset_modes or preset_mode not in preset_modes:
+            preset_modes_str: str = ", ".join(preset_modes or [])
             raise NotValidPresetModeError(
                 f"The preset_mode {preset_mode} is not a valid preset_mode:"
-                f" {preset_modes}"
+                f" {preset_modes}",
+                translation_placeholders={
+                    "preset_mode": preset_mode,
+                    "preset_modes": preset_modes_str,
+                },
             )
 
     def set_direction(self, direction: str) -> None:
@@ -264,6 +320,18 @@ class FanEntity(ToggleEntity):
     ) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
+
+    @final
+    async def async_handle_turn_on_service(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Validate and turn on the fan."""
+        if preset_mode is not None:
+            self._valid_preset_mode_or_raise(preset_mode)
+        await self.async_turn_on(percentage, preset_mode, **kwargs)
 
     async def async_turn_on(
         self,
@@ -296,14 +364,14 @@ class FanEntity(ToggleEntity):
             self.percentage is not None and self.percentage > 0
         ) or self.preset_mode is not None
 
-    @property
+    @cached_property
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         if hasattr(self, "_attr_percentage"):
             return self._attr_percentage
         return 0
 
-    @property
+    @cached_property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         if hasattr(self, "_attr_speed_count"):
@@ -315,12 +383,12 @@ class FanEntity(ToggleEntity):
         """Return the step size for percentage."""
         return 100 / self.speed_count
 
-    @property
+    @cached_property
     def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
         return self._attr_current_direction
 
-    @property
+    @cached_property
     def oscillating(self) -> bool | None:
         """Return whether or not the fan is currently oscillating."""
         return self._attr_oscillating
@@ -329,10 +397,11 @@ class FanEntity(ToggleEntity):
     def capability_attributes(self) -> dict[str, list[str] | None]:
         """Return capability attributes."""
         attrs = {}
+        supported_features = self.supported_features_compat
 
         if (
-            self.supported_features & FanEntityFeature.SET_SPEED
-            or self.supported_features & FanEntityFeature.PRESET_MODE
+            FanEntityFeature.SET_SPEED in supported_features
+            or FanEntityFeature.PRESET_MODE in supported_features
         ):
             attrs[ATTR_PRESET_MODES] = self.preset_modes
 
@@ -343,32 +412,44 @@ class FanEntity(ToggleEntity):
     def state_attributes(self) -> dict[str, float | str | None]:
         """Return optional state attributes."""
         data: dict[str, float | str | None] = {}
-        supported_features = self.supported_features
+        supported_features = self.supported_features_compat
 
-        if supported_features & FanEntityFeature.DIRECTION:
+        if FanEntityFeature.DIRECTION in supported_features:
             data[ATTR_DIRECTION] = self.current_direction
 
-        if supported_features & FanEntityFeature.OSCILLATE:
+        if FanEntityFeature.OSCILLATE in supported_features:
             data[ATTR_OSCILLATING] = self.oscillating
 
-        if supported_features & FanEntityFeature.SET_SPEED:
+        has_set_speed = FanEntityFeature.SET_SPEED in supported_features
+
+        if has_set_speed:
             data[ATTR_PERCENTAGE] = self.percentage
             data[ATTR_PERCENTAGE_STEP] = self.percentage_step
 
-        if (
-            supported_features & FanEntityFeature.PRESET_MODE
-            or supported_features & FanEntityFeature.SET_SPEED
-        ):
+        if has_set_speed or FanEntityFeature.PRESET_MODE in supported_features:
             data[ATTR_PRESET_MODE] = self.preset_mode
 
         return data
 
-    @property
+    @cached_property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 
     @property
+    def supported_features_compat(self) -> FanEntityFeature:
+        """Return the supported features as FanEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = FanEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
+
+    @cached_property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite.
 
@@ -378,7 +459,7 @@ class FanEntity(ToggleEntity):
             return self._attr_preset_mode
         return None
 
-    @property
+    @cached_property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes.
 
@@ -387,3 +468,11 @@ class FanEntity(ToggleEntity):
         if hasattr(self, "_attr_preset_modes"):
             return self._attr_preset_modes
         return None
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

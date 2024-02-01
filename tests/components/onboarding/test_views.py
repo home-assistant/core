@@ -101,7 +101,8 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         "homeassistant.components.hassio.HassIO.get_ingress_panels",
         return_value={"panels": {}},
     ), patch.dict(
-        os.environ, {"SUPERVISOR_TOKEN": "123456"}
+        os.environ,
+        {"SUPERVISOR_TOKEN": "123456"},
     ):
         yield
 
@@ -117,6 +118,8 @@ def mock_default_integrations():
         "homeassistant.components.met.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.radio_browser.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.shopping_list.async_setup_entry", return_value=True
     ):
         yield
 
@@ -229,9 +232,7 @@ async def test_onboarding_user(
     assert resp.status == 200
     tokens = await resp.json()
 
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
     # Validate created areas
     assert len(area_registry.areas) == 3
@@ -344,9 +345,7 @@ async def test_onboarding_integration(
     assert const.STEP_INTEGRATION in hass_storage[const.DOMAIN]["data"]["done"]
     tokens = await resp.json()
 
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
     # Onboarding refresh token and new refresh token
     user = await hass.auth.async_get_user(hass_admin_user.id)
@@ -365,7 +364,7 @@ async def test_onboarding_integration_missing_credential(
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     refresh_token.credential = None
 
     client = await hass_client()
@@ -451,6 +450,48 @@ async def test_onboarding_core_sets_up_met(
 
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries("met")) == 1
+
+
+async def test_onboarding_core_sets_up_shopping_list(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    mock_default_integrations,
+) -> None:
+    """Test finishing the core step set up the shopping list."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries("shopping_list")) == 1
+
+
+async def test_onboarding_core_sets_up_google_translate(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    mock_default_integrations,
+) -> None:
+    """Test finishing the core step sets up google translate."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries("google_translate")) == 1
 
 
 async def test_onboarding_core_sets_up_radio_browser(

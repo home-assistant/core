@@ -1,0 +1,18 @@
+{
+  "services": {
+    "set_all_zones": {
+      "name": "Set all zones",
+      "description": "Sets all Blackbird zones to a single source.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of any blackbird zone."
+        },
+        "source": {
+          "name": "Source",
+          "description": "Name of source to switch to."
+        }
+      }
+    }
+  }
+}

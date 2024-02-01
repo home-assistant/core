@@ -7,7 +7,6 @@ DOMAIN = "subaru"
 FETCH_INTERVAL = 300
 UPDATE_INTERVAL = 7200
 CONF_UPDATE_ENABLED = "update_enabled"
-CONF_COUNTRY = "country"
 
 # entry fields
 ENTRY_CONTROLLER = "controller"
@@ -37,6 +36,7 @@ API_GEN_3 = "g3"
 MANUFACTURER = "Subaru"
 
 PLATFORMS = [
+    Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.SENSOR,
 ]

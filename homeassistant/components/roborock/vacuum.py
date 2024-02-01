@@ -2,6 +2,7 @@
 from typing import Any
 
 from roborock.code_mappings import RoborockStateCode
+from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.vacuum import (
@@ -75,13 +76,14 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.STATUS
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.CLEAN_SPOT
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
     )
+    _attr_translation_key = DOMAIN
+    _attr_name = None
 
     def __init__(
         self,
@@ -91,11 +93,18 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
         RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
-        self._attr_fan_speed_list = self._device_status.fan_power.keys()
+        self._attr_fan_speed_list = self._device_status.fan_power_options
+        self.api.add_listener(
+            RoborockDataProtocol.FAN_POWER, self._update_from_listener, self.api.cache
+        )
+        self.api.add_listener(
+            RoborockDataProtocol.STATE, self._update_from_listener, self.api.cache
+        )
 
     @property
     def state(self) -> str | None:
         """Return the status of the vacuum cleaner."""
+        assert self._device_status.state is not None
         return STATE_CODE_TO_STATE.get(self._device_status.state)
 
     @property
@@ -106,12 +115,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return self._device_status.fan_power.name
-
-    @property
-    def status(self) -> str | None:
-        """Return the status of the vacuum cleaner."""
-        return self._device_status.state.name
+        return self._device_status.fan_power_name
 
     async def async_start(self) -> None:
         """Start the vacuum."""
@@ -141,16 +145,8 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Set vacuum fan speed."""
         await self.send(
             RoborockCommand.SET_CUSTOM_MODE,
-            [self._device_status.fan_power.as_dict().get(fan_speed)],
+            [self._device_status.get_fan_speed_code(fan_speed)],
         )
-        await self.coordinator.async_request_refresh()
-
-    async def async_start_pause(self) -> None:
-        """Start, pause or resume the cleaning task."""
-        if self.state == STATE_CLEANING:
-            await self.async_pause()
-        else:
-            await self.async_start()
 
     async def async_send_command(
         self,

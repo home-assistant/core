@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -38,6 +39,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -111,6 +113,63 @@ async def test_controlling_state_via_topic(
 
     state = hass.states.get("text.test")
     assert state.state == ""
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                text.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "min": 5,
+                    "max": 5,
+                }
+            }
+        }
+    ],
+)
+async def test_forced_text_length(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a text entity that only allows a fixed length."""
+    await mqtt_mock_entry()
+
+    state = hass.states.get("text.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "state-topic", "12345")
+    state = hass.states.get("text.test")
+    assert state.state == "12345"
+
+    caplog.clear()
+    # Text too long
+    async_fire_mqtt_message(hass, "state-topic", "123456")
+    state = hass.states.get("text.test")
+    assert state.state == "12345"
+    assert (
+        "ValueError: Entity text.test provides state 123456 "
+        "which is too long (maximum length 5)" in caplog.text
+    )
+
+    caplog.clear()
+    # Text too short
+    async_fire_mqtt_message(hass, "state-topic", "1")
+    state = hass.states.get("text.test")
+    assert state.state == "12345"
+    assert (
+        "ValueError: Entity text.test provides state 1 "
+        "which is too short (minimum length 5)" in caplog.text
+    )
+    # Valid update
+    async_fire_mqtt_message(hass, "state-topic", "54321")
+    state = hass.states.get("text.test")
+    assert state.state == "54321"
 
 
 @pytest.mark.parametrize(
@@ -203,11 +262,13 @@ async def test_controlling_validation_state_via_topic(
     ],
 )
 async def test_attribute_validation_max_greater_then_min(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the validation of min and max configuration attributes."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
+    assert "text length min must be <= max" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -226,11 +287,13 @@ async def test_attribute_validation_max_greater_then_min(
     ],
 )
 async def test_attribute_validation_max_not_greater_then_max_state_length(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the max value of of max configuration attribute."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
+    assert "max text length must be <= 255" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -738,7 +801,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -758,3 +825,39 @@ async def test_unload_entry(
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            text.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", "My original text", "Changed text"),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)

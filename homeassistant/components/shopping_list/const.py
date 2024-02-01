@@ -1,6 +1,9 @@
 """All constants related to the shopping list component."""
+
+from homeassistant.const import EVENT_SHOPPING_LIST_UPDATED  # noqa: F401
+
 DOMAIN = "shopping_list"
-EVENT_SHOPPING_LIST_UPDATED = "shopping_list_updated"
+
 
 ATTR_REVERSE = "reverse"
 

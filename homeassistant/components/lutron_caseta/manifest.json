@@ -9,7 +9,7 @@
   },
   "iot_class": "local_push",
   "loggers": ["pylutron_caseta"],
-  "requirements": ["pylutron-caseta==0.18.1"],
+  "requirements": ["pylutron-caseta==0.19.0"],
   "zeroconf": [
     {
       "type": "_lutron._tcp.local.",

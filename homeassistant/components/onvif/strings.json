@@ -36,6 +36,9 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
+        "data_description": {
+          "host": "The hostname or IP address of your ONVIF device."
+        },
         "title": "Configure ONVIF device"
       },
       "configure_profile": {
@@ -65,6 +68,46 @@
           "enable_webhooks": "Enable Webhooks"
         },
         "title": "ONVIF Device Options"
+      }
+    }
+  },
+  "services": {
+    "ptz": {
+      "name": "PTZ",
+      "description": "If your ONVIF camera supports PTZ, you will be able to pan, tilt or zoom your camera.",
+      "fields": {
+        "tilt": {
+          "name": "Tilt",
+          "description": "Tilt direction."
+        },
+        "pan": {
+          "name": "Pan",
+          "description": "Pan direction."
+        },
+        "zoom": {
+          "name": "Zoom",
+          "description": "Zoom."
+        },
+        "distance": {
+          "name": "Distance",
+          "description": "Distance coefficient. Sets how much PTZ should be executed in one request."
+        },
+        "speed": {
+          "name": "Speed",
+          "description": "Speed coefficient. Sets how fast PTZ will be executed."
+        },
+        "continuous_duration": {
+          "name": "Continuous duration",
+          "description": "Set ContinuousMove delay in seconds before stopping the move."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "PTZ preset profile token. Sets the preset profile token which is executed with GotoPreset."
+        },
+        "move_mode": {
+          "name": "Move Mode",
+          "description": "PTZ moving mode."
+        }
       }
     }
   }

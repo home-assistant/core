@@ -40,6 +40,7 @@ async def async_setup_entry(
 class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
+    _attr_name = None
     _attr_assumed_state = True
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = (

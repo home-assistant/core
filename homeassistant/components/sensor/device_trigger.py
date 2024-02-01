@@ -1,7 +1,10 @@
 """Provides device triggers for sensors."""
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    async_get_entity_registry_entry_or_raise,
+)
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -53,6 +56,7 @@ CONF_NITROGEN_DIOXIDE = "nitrogen_dioxide"
 CONF_NITROGEN_MONOXIDE = "nitrogen_monoxide"
 CONF_NITROUS_OXIDE = "nitrous_oxide"
 CONF_OZONE = "ozone"
+CONF_PH = "ph"
 CONF_PM1 = "pm1"
 CONF_PM10 = "pm10"
 CONF_PM25 = "pm25"
@@ -72,6 +76,7 @@ CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
 CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
 CONF_VOLTAGE = "voltage"
 CONF_VOLUME = "volume"
+CONF_VOLUME_FLOW_RATE = "volume_flow_rate"
 CONF_WATER = "water"
 CONF_WEIGHT = "weight"
 CONF_WIND_SPEED = "wind_speed"
@@ -101,6 +106,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
     SensorDeviceClass.NITROUS_OXIDE: [{CONF_TYPE: CONF_NITROUS_OXIDE}],
     SensorDeviceClass.OZONE: [{CONF_TYPE: CONF_OZONE}],
+    SensorDeviceClass.PH: [{CONF_TYPE: CONF_PH}],
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_PM25}],
@@ -126,6 +132,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_VOLUME}],
     SensorDeviceClass.VOLUME_STORAGE: [{CONF_TYPE: CONF_VOLUME}],
+    SensorDeviceClass.VOLUME_FLOW_RATE: [{CONF_TYPE: CONF_VOLUME_FLOW_RATE}],
     SensorDeviceClass.WATER: [{CONF_TYPE: CONF_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_WEIGHT}],
     SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_WIND_SPEED}],
@@ -136,7 +143,7 @@ ENTITY_TRIGGERS = {
 TRIGGER_SCHEMA = vol.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_APPARENT_POWER,
@@ -162,6 +169,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_NITROGEN_MONOXIDE,
                     CONF_NITROUS_OXIDE,
                     CONF_OZONE,
+                    CONF_PH,
                     CONF_PM1,
                     CONF_PM10,
                     CONF_PM25,
@@ -180,6 +188,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_VOLTAGE,
                     CONF_VOLUME,
+                    CONF_VOLUME_FLOW_RATE,
                     CONF_WATER,
                     CONF_WEIGHT,
                     CONF_WIND_SPEED,
@@ -251,7 +260,7 @@ async def async_get_triggers(
                 **automation,
                 "platform": "device",
                 "device_id": device_id,
-                "entity_id": entry.entity_id,
+                "entity_id": entry.id,
                 "domain": DOMAIN,
             }
             for automation in templates
@@ -264,8 +273,10 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
+
     try:
-        unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])
+        entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
+        unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
     except HomeAssistantError:
         unit_of_measurement = None
 

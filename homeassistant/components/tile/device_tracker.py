@@ -13,6 +13,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
@@ -82,6 +83,8 @@ class TileDeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], TrackerE
     """Representation of a network infrastructure device."""
 
     _attr_icon = DEFAULT_ICON
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, entry: ConfigEntry, coordinator: DataUpdateCoordinator[None], tile: Tile
@@ -90,7 +93,6 @@ class TileDeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], TrackerE
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {}
-        self._attr_name = tile.name
         self._attr_unique_id = f"{entry.data[CONF_USERNAME]}_{tile.uuid}"
         self._entry = entry
         self._tile = tile
@@ -109,6 +111,11 @@ class TileDeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], TrackerE
         if not self._tile.accuracy:
             return super().location_accuracy
         return int(self._tile.accuracy)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(identifiers={(DOMAIN, self._tile.uuid)}, name=self._tile.name)
 
     @property
     def latitude(self) -> float | None:

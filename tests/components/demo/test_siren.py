@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -24,8 +25,18 @@ ENTITY_SIREN = "siren.siren"
 ENTITY_SIREN_WITH_ALL_FEATURES = "siren.siren_with_all_features"
 
 
+@pytest.fixture
+async def siren_only() -> None:
+    """Enable only the datetime platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.SIREN],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_demo_siren(hass):
+async def setup_demo_siren(hass: HomeAssistant, siren_only: None):
     """Initialize setup demo siren."""
     assert await async_setup_component(hass, DOMAIN, {"siren": {"platform": "demo"}})
     await hass.async_block_till_done()

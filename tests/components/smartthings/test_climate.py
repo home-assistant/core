@@ -15,16 +15,20 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.climate.const import ATTR_SWING_MODE
 from homeassistant.components.smartthings import climate
 from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.const import (
@@ -112,6 +116,10 @@ def thermostat_fixture(device_factory):
             ],
             Attribute.thermostat_operating_state: "idle",
             Attribute.humidity: 34,
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
         },
     )
     device.status.attributes[Attribute.temperature] = Status(70, "F", None)
@@ -151,6 +159,7 @@ def air_conditioner_fixture(device_factory):
             Capability.switch,
             Capability.temperature_measurement,
             Capability.thermostat_cooling_setpoint,
+            Capability.fan_oscillation_mode,
         ],
         status={
             Attribute.air_conditioner_mode: "auto",
@@ -178,6 +187,14 @@ def air_conditioner_fixture(device_factory):
             ],
             Attribute.switch: "on",
             Attribute.cooling_setpoint: 23,
+            "supportedAcOptionalMode": ["windFree"],
+            Attribute.supported_fan_oscillation_modes: [
+                "all",
+                "horizontal",
+                "vertical",
+                "fixed",
+            ],
+            Attribute.fan_oscillation_mode: "vertical",
         },
     )
     device.status.attributes[Attribute.temperature] = Status(24, "C", None)
@@ -196,6 +213,8 @@ async def test_legacy_thermostat_entity_state(
         == ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
@@ -223,6 +242,8 @@ async def test_basic_thermostat_entity_state(
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert ATTR_HVAC_ACTION not in state.attributes
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
@@ -244,6 +265,8 @@ async def test_thermostat_entity_state(hass: HomeAssistant, thermostat) -> None:
         == ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
@@ -271,6 +294,8 @@ async def test_buggy_thermostat_entity_state(
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.state is STATE_UNKNOWN
     assert state.attributes[ATTR_TEMPERATURE] is None
@@ -299,7 +324,12 @@ async def test_air_conditioner_entity_state(
     assert state.state == HVACMode.HEAT_COOL
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        == ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVACMode.COOL,
@@ -576,10 +606,51 @@ async def test_entity_and_device_attributes(hass: HomeAssistant, thermostat) -> 
     assert entry
     assert entry.unique_id == thermostat.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, thermostat.device_id)})
+    entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, thermostat.device_id)}
+    )
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, thermostat.device_id)}
     assert entry.name == thermostat.label
-    assert entry.model == thermostat.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
+
+
+async def test_set_windfree_off(hass: HomeAssistant, air_conditioner) -> None:
+    """Test if the windfree preset can be turned on and is turned off when fan mode is set."""
+    entity_ids = ["climate.air_conditioner"]
+    air_conditioner.status.update_attribute_value(Attribute.switch, "on")
+    await setup_platform(hass, CLIMATE_DOMAIN, devices=[air_conditioner])
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_ids, ATTR_PRESET_MODE: "windFree"},
+        blocking=True,
+    )
+    state = hass.states.get("climate.air_conditioner")
+    assert state.attributes[ATTR_PRESET_MODE] == "windFree"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: entity_ids, ATTR_FAN_MODE: "low"},
+        blocking=True,
+    )
+    state = hass.states.get("climate.air_conditioner")
+    assert not state.attributes[ATTR_PRESET_MODE]
+
+
+async def test_set_swing_mode(hass: HomeAssistant, air_conditioner) -> None:
+    """Test the fan swing is set successfully."""
+    await setup_platform(hass, CLIMATE_DOMAIN, devices=[air_conditioner])
+    entity_ids = ["climate.air_conditioner"]
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_SWING_MODE,
+        {ATTR_ENTITY_ID: entity_ids, ATTR_SWING_MODE: "vertical"},
+        blocking=True,
+    )
+    state = hass.states.get("climate.air_conditioner")
+    assert state.attributes[ATTR_SWING_MODE] == "vertical"

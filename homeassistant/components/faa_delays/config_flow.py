@@ -1,5 +1,6 @@
 """Config flow for FAA Delays integration."""
 import logging
+from typing import Any
 
 from aiohttp import ClientConnectionError
 import faadelays
@@ -7,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -21,7 +23,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -35,10 +39,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await data.update()
 
-            except faadelays.InvalidAirport:
-                _LOGGER.error("Airport code %s is invalid", user_input[CONF_ID])
-                errors[CONF_ID] = "invalid_airport"
-
             except ClientConnectionError:
                 _LOGGER.error("Error connecting to FAA API")
                 errors["base"] = "cannot_connect"
@@ -49,11 +49,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 _LOGGER.debug(
-                    "Creating entry with id: %s, name: %s",
+                    "Creating entry with id: %s",
                     user_input[CONF_ID],
-                    data.name,
                 )
-                return self.async_create_entry(title=data.name, data=user_input)
+                return self.async_create_entry(title=data.code, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

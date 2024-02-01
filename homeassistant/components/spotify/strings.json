@@ -10,22 +10,23 @@
       }
     },
     "abort": {
-      "authorize_url_timeout": "Timeout generating authorize URL.",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "The Spotify integration is not configured. Please follow the documentation.",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "reauth_account_mismatch": "The Spotify account authenticated with, does not match the account needed re-authentication."
+      "reauth_account_mismatch": "The Spotify account authenticated with, does not match the account needed re-authentication.",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "connection_error": "Could not fetch account information. Is the user registered in the Spotify Developer Dashboard?"
     },
-    "create_entry": { "default": "Successfully authenticated with Spotify." }
+    "create_entry": {
+      "default": "Successfully authenticated with Spotify."
+    }
   },
   "system_health": {
     "info": {
       "api_endpoint_reachable": "Spotify API endpoint reachable"
-    }
-  },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Spotify YAML configuration has been removed",
-      "description": "Configuring Spotify using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }

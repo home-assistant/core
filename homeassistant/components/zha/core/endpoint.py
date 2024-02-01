@@ -2,20 +2,21 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
+import functools
 import logging
 from typing import TYPE_CHECKING, Any, Final, TypeVar
 
-import zigpy
 from zigpy.typing import EndpointType as ZigpyEndpointType
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from . import const, discovery, registries
 from .cluster_handlers import ClusterHandler
-from .cluster_handlers.general import MultistateInput
+from .helpers import get_zha_data
 
 if TYPE_CHECKING:
     from .cluster_handlers import ClientClusterHandler
@@ -27,7 +28,7 @@ ATTR_IN_CLUSTERS: Final[str] = "input_clusters"
 ATTR_OUT_CLUSTERS: Final[str] = "output_clusters"
 
 _LOGGER = logging.getLogger(__name__)
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 
 
 class Endpoint:
@@ -115,28 +116,27 @@ class Endpoint:
     def add_all_cluster_handlers(self) -> None:
         """Create and add cluster handlers for all input clusters."""
         for cluster_id, cluster in self.zigpy_endpoint.in_clusters.items():
-            cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-                cluster_id, ClusterHandler
+            cluster_handler_classes = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+                cluster_id, {None: ClusterHandler}
+            )
+            quirk_id = (
+                self.device.quirk_id
+                if self.device.quirk_id in cluster_handler_classes
+                else None
+            )
+            cluster_handler_class = cluster_handler_classes.get(
+                quirk_id, ClusterHandler
             )
 
             # Allow cluster handler to filter out bad matches
             if not cluster_handler_class.matches(cluster, self):
                 cluster_handler_class = ClusterHandler
 
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Creating cluster handler for cluster id: %s class: %s",
                 cluster_id,
                 cluster_handler_class,
             )
-            # really ugly hack to deal with xiaomi using the door lock cluster
-            # incorrectly.
-            if (
-                hasattr(cluster, "ep_attribute")
-                and cluster_id == zigpy.zcl.clusters.closures.DoorLock.cluster_id
-                and cluster.ep_attribute == "multistate_input"
-            ):
-                cluster_handler_class = MultistateInput
-            # end of ugly hack
 
             try:
                 cluster_handler = cluster_handler_class(cluster, self)
@@ -171,31 +171,43 @@ class Endpoint:
 
     async def async_initialize(self, from_cache: bool = False) -> None:
         """Initialize claimed cluster handlers."""
-        await self._execute_handler_tasks("async_initialize", from_cache)
+        await self._execute_handler_tasks(
+            "async_initialize", from_cache, max_concurrency=1
+        )
 
     async def async_configure(self) -> None:
         """Configure claimed cluster handlers."""
         await self._execute_handler_tasks("async_configure")
 
-    async def _execute_handler_tasks(self, func_name: str, *args: Any) -> None:
+    async def _execute_handler_tasks(
+        self, func_name: str, *args: Any, max_concurrency: int | None = None
+    ) -> None:
         """Add a throttled cluster handler task and swallow exceptions."""
         cluster_handlers = [
             *self.claimed_cluster_handlers.values(),
             *self.client_cluster_handlers.values(),
         ]
         tasks = [getattr(ch, func_name)(*args) for ch in cluster_handlers]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        gather: Callable[..., Awaitable]
+
+        if max_concurrency is None:
+            gather = asyncio.gather
+        else:
+            gather = functools.partial(gather_with_limited_concurrency, max_concurrency)
+
+        results = await gather(*tasks, return_exceptions=True)
         for cluster_handler, outcome in zip(cluster_handlers, results):
             if isinstance(outcome, Exception):
-                cluster_handler.warning(
+                cluster_handler.debug(
                     "'%s' stage failed: %s", func_name, str(outcome), exc_info=outcome
                 )
-                continue
-            cluster_handler.debug("'%s' stage succeeded", func_name)
+            else:
+                cluster_handler.debug("'%s' stage succeeded", func_name)
 
     def async_new_entity(
         self,
-        platform: Platform | str,
+        platform: Platform,
         entity_class: CALLABLE_T,
         unique_id: str,
         cluster_handlers: list[ClusterHandler],
@@ -206,7 +218,8 @@ class Endpoint:
         if self.device.status == DeviceStatus.INITIALIZED:
             return
 
-        self.device.hass.data[const.DATA_ZHA][platform].append(
+        zha_data = get_zha_data(self.device.hass)
+        zha_data.platforms[platform].append(
             (entity_class, (unique_id, self.device, cluster_handlers))
         )
 

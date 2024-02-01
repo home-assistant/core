@@ -16,10 +16,42 @@
       "invalid_identifier": "[%key:component::dwd_weather_warnings::config::error::invalid_identifier%]"
     }
   },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Deutscher Wetterdienst (DWD) Weather Warnings YAML configuration is being removed",
-      "description": "Configuring Deutscher Wetterdienst (DWD) Weather Warnings using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Deutscher Wetterdienst (DWD) Weather Warnings YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "entity": {
+    "sensor": {
+      "current_warning_level": {
+        "name": "Current warning level",
+        "state_attributes": {
+          "region_name": {
+            "name": "Region name"
+          },
+          "region_id": {
+            "name": "Region ID"
+          },
+          "last_update": {
+            "name": "Last update"
+          },
+          "warning_count": {
+            "name": "Warning count"
+          }
+        }
+      },
+      "advance_warning_level": {
+        "name": "Advance warning level",
+        "state_attributes": {
+          "region_name": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::region_name::name%]"
+          },
+          "region_id": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::region_id::name%]"
+          },
+          "last_update": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::last_update::name%]"
+          },
+          "warning_count": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::warning_count::name%]"
+          }
+        }
+      }
     }
   }
 }

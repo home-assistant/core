@@ -23,6 +23,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import (
+    CALLBACK_TYPE,
     CoreState,
     Event,
     HomeAssistant,
@@ -108,7 +109,12 @@ def _supported_legacy(hass: HomeAssistant, entity_id: str) -> bool:
     if domain in SUPPORTED_DOMAINS:
         return True
 
-    device_class = get_device_class(hass, entity_id)
+    try:
+        device_class = get_device_class(hass, entity_id)
+    except HomeAssistantError:
+        # The entity no longer exists
+        return False
+
     if (
         domain == "binary_sensor"
         and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
@@ -139,6 +145,7 @@ class CloudGoogleConfig(AbstractConfig):
         self._prefs = prefs
         self._cloud = cloud
         self._sync_entities_lock = asyncio.Lock()
+        self._on_deinitialize: list[CALLBACK_TYPE] = []
 
     @property
     def enabled(self) -> bool:
@@ -204,10 +211,17 @@ class CloudGoogleConfig(AbstractConfig):
 
     async def async_initialize(self) -> None:
         """Perform async initialization of config."""
+        _LOGGER.debug("async_initialize")
         await super().async_initialize()
 
         async def on_hass_started(hass: HomeAssistant) -> None:
+            _LOGGER.debug("async_initialize on_hass_started")
             if self._prefs.google_settings_version != GOOGLE_SETTINGS_VERSION:
+                _LOGGER.info(
+                    "Start migration of Google Assistant settings from v%s to v%s",
+                    self._prefs.google_settings_version,
+                    GOOGLE_SETTINGS_VERSION,
+                )
                 if self._prefs.google_settings_version < 2 or (
                     # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
                     self._prefs.google_settings_version < 3
@@ -220,19 +234,27 @@ class CloudGoogleConfig(AbstractConfig):
                 ):
                     self._migrate_google_entity_settings_v1()
 
+                _LOGGER.info(
+                    "Finished migration of Google Assistant settings from v%s to v%s",
+                    self._prefs.google_settings_version,
+                    GOOGLE_SETTINGS_VERSION,
+                )
                 await self._prefs.async_update(
                     google_settings_version=GOOGLE_SETTINGS_VERSION
                 )
-            async_listen_entity_updates(
-                self.hass, CLOUD_GOOGLE, self._async_exposed_entities_updated
+            self._on_deinitialize.append(
+                async_listen_entity_updates(
+                    self.hass, CLOUD_GOOGLE, self._async_exposed_entities_updated
+                )
             )
 
         async def on_hass_start(hass: HomeAssistant) -> None:
+            _LOGGER.debug("async_initialize on_hass_start")
             if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
                 await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
-        start.async_at_start(self.hass, on_hass_start)
-        start.async_at_started(self.hass, on_hass_started)
+        self._on_deinitialize.append(start.async_at_start(self.hass, on_hass_start))
+        self._on_deinitialize.append(start.async_at_started(self.hass, on_hass_started))
 
         # Remove any stored user agent id that is not ours
         remove_agent_user_ids = []
@@ -240,18 +262,33 @@ class CloudGoogleConfig(AbstractConfig):
             if agent_user_id != self.agent_user_id:
                 remove_agent_user_ids.append(agent_user_id)
 
+        if remove_agent_user_ids:
+            _LOGGER.debug("remove non cloud agent_user_ids: %s", remove_agent_user_ids)
         for agent_user_id in remove_agent_user_ids:
             await self.async_disconnect_agent_user(agent_user_id)
 
-        self._prefs.async_listen_updates(self._async_prefs_updated)
-        self.hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._handle_entity_registry_updated,
+        self._on_deinitialize.append(
+            self._prefs.async_listen_updates(self._async_prefs_updated)
         )
-        self.hass.bus.async_listen(
-            dr.EVENT_DEVICE_REGISTRY_UPDATED,
-            self._handle_device_registry_updated,
+        self._on_deinitialize.append(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._handle_entity_registry_updated,
+            )
         )
+        self._on_deinitialize.append(
+            self.hass.bus.async_listen(
+                dr.EVENT_DEVICE_REGISTRY_UPDATED,
+                self._handle_device_registry_updated,
+            )
+        )
+
+    @callback
+    def async_deinitialize(self) -> None:
+        """Remove listeners."""
+        _LOGGER.debug("async_deinitialize")
+        while self._on_deinitialize:
+            self._on_deinitialize.pop()()
 
     def should_expose(self, state: State) -> bool:
         """If a state object should be exposed."""
@@ -330,14 +367,16 @@ class CloudGoogleConfig(AbstractConfig):
         assistant_options = settings.get(CLOUD_GOOGLE, {})
         return not assistant_options.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 
-    async def async_report_state(self, message: Any, agent_user_id: str) -> None:
+    async def async_report_state(
+        self, message: Any, agent_user_id: str, event_id: str | None = None
+    ) -> None:
         """Send a state report to Google."""
         try:
             await self._cloud.google_report_state.async_send_message(message)
         except ErrorResponse as err:
             _LOGGER.warning("Error reporting state - %s: %s", err.code, err.message)
 
-    async def _async_request_sync_devices(self, agent_user_id: str) -> int:
+    async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus | int:
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
             return HTTPStatus.OK
@@ -348,6 +387,7 @@ class CloudGoogleConfig(AbstractConfig):
 
     async def _async_prefs_updated(self, prefs: CloudPreferences) -> None:
         """Handle updated preferences."""
+        _LOGGER.debug("_async_prefs_updated")
         if not self._cloud.is_logged_in:
             if self.is_reporting_state:
                 self.async_disable_report_state()
@@ -395,7 +435,7 @@ class CloudGoogleConfig(AbstractConfig):
         if (
             not self.enabled
             or not self._cloud.is_logged_in
-            or self.hass.state != CoreState.running
+            or self.hass.state is not CoreState.running
         ):
             return
 
@@ -418,7 +458,7 @@ class CloudGoogleConfig(AbstractConfig):
         if (
             not self.enabled
             or not self._cloud.is_logged_in
-            or self.hass.state != CoreState.running
+            or self.hass.state is not CoreState.running
         ):
             return
 

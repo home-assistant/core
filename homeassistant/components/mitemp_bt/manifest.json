@@ -1,8 +1,0 @@
-{
-  "domain": "mitemp_bt",
-  "name": "Xiaomi Mijia BLE Temperature and Humidity Sensor",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/mitemp_bt",
-  "iot_class": "local_polling",
-  "requirements": []
-}

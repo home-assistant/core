@@ -1,6 +1,7 @@
 """Config flow for generic (IP Camera)."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import contextlib
 from datetime import datetime
@@ -9,10 +10,9 @@ import io
 import logging
 from typing import Any
 
-import PIL
 from aiohttp import web
-from async_timeout import timeout
 from httpx import HTTPStatusError, RequestError, TimeoutException
+import PIL.Image
 import voluptuous as vol
 import yarl
 
@@ -77,8 +77,8 @@ IMAGE_PREVIEWS_ACTIVE = "previews"
 def build_schema(
     user_input: Mapping[str, Any],
     is_options_flow: bool = False,
-    show_advanced_options=False,
-):
+    show_advanced_options: bool = False,
+) -> vol.Schema:
     """Create schema for camera config setup."""
     spec = {
         vol.Optional(
@@ -136,7 +136,7 @@ def get_image_type(image: bytes) -> str | None:
     imagefile = io.BytesIO(image)
     with contextlib.suppress(PIL.UnidentifiedImageError):
         img = PIL.Image.open(imagefile)
-        fmt = img.format.lower()
+        fmt = img.format.lower() if img.format else None
 
     if fmt is None:
         # if PIL can't figure it out, could be svg.
@@ -170,7 +170,7 @@ async def async_test_still(
     auth = generate_auth(info)
     try:
         async_client = get_async_client(hass, verify_ssl=verify_ssl)
-        async with timeout(GET_IMAGE_TIMEOUT):
+        async with asyncio.timeout(GET_IMAGE_TIMEOUT):
             response = await async_client.get(url, auth=auth, timeout=GET_IMAGE_TIMEOUT)
             response.raise_for_status()
             image = response.content
@@ -276,7 +276,7 @@ async def async_test_stream(
     return {}
 
 
-def register_preview(hass: HomeAssistant):
+def register_preview(hass: HomeAssistant) -> None:
     """Set up previews for camera feeds during config flow."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -378,25 +378,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=None,
         )
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Handle config import from yaml."""
-        # abort if we've already got this one.
-        if self.check_for_existing(import_config):
-            return self.async_abort(reason="already_exists")
-        # Don't bother testing the still or stream details on yaml import.
-        still_url = import_config.get(CONF_STILL_IMAGE_URL)
-        stream_url = import_config.get(CONF_STREAM_SOURCE)
-        name = import_config.get(
-            CONF_NAME,
-            slug(self.hass, still_url) or slug(self.hass, stream_url) or DEFAULT_NAME,
-        )
-
-        if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
-            import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
-        still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
-        import_config[CONF_CONTENT_TYPE] = still_format
-        return self.async_create_entry(title=name, data={}, options=import_config)
-
 
 class GenericOptionsFlowHandler(OptionsFlow):
     """Handle Generic IP Camera options."""
@@ -426,24 +407,12 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     # is always jpeg
                     still_format = "image/jpeg"
                 data = {
-                    CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
-                    CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
-                    CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                    CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: self.config_entry.options.get(
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                    ),
+                    **user_input,
                     CONF_CONTENT_TYPE: still_format
                     or self.config_entry.options.get(CONF_CONTENT_TYPE),
-                    CONF_USERNAME: user_input.get(CONF_USERNAME),
-                    CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input[
-                        CONF_LIMIT_REFETCH_TO_URL_CHANGE
-                    ],
-                    CONF_FRAMERATE: user_input[CONF_FRAMERATE],
-                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                        self.config_entry.options.get(
-                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
-                        ),
-                    ),
                 }
                 self.user_input = data
                 # temporary preview for user to check the image

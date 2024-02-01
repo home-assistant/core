@@ -40,7 +40,7 @@ async def test_setup_demo_platform(hass: HomeAssistant) -> None:
     """Test setup."""
     mock = MagicMock()
     add_entities = mock.MagicMock()
-    await demo.async_setup_platform(hass, {}, add_entities)
+    await demo.async_setup_entry(hass, {}, add_entities)
     assert add_entities.call_count == 1
 
 
@@ -1221,7 +1221,7 @@ async def test_restore_state(hass: HomeAssistant, expected_state) -> None:
     """Ensure state is restored on startup."""
     mock_restore_cache(hass, (State("alarm_control_panel.test", expected_state),))
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1266,7 +1266,7 @@ async def test_restore_state_arming(hass: HomeAssistant, expected_state) -> None
         hass, (State(entity_id, expected_state, attributes, last_updated=time),)
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1323,7 +1323,7 @@ async def test_restore_state_pending(hass: HomeAssistant, previous_state) -> Non
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1388,7 +1388,7 @@ async def test_restore_state_triggered(hass: HomeAssistant, previous_state) -> N
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1434,7 +1434,7 @@ async def test_restore_state_triggered_long_ago(hass: HomeAssistant) -> None:
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(

@@ -2,23 +2,19 @@
 # name: test_diagnostics
   dict({
     'info': dict({
-      'display_name': 'Frenck',
+      'displayName': 'Frenck',
       'features': list([
         'lights',
       ]),
-      'firmware_build_number': 192,
-      'firmware_version': '1.0.3',
-      'hardware_board_type': 53,
-      'mac_address': None,
-      'product_name': 'Elgato Key Light',
-      'serial_number': 'CN11A1A00001',
-      'wifi': None,
+      'firmwareBuildNumber': 192,
+      'firmwareVersion': '1.0.3',
+      'hardwareBoardType': 53,
+      'productName': 'Elgato Key Light',
+      'serialNumber': 'CN11A1A00001',
     }),
     'state': dict({
       'brightness': 21,
-      'hue': None,
-      'on': True,
-      'saturation': None,
+      'on': 1,
       'temperature': 297,
     }),
   })

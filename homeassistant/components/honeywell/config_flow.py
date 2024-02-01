@@ -22,7 +22,12 @@ from .const import (
     DOMAIN,
 )
 
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -42,18 +47,12 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm re-authentication with Honeywell."""
         errors: dict[str, str] = {}
-
+        assert self.entry is not None
         if user_input:
-            assert self.entry is not None
-            password = user_input[CONF_PASSWORD]
-            data = {
-                CONF_USERNAME: self.entry.data[CONF_USERNAME],
-                CONF_PASSWORD: password,
-            }
-
             try:
                 await self.is_valid(
-                    username=data[CONF_USERNAME], password=data[CONF_PASSWORD]
+                    username=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
                 )
 
             except aiosomecomfort.AuthError:
@@ -67,19 +66,19 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             else:
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self.entry,
                     data={
                         **self.entry.data,
-                        CONF_PASSWORD: password,
+                        **user_input,
                     },
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=REAUTH_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                REAUTH_SCHEMA, self.entry.data
+            ),
             errors=errors,
         )
 

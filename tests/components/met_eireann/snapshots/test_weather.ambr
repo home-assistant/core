@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_forecast_service
+  dict({
+    'forecast': list([
+      dict({
+        'condition': 'lightning-rainy',
+        'datetime': '2023-08-08T12:00:00+00:00',
+        'temperature': 10.0,
+      }),
+      dict({
+        'condition': 'lightning-rainy',
+        'datetime': '2023-08-09T12:00:00+00:00',
+        'temperature': 20.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_forecast_service.1
+  dict({
+    'forecast': list([
+      dict({
+        'condition': 'lightning-rainy',
+        'datetime': '2023-08-08T12:00:00+00:00',
+        'temperature': 10.0,
+      }),
+      dict({
+        'condition': 'lightning-rainy',
+        'datetime': '2023-08-09T12:00:00+00:00',
+        'temperature': 20.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_forecast_service[forecast]
+  dict({
+    'weather.somewhere': dict({
+      'forecast': list([
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2023-08-08T12:00:00+00:00',
+          'temperature': 10.0,
+        }),
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2023-08-09T12:00:00+00:00',
+          'temperature': 20.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[forecast].1
+  dict({
+    'weather.somewhere': dict({
+      'forecast': list([
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2023-08-08T12:00:00+00:00',
+          'temperature': 10.0,
+        }),
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2023-08-09T12:00:00+00:00',
+          'temperature': 20.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[get_forecast]
+  dict({
+    'forecast': list([
+      dict({
+        'condition': 'lightning-rainy',
+        'datetime': '2023-08-08T12:00:00+00:00',
+        'temperature': 10.0,
+      }),
+      dict({
+        'condition': 'lightning-rainy',
+        'datetime': '2023-08-09T12:00:00+00:00',
+        'temperature': 20.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_forecast_service[get_forecast].1
+  dict({
+    'forecast': list([
+      dict({
+        'condition': 'lightning-rainy',
+        'datetime': '2023-08-08T12:00:00+00:00',
+        'temperature': 10.0,
+      }),
+      dict({
+        'condition': 'lightning-rainy',
+        'datetime': '2023-08-09T12:00:00+00:00',
+        'temperature': 20.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_forecast_service[get_forecasts]
+  dict({
+    'weather.somewhere': dict({
+      'forecast': list([
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2023-08-08T12:00:00+00:00',
+          'temperature': 10.0,
+        }),
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2023-08-09T12:00:00+00:00',
+          'temperature': 20.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[get_forecasts].1
+  dict({
+    'weather.somewhere': dict({
+      'forecast': list([
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2023-08-08T12:00:00+00:00',
+          'temperature': 10.0,
+        }),
+        dict({
+          'condition': 'lightning-rainy',
+          'datetime': '2023-08-09T12:00:00+00:00',
+          'temperature': 20.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_subscription[daily]
+  list([
+    dict({
+      'condition': 'lightning-rainy',
+      'datetime': '2023-08-08T12:00:00+00:00',
+      'temperature': 10.0,
+    }),
+    dict({
+      'condition': 'lightning-rainy',
+      'datetime': '2023-08-09T12:00:00+00:00',
+      'temperature': 20.0,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[daily].1
+  list([
+    dict({
+      'condition': 'lightning-rainy',
+      'datetime': '2023-08-08T12:00:00+00:00',
+      'temperature': 15.0,
+    }),
+    dict({
+      'condition': 'lightning-rainy',
+      'datetime': '2023-08-09T12:00:00+00:00',
+      'temperature': 25.0,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[hourly]
+  list([
+    dict({
+      'condition': 'lightning-rainy',
+      'datetime': '2023-08-08T12:00:00+00:00',
+      'temperature': 10.0,
+    }),
+    dict({
+      'condition': 'lightning-rainy',
+      'datetime': '2023-08-09T12:00:00+00:00',
+      'temperature': 20.0,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[hourly].1
+  list([
+    dict({
+      'condition': 'lightning-rainy',
+      'datetime': '2023-08-08T12:00:00+00:00',
+      'temperature': 15.0,
+    }),
+    dict({
+      'condition': 'lightning-rainy',
+      'datetime': '2023-08-09T12:00:00+00:00',
+      'temperature': 25.0,
+    }),
+  ])
+# ---

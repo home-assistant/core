@@ -1,4 +1,5 @@
 """Test Axis device."""
+from ipaddress import ip_address
 from unittest import mock
 from unittest.mock import Mock, patch
 
@@ -40,7 +41,11 @@ def hass_mock_forward_entry_setup(hass):
 
 
 async def test_device_setup(
-    hass: HomeAssistant, forward_entry_setup, config, setup_config_entry
+    hass: HomeAssistant,
+    forward_entry_setup,
+    config,
+    setup_config_entry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
     device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
@@ -61,7 +66,6 @@ async def test_device_setup(
     assert device.name == config[CONF_NAME]
     assert device.unique_id == FORMATTED_MAC
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={(AXIS_DOMAIN, device.unique_id)}
     )
@@ -117,8 +121,8 @@ async def test_update_address(
         await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,
             data=zeroconf.ZeroconfServiceInfo(
-                host="2.3.4.5",
-                addresses=["2.3.4.5"],
+                ip_address=ip_address("2.3.4.5"),
+                ip_addresses=[ip_address("2.3.4.5")],
                 hostname="mock_hostname",
                 name="name",
                 port=80,

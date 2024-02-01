@@ -61,7 +61,9 @@ async def create_omada_client(
         is not None
     ):
         # TP-Link API uses cookies for login session, so an unsafe cookie jar is required for IP addresses
-        websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+        websession = async_create_clientsession(
+            hass, cookie_jar=CookieJar(unsafe=True), verify_ssl=verify_ssl
+        )
     else:
         websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
 

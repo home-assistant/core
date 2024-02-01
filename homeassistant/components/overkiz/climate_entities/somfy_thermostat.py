@@ -33,10 +33,12 @@ OVERKIZ_TO_PRESET_MODES: dict[OverkizCommandParam, str] = {
     OverkizCommandParam.AT_HOME_MODE: PRESET_HOME,
     OverkizCommandParam.AWAY_MODE: PRESET_AWAY,
     OverkizCommandParam.FREEZE_MODE: PRESET_FREEZE,
+    OverkizCommandParam.GEOFENCING_MODE: PRESET_NONE,
     OverkizCommandParam.MANUAL_MODE: PRESET_NONE,
     OverkizCommandParam.SLEEPING_MODE: PRESET_NIGHT,
     OverkizCommandParam.SUDDEN_DROP_MODE: PRESET_NONE,
 }
+
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
 TARGET_TEMP_TO_OVERKIZ = {
     PRESET_HOME: OverkizState.SOMFY_THERMOSTAT_AT_HOME_TARGET_TEMPERATURE,
@@ -54,7 +56,10 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
@@ -74,7 +79,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         )
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return OVERKIZ_TO_HVAC_MODES[
             cast(

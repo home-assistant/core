@@ -4,7 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, TypeVar
 
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .common import SynoApi
@@ -17,14 +18,14 @@ from .coordinator import (
 _CoordinatorT = TypeVar("_CoordinatorT", bound=SynologyDSMUpdateCoordinator[Any])
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMRequiredKeysMixin:
     """Mixin for required keys."""
 
     api_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMEntityDescription(EntityDescription, SynologyDSMRequiredKeysMixin):
     """Generic Synology DSM entity description."""
 

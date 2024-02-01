@@ -9,7 +9,7 @@
   "loggers": ["nmap"],
   "requirements": [
     "netmap==0.7.0.2",
-    "getmac==0.8.2",
+    "getmac==0.9.4",
     "mac-vendor-lookup==0.1.12"
   ]
 }

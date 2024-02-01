@@ -175,7 +175,7 @@ async def test_async_step_user_no_devices_found_2(hass: HomeAssistant) -> None:
     This variant tests with a non-BTHome device known to us.
     """
     with patch(
-        "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.bthome.config_flow.async_discovered_service_info",
         return_value=[NOT_BTHOME_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(

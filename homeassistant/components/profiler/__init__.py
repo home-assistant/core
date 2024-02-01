@@ -11,7 +11,7 @@ import time
 import traceback
 from typing import Any, cast
 
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -45,7 +45,6 @@ _KNOWN_LRU_CLASSES = (
     "StatesMetaManager",
     "StateAttributesManager",
     "StatisticsMetaManager",
-    "DomainData",
     "IntegrationMatcher",
 )
 

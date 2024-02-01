@@ -1,0 +1,683 @@
+{
+  "type": "switch",
+  "mac": "54-AF-97-00-00-01",
+  "name": "Test PoE Switch",
+  "model": "TL-SG3210XHP-M2",
+  "modelVersion": "1.0",
+  "compoundModel": "TL-SG3210XHP-M2 v1.0",
+  "showModel": "TL-SG3210XHP-M2 v1.0",
+  "firmwareVersion": "1.0.12 Build 20230203 Rel.36545",
+  "version": "1.0.12",
+  "hwVersion": "1.0",
+  "status": 14,
+  "statusCategory": 1,
+  "site": "000000000000000000000000",
+  "omadacId": "00000000000000000000000000000000",
+  "compatible": 0,
+  "sn": "Y220000000001",
+  "addedInAdvanced": false,
+  "deviceMisc": {
+    "portNum": 10
+  },
+  "devCap": {
+    "maxMirrorGroup": 1,
+    "maxMirroredPort": 9,
+    "maxLagNum": 8,
+    "maxLagMember": 8,
+    "poePortNum": 8,
+    "poeSupport": true,
+    "supportBt": false,
+    "jumboSupport": true,
+    "jumboOddSupport": false,
+    "lagCap": {
+      "lacpModSupport": true,
+      "lagHashAlgSupport": true,
+      "lagHashAlgs": [0, 1, 2, 3, 4, 5]
+    },
+    "eeeSupport": true,
+    "flowControlSupport": true,
+    "loopbackVlanBasedSupport": true,
+    "dhcpL2RelaySupport": true,
+    "sfpBeginNum": 9,
+    "sfpNum": 2
+  },
+  "ledSetting": 2,
+  "mvlanNetworkId": "000000000000000000000000",
+  "ipSetting": {
+    "mode": "dhcp",
+    "fallback": true,
+    "fallbackIp": "192.168.0.1",
+    "fallbackMask": "255.255.255.0"
+  },
+  "loopbackDetectEnable": true,
+  "stp": 0,
+  "priority": 32768,
+  "snmp": {
+    "location": "",
+    "contact": ""
+  },
+  "ports": [
+    {
+      "id": "000000000000000000000001",
+      "port": 1,
+      "name": "Port1",
+      "disable": false,
+      "type": 1,
+      "maxSpeed": 4,
+      "profileId": "00000000",
+      "profileName": "All",
+      "operation": "switching",
+      "portStatus": {
+        "port": 1,
+        "linkStatus": 1,
+        "linkSpeed": 2,
+        "duplex": 2,
+        "poe": true,
+        "poePower": 2.7,
+        "tx": 22048870335,
+        "rx": 6155774646,
+        "stpDiscarding": false
+      },
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 0
+        }
+      ]
+    },
+    {
+      "id": "000000000000000000000002",
+      "port": 2,
+      "name": "Port2",
+      "disable": false,
+      "type": 1,
+      "maxSpeed": 4,
+      "profileId": "00000000",
+      "profileName": "All",
+      "operation": "switching",
+      "portStatus": {
+        "port": 2,
+        "linkStatus": 1,
+        "linkSpeed": 3,
+        "duplex": 2,
+        "poe": false,
+        "poePower": 0.0,
+        "tx": 2111818481511,
+        "rx": 297809855535,
+        "stpDiscarding": false
+      },
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 0
+        }
+      ]
+    },
+    {
+      "id": "000000000000000000000003",
+      "port": 3,
+      "name": "Primary AP",
+      "disable": false,
+      "type": 1,
+      "maxSpeed": 4,
+      "profileId": "00000000",
+      "profileName": "All",
+      "operation": "switching",
+      "portStatus": {
+        "port": 3,
+        "linkStatus": 1,
+        "linkSpeed": 4,
+        "duplex": 2,
+        "poe": true,
+        "poePower": 9.8,
+        "tx": 2118915311852,
+        "rx": 1222744181939,
+        "stpDiscarding": false
+      },
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 0
+        }
+      ]
+    },
+    {
+      "id": "000000000000000000000004",
+      "port": 4,
+      "name": "Port4",
+      "disable": false,
+      "type": 1,
+      "maxSpeed": 4,
+      "profileId": "00000000",
+      "profileName": "All",
+      "operation": "switching",
+      "portStatus": {
+        "port": 4,
+        "linkStatus": 0,
+        "linkSpeed": 0,
+        "duplex": 0,
+        "poe": false,
+        "poePower": 0.0,
+        "tx": 0,
+        "rx": 0,
+        "stpDiscarding": false
+      },
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 0
+        }
+      ]
+    },
+    {
+      "id": "000000000000000000000005",
+      "port": 5,
+      "name": "Port5",
+      "disable": false,
+      "type": 1,
+      "maxSpeed": 4,
+      "profileId": "00000000",
+      "profileName": "All",
+      "operation": "switching",
+      "portStatus": {
+        "port": 5,
+        "linkStatus": 1,
+        "linkSpeed": 3,
+        "duplex": 2,
+        "poe": true,
+        "poePower": 7.2,
+        "tx": 357059477760,
+        "rx": 59530432926,
+        "stpDiscarding": false
+      },
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 0
+        }
+      ]
+    },
+    {
+      "id": "000000000000000000000006",
+      "port": 6,
+      "name": "Port6",
+      "disable": false,
+      "type": 1,
+      "maxSpeed": 4,
+      "profileId": "00000000",
+      "profileName": "All",
+      "operation": "switching",
+      "portStatus": {
+        "port": 6,
+        "linkStatus": 1,
+        "linkSpeed": 3,
+        "duplex": 2,
+        "poe": false,
+        "poePower": 0.0,
+        "tx": 20729276425,
+        "rx": 1260359882,
+        "stpDiscarding": false
+      },
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 0
+        }
+      ]
+    },
+    {
+      "id": "000000000000000000000007",
+      "port": 7,
+      "name": "Port7",
+      "disable": false,
+      "type": 1,
+      "maxSpeed": 4,
+      "profileId": "00000000",
+      "profileName": "All",
+      "operation": "switching",
+      "portStatus": {
+        "port": 7,
+        "linkStatus": 0,
+        "linkSpeed": 0,
+        "duplex": 0,
+        "poe": false,
+        "poePower": 0.0,
+        "tx": 6884938116575,
+        "rx": 3015211000000,
+        "stpDiscarding": false
+      },
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 0
+        }
+      ]
+    },
+    {
+      "id": "000000000000000000000008",
+      "port": 8,
+      "name": "Family Room Kiosk",
+      "disable": false,
+      "type": 1,
+      "maxSpeed": 4,
+      "profileId": "00000000",
+      "profileName": "All",
+      "operation": "switching",
+      "portStatus": {
+        "port": 8,
+        "linkStatus": 1,
+        "linkSpeed": 3,
+        "duplex": 2,
+        "poe": true,
+        "poePower": 1.9,
+        "tx": 17735212467,
+        "rx": 2751725454,
+        "stpDiscarding": false
+      },
+      "portCap": [
+        {
+          "linkSpeed": 2,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 4,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 1
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 0,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 2,
+          "duplex": 0
+        }
+      ]
+    },
+    {
+      "id": "000000000000000000000009",
+      "port": 9,
+      "name": "Port9",
+      "disable": false,
+      "type": 3,
+      "maxSpeed": 5,
+      "profileId": "00000000",
+      "profileName": "All",
+      "operation": "switching",
+      "portStatus": {
+        "port": 9,
+        "linkStatus": 0,
+        "linkSpeed": 0,
+        "duplex": 0,
+        "poe": false,
+        "tx": 0,
+        "rx": 0,
+        "stpDiscarding": false
+      },
+      "portCap": [
+        {
+          "linkSpeed": 5,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ]
+    },
+    {
+      "id": "00000000000000000000000a",
+      "port": 10,
+      "name": "Uplink",
+      "disable": false,
+      "type": 3,
+      "maxSpeed": 5,
+      "profileId": "00000000",
+      "profileName": "All",
+      "operation": "switching",
+      "portStatus": {
+        "port": 10,
+        "linkStatus": 1,
+        "linkSpeed": 5,
+        "duplex": 2,
+        "poe": false,
+        "tx": 4599788287992,
+        "rx": 11431810000000,
+        "stpDiscarding": false
+      },
+      "portCap": [
+        {
+          "linkSpeed": 5,
+          "duplex": 2
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 0
+        },
+        {
+          "linkSpeed": 3,
+          "duplex": 2
+        }
+      ]
+    }
+  ],
+  "lags": [],
+  "tagIds": [],
+  "ip": "192.168.0.12",
+  "lastSeen": 1687385981898,
+  "needUpgrade": false,
+  "uptime": "97day(s) 23h 57m 34s",
+  "uptimeLong": 8467054,
+  "cpuUtil": 18,
+  "memUtil": 72,
+  "poeRemain": 218.399994,
+  "poeRemainPercent": 91.0,
+  "fanStatus": 0,
+  "downlinkList": [
+    {
+      "port": 3,
+      "model": "EAP660 HD",
+      "hwVersion": "1.0",
+      "modelVersion": "1.0",
+      "mac": "B4-B0-24-00-00-01",
+      "name": "Access Point 1",
+      "linkSpeed": 4,
+      "duplex": 2
+    },
+    {
+      "port": 5,
+      "model": "EAP653",
+      "hwVersion": "1.0",
+      "modelVersion": "1.0",
+      "mac": "34-60-F9-00-00-01E",
+      "name": "Access Point 2",
+      "linkSpeed": 3,
+      "duplex": 2
+    }
+  ],
+  "download": 16037273330382,
+  "upload": 16133033034917,
+  "supportVlanIf": true,
+  "jumbo": 1518,
+  "lagHashAlg": 2,
+  "speeds": [2, 3, 4, 5]
+}

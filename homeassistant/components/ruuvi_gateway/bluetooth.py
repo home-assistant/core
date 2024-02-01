@@ -1,16 +1,13 @@
 """Bluetooth support for Ruuvi Gateway."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 import time
 
-from home_assistant_bluetooth import BluetoothServiceInfoBleak
-
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    MONOTONIC_TIME,
     BaseHaRemoteScanner,
-    async_get_advertisement_callback,
     async_register_scanner,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -26,19 +23,15 @@ class RuuviGatewayScanner(BaseHaRemoteScanner):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         scanner_id: str,
         name: str,
-        new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
         *,
         coordinator: RuuviGatewayUpdateCoordinator,
     ) -> None:
         """Initialize the scanner, using the given update coordinator as data source."""
         super().__init__(
-            hass,
             scanner_id,
             name,
-            new_info_callback,
             connector=None,
             connectable=False,
         )
@@ -47,6 +40,7 @@ class RuuviGatewayScanner(BaseHaRemoteScanner):
     @callback
     def _async_handle_new_data(self) -> None:
         now = time.time()
+        monotonic_now = MONOTONIC_TIME()
         for tag_data in self.coordinator.data:
             data_age_seconds = now - tag_data.timestamp  # Both are Unix time
             if data_age_seconds > FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS:
@@ -62,6 +56,7 @@ class RuuviGatewayScanner(BaseHaRemoteScanner):
                 manufacturer_data=anno.manufacturer_data,
                 tx_power=anno.tx_power,
                 details={},
+                advertisement_monotonic_time=monotonic_now - data_age_seconds,
             )
 
     @callback
@@ -84,14 +79,12 @@ def async_connect_scanner(
         source,
     )
     scanner = RuuviGatewayScanner(
-        hass=hass,
         scanner_id=source,
         name=entry.title,
-        new_info_callback=async_get_advertisement_callback(hass),
         coordinator=coordinator,
     )
     unload_callbacks = [
-        async_register_scanner(hass, scanner, connectable=False),
+        async_register_scanner(hass, scanner),
         scanner.async_setup(),
         scanner.start_polling(),
     ]

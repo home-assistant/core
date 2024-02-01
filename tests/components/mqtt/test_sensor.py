@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -53,11 +54,13 @@ from .test_common import (
     help_test_entity_disabled_by_default,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_entity_name,
     help_test_reload_with_config,
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -65,6 +68,7 @@ from .test_common import (
 )
 
 from tests.common import (
+    MockConfigEntry,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
@@ -335,7 +339,6 @@ async def test_setting_sensor_value_expires_availability_topic(
                     "state_topic": "test-topic",
                     "unit_of_measurement": "fav unit",
                     "expire_after": "4",
-                    "force_update": True,
                 }
             }
         }
@@ -358,51 +361,68 @@ async def expires_helper(hass: HomeAssistant) -> None:
     """Run the basic expiry code."""
     realnow = dt_util.utcnow()
     now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with freeze_time(now) as freezer:
+        freezer.move_to(now)
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "100")
         await hass.async_block_till_done()
 
-    # Value was set correctly.
-    state = hass.states.get("sensor.test")
-    assert state.state == "100"
+        # Value was set correctly.
+        state = hass.states.get("sensor.test")
+        assert state.state == "100"
 
-    # Time jump +3s
-    now = now + timedelta(seconds=3)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
+        # Time jump +3s
+        now += timedelta(seconds=3)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
-    # Value is not yet expired
-    state = hass.states.get("sensor.test")
-    assert state.state == "100"
+        # Value is not yet expired
+        state = hass.states.get("sensor.test")
+        assert state.state == "100"
 
-    # Next message resets timer
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+        # Next message resets timer
+        now += timedelta(seconds=0.5)
+        freezer.move_to(now)
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "101")
         await hass.async_block_till_done()
 
-    # Value was updated correctly.
-    state = hass.states.get("sensor.test")
-    assert state.state == "101"
+        # Value was updated correctly.
+        state = hass.states.get("sensor.test")
+        assert state.state == "101"
 
-    # Time jump +3s
-    now = now + timedelta(seconds=3)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
+        # Time jump +3s
+        now += timedelta(seconds=3)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
-    # Value is not yet expired
-    state = hass.states.get("sensor.test")
-    assert state.state == "101"
+        # Value is not yet expired
+        state = hass.states.get("sensor.test")
+        assert state.state == "101"
 
-    # Time jump +2s
-    now = now + timedelta(seconds=2)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
+        # Time jump +2s
+        now += timedelta(seconds=2)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
-    # Value is expired now
-    state = hass.states.get("sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+        # Value is expired now
+        state = hass.states.get("sensor.test")
+        assert state.state == STATE_UNAVAILABLE
+
+        # Send the last message again
+        # Time jump 0.5s
+        now += timedelta(seconds=0.5)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        async_fire_mqtt_message(hass, "test-topic", "101")
+        await hass.async_block_till_done()
+
+        # Value was updated correctly.
+        state = hass.states.get("sensor.test")
+        assert state.state == "101"
 
 
 @pytest.mark.parametrize(
@@ -480,117 +500,44 @@ async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_st
                     "state_class": "total",
                     "state_topic": "test-topic",
                     "unit_of_measurement": "fav unit",
-                    "last_reset_topic": "last-reset-topic",
-                }
-            }
-        }
-    ],
-)
-async def test_setting_sensor_last_reset_via_mqtt_message(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the setting of the last_reset property via MQTT."""
-    await mqtt_mock_entry()
-
-    async_fire_mqtt_message(hass, "last-reset-topic", "2020-01-02 08:11:00")
-    state = hass.states.get("sensor.test")
-    assert state.attributes.get("last_reset") == "2020-01-02T08:11:00"
-    assert "'last_reset_topic' must be same as 'state_topic'" in caplog.text
-    assert (
-        "'last_reset_value_template' must be set if 'last_reset_topic' is set"
-        in caplog.text
-    )
-
-
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        {
-            mqtt.DOMAIN: {
-                sensor.DOMAIN: {
-                    "name": "test",
-                    "state_class": "total",
-                    "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
-                    "last_reset_topic": "last-reset-topic",
-                }
-            }
-        }
-    ],
-)
-@pytest.mark.parametrize("datestring", ["2020-21-02 08:11:00", "Hello there!"])
-async def test_setting_sensor_bad_last_reset_via_mqtt_message(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    datestring,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-) -> None:
-    """Test the setting of the last_reset property via MQTT."""
-    await mqtt_mock_entry()
-
-    async_fire_mqtt_message(hass, "last-reset-topic", datestring)
-    state = hass.states.get("sensor.test")
-    assert state.attributes.get("last_reset") is None
-    assert "Invalid last_reset message" in caplog.text
-
-
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        {
-            mqtt.DOMAIN: {
-                sensor.DOMAIN: {
-                    "name": "test",
-                    "state_class": "total",
-                    "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
-                    "last_reset_topic": "last-reset-topic",
-                }
-            }
-        }
-    ],
-)
-async def test_setting_sensor_empty_last_reset_via_mqtt_message(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the setting of the last_reset property via MQTT."""
-    await mqtt_mock_entry()
-
-    async_fire_mqtt_message(hass, "last-reset-topic", "")
-    state = hass.states.get("sensor.test")
-    assert state.attributes.get("last_reset") is None
-
-
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        {
-            mqtt.DOMAIN: {
-                sensor.DOMAIN: {
-                    "name": "test",
-                    "state_class": "total",
-                    "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
-                    "last_reset_topic": "last-reset-topic",
                     "last_reset_value_template": "{{ value_json.last_reset }}",
+                    "value_template": "{{ value_json.state }}",
                 }
             }
         }
+    ],
+)
+@pytest.mark.parametrize(
+    ("message", "last_reset", "state"),
+    [
+        (
+            '{ "last_reset": "2020-01-02 08:11:00" }',
+            "2020-01-02T08:11:00",
+            STATE_UNKNOWN,
+        ),
+        (
+            '{ "last_reset": "2020-01-02 08:11:03", "state": 10.0 }',
+            "2020-01-02T08:11:03",
+            "10.0",
+        ),
+        ('{ "last_reset": null, "state": 10.1 }', None, "10.1"),
+        ('{ "last_reset": "", "state": 10.1 }', None, "10.1"),
     ],
 )
 async def test_setting_sensor_last_reset_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    message: str,
+    last_reset: str,
+    state: str,
 ) -> None:
     """Test the setting of the value via MQTT with JSON payload."""
     await mqtt_mock_entry()
 
-    async_fire_mqtt_message(
-        hass, "last-reset-topic", '{ "last_reset": "2020-01-02 08:11:00" }'
-    )
-    state = hass.states.get("sensor.test")
-    assert state.attributes.get("last_reset") == "2020-01-02T08:11:00"
+    async_fire_mqtt_message(hass, "test-topic", message)
+    sensor_state = hass.states.get("sensor.test")
+    assert sensor_state.attributes.get("last_reset") == last_reset
+    assert sensor_state.state == state
 
 
 @pytest.mark.parametrize(
@@ -605,19 +552,6 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message(
                     "unit_of_measurement": "kWh",
                     "value_template": "{{ value_json.value | float / 60000 }}",
                     "last_reset_value_template": "{{ utcnow().fromtimestamp(value_json.time / 1000, tz=utcnow().tzinfo) }}",
-                },
-            }
-        },
-        {
-            mqtt.DOMAIN: {
-                sensor.DOMAIN: {
-                    "name": "test",
-                    "state_class": "total",
-                    "state_topic": "test-topic",
-                    "unit_of_measurement": "kWh",
-                    "value_template": "{{ value_json.value | float / 60000 }}",
-                    "last_reset_value_template": "{{ utcnow().fromtimestamp(value_json.time / 1000, tz=utcnow().tzinfo) }}",
-                    "last_reset_topic": "test-topic",
                 },
             }
         },
@@ -640,11 +574,6 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
     state = hass.states.get("sensor.test")
     assert float(state.state) == pytest.approx(0.015796176944444445)
     assert state.attributes.get("last_reset") == "2021-08-19T15:05:00+00:00"
-    assert "'last_reset_topic' must be same as 'state_topic'" not in caplog.text
-    assert (
-        "'last_reset_value_template' must be set if 'last_reset_topic' is set"
-        not in caplog.text
-    )
 
 
 @pytest.mark.parametrize(
@@ -779,14 +708,13 @@ async def test_default_availability_list_payload_any(
 
 
 async def test_default_availability_list_single(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test availability list and availability_topic are mutually exclusive."""
     await help_test_default_availability_list_single(
-        hass,
-        caplog,
-        sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -828,11 +756,8 @@ async def test_invalid_device_class(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device_class option with invalid value."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: expected SensorDeviceClass or one of" in caplog.text
-    )
+    assert await mqtt_mock_entry()
+    assert "expected SensorDeviceClass or one of" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -892,11 +817,8 @@ async def test_invalid_state_class(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test state_class option with invalid value."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: expected SensorStateClass or one of" in caplog.text
-    )
+    assert await mqtt_mock_entry()
+    assert "expected SensorStateClass or one of" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1212,13 +1134,16 @@ async def test_entity_id_update_discovery_update(
 
 
 async def test_entity_device_info_with_hub(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test MQTT sensor device registry integration."""
     await mqtt_mock_entry()
-    registry = dr.async_get(hass)
-    hub = registry.async_get_or_create(
-        config_entry_id="123",
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
+    hub = device_registry.async_get_or_create(
+        config_entry_id=other_config_entry.entry_id,
         connections=set(),
         identifiers={("mqtt", "hub-id")},
         manufacturer="manufacturer",
@@ -1236,7 +1161,7 @@ async def test_entity_device_info_with_hub(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")})
+    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.via_device_id == hub.id
 
@@ -1479,7 +1404,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -1499,3 +1428,63 @@ async def test_unload_entry(
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+@pytest.mark.parametrize(
+    ("expected_friendly_name", "device_class"),
+    [("test", None), ("Humidity", "humidity"), ("Temperature", "temperature")],
+)
+async def test_entity_name(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    expected_friendly_name: str | None,
+    device_class: str | None,
+) -> None:
+    """Test the entity name setup."""
+    domain = sensor.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_name(
+        hass, mqtt_mock_entry, domain, config, expected_friendly_name, device_class
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            sensor.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "value_template": "{{ value_json.state }}",
+                    "last_reset_value_template": "{{ value_json.last_reset }}",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", '{"state":"val1"}', '{"state":"val2"}'),
+        (
+            "test-topic",
+            '{"last_reset":"2023-09-15 15:11:03"}',
+            '{"last_reset":"2023-09-16 15:11:02"}',
+        ),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)

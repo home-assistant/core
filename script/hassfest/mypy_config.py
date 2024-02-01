@@ -35,7 +35,6 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "show_error_codes": "true",
     "follow_imports": "silent",
     # Enable some checks globally.
-    "ignore_missing_imports": "true",
     "local_partial_types": "true",
     "strict_equality": "true",
     "no_implicit_optional": "true",
@@ -50,9 +49,16 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
             "truthy-iterable",
         ]
     ),
-    "disable_error_code": ", ".join(["annotation-unchecked"]),
-    # Strict_concatenate breaks passthrough ParamSpec typing
-    "strict_concatenate": "false",
+    "disable_error_code": ", ".join(
+        [
+            "annotation-unchecked",
+            "import-not-found",
+            "import-untyped",
+        ]
+    ),
+    # Impractical in real code
+    # E.g. this breaks passthrough ParamSpec typing with Concatenate
+    "extra_checks": "false",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".

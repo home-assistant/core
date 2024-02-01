@@ -4,7 +4,6 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
@@ -196,7 +195,7 @@ class VoiceRSSProvider(Provider):
         form_data["hl"] = language
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 request = await websession.post(VOICERSS_API_URL, data=form_data)
 
                 if request.status != HTTPStatus.OK:

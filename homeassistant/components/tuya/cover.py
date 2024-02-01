@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -24,7 +24,7 @@ from .base import IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaCoverEntityDescription(CoverEntityDescription):
     """Describe an Tuya cover entity."""
 
@@ -44,7 +44,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "cl": (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
-            name="Curtain",
+            translation_key="curtain",
             current_state=DPCode.SITUATION_SET,
             current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
             set_position=DPCode.PERCENT_CONTROL,
@@ -52,21 +52,21 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
-            name="Curtain 2",
+            translation_key="curtain_2",
             current_position=DPCode.PERCENT_STATE_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_3,
-            name="Curtain 3",
+            translation_key="curtain_3",
             current_position=DPCode.PERCENT_STATE_3,
             set_position=DPCode.PERCENT_CONTROL_3,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.MACH_OPERATE,
-            name="Curtain",
+            translation_key="curtain",
             current_position=DPCode.POSITION,
             set_position=DPCode.POSITION,
             device_class=CoverDeviceClass.CURTAIN,
@@ -78,7 +78,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         # It is used by the Kogan Smart Blinds Driver
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_1,
-            name="Blind",
+            translation_key="blind",
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.BLIND,
@@ -89,21 +89,21 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "ckmkzq": (
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_1,
-            name="Door",
+            translation_key="door",
             current_state=DPCode.DOORCONTACT_STATE,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_2,
-            name="Door 2",
+            translation_key="door_2",
             current_state=DPCode.DOORCONTACT_STATE_2,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_3,
-            name="Door 3",
+            translation_key="door_3",
             current_state=DPCode.DOORCONTACT_STATE_3,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
@@ -114,14 +114,14 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "clkg": (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
-            name="Curtain",
+            translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
-            name="Curtain 2",
+            translation_key="curtain_2",
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
@@ -132,6 +132,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "jdcljqr": (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
+            translation_key="curtain",
             current_position=DPCode.PERCENT_STATE,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
@@ -151,7 +152,7 @@ async def async_setup_entry(
         """Discover and add a discovered tuya cover."""
         entities: list[TuyaCoverEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if descriptions := COVERS.get(device.category):
                 for description in descriptions:
                     if (
@@ -159,14 +160,12 @@ async def async_setup_entry(
                         or description.key in device.status_range
                     ):
                         entities.append(
-                            TuyaCoverEntity(
-                                device, hass_data.device_manager, description
-                            )
+                            TuyaCoverEntity(device, hass_data.manager, description)
                         )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -183,8 +182,8 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: TuyaCoverEntityDescription,
     ) -> None:
         """Init Tuya Cover."""

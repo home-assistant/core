@@ -1,5 +1,9 @@
 """Support for Soma Smartshades."""
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 import logging
+from typing import Any, TypeVar
 
 from api.soma_api import SomaApi
 from requests import RequestException
@@ -10,11 +14,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import API, DOMAIN, HOST, PORT
 from .utils import is_api_response_success
+
+_SomaEntityT = TypeVar("_SomaEntityT", bound="SomaEntity")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,10 +75,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def soma_api_call(api_call):
+def soma_api_call(
+    api_call: Callable[[_SomaEntityT], Coroutine[Any, Any, dict]],
+) -> Callable[[_SomaEntityT], Coroutine[Any, Any, dict]]:
     """Soma api call decorator."""
 
-    async def inner(self) -> dict:
+    async def inner(self: _SomaEntityT) -> dict:
         response = {}
         try:
             response_from_api = await api_call(self)
@@ -108,6 +117,8 @@ def soma_api_call(api_call):
 class SomaEntity(Entity):
     """Representation of a generic Soma device."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device, api):
         """Initialize the Soma device."""
         self.device = device
@@ -128,11 +139,6 @@ class SomaEntity(Entity):
         return self.device["mac"]
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self.device["name"]
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes.
 
@@ -141,7 +147,7 @@ class SomaEntity(Entity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Wazombi Labs",
-            name=self.name,
+            name=self.device["name"],
         )
 
     def set_position(self, position: int) -> None:

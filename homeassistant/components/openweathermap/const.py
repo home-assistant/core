@@ -24,7 +24,6 @@ DEFAULT_NAME = "OpenWeatherMap"
 DEFAULT_LANGUAGE = "en"
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 MANUFACTURER = "OpenWeather"
-CONF_LANGUAGE = "language"
 CONFIG_FLOW_VERSION = 2
 ENTRY_NAME = "name"
 ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
@@ -35,6 +34,7 @@ ATTR_API_DEW_POINT = "dew_point"
 ATTR_API_WEATHER = "weather"
 ATTR_API_TEMPERATURE = "temperature"
 ATTR_API_FEELS_LIKE_TEMPERATURE = "feels_like_temperature"
+ATTR_API_WIND_GUST = "wind_gust"
 ATTR_API_WIND_SPEED = "wind_speed"
 ATTR_API_WIND_BEARING = "wind_bearing"
 ATTR_API_HUMIDITY = "humidity"
@@ -50,7 +50,10 @@ ATTR_API_FORECAST = "forecast"
 UPDATE_LISTENER = "update_listener"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
+ATTR_API_FORECAST_CLOUDS = "clouds"
 ATTR_API_FORECAST_CONDITION = "condition"
+ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE = "feels_like_temperature"
+ATTR_API_FORECAST_HUMIDITY = "humidity"
 ATTR_API_FORECAST_PRECIPITATION = "precipitation"
 ATTR_API_FORECAST_PRECIPITATION_PROBABILITY = "precipitation_probability"
 ATTR_API_FORECAST_PRESSURE = "pressure"
@@ -152,4 +155,9 @@ CONDITION_CLASSES = {
         903,
         904,
     ],
+}
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
 }

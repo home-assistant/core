@@ -15,7 +15,7 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.percentage import (
@@ -23,7 +23,8 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from . import Coordinator, async_setup_entry_platform
+from . import async_setup_entry_platform
+from .coordinator import FjaraskupanCoordinator
 
 ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
@@ -54,21 +55,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
-    def _constructor(coordinator: Coordinator):
+    def _constructor(coordinator: FjaraskupanCoordinator):
         return [Fan(coordinator, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Fan(CoordinatorEntity[Coordinator], FanEntity):
+class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
     """Fan entity."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: FjaraskupanCoordinator,
         device_info: DeviceInfo,
     ) -> None:
         """Init fan entity."""
@@ -129,11 +131,9 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if command := PRESET_TO_COMMAND.get(preset_mode):
-            async with self.coordinator.async_connect_and_update() as device:
-                await device.send_command(command)
-        else:
-            raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
+        command = PRESET_TO_COMMAND[preset_mode]
+        async with self.coordinator.async_connect_and_update() as device:
+            await device.send_command(command)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""

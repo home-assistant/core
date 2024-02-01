@@ -1,9 +1,7 @@
 """Test state helpers."""
 import asyncio
-from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
@@ -21,32 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import state
-from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
-
-
-async def test_async_track_states(
-    hass: HomeAssistant, mock_integration_frame: Mock
-) -> None:
-    """Test AsyncTrackStates context manager."""
-    point1 = dt_util.utcnow()
-    point2 = point1 + timedelta(seconds=5)
-    point3 = point2 + timedelta(seconds=5)
-
-    with freeze_time(point2) as freezer, state.AsyncTrackStates(hass) as states:
-        freezer.move_to(point1)
-        hass.states.async_set("light.test", "on")
-
-        freezer.move_to(point2)
-        hass.states.async_set("light.test2", "on")
-        state2 = hass.states.get("light.test2")
-
-        freezer.move_to(point3)
-        hass.states.async_set("light.test3", "on")
-        state3 = hass.states.get("light.test3")
-
-    assert [state2, state3] == sorted(states, key=lambda state: state.entity_id)
 
 
 async def test_call_to_component(hass: HomeAssistant) -> None:
@@ -80,29 +54,6 @@ async def test_call_to_component(hass: HomeAssistant) -> None:
             climate_fun.assert_called_once_with(
                 hass, [state_climate], context=context, reproduce_options=None
             )
-
-
-async def test_get_changed_since(
-    hass: HomeAssistant, mock_integration_frame: Mock
-) -> None:
-    """Test get_changed_since."""
-    point1 = dt_util.utcnow()
-    point2 = point1 + timedelta(seconds=5)
-    point3 = point2 + timedelta(seconds=5)
-
-    with freeze_time(point1) as freezer:
-        hass.states.async_set("light.test", "on")
-        state1 = hass.states.get("light.test")
-
-        freezer.move_to(point2)
-        hass.states.async_set("light.test2", "on")
-        state2 = hass.states.get("light.test2")
-
-        freezer.move_to(point3)
-        hass.states.async_set("light.test3", "on")
-        state3 = hass.states.get("light.test3")
-
-    assert [state2, state3] == state.get_changed_since([state1, state2, state3], point2)
 
 
 async def test_reproduce_with_no_entity(hass: HomeAssistant) -> None:

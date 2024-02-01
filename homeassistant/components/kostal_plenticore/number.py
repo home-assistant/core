@@ -16,7 +16,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,7 +26,7 @@ from .helper import PlenticoreDataFormatter, SettingDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreNumberEntityDescriptionMixin:
     """Define an entity description mixin for number entities."""
 
@@ -36,7 +36,7 @@ class PlenticoreNumberEntityDescriptionMixin:
     fmt_to: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreNumberEntityDescription(
     NumberEntityDescription, PlenticoreNumberEntityDescriptionMixin
 ):

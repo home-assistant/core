@@ -7,13 +7,18 @@ import aiohttp
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from gspread import Client
+from gspread.exceptions import APIError
 from gspread.utils import ValueInputOption
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
@@ -76,7 +81,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entry.state == ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
-        for service_name in hass.services.async_services()[DOMAIN]:
+        for service_name in hass.services.async_services_for_domain(DOMAIN):
             hass.services.async_remove(DOMAIN, service_name)
 
     return True
@@ -93,6 +98,9 @@ async def async_setup_service(hass: HomeAssistant) -> None:
         except RefreshError as ex:
             entry.async_start_reauth(hass)
             raise ex
+        except APIError as ex:
+            raise HomeAssistantError("Failed to write data") from ex
+
         worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
         row_data = {"created": str(datetime.now())} | call.data[DATA]
         columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])

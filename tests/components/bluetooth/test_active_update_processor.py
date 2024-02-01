@@ -91,7 +91,7 @@ async def test_basic_usage(
     # The first time, it was passed the data from parsing the advertisement
     # The second time, it was passed the data from polling
     assert len(async_handle_update.mock_calls) == 2
-    assert async_handle_update.mock_calls[0] == call({"testdata": 0})
+    assert async_handle_update.mock_calls[0] == call({"testdata": 0}, False)
     assert async_handle_update.mock_calls[1] == call({"testdata": 1})
 
     cancel()
@@ -148,7 +148,7 @@ async def test_poll_can_be_skipped(
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": None})
+    assert async_handle_update.mock_calls[-1] == call({"testdata": None}, True)
 
     flag = True
 
@@ -208,7 +208,7 @@ async def test_bleak_error_and_recover(
     # First poll fails
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": None})
+    assert async_handle_update.mock_calls[-1] == call({"testdata": None}, False)
 
     assert (
         "aa:bb:cc:dd:ee:ff: Bluetooth error whilst polling: Connection was aborted"
@@ -272,7 +272,7 @@ async def test_poll_failure_and_recover(
     # First poll fails
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": None})
+    assert async_handle_update.mock_calls[-1] == call({"testdata": None}, False)
 
     # Second poll works
     flag = False
@@ -433,10 +433,10 @@ async def test_no_polling_after_stop_event(
     # The first time, it was passed the data from parsing the advertisement
     # The second time, it was passed the data from polling
     assert len(async_handle_update.mock_calls) == 2
-    assert async_handle_update.mock_calls[0] == call({"testdata": 0})
+    assert async_handle_update.mock_calls[0] == call({"testdata": 0}, False)
     assert async_handle_update.mock_calls[1] == call({"testdata": 1})
 
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await hass.async_block_till_done()
     assert needs_poll_calls == 1
 

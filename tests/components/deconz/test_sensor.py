@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -441,6 +441,43 @@ TEST_DATA = [
             "next_state": "10.0",
         },
     ),
+    (  # Moisture Sensor
+        {
+            "config": {"battery": 100, "offset": 0, "on": True, "reachable": True},
+            "etag": "1ba99c68975111c04367b67cf95ead44",
+            "lastannounced": None,
+            "lastseen": "2023-05-19T09:55Z",
+            "manufacturername": "_TZE200_myd45weu",
+            "modelid": "TS0601",
+            "name": "Soil Sensor",
+            "state": {
+                "lastupdated": "2023-05-19T09:42:00.472",
+                "lowbattery": False,
+                "moisture": 7213,
+            },
+            "swversion": "1.0.8",
+            "type": "ZHAMoisture",
+            "uniqueid": "a4:c1:38:fe:86:8f:07:a3-01-0408",
+        },
+        {
+            "entity_count": 3,
+            "device_count": 3,
+            "entity_id": "sensor.soil_sensor",
+            "unique_id": "a4:c1:38:fe:86:8f:07:a3-01-0408-moisture",
+            "state": "72.13",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.MOISTURE,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "state_class": "measurement",
+                "unit_of_measurement": "%",
+                "device_class": "moisture",
+                "friendly_name": "Soil Sensor",
+            },
+            "websocket_event": {"state": {"moisture": 6923}},
+            "next_state": "69.23",
+        },
+    ),
     (  # Light level sensor
         {
             "config": {
@@ -491,6 +528,55 @@ TEST_DATA = [
             },
             "websocket_event": {"state": {"lightlevel": 1000}},
             "next_state": "1.3",
+        },
+    ),
+    (  # Particulate matter -> pm2_5
+        {
+            "capabilities": {
+                "measured_value": {
+                    "max": 999,
+                    "min": 0,
+                    "quantity": "density",
+                    "substance": "PM2.5",
+                    "unit": "ug/m^3",
+                }
+            },
+            "config": {"on": True, "reachable": True},
+            "ep": 1,
+            "etag": "2a67a4b5cbcc20532c0ee75e2abac0c3",
+            "lastannounced": None,
+            "lastseen": "2023-10-29T12:59Z",
+            "manufacturername": "IKEA of Sweden",
+            "modelid": "STARKVIND Air purifier table",
+            "name": "STARKVIND AirPurifier",
+            "productid": "E2006",
+            "state": {
+                "airquality": "excellent",
+                "lastupdated": "2023-10-29T12:59:27.976",
+                "measured_value": 1,
+                "pm2_5": 1,
+            },
+            "swversion": "1.1.001",
+            "type": "ZHAParticulateMatter",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-042a",
+        },
+        {
+            "entity_count": 1,
+            "device_count": 3,
+            "entity_id": "sensor.starkvind_airpurifier_pm25",
+            "unique_id": "xx:xx:xx:xx:xx:xx:xx:xx-01-042a-particulate_matter_pm2_5",
+            "state": "1",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.PM25,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "friendly_name": "STARKVIND AirPurifier PM25",
+                "device_class": SensorDeviceClass.PM25,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            },
+            "websocket_event": {"state": {"measured_value": 2}},
+            "next_state": "2",
         },
     ),
     (  # Power sensor
@@ -755,18 +841,18 @@ TEST_DATA = [
 @pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     mock_deconz_websocket,
     sensor_data,
     expected,
 ) -> None:
     """Test successful creation of sensor entities."""
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
 
     # Create entity entry to migrate to new unique ID
     if "old_unique_id" in expected:
-        ent_reg.async_get_or_create(
+        entity_registry.async_get_or_create(
             SENSOR_DOMAIN,
             DECONZ_DOMAIN,
             expected["old_unique_id"],
@@ -780,12 +866,14 @@ async def test_sensors(
 
     # Enable in entity registry
     if expected.get("enable_entity"):
-        ent_reg.async_update_entity(entity_id=expected["entity_id"], disabled_by=None)
+        entity_registry.async_update_entity(
+            entity_id=expected["entity_id"], disabled_by=None
+        )
         await hass.async_block_till_done()
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
         )
         await hass.async_block_till_done()
 
@@ -799,16 +887,16 @@ async def test_sensors(
 
     # Verify entity registry
     assert (
-        ent_reg.async_get(expected["entity_id"]).entity_category
+        entity_registry.async_get(expected["entity_id"]).entity_category
         is expected["entity_category"]
     )
-    ent_reg_entry = ent_reg.async_get(expected["entity_id"])
+    ent_reg_entry = entity_registry.async_get(expected["entity_id"])
     assert ent_reg_entry.entity_category is expected["entity_category"]
     assert ent_reg_entry.unique_id == expected["unique_id"]
 
     # Verify device registry
     assert (
-        len(dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id))
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
         == expected["device_count"]
     )
 

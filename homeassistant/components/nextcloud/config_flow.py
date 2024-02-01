@@ -2,14 +2,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from nextcloudmonitor import (
     NextcloudMonitor,
     NextcloudMonitorAuthorizationError,
     NextcloudMonitorConnectionError,
-    NextcloudMonitorError,
     NextcloudMonitorRequestError,
 )
 import voluptuous as vol
@@ -35,8 +33,6 @@ DATA_SCHEMA_REAUTH = vol.Schema(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Nextcloud config flow."""
@@ -52,25 +48,6 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_USERNAME],
             user_input[CONF_PASSWORD],
             user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-        )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle a flow initiated by configuration file."""
-        self._async_abort_entries_match({CONF_URL: user_input.get(CONF_URL)})
-        try:
-            await self.hass.async_add_executor_job(self._try_connect_nc, user_input)
-        except NextcloudMonitorError:
-            _LOGGER.error(
-                "Connection error during import of yaml configuration, import aborted"
-            )
-            return self.async_abort(reason="connection_error_during_import")
-        return await self.async_step_user(
-            {
-                CONF_URL: user_input[CONF_URL],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
-            }
         )
 
     async def async_step_user(

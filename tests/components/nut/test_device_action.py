@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 from pynut2.nut2 import PyNUTError
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import automation, device_automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -14,7 +15,7 @@ from homeassistant.setup import async_setup_component
 
 from .util import async_init_integration
 
-from tests.common import assert_lists_same, async_get_device_automations
+from tests.common import async_get_device_automations
 
 
 async def test_get_all_actions_for_specified_user(
@@ -47,7 +48,7 @@ async def test_get_all_actions_for_specified_user(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 async def test_no_actions_for_anonymous_user(

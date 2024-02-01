@@ -181,7 +181,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         await hass.services.async_call(domain, service, data, blocking=True)
         if payload is None:
             mocked_method.assert_called_once()
-        elif type(payload) == list:
+        elif isinstance(payload, list):
             mocked_method.assert_called_once_with(*payload)
         else:
             mocked_method.assert_called_once_with(**payload)
@@ -826,6 +826,9 @@ async def test_device_types(
         # nightlight as a setting of the main entity
         if nightlight_mode_properties is not None:
             mocked_bulb.last_properties["active_mode"] = True
+            config_entry = MockConfigEntry(
+                domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
+            )
             config_entry.add_to_hass(hass)
             await _async_setup(config_entry)
             state = hass.states.get(entity_id)
@@ -889,6 +892,7 @@ async def test_device_types(
         "mono",
         {
             "effect_list": YEELIGHT_MONO_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": bright,
             "color_mode": "brightness",
@@ -903,6 +907,7 @@ async def test_device_types(
         {
             "effect_list": YEELIGHT_MONO_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "effect": None,
             "brightness": bright,
             "color_mode": "brightness",
             "supported_color_modes": ["brightness"],
@@ -917,6 +922,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -944,6 +950,7 @@ async def test_device_types(
         },
         nightlight_mode_properties={
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "hs_color": (28.401, 100.0),
             "rgb_color": (255, 120, 0),
@@ -976,6 +983,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -991,6 +999,8 @@ async def test_device_types(
             "hs_color": hs_color,
             "rgb_color": color_hs_to_RGB(*hs_color),
             "xy_color": color_hs_to_xy(*hs_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1009,6 +1019,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1024,6 +1035,8 @@ async def test_device_types(
             "hs_color": color_RGB_to_hs(*rgb_color),
             "rgb_color": rgb_color,
             "xy_color": color_RGB_to_xy(*rgb_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1043,6 +1056,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1055,6 +1069,11 @@ async def test_device_types(
                 model_specs["color_temp"]["min"]
             ),
             "brightness": bright,
+            "hs_color": None,
+            "rgb_color": None,
+            "xy_color": None,
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1074,6 +1093,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1086,6 +1106,11 @@ async def test_device_types(
                 model_specs["color_temp"]["min"]
             ),
             "brightness": bright,
+            "hs_color": None,
+            "rgb_color": None,
+            "xy_color": None,
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1104,6 +1129,7 @@ async def test_device_types(
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1115,6 +1141,12 @@ async def test_device_types(
             "max_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
+            "brightness": None,
+            "hs_color": None,
+            "rgb_color": None,
+            "xy_color": None,
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "unknown",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1133,6 +1165,7 @@ async def test_device_types(
         "ceiling1",
         {
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
                 color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
@@ -1163,6 +1196,7 @@ async def test_device_types(
         },
         nightlight_mode_properties={
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
                 color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
@@ -1201,6 +1235,7 @@ async def test_device_types(
         {
             "friendly_name": NAME,
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "flowing": False,
             "night_light": True,
             "supported_features": SUPPORT_YEELIGHT,
@@ -1234,6 +1269,7 @@ async def test_device_types(
         nightlight_mode_properties={
             "friendly_name": NAME,
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "flowing": False,
             "night_light": True,
             "supported_features": SUPPORT_YEELIGHT,
@@ -1270,6 +1306,7 @@ async def test_device_types(
         "ceiling4",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1297,6 +1334,7 @@ async def test_device_types(
         "ceiling4",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1308,6 +1346,8 @@ async def test_device_types(
             "hs_color": bg_hs_color,
             "rgb_color": color_hs_to_RGB(*bg_hs_color),
             "xy_color": color_hs_to_xy(*bg_hs_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1322,6 +1362,7 @@ async def test_device_types(
         "ceiling4",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1333,6 +1374,8 @@ async def test_device_types(
             "hs_color": color_RGB_to_hs(*bg_rgb_color),
             "rgb_color": bg_rgb_color,
             "xy_color": color_RGB_to_xy(*bg_rgb_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },

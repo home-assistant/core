@@ -1,5 +1,4 @@
 """Test the config flow for the Insteon integration."""
-
 from unittest.mock import patch
 
 import pytest
@@ -15,6 +14,7 @@ from homeassistant.components.insteon.config_flow import (
     STEP_HUB_V1,
     STEP_HUB_V2,
     STEP_PLM,
+    STEP_PLM_MANUALLY,
     STEP_REMOVE_OVERRIDE,
     STEP_REMOVE_X10,
 )
@@ -42,15 +42,10 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     MOCK_DEVICE,
-    MOCK_HOSTNAME,
-    MOCK_IMPORT_CONFIG_PLM,
-    MOCK_IMPORT_MINIMUM_HUB_V1,
-    MOCK_IMPORT_MINIMUM_HUB_V2,
-    MOCK_PASSWORD,
     MOCK_USER_INPUT_HUB_V1,
     MOCK_USER_INPUT_HUB_V2,
     MOCK_USER_INPUT_PLM,
-    MOCK_USERNAME,
+    MOCK_USER_INPUT_PLM_MANUAL,
     PATCH_ASYNC_SETUP,
     PATCH_ASYNC_SETUP_ENTRY,
     PATCH_CONNECTION,
@@ -161,6 +156,41 @@ async def test_form_select_plm(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_select_plm_no_usb(hass: HomeAssistant) -> None:
+    """Test we set up the PLM when no comm ports are found."""
+
+    temp_usb_list = dict(USB_PORTS)
+    USB_PORTS.clear()
+    result = await _init_form(hass, STEP_PLM)
+
+    result2, _, _ = await _device_form(
+        hass, result["flow_id"], mock_successful_connection, None
+    )
+    USB_PORTS.update(temp_usb_list)
+    assert result2["type"] == "form"
+    assert result2["step_id"] == STEP_PLM_MANUALLY
+
+
+async def test_form_select_plm_manual(hass: HomeAssistant) -> None:
+    """Test we set up the PLM correctly."""
+
+    result = await _init_form(hass, STEP_PLM)
+
+    result2, mock_setup, mock_setup_entry = await _device_form(
+        hass, result["flow_id"], mock_failed_connection, MOCK_USER_INPUT_PLM_MANUAL
+    )
+
+    result3, mock_setup, mock_setup_entry = await _device_form(
+        hass, result2["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
+    )
+    assert result2["type"] == "form"
+    assert result3["type"] == "create_entry"
+    assert result3["data"] == MOCK_USER_INPUT_PLM
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_select_hub_v1(hass: HomeAssistant) -> None:
     """Test we set up the Hub v1 correctly."""
 
@@ -231,6 +261,21 @@ async def test_failed_connection_plm(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_failed_connection_plm_manually(hass: HomeAssistant) -> None:
+    """Test a failed connection with the PLM."""
+
+    result = await _init_form(hass, STEP_PLM)
+
+    result2, _, _ = await _device_form(
+        hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM_MANUAL
+    )
+    result3, _, _ = await _device_form(
+        hass, result["flow_id"], mock_failed_connection, MOCK_USER_INPUT_PLM
+    )
+    assert result3["type"] == "form"
+    assert result3["errors"] == {"base": "cannot_connect"}
+
+
 async def test_failed_connection_hub(hass: HomeAssistant) -> None:
     """Test a failed connection with a Hub."""
 
@@ -241,30 +286,6 @@ async def test_failed_connection_hub(hass: HomeAssistant) -> None:
     )
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def _import_config(hass, config):
-    """Run the import step."""
-    with patch(
-        PATCH_CONNECTION,
-        new=mock_successful_connection,
-    ), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ), patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True):
-        return await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-
-
-async def test_import_plm(hass: HomeAssistant) -> None:
-    """Test importing a minimum PLM config from yaml."""
-
-    result = await _import_config(hass, MOCK_IMPORT_CONFIG_PLM)
-
-    assert result["type"] == "create_entry"
-    assert hass.config_entries.async_entries(DOMAIN)
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        assert entry.data == MOCK_IMPORT_CONFIG_PLM
 
 
 async def _options_init_form(hass, entry_id, step):
@@ -280,75 +301,6 @@ async def _options_init_form(hass, entry_id, step):
         {"next_step_id": step},
     )
     return result2
-
-
-async def test_import_min_hub_v2(hass: HomeAssistant) -> None:
-    """Test importing a minimum Hub v2 config from yaml."""
-
-    result = await _import_config(
-        hass, {**MOCK_IMPORT_MINIMUM_HUB_V2, CONF_PORT: 25105, CONF_HUB_VERSION: 2}
-    )
-
-    assert result["type"] == "create_entry"
-    assert hass.config_entries.async_entries(DOMAIN)
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        assert entry.data[CONF_HOST] == MOCK_HOSTNAME
-        assert entry.data[CONF_PORT] == 25105
-        assert entry.data[CONF_USERNAME] == MOCK_USERNAME
-        assert entry.data[CONF_PASSWORD] == MOCK_PASSWORD
-        assert entry.data[CONF_HUB_VERSION] == 2
-
-
-async def test_import_min_hub_v1(hass: HomeAssistant) -> None:
-    """Test importing a minimum Hub v1 config from yaml."""
-
-    result = await _import_config(
-        hass, {**MOCK_IMPORT_MINIMUM_HUB_V1, CONF_PORT: 9761, CONF_HUB_VERSION: 1}
-    )
-
-    assert result["type"] == "create_entry"
-    assert hass.config_entries.async_entries(DOMAIN)
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        assert entry.data[CONF_HOST] == MOCK_HOSTNAME
-        assert entry.data[CONF_PORT] == 9761
-        assert entry.data[CONF_HUB_VERSION] == 1
-
-
-async def test_import_existing(hass: HomeAssistant) -> None:
-    """Test we fail on an existing config imported."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="abcde12345",
-        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
-        options={},
-    )
-    config_entry.add_to_hass(hass)
-    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
-
-    result = await _import_config(
-        hass, {**MOCK_IMPORT_MINIMUM_HUB_V2, CONF_PORT: 25105, CONF_HUB_VERSION: 2}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
-async def test_import_failed_connection(hass: HomeAssistant) -> None:
-    """Test a failed connection on import."""
-
-    with patch(
-        PATCH_CONNECTION,
-        new=mock_failed_connection,
-    ), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ), patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={**MOCK_IMPORT_MINIMUM_HUB_V2, CONF_PORT: 25105, CONF_HUB_VERSION: 2},
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
 
 
 async def _options_form(

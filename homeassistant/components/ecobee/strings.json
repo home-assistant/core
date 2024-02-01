@@ -2,14 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "ecobee API key",
         "description": "Please enter the API key obtained from ecobee.com.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "authorize": {
-        "title": "Authorize app on ecobee.com",
         "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with PIN code:\n\n{pin}\n\nThen, press Submit."
       }
     },
@@ -19,6 +17,140 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "entity": {
+    "number": {
+      "ventilator_min_type_home": {
+        "name": "Ventilator min time home"
+      },
+      "ventilator_min_type_away": {
+        "name": "Ventilator min time away"
+      }
+    }
+  },
+  "services": {
+    "create_vacation": {
+      "name": "Create vacation",
+      "description": "Creates a vacation on the selected thermostat. Note: start/end date and time must all be specified together for these parameters to have an effect. If start/end date and time are not specified, the vacation will start immediately and last 14 days (unless deleted earlier).",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Ecobee thermostat on which to create the vacation."
+        },
+        "vacation_name": {
+          "name": "Vacation name",
+          "description": "Name of the vacation to create; must be unique on the thermostat."
+        },
+        "cool_temp": {
+          "name": "Cool temperature",
+          "description": "Cooling temperature during the vacation."
+        },
+        "heat_temp": {
+          "name": "Heat temperature",
+          "description": "Heating temperature during the vacation."
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "Date the vacation starts in the YYYY-MM-DD format (optional, immediately if not provided along with start_time)."
+        },
+        "start_time": {
+          "name": "Start time",
+          "description": "Time the vacation starts, in the local time of the thermostat, in the 24-hour format \"HH:MM:SS\"."
+        },
+        "end_date": {
+          "name": "End date",
+          "description": "Date the vacation ends in the YYYY-MM-DD format (optional, 14 days from now if not provided along with end_time)."
+        },
+        "end_time": {
+          "name": "End time",
+          "description": "Time the vacation ends, in the local time of the thermostat, in the 24-hour format \"HH:MM:SS\"."
+        },
+        "fan_mode": {
+          "name": "Fan mode",
+          "description": "Fan mode of the thermostat during the vacation."
+        },
+        "fan_min_on_time": {
+          "name": "Fan minimum on time",
+          "description": "Minimum number of minutes to run the fan each hour (0 to 60) during the vacation."
+        }
+      }
+    },
+    "delete_vacation": {
+      "name": "Delete vacation",
+      "description": "Deletes a vacation on the selected thermostat.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Ecobee thermostat on which to delete the vacation."
+        },
+        "vacation_name": {
+          "name": "[%key:component::ecobee::services::create_vacation::fields::vacation_name::name%]",
+          "description": "Name of the vacation to delete."
+        }
+      }
+    },
+    "resume_program": {
+      "name": "Resume program",
+      "description": "Resumes the programmed schedule.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of entities to change."
+        },
+        "resume_all": {
+          "name": "Resume all",
+          "description": "Resume all events and return to the scheduled program."
+        }
+      }
+    },
+    "set_fan_min_on_time": {
+      "name": "Set fan minimum on time",
+      "description": "Sets the minimum fan on time.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "[%key:component::ecobee::services::resume_program::fields::entity_id::description%]"
+        },
+        "fan_min_on_time": {
+          "name": "[%key:component::ecobee::services::create_vacation::fields::fan_min_on_time::name%]",
+          "description": "New value of fan min on time."
+        }
+      }
+    },
+    "set_dst_mode": {
+      "name": "Set Daylight savings time mode",
+      "description": "Enables/disables automatic daylight savings time.",
+      "fields": {
+        "dst_enabled": {
+          "name": "Daylight savings time enabled",
+          "description": "Enable automatic daylight savings time."
+        }
+      }
+    },
+    "set_mic_mode": {
+      "name": "Set mic mode",
+      "description": "Enables/disables Alexa mic (only for Ecobee 4).",
+      "fields": {
+        "mic_enabled": {
+          "name": "Mic enabled",
+          "description": "Enable Alexa mic."
+        }
+      }
+    },
+    "set_occupancy_modes": {
+      "name": "Set occupancy modes",
+      "description": "Enables/disables Smart Home/Away and Follow Me modes.",
+      "fields": {
+        "auto_away": {
+          "name": "Auto away",
+          "description": "Enable Smart Home/Away mode."
+        },
+        "follow_me": {
+          "name": "Follow me",
+          "description": "Enable Follow Me mode."
+        }
+      }
     }
   }
 }

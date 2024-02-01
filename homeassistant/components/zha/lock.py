@@ -20,10 +20,10 @@ from homeassistant.helpers.typing import StateType
 from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_DOORLOCK,
-    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -45,7 +45,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation Door Lock from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.LOCK]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.LOCK]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -96,7 +97,7 @@ async def async_setup_entry(
 class ZhaDoorLock(ZhaEntity, LockEntity):
     """Representation of a ZHA lock."""
 
-    _attr_name: str = "Door lock"
+    _attr_translation_key: str = "door_lock"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""
@@ -132,7 +133,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         result = await self._doorlock_cluster_handler.lock_door()
-        if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
+        if result[0] is not Status.SUCCESS:
             self.error("Error with lock_door: %s", result)
             return
         self.async_write_ha_state()
@@ -140,7 +141,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         result = await self._doorlock_cluster_handler.unlock_door()
-        if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
+        if result[0] is not Status.SUCCESS:
             self.error("Error with unlock_door: %s", result)
             return
         self.async_write_ha_state()

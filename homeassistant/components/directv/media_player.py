@@ -80,11 +80,11 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         """Initialize DirecTV media player."""
         super().__init__(
             dtv=dtv,
+            name=name,
             address=address,
         )
 
         self._attr_unique_id = self._device_id
-        self._attr_name = name
         self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
         self._attr_available = False
 

@@ -1,11 +1,11 @@
 """Plugwise Binary Sensor component for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from plugwise import SmileBinarySensors
+from plugwise.constants import BinarySensorType
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -23,86 +23,54 @@ from .entity import PlugwiseEntity
 SEVERITIES = ["other", "info", "warning", "error"]
 
 
-@dataclass
-class PlugwiseBinarySensorMixin:
-    """Mixin for required Plugwise binary sensor base description keys."""
-
-    value_fn: Callable[[SmileBinarySensors], bool]
-
-
-@dataclass
-class PlugwiseBinarySensorEntityDescription(
-    BinarySensorEntityDescription, PlugwiseBinarySensorMixin
-):
+@dataclass(frozen=True)
+class PlugwiseBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Plugwise binary sensor entity."""
 
-    icon_off: str | None = None
+    key: BinarySensorType
 
 
 BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
     PlugwiseBinarySensorEntityDescription(
         key="compressor_state",
         translation_key="compressor_state",
-        icon="mdi:hvac",
-        icon_off="mdi:hvac-off",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data["compressor_state"],
     ),
     PlugwiseBinarySensorEntityDescription(
         key="cooling_enabled",
         translation_key="cooling_enabled",
-        icon="mdi:snowflake-thermometer",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data["cooling_enabled"],
     ),
     PlugwiseBinarySensorEntityDescription(
         key="dhw_state",
         translation_key="dhw_state",
-        icon="mdi:water-pump",
-        icon_off="mdi:water-pump-off",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data["dhw_state"],
     ),
     PlugwiseBinarySensorEntityDescription(
         key="flame_state",
         translation_key="flame_state",
         name="Flame state",
-        icon="mdi:fire",
-        icon_off="mdi:fire-off",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data["flame_state"],
     ),
     PlugwiseBinarySensorEntityDescription(
         key="heating_state",
         translation_key="heating_state",
-        icon="mdi:radiator",
-        icon_off="mdi:radiator-off",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data["heating_state"],
     ),
     PlugwiseBinarySensorEntityDescription(
         key="cooling_state",
         translation_key="cooling_state",
-        icon="mdi:snowflake",
-        icon_off="mdi:snowflake-off",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data["cooling_state"],
     ),
     PlugwiseBinarySensorEntityDescription(
         key="slave_boiler_state",
         translation_key="slave_boiler_state",
-        icon="mdi:fire",
-        icon_off="mdi:circle-off-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data["slave_boiler_state"],
     ),
     PlugwiseBinarySensorEntityDescription(
         key="plugwise_notification",
         translation_key="plugwise_notification",
-        icon="mdi:mailbox-up-outline",
-        icon_off="mdi:mailbox-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data["plugwise_notification"],
     ),
 )
 
@@ -154,14 +122,7 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.entity_description.value_fn(self.device["binary_sensors"])
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        if (icon_off := self.entity_description.icon_off) and self.is_on is False:
-            return icon_off
-        return self.entity_description.icon
+        return self.device["binary_sensors"][self.entity_description.key]
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:

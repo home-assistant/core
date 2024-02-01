@@ -1,12 +1,12 @@
 """Rainforest data."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
 import aioeagle
 import aiohttp
-import async_timeout
 from eagle100 import Eagle as Eagle100Reader
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
@@ -50,7 +50,7 @@ async def async_get_type(hass, cloud_id, install_code, host):
     )
 
     try:
-        async with async_timeout.timeout(30):
+        async with asyncio.timeout(30):
             meters = await hub.get_device_list()
     except aioeagle.BadAuth as err:
         raise InvalidAuth from err
@@ -87,7 +87,7 @@ async def async_get_type(hass, cloud_id, install_code, host):
     return None, None
 
 
-class EagleDataCoordinator(DataUpdateCoordinator):
+class EagleDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Get the latest data from the Eagle device."""
 
     eagle100_reader: Eagle100Reader | None = None
@@ -150,7 +150,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
         else:
             is_connected = eagle200_meter.is_connected
 
-        async with async_timeout.timeout(30):
+        async with asyncio.timeout(30):
             data = await eagle200_meter.get_device_query()
 
         if self.eagle200_meter is None:

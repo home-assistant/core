@@ -9,20 +9,12 @@ from surepy.enums import EntityType, Location, LockState
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -30,9 +22,6 @@ from .const import (
     ATTR_LOCATION,
     ATTR_LOCK_STATE,
     ATTR_PET_NAME,
-    CONF_FEEDERS,
-    CONF_FLAPS,
-    CONF_PETS,
     DOMAIN,
     SERVICE_SET_LOCK_STATE,
     SERVICE_SET_PET_LOCATION,
@@ -43,52 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=3)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                vol.All(
-                    {
-                        vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Optional(CONF_FEEDERS): vol.All(
-                            cv.ensure_list, [cv.positive_int]
-                        ),
-                        vol.Optional(CONF_FLAPS): vol.All(
-                            cv.ensure_list, [cv.positive_int]
-                        ),
-                        vol.Optional(CONF_PETS): vol.All(
-                            cv.ensure_list, [cv.positive_int]
-                        ),
-                        vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
-                    },
-                    cv.deprecated(CONF_FEEDERS),
-                    cv.deprecated(CONF_FLAPS),
-                    cv.deprecated(CONF_PETS),
-                    cv.deprecated(CONF_SCAN_INTERVAL),
-                )
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Sure Petcare integration."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config[DOMAIN],
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -159,7 +102,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]]):
+class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]]):  # pylint: disable=hass-enforce-coordinator-module
     """Handle Surepetcare data."""
 
     def __init__(self, entry: ConfigEntry, hass: HomeAssistant) -> None:

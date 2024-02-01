@@ -71,20 +71,37 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
         self._attr_name = f"{self.device.display_name} Lock"
 
     @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (
+            self._attr_available,
+            self._attr_is_locked,
+            self._attr_is_locking,
+            self._attr_is_unlocking,
+            self._attr_is_jammed,
+        )
+
+    @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
+        lock_status = self.device.lock_status
 
         self._attr_is_locked = False
         self._attr_is_locking = False
         self._attr_is_unlocking = False
         self._attr_is_jammed = False
-        if self.device.lock_status == LockStatusType.CLOSED:
+        if lock_status is LockStatusType.CLOSED:
             self._attr_is_locked = True
-        elif self.device.lock_status == LockStatusType.CLOSING:
+        elif lock_status is LockStatusType.CLOSING:
             self._attr_is_locking = True
-        elif self.device.lock_status == LockStatusType.OPENING:
+        elif lock_status is LockStatusType.OPENING:
             self._attr_is_unlocking = True
-        elif self.device.lock_status in (
+        elif lock_status in (
             LockStatusType.FAILED_WHILE_CLOSING,
             LockStatusType.FAILED_WHILE_OPENING,
             LockStatusType.JAMMED_WHILE_CLOSING,
@@ -92,7 +109,7 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
         ):
             self._attr_is_jammed = True
         # lock is not fully initialized yet
-        elif self.device.lock_status != LockStatusType.OPEN:
+        elif lock_status != LockStatusType.OPEN:
             self._attr_available = False
 
     async def async_unlock(self, **kwargs: Any) -> None:

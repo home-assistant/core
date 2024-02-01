@@ -6,7 +6,13 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.homeassistant import exposed_entities
-from homeassistant.components.switch_as_x.const import CONF_TARGET_DOMAIN, DOMAIN
+from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
+from homeassistant.components.switch_as_x.const import (
+    CONF_INVERT,
+    CONF_TARGET_DOMAIN,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ENTITY_ID,
     STATE_CLOSED,
@@ -22,6 +28,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from . import PLATFORMS_TO_TEST
+
 from tests.common import MockConfigEntry
 
 EXPOSE_SETTINGS = {
@@ -29,14 +37,6 @@ EXPOSE_SETTINGS = {
     "cloud.google_assistant": False,
     "conversation": True,
 }
-
-PLATFORMS_TO_TEST = (
-    Platform.COVER,
-    Platform.FAN,
-    Platform.LIGHT,
-    Platform.LOCK,
-    Platform.SIREN,
-)
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -51,9 +51,12 @@ async def test_config_entry_unregistered_uuid(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: fake_uuid,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
 
     config_entry.add_to_hass(hass)
@@ -72,6 +75,7 @@ async def test_config_entry_unregistered_uuid(
         (Platform.LIGHT, STATE_ON, STATE_OFF),
         (Platform.LOCK, STATE_UNLOCKED, STATE_LOCKED),
         (Platform.SIREN, STATE_ON, STATE_OFF),
+        (Platform.VALVE, STATE_OPEN, STATE_CLOSED),
     ),
 )
 async def test_entity_registry_events(
@@ -90,9 +94,12 @@ async def test_entity_registry_events(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: registry_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
 
     config_entry.add_to_hass(hass)
@@ -143,6 +150,7 @@ async def test_device_registry_config_entry_1(
     entity_registry = er.async_get(hass)
 
     switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=switch_config_entry.entry_id,
@@ -166,11 +174,13 @@ async def test_device_registry_config_entry_1(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
-
     switch_as_x_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
@@ -202,6 +212,7 @@ async def test_device_registry_config_entry_2(
     entity_registry = er.async_get(hass)
 
     switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=switch_config_entry.entry_id,
@@ -221,9 +232,12 @@ async def test_device_registry_config_entry_2(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
 
     switch_as_x_config_entry.add_to_hass(hass)
@@ -255,9 +269,12 @@ async def test_config_entry_entity_id(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: "switch.abc",
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
 
     config_entry.add_to_hass(hass)
@@ -293,9 +310,12 @@ async def test_config_entry_uuid(hass: HomeAssistant, target_domain: Platform) -
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: registry_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
 
     config_entry.add_to_hass(hass)
@@ -313,6 +333,7 @@ async def test_device(hass: HomeAssistant, target_domain: Platform) -> None:
     entity_registry = er.async_get(hass)
 
     test_config_entry = MockConfigEntry()
+    test_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=test_config_entry.entry_id,
@@ -327,9 +348,12 @@ async def test_device(hass: HomeAssistant, target_domain: Platform) -> None:
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
 
     switch_as_x_config_entry.add_to_hass(hass)
@@ -356,9 +380,12 @@ async def test_setup_and_remove_config_entry(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: "switch.test",
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
@@ -405,9 +432,12 @@ async def test_reset_hidden_by(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
@@ -441,9 +471,12 @@ async def test_entity_category_inheritance(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
@@ -477,9 +510,12 @@ async def test_entity_options(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
@@ -490,7 +526,7 @@ async def test_entity_options(
     assert entity_entry
     assert entity_entry.device_id == switch_entity_entry.device_id
     assert entity_entry.options == {
-        DOMAIN: {"entity_id": switch_entity_entry.entity_id}
+        DOMAIN: {"entity_id": switch_entity_entry.entity_id, "invert": False},
     }
 
 
@@ -504,6 +540,7 @@ async def test_entity_name(
     device_registry = dr.async_get(hass)
 
     switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=switch_config_entry.entry_id,
@@ -529,9 +566,12 @@ async def test_entity_name(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
@@ -545,7 +585,7 @@ async def test_entity_name(
     assert entity_entry.name is None
     assert entity_entry.original_name is None
     assert entity_entry.options == {
-        DOMAIN: {"entity_id": switch_entity_entry.entity_id}
+        DOMAIN: {"entity_id": switch_entity_entry.entity_id, "invert": False}
     }
 
 
@@ -559,6 +599,7 @@ async def test_custom_name_1(
     device_registry = dr.async_get(hass)
 
     switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=switch_config_entry.entry_id,
@@ -586,9 +627,12 @@ async def test_custom_name_1(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
@@ -604,7 +648,7 @@ async def test_custom_name_1(
     assert entity_entry.name == "Custom entity name"
     assert entity_entry.original_name == "Original entity name"
     assert entity_entry.options == {
-        DOMAIN: {"entity_id": switch_entity_entry.entity_id}
+        DOMAIN: {"entity_id": switch_entity_entry.entity_id, "invert": False}
     }
 
 
@@ -622,6 +666,7 @@ async def test_custom_name_2(
     device_registry = dr.async_get(hass)
 
     switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=switch_config_entry.entry_id,
@@ -649,9 +694,12 @@ async def test_custom_name_2(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
@@ -682,7 +730,7 @@ async def test_custom_name_2(
     assert entity_entry.name == "Old custom entity name"
     assert entity_entry.original_name == "Original entity name"
     assert entity_entry.options == {
-        DOMAIN: {"entity_id": switch_entity_entry.entity_id}
+        DOMAIN: {"entity_id": switch_entity_entry.entity_id, "invert": False}
     }
 
 
@@ -712,9 +760,12 @@ async def test_import_expose_settings_1(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
@@ -770,9 +821,12 @@ async def test_import_expose_settings_2(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
@@ -835,9 +889,12 @@ async def test_restore_expose_settings(
         domain=DOMAIN,
         options={
             CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
     switch_as_x_config_entry.add_to_hass(hass)
 
@@ -864,3 +921,80 @@ async def test_restore_expose_settings(
     )
     for assistant in EXPOSE_SETTINGS:
         assert expose_settings[assistant]["should_expose"] == EXPOSE_SETTINGS[assistant]
+
+
+@pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
+async def test_migrate(
+    hass: HomeAssistant,
+    target_domain: Platform,
+) -> None:
+    """Test migration."""
+    registry = er.async_get(hass)
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: "switch.test",
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+        version=1,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check migration was successful and added invert option
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.options == {
+        CONF_ENTITY_ID: "switch.test",
+        CONF_INVERT: False,
+        CONF_TARGET_DOMAIN: target_domain,
+    }
+    assert config_entry.version == SwitchAsXConfigFlowHandler.VERSION
+    assert config_entry.minor_version == SwitchAsXConfigFlowHandler.MINOR_VERSION
+
+    # Check the state and entity registry entry are present
+    assert hass.states.get(f"{target_domain}.abc") is not None
+    assert registry.async_get(f"{target_domain}.abc") is not None
+
+
+@pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
+async def test_migrate_from_future(
+    hass: HomeAssistant,
+    target_domain: Platform,
+) -> None:
+    """Test migration."""
+    registry = er.async_get(hass)
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: "switch.test",
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check migration was not successful and did not add invert option
+    assert config_entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.options == {
+        CONF_ENTITY_ID: "switch.test",
+        CONF_TARGET_DOMAIN: target_domain,
+    }
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 1
+
+    # Check the state and entity registry entry are not present
+    assert hass.states.get(f"{target_domain}.abc") is None
+    assert registry.async_get(f"{target_domain}.abc") is None

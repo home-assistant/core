@@ -30,9 +30,11 @@ async def async_setup_entry(
 class StarlineLock(StarlineEntity, LockEntity):
     """Representation of a StarLine lock."""
 
+    _attr_translation_key = "security"
+
     def __init__(self, account: StarlineAccount, device: StarlineDevice) -> None:
         """Initialize the lock."""
-        super().__init__(account, device, "lock", "Security")
+        super().__init__(account, device, "lock")
 
     @property
     def available(self) -> bool:

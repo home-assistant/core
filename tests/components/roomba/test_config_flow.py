@@ -1,4 +1,5 @@
 """Test the iRobot Roomba config flow."""
+from ipaddress import ip_address
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -36,25 +37,25 @@ DISCOVERY_DEVICES = [
     (
         config_entries.SOURCE_ZEROCONF,
         zeroconf.ZeroconfServiceInfo(
-            host=MOCK_IP,
+            ip_address=ip_address(MOCK_IP),
+            ip_addresses=[ip_address(MOCK_IP)],
             hostname="irobot-blid.local.",
             name="irobot-blid._amzn-alexa._tcp.local.",
             type="_amzn-alexa._tcp.local.",
             port=443,
             properties={},
-            addresses=[MOCK_IP],
         ),
     ),
     (
         config_entries.SOURCE_ZEROCONF,
         zeroconf.ZeroconfServiceInfo(
-            host=MOCK_IP,
+            ip_address=ip_address(MOCK_IP),
+            ip_addresses=[ip_address(MOCK_IP)],
             hostname="roomba-blid.local.",
             name="roomba-blid._amzn-alexa._tcp.local.",
             type="_amzn-alexa._tcp.local.",
             port=443,
             properties={},
-            addresses=[MOCK_IP],
         ),
     ),
 ]

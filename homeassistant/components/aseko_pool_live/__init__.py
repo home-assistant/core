@@ -1,19 +1,18 @@
 """The Aseko Pool Live integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
-from aioaseko import APIUnavailable, MobileAccount, Unit, Variable
+from aioaseko import APIUnavailable, MobileAccount
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .coordinator import AsekoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,28 +48,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class AsekoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Variable]]):
-    """Class to manage fetching Aseko unit data from single endpoint."""
-
-    def __init__(self, hass: HomeAssistant, unit: Unit) -> None:
-        """Initialize global Aseko unit data updater."""
-        self._unit = unit
-
-        if self._unit.name:
-            name = self._unit.name
-        else:
-            name = f"{self._unit.type}-{self._unit.serial_number}"
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=name,
-            update_interval=timedelta(minutes=2),
-        )
-
-    async def _async_update_data(self) -> dict[str, Variable]:
-        """Fetch unit data."""
-        await self._unit.get_state()
-        return {variable.type: variable for variable in self._unit.variables}

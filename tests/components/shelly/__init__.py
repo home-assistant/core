@@ -7,9 +7,12 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock
 
+from aioshelly.const import MODEL_25
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.shelly.const import (
+    CONF_GEN,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -20,7 +23,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -29,8 +31,8 @@ MOCK_MAC = "123456789ABC"
 
 async def init_integration(
     hass: HomeAssistant,
-    gen: int,
-    model="SHSW-25",
+    gen: int | None,
+    model=MODEL_25,
     sleep_period=0,
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,
@@ -40,8 +42,9 @@ async def init_integration(
         CONF_HOST: "192.168.1.37",
         CONF_SLEEP_PERIOD: sleep_period,
         "model": model,
-        "gen": gen,
     }
+    if gen is not None:
+        data[CONF_GEN] = gen
 
     entry = MockConfigEntry(
         domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options
@@ -71,24 +74,28 @@ def mutate_rpc_device_status(
 def inject_rpc_device_event(
     monkeypatch: pytest.MonkeyPatch,
     mock_rpc_device: Mock,
-    event: dict[str, dict[str, Any]],
+    event: Mapping[str, list[dict[str, Any]] | float],
 ) -> None:
     """Inject event for rpc device."""
     monkeypatch.setattr(mock_rpc_device, "event", event)
     mock_rpc_device.mock_event()
 
 
-async def mock_rest_update(hass: HomeAssistant, seconds=REST_SENSORS_UPDATE_INTERVAL):
+async def mock_rest_update(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    seconds=REST_SENSORS_UPDATE_INTERVAL,
+):
     """Move time to create REST sensors update event."""
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=seconds))
+    freezer.tick(timedelta(seconds=seconds))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
 
-async def mock_polling_rpc_update(hass: HomeAssistant):
+async def mock_polling_rpc_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
     """Move time to create polling RPC sensors update event."""
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL)
-    )
+    freezer.tick(timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
 
@@ -112,6 +119,13 @@ def register_entity(
         capabilities=capabilities,
     )
     return f"{domain}.{object_id}"
+
+
+def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
+    """Return entity state."""
+    entity = hass.states.get(entity_id)
+    assert entity
+    return entity.state
 
 
 def register_device(device_reg, config_entry: ConfigEntry):

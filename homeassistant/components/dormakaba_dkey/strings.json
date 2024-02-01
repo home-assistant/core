@@ -5,7 +5,7 @@
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+          "address": "[%key:common::config_flow::data::device%]"
         }
       },
       "bluetooth_confirm": {
@@ -32,6 +32,13 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "deadbolt": {
+        "name": "Deadbolt"
+      }
     }
   }
 }

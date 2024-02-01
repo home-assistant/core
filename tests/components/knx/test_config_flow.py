@@ -71,15 +71,15 @@ def fixture_knx_setup():
 def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
     """Patch file upload. Yields the Keyring instance (return_value)."""
     with patch(
-        "homeassistant.components.knx.config_flow.process_uploaded_file"
+        "homeassistant.components.knx.helpers.keyring.process_uploaded_file"
     ) as file_upload_mock, patch(
-        "homeassistant.components.knx.config_flow.sync_load_keyring",
+        "homeassistant.components.knx.helpers.keyring.sync_load_keyring",
         return_value=return_value,
         side_effect=side_effect,
     ), patch(
-        "pathlib.Path.mkdir"
+        "pathlib.Path.mkdir",
     ) as mkdir_mock, patch(
-        "shutil.move"
+        "shutil.move",
     ) as shutil_move_mock:
         file_upload_mock.return_value.__enter__.return_value = Mock()
         yield return_value
@@ -302,7 +302,7 @@ async def test_routing_secure_manual_setup(
         },
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_key_source"
+    assert result3["step_id"] == "secure_key_source_menu_routing"
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
@@ -392,7 +392,7 @@ async def test_routing_secure_keyfile(
         },
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_key_source"
+    assert result3["step_id"] == "secure_key_source_menu_routing"
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
@@ -910,7 +910,7 @@ async def test_form_with_automatic_connection_handling(
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
         CONF_KNX_STATE_UPDATER: True,
-        CONF_KNX_TELEGRAM_LOG_SIZE: 50,
+        CONF_KNX_TELEGRAM_LOG_SIZE: 200,
     }
     knx_setup.assert_called_once()
 
@@ -948,7 +948,7 @@ async def _get_menu_step_secure_tunnel(hass: HomeAssistant) -> FlowResult:
         {CONF_KNX_GATEWAY: str(gateway)},
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_key_source"
+    assert result3["step_id"] == "secure_key_source_menu_tunnel"
     return result3
 
 
@@ -1008,7 +1008,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
         },
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_key_source"
+    assert result3["step_id"] == "secure_key_source_menu_tunnel"
 
 
 async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup) -> None:
@@ -1210,7 +1210,7 @@ async def test_options_flow_connection_type(
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
             CONF_KNX_SECURE_USER_ID: None,
             CONF_KNX_SECURE_USER_PASSWORD: None,
-            CONF_KNX_TELEGRAM_LOG_SIZE: 50,
+            CONF_KNX_TELEGRAM_LOG_SIZE: 200,
         }
 
 
@@ -1272,7 +1272,7 @@ async def test_options_flow_secure_manual_to_keyfile(
         {CONF_KNX_GATEWAY: str(gateway)},
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_key_source"
+    assert result3["step_id"] == "secure_key_source_menu_tunnel"
 
     result4 = await hass.config_entries.options.async_configure(
         result3["flow_id"],

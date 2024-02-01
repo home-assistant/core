@@ -123,6 +123,12 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
 class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a battery entity within devolo Home Control."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_name = "Battery level"
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
@@ -134,11 +140,6 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
             element_uid=element_uid,
         )
 
-        self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
-        self._attr_state_class = STATE_CLASS_MAPPING.get("battery")
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_native_unit_of_measurement = PERCENTAGE
-        self._attr_name = "Battery level"
         self._value = device_instance.battery_level
 
 
@@ -175,7 +176,11 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID of the entity."""
+        """Return the unique ID of the entity.
+
+        As both sensor types share the same element_uid we need to extend original
+        self._attr_unique_id to be really unique.
+        """
         return f"{self._attr_unique_id}_{self._sensor_type}"
 
     def _sync(self, message: tuple) -> None:

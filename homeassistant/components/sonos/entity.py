@@ -8,8 +8,9 @@ import logging
 from soco.core import SoCo
 
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import DATA_SONOS, DOMAIN, SONOS_FALLBACK_POLL, SONOS_STATE_UPDATED
 from .exception import SonosUpdateError

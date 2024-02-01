@@ -3,12 +3,21 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    FirmwareUnsupported,
+    InvalidAuthError,
+    MacAddressMismatchError,
+)
 import pytest
 
 from homeassistant.components.shelly.const import (
+    BLOCK_EXPECTED_SLEEP_PERIOD,
+    BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
+    CONF_SLEEP_PERIOD,
     DOMAIN,
+    MODELS_WITH_WRONG_SLEEP_PERIOD,
     BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -17,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
 
-from . import MOCK_MAC, init_integration
+from . import MOCK_MAC, init_integration, mutate_rpc_device_status
 
 from tests.common import MockConfigEntry
 
@@ -37,7 +46,7 @@ async def test_custom_coap_port(
     assert "Starting CoAP context with UDP port 7632" in caplog.text
 
 
-@pytest.mark.parametrize("gen", [1, 2])
+@pytest.mark.parametrize("gen", [1, 2, 3])
 async def test_shared_device_mac(
     hass: HomeAssistant,
     gen,
@@ -70,23 +79,45 @@ async def test_setup_entry_not_shelly(
     assert "probably comes from a custom integration" in caplog.text
 
 
-@pytest.mark.parametrize("gen", [1, 2])
+@pytest.mark.parametrize("gen", [1, 2, 3])
+@pytest.mark.parametrize("side_effect", [DeviceConnectionError, FirmwareUnsupported])
 async def test_device_connection_error(
-    hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    gen,
+    side_effect,
+    mock_block_device,
+    mock_rpc_device,
+    monkeypatch,
 ) -> None:
     """Test device connection error."""
     monkeypatch.setattr(
-        mock_block_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+        mock_block_device, "initialize", AsyncMock(side_effect=side_effect)
     )
     monkeypatch.setattr(
-        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+        mock_rpc_device, "initialize", AsyncMock(side_effect=side_effect)
     )
 
     entry = await init_integration(hass, gen)
     assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize("gen", [1, 2])
+@pytest.mark.parametrize("gen", [1, 2, 3])
+async def test_mac_mismatch_error(
+    hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
+) -> None:
+    """Test device MAC address mismatch error."""
+    monkeypatch.setattr(
+        mock_block_device, "initialize", AsyncMock(side_effect=MacAddressMismatchError)
+    )
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=MacAddressMismatchError)
+    )
+
+    entry = await init_integration(hass, gen)
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("gen", [1, 2, 3])
 async def test_device_auth_error(
     hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
 ) -> None:
@@ -153,6 +184,22 @@ async def test_sleeping_rpc_device_online(
     mock_rpc_device.mock_update()
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == device_sleep
+
+
+async def test_sleeping_rpc_device_online_new_firmware(
+    hass: HomeAssistant,
+    mock_rpc_device,
+    monkeypatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 with firmware 1.0.0 or later."""
+    entry = await init_integration(hass, 2, sleep_period=None)
+    assert "will resume when device is online" in caplog.text
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "sys", "wakeup_period", 1500)
+    mock_rpc_device.mock_update()
+    assert "online, resuming setup" in caplog.text
+    assert entry.data["sleep_period"] == 1500
 
 
 @pytest.mark.parametrize(
@@ -265,3 +312,25 @@ async def test_no_attempt_to_stop_scanner_with_sleepy_devices(
         mock_rpc_device.mock_update()
         await hass.async_block_till_done()
         assert not mock_stop_scanner.call_count
+
+
+async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device) -> None:
+    """Test successful Gen1 device init when gen is missing in entry data."""
+    entry = await init_integration(hass, None)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("switch.test_name_channel_1").state is STATE_ON
+
+
+@pytest.mark.parametrize(("model"), MODELS_WITH_WRONG_SLEEP_PERIOD)
+async def test_sleeping_block_device_wrong_sleep_period(
+    hass: HomeAssistant, mock_block_device, model
+) -> None:
+    """Test sleeping block device with wrong sleep period."""
+    entry = await init_integration(
+        hass, 1, model=model, sleep_period=BLOCK_WRONG_SLEEP_PERIOD, skip_setup=True
+    )
+    assert entry.data[CONF_SLEEP_PERIOD] == BLOCK_WRONG_SLEEP_PERIOD
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.data[CONF_SLEEP_PERIOD] == BLOCK_EXPECTED_SLEEP_PERIOD

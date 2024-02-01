@@ -17,7 +17,7 @@ from . import PiHoleEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class PiHoleUpdateEntityDescription(UpdateEntityDescription):
     """Describes PiHole update entity."""
 

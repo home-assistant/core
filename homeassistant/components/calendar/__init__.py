@@ -1,4 +1,4 @@
-"""Support for Google Calendar event device sensors."""
+"""Support for Calendar event device sensors."""
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -8,7 +8,7 @@ from http import HTTPStatus
 from itertools import groupby
 import logging
 import re
-from typing import Any, cast, final
+from typing import Any, Final, cast, final
 
 from aiohttp import web
 from dateutil.rrule import rrulestr
@@ -19,7 +19,14 @@ from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPOR
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -29,13 +36,17 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonValueType
 
 from .const import (
     CONF_EVENT,
     EVENT_DESCRIPTION,
+    EVENT_DURATION,
     EVENT_END,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
@@ -53,6 +64,7 @@ from .const import (
     EVENT_TIME_FIELDS,
     EVENT_TYPES,
     EVENT_UID,
+    LIST_EVENT_FIELDS,
     CalendarEntityFeature,
 )
 
@@ -117,7 +129,7 @@ def _as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]
         """Convert all keys that are datetime values to local timezone."""
         for k in keys:
             if (value := obj.get(k)) and isinstance(value, datetime.datetime):
-                obj[k] = dt.as_local(value)
+                obj[k] = dt_util.as_local(value)
         return obj
 
     return validate
@@ -250,6 +262,23 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+LEGACY_SERVICE_LIST_EVENTS: Final = "list_events"
+"""Deprecated: please use SERVICE_LIST_EVENTS."""
+SERVICE_GET_EVENTS: Final = "get_events"
+SERVICE_GET_EVENTS_SCHEMA: Final = vol.All(
+    cv.has_at_least_one_key(EVENT_END_DATETIME, EVENT_DURATION),
+    cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
+    cv.make_entity_service_schema(
+        {
+            vol.Optional(EVENT_START_DATETIME): cv.datetime,
+            vol.Optional(EVENT_END_DATETIME): cv.datetime,
+            vol.Optional(EVENT_DURATION): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+        }
+    ),
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
@@ -274,7 +303,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
     )
-
+    component.async_register_legacy_entity_service(
+        LEGACY_SERVICE_LIST_EVENTS,
+        SERVICE_GET_EVENTS_SCHEMA,
+        async_list_events_service,
+        supports_response=SupportsResponse.ONLY,
+    )
+    component.async_register_entity_service(
+        SERVICE_GET_EVENTS,
+        SERVICE_GET_EVENTS_SCHEMA,
+        async_get_events_service,
+        supports_response=SupportsResponse.ONLY,
+    )
     await component.async_setup(config)
     return True
 
@@ -294,14 +334,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def get_date(date: dict[str, Any]) -> datetime.datetime:
     """Get the dateTime from date or dateTime as a local."""
     if "date" in date:
-        parsed_date = dt.parse_date(date["date"])
+        parsed_date = dt_util.parse_date(date["date"])
         assert parsed_date
-        return dt.start_of_local_day(
+        return dt_util.start_of_local_day(
             datetime.datetime.combine(parsed_date, datetime.time.min)
         )
-    parsed_datetime = dt.parse_datetime(date["dateTime"])
+    parsed_datetime = dt_util.parse_datetime(date["dateTime"])
     assert parsed_datetime
-    return dt.as_local(parsed_datetime)
+    return dt_util.as_local(parsed_datetime)
 
 
 @dataclasses.dataclass
@@ -380,7 +420,7 @@ def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for name, value in obj:
         if isinstance(value, datetime.datetime):
-            result[name] = {"dateTime": dt.as_local(value).isoformat()}
+            result[name] = {"dateTime": dt_util.as_local(value).isoformat()}
         elif isinstance(value, datetime.date):
             result[name] = {"date": value.isoformat()}
         else:
@@ -388,19 +428,30 @@ def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
+def _list_events_dict_factory(
+    obj: Iterable[tuple[str, Any]],
+) -> dict[str, JsonValueType]:
+    """Convert CalendarEvent dataclass items to dictionary of attributes."""
+    return {
+        name: value
+        for name, value in _event_dict_factory(obj).items()
+        if name in LIST_EVENT_FIELDS and value is not None
+    }
+
+
 def _get_datetime_local(
     dt_or_d: datetime.datetime | datetime.date,
 ) -> datetime.datetime:
     """Convert a calendar event date/datetime to a datetime if needed."""
     if isinstance(dt_or_d, datetime.datetime):
-        return dt.as_local(dt_or_d)
-    return dt.start_of_local_day(dt_or_d)
+        return dt_util.as_local(dt_or_d)
+    return dt_util.start_of_local_day(dt_or_d)
 
 
 def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
     """Convert a calendar event date/datetime to a datetime if needed."""
     if isinstance(dt_or_d, datetime.datetime):
-        return {"dateTime": dt.as_local(dt_or_d).isoformat()}
+        return {"dateTime": dt_util.as_local(dt_or_d).isoformat()}
     return {"date": dt_or_d.isoformat()}
 
 
@@ -416,7 +467,7 @@ def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.time
     if search and search.group(1):
         time = search.group(1)
         if ":" not in time:
-            if time[0] == "+" or time[0] == "-":
+            if time[0] in ("+", "-"):
                 time = f"{time[0]}0:{time[1:]}"
             else:
                 time = f"0:{time}"
@@ -433,11 +484,15 @@ def is_offset_reached(
     """Have we reached the offset time specified in the event title."""
     if offset_time == datetime.timedelta():
         return False
-    return start + offset_time <= dt.now(start.tzinfo)
+    return start + offset_time <= dt_util.now(start.tzinfo)
 
 
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
+
+    _entity_component_unrecorded_attributes = frozenset({"description"})
+
+    _alarm_unsubs: list[CALLBACK_TYPE] | None = None
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -467,12 +522,69 @@ class CalendarEntity(Entity):
         if (event := self.event) is None:
             return STATE_OFF
 
-        now = dt.now()
+        now = dt_util.now()
 
         if event.start_datetime_local <= now < event.end_datetime_local:
             return STATE_ON
 
         return STATE_OFF
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine.
+
+        This sets up listeners to handle state transitions for start or end of
+        the current or upcoming event.
+        """
+        super().async_write_ha_state()
+        if self._alarm_unsubs is None:
+            self._alarm_unsubs = []
+        _LOGGER.debug(
+            "Clearing %s alarms (%s)", self.entity_id, len(self._alarm_unsubs)
+        )
+        for unsub in self._alarm_unsubs:
+            unsub()
+        self._alarm_unsubs.clear()
+
+        now = dt_util.now()
+        event = self.event
+        if event is None or now >= event.end_datetime_local:
+            _LOGGER.debug("No alarms needed for %s (event=%s)", self.entity_id, event)
+            return
+
+        @callback
+        def update(_: datetime.datetime) -> None:
+            """Update state and reschedule next alarms."""
+            _LOGGER.debug("Running %s update", self.entity_id)
+            self.async_write_ha_state()
+
+        if now < event.start_datetime_local:
+            self._alarm_unsubs.append(
+                async_track_point_in_time(
+                    self.hass,
+                    update,
+                    event.start_datetime_local,
+                )
+            )
+        self._alarm_unsubs.append(
+            async_track_point_in_time(self.hass, update, event.end_datetime_local)
+        )
+        _LOGGER.debug(
+            "Scheduled %d updates for %s (%s, %s)",
+            len(self._alarm_unsubs),
+            self.entity_id,
+            event.start_datetime_local,
+            event.end_datetime_local,
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass.
+
+        To be extended by integrations.
+        """
+        for unsub in self._alarm_unsubs or ():
+            unsub()
+        self._alarm_unsubs = None
 
     async def async_get_events(
         self,
@@ -529,8 +641,8 @@ class CalendarEventView(http.HomeAssistantView):
         if start is None or end is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         try:
-            start_date = dt.parse_datetime(start)
-            end_date = dt.parse_datetime(end)
+            start_date = dt_util.parse_datetime(start)
+            end_date = dt_util.parse_datetime(end)
         except (ValueError, AttributeError):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
@@ -540,7 +652,9 @@ class CalendarEventView(http.HomeAssistantView):
 
         try:
             calendar_event_list = await entity.async_get_events(
-                request.app["hass"], dt.as_local(start_date), dt.as_local(end_date)
+                request.app["hass"],
+                dt_util.as_local(start_date),
+                dt_util.as_local(end_date),
             )
         except HomeAssistantError as err:
             _LOGGER.debug("Error reading events: %s", err)
@@ -704,13 +818,13 @@ async def handle_calendar_event_update(
 
 
 def _validate_timespan(
-    values: dict[str, Any]
+    values: dict[str, Any],
 ) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
     """Parse a create event service call and convert the args ofr a create event entity call.
 
     This converts the input service arguments into a `start` and `end` date or date time. This
     exists because service calls use `start_date` and `start_date_time` whereas the
-    normal entity methods can take either a `datetim` or `date` as a single `start` argument.
+    normal entity methods can take either a `datetime` or `date` as a single `start` argument.
     It also handles the other service call variations like "in days" as well.
     """
 
@@ -741,3 +855,49 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
         EVENT_END: end,
     }
     await entity.async_create_event(**params)
+
+
+async def async_list_events_service(
+    calendar: CalendarEntity, service_call: ServiceCall
+) -> ServiceResponse:
+    """List events on a calendar during a time range.
+
+    Deprecated: please use async_get_events_service.
+    """
+    _LOGGER.warning(
+        "Detected use of service 'calendar.list_events'. "
+        "This is deprecated and will stop working in Home Assistant 2024.6. "
+        "Use 'calendar.get_events' instead which supports multiple entities",
+    )
+    async_create_issue(
+        calendar.hass,
+        DOMAIN,
+        "deprecated_service_calendar_list_events",
+        breaks_in_ha_version="2024.6.0",
+        is_fixable=True,
+        is_persistent=False,
+        issue_domain=calendar.platform.platform_name,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_service_calendar_list_events",
+    )
+    return await async_get_events_service(calendar, service_call)
+
+
+async def async_get_events_service(
+    calendar: CalendarEntity, service_call: ServiceCall
+) -> ServiceResponse:
+    """List events on a calendar during a time range."""
+    start = service_call.data.get(EVENT_START_DATETIME, dt_util.now())
+    if EVENT_DURATION in service_call.data:
+        end = start + service_call.data[EVENT_DURATION]
+    else:
+        end = service_call.data[EVENT_END_DATETIME]
+    calendar_event_list = await calendar.async_get_events(
+        calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
+    )
+    return {
+        "events": [
+            dataclasses.asdict(event, dict_factory=_list_events_dict_factory)
+            for event in calendar_event_list
+        ]
+    }

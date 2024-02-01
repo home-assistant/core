@@ -23,8 +23,8 @@ from .common import (
     MockModule,
     MockPlatform,
     assert_setup_component,
-    mock_entity_platform,
     mock_integration,
+    mock_platform,
 )
 
 
@@ -90,9 +90,9 @@ async def test_validate_platform_config(
         hass,
         MockModule("platform_conf", platform_schema_base=platform_schema_base),
     )
-    mock_entity_platform(
+    mock_platform(
         hass,
-        "platform_conf.whatever",
+        "whatever.platform_conf",
         MockPlatform(platform_schema=platform_schema),
     )
 
@@ -156,9 +156,9 @@ async def test_validate_platform_config_2(
         ),
     )
 
-    mock_entity_platform(
+    mock_platform(
         hass,
-        "platform_conf.whatever",
+        "whatever.platform_conf",
         MockPlatform("whatever", platform_schema=platform_schema),
     )
 
@@ -185,9 +185,9 @@ async def test_validate_platform_config_3(
         hass, MockModule("platform_conf", platform_schema=component_schema)
     )
 
-    mock_entity_platform(
+    mock_platform(
         hass,
-        "platform_conf.whatever",
+        "whatever.platform_conf",
         MockPlatform("whatever", platform_schema=platform_schema),
     )
 
@@ -213,9 +213,9 @@ async def test_validate_platform_config_4(hass: HomeAssistant) -> None:
         MockModule("platform_conf", platform_schema_base=component_schema),
     )
 
-    mock_entity_platform(
+    mock_platform(
         hass,
-        "platform_conf.whatever",
+        "whatever.platform_conf",
         MockPlatform(platform_schema=platform_schema),
     )
 
@@ -350,7 +350,7 @@ async def test_component_setup_with_validation_and_dependency(
         MockModule("platform_a", setup=config_check_setup, dependencies=["comp_a"]),
     )
 
-    mock_entity_platform(hass, "switch.platform_a", platform)
+    mock_platform(hass, "platform_a.switch", platform)
 
     await setup.async_setup_component(
         hass,
@@ -367,13 +367,15 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
 
     mock_setup = Mock(spec_set=True)
 
-    mock_entity_platform(
+    mock_platform(
         hass,
-        "switch.platform_a",
+        "platform_a.switch",
         MockPlatform(platform_schema=platform_schema, setup_platform=mock_setup),
     )
 
-    with assert_setup_component(0, "switch"):
+    with assert_setup_component(0, "switch"), patch(
+        "homeassistant.setup.async_notify_setup_error"
+    ) as mock_notify:
         assert await setup.async_setup_component(
             hass,
             "switch",
@@ -381,11 +383,14 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert mock_setup.call_count == 0
+        assert len(mock_notify.mock_calls) == 1
 
     hass.data.pop(setup.DATA_SETUP)
     hass.config.components.remove("switch")
 
-    with assert_setup_component(0):
+    with assert_setup_component(0), patch(
+        "homeassistant.setup.async_notify_setup_error"
+    ) as mock_notify:
         assert await setup.async_setup_component(
             hass,
             "switch",
@@ -399,11 +404,14 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert mock_setup.call_count == 0
+        assert len(mock_notify.mock_calls) == 1
 
     hass.data.pop(setup.DATA_SETUP)
     hass.config.components.remove("switch")
 
-    with assert_setup_component(1, "switch"):
+    with assert_setup_component(1, "switch"), patch(
+        "homeassistant.setup.async_notify_setup_error"
+    ) as mock_notify:
         assert await setup.async_setup_component(
             hass,
             "switch",
@@ -411,6 +419,7 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert mock_setup.call_count == 1
+        assert len(mock_notify.mock_calls) == 0
 
 
 async def test_disable_component_if_invalid_return(hass: HomeAssistant) -> None:
@@ -523,7 +532,7 @@ async def test_platform_error_slow_setup(
         result = await setup.async_setup_component(hass, "test_component1", {})
         assert len(called) == 1
         assert not result
-        assert "test_component1 is taking longer than 0.1 seconds" in caplog.text
+        assert "'test_component1' is taking longer than 0.1 seconds" in caplog.text
 
 
 async def test_when_setup_already_loaded(hass: HomeAssistant) -> None:
@@ -618,7 +627,7 @@ async def test_parallel_entry_setup(hass: HomeAssistant, mock_handlers) -> None:
             async_setup_entry=mock_async_setup_entry,
         ),
     )
-    mock_entity_platform(hass, "config_flow.comp", None)
+    mock_platform(hass, "comp.config_flow", None)
     await setup.async_setup_component(hass, "comp", {})
 
     assert calls == [1, 2, 1, 2]
@@ -653,7 +662,7 @@ async def test_integration_logs_is_custom(
     ):
         result = await setup.async_setup_component(hass, "test_component1", {})
     assert not result
-    assert "Setup failed for custom integration test_component1: Boom" in caplog.text
+    assert "Setup failed for custom integration 'test_component1': Boom" in caplog.text
 
 
 async def test_async_get_loaded_integrations(hass: HomeAssistant) -> None:
@@ -663,7 +672,7 @@ async def test_async_get_loaded_integrations(hass: HomeAssistant) -> None:
     hass.config.components.add("notbase.switch")
     hass.config.components.add("myintegration")
     hass.config.components.add("device_tracker")
-    hass.config.components.add("device_tracker.other")
+    hass.config.components.add("other.device_tracker")
     hass.config.components.add("myintegration.light")
     assert setup.async_get_loaded_integrations(hass) == {
         "other",
@@ -720,11 +729,65 @@ async def test_async_start_setup(hass: HomeAssistant) -> None:
 
 async def test_async_start_setup_platforms(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times for platforms."""
-    with setup.async_start_setup(hass, ["sensor.august"]):
+    with setup.async_start_setup(hass, ["august.sensor"]):
         assert isinstance(
-            hass.data[setup.DATA_SETUP_STARTED]["sensor.august"], datetime.datetime
+            hass.data[setup.DATA_SETUP_STARTED]["august.sensor"], datetime.datetime
         )
 
     assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
     assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
     assert "sensor" not in hass.data[setup.DATA_SETUP_TIME]
+
+
+async def test_setup_config_entry_from_yaml(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test attempting to setup an integration which only supports config_entries."""
+    expected_warning = (
+        "The 'test_integration_only_entry' integration does not support YAML setup, "
+        "please remove it from your configuration"
+    )
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test_integration_only_entry",
+            setup=False,
+            async_setup_entry=AsyncMock(return_value=True),
+        ),
+    )
+
+    assert await setup.async_setup_component(hass, "test_integration_only_entry", {})
+    assert expected_warning not in caplog.text
+    caplog.clear()
+    hass.data.pop(setup.DATA_SETUP)
+    hass.config.components.remove("test_integration_only_entry")
+
+    # There should be a warning, but setup should not fail
+    assert await setup.async_setup_component(
+        hass, "test_integration_only_entry", {"test_integration_only_entry": None}
+    )
+    assert expected_warning in caplog.text
+    caplog.clear()
+    hass.data.pop(setup.DATA_SETUP)
+    hass.config.components.remove("test_integration_only_entry")
+
+    # There should be a warning, but setup should not fail
+    assert await setup.async_setup_component(
+        hass, "test_integration_only_entry", {"test_integration_only_entry": {}}
+    )
+    assert expected_warning in caplog.text
+    caplog.clear()
+    hass.data.pop(setup.DATA_SETUP)
+    hass.config.components.remove("test_integration_only_entry")
+
+    # There should be a warning, but setup should not fail
+    assert await setup.async_setup_component(
+        hass,
+        "test_integration_only_entry",
+        {"test_integration_only_entry": {"hello": "world"}},
+    )
+    assert expected_warning in caplog.text
+    caplog.clear()
+    hass.data.pop(setup.DATA_SETUP)
+    hass.config.components.remove("test_integration_only_entry")

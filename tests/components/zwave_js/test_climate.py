@@ -5,6 +5,7 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_OPERATING_STATE_PROPERTY,
 )
 from zwave_js_server.event import Event
+from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.climate import (
@@ -30,6 +31,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
+from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -37,6 +39,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .common import (
     CLIMATE_DANFOSS_LC13_ENTITY,
@@ -49,7 +52,11 @@ from .common import (
 
 
 async def test_thermostat_v2(
-    hass: HomeAssistant, client, climate_radio_thermostat_ct100_plus, integration
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus,
+    integration,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a thermostat v2 command class entity."""
     node = climate_radio_thermostat_ct100_plus
@@ -76,6 +83,8 @@ async def test_thermostat_v2(
         == ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     client.async_send_command.reset_mock()
@@ -269,7 +278,7 @@ async def test_thermostat_v2(
     client.async_send_command.reset_mock()
 
     # Test setting invalid fan mode
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
@@ -279,6 +288,20 @@ async def test_thermostat_v2(
             },
             blocking=True,
         )
+
+    # Refresh value should log an error when there is an issue
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert "Error while refreshing value" in caplog.text
 
 
 async def test_thermostat_different_endpoints(
@@ -392,6 +415,80 @@ async def test_setpoint_thermostat(
     client.async_send_command_no_wait.reset_mock()
 
 
+async def test_thermostat_heatit_z_trm6(
+    hass: HomeAssistant, client, climate_heatit_z_trm6, integration
+) -> None:
+    """Test a heatit Z-TRM6 entity."""
+    node = climate_heatit_z_trm6
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+
+    assert state
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+    ]
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+    assert state.attributes[ATTR_TEMPERATURE] == 19
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    assert state.attributes[ATTR_MIN_TEMP] == 5
+    assert state.attributes[ATTR_MAX_TEMP] == 40
+
+    # Try switching to external sensor (not connected so defaults to 0)
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 101,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "propertyName": "Sensor mode",
+                "newValue": 4,
+                "prevValue": 2,
+            },
+        },
+    )
+    node.receive_event(event)
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 0
+
+    # Try switching to floor sensor
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 101,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "propertyName": "Sensor mode",
+                "newValue": 0,
+                "prevValue": 4,
+            },
+        },
+    )
+    node.receive_event(event)
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.9
+
+
 async def test_thermostat_heatit_z_trm3_no_value(
     hass: HomeAssistant, client, climate_heatit_z_trm3_no_value, integration
 ) -> None:
@@ -421,6 +518,8 @@ async def test_thermostat_heatit_z_trm3(
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_MIN_TEMP] == 5
     assert state.attributes[ATTR_MAX_TEMP] == 35
@@ -490,7 +589,10 @@ async def test_thermostat_heatit_z_trm2fx(
     assert state.attributes[ATTR_TEMPERATURE] == 29
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_MIN_TEMP] == 7
     assert state.attributes[ATTR_MAX_TEMP] == 35
@@ -535,7 +637,7 @@ async def test_thermostat_srt321_hrt4_zw(
         HVACMode.HEAT,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 384
 
 
 async def test_preset_and_no_setpoint(
@@ -598,7 +700,7 @@ async def test_preset_and_no_setpoint(
     assert state.attributes[ATTR_TEMPERATURE] is None
     assert state.attributes[ATTR_PRESET_MODE] == "Full power"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         # Test setting invalid preset mode
         await hass.services.async_call(
             CLIMATE_DOMAIN,
