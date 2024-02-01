@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         identifiers={(DOMAIN, webio_serial)},
         manufacturer=MANUFACTURER,
         name=webio_api.get_name(),
-        configuration_url=NASWEB_CONFIG_URL.replace("[host]", entry.data[CONF_HOST]),
+        configuration_url=NASWEB_CONFIG_URL.format(host=entry.data[CONF_HOST]),
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
