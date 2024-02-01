@@ -775,7 +775,7 @@
       "default_strobe": {
         "name": "Default strobe",
         "state": {
-          "no_strobe": "No_Strobe",
+          "no_strobe": "No Strobe",
           "strobe": "Strobe "
         }
       },
