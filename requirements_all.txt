@@ -2022,6 +2022,9 @@ pypca==0.0.7
 # homeassistant.components.lcn
 pypck==0.7.17
 
+# homeassistant.components.pglab
+pypglab==0.0.1
+
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
 
