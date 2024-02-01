@@ -380,7 +380,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for device in old_data["devices"]:
                     device["serial_number"] = None
             if old_minor_version < 5:
-                # Introduced in 2023.12
+                # Introduced in 2024.3
                 for device in old_data["devices"]:
                     device["labels"] = device.get("labels", [])
 
