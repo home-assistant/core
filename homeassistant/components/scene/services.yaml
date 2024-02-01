@@ -39,7 +39,7 @@ create:
       selector:
         text:
     entities:
-      status: passive
+      status: secondary
       example: |
         light.tv_back_light: "on"
         light.ceiling:

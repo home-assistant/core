@@ -105,7 +105,7 @@ set_config_parameter:
       selector:
         text:
     bitmask:
-      status: passive
+      status: secondary
       selector:
         text:
     value:

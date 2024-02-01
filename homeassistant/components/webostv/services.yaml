@@ -30,7 +30,7 @@ command:
     payload:
       example: >-
         target: https://www.google.com
-      status: passive
+      status: secondary
       selector:
         object:
 

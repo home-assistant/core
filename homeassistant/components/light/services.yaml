@@ -6,7 +6,7 @@ turn_on:
       domain: light
   fields:
     transition:
-      status: passive
+      status: secondary
       filter:
         supported_features:
           - light.LightEntityFeature.TRANSITION
@@ -321,7 +321,7 @@ turn_on:
           min: -225
           max: 255
     brightness_step_pct:
-      status: passive
+      status: secondary
       filter:
         attribute:
           supported_color_modes:
@@ -338,7 +338,7 @@ turn_on:
           max: 100
           unit_of_measurement: "%"
     white:
-      status: passive
+      status: secondary
       filter:
         attribute:
           supported_color_modes:
@@ -353,7 +353,7 @@ turn_on:
       selector:
         text:
     flash:
-      status: passive
+      status: secondary
       filter:
         supported_features:
           - light.LightEntityFeature.FLASH
@@ -365,7 +365,7 @@ turn_on:
             - label: "Short"
               value: "short"
     effect:
-      status: passive
+      status: secondary
       filter:
         supported_features:
           - light.LightEntityFeature.EFFECT
@@ -378,7 +378,7 @@ turn_off:
       domain: light
   fields:
     transition:
-      status: passive
+      status: secondary
       filter:
         supported_features:
           - light.LightEntityFeature.TRANSITION
@@ -388,7 +388,7 @@ turn_off:
           max: 300
           unit_of_measurement: seconds
     flash:
-      status: passive
+      status: secondary
       filter:
         supported_features:
           - light.LightEntityFeature.FLASH
@@ -406,7 +406,7 @@ toggle:
       domain: light
   fields:
     transition:
-      status: passive
+      status: secondary
       filter:
         supported_features:
           - light.LightEntityFeature.TRANSITION
@@ -677,7 +677,7 @@ toggle:
           max: 100
           unit_of_measurement: "%"
     white:
-      status: passive
+      status: secondary
       filter:
         attribute:
           supported_color_modes:
@@ -692,7 +692,7 @@ toggle:
       selector:
         text:
     flash:
-      status: passive
+      status: secondary
       filter:
         supported_features:
           - light.LightEntityFeature.FLASH
@@ -704,7 +704,7 @@ toggle:
             - label: "Short"
               value: "short"
     effect:
-      status: passive
+      status: secondary
       filter:
         supported_features:
           - light.LightEntityFeature.EFFECT

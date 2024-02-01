@@ -44,7 +44,7 @@ set_temperature:
           step: 0.1
           mode: box
     target_temp_high:
-      status: passive
+      status: secondary
       filter:
         supported_features:
           - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -55,7 +55,7 @@ set_temperature:
           step: 0.1
           mode: box
     target_temp_low:
-      status: passive
+      status: secondary
       filter:
         supported_features:
           - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE

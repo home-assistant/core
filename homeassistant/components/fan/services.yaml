@@ -94,7 +94,7 @@ increase_speed:
         - fan.FanEntityFeature.SET_SPEED
   fields:
     percentage_step:
-      status: passive
+      status: secondary
       required: false
       selector:
         number:
@@ -110,7 +110,7 @@ decrease_speed:
         - fan.FanEntityFeature.SET_SPEED
   fields:
     percentage_step:
-      status: passive
+      status: secondary
       required: false
       selector:
         number:

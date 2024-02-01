@@ -6,7 +6,7 @@ set_text_overlay:
       integration: motioneye
   fields:
     left_text:
-      status: passive
+      status: secondary
       required: false
       example: "timestamp"
       default: ""
@@ -18,7 +18,7 @@ set_text_overlay:
             - "timestamp"
             - "custom-text"
     custom_left_text:
-      status: passive
+      status: secondary
       required: false
       example: "Hello on the left!"
       default: ""
@@ -26,7 +26,7 @@ set_text_overlay:
         text:
           multiline: true
     right_text:
-      status: passive
+      status: secondary
       required: false
       example: "timestamp"
       default: ""
@@ -38,7 +38,7 @@ set_text_overlay:
             - "timestamp"
             - "custom-text"
     custom_right_text:
-      status: passive
+      status: secondary
       required: false
       example: "Hello on the right!"
       default: ""
@@ -54,7 +54,7 @@ action:
       integration: motioneye
   fields:
     action:
-      status: passive
+      status: secondary
       required: true
       example: "snapshot"
       default: ""
