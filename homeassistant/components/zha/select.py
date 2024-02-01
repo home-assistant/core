@@ -73,6 +73,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attribute_name: str
     _enum: type[Enum]
+    _dict: dict[str, Any]
 
     def __init__(
         self,
@@ -83,6 +84,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     ) -> None:
         """Init this select entity."""
         self._attribute_name = self._enum.__name__
+        self._dict = {entry.name.lower(): entry.value for entry in self._enum}
         self._attr_options = [entry.name for entry in self._enum]
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)

@@ -157,14 +157,14 @@ async def test_select(hass: HomeAssistant, siren) -> None:
         "select_option",
         {
             "entity_id": entity_id,
-            "option": security.IasWd.Warning.WarningMode.Burglar.name,
+            "option": security.IasWd.Warning.WarningMode.Burglar.name.lower(),
         },
         blocking=True,
     )
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == security.IasWd.Warning.WarningMode.Burglar.name
+    assert state.state == security.IasWd.Warning.WarningMode.Burglar.name.lower()
 
 
 async def test_select_restore_state(
@@ -203,7 +203,7 @@ async def test_select_restore_state(
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == security.IasWd.Warning.WarningMode.Burglar.name
+    assert state.state == security.IasWd.Warning.WarningMode.Burglar.name.lower()
 
 
 async def test_on_off_select_new_join(
