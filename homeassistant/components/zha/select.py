@@ -1,10 +1,10 @@
 """Support for ZHA controls using the select platform."""
 from __future__ import annotations
 
-import re
 from enum import Enum
 import functools
 import logging
+import re
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import (
@@ -53,7 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def camelcase_to_snakecase(string: str):
-    return re.sub(r'(?<!^)(?=[A-Z])', '_', string).lower()
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", string).lower()
 
 
 async def async_setup_entry(
@@ -93,7 +93,9 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     ) -> None:
         """Init this select entity."""
         self._attribute_name = self._enum.__name__
-        self._attr_options = [camelcase_to_snakecase(entry.name) for entry in self._enum]
+        self._attr_options = [
+            camelcase_to_snakecase(entry.name) for entry in self._enum
+        ]
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 

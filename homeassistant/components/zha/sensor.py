@@ -1,13 +1,13 @@
 """Sensors on Zigbee Home Automation networks."""
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from datetime import timedelta
 import enum
 import functools
 import numbers
 import random
+import re
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
@@ -106,7 +106,7 @@ CONFIG_DIAGNOSTIC_MATCH = functools.partial(
 
 
 def camelcase_to_snakecase(string: str):
-    return re.sub(r'(?<!^)(?=[A-Z])', '_', string).lower()
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", string).lower()
 
 
 async def async_setup_entry(
