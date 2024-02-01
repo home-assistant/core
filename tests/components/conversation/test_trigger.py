@@ -7,6 +7,7 @@ from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -97,6 +98,63 @@ async def test_response(hass: HomeAssistant, setup_comp) -> None:
         return_response=True,
     )
     assert service_response["response"]["speech"]["plain"]["speech"] == response
+
+
+async def test_subscribe_trigger_does_not_interfere_with_responses(
+    hass: HomeAssistant, setup_comp, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that subscribing to a trigger from the websocket API does not interfere with responses."""
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "subscribe_trigger",
+            "trigger": {"platform": "conversation", "command": ["test sentence"]},
+        }
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "test sentence",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    # Default response, since no automations with responses are registered
+    assert service_response["response"]["speech"]["plain"]["speech"] == "Done"
+
+    # Now register a trigger with a response
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation test1": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["test sentence"],
+                },
+                "action": {
+                    "set_conversation_response": "test response",
+                },
+            }
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "test sentence",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    # Response will now come through
+    assert service_response["response"]["speech"]["plain"]["speech"] == "test response"
 
 
 async def test_same_trigger_multiple_sentences(
