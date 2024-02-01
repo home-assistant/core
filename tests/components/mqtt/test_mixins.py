@@ -315,7 +315,7 @@ async def test_default_entity_and_device_name(
     """
 
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "mock-broker"})

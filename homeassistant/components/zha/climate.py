@@ -148,7 +148,11 @@ class Thermostat(ZhaEntity, ClimateEntity):
         self._thrm = self.cluster_handlers.get(CLUSTER_HANDLER_THERMOSTAT)
         self._preset = PRESET_NONE
         self._presets = []
-        self._supported_flags = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._supported_flags = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
         self._fan = self.cluster_handlers.get(CLUSTER_HANDLER_FAN)
 
     @property

@@ -44,16 +44,16 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 try:
                     await api.async_initialize()
-                except MinecraftServerAddressError:
-                    pass
+                except MinecraftServerAddressError as error:
+                    _LOGGER.debug(
+                        "Initialization of %s server failed: %s",
+                        server_type,
+                        error,
+                    )
                 else:
                     if await api.async_is_online():
                         config_data[CONF_TYPE] = server_type
                         return self.async_create_entry(title=address, data=config_data)
-
-                _LOGGER.debug(
-                    "Connection check to %s server '%s' failed", server_type, address
-                )
 
             # Host or port invalid or server not reachable.
             errors["base"] = "cannot_connect"

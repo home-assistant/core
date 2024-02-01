@@ -256,10 +256,36 @@ class ProtectDeviceEntity(Entity):
         )
 
     @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available,)
+
+    @callback
     def _async_updated_event(self, device: ProtectModelWithId) -> None:
-        """Call back for incoming data."""
+        """When device is updated from Protect."""
+
+        previous_attrs = self._async_get_state_attrs()
         self._async_update_device_from_protect(device)
-        self.async_write_ha_state()
+        current_attrs = self._async_get_state_attrs()
+        if previous_attrs != current_attrs:
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                device_name = device.name
+                if hasattr(self, "entity_description") and self.entity_description.name:
+                    device_name += f" {self.entity_description.name}"
+
+                _LOGGER.debug(
+                    "Updating state [%s (%s)] %s -> %s",
+                    device_name,
+                    device.mac,
+                    previous_attrs,
+                    current_attrs,
+                )
+            self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

@@ -28,7 +28,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_CHANNEL, DOMAIN
-from .util import get_allowed_channel
+from .util import (
+    compose_default_network_name,
+    generate_random_pan_id,
+    get_allowed_channel,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,10 +89,12 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug(
                     "not importing TLV with channel %s", thread_dataset_channel
                 )
+                pan_id = generate_random_pan_id()
                 await api.create_active_dataset(
                     python_otbr_api.ActiveDataSet(
                         channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
-                        network_name="home-assistant",
+                        network_name=compose_default_network_name(pan_id),
+                        pan_id=pan_id,
                     )
                 )
             await api.set_enabled(True)

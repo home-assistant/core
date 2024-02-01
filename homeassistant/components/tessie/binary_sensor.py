@@ -14,7 +14,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TessieStatus
+from .const import DOMAIN, TessieState
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
@@ -30,7 +30,7 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     TessieBinarySensorEntityDescription(
         key="state",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        is_on=lambda x: x == TessieStatus.ONLINE,
+        is_on=lambda x: x == TessieState.ONLINE,
     ),
     TessieBinarySensorEntityDescription(
         key="charge_state_battery_heater_on",
@@ -53,6 +53,12 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     TessieBinarySensorEntityDescription(
         key="charge_state_trip_charging",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="charge_state_conn_charge_cable",
+        is_on=lambda x: x != "<invalid>",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_auto_seat_climate_left",
@@ -128,6 +134,26 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     TessieBinarySensorEntityDescription(
         key="vehicle_state_rp_window",
         device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_df",
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_dr",
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_pf",
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_pr",
+        device_class=BinarySensorDeviceClass.DOOR,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

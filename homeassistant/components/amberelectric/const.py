@@ -11,4 +11,4 @@ CONF_SITE_NMI = "site_nmi"
 ATTRIBUTION = "Data provided by Amber Electric"
 
 LOGGER = logging.getLogger(__package__)
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
