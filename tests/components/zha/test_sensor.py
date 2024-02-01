@@ -846,7 +846,6 @@ async def test_electrical_measurement_init(
             },
             {
                 "summation_delivered",
-                "summation_received",
             },
             {
                 "instantaneous_demand",
@@ -854,12 +853,11 @@ async def test_electrical_measurement_init(
         ),
         (
             smartenergy.Metering.cluster_id,
-            {"instantaneous_demand", "current_summ_delivered", "current_summ_received"},
+            {"instantaneous_demand", "current_summ_delivered"},
             {},
             {
                 "instantaneous_demand",
                 "summation_delivered",
-                "summation_received",
             },
         ),
         (
@@ -868,7 +866,6 @@ async def test_electrical_measurement_init(
             {
                 "instantaneous_demand",
                 "summation_delivered",
-                "summation_received",
             },
             {},
         ),
