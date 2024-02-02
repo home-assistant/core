@@ -142,16 +142,16 @@ class NoStatesMatchedError(IntentError):
         self,
         name: str | None,
         area: str | None,
-        domain: str | None,
-        device_class: str | None,
+        domains: set[str] | None,
+        device_classes: set[str] | None,
     ) -> None:
         """Initialize error."""
         super().__init__()
 
         self.name = name
         self.area = area
-        self.domain = domain
-        self.device_class = device_class
+        self.domains = domains
+        self.device_classes = device_classes
 
 
 def _is_device_class(
@@ -422,20 +422,13 @@ class ServiceIntentHandler(IntentHandler):
         # Optional domain/device class filters.
         # Convert to sets for speed.
         domains: set[str] | None = None
-        domain_name: str | None = None
         device_classes: set[str] | None = None
-        device_class_name: str | None = None
 
         if "domain" in slots:
             domains = set(slots["domain"]["value"])
-            domain_name = slots["domain"]["text"] or next(iter(domains))
 
         if "device_class" in slots:
             device_classes = set(slots["device_class"]["value"])
-            device_class_name = slots["device_class"]["text"] or next(
-                iter(device_classes)
-            )
-
         states = list(
             async_match_states(
                 hass,
@@ -452,8 +445,8 @@ class ServiceIntentHandler(IntentHandler):
             raise NoStatesMatchedError(
                 name=name,
                 area=area_name,
-                domain=domain_name,
-                device_class=device_class_name,
+                domains=domains,
+                device_classes=device_classes,
             )
 
         response = await self.async_handle_states(intent_obj, states, area)

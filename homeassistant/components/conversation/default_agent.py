@@ -305,6 +305,27 @@ class DefaultAgent(AbstractConversationAgent):
             error_response_type, error_response_args = _get_no_states_matched_response(
                 no_states_error
             )
+            if domain := error_response_args.get("domain"):
+                translations = await translation.async_get_translations(
+                    self.hass, language, "entity_component", [domain]
+                )
+                error_response_args.update(
+                    {
+                        "domain": translations.get(
+                            f"component.{domain}.entity_component._.name", domain
+                        ).lower()
+                    }
+                )
+
+                if device_class := error_response_args.get("device_class"):
+                    error_response_args.update(
+                        {
+                            "device_class": translations.get(
+                                f"component.{domain}.entity_component.{device_class}.name",
+                                device_class,
+                            ).lower()
+                        }
+                    )
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_VALID_TARGETS,
@@ -951,27 +972,29 @@ def _get_no_states_matched_response(
     """Return key and template arguments for error when intent returns no matching states."""
 
     # Device classes should be checked before domains
-    if no_states_error.device_class:
+    if no_states_error.device_classes:
+        device_class = next(iter(no_states_error.device_classes))  # first device class
         if no_states_error.area:
             # device_class in area
             return ErrorKey.NO_DEVICE_CLASS_IN_AREA, {
-                "device_class": no_states_error.device_class,
+                "device_class": device_class,
                 "area": no_states_error.area,
             }
 
         # device_class only
-        return ErrorKey.NO_DEVICE_CLASS, {"device_class": no_states_error.device_class}
+        return ErrorKey.NO_DEVICE_CLASS, {"device_class": device_class}
 
-    if no_states_error.domain:
+    if no_states_error.domains:
+        domain = next(iter(no_states_error.domains))  # first domain
         if no_states_error.area:
             # domain in area
             return ErrorKey.NO_DOMAIN_IN_AREA, {
-                "domain": no_states_error.domain,
+                "domain": domain,
                 "area": no_states_error.area,
             }
 
         # domain only
-        return ErrorKey.NO_DOMAIN, {"domain": no_states_error.domain}
+        return ErrorKey.NO_DOMAIN, {"domain": domain}
 
     # Default error
     return ErrorKey.NO_INTENT, {}

@@ -505,7 +505,7 @@ async def test_error_no_domain(
         )
         assert (
             result.response.speech["plain"]["speech"]
-            == "Sorry, I am not aware of any fans"
+            == "Sorry, I am not aware of any fan"
         )
 
 
@@ -555,7 +555,7 @@ async def test_error_no_device_class(
         )
         assert (
             result.response.speech["plain"]["speech"]
-            == "Sorry, I am not aware of any windows"
+            == "Sorry, I am not aware of any window"
         )
 
 
@@ -572,7 +572,7 @@ async def test_error_no_device_class_in_area(
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "Sorry, I am not aware of any windows in the bedroom area"
+        == "Sorry, I am not aware of any window in the bedroom area"
     )
 
 
