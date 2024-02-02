@@ -48,6 +48,7 @@ from .const import (
     STORE_AGENT_USER_IDS,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
+from .data_redaction import partial_redact
 from .error import SmartHomeError
 
 SYNC_DELAY = 15
@@ -332,8 +333,8 @@ class AbstractConfig(ABC):
 
             _LOGGER.debug(
                 "Register webhook handler %s for agent user id %s",
-                webhook_id,
-                user_agent_id,
+                partial_redact(webhook_id),
+                partial_redact(user_agent_id),
             )
             try:
                 webhook.async_register(
@@ -348,8 +349,8 @@ class AbstractConfig(ABC):
             except ValueError:
                 _LOGGER.warning(
                     "Webhook handler %s for agent user id %s is already defined!",
-                    webhook_id,
-                    user_agent_id,
+                    partial_redact(webhook_id),
+                    partial_redact(user_agent_id),
                 )
                 setup_successful = False
                 break
@@ -374,8 +375,8 @@ class AbstractConfig(ABC):
             webhook_id = self.get_local_webhook_id(agent_user_id)
             _LOGGER.debug(
                 "Unregister webhook handler %s for agent user id %s",
-                webhook_id,
-                agent_user_id,
+                partial_redact(webhook_id),
+                partial_redact(agent_user_id),
             )
             webhook.async_unregister(self.hass, webhook_id)
 
@@ -421,7 +422,7 @@ class AbstractConfig(ABC):
                     "Cannot process request for webhook %s as no linked agent user is"
                     " found:\n%s\n"
                 ),
-                webhook_id,
+                partial_redact(webhook_id),
                 pprint.pformat(payload),
             )
             webhook.async_unregister(self.hass, webhook_id)

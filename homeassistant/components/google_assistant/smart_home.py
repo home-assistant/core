@@ -18,6 +18,7 @@ from .const import (
     EVENT_QUERY_RECEIVED,
     EVENT_SYNC_RECEIVED,
 )
+from .data_redaction import async_redact_sync
 from .error import SmartHomeError
 from .helpers import GoogleEntity, RequestData, async_get_entities
 
@@ -118,7 +119,7 @@ async def async_devices_sync(
     devices = await async_devices_sync_response(hass, data.config, agent_user_id)
     response = create_sync_response(agent_user_id, devices)
 
-    _LOGGER.debug("Syncing entities response: %s", response)
+    _LOGGER.debug("Syncing entities response: %s", async_redact_sync(response))
 
     return response
 
