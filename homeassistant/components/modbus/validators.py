@@ -281,7 +281,7 @@ def check_config(config: dict) -> dict:
             if conf_type in entity:
                 addr += f"_{entity[conf_type]}"
         inx = entity.get(CONF_SLAVE, None) or entity.get(CONF_DEVICE_ADDRESS, 0)
-        addr += "_" + str(inx)
+        addr += f"_{inx}"
         loc_addr: set[str] = set()
         loc_addr.add(addr)
 
