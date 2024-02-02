@@ -26,11 +26,15 @@ from .const import (
     BUTTON_PRESS_DOUBLE_LONG,
     BUTTON_PRESS_LONG,
     CONF_SUBTYPE,
+    CUBE,
+    DIMMER,
     DOMAIN,
     DOUBLE_BUTTON,
     DOUBLE_BUTTON_PRESS_DOUBLE_LONG,
     EVENT_CLASS,
     EVENT_CLASS_BUTTON,
+    EVENT_CLASS_CUBE,
+    EVENT_CLASS_DIMMER,
     EVENT_CLASS_MOTION,
     EVENT_TYPE,
     MOTION,
@@ -48,11 +52,22 @@ TRIGGERS_BY_TYPE = {
     BUTTON_PRESS: ["press"],
     BUTTON_PRESS_LONG: ["press", "long_press"],
     BUTTON_PRESS_DOUBLE_LONG: ["press", "double_press", "long_press"],
+    CUBE: ["rotate_left", "rotate_right"],
+    DIMMER: [
+        "press",
+        "long_press",
+        "rotate_left",
+        "rotate_right",
+        "rotate_left_pressed",
+        "rotate_right_pressed",
+    ],
     MOTION_DEVICE: ["motion_detected"],
 }
 
 EVENT_TYPES = {
     BUTTON: ["button"],
+    CUBE: ["cube"],
+    DIMMER: ["dimmer"],
     DOUBLE_BUTTON: ["button_left", "button_right"],
     TRIPPLE_BUTTON: ["button_left", "button_middle", "button_right"],
     REMOTE: [
@@ -119,6 +134,16 @@ TRIGGER_MODEL_DATA = {
         event_types=EVENT_TYPES[DOUBLE_BUTTON],
         triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS_DOUBLE_LONG],
     ),
+    CUBE: TriggerModelData(
+        event_class=EVENT_CLASS_CUBE,
+        event_types=EVENT_TYPES[CUBE],
+        triggers=TRIGGERS_BY_TYPE[CUBE],
+    ),
+    DIMMER: TriggerModelData(
+        event_class=EVENT_CLASS_DIMMER,
+        event_types=EVENT_TYPES[DIMMER],
+        triggers=TRIGGERS_BY_TYPE[DIMMER],
+    ),
     TRIPPLE_BUTTON_PRESS_DOUBLE_LONG: TriggerModelData(
         event_class=EVENT_CLASS_BUTTON,
         event_types=EVENT_TYPES[TRIPPLE_BUTTON],
@@ -169,6 +194,8 @@ MODEL_DATA = {
     "YLYK01YL-VENFAN": TRIGGER_MODEL_DATA[REMOTE_VENFAN],
     "YLYK01YL-BHFRC": TRIGGER_MODEL_DATA[REMOTE_BATHROOM],
     "MUE4094RT": TRIGGER_MODEL_DATA[MOTION_DEVICE],
+    "XMMF01JQD": TRIGGER_MODEL_DATA[CUBE],
+    "YLKG07YL/YLKG08YL": TRIGGER_MODEL_DATA[DIMMER],
 }
 
 

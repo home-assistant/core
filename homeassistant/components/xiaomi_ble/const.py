@@ -24,6 +24,8 @@ EVENT_CLASS_MOTION: Final = "motion"
 EVENT_CLASS_CUBE: Final = "cube"
 
 BUTTON: Final = "button"
+CUBE: Final = "cube"
+DIMMER: Final = "dimmer"
 DOUBLE_BUTTON: Final = "double_button"
 TRIPPLE_BUTTON: Final = "tripple_button"
 REMOTE: Final = "remote"
