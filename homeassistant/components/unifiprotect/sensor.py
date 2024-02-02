@@ -756,9 +756,9 @@ class ProtectLicensePlateEventSensor(EventEntityMixin, SensorEntity):
 
         if (
             (event := self._event) is not None
+            and self.entity_description.get_is_on(device, event)
             and (metadata := event.metadata) is not None
             and (license_plate := metadata.license_plate) is not None
-            and self.entity_description.get_is_on(device, event)
         ):
             self._attr_native_value = license_plate.name
             return
