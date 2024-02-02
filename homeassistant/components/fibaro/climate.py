@@ -126,6 +126,8 @@ async def async_setup_entry(
 class FibaroThermostat(FibaroDevice, ClimateEntity):
     """Representation of a Fibaro Thermostat."""
 
+    _enable_turn_on_off_backwards_compatibility = False
+
     def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the Fibaro device."""
         super().__init__(fibaro_device)
@@ -209,10 +211,10 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                     if mode in OPMODES_PRESET:
                         self._attr_preset_modes.append(OPMODES_PRESET[mode])
 
-        if HVACMode.OFF in self._attr_hvac_modes:
-            self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
-        if any(_mode for _mode in self._attr_hvac_modes if _mode != HVACMode.OFF):
-            self._attr_supported_features |= ClimateEntityFeature.TURN_ON
+        if HVACMode.OFF in self._attr_hvac_modes and len(self._attr_hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
