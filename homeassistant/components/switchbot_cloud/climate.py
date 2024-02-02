@@ -60,9 +60,7 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
 
     _attr_assumed_state = True
     _attr_supported_features = (
-        ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TURN_ON
+        ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_fan_modes = [
         FanState.FAN_AUTO,
