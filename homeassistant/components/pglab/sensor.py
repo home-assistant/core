@@ -1,9 +1,10 @@
 """Sensor for PG LAB Electronics."""
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any
 
-from pypglab.const import SENSOR_TEMPERATURE, SENSOR_VOLTAGE
+from pypglab.const import SENSOR_REBOOT_TIME, SENSOR_TEMPERATURE, SENSOR_VOLTAGE
 from pypglab.device import Device
 from pypglab.sensor import Sensor
 
@@ -13,10 +14,16 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform, UnitOfElectricPotential, UnitOfTemperature
+from homeassistant.const import (
+    EntityCategory,
+    Platform,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import utcnow
 
 from .const import CREATE_NEW_ENTITY, DISCONNECT_COMPONENT
 from .entity import BaseEntity
@@ -60,6 +67,12 @@ SENSOR_INFO: dict[str, dict[str, Any]] = {
         ICON: None,
         UNIT: UnitOfElectricPotential.VOLT,
     },
+    SENSOR_REBOOT_TIME: {
+        DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
+        STATE_CLASS: None,
+        ICON: "mdi:progress-clock",
+        UNIT: None,
+    },
 }
 
 
@@ -80,7 +93,8 @@ class PgLab_Sensor(BaseEntity, SensorEntity):
 
         self._sensor = pglab_sensor
         self._type = sensor_type
-        self._state: Any | None = self._sensor.state[self._type]
+        self._state: Any | None = None
+        self._state_timestamp: datetime | None = None
 
         sensor_info = SENSOR_INFO[sensor_type]
 
@@ -88,14 +102,27 @@ class PgLab_Sensor(BaseEntity, SensorEntity):
         self._attr_state_class = sensor_info.get(STATE_CLASS)
         self._attr_icon = sensor_info.get(ICON)
         self._attr_native_unit_of_measurement = sensor_info.get(UNIT)
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+        if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
+            self._state_timestamp = utcnow()
+        else:
+            self._state = 0
 
     @callback
     def state_updated(self, payload: str) -> None:
         """Handle state updates."""
-        self._state = self._sensor.state[self._type]
+        value = self._sensor.state[self._type]
+        if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
+            self._state_timestamp = utcnow() - timedelta(seconds=value)
+        else:
+            self._state = value
         super().state_updated(payload)
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | None:
         """Return the state of the entity."""
+        if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
+            return self._state_timestamp
+
         return self._state
