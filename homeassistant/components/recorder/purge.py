@@ -780,7 +780,6 @@ def purge_entity_data(
         ]
         _LOGGER.debug("Purging entity data for %s", selected_metadata_ids)
         if not selected_metadata_ids:
-            _purge_old_entity_ids(instance, session)
             return True
 
         # Purge a max of max_bind_vars, based on the oldest states
