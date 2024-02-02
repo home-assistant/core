@@ -18,7 +18,11 @@ from .const import (
     EVENT_QUERY_RECEIVED,
     EVENT_SYNC_RECEIVED,
 )
-from .data_redaction import async_redact_sync_msg
+from .data_redaction import (
+    async_redact_request_msg,
+    async_redact_response_msg,
+    async_redact_sync_msg,
+)
 from .error import SmartHomeError
 from .helpers import GoogleEntity, RequestData, async_get_entities
 
@@ -43,7 +47,11 @@ async def async_handle_message(hass, config, user_id, message, source):
     response = await _process(hass, data, message)
 
     if response and "errorCode" in response["payload"]:
-        _LOGGER.error("Error handling message %s: %s", message, response["payload"])
+        _LOGGER.error(
+            "Error handling message %s: %s",
+            async_redact_request_msg(message),
+            async_redact_response_msg(response["payload"]),
+        )
 
     return response
 

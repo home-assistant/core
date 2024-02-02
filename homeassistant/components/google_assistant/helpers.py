@@ -49,6 +49,7 @@ from .const import (
     STORE_AGENT_USER_IDS,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
+from .data_redaction import async_redact_request_msg, async_redact_response_msg
 from .error import SmartHomeError
 
 SYNC_DELAY = 15
@@ -411,7 +412,7 @@ class AbstractConfig(ABC):
                 "Received local message from %s (JS %s):\n%s\n",
                 request.remote,
                 request.headers.get("HA-Cloud-Version", "unknown"),
-                pprint.pformat(payload),
+                pprint.pformat(async_redact_request_msg(payload)),
             )
 
         if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
@@ -423,7 +424,7 @@ class AbstractConfig(ABC):
                     " found:\n%s\n"
                 ),
                 partial_redact(webhook_id),
-                pprint.pformat(payload),
+                pprint.pformat(async_redact_request_msg(payload)),
             )
             webhook.async_unregister(self.hass, webhook_id)
             return None
@@ -442,7 +443,10 @@ class AbstractConfig(ABC):
         )
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Responding to local message:\n%s\n", pprint.pformat(result))
+            _LOGGER.debug(
+                "Responding to local message:\n%s\n",
+                pprint.pformat(async_redact_response_msg(result)),
+            )
 
         return json_response(result)
 
