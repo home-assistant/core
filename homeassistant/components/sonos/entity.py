@@ -86,7 +86,9 @@ class SonosEntity(Entity):
                 (dr.CONNECTION_UPNP, f"uuid:{self.speaker.uid}"),
             },
             manufacturer="Sonos",
-            suggested_area=self.speaker.zone_name,
+            suggested_area=self.speaker.zone_name
+            if not self.speaker.battery_info
+            else None,
             configuration_url=f"http://{self.soco.ip_address}:1400/support/review",
         )
 
