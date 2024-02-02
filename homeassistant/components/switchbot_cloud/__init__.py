@@ -14,13 +14,14 @@ from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SWITCH]
 
 
 @dataclass
 class SwitchbotDevices:
     """Switchbot devices data."""
 
+    binary_sensors: list[Device] = field(default_factory=list)
     climates: list[Remote] = field(default_factory=list)
     switches: list[Device | Remote] = field(default_factory=list)
 
@@ -61,6 +62,10 @@ def make_device_data(
             "Air Conditioner"
         ):
             devices_data.climates.append(
+                prepare_device(hass, api, device, coordinators_by_id)
+            )
+        if isinstance(device, Device) and device.device_type.startswith("Contact"):
+            devices_data.binary_sensors.append(
                 prepare_device(hass, api, device, coordinators_by_id)
             )
         if (
