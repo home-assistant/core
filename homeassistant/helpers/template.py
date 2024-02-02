@@ -2295,6 +2295,7 @@ def iif(
         {{ is_state("device_tracker.frenck", "home") | iif("yes", "no") }}
         {{ iif(1==2, "yes", "no") }}
         {{ (1 == 1) | iif("yes", "no") }}
+
     """
     if value is None and if_none is not _SENTINEL:
         return if_none
