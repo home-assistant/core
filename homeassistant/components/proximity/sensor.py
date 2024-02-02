@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import NamedTuple
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -50,6 +52,13 @@ SENSORS_PER_PROXIMITY: list[SensorEntityDescription] = [
 ]
 
 
+class TrackedEntityDescriptor(NamedTuple):
+    """Descriptor of a tracked entity."""
+
+    entity_id: str
+    identifier: str
+
+
 def _device_info(coordinator: ProximityDataUpdateCoordinator) -> DeviceInfo:
     return DeviceInfo(
         identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
@@ -70,23 +79,17 @@ async def async_setup_entry(
         for description in SENSORS_PER_PROXIMITY
     ]
 
-    tracked_entity_descriptors = []
+    tracked_entity_descriptors: list[TrackedEntityDescriptor] = []
 
     entity_reg = er.async_get(hass)
     for tracked_entity_id in coordinator.tracked_entities:
         if (entity_entry := entity_reg.async_get(tracked_entity_id)) is not None:
             tracked_entity_descriptors.append(
-                {
-                    "entity_id": tracked_entity_id,
-                    "identifier": entity_entry.id,
-                }
+                TrackedEntityDescriptor(tracked_entity_id, entity_entry.id)
             )
         else:
             tracked_entity_descriptors.append(
-                {
-                    "entity_id": tracked_entity_id,
-                    "identifier": tracked_entity_id,
-                }
+                TrackedEntityDescriptor(tracked_entity_id, tracked_entity_id)
             )
 
     entities += [
@@ -139,15 +142,15 @@ class ProximityTrackedEntitySensor(
         self,
         description: SensorEntityDescription,
         coordinator: ProximityDataUpdateCoordinator,
-        tracked_entity_descriptor: dict[str, str],
+        tracked_entity_descriptor: TrackedEntityDescriptor,
     ) -> None:
         """Initialize the proximity."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        self.tracked_entity_id = tracked_entity_descriptor["entity_id"]
+        self.tracked_entity_id = tracked_entity_descriptor.entity_id
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{tracked_entity_descriptor['identifier']}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{tracked_entity_descriptor.identifier}_{description.key}"
         self._attr_name = f"{self.tracked_entity_id.split('.')[-1]} {description.name}"
         self._attr_device_info = _device_info(coordinator)
 

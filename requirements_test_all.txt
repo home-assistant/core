@@ -383,7 +383,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.6.0
+airthings-ble==0.6.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -828,7 +828,7 @@ habitipy==0.2.0
 habluetooth==2.4.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.75.1
+hass-nabucasa==0.76.0
 
 # homeassistant.components.conversation
 hassil==1.6.0
@@ -859,7 +859,7 @@ holidays==0.41
 home-assistant-frontend==20240131.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.1.29
+home-assistant-intents==2024.2.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1676,7 +1676,7 @@ pyswitchbee==1.8.0
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.12
+pytedee-async==0.2.13
 
 # homeassistant.components.motionmount
 python-MotionMount==0.3.1
@@ -1864,7 +1864,7 @@ rflink==0.0.65
 ring-doorbell[listen]==0.8.6
 
 # homeassistant.components.roku
-rokuecp==0.18.1
+rokuecp==0.19.0
 
 # homeassistant.components.romy
 romy==0.0.7

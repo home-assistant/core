@@ -144,12 +144,3 @@ class GpsdSensor(SensorEntity):
             ATTR_CLIMB: self.agps_thread.data_stream.climb,
             ATTR_MODE: self.agps_thread.data_stream.mode,
         }
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the sensor."""
-        mode = self.agps_thread.data_stream.mode
-
-        if isinstance(mode, int) and mode >= 2:
-            return "mdi:crosshairs-gps"
-        return "mdi:crosshairs"
