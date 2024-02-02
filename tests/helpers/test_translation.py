@@ -6,10 +6,7 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
-from homeassistant.const import (
-    EVENT_COMPONENT_LOADED,
-    EVENT_CORE_CONFIG_UPDATE,
-)
+from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
@@ -577,7 +574,9 @@ async def test_get_cached_translations(
     assert translations["component.switch.state.string2"] == "Value 2"
 
     # Test that an untranslated language falls back to English.
-    await translation._async_load_state_translations_to_cache(hass, "invalid-language", None)
+    await translation._async_load_state_translations_to_cache(
+        hass, "invalid-language", None
+    )
     translations = translation.async_get_cached_translations(
         hass, "invalid-language", "state"
     )
@@ -607,7 +606,7 @@ async def test_setup(hass: HomeAssistant):
     ) as mock:
         hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, {"language": "en"})
         await hass.async_block_till_done()
-        mock.assert_called_once_with(hass, hass.config.language)
+        mock.assert_called_once_with(hass, hass.config.language, None)
 
     with patch(
         "homeassistant.helpers.translation._async_load_state_translations_to_cache",
