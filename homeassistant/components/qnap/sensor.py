@@ -158,7 +158,7 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
         translation_key="network_err",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="network_max_speed",
