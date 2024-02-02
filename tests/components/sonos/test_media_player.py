@@ -19,8 +19,23 @@ async def test_device_registry(
         (dr.CONNECTION_UPNP, "uuid:RINCON_test"),
     }
     assert reg_device.manufacturer == "Sonos"
-    assert reg_device.suggested_area == "Zone A"
     assert reg_device.name == "Zone A"
+    # Default device provides battery info, area should not be suggested
+    assert reg_device.suggested_area is None
+
+
+async def test_device_registry_not_portable(
+    hass: HomeAssistant, async_setup_sonos, soco
+) -> None:
+    """Test non-portable sonos device registered in the device registry to ensure area suggested."""
+    soco.get_battery_info.return_value = {}
+    await async_setup_sonos()
+
+    device_registry = dr.async_get(hass)
+    reg_device = device_registry.async_get_device(
+        identifiers={("sonos", "RINCON_test")}
+    )
+    assert reg_device.suggested_area == "Zone A"
 
 
 async def test_entity_basic(
