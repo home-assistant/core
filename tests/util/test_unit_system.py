@@ -515,6 +515,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfPressure.PA,
     ),
     SensorDeviceClass.SPEED: (
+        UnitOfSpeed.BEAUFORT,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.METERS_PER_SECOND,
@@ -723,6 +724,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
     ),
     SensorDeviceClass.PRESSURE: (UnitOfPressure.INHG, UnitOfPressure.PSI),
     SensorDeviceClass.SPEED: (
+        UnitOfSpeed.BEAUFORT,
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.MILES_PER_HOUR,
