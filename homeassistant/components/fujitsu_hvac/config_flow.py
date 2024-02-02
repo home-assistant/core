@@ -81,7 +81,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 self.devices = await get_devices(user_input)
-                self.credentials = user_input
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -90,6 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                self.credentials = user_input
                 if len(self.devices) == 0:
                     return self.async_abort(reason=NO_DEVICES_ERROR)
 
