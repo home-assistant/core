@@ -1,4 +1,4 @@
-"""Helpers to redact Google Assistant data when logging."""
+"""Helpers to redact sensitive data."""
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
