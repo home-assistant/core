@@ -123,8 +123,9 @@ def async_index_integration_matchers(
             oui_matchers.setdefault(mac_address[:6], []).append(matcher)
             continue
 
-        first_char = matcher[HOSTNAME][0].lower()
-        no_oui_matchers.setdefault(first_char, []).append(matcher)
+        if hostname := matcher.get(HOSTNAME):
+            first_char = hostname[0].lower()
+            no_oui_matchers.setdefault(first_char, []).append(matcher)
 
     return DhcpMatchers(
         registered_devices_domains=registered_devices_domains,
