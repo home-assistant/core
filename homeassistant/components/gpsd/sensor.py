@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from typing import Any
 
@@ -48,6 +49,13 @@ ATTR_SPEED = "speed"
 DEFAULT_NAME = "GPS"
 
 
+class FixMode(StrEnum):
+    """Fix mode states."""
+
+    FIX_2D = "2d_fix"
+    FIX_3D = "3d_fix"
+
+
 @dataclass(frozen=True, kw_only=True)
 class GpsdSensorDescription(SensorEntityDescription):
     """Class describing GPSD sensor entities."""
@@ -62,9 +70,9 @@ SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
         name=None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=["2d_fix", "3d_fix"],
-        value_fn=lambda agps_thread: {0: None, 2: "2d_fix", 3: "3d_fix"}.get(
-            agps_thread.data_stream.mode, agps_thread.data_stream.mode
+        options=list(FixMode),
+        value_fn=lambda agps_thread: {2: FixMode.FIX_2D, 3: FixMode.FIX_3D}.get(
+            agps_thread.data_stream.mode
         ),
     ),
 )
@@ -154,10 +162,7 @@ class GpsdSensor(SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of GPSD."""
-        value = self.entity_description.value_fn(self.agps_thread)
-        if value == "n/a":
-            return None
-        return value
+        return self.entity_description.value_fn(self.agps_thread)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
