@@ -75,7 +75,7 @@
           "disconnected": "Disconnected",
           "stopped": "Stopped",
           "complete": "Complete",
-          "nopower": "No power"
+          "no_power": "No power"
         }
       },
       "charge_state_usable_battery_level": {
