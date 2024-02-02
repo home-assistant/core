@@ -80,7 +80,7 @@
       "button_decrease_wind_speed": "Button Decrease Wind Speed \"{subtype}\"",
       "dimmer": "{subtype}",
       "motion": "{subtype}",
-      "rubiks_cube": "{subtype}"
+      "cube": "{subtype}"
     }
   },
   "entity": {
@@ -92,6 +92,30 @@
               "press": "Press",
               "double_press": "Double press",
               "long_press": "Long press"
+            }
+          }
+        }
+      },
+      "cube": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "rotate_left": "Rotate left",
+              "rotate_right": "Rotate right"
+            }
+          }
+        }
+      },
+      "dimmer": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press",
+              "long_press": "Long press",
+              "rotate_left": "Rotate left",
+              "rotate_right": "Rotate right",
+              "rotate_left_pressed": "Rotate left (pressed)",
+              "rotate_right_pressed": "Rotate left (pressed)"
             }
           }
         }
