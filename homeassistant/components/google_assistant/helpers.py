@@ -32,6 +32,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.redact import partial_redact
 from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
@@ -48,6 +49,7 @@ from .const import (
     STORE_AGENT_USER_IDS,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
+from .data_redaction import async_redact_request_msg, async_redact_response_msg
 from .error import SmartHomeError
 
 SYNC_DELAY = 15
@@ -332,8 +334,8 @@ class AbstractConfig(ABC):
 
             _LOGGER.debug(
                 "Register webhook handler %s for agent user id %s",
-                webhook_id,
-                user_agent_id,
+                partial_redact(webhook_id),
+                partial_redact(user_agent_id),
             )
             try:
                 webhook.async_register(
@@ -348,8 +350,8 @@ class AbstractConfig(ABC):
             except ValueError:
                 _LOGGER.warning(
                     "Webhook handler %s for agent user id %s is already defined!",
-                    webhook_id,
-                    user_agent_id,
+                    partial_redact(webhook_id),
+                    partial_redact(user_agent_id),
                 )
                 setup_successful = False
                 break
@@ -374,8 +376,8 @@ class AbstractConfig(ABC):
             webhook_id = self.get_local_webhook_id(agent_user_id)
             _LOGGER.debug(
                 "Unregister webhook handler %s for agent user id %s",
-                webhook_id,
-                agent_user_id,
+                partial_redact(webhook_id),
+                partial_redact(agent_user_id),
             )
             webhook.async_unregister(self.hass, webhook_id)
 
@@ -410,7 +412,7 @@ class AbstractConfig(ABC):
                 "Received local message from %s (JS %s):\n%s\n",
                 request.remote,
                 request.headers.get("HA-Cloud-Version", "unknown"),
-                pprint.pformat(payload),
+                pprint.pformat(async_redact_request_msg(payload)),
             )
 
         if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
@@ -421,8 +423,8 @@ class AbstractConfig(ABC):
                     "Cannot process request for webhook %s as no linked agent user is"
                     " found:\n%s\n"
                 ),
-                webhook_id,
-                pprint.pformat(payload),
+                partial_redact(webhook_id),
+                pprint.pformat(async_redact_request_msg(payload)),
             )
             webhook.async_unregister(self.hass, webhook_id)
             return None
@@ -441,7 +443,10 @@ class AbstractConfig(ABC):
         )
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Responding to local message:\n%s\n", pprint.pformat(result))
+            _LOGGER.debug(
+                "Responding to local message:\n%s\n",
+                pprint.pformat(async_redact_response_msg(result)),
+            )
 
         return json_response(result)
 
