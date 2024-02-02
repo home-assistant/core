@@ -19,7 +19,9 @@ EVENT_PROPERTIES: Final = "event_properties"
 XIAOMI_BLE_EVENT: Final = "xiaomi_ble_event"
 
 EVENT_CLASS_BUTTON: Final = "button"
+EVENT_CLASS_DIMMER: Final = "dimmer"
 EVENT_CLASS_MOTION: Final = "motion"
+EVENT_CLASS_CUBE: Final = "cube"
 
 BUTTON: Final = "button"
 DOUBLE_BUTTON: Final = "double_button"

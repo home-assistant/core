@@ -94,6 +94,53 @@ from tests.components.bluetooth import (
                 }
             ],
         ),
+        (
+            "E2:53:30:E6:D3:54",
+            make_advertisement(
+                "E2:53:30:E6:D3:54",
+                b"P0\xe1\x04\x8eT\xd3\xe60S\xe2\x01\x10\x03\x01\x00\x00",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.magic_cube_d354_cube",
+                    ATTR_FRIENDLY_NAME: "Magic Cube D354 Cube",
+                    ATTR_EVENT_TYPE: "rotate_left",
+                }
+            ],
+        ),
+        (
+            "F8:24:41:C5:98:8B",
+            make_advertisement(
+                "F8:24:41:C5:98:8B",
+                b"X0\xb6\x036\x8b\x98\xc5A$\xf8\x8b\xb8\xf2f" b"\x13Q\x00\x00\x00\xd6",
+            ),
+            "b853075158487ca39a5b5ea9",
+            [
+                {
+                    "entity": "event.dimmer_switch_988b_dimmer",
+                    ATTR_FRIENDLY_NAME: "Dimmer Switch 988B Dimmer",
+                    ATTR_EVENT_TYPE: "rotate_left",
+                    "event_properties": {"steps": 1},
+                }
+            ],
+        ),
+        (
+            "F8:24:41:C5:98:8B",
+            make_advertisement(
+                "F8:24:41:C5:98:8B",
+                b"X0\xb6\x03\xd2\x8b\x98\xc5A$\xf8\xc3I\x14vu~\x00\x00\x00\x99",
+            ),
+            "b853075158487ca39a5b5ea9",
+            [
+                {
+                    "entity": "event.dimmer_switch_988b_dimmer",
+                    ATTR_FRIENDLY_NAME: "Dimmer Switch 988B Dimmer",
+                    ATTR_EVENT_TYPE: "press",
+                    "event_properties": {"duration": 2},
+                }
+            ],
+        ),
     ],
 )
 async def test_events(

@@ -44,7 +44,11 @@
       "press": "Press",
       "double_press": "Double Press",
       "long_press": "Long Press",
-      "motion_detected": "Motion Detected"
+      "motion_detected": "Motion Detected",
+      "rotate_left": "Rotate Left",
+      "rotate_right": "Rotate Right",
+      "rotate_left_pressed": "Rotate Left (Pressed)",
+      "rotate_right_pressed": "Rotate Right (Pressed)"
     },
     "trigger_type": {
       "button": "Button \"{subtype}\"",
@@ -74,7 +78,9 @@
       "button_timer_60_minutes": "Button Timer 30 Minutes \"{subtype}\"",
       "button_increase_wind_speed": "Button Increase Wind Speed \"{subtype}\"",
       "button_decrease_wind_speed": "Button Decrease Wind Speed \"{subtype}\"",
-      "motion": "{subtype}"
+      "dimmer": "{subtype}",
+      "motion": "{subtype}",
+      "rubiks_cube": "{subtype}"
     }
   },
   "entity": {
