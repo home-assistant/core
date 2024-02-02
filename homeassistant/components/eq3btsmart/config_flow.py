@@ -14,13 +14,11 @@ from homeassistant.helpers.device_registry import format_mac
 from .const import (
     CONF_ADAPTER,
     CONF_CURRENT_TEMP_SELECTOR,
-    CONF_DEBUG_MODE,
     CONF_EXTERNAL_TEMP_SENSOR,
     CONF_RSSI,
     CONF_TARGET_TEMP_SELECTOR,
     DEFAULT_ADAPTER,
     DEFAULT_CURRENT_TEMP_SELECTOR,
-    DEFAULT_DEBUG_MODE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TARGET_TEMP_SELECTOR,
     DOMAIN,
@@ -153,9 +151,6 @@ class OptionsFlowHandler(OptionsFlow):
                 ),
                 suggested_adapter=self.config_entry.options.get(
                     CONF_ADAPTER, DEFAULT_ADAPTER
-                ),
-                suggested_debug_mode=self.config_entry.options.get(
-                    CONF_DEBUG_MODE, DEFAULT_DEBUG_MODE
                 ),
             ),
         )

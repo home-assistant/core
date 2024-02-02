@@ -17,5 +17,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/eulemitkeule/eq3btsmart/issues",
   "quality_scale": "silver",
-  "requirements": ["eq3btsmart==1.0.1", "bleak-esphome==0.4.1"]
+  "requirements": ["eq3btsmart==1.0.3", "bleak-esphome==0.4.1"]
 }

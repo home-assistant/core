@@ -51,7 +51,6 @@ CONF_ADAPTER = "conf_adapter"
 CONF_CURRENT_TEMP_SELECTOR = "conf_current_temp_selector"
 CONF_TARGET_TEMP_SELECTOR = "conf_target_temp_selector"
 CONF_EXTERNAL_TEMP_SENSOR = "conf_external_temp_sensor"
-CONF_DEBUG_MODE = "conf_debug_mode"
 CONF_RSSI = "rssi"
 
 ENTITY_NAME_BUSY = "Busy"
@@ -111,5 +110,4 @@ class TargetTemperatureSelector(str, Enum):
 DEFAULT_ADAPTER = Adapter.AUTO
 DEFAULT_CURRENT_TEMP_SELECTOR = CurrentTemperatureSelector.DEVICE
 DEFAULT_TARGET_TEMP_SELECTOR = TargetTemperatureSelector.TARGET
-DEFAULT_DEBUG_MODE = False
 DEFAULT_SCAN_INTERVAL = 10  # seconds

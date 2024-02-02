@@ -18,7 +18,6 @@ class Eq3Config:
     current_temp_selector: CurrentTemperatureSelector
     target_temp_selector: TargetTemperatureSelector
     external_temp_sensor: str
-    debug_mode: bool
     scan_interval: int
     default_away_hours: float = DEFAULT_AWAY_HOURS
     default_away_temperature: float = DEFAULT_AWAY_TEMP

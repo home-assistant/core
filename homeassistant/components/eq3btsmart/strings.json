@@ -35,8 +35,7 @@
           "conf_target_temp_selector": "What to show as target temperature",
           "conf_external_temp_sensor": "External temperature sensor",
           "conf_adapter": "Bluetooth adapter",
-          "conf_stay_connected": "Keep bluetooth connection open",
-          "conf_debug_mode": "Debug mode. Adds extra entities for debugging."
+          "conf_stay_connected": "Keep bluetooth connection open"
         }
       }
     }

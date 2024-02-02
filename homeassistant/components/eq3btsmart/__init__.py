@@ -17,12 +17,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import (
     CONF_ADAPTER,
     CONF_CURRENT_TEMP_SELECTOR,
-    CONF_DEBUG_MODE,
     CONF_EXTERNAL_TEMP_SENSOR,
     CONF_TARGET_TEMP_SELECTOR,
     DEFAULT_ADAPTER,
     DEFAULT_CURRENT_TEMP_SELECTOR,
-    DEFAULT_DEBUG_MODE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TARGET_TEMP_SELECTOR,
     DOMAIN,
@@ -31,13 +29,7 @@ from .const import (
 from .models import Eq3Config, Eq3ConfigEntry
 
 PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
     Platform.CLIMATE,
-    Platform.LOCK,
-    Platform.NUMBER,
-    Platform.SENSOR,
-    Platform.SWITCH,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_TARGET_TEMP_SELECTOR, DEFAULT_TARGET_TEMP_SELECTOR
     )
     external_temp_sensor = entry.options.get(CONF_EXTERNAL_TEMP_SENSOR)
-    debug_mode = entry.options.get(CONF_DEBUG_MODE, DEFAULT_DEBUG_MODE)
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     eq3_config = Eq3Config(
@@ -66,7 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         current_temp_selector=current_temp_selector,
         target_temp_selector=target_temp_selector,
         external_temp_sensor=external_temp_sensor,
-        debug_mode=debug_mode,
         scan_interval=scan_interval,
     )
 

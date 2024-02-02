@@ -10,7 +10,6 @@ from homeassistant.helpers.selector import selector
 from .const import (
     CONF_ADAPTER,
     CONF_CURRENT_TEMP_SELECTOR,
-    CONF_DEBUG_MODE,
     CONF_EXTERNAL_TEMP_SENSOR,
     CONF_TARGET_TEMP_SELECTOR,
     Adapter,
@@ -101,7 +100,6 @@ def schema_options(
     suggested_target_temp_selector: TargetTemperatureSelector,
     suggested_external_temp_sensor: str,
     suggested_adapter: Adapter,
-    suggested_debug_mode: bool,
 ) -> vol.Schema:
     """Return options schema."""
 
@@ -200,10 +198,6 @@ def schema_options(
                     }
                 }
             ),
-            vol.Required(
-                CONF_DEBUG_MODE,
-                description={"suggested_value": suggested_debug_mode},
-            ): cv.boolean,
         }
     )
 

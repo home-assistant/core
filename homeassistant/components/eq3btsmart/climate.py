@@ -21,7 +21,12 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, format_mac
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    async_get,
+    format_mac,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityPlatformState
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -71,14 +76,17 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         self._thermostat.register_update_callback(self._on_updated)
         self._thermostat.register_connection_callback(self._on_connection_changed)
-        self._target_temperature_to_set: float | None = None
-        self._is_setting_temperature = False
+        self._target_temperature: float | None = None
         self._is_available = False
         self._cancel_timer: Callable[[], None] | None = None
         self._attr_has_entity_name = True
         self._attr_name = None
+        self._attr_hvac_mode = None
         self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_precision = PRECISION_TENTHS
@@ -89,11 +97,13 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         self._attr_unique_id = format_mac(self._eq3_config.mac_address)
         self._attr_should_poll = False
         self._was_connected: bool = False
+        self._firmware_version: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
         asyncio.get_event_loop().create_task(self._async_scan_loop())
+        self._on_connection_changed(True)
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -118,35 +128,64 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         self._is_available = True
 
-        if self._thermostat.status is None:
-            return
+        if self._thermostat.status is not None:
+            self._on_status_updated()
 
-        if (
-            self._target_temperature_to_set
-            == self._thermostat.status.target_temperature.value
-        ):
-            self._is_setting_temperature = False
-
-        if (
-            not self._is_setting_temperature
-            and self._thermostat.status.target_temperature is not None
-        ):
-            # temperature may have been updated from the thermostat
-            self._target_temperature_to_set = (
-                self._thermostat.status.target_temperature.value
-            )
+        if self._thermostat.device_data is not None:
+            self._on_device_updated()
 
         self.schedule_update_ha_state()
 
     @callback
-    def _on_connection_changed(self, is_connected: bool):
-        if not self._was_connected and is_connected:
-            self._was_connected = True
-            _LOGGER.info("[%s] Connected to device", self._eq3_config.name)
+    def _on_status_updated(self):
+        """Handle updated status from the thermostat."""
 
-        if self._was_connected and not is_connected:
+        self._target_temperature = self._thermostat.status.target_temperature.value
+        self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
+
+    @callback
+    def _on_device_updated(self):
+        """Handle updated device data from the thermostat."""
+
+        self._firmware_version = str(self._thermostat.device_data.firmware_version)
+
+        device_registry = async_get(self.hass)
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, self._eq3_config.mac_address)},
+        )
+
+        if device:
+            device_registry.async_update_device(
+                device_id=device.id,
+                sw_version=self._firmware_version,
+            )
+
+    @callback
+    def _on_connection_changed(self, is_connected: bool = True) -> None:
+        """Handle connection changed."""
+
+        self._is_available = is_connected
+
+        if is_connected and not self._was_connected:
+            _LOGGER.info("[%s] Connected", self._eq3_config.name)
+            self._was_connected = True
+            self.hass.add_job(self._update_device())
+
+        if not is_connected and self._was_connected:
+            _LOGGER.warning("[%s] Disconnected", self._eq3_config.name)
             self._was_connected = False
-            _LOGGER.warning("[%s] Disconnected from device", self._eq3_config.name)
+
+        self.schedule_update_ha_state()
+
+    @callback
+    async def _update_device(self) -> None:
+        try:
+            await self._thermostat.async_get_id()
+        except Eq3Exception:
+            _LOGGER.error(
+                "[%s] Error fetching device information", self._eq3_config.name
+            )
+            return
 
     @property
     def available(self) -> bool:
@@ -156,7 +195,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
     @property
     def hvac_action(self) -> HVACAction | None:
-        """Return the current running hvac operation if supported."""
+        """Return the current running hvac operation."""
 
         if self._thermostat.status is None:
             return None
@@ -186,7 +225,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                     - 2
                 )
             case CurrentTemperatureSelector.UI:
-                return self._target_temperature_to_set
+                return self._target_temperature
             case CurrentTemperatureSelector.DEVICE:
                 if self._thermostat.status is None:
                     return None
@@ -211,7 +250,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         match self._eq3_config.target_temp_selector:
             case TargetTemperatureSelector.TARGET:
-                return self._target_temperature_to_set
+                return self._target_temperature
             case TargetTemperatureSelector.LAST_REPORTED:
                 if self._thermostat.status is None:
                     return None
@@ -226,77 +265,67 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
 
-        # We can also set the HVAC mode when setting the temperature.
-        # This needs to be done before changing the temperature because
-        # changing the mode might change the temperature.
         if ATTR_HVAC_MODE in kwargs:
             mode = kwargs.get(ATTR_HVAC_MODE)
+
             if mode is None:
                 return
-            # Setting the mode to off while change the temperature doesn't make sense.
-            if mode != HVACMode.OFF:
-                await self.async_set_hvac_mode(mode)
-            else:
-                _LOGGER.warning(
-                    "[%s] Can't change temperature while changing HVAC mode to off, Ignoring mode change",
-                    self._eq3_config.name,
+
+            if mode == HVACMode.OFF:
+                raise ServiceValidationError(
+                    f"[{self._eq3_config.name}] Can't change HVAC mode to off while changing temperature",
                 )
+
+            await self.async_set_hvac_mode(mode)
 
         temperature = kwargs.get(ATTR_TEMPERATURE)
 
         if temperature is None:
             return
 
-        temperature = round(temperature * 2) / 2  # increments of 0.5
+        temperature = round(temperature * 2) / 2
         temperature = min(temperature, self.max_temp)
         temperature = max(temperature, self.min_temp)
 
-        previous_temperature = self._target_temperature_to_set
-        self._is_setting_temperature = True
-        self._target_temperature_to_set = temperature
-        # show current temp now
+        previous_temperature = self._target_temperature
+        self._target_temperature = temperature
+
         self.async_schedule_update_ha_state()
 
         try:
-            await self.async_set_temperature_now()
+            await self._thermostat.async_set_temperature(self._target_temperature)
         except Eq3Exception:
             _LOGGER.error("[%s] Failed setting temperature", self._eq3_config.name)
-            self._target_temperature_to_set = previous_temperature
+            self._target_temperature = previous_temperature
             self.async_schedule_update_ha_state()
-
-    async def async_set_temperature_now(self) -> None:
-        """Set new target temperature now."""
-
-        if self._target_temperature_to_set is None:
-            return
-        await self._thermostat.async_set_temperature(self._target_temperature_to_set)
-        self._is_setting_temperature = False
+        except ValueError as ex:
+            raise ServiceValidationError("Invalid temperature") from ex
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
 
-        if self._thermostat.status is None:
-            return None
-
-        return EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
+        return self._attr_hvac_mode
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
-        match hvac_mode:
-            case HVACMode.OFF:
-                self._target_temperature_to_set = EQ3BT_OFF_TEMP
-                self._is_setting_temperature = True
-            case _:
-                if self._thermostat.status is not None:
-                    self._target_temperature_to_set = (
-                        self._thermostat.status.target_temperature.value
-                    )
-                self._is_setting_temperature = False
+        if hvac_mode == HVACMode.OFF:
+            self._target_temperature = EQ3BT_OFF_TEMP
+            await self.async_set_temperature(temperature=EQ3BT_OFF_TEMP)
+
+        previous_mode = self.hvac_mode
+        self._attr_hvac_mode = hvac_mode
 
         self.async_schedule_update_ha_state()
-        await self._thermostat.async_set_mode(HA_TO_EQ_HVAC[hvac_mode])
+
+        try:
+            await self._thermostat.async_set_mode(HA_TO_EQ_HVAC[hvac_mode])
+        except Eq3Exception:
+            _LOGGER.error("[%s] Failed setting HVAC mode", self._eq3_config.name)
+            self._attr_hvac_mode = previous_mode
+
+        self.async_schedule_update_ha_state()
 
     @property
     def preset_mode(self) -> str | None:
@@ -367,12 +396,8 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
                 await self._thermostat.async_set_mode(OperationMode.ON)
 
-        # by now, the target temperature should have been (maybe set) and fetched
         if self._thermostat.status is not None:
-            self._target_temperature_to_set = (
-                self._thermostat.status.target_temperature.value
-            )
-            self._is_setting_temperature = False
+            self._target_temperature = self._thermostat.status.target_temperature.value
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -383,11 +408,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
             identifiers={(DOMAIN, self._eq3_config.mac_address)},
-            sw_version=str(
-                self._thermostat.device_data.firmware_version
-                if self._thermostat.device_data is not None
-                else "unknown"
-            ),
+            sw_version=self._firmware_version,
             connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
         )
 
@@ -396,11 +417,6 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         try:
             await self._thermostat.async_get_status()
-            if self._is_setting_temperature:
-                await self.async_set_temperature_now()
         except Eq3Exception:
+            self._is_available = False
             self.schedule_update_ha_state()
-            _LOGGER.error(
-                "[%s] Error updating",
-                self._eq3_config.name,
-            )
