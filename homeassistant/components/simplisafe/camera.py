@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from datetime import datetime
 import os
-from typing import Any, cast
+from typing import Any
 
-from simplipy.device import DeviceTypes
+from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.camera import CameraTypes
 from simplipy.errors import SimplipyError
 from simplipy.system.v3 import SystemV3
@@ -84,7 +84,7 @@ async def async_setup_entry(
 class SimplisafeMotionCamera(SimpliSafeEntity, Camera):
     """A camera base class that supports motion capture media."""
 
-    _device: Camera
+    _device: DeviceV3
     _attr_image_last_updated: datetime | None = None
     _attr_image_url: str | None = None
     _attr_clip_url: str | None = None
@@ -96,7 +96,7 @@ class SimplisafeMotionCamera(SimpliSafeEntity, Camera):
         hass: HomeAssistant,
         simplisafe: SimpliSafe,
         system: SystemV3,
-        camera: Camera,
+        camera: DeviceV3,
     ) -> None:
         """Initialize."""
         SimpliSafeEntity.__init__(
@@ -114,7 +114,7 @@ class SimplisafeMotionCamera(SimpliSafeEntity, Camera):
     @property
     def name(self) -> str | None:
         """Return a good name for this camera."""
-        return cast(str, self._device.name)
+        return self._device.name
 
     @callback
     def async_unload(self) -> None:
