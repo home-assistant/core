@@ -1,5 +1,5 @@
 """Config flow for Fujitsu HVAC (based on Ayla IOT) integration."""
-from asyncio import timeout
+from asyncio import gather, timeout
 import logging
 from typing import Any
 
@@ -35,34 +35,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def get_devices(data: dict[str, Any]) -> dict[str, Any]:
-    """Get the list of devices from the ayla API."""
-    api = new_ayla_api(
-        data[CONF_USERNAME],
-        data[CONF_PASSWORD],
-        AYLA_APP_ID,
-        AYLA_APP_SECRET,
-        europe=data[CONF_EUROPE],
-    )
-    try:
-        async with timeout(API_TIMEOUT):
-            await api.async_sign_in()
-    except AylaAuthError as e:
-        raise InvalidAuth from e
-    except TimeoutError as e:
-        raise CannotConnect from e
-
-    devices = [
-        device
-        for device in await api.async_get_devices()
-        if isinstance(device, FujitsuHVAC)
-    ]
-    for dev in devices:
-        await dev.async_update()
-
-    return {device.device_serial_number: device for device in devices}
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
 
@@ -77,19 +49,39 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            api = new_ayla_api(
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                AYLA_APP_ID,
+                AYLA_APP_SECRET,
+                europe=user_input[CONF_EUROPE],
+            )
             try:
-                self.devices = await get_devices(user_input)
-            except CannotConnect:
+                async with timeout(API_TIMEOUT):
+                    await api.async_sign_in()
+            except TimeoutError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except AylaAuthError:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self.credentials = user_input
-                if len(self.devices) == 0:
+                devices = [
+                    device
+                    for device in await api.async_get_devices()
+                    if isinstance(device, FujitsuHVAC)
+                ]
+
+                if len(devices) == 0:
                     return self.async_abort(reason=NO_DEVICES_ERROR)
+
+                gather(*[dev.async_update() for dev in devices])
+
+                self.devices = {
+                    device.device_serial_number: device for device in devices
+                }
+                self.credentials = user_input
 
                 return self.async_show_form(
                     step_id="choose_device",
