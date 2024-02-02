@@ -186,24 +186,6 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key="drive_model",
-        translation_key="drive_model",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SensorEntityDescription(
-        key="drive_serial",
-        translation_key="drive_serial",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SensorEntityDescription(
-        key="drive_type",
-        translation_key="drive_type",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
 )
 _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -491,15 +473,6 @@ class QNAPDriveSensor(QNAPSensor):
 
         if self.entity_description.key == "drive_temp":
             return int(data["temp_c"]) if data["temp_c"] is not None else 0
-
-        if self.entity_description.key == "drive_model":
-            return data["model"]
-
-        if self.entity_description.key == "drive_serial":
-            return data["serial"]
-
-        if self.entity_description.key == "drive_type":
-            return data["type"]
 
     @property
     def extra_state_attributes(self):

@@ -40,15 +40,6 @@
       "volume_size_total": {
         "default": "mdi:chart-pie"
       },
-      "drive_model": {
-        "default": "mdi:harddisk"
-      },
-      "drive_serial": {
-        "default": "mdi:harddisk"
-      },
-      "drive_type": {
-        "default": "mdi:harddisk"
-      },
       "memory_size": {
         "default": "mdi:memory"
       },

@@ -82,19 +82,6 @@
       "network_max_speed": {
         "name": "{monitor_device} maximum speed"
       },
-      "drive_model": {
-        "name": "Drive {monitor_device} model"
-      },
-      "drive_serial": {
-        "name": "Drive {monitor_device} serial number"
-      },
-      "drive_type": {
-        "name": "Drive {monitor_device} type",
-        "state": {
-          "hdd": "HDD",
-          "ssd": "SSD"
-        }
-      },
       "volume_size_total": {
         "name": "Volume size"
       }
