@@ -10,9 +10,9 @@ from homeassistant.components.epic_games_store.helper import (
     is_free_game,
 )
 
-from .const import DATA_ERROR_ATTRIBUTE_NOT_FOUND, DATA_ONE_FREE_GAME
+from .const import DATA_ERROR_ATTRIBUTE_NOT_FOUND, DATA_FREE_GAMES_ONE
 
-FREE_GAMES_API = DATA_ONE_FREE_GAME["data"]["Catalog"]["searchStore"]["elements"]
+FREE_GAMES_API = DATA_FREE_GAMES_ONE["data"]["Catalog"]["searchStore"]["elements"]
 FREE_GAME = FREE_GAMES_API[2]
 NOT_FREE_GAME = FREE_GAMES_API[0]
 
