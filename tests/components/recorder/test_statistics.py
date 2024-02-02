@@ -432,7 +432,7 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
 
 
 def test_statistics_during_period_set_back_compat(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test statistics_during_period can handle a list instead of a set."""
     hass = hass_recorder()

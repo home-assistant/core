@@ -22,7 +22,7 @@ from .entity import WemoEntity
 from .wemo_device import DeviceCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class AttributeSensorDescription(SensorEntityDescription):
     """SensorEntityDescription for WeMo AttributeSensor entities."""
 

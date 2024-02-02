@@ -220,6 +220,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_supported_color_modes = self._config[CONF_SUPPORTED_COLOR_MODES]
             if self.supported_color_modes and len(self.supported_color_modes) == 1:
                 self._attr_color_mode = next(iter(self.supported_color_modes))
+            else:
+                self._attr_color_mode = ColorMode.UNKNOWN
 
     def _update_color(self, values: dict[str, Any]) -> None:
         if not self._config[CONF_COLOR_MODE]:
@@ -406,6 +408,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                         values["color_temp"],
                         self.entity_id,
                     )
+                # Allow to switch back to color_temp
+                if "color" not in values:
+                    self._attr_hs_color = None
 
             if self.supported_features and LightEntityFeature.EFFECT:
                 with suppress(KeyError):

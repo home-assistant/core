@@ -7,13 +7,11 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Generic, TypeVar, cast
 
-import aioshelly
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import MODEL_VALVE
+from aioshelly.const import MODEL_NAMES, MODEL_VALVE
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
-from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
@@ -33,7 +31,6 @@ from .const import (
     ATTR_DEVICE,
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
-    BLE_MIN_VERSION,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
@@ -59,7 +56,11 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
-from .utils import get_rpc_device_wakeup_period, update_device_fw_info
+from .utils import (
+    get_device_entry_gen,
+    get_rpc_device_wakeup_period,
+    update_device_fw_info,
+)
 
 _DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
 
@@ -135,9 +136,9 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             name=self.name,
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
-            model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
+            model=MODEL_NAMES.get(self.model, self.model),
             sw_version=self.sw_version,
-            hw_version=f"gen{self.device.gen} ({self.model})",
+            hw_version=f"gen{get_device_entry_gen(self.entry)} ({self.model})",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = device_entry.id
@@ -586,14 +587,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         )
         if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
             await async_stop_scanner(self.device)
-            return
-        if AwesomeVersion(self.device.version) < BLE_MIN_VERSION:
-            LOGGER.error(
-                "BLE not supported on device %s with firmware %s; upgrade to %s",
-                self.name,
-                self.device.version,
-                BLE_MIN_VERSION,
-            )
             return
         if await async_ensure_ble_enabled(self.device):
             # BLE enable required a reboot, don't bother connecting

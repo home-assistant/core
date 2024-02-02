@@ -17,7 +17,7 @@ from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class RitualsNumberEntityDescription(NumberEntityDescription):
     """Class describing Rituals number entities."""
 

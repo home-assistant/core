@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "cook_time": {
+        "default": "mdi:clock-outline"
+      },
+      "target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "cook_time_remaining": {
+        "default": "mdi:clock-outline"
+      },
+      "heater_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "triac_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "water_temperature": {
+        "default": "mdi:thermometer"
+      }
+    }
+  }
+}

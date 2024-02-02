@@ -1,9 +1,9 @@
 {
   "domain": "unifi_direct",
   "name": "UniFi AP",
-  "codeowners": [],
+  "codeowners": ["@tofuSCHNITZEL"],
   "documentation": "https://www.home-assistant.io/integrations/unifi_direct",
   "iot_class": "local_polling",
-  "loggers": ["pexpect", "ptyprocess"],
-  "requirements": ["pexpect==4.6.0"]
+  "loggers": ["unifi_ap"],
+  "requirements": ["unifi_ap==0.0.1"]
 }

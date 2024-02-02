@@ -18,7 +18,7 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
@@ -32,7 +32,7 @@ class RoborockSelectDescriptionMixin:
     parameter_lambda: Callable[[str, Status], list[int]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockSelectDescription(
     SelectEntityDescription, RoborockSelectDescriptionMixin
 ):

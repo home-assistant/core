@@ -6,13 +6,9 @@ from nextdns import ApiError, InvalidApiKeyError
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.nextdns.const import (
-    CONF_PROFILE_ID,
-    CONF_PROFILE_NAME,
-    DOMAIN,
-)
+from homeassistant.components.nextdns.const import CONF_PROFILE_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_PROFILE_NAME
 from homeassistant.core import HomeAssistant
 
 from . import PROFILES, init_integration

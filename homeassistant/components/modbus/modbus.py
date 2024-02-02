@@ -7,12 +7,8 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-from pymodbus.client import (
-    ModbusBaseClient,
-    ModbusSerialClient,
-    ModbusTcpClient,
-    ModbusUdpClient,
-)
+from pymodbus.client import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
+from pymodbus.client.base import ModbusBaseClient
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ModbusResponse
 from pymodbus.transaction import ModbusAsciiFramer, ModbusRtuFramer, ModbusSocketFramer
@@ -260,6 +256,26 @@ class ModbusHub:
     def __init__(self, hass: HomeAssistant, client_config: dict[str, Any]) -> None:
         """Initialize the Modbus hub."""
 
+        if CONF_RETRIES in client_config:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_retries",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_retries",
+                translation_placeholders={
+                    "config_key": "retries",
+                    "integration": DOMAIN,
+                    "url": "https://www.home-assistant.io/integrations/modbus",
+                },
+            )
+            _LOGGER.warning(
+                "`retries`: is deprecated and will be removed in version 2024.7"
+            )
+        else:
+            client_config[CONF_RETRIES] = 3
         if CONF_CLOSE_COMM_ON_ERROR in client_config:
             async_create_issue(
                 hass,
@@ -315,7 +331,7 @@ class ModbusHub:
         self._pb_params = {
             "port": client_config[CONF_PORT],
             "timeout": client_config[CONF_TIMEOUT],
-            "retries": client_config[CONF_RETRIES],
+            "retries": 3,
             "retry_on_empty": True,
         }
         if self._config_type == SERIAL:

@@ -65,7 +65,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         # Only poll if hass is running, we need to poll,
         # and we actually have a way to connect to the device
         return (
-            self.hass.state == CoreState.running
+            self.hass.state is CoreState.running
             and self.device.poll_needed(seconds_since_last_poll)
             and bool(
                 bluetooth.async_ble_device_from_address(

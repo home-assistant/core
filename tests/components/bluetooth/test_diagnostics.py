@@ -3,17 +3,18 @@ from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
-from habluetooth import HaScanner
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BaseHaRemoteScanner,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
+    HaScanner,
 )
 from homeassistant.core import HomeAssistant
 
 from . import (
+    FakeScannerMixin,
     MockBleakClient,
     _get_manager,
     generate_advertisement_data,
@@ -26,7 +27,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-class FakeHaScanner(HaScanner):
+class FakeHaScanner(FakeScannerMixin, HaScanner):
     """Fake HaScanner."""
 
     @property
@@ -77,23 +78,16 @@ async def test_diagnostics(
             }
         },
     ):
-        entry1 = MockConfigEntry(
-            domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
-        )
-        entry1.add_to_hass(hass)
-
         entry2 = MockConfigEntry(
             domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:02"
         )
         entry2.add_to_hass(hass)
 
-        assert await hass.config_entries.async_setup(entry1.entry_id)
-        await hass.async_block_till_done()
         assert await hass.config_entries.async_setup(entry2.entry_id)
         await hass.async_block_till_done()
 
-        diag = await get_diagnostics_for_config_entry(hass, hass_client, entry1)
-        assert diag == {
+        diag = await get_diagnostics_for_config_entry(hass, hass_client, entry2)
+        expected = {
             "adapters": {
                 "hci0": {
                     "address": "00:00:00:00:00:01",
@@ -180,33 +174,6 @@ async def test_diagnostics(
                         "type": "HaScanner",
                     },
                     {
-                        "adapter": "hci0",
-                        "discovered_devices_and_advertisement_data": [
-                            {
-                                "address": "44:44:33:11:23:45",
-                                "advertisement_data": [
-                                    "x",
-                                    {},
-                                    {},
-                                    [],
-                                    -127,
-                                    -127,
-                                    [[]],
-                                ],
-                                "details": None,
-                                "name": "x",
-                                "rssi": -127,
-                            }
-                        ],
-                        "last_detection": ANY,
-                        "monotonic_time": ANY,
-                        "name": "hci0 (00:00:00:00:00:01)",
-                        "scanning": True,
-                        "source": "00:00:00:00:00:01",
-                        "start_time": ANY,
-                        "type": "FakeHaScanner",
-                    },
-                    {
                         "adapter": "hci1",
                         "discovered_devices_and_advertisement_data": [
                             {
@@ -241,6 +208,12 @@ async def test_diagnostics(
                 },
             },
         }
+        diag_scanners = diag["manager"].pop("scanners")
+        expected_scanners = expected["manager"].pop("scanners")
+        assert diag == expected
+        assert sorted(diag_scanners, key=lambda x: x["name"]) == sorted(
+            expected_scanners, key=lambda x: x["name"]
+        )
 
 
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
@@ -423,7 +396,7 @@ async def test_diagnostics_remote_adapter(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -447,29 +420,20 @@ async def test_diagnostics_remote_adapter(
         "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
         return_value={},
     ):
-        entry1 = MockConfigEntry(
-            domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
-        )
-        entry1.add_to_hass(hass)
-
-        assert await hass.config_entries.async_setup(entry1.entry_id)
-        await hass.async_block_till_done()
-        new_info_callback = manager.scanner_adv_received
+        entry1 = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
         connector = (
             HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
         )
-        scanner = FakeScanner(
-            hass, "esp32", "esp32", new_info_callback, connector, False
-        )
+        scanner = FakeScanner("esp32", "esp32", connector, True)
         unsetup = scanner.async_setup()
-        cancel = manager.async_register_scanner(scanner, True)
+        cancel = manager.async_register_scanner(scanner)
 
         scanner.inject_advertisement(switchbot_device, switchbot_adv)
         inject_advertisement(hass, switchbot_device, switchbot_adv)
 
         diag = await get_diagnostics_for_config_entry(hass, hass_client, entry1)
 
-        assert diag == {
+        expected = {
             "adapters": {
                 "hci0": {
                     "address": "00:00:00:00:00:01",
@@ -492,7 +456,7 @@ async def test_diagnostics_remote_adapter(
                         "passive_scan": False,
                         "product": "Bluetooth Adapter 5.0",
                         "product_id": "aa01",
-                        "sw_version": "homeassistant",
+                        "sw_version": ANY,
                         "vendor_id": "cc01",
                     }
                 },
@@ -514,7 +478,7 @@ async def test_diagnostics_remote_adapter(
                             -127,
                             [],
                         ],
-                        "connectable": False,
+                        "connectable": True,
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
                             "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
@@ -540,7 +504,7 @@ async def test_diagnostics_remote_adapter(
                             [],
                             -127,
                             -127,
-                            [[]],
+                            [],
                         ],
                         "connectable": True,
                         "device": {
@@ -554,7 +518,7 @@ async def test_diagnostics_remote_adapter(
                         "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
-                        "source": "local",
+                        "source": "esp32",
                         "time": ANY,
                     }
                 ],
@@ -571,34 +535,7 @@ async def test_diagnostics_remote_adapter(
                         "type": "HaScanner",
                     },
                     {
-                        "adapter": "hci0",
-                        "discovered_devices_and_advertisement_data": [
-                            {
-                                "address": "44:44:33:11:23:45",
-                                "advertisement_data": [
-                                    "x",
-                                    {},
-                                    {},
-                                    [],
-                                    -127,
-                                    -127,
-                                    [[]],
-                                ],
-                                "details": None,
-                                "name": "x",
-                                "rssi": -127,
-                            }
-                        ],
-                        "last_detection": ANY,
-                        "monotonic_time": ANY,
-                        "name": "hci0 (00:00:00:00:00:01)",
-                        "scanning": True,
-                        "source": "00:00:00:00:00:01",
-                        "start_time": ANY,
-                        "type": "FakeHaScanner",
-                    },
-                    {
-                        "connectable": False,
+                        "connectable": True,
                         "discovered_device_timestamps": {"44:44:33:11:23:45": ANY},
                         "discovered_devices_and_advertisement_data": [
                             {
@@ -631,7 +568,6 @@ async def test_diagnostics_remote_adapter(
                         "scanning": True,
                         "source": "esp32",
                         "start_time": ANY,
-                        "storage": None,
                         "time_since_last_device_detection": {"44:44:33:11:23:45": ANY},
                         "type": "FakeScanner",
                     },
@@ -643,6 +579,13 @@ async def test_diagnostics_remote_adapter(
                 },
             },
         }
+
+        diag_scanners = diag["manager"].pop("scanners")
+        expected_scanners = expected["manager"].pop("scanners")
+        assert diag == expected
+        assert sorted(diag_scanners, key=lambda x: x["name"]) == sorted(
+            expected_scanners, key=lambda x: x["name"]
+        )
 
     cancel()
     unsetup()

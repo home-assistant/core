@@ -58,7 +58,7 @@ VICARE_UNIT_TO_DEVICE_CLASS = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class ViCareSensorEntityDescription(SensorEntityDescription, ViCareRequiredKeysMixin):
     """Describes ViCare sensor entity."""
 
@@ -209,6 +209,68 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getGasConsumptionHeatingThisYear(),
         unit_getter=lambda api: api.getGasConsumptionHeatingUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="gas_consumption_fuelcell_today",
+        translation_key="gas_consumption_fuelcell_today",
+        value_getter=lambda api: api.getFuelCellGasConsumptionToday(),
+        unit_getter=lambda api: api.getFuelCellGasConsumptionUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="gas_consumption_fuelcell_this_week",
+        translation_key="gas_consumption_fuelcell_this_week",
+        value_getter=lambda api: api.getFuelCellGasConsumptionThisWeek(),
+        unit_getter=lambda api: api.getFuelCellGasConsumptionUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="gas_consumption_fuelcell_this_month",
+        translation_key="gas_consumption_fuelcell_this_month",
+        value_getter=lambda api: api.getFuelCellGasConsumptionThisMonth(),
+        unit_getter=lambda api: api.getFuelCellGasConsumptionUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="gas_consumption_fuelcell_this_year",
+        translation_key="gas_consumption_fuelcell_this_year",
+        value_getter=lambda api: api.getFuelCellGasConsumptionThisYear(),
+        unit_getter=lambda api: api.getFuelCellGasConsumptionUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="gas_consumption_total_today",
+        translation_key="gas_consumption_total_today",
+        value_getter=lambda api: api.getGasConsumptionTotalToday(),
+        unit_getter=lambda api: api.getGasConsumptionUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="gas_consumption_total_this_week",
+        translation_key="gas_consumption_total_this_week",
+        value_getter=lambda api: api.getGasConsumptionTotalThisWeek(),
+        unit_getter=lambda api: api.getGasConsumptionUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="gas_consumption_total_this_month",
+        translation_key="gas_consumption_total_this_month",
+        value_getter=lambda api: api.getGasConsumptionTotalThisMonth(),
+        unit_getter=lambda api: api.getGasConsumptionUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="gas_consumption_total_this_year",
+        translation_key="gas_consumption_total_this_year",
+        value_getter=lambda api: api.getGasConsumptionTotalThisYear(),
+        unit_getter=lambda api: api.getGasConsumptionUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="gas_summary_consumption_heating_currentday",

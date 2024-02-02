@@ -1,4 +1,6 @@
 """The tests for the Remote component, adapted from Light Test."""
+import pytest
+
 import homeassistant.components.remote as remote
 from homeassistant.components.remote import (
     ATTR_ALTERNATIVE,
@@ -20,7 +22,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_mock_service
+from tests.common import (
+    async_mock_service,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+)
 
 TEST_PLATFORM = {DOMAIN: {CONF_PLATFORM: "test"}}
 SERVICE_SEND_COMMAND = "send_command"
@@ -139,3 +145,37 @@ async def test_delete_command(hass: HomeAssistant) -> None:
     assert call.domain == remote.DOMAIN
     assert call.service == SERVICE_DELETE_COMMAND
     assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(remote)
+
+
+@pytest.mark.parametrize(("enum"), list(remote.RemoteEntityFeature))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: remote.RemoteEntityFeature,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, remote, enum, "SUPPORT_", "2025.1")
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockRemote(remote.RemoteEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockRemote()
+    assert entity.supported_features_compat is remote.RemoteEntityFeature(1)
+    assert "MockRemote" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "RemoteEntityFeature.LEARN_COMMAND" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is remote.RemoteEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

@@ -9,16 +9,13 @@ from typing import Any
 from aiohttp import ClientConnectionError, ClientResponseError
 from pymelcloud import Device, get_devices
 from pymelcloud.atw_device import Zone
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_TOKEN, CONF_USERNAME, Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -28,39 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
-
-CONF_LANGUAGE = "language"
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_TOKEN): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Establish connection with MELCloud."""
-    if DOMAIN not in config:
-        return True
-
-    username = config[DOMAIN][CONF_USERNAME]
-    token = config[DOMAIN][CONF_TOKEN]
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_USERNAME: username, CONF_TOKEN: token},
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

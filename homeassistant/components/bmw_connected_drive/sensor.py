@@ -28,7 +28,7 @@ from .coordinator import BMWDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWSensorEntityDescription(SensorEntityDescription):
     """Describes BMW sensor entity."""
 

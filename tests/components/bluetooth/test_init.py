@@ -2,12 +2,13 @@
 import asyncio
 from datetime import timedelta
 import time
-from unittest.mock import ANY, MagicMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 from habluetooth import scanner
+from habluetooth.wrappers import HaBleakScannerWrapper
 import pytest
 
 from homeassistant.components import bluetooth
@@ -35,7 +36,6 @@ from homeassistant.components.bluetooth.match import (
     SERVICE_DATA_UUID,
     SERVICE_UUID,
 )
-from homeassistant.components.bluetooth.wrappers import HaBleakScannerWrapper
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -374,6 +374,56 @@ async def test_discovery_match_by_service_uuid(
 
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
+
+
+@patch.object(
+    bluetooth,
+    "async_get_bluetooth",
+    return_value=[
+        {
+            "domain": "sensorpush",
+            "local_name": "s",
+            "service_uuid": "ef090000-11d6-42ba-93b8-9dd7ec090aa9",
+        }
+    ],
+)
+async def test_discovery_match_by_service_uuid_and_short_local_name(
+    mock_async_get_bluetooth: AsyncMock,
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
+    """Test bluetooth discovery match by service_uuid and short local name."""
+    entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        wrong_device = generate_ble_device("44:44:33:11:23:45", "wrong_name")
+        wrong_adv = generate_advertisement_data(local_name="s", service_uuids=[])
+
+        inject_advertisement(hass, wrong_device, wrong_adv)
+        await hass.async_block_till_done()
+
+        assert len(mock_config_flow.mock_calls) == 0
+
+        ht1_device = generate_ble_device("44:44:33:11:23:45", "s")
+        ht1_adv = generate_advertisement_data(
+            local_name="s", service_uuids=["ef090000-11d6-42ba-93b8-9dd7ec090aa9"]
+        )
+
+        inject_advertisement(hass, ht1_device, ht1_adv)
+        await hass.async_block_till_done()
+
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "sensorpush"
 
 
 def _domains_from_mock_config_flow(mock_config_flow: Mock) -> list[str]:
@@ -2020,14 +2070,6 @@ async def test_register_callback_by_local_name_overly_broad(
         bluetooth.async_register_callback(
             hass,
             _fake_subscriber,
-            {LOCAL_NAME: "a"},
-            BluetoothScanningMode.ACTIVE,
-        )
-
-    with pytest.raises(ValueError):
-        bluetooth.async_register_callback(
-            hass,
-            _fake_subscriber,
             {LOCAL_NAME: "ab*"},
             BluetoothScanningMode.ACTIVE,
         )
@@ -2816,7 +2858,7 @@ async def test_scanner_count_connectable(
 ) -> None:
     """Test getting the connectable scanner count."""
     scanner = FakeScanner("any", "any")
-    cancel = bluetooth.async_register_scanner(hass, scanner, False)
+    cancel = bluetooth.async_register_scanner(hass, scanner)
     assert bluetooth.async_scanner_count(hass, connectable=True) == 1
     cancel()
 
@@ -2824,7 +2866,7 @@ async def test_scanner_count_connectable(
 async def test_scanner_count(hass: HomeAssistant, enable_bluetooth: None) -> None:
     """Test getting the connectable and non-connectable scanner count."""
     scanner = FakeScanner("any", "any")
-    cancel = bluetooth.async_register_scanner(hass, scanner, False)
+    cancel = bluetooth.async_register_scanner(hass, scanner)
     assert bluetooth.async_scanner_count(hass, connectable=False) == 2
     cancel()
 

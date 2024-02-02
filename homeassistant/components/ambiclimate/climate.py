@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import ambiclimate
+from ambiclimate import AmbiclimateDevice
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -157,13 +158,13 @@ class AmbiclimateEntity(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, heater, store):
+    def __init__(self, heater: AmbiclimateDevice, store: Store[dict[str, Any]]) -> None:
         """Initialize the thermostat."""
         self._heater = heater
         self._store = store
         self._attr_unique_id = heater.device_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self.unique_id)},  # type: ignore[arg-type]
             manufacturer="Ambiclimate",
             name=heater.name,
         )

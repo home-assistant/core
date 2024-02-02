@@ -17,6 +17,12 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
+
+
+@pytest.fixture(autouse=True)
 async def init_components(hass: HomeAssistant):
     """Set up required components."""
     assert await async_setup_component(hass, "homeassistant", {})

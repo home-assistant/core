@@ -65,7 +65,7 @@ async def test_adam_2_climate_entity_attributes(
     state = hass.states.get("climate.anna")
     assert state
     assert state.state == HVACMode.HEAT
-    assert state.attributes["hvac_action"] == "heating"
+    assert state.attributes["hvac_action"] == "preheating"
     assert state.attributes["hvac_modes"] == [
         HVACMode.OFF,
         HVACMode.AUTO,
@@ -75,7 +75,7 @@ async def test_adam_2_climate_entity_attributes(
     state = hass.states.get("climate.lisa_badkamer")
     assert state
     assert state.state == HVACMode.AUTO
-    assert state.attributes["hvac_action"] == "heating"
+    assert state.attributes["hvac_action"] == "idle"
     assert state.attributes["hvac_modes"] == [
         HVACMode.OFF,
         HVACMode.AUTO,
@@ -101,7 +101,7 @@ async def test_adam_3_climate_entity_attributes(
     data.devices["da224107914542988a88561b4452b0f6"][
         "select_regulation_mode"
     ] = "heating"
-    data.devices["ad4838d7d35c4d6ea796ee12ae5aedf8"]["mode"] = "heat"
+    data.devices["ad4838d7d35c4d6ea796ee12ae5aedf8"]["control_state"] = "heating"
     data.devices["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"][
         "cooling_state"
     ] = False
@@ -124,7 +124,7 @@ async def test_adam_3_climate_entity_attributes(
     data.devices["da224107914542988a88561b4452b0f6"][
         "select_regulation_mode"
     ] = "cooling"
-    data.devices["ad4838d7d35c4d6ea796ee12ae5aedf8"]["mode"] = "cool"
+    data.devices["ad4838d7d35c4d6ea796ee12ae5aedf8"]["control_state"] = "cooling"
     data.devices["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"][
         "cooling_state"
     ] = True

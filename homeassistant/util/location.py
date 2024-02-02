@@ -5,6 +5,7 @@ detect_location_info and elevation are mocked by default during tests.
 from __future__ import annotations
 
 import asyncio
+from functools import lru_cache
 import math
 from typing import Any, NamedTuple
 
@@ -57,6 +58,7 @@ async def async_detect_location_info(
     return LocationInfo(**data)
 
 
+@lru_cache
 def distance(
     lat1: float | None, lon1: float | None, lat2: float, lon2: float
 ) -> float | None:

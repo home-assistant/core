@@ -22,7 +22,7 @@ from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -30,7 +30,7 @@ class RenaultBinarySensorRequiredKeysMixin:
     on_value: StateType
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultBinarySensorEntityDescription(
     BinarySensorEntityDescription,
     RenaultDataEntityDescription,

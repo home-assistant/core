@@ -13,11 +13,11 @@ from aiohue.errors import AiohueException, BridgeBusy
 
 from homeassistant import core
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, Platform
+from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_API_VERSION, DOMAIN
+from .const import DOMAIN
 from .v1.sensor_base import SensorManager
 from .v2.device import async_setup_devices
 from .v2.hue_event import async_setup_hue_events

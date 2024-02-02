@@ -62,7 +62,7 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     """Connect to imap server and return client."""
     ssl_cipher_list: str = data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
     if data.get(CONF_VERIFY_SSL, True):
-        ssl_context = client_context(ssl_cipher_list=ssl_cipher_list)
+        ssl_context = client_context(ssl_cipher_list=SSLCipherList(ssl_cipher_list))
     else:
         ssl_context = create_no_verify_ssl_context()
     client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT], ssl_context=ssl_context)

@@ -97,10 +97,6 @@ class BasePlatform(Entity):
                 },
             )
             _LOGGER.warning(
-                "`close_comm_on_error`: is deprecated and will be removed in version 2024.4"
-            )
-
-            _LOGGER.warning(
                 "`lazy_error_count`: is deprecated and will be removed in version 2024.7"
             )
 
@@ -185,15 +181,26 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._swap = config[CONF_SWAP]
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
-        self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
-        if self._scale < 1 and not self._precision:
-            self._precision = 2
+        self._precision = config.get(CONF_PRECISION, 2)
         self._offset = config[CONF_OFFSET]
         self._slave_count = config.get(CONF_SLAVE_COUNT, None) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
         self._slave_size = self._count = config[CONF_COUNT]
+        self._value_is_int: bool = self._data_type in (
+            DataType.INT16,
+            DataType.INT32,
+            DataType.INT64,
+            DataType.UINT16,
+            DataType.UINT32,
+            DataType.UINT64,
+        )
+        if self._value_is_int:
+            if self._min_value:
+                self._min_value = round(self._min_value)
+            if self._max_value:
+                self._max_value = round(self._max_value)
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""
@@ -233,7 +240,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             return str(self._max_value)
         if self._zero_suppress is not None and abs(val) <= self._zero_suppress:
             return "0"
-        if self._precision == 0:
+        if self._precision == 0 or self._value_is_int:
             return str(int(round(val, 0)))
         return f"{float(val):.{self._precision}f}"
 
