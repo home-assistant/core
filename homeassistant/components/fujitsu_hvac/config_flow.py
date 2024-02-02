@@ -76,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if len(devices) == 0:
                     return self.async_abort(reason=NO_DEVICES_ERROR)
 
-                gather(*[dev.async_update() for dev in devices])
+                await gather(*[dev.async_update() for dev in devices])
 
                 self.devices = {
                     device.device_serial_number: device for device in devices
