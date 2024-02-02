@@ -191,6 +191,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     _attr_name = None
     _attr_precision = PRECISION_TENTHS
     _attr_translation_key = "climate_device"
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, coordinator: SensiboDataUpdateCoordinator, device_id: str
