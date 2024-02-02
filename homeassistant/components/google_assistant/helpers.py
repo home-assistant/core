@@ -34,6 +34,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
+from homeassistant.util.redact import partial_redact
 
 from . import trait
 from .const import (
@@ -48,7 +49,6 @@ from .const import (
     STORE_AGENT_USER_IDS,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
-from .data_redaction import partial_redact
 from .error import SmartHomeError
 
 SYNC_DELAY = 15
