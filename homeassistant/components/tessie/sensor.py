@@ -119,7 +119,6 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="drive_state_shift_state",
-        icon="mdi:car-shift-pattern",
         options=["p", "d", "r", "n"],
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.lower() if isinstance(x, str) else x,
@@ -225,7 +224,6 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="drive_state_active_route_destination",
-        icon="mdi:map-marker",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

@@ -20,7 +20,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:car-seat-heater',
+    'original_icon': None,
     'original_name': 'Auto seat climate left',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -34,7 +34,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Auto seat climate left',
-      'icon': 'mdi:car-seat-heater',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_auto_seat_climate_left',
@@ -64,7 +63,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:car-seat-heater',
+    'original_icon': None,
     'original_name': 'Auto seat climate right',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -78,7 +77,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Auto seat climate right',
-      'icon': 'mdi:car-seat-heater',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_auto_seat_climate_right',
@@ -108,7 +106,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:steering',
+    'original_icon': None,
     'original_name': 'Auto steering wheel heater',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -122,7 +120,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Auto steering wheel heater',
-      'icon': 'mdi:steering',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_auto_steering_wheel_heater',

@@ -62,17 +62,14 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_auto_seat_climate_left",
-        icon="mdi:car-seat-heater",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_auto_seat_climate_right",
-        icon="mdi:car-seat-heater",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_auto_steering_wheel_heat",
-        icon="mdi:steering",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(

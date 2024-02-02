@@ -368,7 +368,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:map-marker',
+    'original_icon': None,
     'original_name': 'Destination',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -382,7 +382,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Destination',
-      'icon': 'mdi:map-marker',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_destination',
@@ -824,7 +823,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:car-shift-pattern',
+    'original_icon': None,
     'original_name': 'Shift state',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -839,7 +838,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Shift state',
-      'icon': 'mdi:car-shift-pattern',
       'options': list([
         'p',
         'd',
