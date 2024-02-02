@@ -56,12 +56,13 @@ class EGSCalendar(CoordinatorEntity[EGSCalendarUpdateCoordinator], CalendarEntit
             manufacturer="Epic Games Store",
             name="Epic Games Store",
         )
-        self._event: CalendarEvent | None = None
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return self._event
+        if event := self.coordinator.data[self._cal_type]:
+            return _get_calendar_event(event[0])
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -83,12 +84,6 @@ class EGSCalendar(CoordinatorEntity[EGSCalendarUpdateCoordinator], CalendarEntit
             self.coordinator.data[self._cal_type],
         )
         return [_get_calendar_event(event) for event in events]
-
-    async def async_update(self) -> None:
-        """Update entity state with the next upcoming event."""
-        event: list[dict[str, Any]] = self.coordinator.data[self._cal_type]
-        if event:
-            self._event = _get_calendar_event(event[0])
 
 
 def _get_calendar_event(event: dict[str, Any]) -> CalendarEvent:
