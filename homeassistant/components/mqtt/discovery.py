@@ -105,7 +105,7 @@ def async_log_discovery_origin_info(
 
 
 @callback
-def _replace_all_abbreviations(discovery_payload: Any | dict[str, Any]) -> bool:
+def _replace_all_abbreviations(discovery_payload: Any | dict[str, Any]) -> None:
     """Replace all abbreviations in an MQTT discovery payload."""
 
     @callback
@@ -125,16 +125,6 @@ def _replace_all_abbreviations(discovery_payload: Any | dict[str, Any]) -> bool:
     if CONF_ORIGIN in discovery_payload:
         origin_info: dict[str, Any] = discovery_payload[CONF_ORIGIN]
         _replace_abbreviations(origin_info, ORIGIN_ABBREVIATIONS)
-        try:
-            MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.warning(
-                "Unable to parse origin information "
-                "from discovery message: %s, got %s",
-                exc,
-                discovery_payload[CONF_ORIGIN],
-            )
-            return False
 
     if CONF_DEVICE in discovery_payload:
         _replace_abbreviations(discovery_payload[CONF_DEVICE], DEVICE_ABBREVIATIONS)
@@ -142,7 +132,6 @@ def _replace_all_abbreviations(discovery_payload: Any | dict[str, Any]) -> bool:
     if CONF_AVAILABILITY in discovery_payload:
         for availability_conf in cv.ensure_list(discovery_payload[CONF_AVAILABILITY]):
             _replace_abbreviations(availability_conf, ABBREVIATIONS)
-    return True
 
 
 @callback
@@ -212,8 +201,7 @@ def _parse_device_payload(
         _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
         return {}
     try:
-        if not _replace_all_abbreviations(device_payload):
-            return {}
+        _replace_all_abbreviations(device_payload)
         DEVICE_DISCOVERY_SCHEMA(device_payload)
     except vol.Invalid as exc:
         _LOGGER.warning(
@@ -224,6 +212,23 @@ def _parse_device_payload(
         )
         return {}
     return device_payload
+
+
+@callback
+def _valid_origin_info(discovery_payload: MQTTDiscoveryPayload) -> bool:
+    """Parse and validate origin info from a single component discovery payload."""
+    if CONF_ORIGIN not in discovery_payload:
+        return True
+    try:
+        MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.warning(
+            "Unable to parse origin information " "from discovery message: %s, got %s",
+            exc,
+            discovery_payload[CONF_ORIGIN],
+        )
+        return False
+    return True
 
 
 @callback
@@ -326,7 +331,8 @@ async def async_start(  # noqa: C901
             except ValueError:
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return
-            if not _replace_all_abbreviations(discovery_payload):
+            _replace_all_abbreviations(discovery_payload)
+            if not _valid_origin_info(discovery_payload):
                 return
             discovered_components.append(
                 MqttComponentConfig(component, object_id, node_id, discovery_payload)
