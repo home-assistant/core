@@ -396,7 +396,7 @@ class SpeedConverter(BaseUnitConverter):
         if from_unit == UnitOfSpeed.BEAUFORT:
             to_ratio = cls._UNIT_CONVERSION[to_unit]
             return lambda val: cls._beaufort_to_ms(val) * to_ratio
-        if to_unit == UnitOfSpeed.BEAUFORT and from_unit in UnitOfSpeed:
+        if to_unit == UnitOfSpeed.BEAUFORT:
             from_ratio = cls._UNIT_CONVERSION[from_unit]
             return lambda val: cls._ms_to_beaufort(val / from_ratio)
 
