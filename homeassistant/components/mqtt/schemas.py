@@ -224,7 +224,7 @@ DEVICE_DISCOVERY_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Required(CONF_COMPONENTS): vol.Schema({str: COMPONENT_CONFIG_SCHEMA}),
-        vol.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
+        vol.Required(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_QOS): valid_qos_schema,
