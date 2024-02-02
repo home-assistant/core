@@ -307,7 +307,7 @@ def check_config(config: dict) -> dict:
                 _LOGGER.warning(err)
             return False
         if name in ent_names:
-            err = f"Modbus {hub_name}/{name}  is duplicate, second entry not" " loaded!"
+            err = f"Modbus {hub_name}/{name} is duplicate, second entry not loaded!"
             _LOGGER.warning(err)
             return False
         ent_names.add(name)
