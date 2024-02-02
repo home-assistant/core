@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -13,10 +12,7 @@ from .coordinator import RingDataCoordinator
 from .entity import RingEntity
 
 BUTTON_DESCRIPTION = ButtonEntityDescription(
-    key="open_door",
-    translation_key="open_door",
-    icon="mdi:door-closed-lock",
-    entity_category=EntityCategory.CONFIG,
+    key="open_door", translation_key="open_door", icon="mdi:door-closed-lock"
 )
 
 
