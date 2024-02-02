@@ -523,7 +523,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 LICENSE_PLATE_EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
         key="smart_obj_licenseplate",
-        name="License Plate Detected",
+        name="License Plate",
         icon="mdi:car",
         translation_key="license_plate",
         ufp_value="is_license_plate_currently_detected",
