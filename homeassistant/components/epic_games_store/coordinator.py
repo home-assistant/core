@@ -70,7 +70,7 @@ class EGSCalendarUpdateCoordinator(
             data,
         )
 
-        return_data: dict[str, list[dict[str, Any]]] = self.data or {
+        return_data: dict[str, list[dict[str, Any]]] = {
             CalendarType.DISCOUNT: [],
             CalendarType.FREE: [],
         }
