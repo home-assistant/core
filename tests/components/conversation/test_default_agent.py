@@ -482,7 +482,7 @@ async def test_error_no_domain(
     """Test error message when no devices/entities exist for a domain."""
 
     # We don't have a sentence for turning on all fans
-    fan_domain = MatchEntity(name="domain", value="fan", text="")
+    fan_domain = MatchEntity(name="domain", value="fan", text="fans")
     recognize_result = RecognizeResult(
         intent=Intent("HassTurnOn"),
         intent_data=IntentData([]),
@@ -505,7 +505,7 @@ async def test_error_no_domain(
         )
         assert (
             result.response.speech["plain"]["speech"]
-            == "Sorry, I am not aware of any fan"
+            == "Sorry, I am not aware of any fans"
         )
 
 
@@ -532,7 +532,7 @@ async def test_error_no_device_class(
     """Test error message when no entities of a device class exist."""
 
     # We don't have a sentence for opening all windows
-    window_class = MatchEntity(name="device_class", value="window", text="")
+    window_class = MatchEntity(name="device_class", value="window", text="windows")
     recognize_result = RecognizeResult(
         intent=Intent("HassTurnOn"),
         intent_data=IntentData([]),
@@ -555,7 +555,7 @@ async def test_error_no_device_class(
         )
         assert (
             result.response.speech["plain"]["speech"]
-            == "Sorry, I am not aware of any window"
+            == "Sorry, I am not aware of any windows"
         )
 
 
@@ -572,7 +572,7 @@ async def test_error_no_device_class_in_area(
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "Sorry, I am not aware of any window in the bedroom area"
+        == "Sorry, I am not aware of any windows in the bedroom area"
     )
 
 
