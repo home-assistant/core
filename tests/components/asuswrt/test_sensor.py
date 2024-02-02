@@ -243,7 +243,7 @@ async def test_loadavg_sensors_unaivalable_http(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
-    # assert temperature sensor available
+    # assert load average sensors not available
     assert not hass.states.get(f"{sensor_prefix}_sensor_load_avg1")
     assert not hass.states.get(f"{sensor_prefix}_sensor_load_avg5")
     assert not hass.states.get(f"{sensor_prefix}_sensor_load_avg15")
