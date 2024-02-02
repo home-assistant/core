@@ -125,10 +125,6 @@ class Airtouch5ClimateEntity(ClimateEntity, Airtouch5Entity):
 class Airtouch5AC(Airtouch5ClimateEntity):
     """Representation of the AC unit. Used to control the overall HVAC Mode."""
 
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-    )
-
     def __init__(self, client: Airtouch5SimpleClient, ability: AcAbility) -> None:
         """Initialise the Climate Entity."""
         super().__init__(client)
@@ -151,6 +147,14 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.FAN_ONLY)
         if ability.supports_mode_heat:
             self._attr_hvac_modes.append(HVACMode.HEAT)
+
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+        )
+        if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
+            self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 
         self._attr_fan_modes = []
         if ability.supports_fan_speed_quiet:
@@ -262,7 +266,10 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
     _attr_preset_modes = [PRESET_NONE, PRESET_BOOST]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     def __init__(
