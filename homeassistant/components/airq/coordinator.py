@@ -14,20 +14,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONF_CLIP_NEGATIVE,
-    CONF_RETURN_AVERAGE,
-    DOMAIN,
-    MANUFACTURER,
-    UPDATE_INTERVAL,
-)
+from .const import DOMAIN, MANUFACTURER, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_OPTIONS = {
-    CONF_CLIP_NEGATIVE: True,
-    CONF_RETURN_AVERAGE: True,
-}
 
 
 class AirQCoordinator(DataUpdateCoordinator):
@@ -37,9 +26,10 @@ class AirQCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
+        clip_negative: bool = True,
+        return_average: bool = True,
     ) -> None:
         """Initialise a custom coordinator."""
-        self.options = DEFAULT_OPTIONS | entry.options
         super().__init__(
             hass,
             _LOGGER,
@@ -56,6 +46,8 @@ class AirQCoordinator(DataUpdateCoordinator):
             manufacturer=MANUFACTURER,
             identifiers={(DOMAIN, self.device_id)},
         )
+        self.clip_negative = clip_negative
+        self.return_average = return_average
 
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
@@ -70,19 +62,6 @@ class AirQCoordinator(DataUpdateCoordinator):
                 )
             )
         return await self.airq.get_latest_data(  # type: ignore[no-any-return]
-            return_average=self.options[CONF_RETURN_AVERAGE],
-            clip_negative_values=self.options[CONF_CLIP_NEGATIVE],
+            return_average=self.return_average,
+            clip_negative_values=self.clip_negative,
         )
-
-    async def async_set_options(
-        self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> None:
-        """Update the configuration options for the device."""
-        options = self.options | config_entry.options
-        _LOGGER.debug(
-            "%s.async_set_options: from %s to %s",
-            self.__class__.__name__,
-            repr(self.options),
-            repr(options),
-        )
-        self.options = options

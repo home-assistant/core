@@ -12,7 +12,6 @@ from homeassistant.components.airq.const import (
     CONF_RETURN_AVERAGE,
     DOMAIN,
 )
-from homeassistant.components.airq.coordinator import DEFAULT_OPTIONS
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -32,6 +31,10 @@ TEST_DEVICE_INFO = DeviceInfo(
     sw_version="sw",
     hw_version="hw",
 )
+DEFAULT_OPTIONS = {
+    CONF_CLIP_NEGATIVE: True,
+    CONF_RETURN_AVERAGE: True,
+}
 
 
 async def test_form(hass: HomeAssistant) -> None:
