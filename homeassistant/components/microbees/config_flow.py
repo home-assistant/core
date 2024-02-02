@@ -3,13 +3,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+import microBeesPy
+
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .api import get_api_scopes
 from .const import DOMAIN, VERSION
-from .microbees import MicroBeesConnector
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.warning(DOMAIN)
@@ -40,7 +41,7 @@ class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMA
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        microBees = MicroBeesConnector(
+        microBees = microBeesPy.microbees.MicroBees(
             session=aiohttp_client.async_get_clientsession(self.hass),
             token=data["token"]["access_token"],
         )

@@ -6,6 +6,7 @@ import logging
 
 import aiohttp
 from microBeesPy.bee import Bee
+from microBeesPy.microbees import MicroBees
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,7 +15,6 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
 from .const import ACCESS_TOKEN, AUTH, BEES, CONNECTOR, DOMAIN, PLATFORMS
-from .microbees import MicroBeesConnector
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 class HomeAssistantMicroBeesData:
     """Microbees data stored in the Home Assistant data object."""
 
-    client: MicroBeesConnector
+    client: MicroBees
     bees: list[Bee]
     session: config_entry_oauth2_flow.OAuth2Session
 
@@ -53,7 +53,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id] = {
         AUTH: api.ConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     }
-    microbees = MicroBeesConnector(token=session.token[ACCESS_TOKEN])
+    microbees = MicroBees(token=session.token[ACCESS_TOKEN])
     hass.data[DOMAIN][CONNECTOR] = microbees
     bees = await microbees.getBees()
 
