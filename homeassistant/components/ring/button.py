@@ -14,7 +14,7 @@ from .entity import RingEntity
 
 BUTTON_DESCRIPTION = ButtonEntityDescription(
     key="open_door",
-    name="Open door",
+    translation_key="open_door",
     icon="mdi:door-closed-lock",
     entity_category=EntityCategory.CONFIG,
 )
