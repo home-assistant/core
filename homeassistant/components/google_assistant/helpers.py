@@ -32,9 +32,9 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.redact import partial_redact
 from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
-from homeassistant.util.redact import partial_redact
 
 from . import trait
 from .const import (
