@@ -66,6 +66,7 @@ TOPIC_BASE = "~"
 class MQTTDiscoveryPayload(dict[str, Any]):
     """Class to hold and MQTT discovery payload and discovery data."""
 
+    device_discovery: bool = False
     discovery_data: DiscoveryInfoType
 
 
@@ -84,6 +85,10 @@ def async_log_discovery_origin_info(
     message: str, discovery_payload: MQTTDiscoveryPayload, level: int = logging.INFO
 ) -> None:
     """Log information about the discovery and origin."""
+    # We only log origin info once per device discovery
+    if discovery_payload.device_discovery:
+        _LOGGER.info(message)
+        return
     if CONF_ORIGIN not in discovery_payload:
         _LOGGER.log(level, message)
         return
@@ -297,12 +302,18 @@ async def async_start(  # noqa: C901
         discovered_components: list[MqttComponentConfig] = []
         if component == CONF_DEVICE:
             # Process device based discovery message
-            device_payload = _parse_device_payload(hass, payload, object_id, node_id)
-            if not device_payload:
+            device_discovery_payload = _parse_device_payload(
+                hass, payload, object_id, node_id
+            )
+            if not device_discovery_payload:
                 return
-            device_config: dict[str, Any] = device_payload[CONF_DEVICE]
-            origin_config: dict[str, Any] | None = device_payload.get(CONF_ORIGIN)
-            component_configs: dict[str, Any] = device_payload[CONF_COMPONENTS]
+            device_config: dict[str, Any] = device_discovery_payload[CONF_DEVICE]
+            origin_config: dict[str, Any] | None = device_discovery_payload.get(
+                CONF_ORIGIN
+            )
+            component_configs: dict[str, Any] = device_discovery_payload[
+                CONF_COMPONENTS
+            ]
             for component_id, config in component_configs.items():
                 component = config.pop(CONF_PLATFORM)
                 component_node_id = (
@@ -311,17 +322,28 @@ async def async_start(  # noqa: C901
                 _replace_all_abbreviations(config)
                 discovery_payload = MQTTDiscoveryPayload(config)
                 if discovery_payload:
+                    discovery_payload.device_discovery = True
                     discovery_payload[CONF_DEVICE] = device_config
-                    if origin_config is not None:
-                        discovery_payload[CONF_ORIGIN] = origin_config
+                    discovery_payload[CONF_ORIGIN] = origin_config
                     # Only assign shared config options
                     # when they are not set at entity level
-                    _merge_common_options(discovery_payload, device_payload)
+                    _merge_common_options(discovery_payload, device_discovery_payload)
                 discovered_components.append(
                     MqttComponentConfig(
                         component, object_id, component_node_id, discovery_payload
                     )
                 )
+            _LOGGER.debug(
+                "Process device discovery payload %s", device_discovery_payload
+            )
+            device_discovery_id = (
+                " ".join((node_id, object_id)) if node_id else object_id
+            )
+            message = f"Processing device discovery for '{device_discovery_id}'"
+            async_log_discovery_origin_info(
+                message, MQTTDiscoveryPayload(device_discovery_payload)
+            )
+
         else:
             # Process component based discovery message
             try:
@@ -388,7 +410,7 @@ async def async_start(  # noqa: C901
     ) -> None:
         """Process the payload of a new discovery."""
 
-        _LOGGER.debug("Process discovery payload %s", payload)
+        _LOGGER.debug("Process component discovery payload %s", payload)
         discovery_hash = (component, discovery_id)
 
         already_discovered = discovery_hash in mqtt_data.discovery_already_discovered

@@ -192,7 +192,8 @@ async def test_invalid_device_discovery_config(
     async_fire_mqtt_message(
         hass,
         "homeassistant/device/bla/config",
-        '{ "cmp": { "acp1": {"name": "abc", "state_topic": "home/alarm", '
+        '{ "o": {"name": "foobar"}, "cmp": '
+        '{ "acp1": {"name": "abc", "state_topic": "home/alarm", '
         '"command_topic": "home/alarm/set", '
         '"platform":"alarm_control_panel"}}}',
     )
@@ -206,7 +207,8 @@ async def test_invalid_device_discovery_config(
     async_fire_mqtt_message(
         hass,
         "homeassistant/device/bla/config",
-        '{ "dev": {"identifiers": ["ABDE03"]}, "cmp": { "acp1": {"name": "abc", "state_topic": "home/alarm", '
+        '{ "o": {"name": "foobar"}, "dev": {"identifiers": ["ABDE03"]}, '
+        '"cmp": { "acp1": {"name": "abc", "state_topic": "home/alarm", '
         '"command_topic": "home/alarm/set" }}}',
     )
     await hass.async_block_till_done()
@@ -314,7 +316,9 @@ async def test_discovery_integration_info(
     assert state.name == "Beer"
 
     assert (
-        f"Found new component: binary_sensor {discovery_id} from external application bla2mqtt, version: 1.0"
+        "Processing device discovery for 'bla' from external application bla2mqtt, version: 1.0"
+        in caplog.text
+        or f"Found new component: binary_sensor {discovery_id} from external application bla2mqtt, version: 1.0"
         in caplog.text
     )
     caplog.clear()
@@ -332,7 +336,7 @@ async def test_discovery_integration_info(
     assert state.name == "Milk"
 
     assert (
-        f"Component has already been discovered: binary_sensor {discovery_id}, sending update from external application bla2mqtt, version: 1.1, support URL: https://bla2mqtt.example.com/support"
+        f"Component has already been discovered: binary_sensor {discovery_id}"
         in caplog.text
     )
 
