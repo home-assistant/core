@@ -19,7 +19,7 @@ bluetooth-data-tools==1.19.0
 cached_ipaddress==0.3.0
 certifi>=2021.5.30
 ciso8601==2.3.0
-cryptography==42.0.1
+cryptography==42.0.2
 dbus-fast==2.21.1
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
@@ -28,8 +28,8 @@ habluetooth==2.4.0
 hass-nabucasa==0.76.0
 hassil==1.6.0
 home-assistant-bluetooth==1.12.0
-home-assistant-frontend==20240131.0
-home-assistant-intents==2024.1.29
+home-assistant-frontend==20240202.0
+home-assistant-intents==2024.2.1
 httpx==0.26.0
 ifaddr==0.2.0
 janus==1.0.0
