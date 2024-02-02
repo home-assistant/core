@@ -285,17 +285,11 @@ def check_config(config: dict) -> dict:
         loc_addr: set[str] = {addr}
 
         if CONF_TARGET_TEMP in entity:
-            a = str(entity[CONF_TARGET_TEMP])
-            a += f"_{inx}"
-            loc_addr.add(a)
+            loc_addr.add(f"{entity[CONF_TARGET_TEMP]}_{inx}")
         if CONF_HVAC_MODE_REGISTER in entity:
-            a = str(entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS])
-            a += f"_{inx}"
-            loc_addr.add(a)
+            loc_addr.add(f"{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
         if CONF_FAN_MODE_REGISTER in entity:
-            a = str(entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS])
-            a += f"_{inx}"
-            loc_addr.add(a)
+            loc_addr.add(f"{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
 
         dup_addrs = ent_addr.intersection(loc_addr)
         if len(dup_addrs) > 0:
