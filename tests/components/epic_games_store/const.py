@@ -16,4 +16,8 @@ DATA_ERROR_WRONG_COUNTRY = load_json_object_fixture(
 # free games
 DATA_FREE_GAMES = load_json_object_fixture("free_games.json", DOMAIN)
 
-DATA_ONE_FREE_GAME = load_json_object_fixture("free_game.json", DOMAIN)
+DATA_FREE_GAMES_ONE = load_json_object_fixture("free_games_one.json", DOMAIN)
+
+DATA_FREE_GAMES_CHRISTMAS_SPECIAL = load_json_object_fixture(
+    "free_games_christmas_special.json", DOMAIN
+)

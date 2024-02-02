@@ -20,7 +20,7 @@ from tests.common import async_fire_time_changed
 
 
 async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> None:
-    """Test setup component with calendars."""
+    """Test setup component."""
     await setup_platform(hass, CALENDAR_DOMAIN)
 
     state = hass.states.get("calendar.epic_games_store_discount_games")
@@ -34,7 +34,7 @@ async def test_discount_games(
     freezer: FrozenDateTimeFactory,
     service_multiple: Mock,
 ) -> None:
-    """Test setup component with calendars."""
+    """Test discount games calendar."""
     freezer.move_to("2022-10-15T00:00:00.000Z")
 
     await setup_platform(hass, CALENDAR_DOMAIN)
@@ -72,7 +72,7 @@ async def test_free_games(
     freezer: FrozenDateTimeFactory,
     service_multiple: Mock,
 ) -> None:
-    """Test setup component with calendars."""
+    """Test free games calendar."""
     freezer.move_to("2022-10-30T00:00:00.000Z")
 
     await setup_platform(hass, CALENDAR_DOMAIN)
@@ -104,7 +104,7 @@ async def test_attribute_not_found(
     freezer: FrozenDateTimeFactory,
     service_attribute_not_found: Mock,
 ) -> None:
-    """Test setup component with calendars."""
+    """Test setup calendars with attribute not found error."""
     freezer.move_to("2023-10-12T00:00:00.000Z")
 
     await setup_platform(hass, CALENDAR_DOMAIN)
@@ -117,6 +117,31 @@ async def test_attribute_not_found(
     cal_attrs = dict(state.attributes)
     cal_games = cal_attrs.pop("games")
     assert len(cal_games) == 3
+
+
+async def test_christmas_special(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_christmas_special: Mock,
+) -> None:
+    """Test setup calendars with Christmas special case."""
+    freezer.move_to("2023-12-28T00:00:00.000Z")
+
+    await setup_platform(hass, CALENDAR_DOMAIN)
+
+    state = hass.states.get("calendar.epic_games_store_discount_games")
+    assert state.name == "Epic Games Store Discount games"
+    assert state.state == STATE_OFF
+    cal_attrs = dict(state.attributes)
+    cal_games = cal_attrs.pop("games")
+    assert len(cal_games) == 0
+
+    state = hass.states.get("calendar.epic_games_store_free_games")
+    assert state.name == "Epic Games Store Free games"
+    assert state.state == STATE_ON
+    cal_attrs = dict(state.attributes)
+    cal_games = cal_attrs.pop("games")
+    assert len(cal_games) == 2
 
 
 async def test_get_events(
