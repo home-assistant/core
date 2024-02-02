@@ -1,4 +1,5 @@
 """Standard conversation implementation for Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -264,9 +265,11 @@ class DefaultAgent(AbstractConversationAgent):
             _LOGGER.debug(
                 "Recognized intent '%s' for template '%s' but had unmatched: %s",
                 result.intent.name,
-                result.intent_sentence.text
-                if result.intent_sentence is not None
-                else "",
+                (
+                    result.intent_sentence.text
+                    if result.intent_sentence is not None
+                    else ""
+                ),
                 result.unmatched_entities_list,
             )
             error_response_type, error_response_args = _get_unmatched_response(result)
@@ -285,7 +288,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Slot values to pass to the intent
         slots = {
-            entity.name: {"value": entity.value, "text": entity.text}
+            entity.name: {"value": entity.value, "text": entity.text or entity.value}
             for entity in result.entities_list
         }
 
@@ -305,27 +308,6 @@ class DefaultAgent(AbstractConversationAgent):
             error_response_type, error_response_args = _get_no_states_matched_response(
                 no_states_error
             )
-            if domain := error_response_args.get("domain"):
-                translations = await translation.async_get_translations(
-                    self.hass, language, "entity_component", [domain]
-                )
-                error_response_args.update(
-                    {
-                        "domain": translations.get(
-                            f"component.{domain}.entity_component._.name", domain
-                        ).lower()
-                    }
-                )
-
-                if device_class := error_response_args.get("device_class"):
-                    error_response_args.update(
-                        {
-                            "device_class": translations.get(
-                                f"component.{domain}.entity_component.{device_class}.name",
-                                device_class,
-                            ).lower()
-                        }
-                    )
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_VALID_TARGETS,
@@ -496,9 +478,11 @@ class DefaultAgent(AbstractConversationAgent):
                     for entity_name, entity_value in recognize_result.entities.items()
                 },
                 # First matched or unmatched state
-                "state": template.TemplateState(self.hass, state1)
-                if state1 is not None
-                else None,
+                "state": (
+                    template.TemplateState(self.hass, state1)
+                    if state1 is not None
+                    else None
+                ),
                 "query": {
                     # Entity states that matched the query (e.g, "on")
                     "matched": [
@@ -756,7 +740,7 @@ class DefaultAgent(AbstractConversationAgent):
 
             if not entity:
                 # Default name
-                entity_names.append((state.name, state.name, context))
+                entity_names.append((state.name, state.entity_id, context))
                 continue
 
             if entity.aliases:
@@ -764,10 +748,10 @@ class DefaultAgent(AbstractConversationAgent):
                     if not alias.strip():
                         continue
 
-                    entity_names.append((alias, alias, context))
+                    entity_names.append((alias, state.entity_id, context))
 
             # Default name
-            entity_names.append((state.name, state.name, context))
+            entity_names.append((state.name, state.entity_id, context))
 
         # Expose all areas
         areas = ar.async_get(self.hass)
@@ -807,7 +791,7 @@ class DefaultAgent(AbstractConversationAgent):
         if device_area is None:
             return None
 
-        return {"area": device_area.id}
+        return {"area": {"value": device_area.id, "text": device_area.name}}
 
     def _get_error_text(
         self,
