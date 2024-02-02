@@ -83,6 +83,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_max_temp = 32
     _attr_min_temp = 16
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
