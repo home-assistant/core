@@ -421,15 +421,17 @@ async def test_browse_media_event_type(
 
     assert browse.title == "UnifiProtect > All Cameras"
     assert browse.identifier == "test_id:browse:all"
-    assert len(browse.children) == 4
+    assert len(browse.children) == 5
     assert browse.children[0].title == "All Events"
     assert browse.children[0].identifier == "test_id:browse:all:all"
     assert browse.children[1].title == "Ring Events"
     assert browse.children[1].identifier == "test_id:browse:all:ring"
     assert browse.children[2].title == "Motion Events"
     assert browse.children[2].identifier == "test_id:browse:all:motion"
-    assert browse.children[3].title == "Smart Detections"
+    assert browse.children[3].title == "Object Detections"
     assert browse.children[3].identifier == "test_id:browse:all:smart"
+    assert browse.children[4].title == "Audio Detections"
+    assert browse.children[4].identifier == "test_id:browse:all:audio"
 
 
 ONE_MONTH_SIMPLE = (
