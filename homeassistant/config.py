@@ -1008,6 +1008,12 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
     return None
 
 
+def _validate_package_definition(name: str, conf: Any) -> None:
+    """Validate basic package definition properties."""
+    cv.slug(name)
+    PACKAGE_DEFINITION_SCHEMA(conf)
+
+
 def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> str | None:
     """Merge package into conf, recursively."""
     duplicate_key: str | None = None
@@ -1042,11 +1048,6 @@ async def merge_packages_config(
 
     Raises vol.Invalid if whole package config is invalid.
     """
-
-    def _validate_package_definition(name: str, conf: Any) -> None:
-        """Validate basic package definition properties."""
-        cv.slug(name)
-        PACKAGE_DEFINITION_SCHEMA(conf)
 
     PACKAGES_CONFIG_SCHEMA(packages)
 
