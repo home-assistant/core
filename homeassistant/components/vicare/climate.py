@@ -40,7 +40,7 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, HeatingProgram
+from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, Program
 from .entity import ViCareEntity
 from .utils import get_burners, get_circuits, get_compressors
 
@@ -75,17 +75,17 @@ VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
 }
 
 VICARE_TO_HA_PRESET_HEATING = {
-    HeatingProgram.COMFORT: PRESET_COMFORT,
-    HeatingProgram.ECO: PRESET_ECO,
-    HeatingProgram.NORMAL: PRESET_HOME,
-    HeatingProgram.REDUCED: PRESET_SLEEP,
+    Program.COMFORT: PRESET_COMFORT,
+    Program.ECO: PRESET_ECO,
+    Program.NORMAL: PRESET_HOME,
+    Program.REDUCED: PRESET_SLEEP,
 }
 
 HA_TO_VICARE_PRESET_HEATING = {
-    PRESET_COMFORT: HeatingProgram.COMFORT,
-    PRESET_ECO: HeatingProgram.ECO,
-    PRESET_HOME: HeatingProgram.NORMAL,
-    PRESET_SLEEP: HeatingProgram.REDUCED,
+    PRESET_COMFORT: Program.COMFORT,
+    PRESET_ECO: Program.ECO,
+    PRESET_HOME: Program.NORMAL,
+    PRESET_SLEEP: Program.REDUCED,
 }
 
 
@@ -309,9 +309,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
         _LOGGER.debug("Current preset %s", self._current_program)
         if self._current_program and self._current_program not in [
-            HeatingProgram.NORMAL,
-            HeatingProgram.REDUCED,
-            HeatingProgram.STANDBY,
+            Program.NORMAL,
+            Program.REDUCED,
+            Program.STANDBY,
         ]:
             # We can't deactivate "normal", "reduced" or "standby"
             _LOGGER.debug("deactivating %s", self._current_program)
@@ -328,9 +328,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, target_program)
         if target_program not in [
-            HeatingProgram.NORMAL,
-            HeatingProgram.REDUCED,
-            HeatingProgram.STANDBY,
+            Program.NORMAL,
+            Program.REDUCED,
+            Program.STANDBY,
         ]:
             # And we can't explicitly activate "normal", "reduced" or "standby", either
             _LOGGER.debug("activating %s", target_program)

@@ -34,7 +34,7 @@ VICARE_UNIT_TO_UNIT_OF_MEASUREMENT = {
 }
 
 
-class HeatingProgram(enum.StrEnum):
+class Program(enum.StrEnum):
     """ViCare preset heating programs.
 
     As listed inhttps://github.com/somm15/PyViCare/blob/63f9f7fea505fdf9a26c77c6cd0bff889abcdb05/PyViCare/PyViCareHeatingDevice.py#L606
