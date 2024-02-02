@@ -142,16 +142,16 @@ class NoStatesMatchedError(IntentError):
         self,
         name: str | None,
         area: str | None,
-        domains: set[str] | None,
-        device_classes: set[str] | None,
+        domain: str | None,
+        device_class: str | None,
     ) -> None:
         """Initialize error."""
         super().__init__()
 
         self.name = name
         self.area = area
-        self.domains = domains
-        self.device_classes = device_classes
+        self.domain = domain
+        self.device_class = device_class
 
 
 def _is_device_class(
@@ -401,18 +401,20 @@ class ServiceIntentHandler(IntentHandler):
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
-        name: str | None = slots.get("name", {}).get("value")
-        if name == "all":
+        entity_id: str | None = slots.get("name", {}).get("value")
+        name: str | None = slots.get("name", {}).get("text")
+        if entity_id == "all":
             # Don't match on name if targeting all entities
-            name = None
+            entity_id = None
 
         # Look up area first to fail early
-        area_name = slots.get("area", {}).get("value")
+        area_id = slots.get("area", {}).get("value")
+        area_name = slots.get("area", {}).get("text")
         area: area_registry.AreaEntry | None = None
-        if area_name is not None:
+        if area_id is not None:
             areas = area_registry.async_get(hass)
-            area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
-                area_name
+            area = areas.async_get_area(area_id) or areas.async_get_area_by_name(
+                area_id
             )
             if area is None:
                 raise IntentHandleError(f"No area named {area_name}")
@@ -420,18 +422,24 @@ class ServiceIntentHandler(IntentHandler):
         # Optional domain/device class filters.
         # Convert to sets for speed.
         domains: set[str] | None = None
+        domain_name: str | None = None
         device_classes: set[str] | None = None
+        device_class_name: str | None = None
 
         if "domain" in slots:
             domains = set(slots["domain"]["value"])
+            domain_name = slots["domain"]["text"] or next(iter(domains))
 
         if "device_class" in slots:
             device_classes = set(slots["device_class"]["value"])
+            device_class_name = slots["device_class"]["text"] or next(
+                iter(device_classes)
+            )
 
         states = list(
             async_match_states(
                 hass,
-                name=name,
+                name=entity_id,
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
@@ -444,8 +452,8 @@ class ServiceIntentHandler(IntentHandler):
             raise NoStatesMatchedError(
                 name=name,
                 area=area_name,
-                domains=domains,
-                device_classes=device_classes,
+                domain=domain_name,
+                device_class=device_class_name,
             )
 
         response = await self.async_handle_states(intent_obj, states, area)

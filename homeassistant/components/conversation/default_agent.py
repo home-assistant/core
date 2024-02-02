@@ -285,7 +285,8 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Slot values to pass to the intent
         slots = {
-            entity.name: {"value": entity.value} for entity in result.entities_list
+            entity.name: {"value": entity.value, "text": entity.text}
+            for entity in result.entities_list
         }
 
         try:
@@ -950,29 +951,27 @@ def _get_no_states_matched_response(
     """Return key and template arguments for error when intent returns no matching states."""
 
     # Device classes should be checked before domains
-    if no_states_error.device_classes:
-        device_class = next(iter(no_states_error.device_classes))  # first device class
+    if no_states_error.device_class:
         if no_states_error.area:
             # device_class in area
             return ErrorKey.NO_DEVICE_CLASS_IN_AREA, {
-                "device_class": device_class,
+                "device_class": no_states_error.device_class,
                 "area": no_states_error.area,
             }
 
         # device_class only
-        return ErrorKey.NO_DEVICE_CLASS, {"device_class": device_class}
+        return ErrorKey.NO_DEVICE_CLASS, {"device_class": no_states_error.device_class}
 
-    if no_states_error.domains:
-        domain = next(iter(no_states_error.domains))  # first domain
+    if no_states_error.domain:
         if no_states_error.area:
             # domain in area
             return ErrorKey.NO_DOMAIN_IN_AREA, {
-                "domain": domain,
+                "domain": no_states_error.domain,
                 "area": no_states_error.area,
             }
 
         # domain only
-        return ErrorKey.NO_DOMAIN, {"domain": domain}
+        return ErrorKey.NO_DOMAIN, {"domain": no_states_error.domain}
 
     # Default error
     return ErrorKey.NO_INTENT, {}
