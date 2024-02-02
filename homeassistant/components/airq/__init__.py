@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_CLIP_NEGATIVE, CONF_RETURN_AVERAGE, DOMAIN
 from .coordinator import AirQCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -14,7 +14,12 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up air-Q from a config entry."""
 
-    coordinator = AirQCoordinator(hass, entry)
+    coordinator = AirQCoordinator(
+        hass,
+        entry,
+        clip_negative=entry.options.get(CONF_CLIP_NEGATIVE, True),
+        return_average=entry.options.get(CONF_RETURN_AVERAGE, True),
+    )
 
     # Query the device for the first time and initialise coordinator.data
     await coordinator.async_config_entry_first_refresh()
