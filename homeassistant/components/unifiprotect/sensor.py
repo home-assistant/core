@@ -520,7 +520,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
-EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
+LICENSE_PLATE_EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
         key="smart_obj_licenseplate",
         name="License Plate Detected",
@@ -677,7 +677,7 @@ def _async_event_entities(
         if not device.feature_flags.has_smart_detect:
             continue
 
-        for event_desc in EVENT_SENSORS:
+        for event_desc in LICENSE_PLATE_EVENT_SENSORS:
             if not event_desc.has_required(device):
                 continue
 

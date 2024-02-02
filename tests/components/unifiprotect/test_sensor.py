@@ -19,7 +19,7 @@ from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
-    EVENT_SENSORS,
+    LICENSE_PLATE_EVENT_SENSORS,
     MOTION_TRIP_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
@@ -517,7 +517,7 @@ async def test_camera_update_licenseplate(
     assert_entity_counts(hass, Platform.SENSOR, 23, 13)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, EVENT_SENSORS[0]
+        Platform.SENSOR, camera, LICENSE_PLATE_EVENT_SENSORS[0]
     )
 
     event_metadata = EventMetadata(
