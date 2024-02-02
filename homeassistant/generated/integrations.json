@@ -1648,14 +1648,14 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "eQ-3 MAX!"
+        },
+        "eq3btsmart": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "eQ-3 Bluetooth Smart Thermostats"
         }
       }
-    },
-    "eq3btsmart": {
-      "name": "eQ-3 Bluetooth Smart Thermostats",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
     },
     "escea": {
       "name": "Escea",
