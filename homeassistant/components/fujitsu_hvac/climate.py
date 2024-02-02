@@ -182,18 +182,15 @@ class FujitsuHVACDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        with suppress(KeyError):
-            await self._dev.async_set_op_mode(HVAC_MODE_MAP[hvac_mode])
+        await self._dev.async_set_op_mode(HVAC_MODE_MAP[hvac_mode])
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set Fan mode."""
-        with suppress(KeyError):
-            await self._dev.async_set_fan_speed(FAN_MODE_MAP[fan_mode])
+        await self._dev.async_set_fan_speed(FAN_MODE_MAP[fan_mode])
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
-        with suppress(KeyError):
-            await self._dev.async_set_swing_mode(SWING_MODE_MAP[swing_mode])
+        await self._dev.async_set_swing_mode(SWING_MODE_MAP[swing_mode])
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
