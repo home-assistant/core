@@ -40,9 +40,12 @@ class ElviaImporter:
 
     async def _fetch_hourly_data(self, since: datetime) -> list[MeterValueTimeSeries]:
         """Fetch hourly data."""
-        LOGGER.debug("Fetching hourly data since %s", since)
+        start_time = since.isoformat()
+        end_time = dt_util.utcnow().isoformat()
+        LOGGER.debug("Fetching hourly data  %s - %s", start_time, end_time)
         all_data = await self.client.get_meter_values(
-            start_time=since.isoformat(),
+            start_time=start_time,
+            end_time=end_time,
             metering_point_ids=[self.metering_point_id],
         )
         return all_data["meteringpoints"][0]["metervalue"]["timeSeries"]
