@@ -32,7 +32,6 @@ async def async_get_config_entry_diagnostics(
 
     diag_data = {
         "entry": entry.as_dict(),
-        "data": {},
     }
 
     tracked_states: dict[str, dict] = {}
