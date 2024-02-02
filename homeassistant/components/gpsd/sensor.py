@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import StrEnum
 import logging
 from typing import Any
 
@@ -48,12 +47,7 @@ ATTR_SPEED = "speed"
 
 DEFAULT_NAME = "GPS"
 
-
-class FixMode(StrEnum):
-    """Fix mode states."""
-
-    FIX_2D = "2d_fix"
-    FIX_3D = "3d_fix"
+_MODE_VALUES = {2: "2d_fix", 3: "3d_fix"}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -70,10 +64,8 @@ SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
         name=None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=list(FixMode),
-        value_fn=lambda agps_thread: {2: FixMode.FIX_2D, 3: FixMode.FIX_3D}.get(
-            agps_thread.data_stream.mode
-        ),
+        options=list(_MODE_VALUES.values()),
+        value_fn=lambda agps_thread: _MODE_VALUES.get(agps_thread.data_stream.mode),
     ),
 )
 
