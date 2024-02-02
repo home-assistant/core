@@ -95,7 +95,7 @@ class DhcpMatchers:
     """Prepared info from dhcp entries."""
 
     registered_devices_domains: set[str]
-    no_oui_matchers: list[DHCPMatcher]
+    no_oui_matchers: dict[str, list[DHCPMatcher]]
     oui_matchers: dict[str, list[DHCPMatcher]]
 
 
@@ -107,11 +107,11 @@ def async_index_integration_matchers(
     We have three types of matchers:
 
     1. Registered devices
-    2. Devices with no OUI
-    3. Devices with OUI
+    2. Devices with no OUI - index by first char of lower() hostname
+    3. Devices with OUI - index by OUI
     """
     registered_devices_domains: set[str] = set()
-    no_oui_matchers: list[DHCPMatcher] = []
+    no_oui_matchers: dict[str, list[DHCPMatcher]] = {}
     oui_matchers: dict[str, list[DHCPMatcher]] = {}
     for matcher in integration_matchers:
         domain = matcher["domain"]
@@ -123,7 +123,8 @@ def async_index_integration_matchers(
             oui_matchers.setdefault(mac_address[:6], []).append(matcher)
             continue
 
-        no_oui_matchers.append(matcher)
+        first_char = matcher[HOSTNAME][0].lower()
+        no_oui_matchers.setdefault(first_char, []).append(matcher)
 
     return DhcpMatchers(
         registered_devices_domains=registered_devices_domains,
@@ -247,8 +248,12 @@ class WatcherBase(ABC):
                     matched_domains.add(entry.domain)
 
         oui = uppercase_mac[:6]
+        lowercase_hostname_first_char = (
+            lowercase_hostname[0] if len(lowercase_hostname) else ""
+        )
         for matcher in itertools.chain(
-            matchers.no_oui_matchers, matchers.oui_matchers.get(oui, ())
+            matchers.no_oui_matchers.get(lowercase_hostname_first_char, ()),
+            matchers.oui_matchers.get(oui, ()),
         ):
             domain = matcher["domain"]
             if (
