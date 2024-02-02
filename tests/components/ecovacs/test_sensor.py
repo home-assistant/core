@@ -54,18 +54,18 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
             "yna5x1",
             [
                 "sensor.ozmo_950_area_cleaned",
-                "sensor.ozmo_950_battery",
-                "sensor.ozmo_950_brush_lifespan",
-                "sensor.ozmo_950_error",
-                "sensor.ozmo_950_filter_lifespan",
-                "sensor.ozmo_950_ip_address",
-                "sensor.ozmo_950_side_brush_lifespan",
-                "sensor.ozmo_950_time_cleaned",
+                "sensor.ozmo_950_cleaning_duration",
                 "sensor.ozmo_950_total_area_cleaned",
+                "sensor.ozmo_950_total_cleaning_duration",
                 "sensor.ozmo_950_total_cleanings",
-                "sensor.ozmo_950_total_time_cleaned",
+                "sensor.ozmo_950_battery",
+                "sensor.ozmo_950_ip_address",
                 "sensor.ozmo_950_wi_fi_rssi",
                 "sensor.ozmo_950_wi_fi_ssid",
+                "sensor.ozmo_950_main_brush_lifespan",
+                "sensor.ozmo_950_filter_lifespan",
+                "sensor.ozmo_950_side_brushes_lifespan",
+                "sensor.ozmo_950_error",
             ],
         ),
     ],
@@ -79,7 +79,7 @@ async def test_sensors(
     entity_ids: list[str],
 ) -> None:
     """Test that sensor entity snapshots match."""
-    assert entity_ids == sorted(hass.states.async_entity_ids())
+    assert entity_ids == hass.states.async_entity_ids()
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
