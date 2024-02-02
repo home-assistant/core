@@ -66,8 +66,6 @@ async def get_devices(data: dict[str, Any]) -> dict[str, Any]:
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
 
-    VERSION = 1
-
     def __init__(self) -> None:
         """Create empty data."""
         self.devices: dict[str, FujitsuHVAC] = {}
