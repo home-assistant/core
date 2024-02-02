@@ -286,7 +286,7 @@ def check_config(config: dict) -> dict:
 
         if CONF_TARGET_TEMP in entity:
             a = str(entity[CONF_TARGET_TEMP])
-            a += "_" + str(inx)
+            a += f"_{inx}"
             loc_addr.add(a)
         if CONF_HVAC_MODE_REGISTER in entity:
             a = str(entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS])
