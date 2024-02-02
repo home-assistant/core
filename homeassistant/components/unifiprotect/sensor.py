@@ -751,8 +751,7 @@ class ProtectLicensePlateEventSensor(EventEntityMixin, SensorEntity):
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        # do not call ProtectDeviceSensor method since we want event to get value here
-        EventEntityMixin._async_update_device_from_protect(self, device)
+        super()._async_update_device_from_protect(device)
 
         if (
             (event := self._event) is not None
