@@ -38,10 +38,14 @@ class ElviaImporter:
         self.client = Elvia(meter_value_token=api_token).meter_value()
         self.metering_point_id = metering_point_id
 
-    async def _fetch_hourly_data(self, since: datetime) -> list[MeterValueTimeSeries]:
+    async def _fetch_hourly_data(
+        self,
+        since: datetime,
+        until: datetime,
+    ) -> list[MeterValueTimeSeries]:
         """Fetch hourly data."""
         start_time = since.isoformat()
-        end_time = dt_util.utcnow().isoformat()
+        end_time = until.isoformat()
         LOGGER.debug("Fetching hourly data  %s - %s", start_time, end_time)
         all_data = await self.client.get_meter_values(
             start_time=start_time,
@@ -65,8 +69,10 @@ class ElviaImporter:
 
         if not last_stats:
             # First time we insert 1 years of data (if available)
+            until = dt_util.utcnow()
             hourly_data = await self._fetch_hourly_data(
-                since=dt_util.now() - timedelta(days=365)
+                since=until - timedelta(days=365),
+                until=until,
             )
             if hourly_data is None or len(hourly_data) == 0:
                 return
@@ -74,7 +80,8 @@ class ElviaImporter:
             _sum = 0.0
         else:
             hourly_data = await self._fetch_hourly_data(
-                since=dt_util.utc_from_timestamp(last_stats[statistic_id][0]["end"])
+                since=dt_util.utc_from_timestamp(last_stats[statistic_id][0]["end"]),
+                until=dt_util.utcnow(),
             )
 
             if (
