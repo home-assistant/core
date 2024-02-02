@@ -398,10 +398,10 @@ build.json @home-assistant/supervisor
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50
-/homeassistant/components/epion/ @lhgravendeel
-/tests/components/epion/ @lhgravendeel
 /homeassistant/components/epic_games_store/ @Quentame
 /tests/components/epic_games_store/ @Quentame
+/homeassistant/components/epion/ @lhgravendeel
+/tests/components/epion/ @lhgravendeel
 /homeassistant/components/epson/ @pszafer
 /tests/components/epson/ @pszafer
 /homeassistant/components/eq3btsmart/ @eulemitkeule @dbuezas
