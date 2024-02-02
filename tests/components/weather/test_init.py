@@ -1286,7 +1286,7 @@ async def test_issue_forecast_deprecated_no_logging(
 
     assert weather_entity.state == ATTR_CONDITION_SUNNY
 
-    assert "Setting up weather.test" in caplog.text
+    assert "Setting up test.weather" in caplog.text
     assert (
         "custom_components.test_weather.weather::weather.test is using a forecast attribute on an instance of WeatherEntity"
         not in caplog.text

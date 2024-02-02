@@ -32,7 +32,7 @@ PLATFORMS = [Platform.SENSOR]
 BUILDS_QUERY: Final = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
 
 
-@dataclass
+@dataclass(frozen=True)
 class AzureDevOpsEntityDescription(EntityDescription):
     """Class describing Azure DevOps entities."""
 

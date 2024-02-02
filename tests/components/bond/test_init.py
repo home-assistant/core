@@ -184,9 +184,7 @@ async def test_old_identifiers_are_removed(
             "name": "test1",
             "type": DeviceType.GENERIC_DEVICE,
         }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
         return_value={}
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
@@ -228,9 +226,7 @@ async def test_smart_by_bond_device_suggested_area(
             "type": DeviceType.GENERIC_DEVICE,
             "location": "Den",
         }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
         return_value={}
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
@@ -275,9 +271,7 @@ async def test_bridge_device_suggested_area(
             "type": DeviceType.GENERIC_DEVICE,
             "location": "Bathroom",
         }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
         return_value={}
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True

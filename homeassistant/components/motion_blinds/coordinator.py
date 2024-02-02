@@ -5,7 +5,7 @@ import logging
 from socket import timeout
 from typing import Any
 
-from motionblinds import ParseException
+from motionblinds import DEVICE_TYPES_WIFI, ParseException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -59,7 +59,9 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
     def update_blind(self, blind):
         """Fetch data from a blind."""
         try:
-            if self._wait_for_push:
+            if blind.device_type in DEVICE_TYPES_WIFI:
+                blind.Update_from_cache()
+            elif self._wait_for_push:
                 blind.Update()
             else:
                 blind.Update_trigger()

@@ -417,8 +417,8 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     climate and water_heater platforms.
     """
 
-    _attr_target_temperature_low: float | None = None
-    _attr_target_temperature_high: float | None = None
+    _attr_target_temperature_low: float | None
+    _attr_target_temperature_high: float | None
 
     _feature_preset_mode: bool = False
     _optimistic: bool
@@ -470,9 +470,10 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         except ValueError:
             _LOGGER.error("Could not parse %s from %s", template_name, payload)
 
-    def prepare_subscribe_topics(
-        self, topics: dict[str, dict[str, Any]]
-    ) -> None:  # noqa: C901
+    def prepare_subscribe_topics(  # noqa: C901
+        self,
+        topics: dict[str, dict[str, Any]],
+    ) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
@@ -607,6 +608,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = climate.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
+    _attr_target_temperature_low: float | None = None
+    _attr_target_temperature_high: float | None = None
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -700,7 +703,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 config.get(key), entity=self
             ).async_render
 
-        support = ClimateEntityFeature(0)
+        support = ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         if (self._topic[CONF_TEMP_STATE_TOPIC] is not None) or (
             self._topic[CONF_TEMP_COMMAND_TOPIC] is not None
         ):
@@ -986,23 +989,17 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set a preset mode."""
-        if self._feature_preset_mode and self.preset_modes:
-            if preset_mode not in self.preset_modes and preset_mode is not PRESET_NONE:
-                _LOGGER.warning("'%s' is not a valid preset mode", preset_mode)
-                return
-            mqtt_payload = self._command_templates[CONF_PRESET_MODE_COMMAND_TEMPLATE](
-                preset_mode
-            )
-            await self._publish(
-                CONF_PRESET_MODE_COMMAND_TOPIC,
-                mqtt_payload,
-            )
+        mqtt_payload = self._command_templates[CONF_PRESET_MODE_COMMAND_TEMPLATE](
+            preset_mode
+        )
+        await self._publish(
+            CONF_PRESET_MODE_COMMAND_TOPIC,
+            mqtt_payload,
+        )
 
-            if self._optimistic_preset_mode:
-                self._attr_preset_mode = preset_mode
-                self.async_write_ha_state()
-
-            return
+        if self._optimistic_preset_mode:
+            self._attr_preset_mode = preset_mode
+            self.async_write_ha_state()
 
     # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
     # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9

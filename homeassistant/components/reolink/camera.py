@@ -1,11 +1,10 @@
 """Component providing support for Reolink IP cameras."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from reolink_aio.api import DUAL_LENS_MODELS, Host
+from reolink_aio.api import DUAL_LENS_MODELS
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.camera import (
@@ -20,19 +19,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkCameraEntityDescription(
     CameraEntityDescription,
+    ReolinkChannelEntityDescription,
 ):
     """A class that describes camera entities for a camera channel."""
 
     stream: str
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 CAMERA_ENTITIES = (
@@ -134,10 +133,6 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
             self._attr_translation_key = (
                 f"{entity_description.translation_key}_lens_{self._channel}"
             )
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""

@@ -186,16 +186,22 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             data_to_send = {"text": event.data["tts_input"]}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
             assert event.data is not None
-            path = event.data["tts_output"]["url"]
-            url = async_process_play_media_url(self.hass, path)
-            data_to_send = {"url": url}
+            tts_output = event.data["tts_output"]
+            if tts_output:
+                path = tts_output["url"]
+                url = async_process_play_media_url(self.hass, path)
+                data_to_send = {"url": url}
 
-            if self.device_info.voice_assistant_version >= 2:
-                media_id = event.data["tts_output"]["media_id"]
-                self._tts_task = self.hass.async_create_background_task(
-                    self._send_tts(media_id), "esphome_voice_assistant_tts"
-                )
+                if self.device_info.voice_assistant_version >= 2:
+                    media_id = tts_output["media_id"]
+                    self._tts_task = self.hass.async_create_background_task(
+                        self._send_tts(media_id), "esphome_voice_assistant_tts"
+                    )
+                else:
+                    self._tts_done.set()
             else:
+                # Empty TTS response
+                data_to_send = {}
                 self._tts_done.set()
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END:
             assert event.data is not None
@@ -301,10 +307,6 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             if self.transport is None:
                 return
 
-            self.handle_event(
-                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
-            )
-
             extension, data = await tts.async_get_media_source_audio(
                 self.hass,
                 media_id,
@@ -331,11 +333,17 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
                 audio_bytes = wav_file.readframes(wav_file.getnframes())
 
-            _LOGGER.debug("Sending %d bytes of audio", len(audio_bytes))
+            audio_bytes_size = len(audio_bytes)
+
+            _LOGGER.debug("Sending %d bytes of audio", audio_bytes_size)
+
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
+            )
 
             bytes_per_sample = stt.AudioBitRates.BITRATE_16 // 8
             sample_offset = 0
-            samples_left = len(audio_bytes) // bytes_per_sample
+            samples_left = audio_bytes_size // bytes_per_sample
 
             while samples_left > 0:
                 bytes_offset = sample_offset * bytes_per_sample

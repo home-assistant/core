@@ -56,9 +56,13 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
     _attr_icon = "mdi:hot-tub"
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_translation_key = DOMAIN
+    _attr_name = None
 
     def __init__(self, client: SpaClient) -> None:
         """Initialize the climate entity."""

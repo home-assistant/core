@@ -10,7 +10,7 @@ from aioelectricitymaps.models import CarbonIntensityResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -39,12 +39,11 @@ class CO2SignalCoordinator(DataUpdateCoordinator[CarbonIntensityResponse]):
     async def _async_update_data(self) -> CarbonIntensityResponse:
         """Fetch the latest data from the source."""
 
-        async with self.client as em:
-            try:
-                return await fetch_latest_carbon_intensity(
-                    self.hass, em, self.config_entry.data
-                )
-            except InvalidToken as err:
-                raise ConfigEntryError from err
-            except ElectricityMapsError as err:
-                raise UpdateFailed(str(err)) from err
+        try:
+            return await fetch_latest_carbon_intensity(
+                self.hass, self.client, self.config_entry.data
+            )
+        except InvalidToken as err:
+            raise ConfigEntryAuthFailed from err
+        except ElectricityMapsError as err:
+            raise UpdateFailed(str(err)) from err

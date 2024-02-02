@@ -1,4 +1,5 @@
 """Test Voice Assistant init."""
+import asyncio
 from dataclasses import asdict
 import itertools as it
 from pathlib import Path
@@ -551,6 +552,69 @@ async def test_pipeline_saved_audio_write_error(
 
         # Force a timeout during wake word detection
         with patch("wave.Wave_write.writeframes", raises=RuntimeError()):
+            await assist_pipeline.async_pipeline_from_audio_stream(
+                hass,
+                context=Context(),
+                event_callback=event_callback,
+                stt_metadata=stt.SpeechMetadata(
+                    language="",
+                    format=stt.AudioFormats.WAV,
+                    codec=stt.AudioCodecs.PCM,
+                    bit_rate=stt.AudioBitRates.BITRATE_16,
+                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                    channel=stt.AudioChannels.CHANNEL_MONO,
+                ),
+                stt_stream=audio_data(),
+                start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+                end_stage=assist_pipeline.PipelineStage.STT,
+            )
+
+
+async def test_pipeline_saved_audio_empty_queue(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSttProvider,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_supporting_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that saved audio thread closes WAV file even if there's an empty queue."""
+    with tempfile.TemporaryDirectory() as temp_dir_str:
+        # Enable audio recording to temporary directory
+        temp_dir = Path(temp_dir_str)
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {DOMAIN: {CONF_DEBUG_RECORDING_DIR: temp_dir_str}},
+        )
+
+        def event_callback(event: assist_pipeline.PipelineEvent):
+            if event.type == "run-end":
+                # Verify WAV file exists, but contains no data
+                pipeline_dirs = list(temp_dir.iterdir())
+                run_dirs = list(pipeline_dirs[0].iterdir())
+                wav_path = next(run_dirs[0].iterdir())
+                with wave.open(str(wav_path), "rb") as wav_file:
+                    assert wav_file.getnframes() == 0
+
+        async def audio_data():
+            # Force timeout in _pipeline_debug_recording_thread_proc
+            await asyncio.sleep(1)
+            yield b"not used"
+
+        # Wrap original function to time out immediately
+        _pipeline_debug_recording_thread_proc = (
+            assist_pipeline.pipeline._pipeline_debug_recording_thread_proc
+        )
+
+        def proc_wrapper(run_recording_dir, queue):
+            _pipeline_debug_recording_thread_proc(
+                run_recording_dir, queue, message_timeout=0
+            )
+
+        with patch(
+            "homeassistant.components.assist_pipeline.pipeline._pipeline_debug_recording_thread_proc",
+            proc_wrapper,
+        ):
             await assist_pipeline.async_pipeline_from_audio_stream(
                 hass,
                 context=Context(),

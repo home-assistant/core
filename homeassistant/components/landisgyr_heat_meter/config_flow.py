@@ -108,7 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # validate and retrieve the model and device number for a unique id
                 data = await self.hass.async_add_executor_job(heat_meter.read)
 
-        except (asyncio.TimeoutError, serial.serialutil.SerialException) as err:
+        except (asyncio.TimeoutError, serial.SerialException) as err:
             _LOGGER.warning("Failed read data from: %s. %s", port, err)
             raise CannotConnect(f"Error communicating with device: {err}") from err
 

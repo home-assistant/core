@@ -432,7 +432,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
         DeviceInfo(
             uses_password=False,
             name="test",
-            mac_address="11:22:33:44:55:aa",
+            mac_address="11:22:33:44:55:AA",
         ),
     ]
 

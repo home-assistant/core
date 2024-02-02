@@ -64,5 +64,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "not_valid_option": {
+      "message": "Option {option} is not valid for entity {entity_id}, valid options are: {options}."
+    }
   }
 }

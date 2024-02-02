@@ -47,7 +47,9 @@ def patch_setup_and_devices():
     ), patch.object(insteon, "devices", devices), patch.object(
         insteon_utils, "devices", devices
     ), patch.object(
-        insteon_entity, "devices", devices
+        insteon_entity,
+        "devices",
+        devices,
     ):
         yield
 

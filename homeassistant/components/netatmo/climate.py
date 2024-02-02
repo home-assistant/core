@@ -56,7 +56,7 @@ from .const import (
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,10 @@ PRESET_SCHEDULE = "Schedule"
 PRESET_MANUAL = "Manual"
 
 SUPPORT_FLAGS = (
-    ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
 )
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_BOOST, PRESET_FROST_GUARD, PRESET_SCHEDULE]
 
@@ -178,7 +181,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoThermostat(NetatmoBase, ClimateEntity):
+class NetatmoThermostat(NetatmoBaseEntity, ClimateEntity):
     """Representation a Netatmo thermostat."""
 
     _attr_hvac_mode = HVACMode.AUTO

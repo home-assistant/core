@@ -64,6 +64,7 @@ async def async_setup_entry(
 class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     """Define an Econet thermostat."""
 
+    _attr_should_poll = True
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     def __init__(self, thermostat):

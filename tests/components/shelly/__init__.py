@@ -7,10 +7,12 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock
 
+from aioshelly.const import MODEL_25
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.shelly.const import (
+    CONF_GEN,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -29,8 +31,8 @@ MOCK_MAC = "123456789ABC"
 
 async def init_integration(
     hass: HomeAssistant,
-    gen: int,
-    model="SHSW-25",
+    gen: int | None,
+    model=MODEL_25,
     sleep_period=0,
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,
@@ -40,8 +42,9 @@ async def init_integration(
         CONF_HOST: "192.168.1.37",
         CONF_SLEEP_PERIOD: sleep_period,
         "model": model,
-        "gen": gen,
     }
+    if gen is not None:
+        data[CONF_GEN] = gen
 
     entry = MockConfigEntry(
         domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options
@@ -71,7 +74,7 @@ def mutate_rpc_device_status(
 def inject_rpc_device_event(
     monkeypatch: pytest.MonkeyPatch,
     mock_rpc_device: Mock,
-    event: dict[str, dict[str, Any]],
+    event: Mapping[str, list[dict[str, Any]] | float],
 ) -> None:
     """Inject event for rpc device."""
     monkeypatch.setattr(mock_rpc_device, "event", event)
@@ -116,6 +119,13 @@ def register_entity(
         capabilities=capabilities,
     )
     return f"{domain}.{object_id}"
+
+
+def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
+    """Return entity state."""
+    entity = hass.states.get(entity_id)
+    assert entity
+    return entity.state
 
 
 def register_device(device_reg, config_entry: ConfigEntry):

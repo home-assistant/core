@@ -3,10 +3,13 @@
     "flow_title": "{name} ({model} at {host})",
     "step": {
       "user": {
-        "title": "Connect to the device",
+        "description": "Connect to the device",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "timeout": "Timeout"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Broadlink device."
         }
       },
       "auth": {

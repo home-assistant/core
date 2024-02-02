@@ -120,7 +120,7 @@ async def test_setup_with_photo_session(
 
     await wait_for_debouncer(hass)
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
+    sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == "0"
 
 
@@ -142,7 +142,7 @@ async def test_setup_with_live_tv_session(
 
     await wait_for_debouncer(hass)
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
+    sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == "1"
 
 
@@ -164,7 +164,7 @@ async def test_setup_with_transient_session(
 
     await wait_for_debouncer(hass)
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
+    sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == "1"
 
 
@@ -186,7 +186,7 @@ async def test_setup_with_unknown_session(
 
     await wait_for_debouncer(hass)
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
+    sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == "1"
 
 

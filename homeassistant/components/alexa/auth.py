@@ -15,6 +15,9 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
+from .const import STORAGE_ACCESS_TOKEN, STORAGE_REFRESH_TOKEN
+from .diagnostics import async_redact_lwa_params
+
 _LOGGER = logging.getLogger(__name__)
 
 LWA_TOKEN_URI = "https://api.amazon.com/auth/o2/token"
@@ -24,8 +27,6 @@ PREEMPTIVE_REFRESH_TTL_IN_SECONDS = 300
 STORAGE_KEY = "alexa_auth"
 STORAGE_VERSION = 1
 STORAGE_EXPIRE_TIME = "expire_time"
-STORAGE_ACCESS_TOKEN = "access_token"
-STORAGE_REFRESH_TOKEN = "refresh_token"
 
 
 class Auth:
@@ -56,7 +57,7 @@ class Auth:
         }
         _LOGGER.debug(
             "Calling LWA to get the access token (first time), with: %s",
-            json.dumps(lwa_params),
+            json.dumps(async_redact_lwa_params(lwa_params)),
         )
 
         return await self._async_request_new_token(lwa_params)
@@ -133,7 +134,7 @@ class Auth:
             return None
 
         response_json = await response.json()
-        _LOGGER.debug("LWA response body  : %s", response_json)
+        _LOGGER.debug("LWA response body  : %s", async_redact_lwa_params(response_json))
 
         access_token: str = response_json["access_token"]
         refresh_token: str = response_json["refresh_token"]

@@ -50,7 +50,7 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
-        self._attr_device_info = coordinator.platform_device_info(device)
+        self._attr_device_info = coordinator.platform_device_info(device, device.type)
 
     async def _light_set_state(self, state: int) -> None:
         """Set desired light state."""
