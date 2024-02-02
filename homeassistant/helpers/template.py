@@ -953,7 +953,7 @@ class StateTranslated:
             key = f"component.{domain}.state._.{state.state}"
             if key in translations_state:
                 return str(translations_state[key])
-        _LOGGER.warning(f"No translation found for entity: {entity_id}")
+        _LOGGER.warning("No translation found for entity: %s", entity_id)
         return state.state
 
     def __repr__(self) -> str:
