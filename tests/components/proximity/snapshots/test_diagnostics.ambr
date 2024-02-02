@@ -25,6 +25,10 @@
           'sensor.home_test2_distance',
           'sensor.home_test2_direction_of_travel',
         ]),
+        'device_tracker.test3': list([
+          'sensor.home_test3_distance',
+          'sensor.home_test3_direction_of_travel',
+        ]),
       }),
       'proximity': dict({
         'dir_of_travel': 'unknown',
@@ -62,6 +66,7 @@
         'tracked_entities': list([
           'device_tracker.test1',
           'device_tracker.test2',
+          'device_tracker.test3',
         ]),
         'zone': 'zone.home',
       }),

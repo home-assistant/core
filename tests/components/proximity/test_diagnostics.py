@@ -41,7 +41,11 @@ async def test_entry_diagnostics(
         title="home",
         data={
             CONF_ZONE: "zone.home",
-            CONF_TRACKED_ENTITIES: ["device_tracker.test1", "device_tracker.test2"],
+            CONF_TRACKED_ENTITIES: [
+                "device_tracker.test1",
+                "device_tracker.test2",
+                "device_tracker.test3",
+            ],
             CONF_IGNORED_ZONES: [],
             CONF_TOLERANCE: 1,
         },
