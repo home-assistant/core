@@ -32,7 +32,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
-from .const import DOMAIN
+from .const import DOMAIN, TessieChargeStates
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
@@ -57,16 +57,9 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     TessieSensorEntityDescription(
         key="charge_state_charging_state",
         icon="mdi:ev-station",
-        options=[
-            "starting",
-            "charging",
-            "stopped",
-            "complete",
-            "disconnected",
-            "nopower",
-        ],
+        options=list(TessieChargeStates.values()),
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: cast(str, x).lower(),
+        value_fn=lambda value: TessieChargeStates[cast(str, value)],
     ),
     TessieSensorEntityDescription(
         key="charge_state_usable_battery_level",
