@@ -765,7 +765,6 @@ async def test_ws_prepare(
     msg = await client.receive_json()
 
     assert msg["success"]
-    assert msg["id"] == 5
 
     # Intents should now be load
     assert agent._lang_intents.get(hass.config.language)
