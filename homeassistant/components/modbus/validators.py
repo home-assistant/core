@@ -290,7 +290,7 @@ def check_config(config: dict) -> dict:
             loc_addr.add(a)
         if CONF_HVAC_MODE_REGISTER in entity:
             a = str(entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS])
-            a += "_" + str(inx)
+            a += f"_{inx}"
             loc_addr.add(a)
         if CONF_FAN_MODE_REGISTER in entity:
             a = str(entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS])
