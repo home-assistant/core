@@ -23,8 +23,11 @@ def partial_redact(
     if len(x) < unmasked * 2:
         return REDACTED
 
+    if not unmasked_prefix and not unmasked_suffix:
+        return REDACTED
+
     suffix = x[-unmasked_suffix:] if unmasked_suffix else ""
-    return f"{x[:unmasked_prefix]}{'*' * (len(x) - unmasked)}{suffix}"
+    return f"{x[:unmasked_prefix]}***{suffix}"
 
 
 @overload

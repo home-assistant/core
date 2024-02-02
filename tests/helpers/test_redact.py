@@ -71,11 +71,11 @@ def test_redact_custom_redact_function() -> None:
     }
 
     assert async_redact_data(data, to_redact) == {
-        "key1": "val1********val1",
+        "key1": "val1***val1",
         "key2": ["value2_a", "value2_b"],
         "key3": REDACTED,
         "key4": {
-            "key4_1": "val4****************l4_1",
+            "key4_1": "val4***l4_1",
             "key4_2": ["value4_2a", "value4_2b"],
             "key4_3": [["value4_3a", "value4_3b"], ["value4_3c", "value4_3d"]],
         },
@@ -89,6 +89,6 @@ def test_partial_redact() -> None:
     """Test the partial_redact helper."""
     assert partial_redact(None, 0, 0) == REDACTED
     assert partial_redact("short_string") == REDACTED
-    assert partial_redact("long_enough_string") == "long**********ring"
-    assert partial_redact("long_enough_string", 2, 2) == "lo**************ng"
-    assert partial_redact("long_enough_string", 0, 0) == "******************"
+    assert partial_redact("long_enough_string") == "long***ring"
+    assert partial_redact("long_enough_string", 2, 2) == "lo***ng"
+    assert partial_redact("long_enough_string", 0, 0) == REDACTED
