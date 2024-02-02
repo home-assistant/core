@@ -1,4 +1,5 @@
 """ESPHome voice assistant support."""
+
 from __future__ import annotations
 
 import asyncio
@@ -91,6 +92,16 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         self.handle_finished = handle_finished
         self._tts_done = asyncio.Event()
         self._tts_task: asyncio.Task | None = None
+
+    @property
+    def is_running(self) -> bool:
+        """True if the the UDP server is started and hasn't been stopped."""
+        return (
+            self.started
+            and (not self.stopped)
+            and (self.transport is not None)
+            and (not self.transport.is_closing())
+        )
 
     async def start_server(self) -> int:
         """Start accepting connections."""
@@ -304,9 +315,6 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     async def _send_tts(self, media_id: str) -> None:
         """Send TTS audio to device via UDP."""
         try:
-            if self.transport is None:
-                return
-
             extension, data = await tts.async_get_media_source_audio(
                 self.hass,
                 media_id,
@@ -345,12 +353,13 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             sample_offset = 0
             samples_left = audio_bytes_size // bytes_per_sample
 
-            while samples_left > 0:
+            while (samples_left > 0) and self.is_running:
                 bytes_offset = sample_offset * bytes_per_sample
                 chunk: bytes = audio_bytes[bytes_offset : bytes_offset + 1024]
                 samples_in_chunk = len(chunk) // bytes_per_sample
                 samples_left -= samples_in_chunk
 
+                assert self.transport is not None  # checked with is_running
                 self.transport.sendto(chunk, self.remote_addr)
                 await asyncio.sleep(
                     samples_in_chunk / stt.AudioSampleRates.SAMPLERATE_16000 * 0.9
