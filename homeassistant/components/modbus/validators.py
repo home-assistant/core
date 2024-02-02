@@ -282,8 +282,7 @@ def check_config(config: dict) -> dict:
                 addr += f"_{entity[conf_type]}"
         inx = entity.get(CONF_SLAVE, None) or entity.get(CONF_DEVICE_ADDRESS, 0)
         addr += f"_{inx}"
-        loc_addr: set[str] = set()
-        loc_addr.add(addr)
+        loc_addr: set[str] = {addr}
 
         if CONF_TARGET_TEMP in entity:
             a = str(entity[CONF_TARGET_TEMP])
