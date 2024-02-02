@@ -325,9 +325,6 @@ class Entity(ABC):
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
-    # rascal
-    async_on_push_event: Callable[[Entity], None] | None = None
-
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -1256,7 +1253,7 @@ class Entity(ABC):
 
         return report_issue
 
-    async def async_get_action_target_state(
+    def async_get_action_target_state(
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Return expected state when action is complete."""
@@ -1323,11 +1320,10 @@ class ToggleEntity(Entity):
         else:
             await self.async_turn_on(**kwargs)
 
-    @classmethod
-    async def async_get_action_completed_state(
-        cls, action: dict[str, Any]
+    def async_get_action_target_state(
+        self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
-        """Return expected state when action is complete."""
+        """Return expected state of an action."""
 
         def _target_complete_state(current: bool) -> Callable[[bool], bool]:
             def match(value: bool) -> bool:
@@ -1341,5 +1337,5 @@ class ToggleEntity(Entity):
         elif action[CONF_SERVICE] == SERVICE_TURN_OFF:
             target["is_on"] = _target_complete_state(False)
         elif action[CONF_SERVICE] == SERVICE_TOGGLE:
-            target["is_on"] = _target_complete_state(not cls.is_on)
+            target["is_on"] = _target_complete_state(not self.is_on)
         return target

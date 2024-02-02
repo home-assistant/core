@@ -287,7 +287,7 @@ class LockEntity(Entity):
 
         self._lock_option_default_code = ""
 
-    async def async_get_action_target_state(
+    def async_get_action_target_state(
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Return expected state when action is complete."""

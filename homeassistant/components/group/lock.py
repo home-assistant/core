@@ -15,7 +15,6 @@ from homeassistant.components.lock import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_GROUP_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -123,8 +122,8 @@ class LockGroup(GroupEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Forward the lock command to all locks in the group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids, ATTR_GROUP_ID: self._attr_unique_id}
-        self._async_call()
+        data = {ATTR_ENTITY_ID: self._entity_ids}
+        self._preprocessing(data)
         _LOGGER.debug("Forwarded lock command: %s", data)
 
         await self.hass.services.async_call(
@@ -137,8 +136,8 @@ class LockGroup(GroupEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Forward the unlock command to all locks in the group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids, ATTR_GROUP_ID: self._attr_unique_id}
-        self._async_call()
+        data = {ATTR_ENTITY_ID: self._entity_ids}
+        self._preprocessing(data)
         await self.hass.services.async_call(
             DOMAIN,
             SERVICE_UNLOCK,
@@ -149,8 +148,8 @@ class LockGroup(GroupEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Forward the open command to all locks in the group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids, ATTR_GROUP_ID: self._attr_unique_id}
-        self._async_call()
+        data = {ATTR_ENTITY_ID: self._entity_ids}
+        self._preprocessing(data)
         await self.hass.services.async_call(
             DOMAIN,
             SERVICE_OPEN,

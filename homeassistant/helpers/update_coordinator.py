@@ -16,7 +16,8 @@ import aiohttp
 import requests
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_CALL_SERVICE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.components.rasc.decorator import rasc_track_service
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -27,7 +28,6 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .rasc import RASCState, rasc_on_command, rasc_on_update
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
@@ -132,8 +132,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         # rascal abstraction
         self.entities: list[entity.Entity] = []
-        self.rascal_state_map: dict[str, RASCState] = {}
-        self.hass.bus.async_listen(EVENT_CALL_SERVICE, self._listen_to_command)
 
     def add_entities(self, new_entities: Iterable[entity.Entity]) -> None:
         """Add corresponding entities to coordinator."""
@@ -143,21 +141,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     def add_entity(self, new_entity: entity.Entity) -> None:
         """Add corresponding entity to coordinator."""
         self.entities.append(new_entity)
-
-    async def _listen_to_command(self, e: Event) -> None:
-        target_entities, next_intervals = await rasc_on_command(
-            self.hass,
-            self,
-            e,
-        )
-        if not target_entities:
-            return
-        for target_entity in target_entities:
-            self.hass.create_task(
-                self._track_entity_state(
-                    target_entity, next_intervals[target_entity.entity_id]
-                )
-            )
 
     async def async_register_shutdown(self) -> None:
         """Register shutdown on HomeAssistant stop.
@@ -420,7 +403,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         ):
             self.async_update_listeners()
 
-    async def _track_entity_state(
+    @rasc_track_service
+    async def track_entity_state(
         self, _entity: entity.Entity, delay: timedelta | None = None
     ) -> None:
         """Track the states of the entity."""
@@ -428,12 +412,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             await asyncio.sleep(delay.total_seconds())
         with contextlib.suppress(Exception):
             self.data = await self._async_update_data()
-
-        next_interval = rasc_on_update(self.hass, self.rascal_state_map, _entity)
-        if not next_interval:
-            return
-        await asyncio.sleep(next_interval.total_seconds())
-        self.hass.create_task(self._track_entity_state(_entity))
 
     @callback
     def async_set_update_error(self, err: Exception) -> None:

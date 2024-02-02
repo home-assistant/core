@@ -18,7 +18,6 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_GROUP_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
@@ -181,9 +180,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Move the covers up."""
         data = {
             ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE],
-            ATTR_GROUP_ID: self._attr_unique_id,
         }
-        self._async_call()
+        self._preprocessing(data)
         await self.hass.services.async_call(
             DOMAIN, SERVICE_OPEN_COVER, data, blocking=True, context=self._context
         )
@@ -192,9 +190,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Move the covers down."""
         data = {
             ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE],
-            ATTR_GROUP_ID: self._attr_unique_id,
         }
-        self._async_call()
+        self._preprocessing(data)
         await self.hass.services.async_call(
             DOMAIN, SERVICE_CLOSE_COVER, data, blocking=True, context=self._context
         )
@@ -203,9 +200,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Fire the stop action."""
         data = {
             ATTR_ENTITY_ID: self._covers[KEY_STOP],
-            ATTR_GROUP_ID: self._attr_unique_id,
         }
-        self._async_call()
+        self._preprocessing(data)
         await self.hass.services.async_call(
             DOMAIN, SERVICE_STOP_COVER, data, blocking=True, context=self._context
         )
@@ -215,9 +211,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {
             ATTR_ENTITY_ID: self._covers[KEY_POSITION],
             ATTR_POSITION: kwargs[ATTR_POSITION],
-            ATTR_GROUP_ID: self._attr_unique_id,
         }
-        self._async_call()
+        self._preprocessing(data)
         await self.hass.services.async_call(
             DOMAIN,
             SERVICE_SET_COVER_POSITION,
@@ -230,9 +225,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Tilt covers open."""
         data = {
             ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE],
-            ATTR_GROUP_ID: self._attr_unique_id,
         }
-        self._async_call()
+        self._preprocessing(data)
         await self.hass.services.async_call(
             DOMAIN, SERVICE_OPEN_COVER_TILT, data, blocking=True, context=self._context
         )
@@ -241,9 +235,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Tilt covers closed."""
         data = {
             ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE],
-            ATTR_GROUP_ID: self._attr_unique_id,
         }
-        self._async_call()
+        self._preprocessing(data)
         await self.hass.services.async_call(
             DOMAIN, SERVICE_CLOSE_COVER_TILT, data, blocking=True, context=self._context
         )
@@ -252,9 +245,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Stop cover tilt."""
         data = {
             ATTR_ENTITY_ID: self._tilts[KEY_STOP],
-            ATTR_GROUP_ID: self._attr_unique_id,
         }
-        self._async_call()
+        self._preprocessing(data)
         await self.hass.services.async_call(
             DOMAIN, SERVICE_STOP_COVER_TILT, data, blocking=True, context=self._context
         )
@@ -264,9 +256,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {
             ATTR_ENTITY_ID: self._tilts[KEY_POSITION],
             ATTR_TILT_POSITION: kwargs[ATTR_TILT_POSITION],
-            ATTR_GROUP_ID: self._attr_unique_id,
         }
-        self._async_call()
+        self._preprocessing(data)
         await self.hass.services.async_call(
             DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,

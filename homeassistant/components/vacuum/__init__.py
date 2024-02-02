@@ -480,7 +480,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """Return expected state when action is complete."""
 
         target: dict[str, Any] = (
-            await ToggleEntity.async_get_action_completed_state(action) or {}
+            await cls.async_get_action_completed_state(action) or {}
         )
 
         if action[CONF_SERVICE] in ["clean", SERVICE_START, SERVICE_CLEAN_SPOT]:

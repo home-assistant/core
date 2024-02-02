@@ -394,7 +394,7 @@ class FanEntity(ToggleEntity):
             return self._attr_preset_modes
         return None
 
-    async def async_get_action_target_state(
+    def async_get_action_target_state(
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Return expected state when action is start/complete."""
@@ -429,9 +429,7 @@ class FanEntity(ToggleEntity):
 
             return match
 
-        target: dict[str, Any] = (
-            await super().async_get_action_completed_state(action) or {}
-        )
+        target: dict[str, Any] = super().async_get_action_target_state(action) or {}
 
         service_data = action[CONF_SERVICE_DATA]
         if action[CONF_SERVICE] == SERVICE_SET_PERCENTAGE:

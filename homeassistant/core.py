@@ -35,7 +35,7 @@ import voluptuous as vol
 import yarl
 
 if TYPE_CHECKING:
-    from .helpers.rasc import RASCStore
+    from .components.rasc import RASC
 
 from . import block_async_io, util
 from .backports.functools import cached_property
@@ -49,6 +49,7 @@ from .const import (
     COMPRESSED_STATE_LAST_CHANGED,
     COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
+    DOMAIN_RASC,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -337,8 +338,6 @@ class HomeAssistant:
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
-        # rasc
-        self.rasc_store: RASCStore | None = None
 
     @property
     def is_running(self) -> bool:
@@ -2001,7 +2000,11 @@ class ServiceRegistry:
             context=context,
         )
 
-        coro = self._execute_service(handler, service_call)
+        rasc: RASC = self._hass.data[DOMAIN_RASC]
+        coro, s_coro, c_coro = rasc.execute_service(handler, service_call)
+        # s_coro.add_done_callback(lambda res: print(res.result(), "start!!!"))
+        # c_coro.add_done_callback(lambda res: print(res.result(), "complete!!!"))
+        # coro = self._execute_service(handler, service_call)
         if not blocking:
             self._hass.async_create_task(
                 self._run_service_call_catch_exceptions(coro, service_call),
@@ -2010,16 +2013,6 @@ class ServiceRegistry:
             return None
 
         response_data = await coro
-
-        # self._hass.bus.async_fire(
-        #     RASC_RESPONSE,
-        #     {
-        #         "type": RASC_ACK,
-        #         ATTR_SERVICE: service,
-        #         ATTR_ENTITY_ID: str(service_data[ATTR_ENTITY_ID]),
-        #     },
-        #     context=context,
-        # )
         if not return_response:
             return None
         if not isinstance(response_data, dict):

@@ -11,19 +11,18 @@ from typing import TYPE_CHECKING, Any, Protocol
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.rasc.decorator import rasc_track_service
 
 # from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.const import (
     ATTR_RESTORED,
     DEVICE_DEFAULT_NAME,
-    EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
-    Event,
     HomeAssistant,
     ServiceCall,
     callback,
@@ -45,7 +44,6 @@ from . import (
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .issue_registry import IssueSeverity, async_create_issue
-from .rasc import RASCState, rasc_on_command, rasc_on_update
 from .rascalscheduler import create_x_ready_queue, delete_x_active_queue
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
@@ -152,9 +150,6 @@ class EntityPlatform:
         hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
             self.platform_name, []
         ).append(self)
-
-        # rascal abstraction
-        self.rascal_state_map: dict[str, RASCState] = {}
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
@@ -319,8 +314,6 @@ class EntityPlatform:
             else languages.DEFAULT_LANGUAGE
         )
 
-        self.hass.bus.async_listen(EVENT_CALL_SERVICE, self._listen_to_command)
-
         async def get_translations(
             language: str, category: str, integration: str
         ) -> dict[str, Any]:
@@ -434,27 +427,6 @@ class EntityPlatform:
                 return False
             finally:
                 warn_task.cancel()
-
-    def async_on_push_event(self, entity: Entity) -> None:
-        """Handle push event from push-based devices."""
-        rasc_on_update(self.hass, self.rascal_state_map, entity)
-
-    async def _listen_to_command(self, e: Event) -> None:
-        target_entities, next_intervals = await rasc_on_command(
-            self.hass,
-            self,
-            e,
-        )
-        if not target_entities:
-            return
-        for target_entity in target_entities:
-            if not target_entity.should_poll:
-                continue
-            self.hass.create_task(
-                self._track_entity_state(
-                    target_entity, next_intervals[target_entity.entity_id]
-                )
-            )
 
     def _schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
@@ -784,8 +756,6 @@ class EntityPlatform:
 
         entity.async_on_remove(remove_entity_cb)
 
-        entity.async_on_push_event = self.async_on_push_event
-
         await entity.add_to_platform_finish()
 
     async def async_reset(self) -> None:
@@ -920,7 +890,8 @@ class EntityPlatform:
             ]:
                 await asyncio.gather(*tasks)
 
-    async def _track_entity_state(
+    @rasc_track_service
+    async def track_entity_state(
         self, entity: Entity, delay: timedelta | None = None
     ) -> None:
         """Track the states of the entity."""
@@ -940,12 +911,6 @@ class EntityPlatform:
         async with self._process_updates:
             if entity.should_poll and entity.hass:
                 await entity.async_update_ha_state(True)
-
-        next_interval = rasc_on_update(self.hass, self.rascal_state_map, entity)
-        if not next_interval:
-            return
-        await asyncio.sleep(next_interval.total_seconds())
-        self.hass.create_task(self._track_entity_state(entity))
 
 
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(

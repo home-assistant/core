@@ -390,6 +390,9 @@ ATTR_ENTITY_ID: Final = "entity_id"
 # Contains one string or a list of strings, each being an entity id
 ATTR_GROUP_ID: Final = "group_id"
 
+# Contains one string or a list of strings, each being an entity id
+ATTR_ACTION_ID: Final = "action_id"
+
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID: Final = "area_id"
 
@@ -1213,6 +1216,7 @@ DOMAIN_ZONE = "zone"
 DOMAIN_SENSOR = "sensor"
 DOMAIN_TTS = "tts"
 DOMAIN_RASCALSCHEDULER = "rascalscheduler"
+DOMAIN_RASC = "rasc"
 
 NAME_SUN_NEXT_DAWN = "sun_next_dawn"
 NAME_SUN_NEXT_DUSK = "sun_next_dusk"

@@ -445,7 +445,7 @@ class CoverEntity(Entity):
             return fns["close"]
         return fns["open"]
 
-    async def async_get_action_target_state(
+    def async_get_action_target_state(
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Return expected state when action is start/complete."""
