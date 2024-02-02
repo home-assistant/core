@@ -237,7 +237,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     RingSensorEntityDescription(
         key="wifi_signal_category",
         translation_key="wifi_signal_category",
-        category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
+        category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams", "other"],
         icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         cls=HealthDataRingSensor,
@@ -245,7 +245,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     RingSensorEntityDescription(
         key="wifi_signal_strength",
         translation_key="wifi_signal_strength",
-        category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
+        category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams", "other"],
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         icon="mdi:wifi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
