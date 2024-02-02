@@ -34,7 +34,6 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumetricFlux,
-    UnitOfWindSpeed,
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
@@ -553,7 +552,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.LITERS,
     },
     SensorDeviceClass.WEIGHT: set(UnitOfMass),
-    SensorDeviceClass.WIND_SPEED: set(UnitOfSpeed).union(set(UnitOfWindSpeed)),
+    SensorDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 
 DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {

@@ -297,9 +297,9 @@ EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
 EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
 EVENT_RECORDER_5MIN_STATISTICS_GENERATED: Final = "recorder_5min_statistics_generated"
-EVENT_RECORDER_HOURLY_STATISTICS_GENERATED: Final = (
-    "recorder_hourly_statistics_generated"
-)
+EVENT_RECORDER_HOURLY_STATISTICS_GENERATED: (
+    Final
+) = "recorder_hourly_statistics_generated"
 EVENT_SHOPPING_LIST_UPDATED: Final = "shopping_list_updated"
 
 # #### DEVICE CLASSES ####
@@ -906,6 +906,7 @@ CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 class UnitOfSpeed(StrEnum):
     """Speed units."""
 
+    BEAUFORT = "Bft"
     FEET_PER_SECOND = "ft/s"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
@@ -932,13 +933,6 @@ SPEED_INCHES_PER_DAY: Final = "in/d"
 
 SPEED_INCHES_PER_HOUR: Final = "in/h"
 """Deprecated: please use UnitOfVolumetricFlux.INCHES_PER_HOUR"""
-
-
-# Wind_speed units
-class UnitOfWindSpeed(StrEnum):
-    """Wind speed units."""
-
-    BEAUFORT = "Bft"
 
 
 # Signal_strength units
