@@ -313,7 +313,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         self.handle_event(VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {})
 
         try:
-            if not self.is_running:
+            if (not self.is_running) or (self.transport is None):
                 return
 
             extension, data = await tts.async_get_media_source_audio(
@@ -356,7 +356,6 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 samples_in_chunk = len(chunk) // bytes_per_sample
                 samples_left -= samples_in_chunk
 
-                assert self.transport is not None  # checked with is_running
                 self.transport.sendto(chunk, self.remote_addr)
                 await asyncio.sleep(
                     samples_in_chunk / stt.AudioSampleRates.SAMPLERATE_16000 * 0.9
