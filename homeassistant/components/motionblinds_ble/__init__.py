@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from motionblindsble.crypt import MotionCrypt
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -10,7 +12,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_MAC_CODE, DOMAIN
-from .motionblinds_ble.crypt import MotionCrypt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _LOGGER.info("Setting up MotionBlinds BLE integration")
 
     # The correct time is needed for encryption
-    _LOGGER.info(f"Setting timezone for encryption: {hass.config.time_zone}")
+    _LOGGER.info("Setting timezone for encryption: %s", hass.config.time_zone)
     MotionCrypt.set_timezone(hass.config.time_zone)
 
     return True
@@ -39,7 +40,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MotionBlinds BLE device from a config entry."""
 
-    _LOGGER.info(f"({entry.data[CONF_MAC_CODE]}) Setting up device")
+    _LOGGER.info("(%s) Setting up device", entry.data[CONF_MAC_CODE])
 
     hass.data.setdefault(DOMAIN, {})
 
@@ -50,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         [Platform.SENSOR, Platform.SELECT, Platform.BUTTON],
     )
 
-    _LOGGER.info(f"({entry.data[CONF_MAC_CODE]}) Finished setting up device")
+    _LOGGER.info("(%s) Finished setting up device", entry.data[CONF_MAC_CODE])
 
     return True
 

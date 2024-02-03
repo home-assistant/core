@@ -14,7 +14,8 @@
   "homekit": {},
   "iot_class": "assumed_state",
   "issue_tracker": "https://github.com/LennP/HA-MotionBlinds_BLE/",
-  "requirements": [],
+  "loggers": ["motionblindsble"],
+  "requirements": ["motionblindsble==0.0.3"],
   "ssdp": [],
   "zeroconf": []
 }
