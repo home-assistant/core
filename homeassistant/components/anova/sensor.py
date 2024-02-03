@@ -8,7 +8,6 @@ from anova_wifi import AnovaMode, AnovaState, APCUpdateSensor
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -16,12 +15,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
+from .coordinator import AnovaCoordinator
 from .entity import AnovaDescriptionEntity
 from .models import AnovaData
 
@@ -112,27 +110,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up Anova device."""
     anova_data: AnovaData = hass.data[DOMAIN][entry.entry_id]
-    valid_entities: set[AnovaSensor] = set()
-    ent_registry = er.async_get(hass)
+
     for coordinator in anova_data.coordinators:
-        for description in SENSOR_DESCRIPTIONS:
-            sensor = AnovaSensor(coordinator, description)
-            if f"{DOMAIN}.{SENSOR_DOMAIN}_{sensor.unique_id}" in ent_registry.entities:
-                # If the entity has been added before - we know it is supported.
-                valid_entities.add(sensor)
-            elif (
-                coordinator.data is not None
-                and description.value_fn(coordinator.data.sensor) is not None
-            ):
-                # If the coordinator has data and the value for this sensor is not None
-                # then the entity is supported.
-                # Device must be online for the first time it is added.
-                valid_entities.add(sensor)
-    if not valid_entities:
-        raise PlatformNotReady(
-            "No entities were available - if this is your first time setting up an Anova device in home assistant, make sure it is online."
-        )
-    async_add_entities(valid_entities)
+        setup_coordinator(coordinator, async_add_entities)
+
+
+def setup_coordinator(
+    coordinator: AnovaCoordinator,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up an individual Anova Coordinator."""
+
+    def _async_sensor_listener() -> None:
+        """Listen for new sensor data and add sensors if they did not exist."""
+        if not coordinator.sensor_data_set:
+            valid_entities: set[AnovaSensor] = set()
+            for description in SENSOR_DESCRIPTIONS:
+                if description.value_fn(coordinator.data.sensor) is not None:
+                    valid_entities.add(AnovaSensor(coordinator, description))
+            async_add_entities(valid_entities)
+            coordinator.sensor_data_set = True
+
+    if coordinator.data is not None:
+        _async_sensor_listener()
+    coordinator.async_add_listener(_async_sensor_listener)
 
 
 class AnovaSensor(AnovaDescriptionEntity, SensorEntity):

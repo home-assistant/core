@@ -36,3 +36,4 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
             manufacturer="Anova",
             model="Precision Cooker",
         )
+        self.sensor_data_set: bool = False

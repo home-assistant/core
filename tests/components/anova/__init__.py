@@ -43,7 +43,6 @@ def create_entry(hass: HomeAssistant, device_id: str = DEVICE_UNIQUE_ID) -> Conf
 async def async_init_integration(
     hass: HomeAssistant,
     skip_setup: bool = False,
-    error: str | None = None,
 ) -> ConfigEntry:
     """Set up the Anova integration in Home Assistant."""
 
