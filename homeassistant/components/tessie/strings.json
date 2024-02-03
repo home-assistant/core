@@ -67,6 +67,17 @@
       }
     },
     "sensor": {
+      "charge_state_charging_state": {
+        "name": "Charging",
+        "state": {
+          "starting": "Starting",
+          "charging": "Charging",
+          "disconnected": "Disconnected",
+          "stopped": "Stopped",
+          "complete": "Complete",
+          "no_power": "No power"
+        }
+      },
       "charge_state_usable_battery_level": {
         "name": "Battery level"
       },
@@ -258,7 +269,7 @@
       "climate_state_auto_seat_climate_right": {
         "name": "Auto seat climate right"
       },
-      "climate_state_auto_steering_wheel_heater": {
+      "climate_state_auto_steering_wheel_heat": {
         "name": "Auto steering wheel heater"
       },
       "climate_state_cabin_overheat_protection": {
