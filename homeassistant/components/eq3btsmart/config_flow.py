@@ -23,7 +23,9 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
 
-        self.discovery_info = None
+        self.name = ""
+        self.mac = ""
+        self.rssi = 0
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -50,14 +52,16 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
 
-        self.discovery_info = discovery_info
-        name = self.discovery_info.device.name or self.discovery_info.name
+        self.name = discovery_info.device.name or discovery_info.name
+        self.mac = discovery_info.address
+        self.rssi = discovery_info.rssi
+
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: name,
-                    CONF_MAC: discovery_info.address,
-                    CONF_RSSI: discovery_info.rssi,
+                    CONF_NAME: self.name,
+                    CONF_MAC: self.mac,
+                    CONF_RSSI: self.rssi,
                 }
             }
         )
@@ -68,27 +72,23 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow start."""
 
-        if self.discovery_info is None:
-            return self.async_abort(reason="not_supported")
-
-        self._async_abort_entries_match({CONF_MAC: self.discovery_info.address})
+        self._async_abort_entries_match({CONF_MAC: self.mac})
 
         if user_input is None:
-            name = self.discovery_info.device.name or self.discovery_info.name
             return self.async_show_form(
                 step_id="init",
-                data_schema=SCHEMA_NAME(default_name=name),
+                data_schema=SCHEMA_NAME(default_name=self.name),
                 description_placeholders={
-                    CONF_NAME: name,
-                    CONF_MAC: self.discovery_info.address,
-                    CONF_RSSI: str(self.discovery_info.rssi),
+                    CONF_NAME: self.name,
+                    CONF_MAC: self.mac,
+                    CONF_RSSI: str(self.rssi),
                 },
             )
-        await self.async_set_unique_id(format_mac(self.discovery_info.address))
+        await self.async_set_unique_id(format_mac(self.mac))
         return self.async_create_entry(
             title=user_input[CONF_NAME],
             data={
-                CONF_NAME: user_input[CONF_NAME],
-                CONF_MAC: self.discovery_info.address,
+                CONF_NAME: self.name,
+                CONF_MAC: self.mac,
             },
         )
