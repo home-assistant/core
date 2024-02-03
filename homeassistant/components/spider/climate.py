@@ -69,14 +69,14 @@ class SpiderThermostat(ClimateEntity):
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
         if self.thermostat.has_fan_mode:
-            return (
-                features
-                | ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.FAN_MODE
-            )
-        return features | ClimateEntityFeature.TARGET_TEMPERATURE
+            return features | ClimateEntityFeature.FAN_MODE
+        return features
 
     @property
     def unique_id(self):
