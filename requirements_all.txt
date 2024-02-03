@@ -63,7 +63,7 @@ PyFlick==0.0.2
 PyFlume==0.6.5
 
 # homeassistant.components.fronius
-PyFronius==0.7.2
+PyFronius==0.7.3
 
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
