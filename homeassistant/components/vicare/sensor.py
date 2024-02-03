@@ -692,41 +692,6 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _build_entity(
-    vicare_api,
-    device_config: PyViCareDeviceConfig,
-    entity_description: ViCareSensorEntityDescription,
-):
-    """Create a ViCare sensor entity."""
-    if is_supported(entity_description.key, entity_description, vicare_api):
-        return ViCareSensor(
-            vicare_api,
-            device_config,
-            entity_description,
-        )
-    return None
-
-
-async def _entities_from_descriptions(
-    hass: HomeAssistant,
-    entities: list[ViCareSensor],
-    sensor_descriptions: tuple[ViCareSensorEntityDescription, ...],
-    iterables,
-    config_entry: ConfigEntry,
-) -> None:
-    """Create entities from descriptions and list of burners/circuits."""
-    for description in sensor_descriptions:
-        for current in iterables:
-            entity = await hass.async_add_executor_job(
-                _build_entity,
-                current,
-                hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-                description,
-            )
-            if entity:
-                entities.append(entity)
-
-
 def _build_entities(
     device: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
