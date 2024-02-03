@@ -16,7 +16,7 @@ SCHEMA_NAME_MAC = vol.Schema(
 )
 
 
-def schema_name(default_name: str):
+def schema_name(default_name: str) -> vol.Schema:
     """Return name schema."""
 
     return vol.Schema({vol.Required(CONF_NAME, default=default_name): str})

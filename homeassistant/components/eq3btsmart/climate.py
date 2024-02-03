@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -24,10 +24,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
+    DeviceInfo,
     async_get,
     format_mac,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityPlatformState
+from homeassistant.helpers.entity import Entity, EntityPlatformState
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -111,7 +112,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         if self._cancel_timer:
             self._cancel_timer()
 
-    async def _async_scan_loop(self, now=None) -> None:
+    async def _async_scan_loop(self, now: datetime | None = None) -> None:
         """Scan for data."""
 
         await self.async_scan()
@@ -123,7 +124,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             )
 
     @callback
-    def _on_updated(self):
+    def _on_updated(self) -> None:
         """Handle updated data from the thermostat."""
 
         self._is_available = True
@@ -137,14 +138,14 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         self.schedule_update_ha_state()
 
     @callback
-    def _on_status_updated(self):
+    def _on_status_updated(self) -> None:
         """Handle updated status from the thermostat."""
 
         self._target_temperature = self._thermostat.status.target_temperature.value
         self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
 
     @callback
-    def _on_device_updated(self):
+    def _on_device_updated(self) -> None:
         """Handle updated device data from the thermostat."""
 
         self._firmware_version = str(self._thermostat.device_data.firmware_version)
@@ -219,14 +220,14 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                 if self._thermostat.status is None:
                     return None
 
-                return self._thermostat.status.valve_temperature
+                return float(self._thermostat.status.valve_temperature)
             case CurrentTemperatureSelector.UI:
                 return self._target_temperature
             case CurrentTemperatureSelector.DEVICE:
                 if self._thermostat.status is None:
                     return None
 
-                return self._thermostat.status.target_temperature.value
+                return float(self._thermostat.status.target_temperature.value)
             case CurrentTemperatureSelector.ENTITY:
                 state = self.hass.states.get(self._eq3_config.external_temp_sensor)
                 if state is not None:
@@ -248,9 +249,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                 if self._thermostat.status is None:
                     return None
 
-                return self._thermostat.status.target_temperature.value
-
-        return None
+                return float(self._thermostat.status.target_temperature.value)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
