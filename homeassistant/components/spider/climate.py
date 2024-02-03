@@ -43,6 +43,7 @@ class SpiderThermostat(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, api, thermostat):
         """Initialize the thermostat."""
@@ -68,11 +69,14 @@ class SpiderThermostat(ClimateEntity):
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
+        features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         if self.thermostat.has_fan_mode:
             return (
-                ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+                features
+                | ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.FAN_MODE
             )
-        return ClimateEntityFeature.TARGET_TEMPERATURE
+        return features | ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
     def unique_id(self):
