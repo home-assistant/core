@@ -1,0 +1,8 @@
+{
+  "Dummy": {
+    "endpoint": "(none)",
+    "latest_handshake": 0,
+    "transfer_rx": 0,
+    "transfer_tx": 0
+  }
+}
