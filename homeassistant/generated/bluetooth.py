@@ -350,6 +350,15 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
     },
     {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            12,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
         "domain": "oralb",
         "manufacturer_id": 220,
     },

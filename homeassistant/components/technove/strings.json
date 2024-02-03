@@ -25,6 +25,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "conflict_in_sharing_config": {
+        "name": "Conflict with power sharing mode"
+      },
+      "in_sharing_mode": {
+        "name": "Power sharing mode"
+      },
+      "is_battery_protected": {
+        "name": "Battery protected"
+      },
+      "is_static_ip": {
+        "name": "Static IP"
+      }
+    },
     "sensor": {
       "voltage_in": {
         "name": "Input voltage"
