@@ -64,9 +64,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if HVACMode.OFF in self.hvac_modes:
-            self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
-            if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
-                self._attr_supported_features |= ClimateEntityFeature.TURN_ON
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
+
         if (
             self.cdr_gateway["cooling_present"]
             and self.cdr_gateway["smile_name"] != "Adam"
