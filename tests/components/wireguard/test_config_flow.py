@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 import requests
 
 from homeassistant import config_entries
-from homeassistant.components.wireguard.const import DOMAIN
+from homeassistant.components.wireguard.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -28,7 +28,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DOMAIN
+    assert result["title"] == DEFAULT_NAME
     assert result["data"] == {CONF_HOST: "localhost"}
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -62,6 +62,6 @@ async def test_form_cannot_connect(
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DOMAIN
+    assert result["title"] == DEFAULT_NAME
     assert result["data"] == {CONF_HOST: "localhost"}
     assert len(mock_setup_entry.mock_calls) == 1
