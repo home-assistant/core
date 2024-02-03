@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 import requests
 
 from homeassistant import config_entries
-from homeassistant.components.wireguard.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.wireguard.const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -23,13 +23,13 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     with patch("requests.get", side_effect=mocked_requests):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "localhost"},
+            {CONF_HOST: DEFAULT_HOST},
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
-    assert result["data"] == {CONF_HOST: "localhost"}
+    assert result["data"] == {CONF_HOST: DEFAULT_HOST}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -44,7 +44,7 @@ async def test_form_cannot_connect(
     with patch("requests.get", side_effect=requests.RequestException("error")):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "localhost"},
+            {CONF_HOST: DEFAULT_HOST},
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -57,11 +57,11 @@ async def test_form_cannot_connect(
     with patch("requests.get", side_effect=mocked_requests):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "localhost"},
+            {CONF_HOST: DEFAULT_HOST},
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
-    assert result["data"] == {CONF_HOST: "localhost"}
+    assert result["data"] == {CONF_HOST: DEFAULT_HOST}
     assert len(mock_setup_entry.mock_calls) == 1

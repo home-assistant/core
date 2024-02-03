@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 import requests
 
-from homeassistant.components.wireguard.const import DOMAIN
+from homeassistant.components.wireguard.const import DEFAULT_HOST, DOMAIN
 
 from tests.common import load_fixture
 
@@ -15,7 +15,7 @@ from tests.common import load_fixture
 def mocked_requests(*args, **kwargs):
     """Mock requests.get invocations."""
 
-    if args[0] == "single_peer" or args[0] == "localhost":
+    if args[0] == "single_peer" or args[0] == DEFAULT_HOST:
         return MockResponse(
             json.loads(load_fixture("single_peer.json", DOMAIN)),
             200,

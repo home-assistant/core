@@ -13,7 +13,7 @@ from homeassistant.components.wireguard.api import (
     WireGuardPeer,
     peer_from_data,
 )
-from homeassistant.components.wireguard.const import DOMAIN
+from homeassistant.components.wireguard.const import DEFAULT_HOST, DOMAIN
 
 from .conftest import mocked_requests
 
@@ -22,8 +22,8 @@ from tests.common import load_fixture
 
 def test_init() -> None:
     """Test for the initializer."""
-    api = WireGuardAPI("localhost")
-    assert api.host == "localhost"
+    api = WireGuardAPI(DEFAULT_HOST)
+    assert api.host == DEFAULT_HOST
 
 
 @patch("requests.get", side_effect=mocked_requests)
