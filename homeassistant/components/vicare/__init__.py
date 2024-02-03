@@ -89,7 +89,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     device_config_list = get_supported_devices(vicare_api.devices)
 
     for device in device_config_list:
-        _LOGGER.info(
+        _LOGGER.debug(
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
 
