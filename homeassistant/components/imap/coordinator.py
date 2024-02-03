@@ -97,9 +97,8 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
 class ImapMessage:
     """Class to parse an RFC822 email message."""
 
-    def __init__(self, raw_message: bytes, charset: str = "utf-8") -> None:
+    def __init__(self, raw_message: bytes) -> None:
         """Initialize IMAP message."""
-        self._charset = charset
         self.email_message = email.message_from_bytes(raw_message)
 
     @property
@@ -166,7 +165,13 @@ class ImapMessage:
             Falls back to the raw content part if decoding fails.
             """
             try:
-                return str(part.get_payload(decode=True).decode(self._charset))
+                content_charset = part.get_content_charset()
+                decoded_payload: bytes = part.get_payload(decode=True)
+                return (
+                    decoded_payload.decode(content_charset)
+                    if content_charset is not None
+                    else str(decoded_payload)
+                )
             except ValueError:
                 return str(part.get_payload())
 
@@ -237,9 +242,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         """Send a event for the last message if the last message was changed."""
         response = await self.imap_client.fetch(last_message_uid, "BODY.PEEK[]")
         if response.result == "OK":
-            message = ImapMessage(
-                response.lines[1], charset=self.config_entry.data[CONF_CHARSET]
-            )
+            message = ImapMessage(response.lines[1])
             # Set `initial` to `False` if the last message is triggered again
             initial: bool = True
             if (message_id := message.message_id) == self._last_message_id:
