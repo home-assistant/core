@@ -154,11 +154,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the current target temperature."""
         # If the system is in MyZone mode, and a zone is set, return that temperature instead.
-        if (
-            self._myzone
-            and not self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED)
-            and not self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED)
-        ):
+        if self._myzone and self.preset_mode == ADVANTAGE_AIR_MYZONE:
             return self._myzone["setTemp"]
         return self._ac["setTemp"]
 
@@ -209,11 +205,8 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         """Set the HVAC Mode and State."""
         if hvac_mode == HVACMode.OFF:
             return await self.async_turn_off()
-        if (
-            HASS_HVAC_MODES.get(hvac_mode) == HVACMode.HEAT_COOL
-            and self.preset_mode != ADVANTAGE_AIR_MYAUTO
-        ):
-            raise ValueError
+        if hvac_mode == HVACMode.HEAT_COOL and self.preset_mode != ADVANTAGE_AIR_MYAUTO:
+            raise ValueError("Heat/Cool is not supported in this mode")
         await self.async_update_ac(
             {
                 "state": ADVANTAGE_AIR_STATE_ON,
