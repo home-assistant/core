@@ -512,6 +512,7 @@ class KodiEntity(MediaPlayerEntity):
                     "album",
                     "season",
                     "episode",
+                    "streamdetails",
                 ],
             )
         else:
@@ -627,6 +628,11 @@ class KodiEntity(MediaPlayerEntity):
             return artists[0]
 
         return None
+
+    @property
+    def extra_state_attributes(self):
+        """Extra state attributes."""
+        return {"HDR_type": self._item.get("streamdetails", {}).get("video", [{}])[0].get("hdrtype")}
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
