@@ -86,6 +86,7 @@ class SwitcherClimateEntity(
 
     _attr_has_entity_name = True
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, coordinator: SwitcherDataUpdateCoordinator, remote: SwitcherBreezeRemote
@@ -105,6 +106,9 @@ class SwitcherClimateEntity(
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
         self._attr_hvac_modes = [HVACMode.OFF]
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
         for mode in remote.modes_features:
             self._attr_hvac_modes.append(DEVICE_MODE_TO_HA[mode])
             features = remote.modes_features[mode]
