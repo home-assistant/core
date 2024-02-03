@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import WireGuardPeer
-from .const import ATTR_LATEST_HANDSHAKE, DOMAIN, LOGGER
+from .const import ATTR_LATEST_HANDSHAKE, DOMAIN
 from .coordinator import WireGuardUpdateCoordinator
 
 
@@ -24,7 +24,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the WireGuard binary sensors based on a config entry."""
     coordinator: WireGuardUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    LOGGER.info("Peers: %s", coordinator)
+
     sensors: list[Entity] = []
     sensors.extend(
         WireGuardPeerConnectedSensor(coordinator, peer) for peer in coordinator.data
