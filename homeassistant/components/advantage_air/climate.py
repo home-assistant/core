@@ -121,7 +121,6 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
             self._attr_preset_modes += [ADVANTAGE_AIR_MYAUTO]
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-            # self._attr_hvac_modes += [HVACMode.HEAT_COOL]
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
@@ -249,6 +248,8 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             change[ADVANTAGE_AIR_MYTEMP_ENABLED] = preset_mode == ADVANTAGE_AIR_MYTEMP
         if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
             change[ADVANTAGE_AIR_MYAUTO_ENABLED] = preset_mode == ADVANTAGE_AIR_MYAUTO
+        if change:
+            await self.async_update_ac(change)
 
 
 class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
