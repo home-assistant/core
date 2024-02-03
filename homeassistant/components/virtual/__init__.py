@@ -4,6 +4,7 @@ from distutils import util
 import logging
 
 import voluptuous as vol
+from homeassistant.components.virtual.coordinator import VirtualDataUpdateCoordinator
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_SOURCE, Platform
@@ -119,6 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         }
     )
+    hass.data[COMPONENT_DOMAIN][entry.entry_id] = VirtualDataUpdateCoordinator(hass)
     _LOGGER.debug(f"update hass data {hass.data[COMPONENT_DOMAIN]}")
 
     # Create the entities.

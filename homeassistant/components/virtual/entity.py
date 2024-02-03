@@ -7,11 +7,13 @@ import logging
 import pprint
 
 import voluptuous as vol
+from .coordinator import VirtualDataUpdateCoordinator
 
 from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import *
@@ -27,6 +29,8 @@ def virtual_schema(default_initial_value: str, extra_attrs):
             CONF_INITIAL_AVAILABILITY, default=DEFAULT_AVAILABILITY
         ): cv.boolean,
         vol.Optional(CONF_PERSISTENT, default=DEFAULT_PERSISTENT): cv.boolean,
+        vol.Optional(CONF_COORDINATED, default=DEFAULT_COORDINATED): cv.boolean,
+        vol.Optional(CONF_PUSH, default=DEFAULT_PUSH): cv.boolean,
         vol.Optional(ATTR_DEVICE_ID, default="NOTYET"): cv.string,
         vol.Optional(ATTR_ENTITY_ID, default="NOTYET"): cv.string,
         vol.Optional(ATTR_UNIQUE_ID, default="NOTYET"): cv.string,
@@ -45,6 +49,7 @@ class VirtualEntity(RestoreEntity):
         """Initialize an Virtual Sensor."""
         _LOGGER.debug(f"creating-virtual-{domain}={config}")
         self._config = config
+        self._attr_should_poll = not config.get(CONF_PUSH)
         self._persistent = config.get(CONF_PERSISTENT)
 
         # Build name, entity id and unique id. We do this because historically
@@ -116,3 +121,13 @@ class VirtualEntity(RestoreEntity):
         self._attr_available = value
         self._update_attributes()
         self.async_schedule_update_ha_state()
+
+
+class CoordinatedVirtualEntity(CoordinatorEntity[VirtualDataUpdateCoordinator]):
+    """Common base class for all coordinated virtual entities."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: VirtualDataUpdateCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)

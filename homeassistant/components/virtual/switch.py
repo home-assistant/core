@@ -7,15 +7,17 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN as PLATFORM_DOMAIN, SwitchEntity
+from homeassistant.components.virtual.coordinator import VirtualDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.typing import HomeAssistantType
 
+from .const import COMPONENT_DOMAIN
 from . import get_entity_configs
 from .const import *
-from .entity import VirtualEntity, virtual_schema
+from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,12 +50,19 @@ async def async_setup_entry(
 ) -> None:
     _LOGGER.debug("setting up the entries...")
 
-    entities = []
+    coordinator: VirtualDataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+        entry.entry_id
+    ]
+    entities: list[VirtualSwitch] = []
     for entity in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity = SWITCH_SCHEMA(entity)
-        entities.append(VirtualSwitch(entity))
+        print(entity)
+        if CONF_COORDINATED in entity:
+            entities.append(CoordinatedVirtualSwitch(entity, coordinator))
+        else:
+            entities.append(VirtualSwitch(entity))
     async_add_entities(entities)
 
 
@@ -95,3 +104,16 @@ class VirtualSwitch(VirtualEntity, SwitchEntity):
     def turn_off(self, **kwargs: Any) -> None:
         _LOGGER.debug(f"turning {self.name} off")
         self._attr_is_on = False
+
+
+class CoordinatedVirtualSwitch(CoordinatedVirtualEntity, VirtualSwitch):
+    """Representation of a Virtual switch."""
+
+    def __init__(self, config, coordinator):
+        """Initialize the Virtual switch device."""
+        CoordinatedVirtualEntity.__init__(self, coordinator)
+        VirtualSwitch.__init__(self, config)
+
+        self._attr_device_class = config.get(CONF_CLASS)
+
+        _LOGGER.info(f"CoordinatedVirtualSwitch: {self.name} created")

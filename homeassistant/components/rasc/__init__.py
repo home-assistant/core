@@ -274,6 +274,7 @@ class RASC(ABC):
     ]:
         """Execute a service."""
 
+        # for response wait-notify
         s_cv = asyncio.Condition()
         c_cv = asyncio.Condition()
         f_cv = asyncio.Condition()
@@ -302,7 +303,7 @@ class RASC(ABC):
                     target = cast(Callable[..., _R], target)
                 response = await self.hass.async_add_executor_job(target, service_call)
 
-            # TODO: track entities independently # pylint: disable=fixme
+            # TODO: track entities independently (service._handle_entity_call) # pylint: disable=fixme
             # start tracking after receiving ack
             for entity_id in entity_ids:
                 self._fire(RASC_ACK, entity_id, service_call.service)
@@ -506,7 +507,10 @@ class RASCState(ABC):
         """Start tracking the state."""
         self._next_response = RASC_START
         self._exec_time = time.time()
-        if self.entity.should_poll:
+        coordinator: DataUpdateCoordinator | None = getattr(
+            self.entity, "coordinator", None
+        )
+        if self.entity.should_poll or coordinator:
             key = ",".join(
                 (self.entity.entity_id, self.service_call.service, str(self.transition))
             )
@@ -521,13 +525,21 @@ class RASCState(ABC):
                 async_track_point_in_time(
                     self.entity.hass,
                     self.set_failed,
-                    dt_util.utcnow() + timedelta(seconds=upper_bound),
+                    # TODO: get closer upper_bound # pylint: disable=fixme
+                    dt_util.utcnow() + timedelta(seconds=upper_bound * 1.5),
                 )
             # let platform state polling the state
             next_interval = self.get_polling_interval()
-            self._tracking_task = self.entity.hass.async_create_task(
-                platform.track_entity_state(self.entity, next_interval)
-            )
+            # poll by coordinator
+            if coordinator:
+                self._tracking_task = self.entity.hass.async_create_task(
+                    coordinator.track_entity_state(self.entity, next_interval)
+                )
+            # poll by entity platform
+            else:
+                self._tracking_task = self.entity.hass.async_create_task(
+                    platform.track_entity_state(self.entity, next_interval)
+                )
 
     def get_polling_interval(self) -> timedelta:
         """Get polling interval."""
