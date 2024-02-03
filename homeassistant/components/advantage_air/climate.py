@@ -120,11 +120,15 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         # Add "MyAuto" preset if available
         if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
             self._attr_preset_modes += [ADVANTAGE_AIR_MYAUTO]
-            self._attr_supported_features |= (
-                ClimateEntityFeature.PRESET_MODE
-                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            )
-            self._attr_hvac_modes += [HVACMode.HEAT_COOL]
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            # self._attr_hvac_modes += [HVACMode.HEAT_COOL]
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the list of available HVAC modes."""
+        if self.preset_mode == ADVANTAGE_AIR_MYAUTO:
+            return self._attr_hvac_modes + [HVACMode.HEAT_COOL]
+        return self._attr_hvac_modes
 
     @property
     def current_temperature(self) -> float | None:
@@ -191,24 +195,18 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
         if hvac_mode == HVACMode.OFF:
-            await self.async_update_ac({"state": ADVANTAGE_AIR_STATE_OFF})
-        else:
-            if (
-                HASS_HVAC_MODES.get(hvac_mode) == HVACMode.HEAT_COOL
-                and self.preset_mode != ADVANTAGE_AIR_MYAUTO
-            ):
-                raise ValueError
-            if (
-                HASS_HVAC_MODES.get(hvac_mode) not in [HVACMode.HEAT, HVACMode.COOL]
-                and self.preset_mode == ADVANTAGE_AIR_MYTEMP
-            ):
-                raise ValueError
-            await self.async_update_ac(
-                {
-                    "state": ADVANTAGE_AIR_STATE_ON,
-                    "mode": HASS_HVAC_MODES.get(hvac_mode),
-                }
-            )
+            return await self.async_turn_off()
+        if (
+            HASS_HVAC_MODES.get(hvac_mode) == HVACMode.HEAT_COOL
+            and self.preset_mode != ADVANTAGE_AIR_MYAUTO
+        ):
+            raise ValueError
+        await self.async_update_ac(
+            {
+                "state": ADVANTAGE_AIR_STATE_ON,
+                "mode": HASS_HVAC_MODES.get(hvac_mode),
+            }
+        )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the Fan Mode."""
