@@ -1,6 +1,5 @@
-"""This component provides support for a virtual sensor."""
+"""Provide support for a virtual sensor."""
 
-from collections.abc import Callable
 import logging
 
 import voluptuous as vol
@@ -14,22 +13,32 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_UNIT_OF_MEASUREMENT,
-    FREQUENCY_GIGAHERTZ,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
     POWER_VOLT_AMPERE_REACTIVE,
-    PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS,
-    VOLUME_CUBIC_METERS,
+    UnitOfApparentPower,
+    UnitOfFrequency,
+    UnitOfPressure,
+    UnitOfVolume,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import get_entity_configs, get_entity_from_domain
-from .const import *
-from .entity import VirtualEntity, virtual_schema
+from .const import (
+    ATTR_GROUP_NAME,
+    ATTR_VALUE,
+    COMPONENT_DOMAIN,
+    COMPONENT_SERVICES,
+    CONF_CLASS,
+    CONF_COORDINATED,
+    CONF_INITIAL_VALUE,
+)
+from .coordinator import VirtualDataUpdateCoordinator
+from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +74,7 @@ SERVICE_SCHEMA = vol.Schema(
 )
 
 UNITS_OF_MEASUREMENT = {
-    SensorDeviceClass.APPARENT_POWER: POWER_VOLT_AMPERE,  # apparent power (VA)
+    SensorDeviceClass.APPARENT_POWER: UnitOfApparentPower.VOLT_AMPERE,  # apparent power (VA)
     SensorDeviceClass.BATTERY: PERCENTAGE,  # % of battery that is left
     SensorDeviceClass.CO: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO concentration
     SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
@@ -81,42 +90,46 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,  # signal strength (dB/dBm)
     SensorDeviceClass.SULPHUR_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of sulphur dioxide
     SensorDeviceClass.TEMPERATURE: "C",  # temperature (C/F)
-    SensorDeviceClass.PRESSURE: PRESSURE_HPA,  # pressure (hPa/mbar)
+    SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,  # pressure (hPa/mbar)
     SensorDeviceClass.POWER: "kW",  # power (W/kW)
     SensorDeviceClass.CURRENT: "A",  # current (A)
     SensorDeviceClass.ENERGY: "kWh",  # energy (Wh/kWh/MWh)
-    SensorDeviceClass.FREQUENCY: FREQUENCY_GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
+    SensorDeviceClass.FREQUENCY: UnitOfFrequency.GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
     SensorDeviceClass.POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
     SensorDeviceClass.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,  # reactive power (var)
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of vocs
     SensorDeviceClass.VOLTAGE: "V",  # voltage (V)
-    SensorDeviceClass.GAS: VOLUME_CUBIC_METERS,  # gas (m³)
+    SensorDeviceClass.GAS: UnitOfVolume.CUBIC_METERS,  # gas (m³)
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    _LOGGER.debug("setting up the entries...")
+    """Set up sensors."""
 
-    entities = []
+    coordinator: VirtualDataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+        entry.entry_id
+    ]
+    entities: list[VirtualSensor] = []
     for entity in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity = SENSOR_SCHEMA(entity)
-        entities.append(VirtualSensor(entity))
+        if CONF_COORDINATED in entity:
+            entities.append(CoordinatedVirtualSensor(entity, coordinator))
+        else:
+            entities.append(VirtualSensor(entity))
     async_add_entities(entities)
 
     async def async_virtual_service(call):
         """Call virtual service handler."""
-        _LOGGER.debug(f"{call.service} service called")
         await async_virtual_set_service(hass, call)
 
     # Build up services...
     if not hasattr(hass.data[COMPONENT_SERVICES], PLATFORM_DOMAIN):
-        _LOGGER.debug("installing handlers")
         hass.data[COMPONENT_SERVICES][PLATFORM_DOMAIN] = "installed"
         hass.services.async_register(
             COMPONENT_DOMAIN,
@@ -145,7 +158,7 @@ class VirtualSensor(VirtualEntity, Entity):
                 self._attr_device_class
             ]
 
-        _LOGGER.info(f"VirtualSensor: {self.name} created")
+        _LOGGER.info("VirtualSensor: %s created", self.name)
 
     def _create_state(self, config):
         super()._create_state(config)
@@ -171,13 +184,22 @@ class VirtualSensor(VirtualEntity, Entity):
         )
 
     def set(self, value) -> None:
-        _LOGGER.debug(f"set {self.name} to {value}")
+        """Set value."""
         self._attr_state = value
         self.async_schedule_update_ha_state()
 
 
+class CoordinatedVirtualSensor(CoordinatedVirtualEntity, VirtualSensor):
+    """Representation of a Virtual switch."""
+
+    def __init__(self, config, coordinator):
+        """Initialize the Virtual switch device."""
+        CoordinatedVirtualEntity.__init__(self, coordinator)
+        VirtualSensor.__init__(self, config)
+
+
 async def async_virtual_set_service(hass, call):
+    """Set service."""
     for entity_id in call.data[ATTR_ENTITY_ID]:
         value = call.data[ATTR_VALUE]
-        _LOGGER.debug(f"setting {entity_id} to {value})")
         get_entity_from_domain(hass, PLATFORM_DOMAIN, entity_id).set(value)

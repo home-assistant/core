@@ -1,22 +1,27 @@
-"""This component provides support for a virtual switch."""
+"""Provide support for a virtual switch."""
 
-from collections.abc import Callable
 import logging
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN as PLATFORM_DOMAIN, SwitchEntity
-from homeassistant.components.virtual.coordinator import VirtualDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COMPONENT_DOMAIN
 from . import get_entity_configs
-from .const import *
+from .const import (
+    ATTR_GROUP_NAME,
+    COMPONENT_DOMAIN,
+    CONF_CLASS,
+    CONF_COORDINATED,
+    CONF_INITIAL_VALUE,
+)
+from .coordinator import VirtualDataUpdateCoordinator
 from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,11 +49,11 @@ SWITCH_SCHEMA = vol.Schema(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    _LOGGER.debug("setting up the entries...")
+    """Set up switches."""
 
     coordinator: VirtualDataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
         entry.entry_id
@@ -58,7 +63,6 @@ async def async_setup_entry(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity = SWITCH_SCHEMA(entity)
-        print(entity)
         if CONF_COORDINATED in entity:
             entities.append(CoordinatedVirtualSwitch(entity, coordinator))
         else:
@@ -75,7 +79,7 @@ class VirtualSwitch(VirtualEntity, SwitchEntity):
 
         self._attr_device_class = config.get(CONF_CLASS)
 
-        _LOGGER.info(f"VirtualSwitch: {self.name} created")
+        _LOGGER.info("VirtualSwitch: %s created", self.name)
 
     def _create_state(self, config):
         super()._create_state(config)
@@ -98,11 +102,11 @@ class VirtualSwitch(VirtualEntity, SwitchEntity):
         )
 
     def turn_on(self, **kwargs: Any) -> None:
-        _LOGGER.debug(f"turning {self.name} on")
+        """Turn on."""
         self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
-        _LOGGER.debug(f"turning {self.name} off")
+        """Turn off."""
         self._attr_is_on = False
 
 
@@ -113,7 +117,3 @@ class CoordinatedVirtualSwitch(CoordinatedVirtualEntity, VirtualSwitch):
         """Initialize the Virtual switch device."""
         CoordinatedVirtualEntity.__init__(self, coordinator)
         VirtualSwitch.__init__(self, config)
-
-        self._attr_device_class = config.get(CONF_CLASS)
-
-        _LOGGER.info(f"CoordinatedVirtualSwitch: {self.name} created")

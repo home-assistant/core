@@ -473,22 +473,6 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
-    @classmethod
-    async def async_get_action_completed_state(
-        cls, action: dict[str, Any]
-    ) -> dict[str, Any] | None:
-        """Return expected state when action is complete."""
-
-        target: dict[str, Any] = (
-            await cls.async_get_action_completed_state(action) or {}
-        )
-
-        if action[CONF_SERVICE] in ["clean", SERVICE_START, SERVICE_CLEAN_SPOT]:
-            target["state"] = "cleaning"
-        else:
-            target["state"] = "docked"
-        return target
-
 
 @dataclass
 class StateVacuumEntityDescription(EntityDescription):

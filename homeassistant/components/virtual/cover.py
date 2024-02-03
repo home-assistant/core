@@ -1,7 +1,6 @@
-"""This component provides support for a virtual cover."""
+"""Provide support for a virtual cover."""
 
 import asyncio
-from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -19,13 +18,21 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_CLOSED
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import get_entity_configs
-from .const import *
-from .entity import VirtualEntity, virtual_schema
+from .const import (
+    ATTR_GROUP_NAME,
+    COMPONENT_DOMAIN,
+    CONF_CLASS,
+    CONF_COORDINATED,
+    CONF_INITIAL_VALUE,
+)
+from .coordinator import VirtualDataUpdateCoordinator
+from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,18 +68,24 @@ COVER_SCHEMA = vol.Schema(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    _LOGGER.debug("setting up the entries...")
+    """Set up covers."""
 
-    entities = []
+    coordinator: VirtualDataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+        entry.entry_id
+    ]
+    entities: list[VirtualCover] = []
     for entity in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity = COVER_SCHEMA(entity)
-        entities.append(VirtualCover(entity))
+        if CONF_COORDINATED in entity:
+            entities.append(CoordinatedVirtualCover(entity, coordinator))
+        else:
+            entities.append(VirtualCover(entity))
     async_add_entities(entities)
 
 
@@ -131,7 +144,6 @@ class VirtualCover(VirtualEntity, CoverEntity):
         )
 
     def _opening(self) -> None:
-        _LOGGER.debug(f"opening {self.name}")
         self._attr_is_opening = True
         self._attr_is_closing = False
         self._attr_is_closed = False
@@ -170,7 +182,7 @@ class VirtualCover(VirtualEntity, CoverEntity):
                     self._attr_current_cover_position = 100
                     self._open_cover()
                     break
-                elif self._attr_current_cover_position <= 0:
+                if self._attr_current_cover_position <= 0:
                     self._attr_current_cover_position = 0
                     self._close_cover()
                     break
@@ -232,3 +244,12 @@ class VirtualCover(VirtualEntity, CoverEntity):
         """Move the cover tilt to a specific position."""
         self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]
         self._update_attributes()
+
+
+class CoordinatedVirtualCover(CoordinatedVirtualEntity, VirtualCover):
+    """Representation of a Virtual switch."""
+
+    def __init__(self, config, coordinator):
+        """Initialize the Virtual switch device."""
+        CoordinatedVirtualEntity.__init__(self, coordinator)
+        VirtualCover.__init__(self, config)

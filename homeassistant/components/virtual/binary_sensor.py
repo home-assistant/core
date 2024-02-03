@@ -1,6 +1,5 @@
-"""This component provides support for a virtual binary sensor."""
+"""Provide support for a virtual binary sensor."""
 
-from collections.abc import Callable
 import logging
 
 import voluptuous as vol
@@ -11,13 +10,22 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import get_entity_configs, get_entity_from_domain
-from .const import *
-from .entity import VirtualEntity, virtual_schema
+from .const import (
+    ATTR_GROUP_NAME,
+    COMPONENT_DOMAIN,
+    COMPONENT_SERVICES,
+    CONF_CLASS,
+    CONF_COORDINATED,
+    CONF_INITIAL_VALUE,
+)
+from .coordinator import VirtualDataUpdateCoordinator
+from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,23 +61,28 @@ SERVICE_SCHEMA = vol.Schema(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    _LOGGER.debug("setting up the entries...")
+    """Set up binary sensors."""
 
-    entities = []
+    coordinator: VirtualDataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+        entry.entry_id
+    ]
+    entities: list[VirtualBinarySensor] = []
     for entity in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity = BINARY_SENSOR_SCHEMA(entity)
-        entities.append(VirtualBinarySensor(entity))
+        if CONF_COORDINATED in entity:
+            entities.append(CoordinatedVirtualBinarySensor(entity, coordinator))
+        else:
+            entities.append(VirtualBinarySensor(entity))
     async_add_entities(entities)
 
     async def async_virtual_service(call):
         """Call virtual service handler."""
-        _LOGGER.debug(f"{call.service} service called")
         if call.service == SERVICE_ON:
             await async_virtual_on_service(hass, call)
         if call.service == SERVICE_OFF:
@@ -79,7 +92,6 @@ async def async_setup_entry(
 
     # Build up services...
     if not hasattr(hass.data[COMPONENT_SERVICES], PLATFORM_DOMAIN):
-        _LOGGER.debug("installing handlers")
         hass.data[COMPONENT_SERVICES][PLATFORM_DOMAIN] = "installed"
         hass.services.async_register(
             COMPONENT_DOMAIN,
@@ -110,7 +122,7 @@ class VirtualBinarySensor(VirtualEntity, BinarySensorEntity):
 
         self._attr_device_class = config.get(CONF_CLASS)
 
-        _LOGGER.info(f"VirtualBinarySensor: {self.name} created")
+        _LOGGER.info("VirtualBinarySensor: %s created", self.name)
 
     def _create_state(self, config):
         super()._create_state(config)
@@ -133,16 +145,17 @@ class VirtualBinarySensor(VirtualEntity, BinarySensorEntity):
         )
 
     def turn_on(self) -> None:
-        _LOGGER.debug(f"turning {self.name} on")
+        """Turn on."""
         self._attr_is_on = True
         self.async_schedule_update_ha_state()
 
     def turn_off(self) -> None:
-        _LOGGER.debug(f"turning {self.name} off")
+        """Turn off."""
         self._attr_is_on = False
         self.async_schedule_update_ha_state()
 
     def toggle(self) -> None:
+        """Toggle."""
         if self.is_on:
             self.turn_off()
         else:
@@ -150,18 +163,27 @@ class VirtualBinarySensor(VirtualEntity, BinarySensorEntity):
 
 
 async def async_virtual_on_service(hass, call):
+    """Turn on service."""
     for entity_id in call.data["entity_id"]:
-        _LOGGER.debug(f"turning on {entity_id}")
         get_entity_from_domain(hass, PLATFORM_DOMAIN, entity_id).turn_on()
 
 
 async def async_virtual_off_service(hass, call):
+    """Turn off service."""
     for entity_id in call.data["entity_id"]:
-        _LOGGER.debug(f"turning off {entity_id}")
         get_entity_from_domain(hass, PLATFORM_DOMAIN, entity_id).turn_off()
 
 
 async def async_virtual_toggle_service(hass, call):
+    """Toggle service."""
     for entity_id in call.data["entity_id"]:
-        _LOGGER.debug(f"toggling {entity_id}")
         get_entity_from_domain(hass, PLATFORM_DOMAIN, entity_id).toggle()
+
+
+class CoordinatedVirtualBinarySensor(CoordinatedVirtualEntity, VirtualBinarySensor):
+    """Representation of a Virtual switch."""
+
+    def __init__(self, config, coordinator):
+        """Initialize the Virtual switch device."""
+        CoordinatedVirtualEntity.__init__(self, coordinator)
+        VirtualBinarySensor.__init__(self, config)

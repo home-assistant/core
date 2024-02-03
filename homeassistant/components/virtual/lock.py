@@ -1,6 +1,5 @@
-"""This component provides support for a virtual lock."""
+"""Provide support for a virtual lock."""
 
-from collections.abc import Callable
 from datetime import timedelta
 import logging
 import random
@@ -11,15 +10,22 @@ import voluptuous as vol
 from homeassistant.components.lock import DOMAIN as PLATFORM_DOMAIN, LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_LOCKED
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_time
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from . import get_entity_configs
-from .const import *
-from .entity import VirtualEntity, virtual_schema
+from .const import (
+    ATTR_GROUP_NAME,
+    COMPONENT_DOMAIN,
+    CONF_COORDINATED,
+    CONF_INITIAL_VALUE,
+)
+from .coordinator import VirtualDataUpdateCoordinator
+from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,18 +67,24 @@ LOCK_SCHEMA = vol.Schema(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    _LOGGER.debug("setting up the entries...")
+    """Set up locks."""
 
-    entities = []
+    coordinator: VirtualDataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+        entry.entry_id
+    ]
+    entities: list[VirtualLock] = []
     for entity in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity = LOCK_SCHEMA(entity)
-        entities.append(VirtualLock(hass, entity))
+        if CONF_COORDINATED in entity:
+            entities.append(CoordinatedVirtualLock(hass, entity, coordinator))
+        else:
+            entities.append(VirtualLock(hass, entity))
     async_add_entities(entities)
 
 
@@ -87,7 +99,7 @@ class VirtualLock(VirtualEntity, LockEntity):
         self._change_time = config.get(CONF_CHANGE_TIME)
         self._test_jamming = config.get(CONF_TEST_JAMMING)
 
-        _LOGGER.info(f"VirtualLock: {self.name} created")
+        _LOGGER.info("VirtualLock: %s created", self.name)
 
     def _create_state(self, config):
         super()._create_state(config)
@@ -101,7 +113,6 @@ class VirtualLock(VirtualEntity, LockEntity):
 
     def _lock(self) -> None:
         if self._test_jamming == 0 or random.randint(0, self._test_jamming) > 0:
-            _LOGGER.debug(f"locked {self.name}")
             self._attr_is_locked = True
             self._attr_is_locking = False
             self._attr_is_unlocking = False
@@ -110,28 +121,24 @@ class VirtualLock(VirtualEntity, LockEntity):
             self._jam()
 
     def _locking(self) -> None:
-        _LOGGER.debug(f"locking {self.name}")
         self._attr_is_locked = False
         self._attr_is_locking = True
         self._attr_is_unlocking = False
         self._attr_is_jammed = False
 
     def _unlock(self) -> None:
-        _LOGGER.debug(f"unlocked {self.name}")
         self._attr_is_locked = False
         self._attr_is_locking = False
         self._attr_is_unlocking = False
         self._attr_is_jammed = False
 
     def _unlocking(self) -> None:
-        _LOGGER.debug(f"unlocking {self.name}")
         self._attr_is_locked = False
         self._attr_is_locking = False
         self._attr_is_unlocking = True
         self._attr_is_jammed = False
 
     def _jam(self) -> None:
-        _LOGGER.debug(f"jamming {self.name}")
         self._attr_is_locked = False
         self._attr_is_jammed = True
 
@@ -148,6 +155,7 @@ class VirtualLock(VirtualEntity, LockEntity):
         )
 
     def lock(self, **kwargs: Any) -> None:
+        """Lock."""
         if self._change_time == DEFAULT_CHANGE_TIME:
             self._lock()
         else:
@@ -155,6 +163,7 @@ class VirtualLock(VirtualEntity, LockEntity):
             self._start_operation()
 
     def unlock(self, **kwargs: Any) -> None:
+        """Unlock."""
         if self._change_time == DEFAULT_CHANGE_TIME:
             self._unlock()
         else:
@@ -162,5 +171,14 @@ class VirtualLock(VirtualEntity, LockEntity):
             self._start_operation()
 
     def open(self, **kwargs: Any) -> None:
-        _LOGGER.debug(f"opening {self.name}")
+        """Open."""
         self.unlock()
+
+
+class CoordinatedVirtualLock(CoordinatedVirtualEntity, VirtualLock):
+    """Representation of a Virtual switch."""
+
+    def __init__(self, hass, config, coordinator):
+        """Initialize the Virtual switch device."""
+        CoordinatedVirtualEntity.__init__(self, coordinator)
+        VirtualLock.__init__(self, hass, config)

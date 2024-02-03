@@ -1,11 +1,9 @@
-"""This component provides support for a virtual light."""
+"""Provide support for a virtual light."""
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
 import math
-import pprint
 
 import voluptuous as vol
 
@@ -18,23 +16,26 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     DOMAIN as PLATFORM_DOMAIN,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import get_entity_configs
-from .const import *
-from .entity import VirtualEntity, virtual_schema
+from .const import (
+    ATTR_GROUP_NAME,
+    COMPONENT_DOMAIN,
+    CONF_COORDINATED,
+    CONF_INITIAL_VALUE,
+)
+from .coordinator import VirtualDataUpdateCoordinator
+from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +53,7 @@ CONF_SUPPORT_EFFECT = "support_effect"
 CONF_INITIAL_EFFECT = "initial_effect"
 CONF_INITIAL_EFFECT_LIST = "initial_effect_list"
 CONF_SUPPORT_TRANSITION = "support_transition"
+CONF_INITIAL_TRANSITION = True
 
 DEFAULT_LIGHT_VALUE = "on"
 DEFAULT_SUPPORT_BRIGHTNESS = True
@@ -107,60 +109,66 @@ LIGHT_SCHEMA = vol.Schema(BASE_SCHEMA)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    _LOGGER.debug("setting up the entries...")
+    """Set up lights."""
 
-    entities = []
+    coordinator: VirtualDataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+        entry.entry_id
+    ]
+    entities: list[VirtualLight] = []
     for entity in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity = LIGHT_SCHEMA(entity)
-        entities.append(VirtualLight(entity))
+        if CONF_COORDINATED in entity:
+            entities.append(CoordinatedVirtualLight(entity, coordinator))
+        else:
+            entities.append(VirtualLight(entity))
     async_add_entities(entities)
 
 
 class VirtualLight(VirtualEntity, LightEntity):
+    """A virtual light component."""
+
     def __init__(self, config):
         """Initialize a Virtual light."""
         super().__init__(config, PLATFORM_DOMAIN)
 
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         self._attr_supported_features = 0
+        self._attr_transition: bool | None = None
 
         if config.get(CONF_SUPPORT_BRIGHTNESS):
-            self._attr_supported_features |= SUPPORT_BRIGHTNESS
             self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
         if config.get(CONF_SUPPORT_COLOR):
-            self._attr_supported_features |= SUPPORT_COLOR
             self._attr_supported_color_modes.add(ColorMode.HS)
         if config.get(CONF_SUPPORT_COLOR_TEMP):
-            self._attr_supported_features |= SUPPORT_COLOR_TEMP
             self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
         if config.get(CONF_SUPPORT_EFFECT):
-            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_supported_features |= LightEntityFeature.EFFECT
             self._attr_effect_list = self._config.get(CONF_INITIAL_EFFECT_LIST)
         if config.get(CONF_SUPPORT_TRANSITION):
-            self._attr_supported_features |= SUPPORT_TRANSITION
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
 
     def _create_state(self, config):
         super()._create_state(config)
 
         self._attr_is_on = config.get(CONF_INITIAL_VALUE).lower() == STATE_ON
 
-        if self._attr_supported_features & SUPPORT_BRIGHTNESS:
+        if self._attr_supported_features & ColorMode.BRIGHTNESS:
             self._attr_brightness = config.get(CONF_INITIAL_BRIGHTNESS)
-        if self._attr_supported_features & SUPPORT_COLOR:
+        if self._attr_supported_features & ColorMode.HS:
             self._attr_color_mode = ColorMode.HS
             self._attr_hs_color = config.get(CONF_INITIAL_COLOR)
-        if self._attr_supported_features & SUPPORT_COLOR_TEMP:
+        if self._attr_supported_features & ColorMode.COLOR_TEMP:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp = config.get(CONF_INITIAL_COLOR_TEMP)
-        if self._attr_supported_features & SUPPORT_EFFECT:
+        if self._attr_supported_features & LightEntityFeature.EFFECT:
             self._attr_effect = config.get(CONF_INITIAL_EFFECT)
-        if self._attr_supported_features & SUPPORT_TRANSITION:
+        if self._attr_supported_features & LightEntityFeature.TRANSITION:
             self._attr_transition = config.get(CONF_SUPPORT_TRANSITION)
 
     def _restore_state(self, state, config):
@@ -168,23 +176,27 @@ class VirtualLight(VirtualEntity, LightEntity):
 
         self._attr_is_on = state.state.lower() == STATE_ON
 
-        if self._attr_supported_features & SUPPORT_BRIGHTNESS:
+        if self._attr_supported_features & ColorMode.BRIGHTNESS:
             self._attr_brightness = state.attributes.get(
                 ATTR_BRIGHTNESS, config.get(CONF_INITIAL_BRIGHTNESS)
             )
-        if self._attr_supported_features & SUPPORT_COLOR:
+        if self._attr_supported_features & ColorMode.HS:
             self._attr_color_mode = ColorMode.HS
             self._attr_hs_color = state.attributes.get(
                 ATTR_HS_COLOR, config.get(CONF_INITIAL_COLOR)
             )
-        if self._attr_supported_features & SUPPORT_COLOR_TEMP:
+        if self._attr_supported_features & ColorMode.COLOR_TEMP:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp = state.attributes.get(
                 ATTR_COLOR_TEMP, config.get(CONF_INITIAL_COLOR_TEMP)
             )
-        if self._attr_supported_features & SUPPORT_EFFECT:
+        if self._attr_supported_features & LightEntityFeature.EFFECT:
             self._attr_effect = state.attributes.get(
                 ATTR_EFFECT, config.get(CONF_INITIAL_EFFECT)
+            )
+        if self._attr_supported_features & LightEntityFeature.TRANSITION:
+            self._attr_transition = state.attributes.get(
+                ATTR_EFFECT, config.get(CONF_INITIAL_TRANSITION)
             )
 
     def _update_attributes(self):
@@ -207,31 +219,36 @@ class VirtualLight(VirtualEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        _LOGGER.debug(f"turning {self.name} on {pprint.pformat(kwargs)}")
         transition = kwargs.get(ATTR_TRANSITION)
         hs_color = kwargs.get(ATTR_HS_COLOR, None)
-        if hs_color is not None and self._attr_supported_features & SUPPORT_COLOR:
+        if hs_color is not None and self._attr_supported_features & ColorMode.HS:
             self._attr_color_mode = ColorMode.HS
             self._attr_hs_color = hs_color
             self._attr_color_temp = None
 
         ct = kwargs.get(ATTR_COLOR_TEMP, None)
-        if ct is not None and self._attr_supported_features & SUPPORT_COLOR_TEMP:
+        if ct is not None and self._attr_supported_features & ColorMode.COLOR_TEMP:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp = ct
             self._attr_hs_color = None
 
         brightness = kwargs.get(ATTR_BRIGHTNESS, None)
         if brightness is not None:
-            if transition is not None:
-                asyncio.create_task(
+            if (
+                transition is not None
+                and self._attr_supported_features & LightEntityFeature.TRANSITION
+            ):
+                self.hass.create_task(
                     self._async_update_brightness(brightness, transition)
                 )
             else:
                 self._attr_brightness = brightness
 
         effect = kwargs.get(ATTR_EFFECT, None)
-        if effect is not None and self._attr_supported_features & SUPPORT_EFFECT:
+        if (
+            effect is not None
+            and self._attr_supported_features & LightEntityFeature.EFFECT
+        ):
             self._attr_effect = effect
 
         self._attr_is_on = True
@@ -239,7 +256,6 @@ class VirtualLight(VirtualEntity, LightEntity):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        _LOGGER.debug(f"turning {self.name} off {pprint.pformat(kwargs)}")
         self._attr_is_on = False
         self._update_attributes()
 
@@ -262,3 +278,12 @@ class VirtualLight(VirtualEntity, LightEntity):
                 self._attr_brightness = brightness
             self._update_attributes()
             await asyncio.sleep(1)
+
+
+class CoordinatedVirtualLight(CoordinatedVirtualEntity, VirtualLight):
+    """Representation of a Virtual switch."""
+
+    def __init__(self, config, coordinator):
+        """Initialize the Virtual switch device."""
+        CoordinatedVirtualEntity.__init__(self, coordinator)
+        VirtualLight.__init__(self, config)

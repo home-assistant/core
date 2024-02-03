@@ -1,12 +1,12 @@
-"""This component provides support for a virtual fan.
+"""Provide support for a virtual fan.
 
 Borrowed heavily from components/demo/fan.py
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -16,19 +16,19 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as PLATFORM_DOMAIN,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import get_entity_configs
-from .const import *
-from .entity import VirtualEntity, virtual_schema
+from .const import ATTR_GROUP_NAME, COMPONENT_DOMAIN, CONF_COORDINATED
+from .coordinator import VirtualDataUpdateCoordinator
+from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,18 +60,24 @@ FAN_SCHEMA = vol.Schema(BASE_SCHEMA)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    _LOGGER.debug("setting up the entries...")
+    """Set up fans."""
 
-    entities = []
+    coordinator: VirtualDataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+        entry.entry_id
+    ]
+    entities: list[VirtualFan] = []
     for entity in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity = FAN_SCHEMA(entity)
-        entities.append(VirtualFan(entity))
+        if CONF_COORDINATED in entity:
+            entities.append(CoordinatedVirtualFan(entity, coordinator))
+        else:
+            entities.append(VirtualFan(entity))
     async_add_entities(entities)
 
 
@@ -95,20 +101,20 @@ class VirtualFan(VirtualEntity, FanEntity):
 
         self._attr_supported_features = 0
         if self._attr_speed_count > 0:
-            self._attr_supported_features |= SUPPORT_SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
         if config.get(CONF_OSCILLATE, False):
-            self._attr_supported_features |= SUPPORT_OSCILLATE
+            self._attr_supported_features |= FanEntityFeature.OSCILLATE
         if config.get(CONF_DIRECTION, False):
-            self._attr_supported_features |= SUPPORT_DIRECTION
+            self._attr_supported_features |= FanEntityFeature.DIRECTION
 
-        _LOGGER.info(f"VirtualFan: {self.name} created")
+        _LOGGER.info("VirtualFan: %s created", self.name)
 
     def _create_state(self, config):
         super()._create_state(config)
 
-        if self._attr_supported_features & SUPPORT_DIRECTION:
+        if self._attr_supported_features & FanEntityFeature.DIRECTION:
             self._attr_current_direction = "forward"
-        if self._attr_supported_features & SUPPORT_OSCILLATE:
+        if self._attr_supported_features & FanEntityFeature.OSCILLATE:
             self._attr_oscillating = False
         self._attr_percentage = None
         self._attr_preset_mode = None
@@ -116,9 +122,9 @@ class VirtualFan(VirtualEntity, FanEntity):
     def _restore_state(self, state, config):
         super()._restore_state(state, config)
 
-        if self._attr_supported_features & SUPPORT_DIRECTION:
+        if self._attr_supported_features & FanEntityFeature.DIRECTION:
             self._attr_current_direction = state.attributes.get(ATTR_DIRECTION)
-        if self._attr_supported_features & SUPPORT_OSCILLATE:
+        if self._attr_supported_features & FanEntityFeature.OSCILLATE:
             self._attr_oscillating = state.attributes.get(ATTR_OSCILLATING)
         self._attr_percentage = state.attributes.get(ATTR_PERCENTAGE)
         self._attr_preset_mode = state.attributes.get(ATTR_PRESET_MODE)
@@ -140,16 +146,14 @@ class VirtualFan(VirtualEntity, FanEntity):
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        _LOGGER.debug(f"setting {self.name} pcent to {percentage}")
         self._attr_percentage = percentage
         self._attr_preset_mode = None
         self._update_attributes()
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        _LOGGER.debug(f"setting {self.name} mode to {preset_mode}")
         if self.preset_modes is None:
-            raise ValueError(f"The device does no support preset mode")
+            raise ValueError("The device does no support preset mode")
         if preset_mode in self.preset_modes:
             self._attr_preset_mode = preset_mode
             self._attr_percentage = None
@@ -161,10 +165,9 @@ class VirtualFan(VirtualEntity, FanEntity):
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Turn on the entity."""
-        _LOGGER.debug(f"turning {self.name} on")
         if preset_mode:
             self.set_preset_mode(preset_mode)
             return
@@ -173,19 +176,25 @@ class VirtualFan(VirtualEntity, FanEntity):
             percentage = 67
         self.set_percentage(percentage)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
-        _LOGGER.debug(f"turning {self.name} off")
         self.set_percentage(0)
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        _LOGGER.debug(f"setting direction of {self.name} to {direction}")
         self._attr_current_direction = direction
         self._update_attributes()
 
     def oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
-        _LOGGER.debug(f"setting oscillate of {self.name} to {oscillating}")
         self._attr_oscillating = oscillating
         self._update_attributes()
+
+
+class CoordinatedVirtualFan(CoordinatedVirtualEntity, VirtualFan):
+    """Representation of a Virtual switch."""
+
+    def __init__(self, config, coordinator):
+        """Initialize the Virtual switch device."""
+        CoordinatedVirtualEntity.__init__(self, coordinator)
+        VirtualFan.__init__(self, config)
