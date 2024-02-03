@@ -259,7 +259,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                     "invalid client id or redirect uri", HTTPStatus.BAD_REQUEST
                 )
 
-            refresh_token = await hass.auth.async_get_refresh_token(refresh_token_id)
+            refresh_token = hass.auth.async_get_refresh_token(refresh_token_id)
             if refresh_token is None or refresh_token.credential is None:
                 return self.json_message(
                     "Credentials for user not available", HTTPStatus.FORBIDDEN

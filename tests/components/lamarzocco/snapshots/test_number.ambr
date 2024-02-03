@@ -4,7 +4,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'GS01234 Coffee target temperature',
-      'icon': 'mdi:coffee-maker',
       'max': 104,
       'min': 85,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -44,7 +43,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:coffee-maker',
+    'original_icon': None,
     'original_name': 'Coffee target temperature',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -59,7 +58,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'GS01234 Steam target temperature',
-      'icon': 'mdi:kettle-steam',
       'max': 131,
       'min': 126,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -99,7 +97,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:kettle-steam',
+    'original_icon': None,
     'original_name': 'Steam target temperature',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -114,7 +112,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'GS01234 Steam target temperature',
-      'icon': 'mdi:kettle-steam',
       'max': 131,
       'min': 126,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -154,7 +151,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:kettle-steam',
+    'original_icon': None,
     'original_name': 'Steam target temperature',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -169,7 +166,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Tea water duration',
-      'icon': 'mdi:water-percent',
       'max': 30,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -209,7 +205,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:water-percent',
+    'original_icon': None,
     'original_name': 'Tea water duration',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -224,7 +220,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Tea water duration',
-      'icon': 'mdi:water-percent',
       'max': 30,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -264,7 +259,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:water-percent',
+    'original_icon': None,
     'original_name': 'Tea water duration',
     'platform': 'lamarzocco',
     'previous_unique_id': None,

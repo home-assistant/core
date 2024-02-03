@@ -79,7 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if conf is None:
             return
 
-        existing = hass.services.async_services().get(DOMAIN, {})
+        existing = hass.services.async_services_for_domain(DOMAIN)
         for existing_service in existing:
             if existing_service == SERVICE_RELOAD:
                 continue

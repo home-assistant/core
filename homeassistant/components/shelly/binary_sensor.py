@@ -55,7 +55,7 @@ class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescr
     """Class to describe a REST binary sensor."""
 
 
-SENSORS: Final = {
+SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
     ("device", "overtemp"): BlockBinarySensorDescription(
         key="device|overtemp",
         name="Overheating",
