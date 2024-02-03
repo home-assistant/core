@@ -610,6 +610,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature_high: float | None = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -703,7 +704,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 config.get(key), entity=self
             ).async_render
 
-        support = ClimateEntityFeature(0)
+        support = ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         if (self._topic[CONF_TEMP_STATE_TOPIC] is not None) or (
             self._topic[CONF_TEMP_COMMAND_TOPIC] is not None
         ):

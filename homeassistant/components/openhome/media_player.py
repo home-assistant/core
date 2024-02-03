@@ -154,7 +154,7 @@ class OpenhomeDevice(MediaPlayerEntity):
             self._source_index = source_index
             self._attr_source_list = source_names
 
-            if source["type"] == "Radio":
+            if source["type"] in ("Radio", "Receiver"):
                 self._attr_supported_features |= (
                     MediaPlayerEntityFeature.STOP
                     | MediaPlayerEntityFeature.PLAY

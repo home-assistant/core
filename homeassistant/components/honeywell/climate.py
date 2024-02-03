@@ -51,7 +51,7 @@ ATTR_FAN_ACTION = "fan_action"
 
 ATTR_PERMANENT_HOLD = "permanent_hold"
 
-PRESET_HOLD = "Hold"
+PRESET_HOLD = "hold"
 
 HEATING_MODES = {"heat", "emheat", "auto"}
 COOLING_MODES = {"cool", "auto"}
@@ -142,6 +142,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "honeywell"
 
     def __init__(
         self,
@@ -303,7 +304,7 @@ class HoneywellUSThermostat(ClimateEntity):
         if self._is_permanent_hold():
             return PRESET_HOLD
 
-        return None
+        return PRESET_NONE
 
     @property
     def is_aux_heat(self) -> bool | None:

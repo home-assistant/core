@@ -38,6 +38,7 @@ def websocket_list_areas(
     {
         vol.Required("type"): "config/area_registry/create",
         vol.Optional("aliases"): list,
+        vol.Optional("icon"): str,
         vol.Required("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
@@ -97,6 +98,7 @@ def websocket_delete_area(
         vol.Required("type"): "config/area_registry/update",
         vol.Optional("aliases"): list,
         vol.Required("area_id"): str,
+        vol.Optional("icon"): vol.Any(str, None),
         vol.Optional("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
@@ -133,6 +135,7 @@ def _entry_dict(entry: AreaEntry) -> dict[str, Any]:
     return {
         "aliases": list(entry.aliases),
         "area_id": entry.id,
+        "icon": entry.icon,
         "name": entry.name,
         "picture": entry.picture,
     }

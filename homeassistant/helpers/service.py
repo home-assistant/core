@@ -585,7 +585,7 @@ async def async_get_all_descriptions(
     # We don't mutate services here so we avoid calling
     # async_services which makes a copy of every services
     # dict.
-    services = hass.services._services  # pylint: disable=protected-access
+    services = hass.services.async_services_internal()
 
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
@@ -608,6 +608,11 @@ async def async_get_all_descriptions(
 
     # Files we loaded for missing descriptions
     loaded: dict[str, JSON_TYPE] = {}
+    # We try to avoid making a copy in the event the cache is good,
+    # but now we must make a copy in case new services get added
+    # while we are loading the missing ones so we do not
+    # add the new ones to the cache without their descriptions
+    services = {domain: service.copy() for domain, service in services.items()}
 
     if domains_with_missing_services:
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)

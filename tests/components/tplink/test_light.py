@@ -86,7 +86,7 @@ async def test_color_light(
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "hs"
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness", "color_temp", "hs"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
     assert attributes[ATTR_MIN_MIREDS] == 111
     assert attributes[ATTR_MAX_MIREDS] == 250
     assert attributes[ATTR_HS_COLOR] == (10, 30)
@@ -163,7 +163,7 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "hs"
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness", "hs"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
     assert attributes[ATTR_HS_COLOR] == (10, 30)
     assert attributes[ATTR_RGB_COLOR] == (255, 191, 178)
     assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
@@ -225,13 +225,9 @@ async def test_color_temp_light(
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "color_temp"
     if bulb.is_color:
-        assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [
-            "brightness",
-            "color_temp",
-            "hs",
-        ]
+        assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
     else:
-        assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness", "color_temp"]
+        assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp"]
     assert attributes[ATTR_MIN_MIREDS] == 111
     assert attributes[ATTR_MAX_MIREDS] == 250
     assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000

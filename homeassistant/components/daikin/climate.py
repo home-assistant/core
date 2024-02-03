@@ -142,7 +142,11 @@ class DaikinClimate(ClimateEntity):
             ATTR_SWING_MODE: self._attr_swing_modes,
         }
 
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TARGET_TEMPERATURE
+        )
 
         if api.device.support_away_mode or api.device.support_advanced_modes:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
