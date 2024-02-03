@@ -54,6 +54,13 @@ class SpiderThermostat(ClimateEntity):
         for operation_value in thermostat.operation_values:
             if operation_value in SPIDER_STATE_TO_HA:
                 self.support_hvac.append(SPIDER_STATE_TO_HA[operation_value])
+        self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
+        if thermostat.has_fan_mode:
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -65,18 +72,6 @@ class SpiderThermostat(ClimateEntity):
             model=self.thermostat.model,
             name=self.thermostat.name,
         )
-
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features."""
-        features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
-        )
-        if self.thermostat.has_fan_mode:
-            return features | ClimateEntityFeature.FAN_MODE
-        return features
 
     @property
     def unique_id(self):
