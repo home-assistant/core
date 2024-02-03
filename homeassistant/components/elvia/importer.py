@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, cast
 
-from elvia import Elvia
+from elvia import Elvia, error as ElviaError
 
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
 from homeassistant.components.recorder.statistics import (
@@ -68,21 +68,37 @@ class ElviaImporter:
         )
 
         if not last_stats:
-            # First time we insert 1 years of data (if available)
+            # First time we insert 3 years of data (if available)
+            hourly_data: list[MeterValueTimeSeries] = []
             until = dt_util.utcnow()
-            hourly_data = await self._fetch_hourly_data(
-                since=until - timedelta(days=365),
-                until=until,
-            )
+            for year in (3, 2, 1):
+                try:
+                    year_hours = await self._fetch_hourly_data(
+                        since=until - timedelta(days=365 * year),
+                        until=until - timedelta(days=365 * (year - 1)),
+                    )
+                except ElviaError.ElviaException:
+                    # This will raise if the contract have no data for the
+                    # year, we can safely ignore this
+                    continue
+                hourly_data.extend(year_hours)
+
             if hourly_data is None or len(hourly_data) == 0:
+                LOGGER.error("No data available for the metering point")
                 return
             last_stats_time = None
             _sum = 0.0
         else:
-            hourly_data = await self._fetch_hourly_data(
-                since=dt_util.utc_from_timestamp(last_stats[statistic_id][0]["end"]),
-                until=dt_util.utcnow(),
-            )
+            try:
+                hourly_data = await self._fetch_hourly_data(
+                    since=dt_util.utc_from_timestamp(
+                        last_stats[statistic_id][0]["end"]
+                    ),
+                    until=dt_util.utcnow(),
+                )
+            except ElviaError.ElviaException as err:
+                LOGGER.error("Error fetching data: %s", err)
+                return
 
             if (
                 hourly_data is None
