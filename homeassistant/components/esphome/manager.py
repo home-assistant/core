@@ -21,7 +21,6 @@ from aioesphomeapi import (
     UserService,
     UserServiceArgType,
     VoiceAssistantAudioSettings,
-    VoiceAssistantEventType,
 )
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -330,11 +329,6 @@ class ESPHomeManager:
             )
         )
 
-    def _handle_pipeline_event(
-        self, event_type: VoiceAssistantEventType, data: dict[str, str] | None
-    ) -> None:
-        self.cli.send_voice_assistant_event(event_type, data)
-
     def _handle_pipeline_finished(self) -> None:
         self.entry_data.async_set_assist_pipeline_state(False)
 
@@ -358,7 +352,7 @@ class ESPHomeManager:
         self.voice_assistant_udp_server = VoiceAssistantUDPServer(
             hass,
             self.entry_data,
-            self._handle_pipeline_event,
+            self.cli.send_voice_assistant_event,
             self._handle_pipeline_finished,
         )
         port = await self.voice_assistant_udp_server.start_server()
