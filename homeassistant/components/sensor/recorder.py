@@ -224,13 +224,14 @@ def _normalize_states(
 
     converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
-    convert: Callable[[float], float]
+    convert: Callable[[float], float] | None = None
     last_unit: str | None | object = object()
+    valid_units = converter.VALID_UNITS
 
     for fstate, state in fstates:
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         # Exclude states with unsupported unit from statistics
-        if state_unit not in converter.VALID_UNITS:
+        if state_unit not in valid_units:
             if WARN_UNSUPPORTED_UNIT not in hass.data:
                 hass.data[WARN_UNSUPPORTED_UNIT] = set()
             if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
@@ -249,13 +250,20 @@ def _normalize_states(
                     LINK_DEV_STATISTICS,
                 )
             continue
+
         if state_unit != last_unit:
             # The unit of measurement has changed since the last state change
             # recreate the converter factory
-            convert = converter.converter_factory(state_unit, statistics_unit)
+            if state_unit == statistics_unit:
+                convert = None
+            else:
+                convert = converter.converter_factory(state_unit, statistics_unit)
             last_unit = state_unit
 
-        valid_fstates.append((convert(fstate), state))
+        if convert is not None:
+            fstate = convert(fstate)
+
+        valid_fstates.append((fstate, state))
 
     return statistics_unit, valid_fstates
 
