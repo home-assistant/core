@@ -33,7 +33,6 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
     """Class to manage fetching Elgato data."""
 
     config_entry: ConfigEntry
-    _hass: HomeAssistant
     _entities: dict
     _devices: list[Device]
 
@@ -42,20 +41,19 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
     ) -> None:
         """Initialize the coordinator."""
         _LOGGER.debug("Initializing iotty data update coordinator")
-        self.config_entry = entry
-        self._hass = hass
-        self._entities = {}
-        self._devices = []
-
-        self.iotty = api.IottyProxy(
-            hass, aiohttp_client.async_get_clientsession(hass), session
-        )
 
         super().__init__(
             hass,
             LOGGER,
             name=f"{DOMAIN}_coordinator",
             update_interval=UPDATE_INTERVAL,
+        )
+
+        self.config_entry = entry
+        self._entities = {}
+        self._devices = []
+        self.iotty = api.IottyProxy(
+            hass, aiohttp_client.async_get_clientsession(hass), session
         )
 
     def store_entity(self, device_id: str, entity: Entity) -> None:
@@ -71,7 +69,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
 
         await super().async_config_entry_first_refresh()
 
-        await self._hass.config_entries.async_forward_entry_setups(
+        await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
         )
 
@@ -82,10 +80,9 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         for device in self._devices:
             res = await self.iotty.get_status(device.device_id)
 
-            if RESULT not in res or STATUS not in res[RESULT]:
+            if not (status := res.get(RESULT, {}).get(STATUS)):
                 _LOGGER.warning("Unable to read status for device %s", device.device_id)
             else:
-                status = res[RESULT][STATUS]
                 _LOGGER.debug(
                     "Retrieved status: '%s' for device %s", status, device.device_id
                 )
