@@ -26,6 +26,7 @@ from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -405,6 +406,15 @@ class ZHADevice(LogMixin):
             ATTR_MANUFACTURER: self.manufacturer,
             ATTR_MODEL: self.model,
         }
+
+    @property
+    def sw_version(self) -> str | None:
+        """Return the software version for this device."""
+        device_registry = dr.async_get(self.hass)
+        reg_device: DeviceEntry | None = device_registry.async_get(self.device_id)
+        if reg_device is None:
+            return None
+        return reg_device.sw_version
 
     @classmethod
     def new(

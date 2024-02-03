@@ -13,7 +13,6 @@ from homeassistant.util.json import load_json_object
 
 from .translation import build_resources
 
-ICON_LOAD_LOCK = "icon_load_lock"
 ICON_CACHE = "icon_cache"
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,13 +72,14 @@ async def _async_get_component_icons(
 class _IconsCache:
     """Cache for icons."""
 
-    __slots__ = ("_hass", "_loaded", "_cache")
+    __slots__ = ("_hass", "_loaded", "_cache", "_lock")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
         self._hass = hass
         self._loaded: set[str] = set()
         self._cache: dict[str, dict[str, Any]] = {}
+        self._lock = asyncio.Lock()
 
     async def async_fetch(
         self,
@@ -88,7 +88,13 @@ class _IconsCache:
     ) -> dict[str, dict[str, Any]]:
         """Load resources into the cache."""
         if components_to_load := components - self._loaded:
-            await self._async_load(components_to_load)
+            # Icons are never unloaded so if there are no components to load
+            # we can skip the lock which reduces contention
+            async with self._lock:
+                # Check components to load again, as another task might have loaded
+                # them while we were waiting for the lock.
+                if components_to_load := components - self._loaded:
+                    await self._async_load(components_to_load)
 
         return {
             component: result
@@ -143,21 +149,19 @@ async def async_get_icons(
     """Return all icons of integrations.
 
     If integration specified, load it for that one; otherwise default to loaded
-    intgrations.
+    integrations.
     """
-    lock = hass.data.setdefault(ICON_LOAD_LOCK, asyncio.Lock())
-
     if integrations:
         components = set(integrations)
     else:
         components = {
             component for component in hass.config.components if "." not in component
         }
-    async with lock:
-        if ICON_CACHE in hass.data:
-            cache: _IconsCache = hass.data[ICON_CACHE]
-        else:
-            cache = hass.data[ICON_CACHE] = _IconsCache(hass)
+
+    if ICON_CACHE in hass.data:
+        cache: _IconsCache = hass.data[ICON_CACHE]
+    else:
+        cache = hass.data[ICON_CACHE] = _IconsCache(hass)
 
     return await cache.async_fetch(category, components)
 
