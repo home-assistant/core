@@ -44,7 +44,7 @@ async def test_device_diagnostics(
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test config entry diagnostics."""
+    """Test device diagnostics."""
     await setup_integration(hass, mock_config_entry)
 
     devices = dr.async_entries_for_config_entry(
