@@ -6,7 +6,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 
 from .api import WireGuardAPI, WireGuardError
 from .const import DEFAULT_HOST, DOMAIN
@@ -46,7 +45,3 @@ class WireGuardConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
