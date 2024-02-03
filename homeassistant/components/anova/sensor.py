@@ -30,7 +30,7 @@ from .models import AnovaData
 class AnovaSensorEntityDescriptionMixin:
     """Describes the mixin variables for anova sensors."""
 
-    value_fn: Callable[[APCUpdateSensor], float | int | str | None]
+    value_fn: Callable[[APCUpdateSensor], StateType]
 
 
 @dataclass(frozen=True)
@@ -130,7 +130,7 @@ async def async_setup_entry(
                 valid_entities.add(sensor)
     if not valid_entities:
         raise PlatformNotReady(
-            "No entities were available - if this is your first time setting up a Anova device in home assistant, make sure it is online."
+            "No entities were available - if this is your first time setting up an Anova device in home assistant, make sure it is online."
         )
     async_add_entities(valid_entities)
 
