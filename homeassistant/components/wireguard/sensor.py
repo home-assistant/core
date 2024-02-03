@@ -1,6 +1,8 @@
 """Support for WireGuard binary sensors."""
 from datetime import datetime
 
+from date import date
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation
@@ -8,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import WireGuardPeer
@@ -62,9 +65,9 @@ class WireGuardPeerHandshakeSensor(
         )
 
     @property
-    def native_value(self) -> datetime | None:
+    def native_value(self) -> StateType | date | datetime | None:
         """Return the state of the sensor."""
-        return self.peer.latest_handshake or self.state
+        return self.peer.latest_handshake or self._attr_native_value
 
 
 class WireGuardPeerBytesReceivedSensor(
