@@ -6,7 +6,8 @@ import re
 from sma_manager_api.SMA import SMA
 from voluptuous import Required, Schema
 from homeassistant import config_entries
-from .const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_REFRESH_INTERVAL, DOMAIN
+from homeassistant.const import CONF_PORT, CONF_NAME, CONF_HOST
+from .const import CONF_REFRESH_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
