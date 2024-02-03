@@ -76,11 +76,9 @@ class OAuth2FlowHandler(
             return self.async_create_entry(title=self.flow_impl.name, data=data)
 
         if self.reauth_entry.unique_id == user_id or not self.reauth_entry.unique_id:
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 self.reauth_entry, unique_id=user_id, data=data
             )
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_abort(reason="wrong_account")
 
