@@ -18,6 +18,8 @@ from .const import DOMAIN as FLO_DOMAIN, LOGGER
 class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Flo device object."""
 
+    _failure_count: int = 0
+
     def __init__(
         self, hass: HomeAssistant, api_client: API, location_id: str, device_id: str
     ) -> None:
@@ -35,7 +37,6 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=
             name=f"{FLO_DOMAIN}-{device_id}",
             update_interval=timedelta(seconds=60),
         )
-        self._failure_count: int = 0
 
     async def _async_update_data(self):
         """Update data via library."""
