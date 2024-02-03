@@ -35,6 +35,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=
             name=f"{FLO_DOMAIN}-{device_id}",
             update_interval=timedelta(seconds=60),
         )
+        self._failure_count: int = 0
 
     async def _async_update_data(self):
         """Update data via library."""
@@ -43,8 +44,11 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=
                 await self.send_presence_ping()
                 await self._update_device()
                 await self._update_consumption_data()
+                self._failure_count = 0
         except RequestError as error:
-            raise UpdateFailed(error) from error
+            self._failure_count += 1
+            if self._failure_count > 3:
+                raise UpdateFailed(error) from error
 
     @property
     def location_id(self) -> str:
