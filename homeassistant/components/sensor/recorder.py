@@ -146,31 +146,22 @@ def _equivalent_units(units: set[str | None]) -> bool:
     return len(units) == 1
 
 
-def _parse_float(state: str) -> float:
-    """Parse a float string, throw on inf or nan."""
-    fstate = float(state)
-    if not math.isfinite(fstate):
-        raise ValueError
-    return fstate
-
-
-def _float_or_none(state: str) -> float | None:
-    """Return a float or None."""
-    try:
-        return _parse_float(state)
-    except (ValueError, TypeError):
-        return None
-
-
 def _entity_history_to_float_and_state(
     entity_history: Iterable[State],
 ) -> list[tuple[float, State]]:
     """Return a list of (float, state) tuples for the given entity."""
-    return [
-        (fstate, state)
-        for state in entity_history
-        if (fstate := _float_or_none(state.state)) is not None
-    ]
+    float_states: list[tuple[float, State]] = []
+    append = float_states.append
+    isfinite = math.isfinite
+    for state in entity_history:
+        try:
+            if (float_state := float(state.state)) is not None and isfinite(
+                float_state
+            ):
+                append((float_state, state))
+        except (ValueError, TypeError):
+            pass
+    return float_states
 
 
 def _normalize_states(
