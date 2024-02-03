@@ -4325,6 +4325,29 @@ async def test_hashable_non_string_unique_id(
     assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
 
 
+@pytest.mark.parametrize("supports_multiple", [True, False])
+async def test_support_multiple_entries(
+    hass: HomeAssistant, supports_multiple: bool
+) -> None:
+    """Test that we can get if an integration supports multiple entries."""
+    mock_integration(
+        hass, MockModule("comp", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+        supports_multiple_entries = supports_multiple
+
+    with patch.dict(config_entries.HANDLERS, {"comp": MockFlowHandler}):
+        assert (
+            await config_entries.async_support_multiple_entries(hass, "comp")
+            is supports_multiple
+        )
+
+
 async def test_directly_mutating_blocked(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

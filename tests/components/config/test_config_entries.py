@@ -2108,3 +2108,38 @@ async def test_flow_with_multiple_schema_errors_base(
                 "latitude": "required key not provided",
             }
         }
+
+
+@pytest.mark.parametrize("supports_multiple", [True, False])
+async def test_support_multiple_entries(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, supports_multiple: bool
+) -> None:
+    """Test that we can get if an integration supports multiple entries."""
+    assert await async_setup_component(hass, "config", {})
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+        supports_multiple_entries = supports_multiple
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_show_form(step_id="account")
+
+    ws_client = await hass_ws_client(hass)
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "config_entries/supports_multiple",
+                "integration": "test",
+            }
+        )
+        response = await ws_client.receive_json()
+
+        assert response["success"]
+        assert response["result"] is supports_multiple

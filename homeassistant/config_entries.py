@@ -64,7 +64,6 @@ if TYPE_CHECKING:
     from .components.zeroconf import ZeroconfServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
 
-
 _LOGGER = logging.getLogger(__name__)
 
 SOURCE_BLUETOOTH = "bluetooth"
@@ -2373,3 +2372,9 @@ async def _async_get_flow_handler(
         return handler
 
     raise data_entry_flow.UnknownHandler
+
+
+async def async_support_multiple_entries(hass: HomeAssistant, domain: str) -> bool:
+    """Test if a domain supports multiple entries."""
+    handler = await _async_get_flow_handler(hass, domain, {})
+    return handler.supports_multiple_entries

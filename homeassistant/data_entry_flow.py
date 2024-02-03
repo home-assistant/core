@@ -596,6 +596,9 @@ class FlowHandler:
     # The initial data that was used to start the flow
     init_data: Any = None
 
+    # Indicates to the frontend whether we support multiple config entries or not
+    supports_multiple_entries: bool = True
+
     # Set by developer
     VERSION = 1
     MINOR_VERSION = 1
