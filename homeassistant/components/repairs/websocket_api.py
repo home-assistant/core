@@ -29,11 +29,35 @@ from .const import DOMAIN
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the repairs websocket API."""
+    websocket_api.async_register_command(hass, ws_get_issue_data)
     websocket_api.async_register_command(hass, ws_ignore_issue)
     websocket_api.async_register_command(hass, ws_list_issues)
 
     hass.http.register_view(RepairsFlowIndexView(hass.data[DOMAIN]["flow_manager"]))
     hass.http.register_view(RepairsFlowResourceView(hass.data[DOMAIN]["flow_manager"]))
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "repairs/get_issue_data",
+        vol.Required("domain"): str,
+        vol.Required("issue_id"): str,
+    }
+)
+def ws_get_issue_data(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Fix an issue."""
+    issue_registry = async_get_issue_registry(hass)
+    if not (issue := issue_registry.async_get_issue(msg["domain"], msg["issue_id"])):
+        connection.send_error(
+            msg["id"],
+            "unknown_issue",
+            f"Issue '{msg['issue_id']}' not found",
+        )
+        return
+    connection.send_result(msg["id"], {"issue_data": issue.data})
 
 
 @callback

@@ -229,6 +229,7 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
             status = tg.create_task(power_wall.get_status())
             device_type = tg.create_task(power_wall.get_device_type())
             serial_numbers = tg.create_task(power_wall.get_serial_numbers())
+            batteries = tg.create_task(power_wall.get_batteries())
 
     # Mimic the behavior of asyncio.gather by reraising the first caught exception since
     # this is what is expected by the caller of this method
@@ -248,6 +249,7 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
         device_type=device_type.result(),
         serial_numbers=sorted(serial_numbers.result()),
         url=f"https://{host}",
+        batteries={battery.serial_number: battery for battery in batteries.result()},
     )
 
 
@@ -270,6 +272,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
             meters = tg.create_task(power_wall.get_meters())
             grid_services_active = tg.create_task(power_wall.is_grid_services_active())
             grid_status = tg.create_task(power_wall.get_grid_status())
+            batteries = tg.create_task(power_wall.get_batteries())
 
     # Mimic the behavior of asyncio.gather by reraising the first caught exception since
     # this is what is expected by the caller of this method
@@ -287,6 +290,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         grid_services_active=grid_services_active.result(),
         grid_status=grid_status.result(),
         backup_reserve=backup_reserve.result(),
+        batteries={battery.serial_number: battery for battery in batteries.result()},
     )
 
 

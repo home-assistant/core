@@ -36,7 +36,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from .const import DOMAIN, SUPPORTED_LIFESPANS
 from .controller import EcovacsController
 from .entity import (
     EcovacsCapabilityEntityDescription,
@@ -154,11 +154,7 @@ LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     )
-    for component in (
-        LifeSpan.BRUSH,
-        LifeSpan.FILTER,
-        LifeSpan.SIDE_BRUSH,
-    )
+    for component in SUPPORTED_LIFESPANS
 )
 
 
