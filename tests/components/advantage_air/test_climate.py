@@ -40,6 +40,7 @@ async def test_climate_myzone_main(
     entity_registry: er.EntityRegistry,
     mock_get: AsyncMock,
     mock_update: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate platform main entity."""
 
@@ -136,6 +137,7 @@ async def test_climate_myzone_main(
         blocking=True,
     )
     mock_update.assert_called_once()
+    assert mock_update.call_args[0][0] == snapshot(name=f"{entity_id}-preset")
     mock_update.reset_mock()
 
     # Test setting HEAT COOL when its not supported

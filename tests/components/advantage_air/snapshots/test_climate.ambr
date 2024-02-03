@@ -58,3 +58,13 @@
     'state': 'heat_cool',
   })
 # ---
+# name: test_climate_myzone_main[climate.myzone-preset]
+  dict({
+    'ac1': dict({
+      'info': dict({
+        'climateControlModeEnabled': False,
+        'myAutoModeEnabled': True,
+      }),
+    }),
+  })
+# ---
