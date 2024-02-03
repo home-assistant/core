@@ -516,7 +516,7 @@ async def async_matching_config_entries(
     if not type_filter:
         return [entry_json(entry) for entry in entries]
 
-    integrations = {}
+    integrations: dict[str, Integration] = {}
     # Fetch all the integrations so we can check their type
     domains = {entry.domain for entry in entries}
     for domain_key, integration_or_exc in (
@@ -531,35 +531,32 @@ async def async_matching_config_entries(
     # when only helpers are requested, also filter out entries
     # from unknown integrations. This prevent them from showing
     # up in the helpers UI.
-    entries = [
-        entry
+    filter_is_not_helper = type_filter != ["helper"]
+    filter_set = set(type_filter)
+    return [
+        entry_json(entry)
         for entry in entries
-        if (type_filter != ["helper"] and entry.domain not in integrations)
-        or (
-            entry.domain in integrations
-            and integrations[entry.domain].integration_type in type_filter
+        # If the filter is not 'helper', we still include the integration
+        # even if its not returned from async_get_integrations for backwards
+        # compatibility.
+        if (
+            (integration := integrations.get(entry.domain))
+            and integration.integration_type in filter_set
         )
+        or (filter_is_not_helper and entry.domain not in integrations)
     ]
-
-    return [entry_json(entry) for entry in entries]
 
 
 @callback
 def entry_json(entry: config_entries.ConfigEntry) -> dict[str, Any]:
     """Return JSON value of a config entry."""
-    handler = config_entries.HANDLERS.get(entry.domain)
-    # work out if handler has support for options flow
-    supports_options = handler is not None and handler.async_supports_options_flow(
-        entry
-    )
-
     return {
         "entry_id": entry.entry_id,
         "domain": entry.domain,
         "title": entry.title,
         "source": entry.source,
         "state": entry.state.value,
-        "supports_options": supports_options,
+        "supports_options": entry.supports_options,
         "supports_remove_device": entry.supports_remove_device or False,
         "supports_unload": entry.supports_unload or False,
         "pref_disable_new_entities": entry.pref_disable_new_entities,

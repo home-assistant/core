@@ -38,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         border_agent_id = await otbrdata.get_border_agent_id()
         dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
+        extended_address = await otbrdata.get_extended_address()
     except (
         HomeAssistantError,
         aiohttp.ClientError,
@@ -62,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN,
             dataset_tlvs.hex(),
             preferred_border_agent_id=border_agent_id.hex(),
+            preferred_extended_address=extended_address.hex(),
         )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

@@ -44,7 +44,6 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
     LaMarzoccoNumberEntityDescription(
         key="coffee_temp",
         translation_key="coffee_temp",
-        icon="mdi:coffee-maker",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_step=PRECISION_TENTHS,
@@ -56,7 +55,6 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
     LaMarzoccoNumberEntityDescription(
         key="steam_temp",
         translation_key="steam_temp",
-        icon="mdi:kettle-steam",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_step=PRECISION_WHOLE,
@@ -73,7 +71,6 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
     LaMarzoccoNumberEntityDescription(
         key="tea_water_duration",
         translation_key="tea_water_duration",
-        icon="mdi:water-percent",
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_WHOLE,

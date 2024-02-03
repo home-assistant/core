@@ -32,6 +32,20 @@ def require_default_icon_validator(value: dict) -> dict:
     return value
 
 
+def ensure_not_same_as_default(value: dict) -> dict:
+    """Validate an icon isn't the same as its default icon."""
+    for translation_key, section in value.items():
+        if (default := section.get("default")) and (states := section.get("state")):
+            for state, icon in states.items():
+                if icon == default:
+                    raise vol.Invalid(
+                        f"The icon for state `{translation_key}.{state}` is the"
+                        " same as the default icon and thus can be removed"
+                    )
+
+    return value
+
+
 def icon_schema(integration_type: str) -> vol.Schema:
     """Create a icon schema."""
 
@@ -44,23 +58,26 @@ def icon_schema(integration_type: str) -> vol.Schema:
         return {
             marker("default"): icon_value_validator,
             vol.Optional("state"): state_validator,
-            vol.Optional("state_attributes"): cv.schema_with_slug_keys(
-                {
-                    marker("default"): icon_value_validator,
-                    marker("state"): state_validator,
-                },
-                slug_validator=translation_key_validator,
+            vol.Optional("state_attributes"): vol.All(
+                cv.schema_with_slug_keys(
+                    {
+                        marker("default"): icon_value_validator,
+                        marker("state"): state_validator,
+                    },
+                    slug_validator=translation_key_validator,
+                ),
+                ensure_not_same_as_default,
             ),
         }
 
-    base_schema = vol.Schema(
+    schema = vol.Schema(
         {
             vol.Optional("services"): state_validator,
         }
     )
 
-    if integration_type == "entity":
-        return base_schema.extend(
+    if integration_type in ("entity", "helper", "system"):
+        schema = schema.extend(
             {
                 vol.Required("entity_component"): vol.All(
                     cv.schema_with_slug_keys(
@@ -68,20 +85,26 @@ def icon_schema(integration_type: str) -> vol.Schema:
                         slug_validator=vol.Any("_", cv.slug),
                     ),
                     require_default_icon_validator,
+                    ensure_not_same_as_default,
                 )
             }
         )
-    return base_schema.extend(
-        {
-            vol.Required("entity"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    icon_schema_slug(vol.Optional),
-                    slug_validator=translation_key_validator,
-                ),
-                slug_validator=cv.slug,
-            ),
-        }
-    )
+    if integration_type not in ("entity", "system"):
+        schema = schema.extend(
+            {
+                vol.Optional("entity"): vol.All(
+                    cv.schema_with_slug_keys(
+                        cv.schema_with_slug_keys(
+                            icon_schema_slug(vol.Optional),
+                            slug_validator=translation_key_validator,
+                        ),
+                        slug_validator=cv.slug,
+                    ),
+                    ensure_not_same_as_default,
+                )
+            }
+        )
+    return schema
 
 
 def validate_icon_file(config: Config, integration: Integration) -> None:  # noqa: C901

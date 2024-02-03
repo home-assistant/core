@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Prebrew/-infusion mode',
-      'icon': 'mdi:water-plus',
       'options': list([
         'disabled',
         'prebrew',
@@ -44,7 +43,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water-plus',
+    'original_icon': None,
     'original_name': 'Prebrew/-infusion mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -58,7 +57,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LM01234 Prebrew/-infusion mode',
-      'icon': 'mdi:water-plus',
       'options': list([
         'disabled',
         'prebrew',
@@ -99,7 +97,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water-plus',
+    'original_icon': None,
     'original_name': 'Prebrew/-infusion mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -113,7 +111,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MR01234 Prebrew/-infusion mode',
-      'icon': 'mdi:water-plus',
       'options': list([
         'disabled',
         'prebrew',
@@ -154,7 +151,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water-plus',
+    'original_icon': None,
     'original_name': 'Prebrew/-infusion mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -168,7 +165,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MR01234 Steam level',
-      'icon': 'mdi:water-thermometer',
       'options': list([
         '1',
         '2',
@@ -209,7 +205,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water-thermometer',
+    'original_icon': None,
     'original_name': 'Steam level',
     'platform': 'lamarzocco',
     'previous_unique_id': None,

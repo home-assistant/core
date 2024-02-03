@@ -140,7 +140,6 @@ SENSOR_TYPES_VIDEO_DOORBELL = (
     AugustDoorbellBinarySensorEntityDescription(
         key="image capture",
         translation_key="image_capture",
-        icon="mdi:file-image",
         value_fn=_retrieve_image_capture_state,
         is_time_based=True,
     ),

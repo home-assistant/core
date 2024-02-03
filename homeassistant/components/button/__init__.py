@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -141,7 +142,7 @@ class ButtonEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
         """Call when the button is added to hass."""
         await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
-        if state is not None and state.state is not None:
+        if state is not None and state.state not in (STATE_UNAVAILABLE, None):
             self.__set_state(state.state)
 
     def press(self) -> None:
