@@ -16,7 +16,7 @@ from .const import (
     BSH_OPERATION_STATE_RUN,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_FINISHED,
-    DOMAIN
+    DOMAIN,
 )
 from .entity import HomeConnectEntity
 
@@ -76,13 +76,11 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
                 # if the date is supposed to be in the future but we're
                 # already past it, set state to None.
                 self._attr_native_value = None
-            elif (
-                status[BSH_OPERATION_STATE][ATTR_VALUE] in [
-                    BSH_OPERATION_STATE_RUN,
-                    BSH_OPERATION_STATE_PAUSE,
-                    BSH_OPERATION_STATE_FINISHED
-                ]
-            ):
+            elif status[BSH_OPERATION_STATE][ATTR_VALUE] in [
+                BSH_OPERATION_STATE_RUN,
+                BSH_OPERATION_STATE_PAUSE,
+                BSH_OPERATION_STATE_FINISHED
+            ]:
                 seconds = self._sign * float(status[self._key][ATTR_VALUE])
                 self._attr_native_value = dt_util.utcnow() + timedelta(seconds=seconds)
             else:
