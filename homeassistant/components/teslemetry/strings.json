@@ -141,10 +141,10 @@
         "name": "Generator power"
       },
       "wall_connector_state": {
-        "name": "State"
+        "name": "State code"
       },
       "wall_connector_fault_state": {
-        "name": "Fault state"
+        "name": "Fault state code"
       },
       "wall_connector_power": {
         "name": "Power"
