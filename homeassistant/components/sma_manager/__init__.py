@@ -12,7 +12,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
-    """Setup an SMA Manager config entry."""
+    """Set up an SMA Manager config entry."""
 
     data = config.data
     sma = SMA(
