@@ -120,6 +120,7 @@ class Airtouch5ClimateEntity(ClimateEntity, Airtouch5Entity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
 
 class Airtouch5AC(Airtouch5ClimateEntity):
@@ -149,12 +150,12 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.HEAT)
 
         self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.TURN_OFF
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         )
-        if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
-            self._attr_supported_features |= ClimateEntityFeature.TURN_ON
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
         self._attr_fan_modes = []
         if ability.supports_fan_speed_quiet:
