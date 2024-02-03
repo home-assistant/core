@@ -87,9 +87,10 @@ class SwitchgridCoordinator(DataUpdateCoordinator[list[Event]]):
 
     def next_event(self):
         now = dt_util.now()
-        return list(
+        return next(
             filter(
                 lambda event: event["startUtc"] > now,
                 self.data["events"],
-            )
-        )[0]
+            ),
+            None,
+        )
