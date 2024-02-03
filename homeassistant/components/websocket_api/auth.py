@@ -80,9 +80,7 @@ class AuthPhase:
             raise Disconnect from err
 
         if (access_token := valid_msg.get("access_token")) and (
-            refresh_token := await self._hass.auth.async_validate_access_token(
-                access_token
-            )
+            refresh_token := self._hass.auth.async_validate_access_token(access_token)
         ):
             conn = ActiveConnection(
                 self._logger,

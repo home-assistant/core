@@ -172,6 +172,7 @@ def async_setup_rpc_attribute_entities(
     coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     assert coordinator
 
+    polling_coordinator = None
     if not (sleep_period := config_entry.data[CONF_SLEEP_PERIOD]):
         polling_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc_poll
         assert polling_coordinator

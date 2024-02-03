@@ -38,6 +38,7 @@ CONF_TARIFFS = "tariffs"
 CONF_TARIFF = "tariff"
 CONF_TARIFF_ENTITY = "tariff_entity"
 CONF_CRON_PATTERN = "cron"
+CONF_SENSOR_ALWAYS_AVAILABLE = "always_available"
 
 ATTR_TARIFF = "tariff"
 ATTR_TARIFFS = "tariffs"

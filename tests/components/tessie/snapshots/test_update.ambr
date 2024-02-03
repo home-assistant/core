@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_updates[update.test_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.test_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Update',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': <UpdateEntityFeature: 5>,
+    'translation_key': 'update',
+    'unique_id': 'VINVINVIN-update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_updates[update.test_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'entity_picture': 'https://brands.home-assistant.io/_/tessie/icon.png',
+      'friendly_name': 'Test Update',
+      'in_progress': False,
+      'installed_version': '2023.38.6',
+      'latest_version': '2023.44.30.4',
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 5>,
+      'title': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.test_update',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

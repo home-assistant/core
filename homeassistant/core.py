@@ -2019,9 +2019,35 @@ class ServiceRegistry:
     def async_services(self) -> dict[str, dict[str, Service]]:
         """Return dictionary with per domain a list of available services.
 
+        This method makes a copy of the registry. This function is expensive,
+        and should only be used if has_service is not sufficient.
+
         This method must be run in the event loop.
         """
         return {domain: service.copy() for domain, service in self._services.items()}
+
+    @callback
+    def async_services_for_domain(self, domain: str) -> dict[str, Service]:
+        """Return dictionary with per domain a list of available services.
+
+        This method makes a copy of the registry for the domain.
+
+        This method must be run in the event loop.
+        """
+        return self._services.get(domain, {}).copy()
+
+    @callback
+    def async_services_internal(self) -> dict[str, dict[str, Service]]:
+        """Return dictionary with per domain a list of available services.
+
+        This method DOES NOT make a copy of the services like async_services does.
+        It is only expected to be called from the Home Assistant internals
+        as a performance optimization when the caller is not going to modify the
+        returned data.
+
+        This method must be run in the event loop.
+        """
+        return self._services
 
     def has_service(self, domain: str, service: str) -> bool:
         """Test if specified service exists.
