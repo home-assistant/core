@@ -2054,7 +2054,7 @@ async def test_state_translated(
         return {}
 
     with patch(
-        "homeassistant.helpers.template.async_get_cached_translations",
+        "homeassistant.helpers.translation.async_get_cached_translations",
         side_effect=mock_get_cached_translations,
     ):
         tpl8 = template.Template('{{ state_translated("light.hue_5678") }}', hass)

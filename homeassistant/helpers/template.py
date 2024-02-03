@@ -80,7 +80,7 @@ from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
 from .singleton import singleton
-from .translation import async_get_cached_translations
+from .translation import async_translate_state
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -904,57 +904,21 @@ class StateTranslated:
 
     def __call__(self, entity_id: str) -> str | None:
         """Retrieve translated state if available."""
-        language = self._hass.config.language
         state = _get_state_if_valid(self._hass, entity_id)
 
         if state is None:
             return STATE_UNKNOWN
 
-        if state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
-            return state.state
-
+        state_value = state.state
         domain = state.domain
-        device_class = "_"
-        if "device_class" in state.attributes:
-            device_class = state.attributes["device_class"]
-
-        translations_entity_component = async_get_cached_translations(
-            self._hass, language, "entity_component", domain
-        )
-        if len(translations_entity_component) > 0:
-            key = f"component.{domain}.entity_component.{device_class}.state.{state.state}"
-            if key in translations_entity_component:
-                return str(translations_entity_component[key])
-            key = f"component.{domain}.entity_component._.state.{state.state}"
-            if key in translations_entity_component:
-                return str(translations_entity_component[key])
-
+        device_class = state.attributes.get("device_class")
         entry = entity_registry.async_get(self._hass).async_get(entity_id)
-        if (
-            entry is not None
-            and entry.unique_id is not None
-            and hasattr(entry, "translation_key")
-            and entry.translation_key is not None
-        ):
-            key = f"component.{entry.platform}.entity.{domain}.{entry.translation_key}.state.{state.state}"
-            translations_entity = async_get_cached_translations(
-                self._hass, language, "entity"
-            )
-            if len(translations_entity) > 0 and key in translations_entity:
-                return str(translations_entity[key])
+        platform = None if entry is None else entry.platform
+        translation_key = None if entry is None else entry.translation_key
 
-        translations_state = async_get_cached_translations(
-            self._hass, language, "state"
+        return async_translate_state(
+            self._hass, state_value, domain, platform, translation_key, device_class
         )
-        if len(translations_state) > 0:
-            key = f"component.{domain}.state.{device_class}.{state.state}"
-            if key in translations_state:
-                return str(translations_state[key])
-            key = f"component.{domain}.state._.{state.state}"
-            if key in translations_state:
-                return str(translations_state[key])
-        _LOGGER.warning("No translation found for entity: %s", entity_id)
-        return state.state
 
     def __repr__(self) -> str:
         """Representation of Translated state."""
