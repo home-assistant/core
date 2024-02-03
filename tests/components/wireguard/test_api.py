@@ -1,6 +1,6 @@
 """Tests for the WireGuard status API."""
 
-from datetime import datetime as dt
+from datetime import UTC, datetime as dt
 import json
 from unittest.mock import patch
 
@@ -73,7 +73,7 @@ def test_peer_from_data() -> None:
 
     manual_peer2 = WireGuardPeer(
         name="Dummy",
-        latest_handshake=dt.fromtimestamp(float(1)),
+        latest_handshake=dt.fromtimestamp(float(1), UTC),
         transfer_rx=0,
         transfer_tx=0,
     )
