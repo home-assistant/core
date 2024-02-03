@@ -6,6 +6,7 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, cast
 
+from zigpy.state import State
 from zigpy.zcl.clusters.general import Ota
 
 from homeassistant.const import CONF_TYPE, Platform
@@ -102,6 +103,43 @@ class ProbeEndpoint:
         self.discover_multi_entities(endpoint)
         self.discover_by_cluster_id(endpoint)
         self.discover_multi_entities(endpoint, config_diagnostic_entities=True)
+        zha_regs.ZHA_ENTITIES.clean_up()
+
+    @callback
+    def discover_coordinator_entities(self, endpoint: Endpoint) -> None:
+        """Process an endpoint on a zigpy coordinator device."""
+        if endpoint.id != 1 or not endpoint.device.is_coordinator:
+            return
+        _LOGGER.debug(
+            "Discovering coordinator entities for endpoint: %s-%s",
+            str(endpoint.device.ieee),
+            endpoint.id,
+        )
+
+        state: State = endpoint.device.gateway.application_controller.state
+        platforms: dict[Platform, list] = get_zha_data(endpoint.device.hass).platforms
+
+        @callback
+        def process_counters(counter_groups: str) -> None:
+            for counter_group, counters in getattr(state, counter_groups).items():
+                for counter in counters:
+                    platforms[Platform.SENSOR].append(
+                        (
+                            sensor.CoordinatorCounterSensor,
+                            (
+                                f"{endpoint.unique_id}_{counter_groups}_{counter_group}_{counter}",
+                                endpoint.device,
+                                counter_groups,
+                                counter_group,
+                                counter,
+                            ),
+                        )
+                    )
+
+        process_counters("counters")
+        process_counters("broadcast_counters")
+        process_counters("device_counters")
+        process_counters("group_counters")
         zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
