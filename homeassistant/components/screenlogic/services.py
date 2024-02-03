@@ -8,7 +8,12 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import selector
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    selector,
+)
+from homeassistant.helpers.service import async_extract_config_entry_ids
 
 from .const import (
     ATTR_COLOR_MODE,
@@ -36,10 +41,19 @@ BASE_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
-SET_COLOR_MODE_SCHEMA = BASE_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_COLOR_MODE): vol.In(SUPPORTED_COLOR_MODES),
-    }
+SET_COLOR_MODE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                {
+                    "integration": DOMAIN,
+                }
+            ),
+            **cv.ENTITY_SERVICE_FIELDS,
+            vol.Required(ATTR_COLOR_MODE): vol.In(SUPPORTED_COLOR_MODES),
+        }
+    ),
+    cv.has_at_least_one_key(ATTR_CONFIG_ENTRY, *cv.ENTITY_SERVICE_FIELDS),
 )
 
 TURN_ON_SUPER_CHLOR_SCHEMA = BASE_SERVICE_SCHEMA.extend(
@@ -55,59 +69,91 @@ TURN_ON_SUPER_CHLOR_SCHEMA = BASE_SERVICE_SCHEMA.extend(
 def async_load_screenlogic_services(hass: HomeAssistant):
     """Set up services for the ScreenLogic integration."""
 
-    def get_coordinator(
-        service_call: ServiceCall,
-    ) -> ScreenlogicDataUpdateCoordinator:
+    async def extract_screenlogic_config_entry_ids(service_call: ServiceCall):
         if not (
-            coordinator := hass.data[DOMAIN].get(service_call.data[ATTR_CONFIG_ENTRY])
+            screenlogic_entry_ids := [
+                entry_id
+                for entry_id in await async_extract_config_entry_ids(hass, service_call)
+                if (entry := hass.config_entries.async_get_entry(entry_id))
+                and entry.domain == DOMAIN
+            ]
         ):
             raise HomeAssistantError(
                 f"Failed to call service '{service_call.service}'. Config entry for"
-                " not found"
+                " target not found"
             )
-        return coordinator
+        return screenlogic_entry_ids
+
+    async def get_coordinators(
+        service_call: ServiceCall,
+    ) -> list[ScreenlogicDataUpdateCoordinator]:
+        if entry_id := service_call.data.get(ATTR_CONFIG_ENTRY):
+            entry_ids = [entry_id]
+        else:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "service_target_deprecation",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="service_target_deprecation",
+            )
+            entry_ids = await extract_screenlogic_config_entry_ids(service_call)
+
+        if not (
+            coordinators := [hass.data[DOMAIN].get(entry_id) for entry_id in entry_ids]
+        ):
+            raise ServiceValidationError(
+                f"Failed to call service '{service_call.service}'. Config entry not loaded"
+            )
+        return coordinators
 
     async def async_set_color_mode(service_call: ServiceCall) -> None:
-        coordinator: ScreenlogicDataUpdateCoordinator = get_coordinator(service_call)
         color_num = SUPPORTED_COLOR_MODES[service_call.data[ATTR_COLOR_MODE]]
-        _LOGGER.debug(
-            "Service %s called on %s with mode %s",
-            SERVICE_SET_COLOR_MODE,
-            coordinator.gateway.name,
-            color_num,
-        )
-        try:
-            await coordinator.gateway.async_set_color_lights(color_num)
-            # Debounced refresh to catch any secondary changes in the device
-            await coordinator.async_request_refresh()
-        except ScreenLogicError as error:
-            raise HomeAssistantError(error) from error
+        coordinator: ScreenlogicDataUpdateCoordinator
+        for coordinator in await get_coordinators(service_call):
+            _LOGGER.debug(
+                "Service %s called on %s with mode %s",
+                SERVICE_SET_COLOR_MODE,
+                coordinator.gateway.name,
+                color_num,
+            )
+            try:
+                await coordinator.gateway.async_set_color_lights(color_num)
+                # Debounced refresh to catch any secondary changes in the device
+                await coordinator.async_request_refresh()
+            except ScreenLogicError as error:
+                raise HomeAssistantError(error) from error
 
     async def async_set_super_chlor(
         service_call: ServiceCall,
         is_on: bool,
         runtime: int | None = None,
     ) -> None:
-        coordinator: ScreenlogicDataUpdateCoordinator = get_coordinator(service_call)
-        if EQUIPMENT_FLAG.CHLORINATOR not in coordinator.gateway.equipment_flags:
-            raise ServiceValidationError(
-                f"Equipment configuration for {coordinator.gateway.name} does not support {service_call.service}"
+        coordinator: ScreenlogicDataUpdateCoordinator
+        for coordinator in await get_coordinators(service_call):
+            if EQUIPMENT_FLAG.CHLORINATOR not in coordinator.gateway.equipment_flags:
+                raise ServiceValidationError(
+                    f"Equipment configuration for {coordinator.gateway.name} does not"
+                    f" support {service_call.service}"
+                )
+            rt_log = f" with runtime {runtime}" if runtime else ""
+            _LOGGER.debug(
+                "Service %s called on %s%s",
+                service_call.service,
+                coordinator.gateway.name,
+                rt_log,
             )
-        rt_log = f" with runtime {runtime}" if runtime else ""
-        _LOGGER.debug(
-            "Service %s called on %s%s",
-            service_call.service,
-            coordinator.gateway.name,
-            rt_log,
-        )
-        try:
-            await coordinator.gateway.async_set_scg_config(
-                super_chlor_timer=runtime, super_chlorinate=is_on
-            )
-            # Debounced refresh to catch any secondary changes in the device
-            await coordinator.async_request_refresh()
-        except ScreenLogicError as error:
-            raise HomeAssistantError(error) from error
+            try:
+                await coordinator.gateway.async_set_scg_config(
+                    super_chlor_timer=runtime, super_chlorinate=is_on
+                )
+                # Debounced refresh to catch any secondary changes in the device
+                await coordinator.async_request_refresh()
+            except ScreenLogicError as error:
+                raise HomeAssistantError(error) from error
 
     async def async_start_super_chlor(service_call: ServiceCall) -> None:
         runtime = service_call.data[ATTR_RUNTIME]

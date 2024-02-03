@@ -2,7 +2,7 @@
 set_color_mode:
   fields:
     config_entry:
-      required: true
+      required: false
       selector:
         config_entry:
           integration: screenlogic
