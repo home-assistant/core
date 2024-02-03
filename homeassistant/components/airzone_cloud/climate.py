@@ -145,6 +145,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
 
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -179,7 +180,6 @@ class AirzoneDeviceClimate(AirzoneClimate):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -223,7 +223,6 @@ class AirzoneDeviceGroupClimate(AirzoneClimate):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
