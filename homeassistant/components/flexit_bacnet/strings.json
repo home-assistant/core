@@ -68,6 +68,11 @@
       "heat_exchanger_speed": {
         "name": "Heat exchanger speed"
       }
+    },
+    "switch": {
+      "electric_heater": {
+        "name": "Electric heater"
+      }
     }
   }
 }

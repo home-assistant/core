@@ -15,7 +15,7 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN as FLO_DOMAIN, LOGGER
 
 
-class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Flo device object."""
 
     def __init__(
