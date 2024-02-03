@@ -98,7 +98,7 @@ class Coordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Refresh data from SMA Manager."""
-        await self.sma.refresh_data()
+        await self.sma.async_refresh_data()
 
 
 class SensorBase(CoordinatorEntity, SensorEntity):

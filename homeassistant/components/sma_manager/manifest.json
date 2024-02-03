@@ -4,7 +4,7 @@
     "codeowners": ["DEADSEC-SECURITY"],
     "documentation": "",
     "iot_class": "local_polling",
-    "requirements": ["sma-manager~=2.0.0"],
+    "requirements": ["sma-manager~=2.1.0"],
     "version": "0.0.0",
     "config_flow": true
 }

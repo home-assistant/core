@@ -3,7 +3,7 @@
 
 import logging
 import re
-from sma_manager_api import SMA
+from sma_manager_api.SMA import SMA
 from voluptuous import Required, Schema
 from homeassistant import config_entries
 from .const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_REFRESH_INTERVAL, DOMAIN

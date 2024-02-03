@@ -1,10 +1,11 @@
 """The SMA Manager integration."""
 
-from sma_manager_api import SMA
+from sma_manager_api.SMA import SMA
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import Platform
 
 from .const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_REFRESH_INTERVAL, DOMAIN
 
