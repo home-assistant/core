@@ -21,7 +21,7 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up iotty from a config entry."""
-    _LOGGER.debug("async_setup_entry DOMAIN %s entry_id=%s", DOMAIN, entry.entry_id)
+    _LOGGER.debug("async_setup_entry entry_id=%s", entry.entry_id)
 
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
