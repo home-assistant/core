@@ -55,19 +55,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hub = Hub(pv_request)
             await hub.query_firmware()
             device_info = await async_get_device_info(hub)
-            if hub.role != "Primary":
-                # this should be caught in config_flow, but account for a hub changing roles (which only happens manually by a user)
-                _LOGGER.error(
-                    "%s (%s) is performing role of %s Hub. Only the Primary Hub can manage shades",
-                    hub.name,
-                    hub.hub_address,
-                    hub.role,
-                )
-                return False
-            if CONF_API_VERSION not in config:
-                new_data = {**entry.data}
-                new_data[CONF_API_VERSION] = hub.api_version
-                hass.config_entries.async_update_entry(entry, data=new_data)
+        if hub.role != "Primary":
+            # this should be caught in config_flow, but account for a hub changing roles (which only happens manually by a user)
+            _LOGGER.error(
+                "%s (%s) is performing role of %s Hub. Only the Primary Hub can manage shades",
+                hub.name,
+                hub.hub_address,
+                hub.role,
+            )
+            return False
+        if CONF_API_VERSION not in config:
+            new_data = {**entry.data}
+            new_data[CONF_API_VERSION] = hub.api_version
+            hass.config_entries.async_update_entry(entry, data=new_data)
 
         async with asyncio.timeout(10):
             rooms = Rooms(pv_request)
