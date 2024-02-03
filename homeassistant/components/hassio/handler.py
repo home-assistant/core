@@ -330,6 +330,7 @@ class HassIO:
         self.loop = loop
         self.websession = websession
         self._ip = ip
+        self._base_url = URL(f"http://{ip}")
 
     @_api_bool
     def is_connected(self) -> Coroutine:
@@ -559,14 +560,20 @@ class HassIO:
         This method is a coroutine.
         """
         url = f"http://{self._ip}{command}"
-        if url != str(URL(url)):
+        joined_url = self._base_url.join(URL(command))
+        # This check is to make sure the normalized URL string
+        # is the same as the URL string that was passed in. If
+        # they are different, then the passed in command URL
+        # contained characters that were removed by the normalization
+        # such as ../../../../etc/passwd
+        if url != str(joined_url):
             _LOGGER.error("Invalid request %s", command)
             raise HassioAPIError()
 
         try:
             request = await self.websession.request(
                 method,
-                f"http://{self._ip}{command}",
+                joined_url,
                 json=payload,
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (
@@ -584,7 +591,7 @@ class HassIO:
             if return_text:
                 return await request.text(encoding="utf-8")
 
-            return await request.json()
+            return await request.json(encoding="utf-8")
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on %s request", command)

@@ -858,6 +858,11 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
                     "longitude": 2.0,
                     "radius": 3.0,
                 },
+                {
+                    "latitude": 1,
+                    "longitude": 2,
+                    "radius": 3,
+                },
             ),
             (
                 None,
@@ -865,7 +870,6 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
                 {},
                 {"latitude": 1.0},
                 {"longitude": 1.0},
-                {"latitude": 1.0, "longitude": "1.0"},
             ),
         ),
     ),
@@ -1108,3 +1112,32 @@ def test_condition_selector_schema(
 def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test trigger sequence selector."""
     _test_selector("trigger", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {"data": "test", "scale": 5},
+            ("test",),
+            (False, 0, []),
+        ),
+        (
+            {"data": "test"},
+            ("test",),
+            (True, 1, []),
+        ),
+        (
+            {
+                "data": "test",
+                "scale": 5,
+                "error_correction_level": selector.QrErrorCorrectionLevel.HIGH,
+            },
+            ("test",),
+            (True, 1, []),
+        ),
+    ),
+)
+def test_qr_code_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test QR code selector."""
+    _test_selector("qr_code", schema, valid_selections, invalid_selections)

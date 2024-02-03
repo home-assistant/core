@@ -179,7 +179,7 @@ class UpdateCoordinatorDataType(TypedDict):
 
 class FritzBoxTools(
     update_coordinator.DataUpdateCoordinator[UpdateCoordinatorDataType]
-):
+):  # pylint: disable=hass-enforce-coordinator-module
     """FritzBoxTools class."""
 
     def __init__(
@@ -757,7 +757,7 @@ class FritzBoxTools(
             raise HomeAssistantError("Service not supported") from ex
 
 
-class AvmWrapper(FritzBoxTools):
+class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-module
     """Setup AVM wrapper for API calls."""
 
     async def _async_service_call(

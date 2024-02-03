@@ -104,6 +104,23 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
+# ignore misc is required as vol.Invalid is not typed
+# mypy error: Class cannot subclass "Invalid" (has type "Any")
+class InvalidData(vol.Invalid):  # type: ignore[misc]
+    """Invalid data provided."""
+
+    def __init__(
+        self,
+        message: str,
+        path: list[str | vol.Marker] | None,
+        error_message: str | None,
+        schema_errors: dict[str, Any],
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(message, path, error_message, **kwargs)
+        self.schema_errors = schema_errors
+
+
 class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
@@ -163,6 +180,29 @@ def _async_flow_handler_to_flow_result(
             result["step_id"] = flow.cur_step["step_id"]
         results.append(result)
     return results
+
+
+def _map_error_to_schema_errors(
+    schema_errors: dict[str, Any],
+    error: vol.Invalid,
+    data_schema: vol.Schema,
+) -> None:
+    """Map an error to the correct position in the schema_errors.
+
+    Raises ValueError if the error path could not be found in the schema.
+    Limitation: Nested schemas are not supported and a ValueError will be raised.
+    """
+    schema = data_schema.schema
+    error_path = error.path
+    if not error_path or (path_part := error_path[0]) not in schema:
+        raise ValueError("Could not find path in schema")
+
+    if len(error_path) > 1:
+        raise ValueError("Nested schemas are not supported")
+
+    # path_part can also be vol.Marker, but we need a string key
+    path_part_str = str(path_part)
+    schema_errors[path_part_str] = error.error_message
 
 
 class FlowManager(abc.ABC):
@@ -334,7 +374,26 @@ class FlowManager(abc.ABC):
         if (
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
-            user_input = data_schema(user_input)
+            try:
+                user_input = data_schema(user_input)
+            except vol.Invalid as ex:
+                raised_errors = [ex]
+                if isinstance(ex, vol.MultipleInvalid):
+                    raised_errors = ex.errors
+
+                schema_errors: dict[str, Any] = {}
+                for error in raised_errors:
+                    try:
+                        _map_error_to_schema_errors(schema_errors, error, data_schema)
+                    except ValueError:
+                        # If we get here, the path in the exception does not exist in the schema.
+                        schema_errors.setdefault("base", []).append(str(error))
+                raise InvalidData(
+                    "Schema validation failed",
+                    path=ex.path,
+                    error_message=ex.error_message,
+                    schema_errors=schema_errors,
+                ) from ex
 
         # Handle a menu navigation choice
         if cur_step["type"] == FlowResultType.MENU and user_input:

@@ -119,11 +119,18 @@ async def async_api_discovery(
 
     Async friendly.
     """
-    discovery_endpoints = [
-        alexa_entity.serialize_discovery()
-        for alexa_entity in async_get_entities(hass, config)
-        if config.should_expose(alexa_entity.entity_id)
-    ]
+    discovery_endpoints: list[dict[str, Any]] = []
+    for alexa_entity in async_get_entities(hass, config):
+        if not config.should_expose(alexa_entity.entity_id):
+            continue
+        try:
+            discovered_serialized_entity = alexa_entity.serialize_discovery()
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Unable to serialize %s for discovery: %s", alexa_entity.entity_id, exc
+            )
+        else:
+            discovery_endpoints.append(discovered_serialized_entity)
 
     return directive.response(
         name="Discover.Response",
@@ -171,6 +178,8 @@ async def async_api_turn_on(
     service = SERVICE_TURN_ON
     if domain == cover.DOMAIN:
         service = cover.SERVICE_OPEN_COVER
+    elif domain == climate.DOMAIN:
+        service = climate.SERVICE_TURN_ON
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_ON
     elif domain == humidifier.DOMAIN:
@@ -220,6 +229,8 @@ async def async_api_turn_off(
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
         service = cover.SERVICE_CLOSE_COVER
+    elif domain == climate.DOMAIN:
+        service = climate.SERVICE_TURN_OFF
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
     elif domain == humidifier.DOMAIN:
