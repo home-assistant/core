@@ -1,6 +1,6 @@
 """API for the WIreGuard integration."""
 from dataclasses import dataclass
-from datetime import datetime as dt
+from datetime import UTC, datetime as dt
 
 import requests
 
@@ -48,7 +48,7 @@ def peer_from_data(name: str, data: dict[str, str | int]) -> WireGuardPeer:
     return WireGuardPeer(
         name=name,
         latest_handshake=(
-            dt.fromtimestamp(float(data[ATTR_LATEST_HANDSHAKE]))
+            dt.fromtimestamp(float(data[ATTR_LATEST_HANDSHAKE]), UTC)
             if int(data[ATTR_LATEST_HANDSHAKE]) > 0
             else None
         ),
