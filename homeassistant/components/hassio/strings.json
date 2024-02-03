@@ -1,4 +1,9 @@
 {
+  "config": {
+    "abort": {
+      "not_implemented": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
   "system_health": {
     "info": {
       "agent_version": "Agent Version",
