@@ -47,21 +47,6 @@
     'state': '23.75',
   })
 # ---
-# name: test_sensors[sensor.technove_station_current]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'TechnoVE Station Current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_current',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '23.75',
-  })
-# ---
 # name: test_sensors[sensor.technove_station_input_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -96,21 +81,6 @@
   })
 # ---
 # name: test_sensors[sensor.technove_station_input_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'TechnoVE Station Input voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_input_voltage',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '238',
-  })
-# ---
-# name: test_sensors[sensor.technove_station_input_voltage]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -173,84 +143,6 @@
     'state': '12.34',
   })
 # ---
-# name: test_sensors[sensor.technove_station_last_session_energy_usage]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'TechnoVE Station Last session energy usage',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_last_session_energy_usage',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '12.34',
-  })
-# ---
-# name: test_sensors[sensor.technove_station_max_current-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.technove_station_max_current',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Max current',
-    'platform': 'technove',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'max_current',
-    'unique_id': 'AA:AA:AA:AA:AA:BB_max_current',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[sensor.technove_station_max_current-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'TechnoVE Station Max current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_max_current',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '24',
-  })
-# ---
-# name: test_sensors[sensor.technove_station_max_current]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'TechnoVE Station Max current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_max_current',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '24',
-  })
-# ---
 # name: test_sensors[sensor.technove_station_max_station_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -285,21 +177,6 @@
   })
 # ---
 # name: test_sensors[sensor.technove_station_max_station_current-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'TechnoVE Station Max station current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_max_station_current',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '32',
-  })
-# ---
-# name: test_sensors[sensor.technove_station_max_station_current]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -362,21 +239,6 @@
     'state': '238',
   })
 # ---
-# name: test_sensors[sensor.technove_station_output_voltage]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'TechnoVE Station Output voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_output_voltage',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '238',
-  })
-# ---
 # name: test_sensors[sensor.technove_station_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -411,21 +273,6 @@
   })
 # ---
 # name: test_sensors[sensor.technove_station_signal_strength-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'TechnoVE Station Signal strength',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_signal_strength',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-82',
-  })
-# ---
-# name: test_sensors[sensor.technove_station_signal_strength]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -495,24 +342,6 @@
     'state': 'plugged_charging',
   })
 # ---
-# name: test_sensors[sensor.technove_station_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'TechnoVE Station Status',
-      'options': list([
-        'unplugged',
-        'plugged_waiting',
-        'plugged_charging',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_status',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'plugged_charging',
-  })
-# ---
 # name: test_sensors[sensor.technove_station_total_energy_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -561,21 +390,6 @@
     'state': '1234',
   })
 # ---
-# name: test_sensors[sensor.technove_station_total_energy_usage]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'TechnoVE Station Total energy usage',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_total_energy_usage',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1234',
-  })
-# ---
 # name: test_sensors[sensor.technove_station_wi_fi_network_name-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -608,19 +422,6 @@
   })
 # ---
 # name: test_sensors[sensor.technove_station_wi_fi_network_name-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Wi-Fi network name',
-      'icon': 'mdi:wifi',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.technove_station_wi_fi_network_name',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Connecting...',
-  })
-# ---
-# name: test_sensors[sensor.technove_station_wi_fi_network_name]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TechnoVE Station Wi-Fi network name',
