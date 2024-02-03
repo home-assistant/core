@@ -8,7 +8,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
 from .api import WireGuardAPI, WireGuardError
-from .const import DEFAULT_HOST, DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -40,7 +40,7 @@ class WireGuardConfigFlow(ConfigFlow, domain=DOMAIN):
             except WireGuardError:
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_create_entry(title=DOMAIN, data=user_input)
+                return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
