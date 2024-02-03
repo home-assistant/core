@@ -40,16 +40,7 @@ ADVANTAGE_AIR_HVAC_MODES = {
 }
 HASS_HVAC_MODES = {v: k for k, v in ADVANTAGE_AIR_HVAC_MODES.items()}
 
-ADVANTAGE_AIR_FAN_MODES = {
-    "autoAA": FAN_AUTO,
-    "low": FAN_LOW,
-    "medium": FAN_MEDIUM,
-    "high": FAN_HIGH,
-}
-HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
-FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
 
-ADVANTAGE_AIR_AUTOFAN = "aaAutoFanModeEnabled"
 ADVANTAGE_AIR_MYZONE = "MyZone"
 ADVANTAGE_AIR_MYAUTO = "MyAuto"
 ADVANTAGE_AIR_MYAUTO_ENABLED = "myAutoModeEnabled"
