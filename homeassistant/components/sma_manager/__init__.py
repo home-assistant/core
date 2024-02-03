@@ -5,9 +5,9 @@ from sma_manager_api.SMA import SMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import Platform
+from homeassistant.const import Platform, CONF_PORT, CONF_NAME, CONF_HOST
 
-from .const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_REFRESH_INTERVAL, DOMAIN
+from .const import CONF_REFRESH_INTERVAL, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
