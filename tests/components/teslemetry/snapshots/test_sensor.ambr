@@ -879,7 +879,7 @@
     'entity_id': 'sensor.test_destination',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_distance_to_arrival-entry]
@@ -930,7 +930,7 @@
     'entity_id': 'sensor.test_distance_to_arrival',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_driver_temperature_setting-entry]
@@ -1294,7 +1294,7 @@
     'entity_id': 'sensor.test_shift_state',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_speed-entry]
@@ -1345,7 +1345,7 @@
     'entity_id': 'sensor.test_speed',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_state_of_charge_at_arrival-entry]
@@ -1393,7 +1393,7 @@
     'entity_id': 'sensor.test_state_of_charge_at_arrival',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_time_to_arrival-entry]
@@ -1437,7 +1437,7 @@
     'entity_id': 'sensor.test_time_to_arrival',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_time_to_full_charge-entry]
@@ -1768,7 +1768,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': 'mdi:ev-station',
     'original_name': 'Fault state',
     'platform': 'teslemetry',
@@ -1782,7 +1782,6 @@
 # name: test_sensors[sensor.wall_connector_fault_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
       'friendly_name': 'Wall Connector Fault state',
       'icon': 'mdi:ev-station',
     }),
@@ -1813,7 +1812,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': 'mdi:ev-station',
     'original_name': 'Fault state',
     'platform': 'teslemetry',
@@ -1827,7 +1826,6 @@
 # name: test_sensors[sensor.wall_connector_fault_state_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
       'friendly_name': 'Wall Connector Fault state',
       'icon': 'mdi:ev-station',
     }),
@@ -1968,7 +1966,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': 'mdi:ev-station',
     'original_name': 'State',
     'platform': 'teslemetry',
@@ -1982,7 +1980,6 @@
 # name: test_sensors[sensor.wall_connector_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
       'friendly_name': 'Wall Connector State',
       'icon': 'mdi:ev-station',
     }),
@@ -2013,7 +2010,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': 'mdi:ev-station',
     'original_name': 'State',
     'platform': 'teslemetry',
@@ -2027,7 +2024,6 @@
 # name: test_sensors[sensor.wall_connector_state_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
       'friendly_name': 'Wall Connector State',
       'icon': 'mdi:ev-station',
     }),
