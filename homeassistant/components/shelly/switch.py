@@ -59,7 +59,7 @@ MOTION_SWITCH = BlockSwitchDescription(
 )
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True, kw_only=True)
 class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     """Class to describe a RPC virtual switch."""
 
