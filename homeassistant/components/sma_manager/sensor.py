@@ -115,6 +115,7 @@ class SensorBase(CoordinatorEntity, SensorEntity):
     """
 
     _attr_name: str
+    _attr_has_entity_name = True
     _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
