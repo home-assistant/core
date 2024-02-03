@@ -95,7 +95,7 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
                 e.title.lower() for e in self._async_current_entries()
             ]
             if any(t for t in existing_entry_titles if t == title.lower()):
-                for possible_title in [f"{title}{i}" for i in range(10)]:
+                for possible_title in [f"{title}{i}" for i in range(2, 11)]:
                     if possible_title.lower() in existing_entry_titles:
                         continue
                     title = possible_title
