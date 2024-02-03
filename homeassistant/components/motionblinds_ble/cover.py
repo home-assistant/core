@@ -8,6 +8,14 @@ from functools import partial
 import logging
 from typing import Any
 
+from motionblindsble.const import (
+    SETTING_CALIBRATION_DISCONNECT_TIME,
+    MotionConnectionType,
+    MotionRunningType,
+    MotionSpeedLevel,
+)
+from motionblindsble.device import MotionDevice, MotionPositionInfo
+
 from homeassistant.components.bluetooth import (
     BluetoothCallbackMatcher,
     BluetoothChange,
@@ -26,7 +34,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -43,13 +51,6 @@ from .const import (
     MotionBlindType,
     MotionCalibrationType,
 )
-from .motionblinds_ble.const import (
-    SETTING_CALIBRATION_DISCONNECT_TIME,
-    MotionConnectionType,
-    MotionRunningType,
-    MotionSpeedLevel,
-)
-from .motionblinds_ble.device import MotionDevice, MotionPositionInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ def no_run_command(func: Callable) -> Callable:
     return generic_method_decorator(lambda self: self.no_run_command_function, func)
 
 
-@dataclass
+@dataclass(frozen=True)
 class MotionCoverEntityDescription(CoverEntityDescription):
     """Entity description of a cover entity with default values."""
 
@@ -136,7 +137,10 @@ class GenericBlind(CoverEntity):
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the blind."""
         _LOGGER.info(
-            f"({entry.data[CONF_MAC_CODE]}) Setting up {entry.data[CONF_BLIND_TYPE]} cover entity ({BLIND_TO_ENTITY_TYPE[entry.data[CONF_BLIND_TYPE]].__name__})"
+            "(%s) Setting up %s cover entity (%s)",
+            entry.data[CONF_MAC_CODE],
+            entry.data[CONF_BLIND_TYPE],
+            BLIND_TO_ENTITY_TYPE[entry.data[CONF_BLIND_TYPE]].__name__,
         )
         super().__init__()
         self.entity_description = COVER_TYPES[entry.data[CONF_BLIND_TYPE]]
@@ -189,7 +193,7 @@ class GenericBlind(CoverEntity):
 
     async def async_update(self) -> None:
         """Update state, called by HA if there is a poll interval and by the service homeassistant.update_entity."""
-        _LOGGER.info(f"({self.config_entry.data[CONF_MAC_CODE]}) Updating entity")
+        _LOGGER.info("(%s) Updating entity", self.config_entry.data[CONF_MAC_CODE])
         await self.async_connect()
 
     def async_refresh_disconnect_timer(
@@ -218,14 +222,14 @@ class GenericBlind(CoverEntity):
     @run_command
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop moving the blind."""
-        _LOGGER.info(f"({self.config_entry.data[CONF_MAC_CODE]}) Stopping")
+        _LOGGER.info("(%s) Stopping", self.config_entry.data[CONF_MAC_CODE])
         await self._device.stop()
 
     @run_command
     async def async_favorite(self, **kwargs: Any) -> None:
         """Move the blind to the favorite position."""
         _LOGGER.info(
-            f"({self.config_entry.data[CONF_MAC_CODE]}) Going to favorite position"
+            "(%s) Going to favorite position", self.config_entry.data[CONF_MAC_CODE]
         )
         await self._device.favorite()
         self.async_update_running(MotionRunningType.UNKNOWN)
@@ -234,7 +238,8 @@ class GenericBlind(CoverEntity):
     async def async_speed(self, speed_level: MotionSpeedLevel, **kwargs: Any) -> None:
         """Change the speed level of the device."""
         _LOGGER.info(
-            f"({self.config_entry.data[CONF_MAC_CODE]}) Changing speed to {speed_level.name.lower()}"
+            "(%s) Changing speed to {speed_level.name.lower()}",
+            self.config_entry.data[CONF_MAC_CODE],
         )
         await self._device.speed(speed_level)
 
@@ -269,7 +274,10 @@ class GenericBlind(CoverEntity):
     ) -> None:
         """Update the position of the motor."""
         _LOGGER.debug(
-            f"({self.config_entry.data[CONF_MAC_CODE]}) Received position update: {new_position_percentage}, tilt: {new_angle_percentage}"
+            "(%s) Received position update: %i, tilt: %i",
+            self.config_entry.data[CONF_MAC_CODE],
+            new_position_percentage,
+            new_angle_percentage,
         )
         if isinstance(self, PositionCalibrationBlind):
             self.async_update_calibration(end_position_info)
@@ -285,7 +293,9 @@ class GenericBlind(CoverEntity):
     def async_update_connection(self, connection_type: MotionConnectionType) -> None:
         """Update the connection status."""
         _LOGGER.info(
-            f"({self.config_entry.data[CONF_MAC_CODE]}) {connection_type.title()}"
+            "(%s) %s",
+            self.config_entry.data[CONF_MAC_CODE],
+            connection_type.value.title(),
         )
         self._attr_connection_type = connection_type
         if self._connection_callback is not None:
@@ -313,7 +323,15 @@ class GenericBlind(CoverEntity):
     ) -> None:
         """Update motor status, e.g. position, tilt and battery percentage."""
         _LOGGER.debug(
-            f"({self.config_entry.data[CONF_MAC_CODE]}) Received status update; position: {position_percentage}, tilt: {tilt_percentage}; battery: {battery_percentage}; speed: {speed_level.name if speed_level is not None else None}; top position set: {end_position_info.up}; bottom position set: {end_position_info.down}; favorite position set: {end_position_info.favorite}"
+            "(%s) Received status update; position: %i, tilt: %i; battery: %i; speed: %s; top position set: %s; bottom position set: %s; favorite position set: %s",
+            self.config_entry.data[CONF_MAC_CODE],
+            position_percentage,
+            tilt_percentage,
+            battery_percentage,
+            speed_level.name if speed_level is not None else None,
+            end_position_info.up,
+            end_position_info.down,
+            end_position_info.favorite,
         )
         # Only update position based on feedback when necessary and end positions are set, otherwise cover UI will jump around
         if self._use_status_position_update_ui and end_position_info.up:
@@ -336,7 +354,7 @@ class GenericBlind(CoverEntity):
         self, service_info: BluetoothServiceInfoBleak, change: BluetoothChange
     ) -> None:
         """Update the BLEDevice."""
-        _LOGGER.info(f"({service_info.address}) New BLE device found")
+        _LOGGER.info("(%s) New BLE device found", service_info.address)
         self._device.set_ble_device(service_info.device)
         self.device_rssi = service_info.advertisement.rssi
         if callable(self._signal_strength_callback):
@@ -420,7 +438,7 @@ class PositionBlind(GenericBlind):
         self, ignore_end_positions_not_set: bool = False, **kwargs: Any
     ) -> None:
         """Open the blind."""
-        _LOGGER.info(f"({self.config_entry.data[CONF_MAC_CODE]}) Opening")
+        _LOGGER.info("(%s) Opening", self.config_entry.data[CONF_MAC_CODE])
         self.async_update_running(MotionRunningType.OPENING)
         if await self._device.open(
             ignore_end_positions_not_set=ignore_end_positions_not_set
@@ -434,7 +452,7 @@ class PositionBlind(GenericBlind):
         self, ignore_end_positions_not_set: bool = False, **kwargs: Any
     ) -> None:
         """Close the blind."""
-        _LOGGER.info(f"({self.config_entry.data[CONF_MAC_CODE]}) Closing")
+        _LOGGER.info("(%s) Closing", self.config_entry.data[CONF_MAC_CODE])
         self.async_update_running(MotionRunningType.CLOSING)
         if await self._device.close(
             ignore_end_positions_not_set=ignore_end_positions_not_set
@@ -455,7 +473,9 @@ class PositionBlind(GenericBlind):
         )
 
         _LOGGER.info(
-            f"({self.config_entry.data[CONF_MAC_CODE]}) Setting position to {new_position}"
+            "(%s) Setting position to %i",
+            self.config_entry.data[CONF_MAC_CODE],
+            new_position,
         )
         self.async_update_running(
             MotionRunningType.UNKNOWN
@@ -489,7 +509,7 @@ class TiltBlind(GenericBlind):
         self, ignore_end_positions_not_set: bool = False, **kwargs: Any
     ) -> None:
         """Tilt the blind open."""
-        _LOGGER.info(f"({self.config_entry.data[CONF_MAC_CODE]}) Tilt opening")
+        _LOGGER.info("(%s) Tilt opening", self.config_entry.data[CONF_MAC_CODE])
         self.async_update_running(MotionRunningType.OPENING)
         if await self._device.open_tilt(
             ignore_end_positions_not_set=ignore_end_positions_not_set
@@ -503,7 +523,7 @@ class TiltBlind(GenericBlind):
         self, ignore_end_positions_not_set: bool = False, **kwargs: Any
     ) -> None:
         """Tilt the blind closed."""
-        _LOGGER.info(f"({self.config_entry.data[CONF_MAC_CODE]}) Tilt closing")
+        _LOGGER.info("(%s) Tilt closing", self.config_entry.data[CONF_MAC_CODE])
         self.async_update_running(MotionRunningType.CLOSING)
         if await self._device.close_tilt(
             ignore_end_positions_not_set=ignore_end_positions_not_set
@@ -529,7 +549,9 @@ class TiltBlind(GenericBlind):
         )
 
         _LOGGER.info(
-            f"({self.config_entry.data[CONF_MAC_CODE]}) Setting tilt position to {new_tilt_position}"
+            "(%s) Setting tilt position to %i",
+            self.config_entry.data[CONF_MAC_CODE],
+            new_tilt_position,
         )
         self.async_update_running(
             MotionRunningType.STILL
@@ -584,7 +606,8 @@ class PositionCalibrationBlind(PositionBlind):
         ):
             # Curtain motor will calibrate if not calibrated and moved to some position
             _LOGGER.info(
-                f"({self.config_entry.data[CONF_MAC_CODE]}) Calibration status: calibrating"
+                "(%s) Calibration status: calibrating",
+                self.config_entry.data[CONF_MAC_CODE],
             )
             self._calibration_type = MotionCalibrationType.CALIBRATING
             if callable(self._calibration_callback):
@@ -604,9 +627,12 @@ class PositionCalibrationBlind(PositionBlind):
             in [MotionRunningType.OPENING, MotionRunningType.CLOSING]
             else MotionCalibrationType.UNCALIBRATED
         )
-        _LOGGER.info(
-            f"({self.config_entry.data[CONF_MAC_CODE]}) Calibration status: {new_calibration_type}"
-        )
+        if new_calibration_type != self._calibration_type:
+            _LOGGER.info(
+                "(%s) Calibration status: %s",
+                self.config_entry.data[CONF_MAC_CODE],
+                new_calibration_type,
+            )
 
         if (
             self._calibration_type is MotionCalibrationType.CALIBRATING

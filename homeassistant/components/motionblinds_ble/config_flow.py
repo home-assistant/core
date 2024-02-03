@@ -96,13 +96,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm a single device."""
         if user_input is not None:
-            if self._discovery_info is None:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=CONFIG_SCHEMA,
-                    errors={"base": EXCEPTION_MAP[NoDevicesFound]},
-                )
             self._blind_type = user_input[CONF_BLIND_TYPE]
+
+            assert self._discovery_info is not None
+
             return self.async_create_entry(
                 title=str(self._display_name),
                 data={
@@ -134,7 +131,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_discover_motionblind(self, mac_code: str) -> None:
         """Discover MotionBlinds initialized by the user."""
         if not is_valid_mac(mac_code):
-            _LOGGER.error(f"Invalid MAC code: {mac_code.upper()}")
+            _LOGGER.error("Invalid MAC code: %s", mac_code.upper())
             raise InvalidMACCode()
 
         count = bluetooth.async_scanner_count(self.hass, connectable=True)
@@ -165,20 +162,20 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         existing_entries = self._async_current_entries()
 
-        if motion_device:
-            unique_id = motion_device.address
-            if any(entry.unique_id == unique_id for entry in existing_entries):
-                _LOGGER.error(
-                    f"Device with MAC code {mac_code} has already been configured"
-                )
-                raise AlreadyConfigured()
-            await self.async_set_unique_id(unique_id, raise_on_progress=False)
-            self._discovery_info = motion_device
-            self._mac_code = mac_code.upper()
-            self._display_name = f"MotionBlind {self._mac_code}"
-        else:
-            _LOGGER.error(f"Could not find a motor with MAC code: {mac_code.upper()}")
+        if not motion_device:
+            _LOGGER.error("Could not find a motor with MAC code: %s", mac_code.upper())
             raise CouldNotFindMotor()
+
+        unique_id = motion_device.address
+        if any(entry.unique_id == unique_id for entry in existing_entries):
+            _LOGGER.error(
+                "Device with MAC code %s has already been configured", mac_code.upper()
+            )
+            raise AlreadyConfigured()
+        await self.async_set_unique_id(unique_id, raise_on_progress=False)
+        self._discovery_info = motion_device
+        self._mac_code = mac_code.upper()
+        self._display_name = f"MotionBlind {self._mac_code}"
 
 
 def is_valid_mac(data: str) -> bool:

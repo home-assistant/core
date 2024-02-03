@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class CommandButtonEntityDescription(ButtonEntityDescription):
     """Entity description of a button entity that executes a command upon being pressed."""
 
@@ -104,7 +104,9 @@ class GenericCommandButton(ButtonEntity):
     ) -> None:
         """Initialize the command button."""
         _LOGGER.info(
-            f"({blind.config_entry.data[CONF_MAC_CODE]}) Setting up {entity_description.key} button entity"
+            "(%s) Setting up %s button entity",
+            blind.config_entry.data[CONF_MAC_CODE],
+            entity_description.key,
         )
         self.entity_description = entity_description
         self._blind = blind

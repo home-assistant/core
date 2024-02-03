@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from math import ceil
 
+from motionblindsble.const import MotionConnectionType
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -27,7 +29,6 @@ from .const import (
     MotionCalibrationType,
 )
 from .cover import GenericBlind, PositionCalibrationBlind
-from .motionblinds_ble.const import MotionConnectionType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +95,8 @@ class BatterySensor(SensorEntity):
     def __init__(self, blind: GenericBlind) -> None:
         """Initialize the battery sensor."""
         _LOGGER.info(
-            f"({blind.config_entry.data[CONF_MAC_CODE]}) Setting up battery sensor entity"
+            "(%s) Setting up battery sensor entity",
+            blind.config_entry.data[CONF_MAC_CODE],
         )
         self.entity_description = SENSOR_TYPES[ATTR_BATTERY]
         self._blind = blind
@@ -148,13 +150,14 @@ class ConnectionSensor(SensorEntity):
     def __init__(self, blind: GenericBlind) -> None:
         """Initialize the connection sensor."""
         _LOGGER.info(
-            f"({blind.config_entry.data[CONF_MAC_CODE]}) Setting up connection sensor entity"
+            "(%s) Setting up connection sensor entity",
+            blind.config_entry.data[CONF_MAC_CODE],
         )
         self.entity_description = SENSOR_TYPES[ATTR_CONNECTION_TYPE]
         self._blind = blind
         self._attr_unique_id = f"{blind.unique_id}_{ATTR_CONNECTION_TYPE}"
         self._attr_device_info = blind.device_info
-        self._attr_native_value = MotionConnectionType.DISCONNECTED
+        self._attr_native_value = MotionConnectionType.DISCONNECTED.value
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -176,7 +179,8 @@ class CalibrationSensor(SensorEntity):
     def __init__(self, blind: PositionCalibrationBlind) -> None:
         """Initialize the calibration sensor."""
         _LOGGER.info(
-            f"({blind.config_entry.data[CONF_MAC_CODE]}) Setting up calibration sensor entity"
+            "(%s) Setting up calibration sensor entity",
+            blind.config_entry.data[CONF_MAC_CODE],
         )
         self.entity_description = SENSOR_TYPES[ATTR_CALIBRATION]
         self._blind = blind
@@ -204,7 +208,8 @@ class SignalStrengthSensor(SensorEntity):
     def __init__(self, blind: GenericBlind) -> None:
         """Initialize the calibration sensor."""
         _LOGGER.info(
-            f"({blind.config_entry.data[CONF_MAC_CODE]}) Setting up signal strength sensor entity"
+            "(%s) Setting up signal strength sensor entity",
+            blind.config_entry.data[CONF_MAC_CODE],
         )
         self.entity_description = SENSOR_TYPES[ATTR_SIGNAL_STRENGTH]
         self._blind = blind
