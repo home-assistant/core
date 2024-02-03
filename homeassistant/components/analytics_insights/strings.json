@@ -23,5 +23,12 @@
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "custom_integrations": {
+        "name": "{custom_integration_domain} (custom)"
+      }
+    }
   }
 }

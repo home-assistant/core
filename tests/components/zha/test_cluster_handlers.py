@@ -990,15 +990,9 @@ async def test_cluster_handler_naming() -> None:
         assert issubclass(client_cluster_handler, cluster_handlers.ClientClusterHandler)
         assert client_cluster_handler.__name__.endswith("ClientClusterHandler")
 
-    server_cluster_handlers = []
     for cluster_handler_dict in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.values():
-        # remove this filter in the update platform PR
-        server_cluster_handlers += [
-            cluster_handler
-            for cluster_handler in cluster_handler_dict.values()
-            if cluster_handler.__name__ != "OtaClientClusterHandler"
-        ]
-
-    for cluster_handler in server_cluster_handlers:
-        assert not issubclass(cluster_handler, cluster_handlers.ClientClusterHandler)
-        assert cluster_handler.__name__.endswith("ClusterHandler")
+        for cluster_handler in cluster_handler_dict.values():
+            assert not issubclass(
+                cluster_handler, cluster_handlers.ClientClusterHandler
+            )
+            assert cluster_handler.__name__.endswith("ClusterHandler")

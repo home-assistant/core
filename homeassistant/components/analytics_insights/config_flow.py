@@ -25,7 +25,12 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN, LOGGER
+from .const import (
+    CONF_TRACKED_CUSTOM_INTEGRATIONS,
+    CONF_TRACKED_INTEGRATIONS,
+    DOMAIN,
+    LOGGER,
+)
 
 INTEGRATION_TYPES_WITHOUT_ANALYTICS = (
     IntegrationType.BRAND,
@@ -58,6 +63,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             integrations = await client.get_integrations()
+            custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
             return self.async_abort(reason="cannot_connect")
@@ -77,6 +83,13 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
+                            multiple=True,
+                            sort=True,
+                        )
+                    ),
+                    vol.Required(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(custom_integrations),
                             multiple=True,
                             sort=True,
                         )
@@ -101,6 +114,7 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
         )
         try:
             integrations = await client.get_integrations()
+            custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
             return self.async_abort(reason="cannot_connect")
@@ -121,6 +135,13 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         vol.Required(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                             SelectSelectorConfig(
                                 options=options,
+                                multiple=True,
+                                sort=True,
+                            )
+                        ),
+                        vol.Required(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
+                            SelectSelectorConfig(
+                                options=list(custom_integrations),
                                 multiple=True,
                                 sort=True,
                             )

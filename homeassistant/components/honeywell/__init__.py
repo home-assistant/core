@@ -8,7 +8,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_create_clientsession,
+    async_get_clientsession,
+)
 
 from .const import (
     _LOGGER,
@@ -48,9 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
 
-    client = aiosomecomfort.AIOSomeComfort(
-        username, password, session=async_get_clientsession(hass)
-    )
+    if len(hass.config_entries.async_entries(DOMAIN)) > 1:
+        session = async_create_clientsession(hass)
+    else:
+        session = async_get_clientsession(hass)
+
+    client = aiosomecomfort.AIOSomeComfort(username, password, session=session)
     try:
         await client.login()
         await client.discover()
@@ -76,7 +82,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if len(devices) == 0:
         _LOGGER.debug("No devices found")
         return False
-
     data = HoneywellData(config_entry.entry_id, client, devices)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = data
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

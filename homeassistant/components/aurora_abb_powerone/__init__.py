@@ -52,7 +52,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
+class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching AuroraAbbPowerone data."""
 
     def __init__(self, hass: HomeAssistant, comport: str, address: int) -> None:

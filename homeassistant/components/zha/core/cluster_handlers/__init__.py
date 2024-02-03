@@ -424,10 +424,18 @@ class ClusterHandler(LogMixin):
     @callback
     def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
+        attr_name = self._get_attribute_name(attrid)
+        self.debug(
+            "cluster_handler[%s] attribute_updated - cluster[%s] attr[%s] value[%s]",
+            self.name,
+            self.cluster.name,
+            attr_name,
+            value,
+        )
         self.async_send_signal(
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
             attrid,
-            self._get_attribute_name(attrid),
+            attr_name,
             value,
         )
 

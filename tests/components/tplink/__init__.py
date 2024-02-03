@@ -15,7 +15,7 @@ from kasa import (
     SmartStrip,
 )
 from kasa.exceptions import SmartDeviceException
-from kasa.protocol import TPLinkSmartHomeProtocol
+from kasa.protocol import BaseProtocol
 
 from homeassistant.components.tplink import (
     CONF_ALIAS,
@@ -89,8 +89,8 @@ CREATE_ENTRY_DATA_AUTH2 = {
 }
 
 
-def _mock_protocol() -> TPLinkSmartHomeProtocol:
-    protocol = MagicMock(auto_spec=TPLinkSmartHomeProtocol)
+def _mock_protocol() -> BaseProtocol:
+    protocol = MagicMock(auto_spec=BaseProtocol)
     protocol.close = AsyncMock()
     return protocol
 

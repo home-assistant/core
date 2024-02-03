@@ -785,9 +785,8 @@ async def test_import_statistics(
     }
 
     # Adjust the statistics in a different unit
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "type": "recorder/adjust_sum_statistics",
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
