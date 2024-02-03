@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     target_temp_selector = entry.options.get(
         CONF_TARGET_TEMP_SELECTOR, DEFAULT_TARGET_TEMP_SELECTOR
     )
-    external_temp_sensor = entry.options.get(CONF_EXTERNAL_TEMP_SENSOR)
+    external_temp_sensor = entry.options.get(CONF_EXTERNAL_TEMP_SENSOR, "")
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     eq3_config = Eq3Config(

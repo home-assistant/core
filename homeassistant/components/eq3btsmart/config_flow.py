@@ -5,25 +5,12 @@ from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_SCAN_INTERVAL
-from homeassistant.core import callback
+from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import (
-    CONF_ADAPTER,
-    CONF_CURRENT_TEMP_SELECTOR,
-    CONF_EXTERNAL_TEMP_SENSOR,
-    CONF_RSSI,
-    CONF_TARGET_TEMP_SELECTOR,
-    DEFAULT_ADAPTER,
-    DEFAULT_CURRENT_TEMP_SELECTOR,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TARGET_TEMP_SELECTOR,
-    DOMAIN,
-)
-from .schemas import SCHEMA_NAME, SCHEMA_NAME_MAC, SCHEMA_OPTIONS
+from .const import CONF_RSSI, DOMAIN
+from .schemas import SCHEMA_NAME, SCHEMA_NAME_MAC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,53 +91,4 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_NAME: user_input[CONF_NAME],
                 CONF_MAC: self.discovery_info.address,
             },
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Create the options flow."""
-
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(OptionsFlow):
-    """Options flow for eQ-3 Bluetooth Smart thermostats."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the options flow."""
-
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=SCHEMA_OPTIONS(
-                suggested_scan_interval=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-                suggested_current_temp_selector=self.config_entry.options.get(
-                    CONF_CURRENT_TEMP_SELECTOR,
-                    DEFAULT_CURRENT_TEMP_SELECTOR,
-                ),
-                suggested_target_temp_selector=self.config_entry.options.get(
-                    CONF_TARGET_TEMP_SELECTOR,
-                    DEFAULT_TARGET_TEMP_SELECTOR,
-                ),
-                suggested_external_temp_sensor=self.config_entry.options.get(
-                    CONF_EXTERNAL_TEMP_SENSOR, ""
-                ),
-                suggested_adapter=self.config_entry.options.get(
-                    CONF_ADAPTER, DEFAULT_ADAPTER
-                ),
-            ),
         )
