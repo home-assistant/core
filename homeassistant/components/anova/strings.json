@@ -27,9 +27,9 @@
           "preheating": "Preheating",
           "cooking": "Cooking",
           "maintaining": "Maintaining",
-          "timer_expired": "Timed expried",
+          "timer_expired": "Timer expired",
           "set_timer": "Set timer",
-          "no_state": "No State"
+          "no_state": "No state"
         }
       },
       "mode": {

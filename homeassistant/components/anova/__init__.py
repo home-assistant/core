@@ -8,7 +8,6 @@ from anova_wifi import AnovaApi, InvalidLogin, NoDevicesFound
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -37,11 +36,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert api.jwt
     try:
         await api.create_websocket()
-        assert api.websocket_handler
-    except NoDevicesFound as err:
-        raise ConfigEntryNotReady(
+    except NoDevicesFound:
+        _LOGGER.warning(
             "No devices were found on the websocket, perhaps you don't have any devices on this account?"
-        ) from err
+        )
+    assert api.websocket_handler
     # Create a coordinator per device, if the device is offline, no data will be on the websocket,
     # and the coordinator should auto mark as unavailable. But as long as the websocket successfully connected,
     # config entry should setup.

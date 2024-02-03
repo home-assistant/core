@@ -29,7 +29,7 @@ async def test_sensors(hass: HomeAssistant, anova_api: AnovaApi) -> None:
         == "22.37"
     )
     assert hass.states.get("sensor.anova_precision_cooker_mode").state == "idle"
-    assert hass.states.get("sensor.anova_precision_cooker_state").state == ""
+    assert hass.states.get("sensor.anova_precision_cooker_state").state == "no_state"
     assert (
         hass.states.get("sensor.anova_precision_cooker_target_temperature").state
         == "54.72"

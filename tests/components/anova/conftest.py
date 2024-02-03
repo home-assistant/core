@@ -1,7 +1,7 @@
 """Common fixtures for Anova."""
 from unittest.mock import patch
 
-from anova_wifi import AnovaApi, InvalidLogin, NoDevicesFound
+from anova_wifi import AnovaApi, InvalidLogin
 from anova_wifi.mocks.anova_api import anova_api_mock
 import pytest
 
@@ -31,9 +31,8 @@ async def anova_api_no_devices(
     hass: HomeAssistant,
 ) -> AnovaApi:
     """Mock the api for Anova with no online devices."""
-    api_mock = anova_api_mock()
+    api_mock = anova_api_mock(connect_messages=[], post_connect_messages=[])
 
-    api_mock.create_websocket.side_effect = NoDevicesFound
     with patch("homeassistant.components.anova.AnovaApi", return_value=api_mock), patch(
         "homeassistant.components.anova.config_flow.AnovaApi", return_value=api_mock
     ):

@@ -49,7 +49,9 @@ async def test_no_devices_found(
 ) -> None:
     """Test when there don't seem to be any devices on the account."""
     entry = await async_init_integration(hass)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.LOADED
+    # Config flow should be loaded - but we shouldn't have our entities.
+    assert hass.states.get("sensor.anova_precision_cooker_mode") is None
 
 
 async def test_migrate_entry(hass: HomeAssistant, anova_api: AnovaApi) -> None:
