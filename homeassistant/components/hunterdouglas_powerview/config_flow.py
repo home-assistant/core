@@ -39,17 +39,18 @@ async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str
         async with asyncio.timeout(10):
             hub = Hub(pv_request)
             await hub.query_firmware()
-            if hub.role != "Primary":
-                raise UnsupportedDevice(
-                    f"{hub.name} ({hub.hub_address}) is performing role of {hub.role} Hub. Only the Primary Hub can manage shades"
-                )
             device_info = await async_get_device_info(hub)
-    except UnsupportedDevice as unsupported_err:
-        _LOGGER.debug(unsupported_err)
-        raise UnsupportedDevice from unsupported_err
     except HUB_EXCEPTIONS as err:
-        _LOGGER.debug(err)
         raise CannotConnect from err
+
+    if hub.role != "Primary":
+        _LOGGER.debug(
+            "%s (%s) is the %s Hub. Only the Primary can manage shades",
+            hub.name,
+            hub.hub_address,
+            hub.role,
+        )
+        raise UnsupportedDevice
 
     _LOGGER.debug("Connection made using api version: %s", hub.api_version)
 
@@ -114,6 +115,8 @@ class PowerviewConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, host)
         except CannotConnect:
             return None, "cannot_connect"
+        except UnsupportedDevice:
+            return None, "unsupported_device"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return None, "unknown"

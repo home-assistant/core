@@ -19,6 +19,7 @@
     "flow_title": "{name} ({host})",
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unsupported_device": "Only the primary powerview hub can be added",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
