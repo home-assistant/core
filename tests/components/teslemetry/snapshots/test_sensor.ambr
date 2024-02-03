@@ -1748,7 +1748,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_fault_state-entry]
+# name: test_sensors[sensor.wall_connector_fault_state_code-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1760,7 +1760,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wall_connector_fault_state',
+    'entity_id': 'sensor.wall_connector_fault_state_code',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1770,7 +1770,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:ev-station',
-    'original_name': 'Fault state',
+    'original_name': 'Fault state code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1779,20 +1779,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.wall_connector_fault_state-state]
+# name: test_sensors[sensor.wall_connector_fault_state_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wall Connector Fault state',
+      'friendly_name': 'Wall Connector Fault state code',
       'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_fault_state',
+    'entity_id': 'sensor.wall_connector_fault_state_code',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_fault_state_2-entry]
+# name: test_sensors[sensor.wall_connector_fault_state_code_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1804,7 +1804,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wall_connector_fault_state_2',
+    'entity_id': 'sensor.wall_connector_fault_state_code_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1814,7 +1814,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:ev-station',
-    'original_name': 'Fault state',
+    'original_name': 'Fault state code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1823,14 +1823,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.wall_connector_fault_state_2-state]
+# name: test_sensors[sensor.wall_connector_fault_state_code_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wall Connector Fault state',
+      'friendly_name': 'Wall Connector Fault state code',
       'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_fault_state_2',
+    'entity_id': 'sensor.wall_connector_fault_state_code_2',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
@@ -1946,7 +1946,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_state-entry]
+# name: test_sensors[sensor.wall_connector_state_code-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1958,7 +1958,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wall_connector_state',
+    'entity_id': 'sensor.wall_connector_state_code',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1968,7 +1968,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:ev-station',
-    'original_name': 'State',
+    'original_name': 'State code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1977,20 +1977,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.wall_connector_state-state]
+# name: test_sensors[sensor.wall_connector_state_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wall Connector State',
+      'friendly_name': 'Wall Connector State code',
       'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_state',
+    'entity_id': 'sensor.wall_connector_state_code',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_state_2-entry]
+# name: test_sensors[sensor.wall_connector_state_code_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2002,7 +2002,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wall_connector_state_2',
+    'entity_id': 'sensor.wall_connector_state_code_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2012,7 +2012,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:ev-station',
-    'original_name': 'State',
+    'original_name': 'State code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2021,14 +2021,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.wall_connector_state_2-state]
+# name: test_sensors[sensor.wall_connector_state_code_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wall Connector State',
+      'friendly_name': 'Wall Connector State code',
       'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_state_2',
+    'entity_id': 'sensor.wall_connector_state_code_2',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
