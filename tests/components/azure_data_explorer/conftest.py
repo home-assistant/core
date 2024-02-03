@@ -1,7 +1,9 @@
 """Test fixtures for ADX."""
+from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -13,6 +15,7 @@ from homeassistant.components.azure_data_explorer.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -38,13 +41,15 @@ class FilterTest:
 
 
 @pytest.fixture(name="filter_schema")
-def mock_filter_schema():
+def mock_filter_schema() -> dict[str, Any]:
     """Return an empty filter."""
     return {}
 
 
 @pytest.fixture(name="entry_managed")
-async def mock_entry_fixture_managed(hass, filter_schema) -> MockConfigEntry:
+async def mock_entry_fixture_managed(
+    hass: HomeAssistant, filter_schema: dict[str, Any]
+) -> MockConfigEntry:
     """Create the setup in HA."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -57,7 +62,9 @@ async def mock_entry_fixture_managed(hass, filter_schema) -> MockConfigEntry:
 
 
 @pytest.fixture(name="entry_queued")
-async def mock_entry_fixture_queued(hass, filter_schema) -> MockConfigEntry:
+async def mock_entry_fixture_queued(
+    hass: HomeAssistant, filter_schema: dict[str, Any]
+) -> MockConfigEntry:
     """Create the setup in HA."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -69,7 +76,7 @@ async def mock_entry_fixture_queued(hass, filter_schema) -> MockConfigEntry:
     return entry
 
 
-async def _entry(hass, filter_schema, entry) -> None:
+async def _entry(hass: HomeAssistant, filter_schema: dict[str, Any], entry) -> None:
     entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {CONF_FILTER: filter_schema}}
@@ -85,7 +92,9 @@ async def _entry(hass, filter_schema, entry) -> None:
 
 
 @pytest.fixture(name="entry_with_one_event")
-async def mock_entry_with_one_event(hass, entry_managed) -> MockConfigEntry:
+async def mock_entry_with_one_event(
+    hass: HomeAssistant, entry_managed
+) -> MockConfigEntry:
     """Use the entry and add a single test event to the queue."""
     assert entry_managed.state == ConfigEntryState.LOADED
     hass.states.async_set("sensor.test", STATE_ON)
@@ -94,7 +103,7 @@ async def mock_entry_with_one_event(hass, entry_managed) -> MockConfigEntry:
 
 # Fixtures for config_flow tests
 @pytest.fixture
-def mock_setup_entry() -> MockConfigEntry:
+def mock_setup_entry() -> Generator[MockConfigEntry, None, None]:
     """Mock the setup entry call, used for config flow tests."""
     with patch(
         f"{AZURE_DATA_EXPLORER_PATH}.async_setup_entry", return_value=True
@@ -104,7 +113,9 @@ def mock_setup_entry() -> MockConfigEntry:
 
 # Fixtures for mocking the Azure Data Explorer SDK calls.
 @pytest.fixture(autouse=True)
-def mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data() -> None:
+def mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data() -> (
+    Generator[None, None, None]
+):
     """mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.ManagedStreamingIngestClient.ingest_from_stream",
@@ -114,7 +125,9 @@ def mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data() -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_azure_data_explorer_QueuedIngestClient_ingest_data() -> None:
+def mock_azure_data_explorer_QueuedIngestClient_ingest_data() -> (
+    Generator[None, None, None]
+):
     """mock_azure_data_explorer_QueuedIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.QueuedIngestClient.ingest_from_stream",
@@ -124,7 +137,7 @@ def mock_azure_data_explorer_QueuedIngestClient_ingest_data() -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_execute_query() -> None:
+def mock_execute_query() -> Generator[None, None, None]:
     """Mock KustoClient execute_query."""
     with patch(
         "azure.kusto.data.KustoClient.execute_query",

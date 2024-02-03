@@ -26,19 +26,43 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
+async def test_put_event_on_queue_with_managed_client(
+    hass,
+    entry_managed,
+    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test listening to events from Hass. and writing to ADX with managed client."""
+
+    hass.states.async_set("sensor.test_sensor", STATE_ON)
+
+    async_fire_time_changed(hass, datetime(2024, 1, 1, 0, 0, 0))
+
+    await hass.async_block_till_done()
+
+    assert (
+        type(
+            mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.call_args.args[
+                0
+            ]
+        )
+        is StreamDescriptor
+    )
+
+
+@pytest.mark.freeze_time("2024-01-01 00:00:00")
 @pytest.mark.parametrize(
     ("sideeffect", "log_message"),
     [
-        (None, ""),
         (KustoServiceError("test"), "Could not find database or table"),
         (
             KustoAuthenticationError("test", Exception),
             ("Could not authenticate to Azure Data Explorer"),
         ),
     ],
-    ids=["No_error", "KustoServiceError", "KustoAuthenticationError"],
+    ids=["KustoServiceError", "KustoAuthenticationError"],
 )
-async def test_put_event_on_queue_with_managed_client(
+async def test_put_event_on_queue_with_managed_client_with_errors(
     hass,
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
@@ -58,19 +82,7 @@ async def test_put_event_on_queue_with_managed_client(
 
     await hass.async_block_till_done()
 
-    if sideeffect:
-        # Test if logs have been written to capture error message if an error occurered
-        assert log_message in caplog.text
-    else:
-        # Test if the ingest_data function has been called
-        assert (
-            type(
-                mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.call_args.args[
-                    0
-                ]
-            )
-            is StreamDescriptor
-        )
+    assert log_message in caplog.text
 
 
 async def test_put_event_on_queue_with_queueing_client(
@@ -111,7 +123,8 @@ async def test_import(hass) -> None:
 
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
-    assert DOMAIN in hass.data
+
+    assert "filter" in hass.data[DOMAIN]
 
 
 async def test_unload_entry(
@@ -243,7 +256,6 @@ async def test_filter(
             )
             == count
         )
-        mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.reset_mock()
 
 
 @pytest.mark.parametrize(
