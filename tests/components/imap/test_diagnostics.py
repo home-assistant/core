@@ -70,9 +70,9 @@ async def test_entry_diagnostics(
     }
     expected_event_data = {
         "date": "2023-03-24T13:52:00+01:00",
-        "sender": "john.doe@example.com",
-        "subject": "Test subject",
-        "custom": 16,
+        "initial": True,
+        "custom_template_data_type": "<class 'int'>",
+        "custom_template_result_length": 2,
     }
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry

@@ -58,7 +58,7 @@ EVENT_IMAP = "imap_content"
 MAX_ERRORS = 3
 MAX_EVENT_DATA_BYTES = 32168
 
-DIAGNOSTICS_ATTRIBUTES = ["date", "sender", "subject", "custom"]
+DIAGNOSTICS_ATTRIBUTES = ["date", "initial"]
 
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
@@ -363,6 +363,11 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         """Update the diagnostics."""
         self._diagnostics_data.update(
             {key: value for key, value in data.items() if key in DIAGNOSTICS_ATTRIBUTES}
+        )
+        custom: Any | None = data.get("custom")
+        self._diagnostics_data["custom_template_data_type"] = str(type(custom))
+        self._diagnostics_data["custom_template_result_length"] = (
+            None if custom is None else len(f"{custom}")
         )
         self._diagnostics_data["event_time"] = dt_util.now().isoformat()
 
