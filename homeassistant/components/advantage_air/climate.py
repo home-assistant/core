@@ -131,6 +131,20 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         return self._attr_hvac_modes
 
     @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the supported features."""
+        if self.preset_mode == ADVANTAGE_AIR_MYZONE:
+            return (
+                self._attr_supported_features | ClimateEntityFeature.TARGET_TEMPERATURE
+            )
+        if self.preset_mode == ADVANTAGE_AIR_MYAUTO:
+            return (
+                self._attr_supported_features
+                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
+        return self._attr_supported_features
+
+    @property
     def current_temperature(self) -> float | None:
         """Return the selected zones current temperature."""
         if self._myzone:
