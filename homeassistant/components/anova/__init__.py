@@ -63,3 +63,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Disconnect from WS
         await anova_data.api.disconnect_websocket()
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    if config_entry.version == 1:
+        # It used to be needed to persist devices, however that is no longer the case as the
+        # websocket holds information for all devices on the account.
+        new = {
+            CONF_USERNAME: config_entry.data[CONF_USERNAME],
+            CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
+        }
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=new)
+
+    return True

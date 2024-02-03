@@ -1,12 +1,11 @@
 """Config flow for Anova."""
 from __future__ import annotations
 
-from anova_wifi import AnovaApi, InvalidLogin, NoDevicesFound
+from anova_wifi import AnovaApi, InvalidLogin
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -35,16 +34,14 @@ class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
                 await api.authenticate()
             except InvalidLogin:
                 errors["base"] = "invalid_auth"
-            except NoDevicesFound:
-                errors["base"] = "no_devices_found"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title="Anova",
                     data={
-                        CONF_USERNAME: api.username,
-                        CONF_PASSWORD: api.password,
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
 
@@ -55,20 +52,3 @@ class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-
-    if config_entry.version == 2:
-        # It used to be needed to persist devices, however that is no longer the case as the
-        # websocket holds information for all devices on the account.
-        new = {
-            CONF_USERNAME: config_entry.data[CONF_USERNAME],
-            CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
-        }
-
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=new)
-
-    return True

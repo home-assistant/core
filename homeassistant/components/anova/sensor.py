@@ -4,10 +4,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from anova_wifi import APCUpdateSensor
+from anova_wifi import AnovaMode, AnovaState, APCUpdateSensor
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -15,6 +16,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -27,7 +30,7 @@ from .models import AnovaData
 class AnovaSensorEntityDescriptionMixin:
     """Describes the mixin variables for anova sensors."""
 
-    value_fn: Callable[[APCUpdateSensor], float | int | str]
+    value_fn: Callable[[APCUpdateSensor], float | int | str | None]
 
 
 @dataclass(frozen=True)
@@ -37,7 +40,7 @@ class AnovaSensorEntityDescription(
     """Describes a Anova sensor."""
 
 
-SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
+SENSOR_DESCRIPTIONS: list[AnovaSensorEntityDescription] = [
     AnovaSensorEntityDescription(
         key="cook_time",
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -49,11 +52,15 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
     AnovaSensorEntityDescription(
         key="state",
         translation_key="state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.name for state in AnovaState],
         value_fn=lambda data: data.state,
     ),
     AnovaSensorEntityDescription(
         key="mode",
         translation_key="mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[mode.name for mode in AnovaMode],
         value_fn=lambda data: data.mode,
     ),
     AnovaSensorEntityDescription(
@@ -105,11 +112,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up Anova device."""
     anova_data: AnovaData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        AnovaSensor(coordinator, description)
-        for coordinator in anova_data.coordinators
-        for description in SENSOR_DESCRIPTIONS
-    )
+    valid_entities: set[AnovaSensor] = set()
+    ent_registry = er.async_get(hass)
+    for coordinator in anova_data.coordinators:
+        for description in SENSOR_DESCRIPTIONS:
+            sensor = AnovaSensor(coordinator, description)
+            if f"{DOMAIN}.{SENSOR_DOMAIN}_{sensor.unique_id}" in ent_registry.entities:
+                # If the entity has been added before - we know it is supported.
+                valid_entities.add(sensor)
+            elif (
+                coordinator.data is not None
+                and description.value_fn(coordinator.data.sensor) is not None
+            ):
+                # If the coordinator has data and the value for this sensor is not None
+                # then the entity is supported.
+                # Device must be online for the first time it is added.
+                valid_entities.add(sensor)
+    if not valid_entities:
+        raise PlatformNotReady(
+            "No entities were available - if this is your first time setting up a Anova device in home assistant, make sure it is online."
+        )
+    async_add_entities(valid_entities)
 
 
 class AnovaSensor(AnovaDescriptionEntity, SensorEntity):
