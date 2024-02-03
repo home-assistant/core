@@ -17,9 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.COVER,
-    Platform.SENSOR,
-    Platform.SELECT,
-    Platform.BUTTON,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -44,12 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    # First setup cover since sensor, select and button entities require the cover
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.COVER])
-    await hass.config_entries.async_forward_entry_setups(
-        entry,
-        [Platform.SENSOR, Platform.SELECT, Platform.BUTTON],
-    )
 
     _LOGGER.info("(%s) Finished setting up device", entry.data[CONF_MAC_CODE])
 
