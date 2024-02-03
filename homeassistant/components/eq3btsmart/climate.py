@@ -219,18 +219,11 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                 if self._thermostat.status is None:
                     return None
 
-                return (
-                    (1 - self._thermostat.status.valve / 100) * 2
-                    + self._thermostat.status.target_temperature.value
-                    - 2
-                )
+                return self._thermostat.status.valve_temperature
             case CurrentTemperatureSelector.UI:
                 return self._target_temperature
             case CurrentTemperatureSelector.DEVICE:
                 if self._thermostat.status is None:
-                    return None
-
-                if self._thermostat.status.target_temperature is None:
                     return None
 
                 return self._thermostat.status.target_temperature.value
@@ -253,9 +246,6 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                 return self._target_temperature
             case TargetTemperatureSelector.LAST_REPORTED:
                 if self._thermostat.status is None:
-                    return None
-
-                if self._thermostat.status.target_temperature is None:
                     return None
 
                 return self._thermostat.status.target_temperature.value
@@ -369,31 +359,10 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             case Preset.AWAY:
                 await self._thermostat.async_set_away(True)
             case Preset.ECO:
-                if self._thermostat.status is None:
-                    return
-                if self._thermostat.status.is_boost:
-                    await self._thermostat.async_set_boost(False)
-                if self._thermostat.status.is_away:
-                    await self._thermostat.async_set_away(False)
-
                 await self._thermostat.async_set_preset(Eq3Preset.ECO)
             case Preset.COMFORT:
-                if self._thermostat.status is None:
-                    return
-                if self._thermostat.status.is_boost:
-                    await self._thermostat.async_set_boost(False)
-                if self._thermostat.status.is_away:
-                    await self._thermostat.async_set_away(False)
-
                 await self._thermostat.async_set_preset(Eq3Preset.COMFORT)
             case Preset.OPEN:
-                if self._thermostat.status is None:
-                    return
-                if self._thermostat.status.is_boost:
-                    await self._thermostat.async_set_boost(False)
-                if self._thermostat.status.is_away:
-                    await self._thermostat.async_set_away(False)
-
                 await self._thermostat.async_set_mode(OperationMode.ON)
 
         if self._thermostat.status is not None:
