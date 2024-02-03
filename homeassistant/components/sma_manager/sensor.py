@@ -36,12 +36,9 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Create and sets up the entities and setup Riemann Integral version of the same entities, so they can be used in the energy panel.
-
-    @param hass:
-    @param config_entry:
-    @param async_add_entities:
-    @return:
+    """
+    Create and sets up the entities and setup Riemann Integral version of
+    the same entities, so they can be used in the energy panel.
     """
 
     sma = hass.data[DOMAIN][config_entry.entry_id]
@@ -90,11 +87,7 @@ class Coordinator(DataUpdateCoordinator):
     """Coordinates data fetching from the API."""
 
     def __init__(self, hass: HomeAssistant, sma: SMA) -> None:
-        """Init the coordinator object.
-
-        @param hass:
-        @param sma:
-        """
+        """Init the coordinator object."""
         super().__init__(
             hass,
             _LOGGER,
@@ -125,12 +118,7 @@ class SensorBase(CoordinatorEntity, SensorEntity):
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
     ) -> None:
-        """Init the coordinator object.
-
-        @param coordinator:
-        @param sma: SMA API object
-        @param device:
-        """
+        """Init the coordinator object."""
         super().__init__(coordinator)
 
         # Generate unique id
@@ -170,12 +158,7 @@ class GridConsumption(SensorBase):
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
     ) -> None:
-        """Init the Grid Consumption object.
-
-        @param coordinator:
-        @param sma: SMA API object
-        @param device:
-        """
+        """Init the Grid Consumption object."""
         self._attr_name = f"{sma.name} Grid Consumption"
 
         super().__init__(coordinator, sma, device)
@@ -194,12 +177,7 @@ class GridFeed(SensorBase):
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
     ) -> None:
-        """Init the Grid Feed object.
-
-        @param coordinator:
-        @param sma: SMA API object
-        @param device:
-        """
+        """Init the Grid Feed object."""
         self._attr_name = f"{sma.name} Grid Feed"
 
         super().__init__(coordinator, sma, device)
@@ -218,12 +196,7 @@ class PhaseOneConsumption(SensorBase):
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
     ) -> None:
-        """Init the Phase One Consumption object.
-
-        @param coordinator:
-        @param sma: SMA API object
-        @param device:
-        """
+        """Init the Phase One Consumption object."""
         self._attr_name = f"{sma.name} Phase 1 Consumption"
 
         super().__init__(coordinator, sma, device)
@@ -242,12 +215,7 @@ class PhaseOneFeed(SensorBase):
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
     ) -> None:
-        """Init the Phase One Feed object.
-
-        @param coordinator:
-        @param sma: SMA API object
-        @param device:
-        """
+        """Init the Phase One Feed object."""
         self._attr_name = f"{sma.name} Phase 1 Feed"
 
         super().__init__(coordinator, sma, device)
@@ -266,12 +234,7 @@ class PhaseTwoConsumption(SensorBase):
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
     ) -> None:
-        """Init the Phase Two Consumption object.
-
-        @param coordinator:
-        @param sma: SMA API object
-        @param device:
-        """
+        """Init the Phase Two Consumption object."""
         self._attr_name = f"{sma.name} Phase 2 Consumption"
 
         super().__init__(coordinator, sma, device)
@@ -290,12 +253,7 @@ class PhaseTwoFeed(SensorBase):
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
     ) -> None:
-        """Init the Phase One Feed object.
-
-        @param coordinator:
-        @param sma: SMA API object
-        @param device:
-        """
+        """Init the Phase One Feed object."""
         self._attr_name = f"{sma.name} Phase 2 Feed"
 
         super().__init__(coordinator, sma, device)
@@ -314,12 +272,7 @@ class PhaseThreeConsumption(SensorBase):
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
     ) -> None:
-        """Init the Phase Three Consumption object.
-
-        @param coordinator:
-        @param sma: SMA API object
-        @param device:
-        """
+        """Init the Phase Three Consumption object."""
         self._attr_name = f"{sma.name} Phase 3 Consumption"
 
         super().__init__(coordinator, sma, device)
@@ -338,12 +291,7 @@ class PhaseThreeFeed(SensorBase):
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
     ) -> None:
-        """Init the Phase Three Feed object.
-
-        @param coordinator:
-        @param sma: SMA API object
-        @param device:
-        """
+        """Init the Phase Three Feed object."""
         self._attr_name = f"{sma.name} Phase 3 Feed"
 
         super().__init__(coordinator, sma, device)
