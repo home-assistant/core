@@ -972,6 +972,10 @@ DHCP: list[dict[str, str | bool]] = [
         "hostname": "twinkly_*",
     },
     {
+        "domain": "twinkly",
+        "hostname": "twinkly-*",
+    },
+    {
         "domain": "unifiprotect",
         "macaddress": "B4FBE4*",
     },
