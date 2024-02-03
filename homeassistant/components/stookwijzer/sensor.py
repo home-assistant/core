@@ -22,7 +22,7 @@ from .coordinator import StookwijzerCoordinator, StookwijzerData
 from .entity import StookwijzerEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class StookwijzerSensorDescriptionMixin:
     """Required values for Stookwijzer sensors."""
 
@@ -30,7 +30,7 @@ class StookwijzerSensorDescriptionMixin:
     attr_fn: Callable[[StookwijzerCoordinator], list | None] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class StookwijzerSensorDescription(
     SensorEntityDescription,
     StookwijzerSensorDescriptionMixin,
