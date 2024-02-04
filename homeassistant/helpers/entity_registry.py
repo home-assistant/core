@@ -1379,16 +1379,12 @@ async def async_migrate_entries(
     Can also be used to remove duplicated entity registry entries.
     """
     ent_reg = async_get(hass)
-
-    for entry in list(ent_reg.entities.values()):
-        if entry.config_entry_id != config_entry_id:
-            continue
-        if not ent_reg.entities.get_entry(entry.id):
-            continue
-
-        updates = entry_callback(entry)
-
-        if updates is not None:
+    entities = ent_reg.entities
+    for entry in entities.get_entries_for_config_entry_id(config_entry_id):
+        if (
+            entities.get_entry(entry.id)
+            and (updates := entry_callback(entry)) is not None
+        ):
             ent_reg.async_update_entity(entry.entity_id, **updates)
 
 
