@@ -140,10 +140,8 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not await self._client.is_connected():
             await self._client.connect(init=False)
-            if not await self._client.is_connected():
-                errors["base"] = "linking"
-            else:
-                await self._client.disconnect()
+        if not await self._client.is_connected():
+            errors["base"] = "linking"
         else:
             await self._client.disconnect()
 
