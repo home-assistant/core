@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, GAS_VALVE_OPEN_STATES
-from .coordinator import ShellyBlockCoordinator, get_entry_data
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
     RpcEntityDescription,
@@ -218,6 +218,7 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
     ) -> None:
         """Initialize relay switch."""
         super().__init__(coordinator, block, attribute, description)
+        self._attr_unique_id = f"{coordinator.mac}-{block.description}"
         self.control_result: dict[str, Any] | None = None
 
     @property
@@ -249,6 +250,17 @@ class RpcRelaySwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a relay on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_unique_id = f"{coordinator.mac}-{key}"
 
     @property
     def is_on(self) -> bool:
