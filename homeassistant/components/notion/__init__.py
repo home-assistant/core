@@ -6,20 +6,15 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 import traceback
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 from aionotion import async_get_client
-from aionotion.bridge.models import Bridge, BridgeAllResponse
+from aionotion.bridge.models import Bridge
 from aionotion.errors import InvalidCredentialsError, NotionError
-from aionotion.sensor.models import (
-    Listener,
-    ListenerAllResponse,
-    ListenerKind,
-    Sensor,
-    SensorAllResponse,
-)
-from aionotion.user.models import UserPreferences, UserPreferencesResponse
+from aionotion.listener.models import Listener, ListenerKind
+from aionotion.sensor.models import Sensor
+from aionotion.user.models import UserPreferences
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -112,36 +107,35 @@ class NotionData:
     # Define a user preferences response object:
     user_preferences: UserPreferences | None = field(default=None)
 
-    def update_data_from_response(
-        self,
-        response: BridgeAllResponse
-        | ListenerAllResponse
-        | SensorAllResponse
-        | UserPreferencesResponse,
-    ) -> None:
-        """Update data from an aionotion response."""
-        if isinstance(response, BridgeAllResponse):
-            for bridge in response.bridges:
-                # If a new bridge is discovered, register it:
-                if bridge.id not in self.bridges:
-                    _async_register_new_bridge(self.hass, self.entry, bridge)
-                self.bridges[bridge.id] = bridge
-        elif isinstance(response, ListenerAllResponse):
-            self.listeners = {listener.id: listener for listener in response.listeners}
-        elif isinstance(response, SensorAllResponse):
-            self.sensors = {sensor.uuid: sensor for sensor in response.sensors}
-        elif isinstance(response, UserPreferencesResponse):
-            self.user_preferences = response.user_preferences
+    def update_bridges(self, bridges: list[Bridge]) -> None:
+        """Update the bridges."""
+        for bridge in bridges:
+            # If a new bridge is discovered, register it:
+            if bridge.id not in self.bridges:
+                _async_register_new_bridge(self.hass, self.entry, bridge)
+            self.bridges[bridge.id] = bridge
+
+    def update_listeners(self, listeners: list[Listener]) -> None:
+        """Update the listeners."""
+        self.listeners = {listener.id: listener for listener in listeners}
+
+    def update_sensors(self, sensors: list[Sensor]) -> None:
+        """Update the sensors."""
+        self.sensors = {sensor.uuid: sensor for sensor in sensors}
+
+    def update_user_preferences(self, user_preferences: UserPreferences) -> None:
+        """Update the user preferences."""
+        self.user_preferences = user_preferences
 
     def asdict(self) -> dict[str, Any]:
         """Represent this dataclass (and its Pydantic contents) as a dict."""
         data: dict[str, Any] = {
-            DATA_BRIDGES: [bridge.dict() for bridge in self.bridges.values()],
-            DATA_LISTENERS: [listener.dict() for listener in self.listeners.values()],
-            DATA_SENSORS: [sensor.dict() for sensor in self.sensors.values()],
+            DATA_BRIDGES: [item.to_dict() for item in self.bridges.values()],
+            DATA_LISTENERS: [item.to_dict() for item in self.listeners.values()],
+            DATA_SENSORS: [item.to_dict() for item in self.sensors.values()],
         }
         if self.user_preferences:
-            data[DATA_USER_PREFERENCES] = self.user_preferences.dict()
+            data[DATA_USER_PREFERENCES] = self.user_preferences.to_dict()
         return data
 
 
@@ -156,7 +150,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         client = await async_get_client(
-            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            session=session,
+            use_legacy_auth=True,
         )
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed("Invalid username and/or password") from err
@@ -168,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data = NotionData(hass=hass, entry=entry)
         tasks = {
             DATA_BRIDGES: client.bridge.async_all(),
-            DATA_LISTENERS: client.sensor.async_listeners(),
+            DATA_LISTENERS: client.listener.async_all(),
             DATA_SENSORS: client.sensor.async_all(),
             DATA_USER_PREFERENCES: client.user.async_preferences(),
         }
@@ -192,7 +189,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if isinstance(result, BaseException):
                 raise result from None
 
-            data.update_data_from_response(result)  # type: ignore[arg-type]
+            if attr == DATA_BRIDGES:
+                data.update_bridges(cast(list[Bridge], result))
+            elif attr == DATA_LISTENERS:
+                data.update_listeners(cast(list[Listener], result))
+            elif attr == DATA_SENSORS:
+                data.update_sensors(cast(list[Sensor], result))
+            elif attr == DATA_USER_PREFERENCES:
+                data.update_user_preferences(cast(UserPreferences, result))
 
         return data
 
@@ -232,7 +236,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             listener
             for listener in coordinator.data.listeners.values()
             if listener.sensor_id == sensor.uuid
-            and listener.listener_kind == TASK_TYPE_TO_LISTENER_MAP[task_type]
+            and listener.definition_id == TASK_TYPE_TO_LISTENER_MAP[task_type].value
         )
 
         return {"new_unique_id": listener.id}
