@@ -79,10 +79,12 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
             elif (
                 BSH_OPERATION_STATE in status
                 and ATTR_VALUE in status[BSH_OPERATION_STATE]
-                and status[BSH_OPERATION_STATE][ATTR_VALUE] in [
+                and status[BSH_OPERATION_STATE][ATTR_VALUE]
+                in [
                     BSH_OPERATION_STATE_RUN,
                     BSH_OPERATION_STATE_PAUSE,
-                    BSH_OPERATION_STATE_FINISHED,]
+                    BSH_OPERATION_STATE_FINISHED,
+                ]
             ):
                 seconds = self._sign * float(status[self._key][ATTR_VALUE])
                 self._attr_native_value = dt_util.utcnow() + timedelta(seconds=seconds)
