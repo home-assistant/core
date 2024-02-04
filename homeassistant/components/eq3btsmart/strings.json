@@ -23,13 +23,5 @@
         }
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "EQ-3 Options",
-        "description": "Increasing the scan interval to 10 minutes and disabling persistant connections may save battery. Set the bluetooth adapter to 'local' avoid using BTProxy, or pick manually if you have multiple available and want to distribute connection across them."
-      }
-    }
   }
 }
