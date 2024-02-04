@@ -3,7 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "tracked_integrations": "Integrations"
+          "tracked_integrations": "Integrations",
+          "tracked_custom_integrations": "Custom integrations"
         }
       }
     },
