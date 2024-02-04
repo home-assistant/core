@@ -409,7 +409,7 @@ def is_block_channel_type_light(settings: dict[str, Any], channel: str) -> bool:
 
 
 def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
-    """Return true if block should be excludeed from switch platform."""
+    """Return true if block should be excluded from switch platform."""
 
     if settings.get("mode") == "roller":
         return True

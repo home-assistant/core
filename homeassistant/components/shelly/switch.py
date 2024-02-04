@@ -264,6 +264,7 @@ class RpcRelaySwitch(ShellyRpcAttributeEntity, SwitchEntity):
         """Initialize sensor."""
         super().__init__(coordinator, key, attribute, description)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
+        self._id = self.status["id"]
 
     @property
     def is_on(self) -> bool:
@@ -272,8 +273,8 @@ class RpcRelaySwitch(ShellyRpcAttributeEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
-        await self.call_rpc("Switch.Set", {"id": self.status["id"], "on": True})
+        await self.call_rpc("Switch.Set", {"id": self._id, "on": True})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
-        await self.call_rpc("Switch.Set", {"id": self.status["id"], "on": False})
+        await self.call_rpc("Switch.Set", {"id": self._id, "on": False})
