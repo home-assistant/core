@@ -3,6 +3,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 import logging
+from typing import cast
 
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -52,11 +53,11 @@ class StateChangedData:
 class ProximityData:
     """ProximityCoordinatorData class."""
 
-    proximity: dict[str, str | float]
+    proximity: dict[str, str | int | None]
     entities: dict[str, dict[str, str | int | None]]
 
 
-DEFAULT_PROXIMITY_DATA: dict[str, str | float] = {
+DEFAULT_PROXIMITY_DATA: dict[str, str | int | None] = {
     ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
     ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
     ATTR_NEAREST: DEFAULT_NEAREST,
@@ -130,7 +131,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 },
             )
 
-    def _convert(self, value: float | str) -> float | str:
+    def convert_legacy(self, value: float | str) -> float | str:
         """Round and convert given distance value."""
         if isinstance(value, str):
             return value
@@ -303,7 +304,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
 
         # takeover data for legacy proximity entity
-        proximity_data: dict[str, str | float] = {
+        proximity_data: dict[str, str | int | None] = {
             ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
             ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
             ATTR_NEAREST: DEFAULT_NEAREST,
@@ -318,27 +319,25 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 _LOGGER.debug("set first entity_data: %s", entity_data)
                 proximity_data = {
                     ATTR_DIST_TO: distance_to,
-                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL] or "unknown",
+                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL],
                     ATTR_NEAREST: str(entity_data[ATTR_NAME]),
                 }
                 continue
 
-            if float(nearest_distance_to) > float(distance_to):
+            if cast(int, nearest_distance_to) > int(distance_to):
                 _LOGGER.debug("set closer entity_data: %s", entity_data)
                 proximity_data = {
                     ATTR_DIST_TO: distance_to,
-                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL] or "unknown",
+                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL],
                     ATTR_NEAREST: str(entity_data[ATTR_NAME]),
                 }
                 continue
 
-            if float(nearest_distance_to) == float(distance_to):
+            if cast(int, nearest_distance_to) == int(distance_to):
                 _LOGGER.debug("set equally close entity_data: %s", entity_data)
                 proximity_data[
                     ATTR_NEAREST
                 ] = f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
-
-        proximity_data[ATTR_DIST_TO] = self._convert(proximity_data[ATTR_DIST_TO])
 
         return ProximityData(proximity_data, entities_data)
 
