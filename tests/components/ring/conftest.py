@@ -120,4 +120,8 @@ def requests_mock_fixture():
             status_code=200,
             json={"url": "http://127.0.0.1/foo"},
         )
+        mock.get(
+            "https://api.ring.com/groups/v1/locations/mock-location-id/groups",
+            text=load_fixture("groups.json", "ring"),
+        )
         yield mock
