@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from aioflo.errors import RequestError
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
@@ -22,6 +23,7 @@ async def test_device(
     config_entry,
     aioclient_mock_fixture,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Flo by Moen devices."""
     config_entry.add_to_hass(hass)
@@ -81,7 +83,9 @@ async def test_device(
 
     call_count = aioclient_mock.call_count
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
+    time = dt_util.utcnow() + timedelta(seconds=90)
+    freezer.move_to(time)
+    async_fire_time_changed(hass, time)
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == call_count + 6
@@ -92,6 +96,7 @@ async def test_device_failures(
     config_entry,
     aioclient_mock_fixture,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Flo by Moen devices buffer API failures."""
     config_entry.add_to_hass(hass)
@@ -108,7 +113,9 @@ async def test_device_failures(
     assert_state("home")
 
     async def move_time_and_assert_state(state: str) -> None:
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=65))
+        time = dt_util.utcnow() + timedelta(seconds=65)
+        freezer.move_to(time)
+        async_fire_time_changed(hass, time)
         await hass.async_block_till_done()
         assert_state(state)
 
