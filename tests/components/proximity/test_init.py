@@ -1009,6 +1009,29 @@ async def test_nearest_sensors(hass: HomeAssistant, config_zones) -> None:
     state = hass.states.get("sensor.home_test2_direction_of_travel")
     assert state.state == "towards"
 
+    # get unknown distance and direction
+    hass.states.async_set(
+        "device_tracker.test1", "not_home", {"friendly_name": "test1"}
+    )
+    hass.states.async_set(
+        "device_tracker.test2", "not_home", {"friendly_name": "test2"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.home_nearest_device")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.home_nearest_distance")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.home_nearest_direction_of_travel")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.home_test1_distance")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.home_test1_direction_of_travel")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.home_test2_distance")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.home_test2_direction_of_travel")
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_create_deprecated_proximity_issue(
     hass: HomeAssistant,

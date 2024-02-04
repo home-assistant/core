@@ -3,6 +3,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 import logging
+from typing import cast
 
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -323,10 +324,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 }
                 continue
 
-            if nearest_distance_to is None:
-                continue
-
-            if nearest_distance_to > int(distance_to):
+            if cast(int, nearest_distance_to) > int(distance_to):
                 _LOGGER.debug("set closer entity_data: %s", entity_data)
                 proximity_data = {
                     ATTR_DIST_TO: distance_to,
@@ -335,7 +333,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 }
                 continue
 
-            if nearest_distance_to == int(distance_to):
+            if cast(int, nearest_distance_to) == int(distance_to):
                 _LOGGER.debug("set equally close entity_data: %s", entity_data)
                 proximity_data[
                     ATTR_NEAREST
