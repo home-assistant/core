@@ -152,7 +152,7 @@ class ImapMessage:
     def text(self) -> str:
         """Get the message text from the email.
 
-        Will look for text/plain or use text/html if not found.
+        Will look for text/plain or use/ text/html if not found.
         """
         message_text: str | None = None
         message_html: str | None = None
@@ -165,14 +165,12 @@ class ImapMessage:
             Falls back to the raw content part if decoding fails.
             """
             try:
-                content_charset = part.get_content_charset()
-                decoded_payload: bytes = part.get_payload(decode=True)
-                return (
-                    decoded_payload.decode(content_charset)
-                    if content_charset is not None
-                    else str(decoded_payload)
-                )
-            except ValueError:
+                decoded_payload: Any = part.get_payload(decode=True)
+                assert isinstance(decoded_payload, bytes)
+                content_charset = part.get_content_charset() or "utf-8"
+                return decoded_payload.decode(content_charset)
+            except (AssertionError, ValueError):
+                # return undecoded payload
                 return str(part.get_payload())
 
         part: Message
