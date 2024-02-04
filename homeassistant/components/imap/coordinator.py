@@ -94,6 +94,23 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     return client
 
 
+def _decode_payload(part: Message) -> str:
+    """Try to decode text payloads.
+
+    Common text encodings are quoted-printable or base64.
+    Falls back to the raw content part if decoding fails.
+    """
+    try:
+        decoded_payload: Any = part.get_payload(decode=True)
+        if TYPE_CHECKING:
+            assert isinstance(decoded_payload, bytes)
+        content_charset = part.get_content_charset() or "utf-8"
+        return decoded_payload.decode(content_charset)
+    except ValueError:
+        # return undecoded payload
+        return str(part.get_payload())
+
+
 class ImapMessage:
     """Class to parse an RFC822 email message."""
 
@@ -157,22 +174,6 @@ class ImapMessage:
         message_text: str | None = None
         message_html: str | None = None
         message_untyped_text: str | None = None
-
-        def _decode_payload(part: Message) -> str:
-            """Try to decode text payloads.
-
-            Common text encodings are quoted-printable or base64.
-            Falls back to the raw content part if decoding fails.
-            """
-            try:
-                decoded_payload: Any = part.get_payload(decode=True)
-                if TYPE_CHECKING:
-                    assert isinstance(decoded_payload, bytes)
-                content_charset = part.get_content_charset() or "utf-8"
-                return decoded_payload.decode(content_charset)
-            except ValueError:
-                # return undecoded payload
-                return str(part.get_payload())
 
         part: Message
         for part in self.email_message.walk():
