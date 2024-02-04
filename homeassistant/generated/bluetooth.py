@@ -67,10 +67,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_uuid": "e7a60001-6639-429f-94fd-86de8ea26897",
     },
     {
+        "connectable": True,
         "domain": "eq3btsmart",
         "local_name": "CC-RT-BLE",
     },
     {
+        "connectable": True,
         "domain": "eq3btsmart",
         "local_name": "CC-RT-M-BLE",
     },

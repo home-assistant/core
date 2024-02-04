@@ -1650,7 +1650,7 @@
           "name": "eQ-3 MAX!"
         },
         "eq3btsmart": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "eQ-3 Bluetooth Smart Thermostats"
