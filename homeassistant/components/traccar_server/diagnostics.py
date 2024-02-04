@@ -15,12 +15,6 @@ from .coordinator import TraccarServerCoordinator
 TO_REDACT = {CONF_ADDRESS, CONF_LATITUDE, CONF_LONGITUDE}
 
 
-def _get_state_dict(hass: HomeAssistant, enity_id: str) -> dict[str, Any] | None:
-    if state := hass.states.get(enity_id):
-        return {"state": state.state, "attributes": state.attributes}
-    return None
-
-
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -42,9 +36,10 @@ async def async_get_config_entry_diagnostics(
                 {
                     "enity_id": entity.entity_id,
                     "disabled": entity.disabled,
-                    "state": _get_state_dict(hass, entity.entity_id),
+                    "state": {"state": state.state, "attributes": state.attributes},
                 }
                 for entity in entities
+                if (state := hass.states.get(entity.entity_id)) is not None
             ],
         },
         TO_REDACT,
@@ -74,9 +69,10 @@ async def async_get_device_diagnostics(
                 {
                     "enity_id": entity.entity_id,
                     "disabled": entity.disabled,
-                    "state": _get_state_dict(hass, entity.entity_id),
+                    "state": {"state": state.state, "attributes": state.attributes},
                 }
                 for entity in entities
+                if (state := hass.states.get(entity.entity_id)) is not None
             ],
         },
         TO_REDACT,
