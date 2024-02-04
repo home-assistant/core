@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -211,9 +212,9 @@ class Proximity(CoordinatorEntity[ProximityDataUpdateCoordinator]):
     @property
     def state(self) -> str | float:
         """Return the state."""
-        if (distance := self.data[ATTR_DIST_TO]) is None:
-            return STATE_UNKNOWN
-        return self.coordinator.convert_legacy(distance)
+        if isinstance(distance := self.data[ATTR_DIST_TO], str):
+            return distance
+        return self.coordinator.convert_legacy(cast(int, distance))
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
