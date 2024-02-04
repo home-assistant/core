@@ -6952,6 +6952,11 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "zondergas": {
+      "name": "ZonderGas",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
+    },
     "zoneminder": {
       "name": "ZoneMinder",
       "integration_type": "hub",
