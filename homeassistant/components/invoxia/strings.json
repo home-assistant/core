@@ -20,7 +20,7 @@
   "entity": {
     "device_tracker": {
       "invoxia_gps_tracker": {
-        "name": "Invoxia GPS Tracker"
+        "name": "[%key:component::device_tracker::title%]"
       }
     }
   }

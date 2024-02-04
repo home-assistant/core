@@ -11,7 +11,6 @@ from homeassistant.components import device_tracker
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITIES
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -57,13 +56,6 @@ class GpsTrackerEntityDescription(EntityDescription):
     """Describes a Invoxia GPS tracker entity."""
 
 
-GPS_TRACKER_DESCRIPTION = GpsTrackerEntityDescription(
-    key="invoxia_gps_tracker",
-    translation_key="invoxia_gps_tracker",
-    entity_registry_enabled_default=True,
-)
-
-
 class GpsTrackerEntity(
     CoordinatorEntity[GpsTrackerCoordinator], device_tracker.TrackerEntity
 ):
@@ -80,8 +72,6 @@ class GpsTrackerEntity(
         """Store tracker main properties."""
         super().__init__(coordinator)
 
-        self.entity_description = GPS_TRACKER_DESCRIPTION
-
         # Attributes for update logic
         self._client: AsyncClient = client
         self._tracker: Tracker = tracker
@@ -89,9 +79,16 @@ class GpsTrackerEntity(
         # Static entity attributes
         if isinstance(tracker, Tracker01):
             self._attr_icon = MDI_ICONS[tracker.tracker_config.icon]
-            self._attr_device_info = self._form_device_info(tracker)  # type:ignore[assignment]
             self._attr_name = self._tracker.name
             self._attr_unique_id = str(self._tracker.id)
+
+        self.entity_description = GpsTrackerEntityDescription(
+            entity_registry_enabled_default=True,
+            has_entity_name=True,
+            key="invoxia_gps_tracker",
+            translation_key="invoxia_gps_tracker",
+            icon=self._attr_icon,
+        )
 
         # Dynamic entity attributes
         self._attr_available: bool = True
@@ -139,16 +136,3 @@ class GpsTrackerEntity(
     def longitude(self) -> float | None:
         """Return last device longitude."""
         return self._tracker_data.longitude
-
-    @staticmethod
-    def _form_device_info(tracker: Tracker01) -> DeviceInfo:
-        """Extract device_info from tracker instance."""
-        return {
-            "hw_version": tracker.tracker_config.board_name,
-            "identifiers": {(DOMAIN, tracker.serial)},
-            "manufacturer": "Invoxia",
-            "model": tracker.model,
-            "serial_number": tracker.serial,
-            "name": tracker.name,
-            "sw_version": tracker.version,
-        }
