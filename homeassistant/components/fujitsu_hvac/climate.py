@@ -76,7 +76,7 @@ class FujitsuHVACDevice(ClimateEntity):
         """Set up static attributes."""
         self._dev = dev
 
-        self._attr_unique_id = f"{DOMAIN}_{self._dev.device_serial_number}"
+        self._attr_unique_id = dev.device_serial_number
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev.device_serial_number)},
             name=self._dev.device_name,
