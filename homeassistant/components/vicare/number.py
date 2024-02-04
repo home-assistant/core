@@ -123,18 +123,19 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entities(
-    api: PyViCareDevice,
+    device: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a component."""
 
     return [
         ViCareNumber(
-            circuit,
             device_config,
+            device,
+            circuit,
             description,
         )
-        for circuit in get_circuits(api)
+        for circuit in get_circuits(device)
         for description in CIRCUIT_ENTITY_DESCRIPTIONS
         if is_supported(description.key, description, circuit)
     ]
@@ -165,12 +166,13 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        api: PyViCareHeatingDeviceComponent,
         device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceComponent,
         description: ViCareNumberEntityDescription,
     ) -> None:
         """Initialize the number."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(device_config, device, component, description.key)
         self.entity_description = description
 
     @property
