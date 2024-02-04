@@ -1755,6 +1755,9 @@ def _async_abort_entries_match(
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
+    # Indicates whether we support multiple config entries or not
+    supports_multiple_entries: bool = True
+
     def __init_subclass__(cls, *, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)
