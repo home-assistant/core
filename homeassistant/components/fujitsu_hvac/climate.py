@@ -91,7 +91,7 @@ class FujitsuHVACDevice(ClimateEntity):
         """Gather data from API and update our attributes."""
         try:
             if self._dev.ayla_api.token_expiring_soon:
-                await self._dev.ayla_api.refresh_auth()
+                await self._dev.ayla_api.async_refresh_auth()
         except AylaAuthError:
             await self._dev.ayla_api.async_sign_in()
 
