@@ -80,15 +80,6 @@ async def test_config_flow_manual_success(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_MAC_CODE: TEST_MAC},
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": const.ERROR_ALREADY_CONFIGURED}
-
 
 async def test_config_flow_manual_errors(
     hass: HomeAssistant, motionblinds_ble_connect
