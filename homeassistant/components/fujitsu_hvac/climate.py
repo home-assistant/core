@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PASSWORD,
     CONF_USERNAME,
+    PRECISION_HALVES,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -67,7 +68,7 @@ class FujitsuHVACDevice(ClimateEntity):
     """Represent a Fujitsu HVAC device."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_precision = 0.5
+    _attr_precision = PRECISION_HALVES
     _attr_target_temperature_step = 0.5
     _attr_has_entity_name = True
     _attr_name = None
