@@ -2494,9 +2494,6 @@ scsgate==0.1.0
 # homeassistant.components.backup
 securetar==2023.3.0
 
-# homeassistant.components.tuya
-segno==1.5.3
-
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
 
