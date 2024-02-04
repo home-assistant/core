@@ -339,9 +339,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         def _report_turn_on_off(feature: str, method: str) -> None:
             """Log warning not implemented turn on/off feature."""
-            module = type(self).__module__
-            if module and "custom_components" not in module:
-                return
             report_issue = self._suggest_report_issue()
             if feature.startswith("TURN"):
                 message = (
