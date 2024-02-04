@@ -17,8 +17,17 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_DIR_OF_TRAVEL, ATTR_DIST_TO, ATTR_NEAREST, DOMAIN
+from .const import (
+    ATTR_DIR_OF_TRAVEL,
+    ATTR_DIST_TO,
+    ATTR_NEAREST,
+    ATTR_NEAREST_DIR_OF_TRAVEL,
+    ATTR_NEAREST_DIST_TO,
+    DOMAIN,
+)
 from .coordinator import ProximityDataUpdateCoordinator
+
+DIRECTIONS = ["arrived", "away_from", "stationary", "towards"]
 
 SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
     SensorEntityDescription(
@@ -33,12 +42,7 @@ SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
         translation_key=ATTR_DIR_OF_TRAVEL,
         icon="mdi:compass-outline",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "arrived",
-            "away_from",
-            "stationary",
-            "towards",
-        ],
+        options=DIRECTIONS,
     ),
 ]
 
@@ -48,6 +52,21 @@ SENSORS_PER_PROXIMITY: list[SensorEntityDescription] = [
         name="Nearest",
         translation_key=ATTR_NEAREST,
         icon="mdi:near-me",
+    ),
+    SensorEntityDescription(
+        key=ATTR_DIST_TO,
+        name="Nearest distance",
+        translation_key=ATTR_NEAREST_DIST_TO,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.METERS,
+    ),
+    SensorEntityDescription(
+        key=ATTR_DIR_OF_TRAVEL,
+        name="Nearest direction of travel",
+        translation_key=ATTR_NEAREST_DIR_OF_TRAVEL,
+        icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.ENUM,
+        options=DIRECTIONS,
     ),
 ]
 

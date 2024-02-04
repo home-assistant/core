@@ -40,7 +40,17 @@
           "towards": "Towards"
         }
       },
-      "nearest": { "name": "Nearest device" }
+      "nearest": { "name": "Nearest device" },
+      "nearest_dir_of_travel": {
+        "name": "Nearest direction of travel",
+        "state": {
+          "arrived": "Arrived",
+          "away_from": "Away from",
+          "stationary": "Stationary",
+          "towards": "Towards"
+        }
+      },
+      "nearest_distance": { "name": "Nearest distance" }
     }
   },
   "issues": {
