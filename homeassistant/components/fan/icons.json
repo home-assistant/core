@@ -13,7 +13,8 @@
           }
         },
         "preset_mode": {
-          "default": "mdi:circle-medium"
+          "default": "mdi:circle-medium",
+          "state": {}
         }
       }
     }
