@@ -95,16 +95,22 @@ async def test_device_failures(
 ) -> None:
     """Test Flo by Moen devices buffer API failures."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(
-        hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
 
-    assert (
-        hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
-        == "home"
-    )
+    def assert_state(state: str) -> None:
+        assert (
+            hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
+            == state
+        )
+
+    assert_state("home")
+
+    async def move_time_and_assert_state(state: str) -> None:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=65))
+        await hass.async_block_till_done()
+        assert_state(state)
 
     aioclient_mock.clear_requests()
     with patch(
@@ -113,34 +119,7 @@ async def test_device_failures(
     ):
         # simulate 4 updates failing. The failures should be buffered so that it takes 4
         # consecutive failures to mark the device and entities as unavailable.
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=65))
-        await hass.async_block_till_done()
-
-        assert (
-            hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
-            == "home"
-        )
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=65))
-        await hass.async_block_till_done()
-
-        assert (
-            hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
-            == "home"
-        )
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=65))
-        await hass.async_block_till_done()
-
-        assert (
-            hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
-            == "home"
-        )
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=65))
-        await hass.async_block_till_done()
-
-        assert (
-            hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
-            == STATE_UNAVAILABLE
-        )
+        await move_time_and_assert_state("home")
+        await move_time_and_assert_state("home")
+        await move_time_and_assert_state("home")
+        await move_time_and_assert_state(STATE_UNAVAILABLE)
