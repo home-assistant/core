@@ -77,6 +77,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "CC-RT-M-BLE",
     },
     {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-BLE-EQ",
+    },
+    {
         "domain": "eufylife_ble",
         "local_name": "eufy T9140",
     },

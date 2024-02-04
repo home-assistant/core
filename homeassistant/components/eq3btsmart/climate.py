@@ -25,6 +25,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     DeviceInfo,
+    async_get,
     format_mac,
 )
 from homeassistant.helpers.entity import EntityPlatformState
@@ -153,6 +154,17 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         self._firmware_version = str(self._thermostat.device_data.firmware_version)
         self._attr_device_info["sw_version"] = self._firmware_version
+
+        device_registry = async_get(self.hass)
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, self._eq3_config.mac_address)},
+        )
+
+        if device:
+            device_registry.async_update_device(
+                device.id,
+                sw_version=self._firmware_version,
+            )
 
     @callback
     def _on_connection_changed(self, is_connected: bool = True) -> None:

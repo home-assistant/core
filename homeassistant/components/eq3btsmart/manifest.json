@@ -9,6 +9,10 @@
     {
       "local_name": "CC-RT-M-BLE",
       "connectable": true
+    },
+    {
+      "local_name": "CC-RT-BLE-EQ",
+      "connectable": true
     }
   ],
   "codeowners": ["@eulemitkeule", "@dbuezas"],
