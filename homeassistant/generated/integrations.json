@@ -5080,6 +5080,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "samsam": {
+      "name": "SamSam",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
+    },
     "samsung": {
       "name": "Samsung",
       "integrations": {
