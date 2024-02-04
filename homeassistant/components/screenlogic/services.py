@@ -93,7 +93,7 @@ def async_load_screenlogic_services(hass: HomeAssistant):
                 hass,
                 DOMAIN,
                 "service_target_deprecation",
-                breaks_in_ha_version="2024.7.0",
+                breaks_in_ha_version="2024.8.0",
                 is_fixable=True,
                 is_persistent=True,
                 severity=ir.IssueSeverity.WARNING,
