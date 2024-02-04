@@ -116,61 +116,35 @@ def _build_entities(
 ) -> list[ViCareBinarySensor]:
     """Create ViCare binary sensor entities for a device."""
 
-    entities: list[ViCareBinarySensor] = _build_entities_for_device(
-        device, device_config
-    )
-    entities.extend(
-        _build_entities_for_component(
-            get_circuits(device), device_config, CIRCUIT_SENSORS
-        )
-    )
-    entities.extend(
-        _build_entities_for_component(
-            get_burners(device), device_config, BURNER_SENSORS
-        )
-    )
-    entities.extend(
-        _build_entities_for_component(
-            get_compressors(device), device_config, COMPRESSOR_SENSORS
-        )
-    )
-    return entities
-
-
-def _build_entities_for_device(
-    device: PyViCareDevice,
-    device_config: PyViCareDeviceConfig,
-) -> list[ViCareBinarySensor]:
-    """Create device specific ViCare binary sensor entities."""
-
-    return [
+    entities: list[ViCareBinarySensor] = [
         ViCareBinarySensor(
-            device,
             device_config,
+            device,
+            None,
             description,
         )
         for description in GLOBAL_SENSORS
         if is_supported(description.key, description, device)
     ]
-
-
-def _build_entities_for_component(
-    components: list[PyViCareHeatingDeviceWithComponent],
-    device_config: PyViCareDeviceConfig,
-    entity_descriptions: tuple[ViCareBinarySensorEntityDescription, ...],
-) -> list[ViCareBinarySensor]:
-    """Create component specific ViCare binary sensor entities."""
-
-    return [
-        ViCareBinarySensor(
-            component,
-            device_config,
-            description,
+    for component_list, entity_description_list in (
+        (get_circuits(device), CIRCUIT_SENSORS),
+        (get_burners(device), BURNER_SENSORS),
+        (get_compressors(device), COMPRESSOR_SENSORS),
+    ):
+        entities.extend(
+            [
+                ViCareBinarySensor(
+                    device_config,
+                    device,
+                    component,
+                    description,
+                )
+                for component in component_list
+                for description in entity_description_list
+                if is_supported(description.key, description, component)
+            ]
         )
-        for component in components
-        for description in entity_descriptions
-        if is_supported(description.key, description, component)
-    ]
+    return entities
 
 
 async def async_setup_entry(
@@ -198,12 +172,13 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        api: PyViCareDevice,
         device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceWithComponent,
         description: ViCareBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(device_config, device, component, description.key)
         self.entity_description = description
 
     @property
