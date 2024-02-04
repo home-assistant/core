@@ -1,0 +1,13 @@
+{
+  "domain": "invoxia",
+  "name": "Invoxia (unofficial)",
+  "codeowners": ["@ezlo-picori"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/invoxia",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["invoxia"],
+  "quality_scale": "platinum",
+  "requirements": ["gps-tracker==0.9.0"]
+}

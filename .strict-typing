@@ -244,6 +244,7 @@ homeassistant.components.input_text.*
 homeassistant.components.integration.*
 homeassistant.components.intent.*
 homeassistant.components.intent_script.*
+homeassistant.components.invoxia.*
 homeassistant.components.ios.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*

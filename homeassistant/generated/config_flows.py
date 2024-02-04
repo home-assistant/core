@@ -243,6 +243,7 @@ FLOWS = {
         "inkbird",
         "insteon",
         "intellifire",
+        "invoxia",
         "ios",
         "iotawatt",
         "ipma",

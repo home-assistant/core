@@ -1,0 +1,35 @@
+[
+  {
+    "id": 999999,
+    "name": "Dummy Tracker",
+    "type": "tracker_01",
+    "serial": "18b79eff01234567",
+    "created": "2004-11-04T15:05:27.280991Z",
+    "version_build": "894666a",
+    "timezone": "Asia/Tokyo",
+    "version": "4.62.0",
+    "tracker_config": {
+      "mode": "235",
+      "color": 0,
+      "icon": 31,
+      "notify_position": false,
+      "notify_long_walk": false,
+      "network": "lorule",
+      "network_region": "EU",
+      "network_config": 1,
+      "firmware_path": "http://developer.invoxia.com/update/tracker/update.pup",
+      "board_name": "exelo",
+      "usage": "other"
+    },
+    "tracker_status": {
+      "battery": 90,
+      "begin_date": "2004-11-04T15:05:27.280991Z",
+      "last_event": "2017-03-03T11:32:10.564000Z",
+      "state": "online",
+      "sub_end_date": "2007-11-05",
+      "sub_state": "normal",
+      "network_operator": "",
+      "stationary": 25
+    }
+  }
+]

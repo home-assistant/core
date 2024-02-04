@@ -969,6 +969,9 @@ govee-local-api==1.4.1
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
 
+# homeassistant.components.invoxia
+gps-tracker==0.9.0
+
 # homeassistant.components.gpsd
 gps3==0.33.3
 
