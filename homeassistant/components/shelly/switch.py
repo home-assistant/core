@@ -73,7 +73,9 @@ RPC_RELAY_SWITCHES = {
     "switch": RpcSwitchDescription(
         key="switch",
         sub_key="output",
-        removal_condition=is_rpc_channel_type_light,
+        removal_condition=lambda config, _, channel: is_rpc_channel_type_light(
+            config, int(channel.partition(":")[2])
+        ),
     )
 }
 

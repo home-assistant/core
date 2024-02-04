@@ -78,7 +78,7 @@ def async_setup_block_entry(
             blocks.append(block)
         elif block.type == "relay" and block.channel is not None:
             if not is_block_channel_type_light(
-                coordinator.device.settings, block.channel
+                coordinator.device.settings, int(block.channel)
             ):
                 continue
 
@@ -105,9 +105,7 @@ def async_setup_rpc_entry(
 
     switch_ids = []
     for id_ in switch_key_ids:
-        if not is_rpc_channel_type_light(
-            coordinator.device.config, coordinator.device.status, f"switch:{id_}"
-        ):
+        if not is_rpc_channel_type_light(coordinator.device.config, id_):
             continue
 
         switch_ids.append(id_)
