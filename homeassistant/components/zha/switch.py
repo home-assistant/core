@@ -110,10 +110,9 @@ class Switch(ZhaEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Attempt to retrieve on off state from the switch."""
-        self.debug("Polling current state")
-        await self._on_off_cluster_handler.get_attribute_value(
-            "on_off", from_cache=False
-        )
+        # onoff is used in a few spots. we want to always update switch entities
+        # so we can't use the cluster handler's async_update method.
+        await self._on_off_cluster_handler.read_attribute("on_off")
 
 
 @GROUP_MATCH()
@@ -256,14 +255,11 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
-        self.debug("Polling current state")
-        value = await self._cluster_handler.get_attribute_value(
-            self._attribute_name, from_cache=False
+        await self._cluster_handler.read_attributes(
+            [self._attribute_name]
+            if self._inverter_attribute_name is None
+            else [self._attribute_name, self._inverter_attribute_name]
         )
-        await self._cluster_handler.get_attribute_value(
-            self._inverter_attribute_name, from_cache=False
-        )
-        self.debug("read value=%s, inverted=%s", value, self.inverted)
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -659,13 +655,11 @@ class WindowCoveringInversionSwitch(ZHASwitchConfigurationEntity):
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
         self.debug("Polling current state")
-        await self._cluster_handler.get_attributes(
+        await self._cluster_handler.read_attributes(
             [
                 self._attribute_name,
                 WindowCovering.AttributeDefs.window_covering_mode.name,
-            ],
-            from_cache=False,
-            only_cache=False,
+            ]
         )
         self.async_write_ha_state()
 

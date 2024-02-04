@@ -27,16 +27,15 @@ class DoorLockClusterHandler(ClusterHandler):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await self.get_attribute_value(
+        result = await self.read_attribute(
             DoorLock.AttributeDefs.lock_state.name, from_cache=True
         )
-        if result is not None:
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                DoorLock.AttributeDefs.lock_state.id,
-                DoorLock.AttributeDefs.lock_state.name,
-                result,
-            )
+        self.async_send_signal(
+            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+            DoorLock.AttributeDefs.lock_state.id,
+            DoorLock.AttributeDefs.lock_state.name,
+            result,
+        )
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -158,13 +157,12 @@ class WindowCoveringClusterHandler(ClusterHandler):
 
     async def async_update(self):
         """Retrieve latest state."""
-        results = await self.get_attributes(
+        results = await self.read_attributes(
             [
                 WindowCovering.AttributeDefs.current_position_lift_percentage.name,
                 WindowCovering.AttributeDefs.current_position_tilt_percentage.name,
             ],
-            from_cache=False,
-            only_cache=False,
+            ignore_failures=True,
         )
         self.debug(
             "read current_position_lift_percentage and current_position_tilt_percentage - results: %s",

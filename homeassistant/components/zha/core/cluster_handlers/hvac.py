@@ -63,9 +63,7 @@ class FanClusterHandler(ClusterHandler):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        await self.get_attribute_value(
-            Fan.AttributeDefs.fan_mode.name, from_cache=False
-        )
+        await self.read_attribute(Fan.AttributeDefs.fan_mode.name)
 
     @callback
     def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
@@ -330,12 +328,7 @@ class ThermostatClusterHandler(ClusterHandler):
 
     async def get_occupancy(self) -> bool | None:
         """Get unreportable occupancy attribute."""
-        res, fail = await self.read_attributes(
-            [Thermostat.AttributeDefs.occupancy.name]
-        )
-        self.debug("read 'occupancy' attr, success: %s, fail: %s", res, fail)
-        if Thermostat.AttributeDefs.occupancy.name not in res:
-            return None
+        await self.read_attribute(Thermostat.AttributeDefs.occupancy.name)
         return bool(self.occupancy)
 
 

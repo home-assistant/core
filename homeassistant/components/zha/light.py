@@ -614,20 +614,6 @@ class BaseLight(LogMixin, light.LightEntity):
         self._transitioning_individual = False
         self._async_unsub_transition_listener()
         self.async_write_ha_state()
-        if isinstance(self, LightGroup):
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_LIGHT_GROUP_TRANSITION_FINISHED,
-                {"entity_ids": self._entity_ids},
-            )
-            if self._debounced_member_refresh is not None:
-                self.debug("transition complete - refreshing group member states")
-                assert self.platform.config_entry
-                self.platform.config_entry.async_create_background_task(
-                    self.hass,
-                    self._debounced_member_refresh.async_call(),
-                    "zha.light-refresh-debounced-member",
-                )
 
 
 @STRICT_MATCH(
@@ -871,28 +857,22 @@ class Light(BaseLight, ZhaEntity):
         self.debug("polling current state")
 
         if self._on_off_cluster_handler:
-            state = await self._on_off_cluster_handler.get_attribute_value(
-                "on_off", from_cache=False
-            )
+            state = await self._on_off_cluster_handler.read_attribute("on_off")
             # check if transition started whilst waiting for polled state
             if self.is_transitioning:
                 return
 
-            if state is not None:
-                self._attr_state = state
-                if state:  # reset "off with transition" flag if the light is on
-                    self._off_with_transition = False
-                    self._off_brightness = None
+            self._attr_state = state
+            if state:  # reset "off with transition" flag if the light is on
+                self._off_with_transition = False
+                self._off_brightness = None
 
         if self._level_cluster_handler:
-            level = await self._level_cluster_handler.get_attribute_value(
-                "current_level", from_cache=False
-            )
+            level = await self._level_cluster_handler.read_attribute("current_level")
             # check if transition started whilst waiting for polled state
             if self.is_transitioning:
                 return
-            if level is not None:
-                self._attr_brightness = level
+            self._attr_brightness = level
 
         if self._color_cluster_handler:
             attributes = [
@@ -918,8 +898,8 @@ class Light(BaseLight, ZhaEntity):
             if self._color_cluster_handler.color_loop_supported:
                 attributes.append("color_loop_active")
 
-            results = await self._color_cluster_handler.get_attributes(
-                attributes, from_cache=False, only_cache=False
+            results = await self._color_cluster_handler.read_attributes(
+                attributes, ignore_failures=True
             )
 
             # although rare, a transition might have been started while we were waiting
@@ -1367,3 +1347,22 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             {"entity_ids": self._entity_ids},
             update_params,
         )
+
+    @callback
+    def async_transition_complete(self, _=None) -> None:
+        """Set _transitioning_individual to False and write HA state."""
+        super().async_transition_complete()
+
+        async_dispatcher_send(
+            self.hass,
+            SIGNAL_LIGHT_GROUP_TRANSITION_FINISHED,
+            {"entity_ids": self._entity_ids},
+        )
+        if self._debounced_member_refresh is not None:
+            self.debug("transition complete - refreshing group member states")
+            assert self.platform.config_entry
+            self.platform.config_entry.async_create_background_task(
+                self.hass,
+                self._debounced_member_refresh.async_call(),
+                "zha.light-refresh-debounced-member",
+            )

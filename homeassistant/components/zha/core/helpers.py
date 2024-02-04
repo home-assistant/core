@@ -60,27 +60,6 @@ class BindingPair:
         )
 
 
-async def safe_read(
-    cluster, attributes, allow_cache=True, only_cache=False, manufacturer=None
-):
-    """Swallow all exceptions from network read.
-
-    If we throw during initialization, setup fails. Rather have an entity that
-    exists, but is in a maybe wrong state, than no entity. This method should
-    probably only be used during initialization.
-    """
-    try:
-        result, _ = await cluster.read_attributes(
-            attributes,
-            allow_cache=allow_cache,
-            only_cache=only_cache,
-            manufacturer=manufacturer,
-        )
-        return result
-    except Exception:  # pylint: disable=broad-except
-        return {}
-
-
 async def get_matched_clusters(
     source_zha_device: ZHADevice, target_zha_device: ZHADevice
 ) -> list[BindingPair]:

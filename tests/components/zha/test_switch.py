@@ -156,6 +156,13 @@ async def test_switch(
 ) -> None:
     """Test ZHA switch platform."""
 
+    zigpy_device.endpoints[1].on_off.PLUGGED_ATTR_READS.update(
+        {
+            general.OnOff.AttributeDefs.on_off.name: 0,
+            general.OnOff.AttributeDefs.start_up_on_off.name: 0,
+        }
+    )
+
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints[1].on_off
     entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
@@ -171,6 +178,13 @@ async def test_switch(
 
     # test that the state has changed from unavailable to off
     assert hass.states.get(entity_id).state == STATE_OFF
+
+    # Test async_update
+    cluster.read_attributes.reset_mock()
+    await async_update_entity(hass, entity_id)
+    assert cluster.read_attributes.mock_calls == [
+        call(["on_off"], allow_cache=False, only_cache=False, manufacturer=None)
+    ]
 
     # turn on at switch
     await send_attributes_report(hass, cluster, {1: 0, 0: 1, 2: 2})
@@ -505,18 +519,11 @@ async def test_switch_configurable(
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     # the mocking doesn't update the attr cache so this flips back to initial value
-    assert cluster.read_attributes.call_count == 2
+    assert cluster.read_attributes.call_count == 1
     assert [
         call(
             [
                 "window_detection_function",
-            ],
-            allow_cache=False,
-            only_cache=False,
-            manufacturer=None,
-        ),
-        call(
-            [
                 "window_detection_function_inverter",
             ],
             allow_cache=False,
@@ -636,6 +643,8 @@ async def test_cover_inversion_switch(
         cluster.PLUGGED_ATTR_READS = {
             WCAttrs.config_status.name: WCCS.Operational
             | WCCS.Open_up_commands_reversed,
+            WCAttrs.window_covering_mode.name: WCM.Motor_direction_reversed
+            | WCM.LEDs_display_feedback,
         }
         # turn on from UI
         await hass.services.async_call(
@@ -659,6 +668,7 @@ async def test_cover_inversion_switch(
         # turn off from UI
         cluster.PLUGGED_ATTR_READS = {
             WCAttrs.config_status.name: WCCS.Operational,
+            WCAttrs.window_covering_mode.name: WCM(WCM.LEDs_display_feedback),
         }
         await hass.services.async_call(
             SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True

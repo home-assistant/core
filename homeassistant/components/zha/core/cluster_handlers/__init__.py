@@ -23,6 +23,7 @@ from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from ..const import (
     ATTR_ARGS,
@@ -42,7 +43,7 @@ from ..const import (
     ZHA_CLUSTER_HANDLER_MSG_DATA,
     ZHA_CLUSTER_HANDLER_READS_PER_REQ,
 )
-from ..helpers import LogMixin, safe_read
+from ..helpers import LogMixin
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -55,6 +56,10 @@ UNPROXIED_CLUSTER_METHODS = {"general_command"}
 _P = ParamSpec("_P")
 _FuncType = Callable[_P, Awaitable[Any]]
 _ReturnFuncType = Callable[_P, Coroutine[Any, Any, Any]]
+
+
+class AttributeReadFailure(zigpy.exceptions.ZigbeeException):
+    """Error to indicate an attribute read failed."""
 
 
 @contextlib.contextmanager
@@ -73,6 +78,23 @@ def wrap_zigpy_exceptions() -> Iterator[None]:
             message = f"{message}: {exc}"
 
         raise HomeAssistantError(message) from exc
+
+
+@contextlib.contextmanager
+def suppress_and_log(
+    log_fmt: str,
+    exceptions: tuple[type[BaseException], ...] = (
+        asyncio.TimeoutError,
+        zigpy.exceptions.ZigbeeException,
+        HomeAssistantError,
+        AttributeReadFailure,
+    ),
+) -> Iterator[None]:
+    """Suppress and log exceptions."""
+    try:
+        yield
+    except exceptions:
+        _LOGGER.debug(log_fmt, exc_info=True)
 
 
 def retry_request(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
@@ -200,20 +222,9 @@ class ClusterHandler(LogMixin):
         devices are unreachable.
         """
         try:
-            res = await self.cluster.bind()
+            res = await retry_request(self.cluster.bind)()
             self.debug("bound '%s' cluster: %s", self.cluster.ep_attribute, res[0])
-            async_dispatcher_send(
-                self._endpoint.device.hass,
-                ZHA_CLUSTER_HANDLER_MSG,
-                {
-                    ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
-                    ZHA_CLUSTER_HANDLER_MSG_DATA: {
-                        "cluster_name": self.cluster.name,
-                        "cluster_id": self.cluster.cluster_id,
-                        "success": res[0] == 0,
-                    },
-                },
-            )
+            success = res[0] == 0
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to bind '%s' cluster: %s",
@@ -221,18 +232,20 @@ class ClusterHandler(LogMixin):
                 str(ex),
                 exc_info=ex,
             )
-            async_dispatcher_send(
-                self._endpoint.device.hass,
-                ZHA_CLUSTER_HANDLER_MSG,
-                {
-                    ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
-                    ZHA_CLUSTER_HANDLER_MSG_DATA: {
-                        "cluster_name": self.cluster.name,
-                        "cluster_id": self.cluster.cluster_id,
-                        "success": False,
-                    },
+            success = False
+
+        async_dispatcher_send(
+            self._endpoint.device.hass,
+            ZHA_CLUSTER_HANDLER_MSG,
+            {
+                ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
+                ZHA_CLUSTER_HANDLER_MSG_DATA: {
+                    "cluster_name": self.cluster.name,
+                    "cluster_id": self.cluster.cluster_id,
+                    "success": success,
                 },
-            )
+            },
+        )
 
     async def configure_reporting(self) -> None:
         """Configure attribute reporting for a cluster.
@@ -242,11 +255,8 @@ class ClusterHandler(LogMixin):
         """
         event_data = {}
         kwargs = {}
-        if (
-            self.cluster.cluster_id >= 0xFC00
-            and self._endpoint.device.manufacturer_code
-        ):
-            kwargs["manufacturer"] = self._endpoint.device.manufacturer_code
+        if self._manufacturer_code is not None:
+            kwargs["manufacturer"] = self._manufacturer_code
 
         for attr_report in self.REPORT_CONFIG:
             attr, config = attr_report["attr"], attr_report["config"]
@@ -273,7 +283,9 @@ class ClusterHandler(LogMixin):
         while chunk:
             reports = {rec["attr"]: rec["config"] for rec in chunk}
             try:
-                res = await self.cluster.configure_reporting_multiple(reports, **kwargs)
+                res = await retry_request(self.cluster.configure_reporting_multiple)(
+                    reports, **kwargs
+                )
                 self._configure_reporting_status(reports, res[0], event_data)
             except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
                 self.debug(
@@ -392,18 +404,25 @@ class ClusterHandler(LogMixin):
 
         if cached:
             self.debug("initializing cached cluster handler attributes: %s", cached)
-            await self._get_attributes(
-                True, cached, from_cache=True, only_cache=from_cache
-            )
+
+            with suppress_and_log("Failed to read cached attributes"):
+                await self.read_attributes(
+                    cached, from_cache=True, only_cache=from_cache
+                )
+
         if uncached:
             self.debug(
                 "initializing uncached cluster handler attributes: %s - from cache[%s]",
                 uncached,
                 from_cache,
             )
-            await self._get_attributes(
-                True, uncached, from_cache=from_cache, only_cache=from_cache
-            )
+
+            with suppress_and_log("Failed to read uncached attributes"):
+                await self.read_attributes(
+                    uncached,
+                    from_cache=from_cache,
+                    only_cache=from_cache,
+                )
 
         ch_specific_init = getattr(
             self, "async_initialize_cluster_handler_specific", None
@@ -412,7 +431,8 @@ class ClusterHandler(LogMixin):
             self.debug(
                 "Performing cluster handler specific initialization: %s", uncached
             )
-            await ch_specific_init(from_cache=from_cache)
+            with suppress_and_log("Failed to perform cluster handler-specific init"):
+                await ch_specific_init(from_cache=from_cache)
 
         self.debug("finished cluster handler initialization")
         self._status = ClusterHandlerStatus.INITIALIZED
@@ -478,60 +498,73 @@ class ClusterHandler(LogMixin):
 
         return self.cluster.attributes[attrid].name
 
-    async def get_attribute_value(self, attribute, from_cache=True):
-        """Get the value for an attribute."""
-        manufacturer = None
+    @property
+    def _manufacturer_code(self) -> int | None:
         manufacturer_code = self._endpoint.device.manufacturer_code
-        if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
-            manufacturer = manufacturer_code
-        result = await safe_read(
-            self._cluster,
-            [attribute],
-            allow_cache=from_cache,
-            only_cache=from_cache,
-            manufacturer=manufacturer,
-        )
-        return result.get(attribute)
 
-    async def _get_attributes(
+        if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
+            return manufacturer_code
+
+        return None
+
+    async def read_attribute(self, attribute: str, from_cache: bool = False) -> Any:
+        """Get the value for an attribute."""
+        results = await self.read_attributes(
+            attributes=[attribute],
+            from_cache=from_cache,
+            only_cache=from_cache,
+        )
+
+        return results[attribute]
+
+    async def read_attributes(
         self,
-        raise_exceptions: bool,
         attributes: list[str],
-        from_cache: bool = True,
-        only_cache: bool = True,
+        *,
+        from_cache: bool = False,
+        only_cache: bool = False,
+        ignore_failures: bool = False,
+        manufacturer: int | None | UndefinedType = UNDEFINED,
     ) -> dict[int | str, Any]:
         """Get the values for a list of attributes."""
-        manufacturer = None
-        manufacturer_code = self._endpoint.device.manufacturer_code
-        if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
-            manufacturer = manufacturer_code
         chunk = attributes[:ZHA_CLUSTER_HANDLER_READS_PER_REQ]
         rest = attributes[ZHA_CLUSTER_HANDLER_READS_PER_REQ:]
-        result = {}
+        success: dict[str | int, Any] = {}
+        failure: dict[str | int, Any] = {}
+
+        if manufacturer is UNDEFINED:
+            manufacturer = self._manufacturer_code
+
         while chunk:
-            try:
-                self.debug("Reading attributes in chunks: %s", chunk)
-                read, _ = await self.cluster.read_attributes(
-                    chunk,
-                    allow_cache=from_cache,
-                    only_cache=only_cache,
-                    manufacturer=manufacturer,
-                )
-                result.update(read)
-            except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
-                self.debug(
-                    "failed to get attributes '%s' on '%s' cluster: %s",
-                    chunk,
-                    self.cluster.ep_attribute,
-                    str(ex),
-                )
-                if raise_exceptions:
-                    raise
+            chunk_success, chunk_failure = await retry_request(
+                self._cluster.read_attributes
+            )(
+                chunk,
+                allow_cache=from_cache,
+                only_cache=only_cache,
+                manufacturer=manufacturer,
+            )
+
+            success.update(chunk_success)
+            failure.update(chunk_failure)
+
             chunk = rest[:ZHA_CLUSTER_HANDLER_READS_PER_REQ]
             rest = rest[ZHA_CLUSTER_HANDLER_READS_PER_REQ:]
-        return result
 
-    get_attributes = functools.partialmethod(_get_attributes, False)
+        if ignore_failures:
+            success.update({k: None for k in failure})
+        elif failure:
+            success_text = ", ".join(f"{k}={v!r}" for k, v in success.items())
+            failure_text = ", ".join(f"{k}={v!r}" for k, v in failure.items())
+
+            msg = f"Could not read attributes {failure_text}"
+
+            if success_text:
+                msg += f" (read {success_text})"
+
+            raise AttributeReadFailure(msg)
+
+        return success
 
     async def write_attributes_safe(
         self, attributes: dict[str, Any], manufacturer: int | None = None
@@ -557,7 +590,7 @@ class ClusterHandler(LogMixin):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
         args = (self._endpoint.device.nwk, self._id) + args
-        _LOGGER.log(level, msg, *args, **kwargs)
+        _LOGGER.log(level, msg, *args, stacklevel=1, **kwargs)
 
     def __getattr__(self, name):
         """Get attribute or a decorated cluster command."""
@@ -566,11 +599,7 @@ class ClusterHandler(LogMixin):
             and callable(getattr(self._cluster, name))
             and name not in UNPROXIED_CLUSTER_METHODS
         ):
-            command = getattr(self._cluster, name)
-            wrapped_command = retry_request(command)
-            wrapped_command.__name__ = name
-
-            return wrapped_command
+            return retry_request(getattr(self._cluster, name))
         return self.__getattribute__(name)
 
 

@@ -23,7 +23,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from . import ClusterHandler, ClusterHandlerStatus
+from . import ClusterHandler, ClusterHandlerStatus, suppress_and_log
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -348,9 +348,9 @@ class IASZoneClusterHandler(ClusterHandler):
 
     async def async_configure(self):
         """Configure IAS device."""
-        await self.get_attribute_value(
-            IasZone.AttributeDefs.zone_type.name, from_cache=False
-        )
+        with suppress_and_log("Failed to read zone type"):
+            await self.read_attribute(IasZone.AttributeDefs.zone_type.name)
+
         if self._endpoint.device.skip_configuration:
             self.debug("skipping IASZoneClusterHandler configuration")
             return

@@ -1,7 +1,6 @@
 """General cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
@@ -515,8 +514,8 @@ class OnOffClusterHandler(ClusterHandler):
             return
         from_cache = not self._endpoint.device.is_mains_powered
         self.debug("attempting to update onoff state - from cache: %s", from_cache)
-        await self.get_attribute_value(
-            OnOff.AttributeDefs.on_off.id, from_cache=from_cache
+        await self.read_attribute(
+            OnOff.AttributeDefs.on_off.name, from_cache=from_cache
         )
         await super().async_update()
 
@@ -657,13 +656,13 @@ class PowerConfigurationClusterHandler(ClusterHandler):
         ),
     )
 
-    def async_initialize_cluster_handler_specific(self, from_cache: bool) -> Coroutine:
+    async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:
         """Initialize cluster handler specific attrs."""
         attributes = [
             PowerConfiguration.AttributeDefs.battery_size.name,
             PowerConfiguration.AttributeDefs.battery_quantity.name,
         ]
-        return self.get_attributes(
+        await self.read_attributes(
             attributes, from_cache=from_cache, only_cache=from_cache
         )
 
