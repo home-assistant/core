@@ -203,7 +203,7 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
 
     MockConfigEntry(
         domain=DOMAIN,
-        title="home3",
+        title="home 3",
         data={
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test2"],
@@ -229,7 +229,7 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
             },
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "home2"
+        assert result["title"] == "home 2"
 
         await hass.async_block_till_done()
 
@@ -246,6 +246,6 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
             },
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "home4"
+        assert result["title"] == "home 4"
 
         await hass.async_block_till_done()

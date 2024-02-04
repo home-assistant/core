@@ -18,6 +18,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
 )
+from homeassistant.util import slugify
 
 from .const import (
     CONF_IGNORED_ZONES,
@@ -91,17 +92,17 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
 
             title = cast(State, self.hass.states.get(user_input[CONF_ZONE])).name
 
-            existing_entry_titles = [
-                e.title.lower() for e in self._async_current_entries()
+            slugified_existing_entry_titles = [
+                slugify(e.title) for e in self._async_current_entries()
             ]
-            if any(t for t in existing_entry_titles if t == title.lower()):
-                for possible_title in [f"{title}{i}" for i in range(2, 11)]:
-                    if possible_title.lower() in existing_entry_titles:
-                        continue
-                    title = possible_title
-                    break
 
-            return self.async_create_entry(title=title, data=user_input)
+            possible_title = title
+            tries = 1
+            while slugify(possible_title) in slugified_existing_entry_titles:
+                tries += 1
+                possible_title = f"{title} {tries}"
+
+            return self.async_create_entry(title=possible_title, data=user_input)
 
         return self.async_show_form(
             step_id="user",
