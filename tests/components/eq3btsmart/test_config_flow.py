@@ -41,6 +41,50 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_flow_invalid_mac(hass: HomeAssistant) -> None:
+    """Test we handle invalid mac address."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.eq3btsmart.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_MAC: "invalid", CONF_NAME: NAME},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {CONF_MAC: "invalid_mac_address"}
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_user_flow_invalid_name(hass: HomeAssistant) -> None:
+    """Test we handle invalid name."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.eq3btsmart.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_MAC: MAC, CONF_NAME: ""},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {CONF_NAME: "invalid_name"}
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
 async def test_bluetooth_flow(
     hass: HomeAssistant, fake_service_info: BluetoothServiceInfoBleak
 ) -> None:

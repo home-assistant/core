@@ -22,7 +22,7 @@ class Eq3Config:
 
     mac_address: str
     name: str
-    adapter: Adapter = DEFAULT_ADAPTER
+    adapter: Adapter | None = DEFAULT_ADAPTER
     current_temp_selector: CurrentTemperatureSelector = DEFAULT_CURRENT_TEMP_SELECTOR
     target_temp_selector: TargetTemperatureSelector = DEFAULT_TARGET_TEMP_SELECTOR
     external_temp_sensor: str = ""

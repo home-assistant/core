@@ -18,8 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for eQ-3 Bluetooth Smart thermostats."""
 
-    VERSION = 1
-
     def __init__(self) -> None:
         """Initialize the config flow."""
 
@@ -32,7 +30,7 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
 
-        errors: dict[str, str] | None = {}
+        errors: dict[str, str] = {}
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
@@ -40,9 +38,28 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        await self.async_set_unique_id(format_mac(user_input[CONF_MAC]))
+        name = user_input[CONF_NAME]
+        mac_address = user_input[CONF_MAC]
+
+        if not validate_name(name):
+            errors[CONF_NAME] = "invalid_name"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=SCHEMA_NAME_MAC,
+                errors=errors,
+            )
+
+        if not validate_mac(mac_address):
+            errors[CONF_MAC] = "invalid_mac_address"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=SCHEMA_NAME_MAC,
+                errors=errors,
+            )
+
+        await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates=user_input)
-        return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+        return self.async_create_entry(title=name, data=user_input)
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -92,3 +109,20 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MAC: self.mac,
             },
         )
+
+
+def validate_mac(mac: str) -> bool:
+    """Return whether or not given value is a valid MAC address."""
+
+    return bool(
+        mac
+        and len(mac) == 17
+        and mac.count(":") == 5
+        and all(int(part, 16) < 256 for part in mac.split(":") if part)
+    )
+
+
+def validate_name(name: str) -> bool:
+    """Return whether or not given value is a valid name."""
+
+    return bool(name)

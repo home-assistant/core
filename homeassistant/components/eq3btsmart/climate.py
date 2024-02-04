@@ -25,10 +25,9 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     DeviceInfo,
-    async_get,
     format_mac,
 )
-from homeassistant.helpers.entity import Entity, EntityPlatformState
+from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -56,13 +55,9 @@ async def async_setup_entry(
     """Handle config entry setup."""
 
     eq3_config_entry: Eq3ConfigEntry = hass.data[DOMAIN][config_entry.entry_id]
-    thermostat = eq3_config_entry.thermostat
-    eq3_config = eq3_config_entry.eq3_config
-
-    entities_to_add: list[Entity] = [Eq3Climate(eq3_config, thermostat)]
 
     async_add_entities(
-        entities_to_add,
+        [Eq3Climate(eq3_config_entry.eq3_config, eq3_config_entry.thermostat)],
         update_before_add=False,
     )
 
@@ -99,6 +94,14 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         self._attr_should_poll = False
         self._was_connected: bool = False
         self._firmware_version: str | None = None
+        self._attr_device_info: DeviceInfo = DeviceInfo(
+            name=self._eq3_config.name,
+            manufacturer=MANUFACTURER,
+            model=DEVICE_MODEL,
+            identifiers={(DOMAIN, self._eq3_config.mac_address)},
+            sw_version=self._firmware_version,
+            connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -149,17 +152,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         """Handle updated device data from the thermostat."""
 
         self._firmware_version = str(self._thermostat.device_data.firmware_version)
-
-        device_registry = async_get(self.hass)
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, self._eq3_config.mac_address)},
-        )
-
-        if device:
-            device_registry.async_update_device(
-                device_id=device.id,
-                sw_version=self._firmware_version,
-            )
+        self._attr_device_info["sw_version"] = self._firmware_version
 
     @callback
     def _on_connection_changed(self, is_connected: bool = True) -> None:
@@ -271,10 +264,6 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         if temperature is None:
             return
-
-        temperature = round(temperature * 2) / 2
-        temperature = min(temperature, self.max_temp)
-        temperature = max(temperature, self.min_temp)
 
         previous_temperature = self._target_temperature
         self._target_temperature = temperature

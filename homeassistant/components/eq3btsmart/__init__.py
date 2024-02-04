@@ -1,7 +1,6 @@
 """Support for EQ3 devices."""
 
 import logging
-from typing import Any
 
 from bleak.backends.device import BLEDevice
 from bleak_esphome.backend.scanner import ESPHomeScanner
@@ -10,22 +9,11 @@ from eq3btsmart.thermostat_config import ThermostatConfig
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import CONF_MAC, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import (
-    CONF_ADAPTER,
-    CONF_CURRENT_TEMP_SELECTOR,
-    CONF_EXTERNAL_TEMP_SENSOR,
-    CONF_TARGET_TEMP_SELECTOR,
-    DEFAULT_ADAPTER,
-    DEFAULT_CURRENT_TEMP_SELECTOR,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TARGET_TEMP_SELECTOR,
-    DOMAIN,
-    Adapter,
-)
+from .const import DOMAIN, Adapter
 from .models import Eq3Config, Eq3ConfigEntry
 
 PLATFORMS = [
@@ -40,31 +28,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     mac_address: str = entry.data[CONF_MAC]
     name: str = entry.data[CONF_NAME]
-    adapter: Adapter = entry.options.get(CONF_ADAPTER, DEFAULT_ADAPTER)
-    current_temp_selector = entry.options.get(
-        CONF_CURRENT_TEMP_SELECTOR, DEFAULT_CURRENT_TEMP_SELECTOR
-    )
-    target_temp_selector = entry.options.get(
-        CONF_TARGET_TEMP_SELECTOR, DEFAULT_TARGET_TEMP_SELECTOR
-    )
-    external_temp_sensor = entry.options.get(CONF_EXTERNAL_TEMP_SENSOR, "")
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     eq3_config = Eq3Config(
         mac_address=mac_address,
         name=name,
-        adapter=adapter,
-        current_temp_selector=current_temp_selector,
-        target_temp_selector=target_temp_selector,
-        external_temp_sensor=external_temp_sensor,
-        scan_interval=scan_interval,
     )
 
     thermostat_config = ThermostatConfig(
         mac_address=mac_address,
         name=name,
-        adapter=adapter,
-        stay_connected=True,
     )
 
     device = await async_get_device(hass, eq3_config)
@@ -81,8 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     eq3_config_entry = Eq3ConfigEntry(eq3_config=eq3_config, thermostat=thermostat)
 
-    domain_data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
-    domain_data[entry.entry_id] = eq3_config_entry
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = eq3_config_entry
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
