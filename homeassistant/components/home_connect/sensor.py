@@ -13,9 +13,9 @@ import homeassistant.util.dt as dt_util
 from .const import (
     ATTR_VALUE,
     BSH_OPERATION_STATE,
-    BSH_OPERATION_STATE_RUN,
-    BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_FINISHED,
+    BSH_OPERATION_STATE_PAUSE,
+    BSH_OPERATION_STATE_RUN,
     DOMAIN,
 )
 from .entity import HomeConnectEntity
