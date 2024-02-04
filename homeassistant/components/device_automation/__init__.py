@@ -249,8 +249,7 @@ async def async_get_device_automations(
 
     for device_id in match_device_ids:
         for entry in entity_registry.entities.get_entries_for_device_id(device_id):
-            if not entry.disabled_by:
-                device_entities_domains.setdefault(device_id, set()).add(entry.domain)
+            device_entities_domains.setdefault(device_id, set()).add(entry.domain)
 
     for device_id in match_device_ids:
         combined_results[device_id] = []
