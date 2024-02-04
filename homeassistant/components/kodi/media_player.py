@@ -631,13 +631,18 @@ class KodiEntity(MediaPlayerEntity):
 
     @property
     def extra_state_attributes(self):
-        """Extra state attributes."""
-        hdrtype = self._item.get("streamdetails", {}).get("video", [{}])[0].get("hdrtype")
-        if hdrtype is None:
-            return {}
-        if hdrtype == "":
-            hdrtype = "sdr"
-        return {"hdr_type": hdrtype}
+        """Return the state attributes."""
+        state_atrr = {}
+        if self.state == MediaPlayerState.OFF:
+            return state_atrr
+
+        hdr_type = self._item.get("streamdetails", {}).get("video", [{}])[0].get("hdrtype")
+        if hdr_type == "":
+            state_atrr["hdr_type"] = "sdr"
+        else:
+            state_atrr["hdr_type"] = hdr_type
+
+        return state_atrr
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
