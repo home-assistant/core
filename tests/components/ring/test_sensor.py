@@ -38,6 +38,15 @@ async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) 
         "sensor.downstairs_wifi_signal_strength"
     )
 
+    ingress_mic_volume_state = hass.states.get("sensor.ingress_mic_volume")
+    assert ingress_mic_volume_state.state == "11"
+
+    ingress_doorbell_volume_state = hass.states.get("sensor.ingress_doorbell_volume")
+    assert ingress_doorbell_volume_state.state == "8"
+
+    ingress_voice_volume_state = hass.states.get("sensor.ingress_voice_volume")
+    assert ingress_voice_volume_state.state == "11"
+
     if not WIFI_ENABLED:
         return
 
