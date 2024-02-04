@@ -504,9 +504,9 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         """Get entries for device."""
         data = self.data
         return [
-            data[key]
+            entry
             for key in self._device_id_index.get(device_id, ())
-            if (include_disabled_entities or not data[key].disabled_by)
+            if not (entry := data[key]).disabled_by or include_disabled_entities
         ]
 
     def get_entries_for_config_entry_id(
