@@ -544,7 +544,7 @@ async def test_update_item_failure(
     calendar.todo_by_uid = MagicMock(return_value=item)
     dav_client.put.side_effect = DAVError()
 
-    with pytest.raises(HomeAssistantError, match="CalDAV save error"):
+    with pytest.raises(HomeAssistantError, match="CalDAV completed error"):
         await hass.services.async_call(
             TODO_DOMAIN,
             "update_item",

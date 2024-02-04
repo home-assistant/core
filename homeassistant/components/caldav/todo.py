@@ -37,11 +37,6 @@ TODO_STATUS_MAP = {
     "COMPLETED": TodoItemStatus.COMPLETED,
     "CANCELLED": TodoItemStatus.COMPLETED,
 }
-TODO_STATUS_MAP_INV: dict[TodoItemStatus, str] = {
-    TodoItemStatus.NEEDS_ACTION: "NEEDS-ACTION",
-    TodoItemStatus.COMPLETED: "COMPLETED",
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -130,7 +125,7 @@ class WebDavTodoListEntity(TodoListEntity):
         if summary := item.summary:
             item_data["summary"] = summary
         if status := item.status:
-            item_data["status"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+            item_data["status"] = "NEEDS-ACTION"
         if due := item.due:
             item_data["due"] = due
         if description := item.description:
@@ -156,16 +151,6 @@ class WebDavTodoListEntity(TodoListEntity):
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
         vtodo = todo.icalendar_component  # type: ignore[attr-defined]
         vtodo["SUMMARY"] = item.summary or ""
-        if status := item.status:
-            if status == TodoItemStatus.COMPLETED:
-                try:
-                    await self.hass.async_add_executor_job(
-                        partial(todo.complete, completion_timestamp=datetime.now()),
-                    )
-                except (requests.ConnectionError, DAVError) as err:
-                    raise HomeAssistantError(f"CalDAV complete error: {err}") from err
-            else:
-                vtodo["STATUS"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
         if due := item.due:
             todo.set_due(due)  # type: ignore[attr-defined]
         else:
@@ -174,6 +159,15 @@ class WebDavTodoListEntity(TodoListEntity):
             vtodo["DESCRIPTION"] = description
         else:
             vtodo.pop("DESCRIPTION", None)
+        if item.status == TodoItemStatus.COMPLETED:
+            try:
+                await self.hass.async_add_executor_job(
+                    partial(todo.complete, completion_timestamp=datetime.now()),
+                )
+            except (requests.ConnectionError, DAVError) as err:
+                raise HomeAssistantError(f"CalDAV completed error: {err}") from err
+            return
+        vtodo["STATUS"] = "NEEDS-ACTION"
         try:
             await self.hass.async_add_executor_job(
                 partial(
