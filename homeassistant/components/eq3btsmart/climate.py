@@ -206,7 +206,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         if self._thermostat.status is None:
             return None
 
-        if self._thermostat.status.operation_mode == OperationMode.OFF:
+        if self._thermostat.status.operation_mode is OperationMode.OFF:
             return HVACAction.OFF
 
         if self._thermostat.status.valve == 0:
@@ -332,7 +332,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             return Preset.LOW_BATTERY
         if self._thermostat.status.is_away:
             return Preset.AWAY
-        if self._thermostat.status.operation_mode == OperationMode.ON:
+        if self._thermostat.status.operation_mode is OperationMode.ON:
             return Preset.OPEN
 
         if self._thermostat.status.presets is None:
