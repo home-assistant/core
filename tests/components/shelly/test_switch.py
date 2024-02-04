@@ -318,7 +318,6 @@ async def test_rpc_device_unique_ids(
 ) -> None:
     """Test RPC device unique_ids."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
-    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     entry = entity_registry.async_get("switch.test_switch_0")
