@@ -4,9 +4,10 @@ from datetime import timedelta
 import logging
 
 from pyarcticspas import Spa, SpaResponse
-from pyarcticspas.error import SpaHTTPException
+from pyarcticspas.error import SpaHTTPException, UnauthorizedError
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -36,5 +37,7 @@ class ArcticSpaDataUpdateCoordinator(DataUpdateCoordinator[SpaResponse]):
         """Fetch ArcticSpa status from API."""
         try:
             return await self.device.async_status()
-        except SpaHTTPException as e:
-            raise UpdateFailed(f"{e.code} {e.msg}") from e
+        except UnauthorizedError as ex:
+            raise ConfigEntryError("Invalid API token") from ex
+        except SpaHTTPException as ex:
+            raise UpdateFailed(f"{ex.code} {ex.msg}") from ex

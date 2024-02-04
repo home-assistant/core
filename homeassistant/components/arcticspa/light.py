@@ -32,7 +32,7 @@ async def async_setup_entry(
 class SpaLight(ArcticSpaEntity, LightEntity):
     """Represents the Arctic Spa light."""
 
-    _attr_name = "Light"
+    _attr_translation_key = "light"
 
     @property
     def is_on(self) -> bool | None:
