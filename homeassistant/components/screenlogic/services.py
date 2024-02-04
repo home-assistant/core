@@ -6,6 +6,7 @@ from screenlogicpy import ScreenLogicError
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -71,14 +72,11 @@ def async_load_screenlogic_services(hass: HomeAssistant):
 
     async def extract_screenlogic_config_entry_ids(service_call: ServiceCall):
         if not (
-            screenlogic_entry_ids := [
-                entry_id
-                for entry_id in await async_extract_config_entry_ids(hass, service_call)
-                if (entry := hass.config_entries.async_get_entry(entry_id))
-                and entry.domain == DOMAIN
-            ]
+            screenlogic_entry_ids := await async_extract_config_entry_ids(
+                hass, service_call
+            )
         ):
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 f"Failed to call service '{service_call.service}'. Config entry for"
                 " target not found"
             )
@@ -87,8 +85,9 @@ def async_load_screenlogic_services(hass: HomeAssistant):
     async def get_coordinators(
         service_call: ServiceCall,
     ) -> list[ScreenlogicDataUpdateCoordinator]:
+        entry_ids: set[str]
         if entry_id := service_call.data.get(ATTR_CONFIG_ENTRY):
-            entry_ids = [entry_id]
+            entry_ids = {entry_id}
         else:
             ir.async_create_issue(
                 hass,
@@ -102,12 +101,25 @@ def async_load_screenlogic_services(hass: HomeAssistant):
             )
             entry_ids = await extract_screenlogic_config_entry_ids(service_call)
 
-        if not (
-            coordinators := [hass.data[DOMAIN].get(entry_id) for entry_id in entry_ids]
-        ):
-            raise ServiceValidationError(
-                f"Failed to call service '{service_call.service}'. Config entry not loaded"
+        coordinators: list[ScreenlogicDataUpdateCoordinator] = []
+        for entry_id in entry_ids:
+            config_entry: ConfigEntry | None = hass.config_entries.async_get_entry(
+                entry_id
             )
+            if not config_entry:
+                raise ServiceValidationError(
+                    f"Failed to call service '{service_call.service}'. Config entry '{entry_id}' not found"
+                )
+            if not config_entry.domain == DOMAIN:
+                raise ServiceValidationError(
+                    f"Failed to call service '{service_call.service}'. Config entry '{entry_id}' is not a {DOMAIN} config"
+                )
+            if not config_entry.state == ConfigEntryState.LOADED:
+                raise ServiceValidationError(
+                    f"Failed to call service '{service_call.service}'. Config entry '{entry_id}' not loaded"
+                )
+            coordinators.append(hass.data[DOMAIN][entry_id])
+
         return coordinators
 
     async def async_set_color_mode(service_call: ServiceCall) -> None:
