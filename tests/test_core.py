@@ -1194,8 +1194,8 @@ async def test_statemachine_remove(hass: HomeAssistant) -> None:
     assert len(events) == 1
 
 
-async def test_statemachine_case_insensitivty(hass: HomeAssistant) -> None:
-    """Test insensitivty."""
+async def test_state_machine_case_insensitivity(hass: HomeAssistant) -> None:
+    """Test setting and getting states entity_id insensitivity."""
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     hass.states.async_set("light.BOWL", "off")
@@ -1203,6 +1203,15 @@ async def test_statemachine_case_insensitivty(hass: HomeAssistant) -> None:
 
     assert hass.states.is_state("light.bowl", "off")
     assert len(events) == 1
+
+    hass.states.async_set("ligHT.Bowl", "on")
+    assert hass.states.get("light.bowl").state == "on"
+
+    hass.states.async_set("light.BOWL", "off")
+    assert hass.states.get("light.BoWL").state == "off"
+
+    hass.states.async_set("light.bowl", "on")
+    assert hass.states.get("light.bowl").state == "on"
 
 
 async def test_statemachine_last_changed_not_updated_on_same_state(
