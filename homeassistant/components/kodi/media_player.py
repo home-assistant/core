@@ -636,7 +636,9 @@ class KodiEntity(MediaPlayerEntity):
         if self.state == MediaPlayerState.OFF:
             return state_atrr
 
-        hdr_type = self._item.get("streamdetails", {}).get("video", [{}])[0].get("hdrtype")
+        hdr_type = (
+            self._item.get("streamdetails", {}).get("video", [{}])[0].get("hdrtype")
+        )
         if hdr_type == "":
             state_atrr["hdr_type"] = "sdr"
         else:
