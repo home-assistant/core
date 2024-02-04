@@ -83,31 +83,24 @@ async def test_entry_diagnostics(
             "listeners": [
                 {
                     "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                    "listener_kind": {
-                        "__type": "<enum 'ListenerKind'>",
-                        "repr": "<ListenerKind.SMOKE: 7>",
-                    },
+                    "definition_id": 7,
                     "created_at": "2019-07-10T22:40:48.847000+00:00",
-                    "device_type": "sensor",
                     "model_version": "3.1",
                     "sensor_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "status_localized": {
+                        "state": "No Sound",
+                        "description": "Jun 28 at 4:12pm",
+                    },
                     "insights": {
                         "primary": {
-                            "origin": {"type": None, "id": None},
+                            "origin": {"id": None, "type": None},
                             "value": "no_alarm",
                             "data_received_at": "2019-06-28T22:12:49.516000+00:00",
                         }
                     },
                     "configuration": {},
                     "pro_monitoring_status": "eligible",
-                    "status": {
-                        "trigger_value": "no_alarm",
-                        "data_received_at": "2019-06-28T22:12:49.516000+00:00",
-                    },
-                    "status_localized": {
-                        "state": "No Sound",
-                        "description": "Jun 28 at 4:12pm",
-                    },
+                    "device_type": "sensor",
                 }
             ],
             "sensors": [
