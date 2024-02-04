@@ -596,100 +596,41 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _build_entity(
-    vicare_api,
-    device_config: PyViCareDeviceConfig,
-    entity_description: ViCareSensorEntityDescription,
-):
-    """Create a ViCare sensor entity."""
-    if is_supported(entity_description.key, entity_description, vicare_api):
-        return ViCareSensor(
-            vicare_api,
-            device_config,
-            entity_description,
-        )
-    return None
-
-
-async def _entities_from_descriptions(
-    hass: HomeAssistant,
-    entities: list[ViCareSensor],
-    sensor_descriptions: tuple[ViCareSensorEntityDescription, ...],
-    iterables,
-    config_entry: ConfigEntry,
-) -> None:
-    """Create entities from descriptions and list of burners/circuits."""
-    for description in sensor_descriptions:
-        for current in iterables:
-            entity = await hass.async_add_executor_job(
-                _build_entity,
-                current,
-                hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-                description,
-            )
-            if entity:
-                entities.append(entity)
-
-
 def _build_entities(
     device: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
 ) -> list[ViCareSensor]:
     """Create ViCare sensor entities for a device."""
 
-    entities: list[ViCareSensor] = _build_entities_for_device(device, device_config)
-    entities.extend(
-        _build_entities_for_component(
-            get_circuits(device), device_config, CIRCUIT_SENSORS
-        )
-    )
-    entities.extend(
-        _build_entities_for_component(
-            get_burners(device), device_config, BURNER_SENSORS
-        )
-    )
-    entities.extend(
-        _build_entities_for_component(
-            get_compressors(device), device_config, COMPRESSOR_SENSORS
-        )
-    )
-    return entities
-
-
-def _build_entities_for_device(
-    device: PyViCareDevice,
-    device_config: PyViCareDeviceConfig,
-) -> list[ViCareSensor]:
-    """Create device specific ViCare sensor entities."""
-
-    return [
+    entities: list[ViCareSensor] = [
         ViCareSensor(
-            device,
             device_config,
+            device,
+            None,
             description,
         )
         for description in GLOBAL_SENSORS
         if is_supported(description.key, description, device)
     ]
-
-
-def _build_entities_for_component(
-    components: list[PyViCareHeatingDeviceWithComponent],
-    device_config: PyViCareDeviceConfig,
-    entity_descriptions: tuple[ViCareSensorEntityDescription, ...],
-) -> list[ViCareSensor]:
-    """Create component specific ViCare sensor entities."""
-
-    return [
-        ViCareSensor(
-            component,
-            device_config,
-            description,
+    for component_list, entity_description_list in (
+        (get_circuits(device), CIRCUIT_SENSORS),
+        (get_burners(device), BURNER_SENSORS),
+        (get_compressors(device), COMPRESSOR_SENSORS),
+    ):
+        entities.extend(
+            [
+                ViCareSensor(
+                    device_config,
+                    device,
+                    component,
+                    description,
+                )
+                for component in component_list
+                for description in entity_description_list
+                if is_supported(description.key, description, component)
+            ]
         )
-        for component in components
-        for description in entity_descriptions
-        if is_supported(description.key, description, component)
-    ]
+    return entities
 
 
 async def async_setup_entry(
@@ -719,12 +660,13 @@ class ViCareSensor(ViCareEntity, SensorEntity):
 
     def __init__(
         self,
-        api,
         device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceWithComponent | None,
         description: ViCareSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(device_config, device, component, description.key)
         self.entity_description = description
 
     @property
