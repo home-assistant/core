@@ -6,6 +6,7 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, cast
 
+from slugify import slugify
 from zigpy.state import State
 from zigpy.zcl.clusters.general import Ota
 
@@ -106,18 +107,23 @@ class ProbeEndpoint:
         zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
-    def discover_coordinator_entities(self, endpoint: Endpoint) -> None:
-        """Process an endpoint on a zigpy coordinator device."""
-        if endpoint.id != 1 or not endpoint.device.is_coordinator:
-            return
+    def discover_device_entities(self, device: ZHADevice) -> None:
+        """Discover entities for a ZHA device."""
         _LOGGER.debug(
-            "Discovering coordinator entities for endpoint: %s-%s",
-            str(endpoint.device.ieee),
-            endpoint.id,
+            "Discovering coordinator entities for device: %s-%s",
+            str(device.ieee),
+            device.name,
         )
 
-        state: State = endpoint.device.gateway.application_controller.state
-        platforms: dict[Platform, list] = get_zha_data(endpoint.device.hass).platforms
+        if device.is_coordinator:
+            self.discover_coordinator_device_entities(device)
+            return
+
+    @callback
+    def discover_coordinator_device_entities(self, device: ZHADevice) -> None:
+        """Discover entities for the coordinator device."""
+        state: State = device.gateway.application_controller.state
+        platforms: dict[Platform, list] = get_zha_data(device.hass).platforms
 
         @callback
         def process_counters(counter_groups: str) -> None:
@@ -125,10 +131,10 @@ class ProbeEndpoint:
                 for counter in counters:
                     platforms[Platform.SENSOR].append(
                         (
-                            sensor.CoordinatorCounterSensor,
+                            sensor.DeviceCounterSensor,
                             (
-                                f"{endpoint.unique_id}_{counter_groups}_{counter_group}_{counter}",
-                                endpoint.device,
+                                f"{slugify(str(device.ieee))}_{counter_groups}_{counter_group}_{counter}",
+                                device,
                                 counter_groups,
                                 counter_group,
                                 counter,

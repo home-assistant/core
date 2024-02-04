@@ -246,14 +246,13 @@ class PollableSensor(Sensor):
             )
 
 
-class CoordinatorCounterSensor(BaseZhaEntity, SensorEntity):
-    """Coordinator counter sensor."""
+class DeviceCounterSensor(BaseZhaEntity, SensorEntity):
+    """Device counter sensor."""
 
     _attr_should_poll = True
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    #
     @classmethod
     def create_entity(
         cls,
