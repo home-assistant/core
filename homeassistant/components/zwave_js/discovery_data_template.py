@@ -564,6 +564,7 @@ class ConfigurableFanValueMappingDataTemplate(
 
     `configuration_value_to_fan_value_mapping` maps the values from
     `configuration_option` to the value mapping object.
+
     """
 
     def resolve_data(
@@ -634,6 +635,7 @@ class FixedFanValueMappingDataTemplate(
               )
           ),
       ),
+
     """
 
     def get_fan_value_mapping(

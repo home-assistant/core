@@ -23,7 +23,7 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class ReolinkSirenEntityDescription(
     SirenEntityDescription, ReolinkChannelEntityDescription
 ):

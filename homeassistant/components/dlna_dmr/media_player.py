@@ -55,7 +55,7 @@ _P = ParamSpec("_P")
 
 
 def catch_request_errors(
-    func: Callable[Concatenate[_DlnaDmrEntityT, _P], Awaitable[_R]]
+    func: Callable[Concatenate[_DlnaDmrEntityT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DlnaDmrEntityT, _P], Coroutine[Any, Any, _R | None]]:
     """Catch UpnpError errors."""
 

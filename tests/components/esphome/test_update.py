@@ -9,7 +9,13 @@ import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
 from homeassistant.components.update import UpdateEntityFeature
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -370,3 +376,46 @@ async def test_update_entity_not_present_without_dashboard(
 
     state = hass.states.get("update.none_firmware")
     assert state is None
+
+
+async def test_update_becomes_available_at_runtime(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    mock_dashboard,
+) -> None:
+    """Test ESPHome update entity when the dashboard has no device at startup but gets them later."""
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_firmware")
+    assert state is not None
+    features = state.attributes[ATTR_SUPPORTED_FEATURES]
+    # There are no devices on the dashboard so no
+    # way to tell the version so install is disabled
+    assert features is UpdateEntityFeature(0)
+
+    # A device gets added to the dashboard
+    mock_dashboard["configured"] = [
+        {
+            "name": "test",
+            "current_version": "2023.2.0-dev",
+            "configuration": "test.yaml",
+        }
+    ]
+
+    await async_get_dashboard(hass).async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_firmware")
+    assert state is not None
+    # We now know the version so install is enabled
+    features = state.attributes[ATTR_SUPPORTED_FEATURES]
+    assert features is UpdateEntityFeature.INSTALL

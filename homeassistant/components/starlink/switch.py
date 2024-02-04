@@ -31,7 +31,7 @@ async def async_setup_entry(
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlinkSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -40,7 +40,7 @@ class StarlinkSwitchEntityDescriptionMixin:
     turn_off_fn: Callable[[StarlinkUpdateCoordinator], Awaitable[None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlinkSwitchEntityDescription(
     SwitchEntityDescription, StarlinkSwitchEntityDescriptionMixin
 ):

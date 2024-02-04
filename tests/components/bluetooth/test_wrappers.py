@@ -1,47 +1,50 @@
 """Tests for the Bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from contextlib import contextmanager
 from unittest.mock import patch
 
 import bleak
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak.exc import BleakError
+from habluetooth.usage import (
+    install_multiple_bleak_catcher,
+    uninstall_multiple_bleak_catcher,
+)
 import pytest
 
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
-    BluetoothServiceInfoBleak,
+    BaseHaRemoteScanner,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
-    async_get_advertisement_callback,
-)
-from homeassistant.components.bluetooth.usage import (
-    install_multiple_bleak_catcher,
-    uninstall_multiple_bleak_catcher,
+    HomeAssistantBluetoothManager,
 )
 from homeassistant.core import HomeAssistant
 
 from . import _get_manager, generate_advertisement_data, generate_ble_device
 
 
-class FakeScanner(HomeAssistantRemoteScanner):
+@contextmanager
+def mock_shutdown(manager: HomeAssistantBluetoothManager) -> None:
+    """Mock shutdown of the HomeAssistantBluetoothManager."""
+    manager.shutdown = True
+    yield
+    manager.shutdown = False
+
+
+class FakeScanner(BaseHaRemoteScanner):
     """Fake scanner."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
         scanner_id: str,
         name: str,
-        new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
         connector: None,
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
-        super().__init__(
-            hass, scanner_id, name, new_info_callback, connector, connectable
-        )
+        super().__init__(scanner_id, name, connector, connectable)
         self._details: dict[str, str | HaBluetoothConnector] = {}
 
     def __repr__(self) -> str:
@@ -133,7 +136,7 @@ def install_bleak_catcher_fixture():
 def mock_platform_client_fixture():
     """Fixture that mocks the platform client."""
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClient,
     ):
         yield
@@ -143,7 +146,7 @@ def mock_platform_client_fixture():
 def mock_platform_client_that_fails_to_connect_fixture():
     """Fixture that mocks the platform client that fails to connect."""
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsToConnect,
     ):
         yield
@@ -153,7 +156,7 @@ def mock_platform_client_that_fails_to_connect_fixture():
 def mock_platform_client_that_raises_on_connect_fixture():
     """Fixture that mocks the platform client that fails to connect."""
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientRaisesOnConnect,
     ):
         yield
@@ -175,13 +178,8 @@ def _generate_scanners_with_fake_devices(hass):
         )
         hci1_device_advs[device.address] = (device, adv_data)
 
-    new_info_callback = async_get_advertisement_callback(hass)
-    scanner_hci0 = FakeScanner(
-        hass, "00:00:00:00:00:01", "hci0", new_info_callback, None, True
-    )
-    scanner_hci1 = FakeScanner(
-        hass, "00:00:00:00:00:02", "hci1", new_info_callback, None, True
-    )
+    scanner_hci0 = FakeScanner("00:00:00:00:00:01", "hci0", None, True)
+    scanner_hci1 = FakeScanner("00:00:00:00:00:02", "hci1", None, True)
 
     for device, adv_data in hci0_device_advs.values():
         scanner_hci0.inject_advertisement(device, adv_data)
@@ -189,8 +187,8 @@ def _generate_scanners_with_fake_devices(hass):
     for device, adv_data in hci1_device_advs.values():
         scanner_hci1.inject_advertisement(device, adv_data)
 
-    cancel_hci0 = manager.async_register_scanner(scanner_hci0, True, 2)
-    cancel_hci1 = manager.async_register_scanner(scanner_hci1, True, 1)
+    cancel_hci0 = manager.async_register_scanner(scanner_hci0, connection_slots=2)
+    cancel_hci1 = manager.async_register_scanner(scanner_hci1, connection_slots=1)
 
     return hci0_device_advs, cancel_hci0, cancel_hci1
 
@@ -332,27 +330,27 @@ async def test_we_switch_adapters_on_failure(
             return True
 
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is False
 
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is False
 
     # After two tries we should switch to hci1
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is True
 
     # ..and we remember that hci1 works as long as the client doesn't change
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is True
@@ -361,10 +359,42 @@ async def test_we_switch_adapters_on_failure(
     client = bleak.BleakClient(ble_device)
 
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is False
+    cancel_hci0()
+    cancel_hci1()
+
+
+async def test_passing_subclassed_str_as_address(
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
+    install_bleak_catcher,
+) -> None:
+    """Ensure the client wrapper can handle a subclassed str as the address."""
+    _, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(hass)
+
+    class SubclassedStr(str):
+        pass
+
+    address = SubclassedStr("00:00:00:00:00:01")
+    client = bleak.BleakClient(address)
+
+    class FakeBleakClient(BaseFakeBleakClient):
+        """Fake bleak client."""
+
+        async def connect(self, *args, **kwargs):
+            """Connect."""
+            return True
+
+    with patch(
+        "habluetooth.wrappers.get_platform_client_backend_type",
+        return_value=FakeBleakClient,
+    ):
+        assert await client.connect() is True
+
     cancel_hci0()
     cancel_hci1()
 
@@ -382,7 +412,7 @@ async def test_raise_after_shutdown(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(manager, "shutdown", True):
+    with mock_shutdown(manager):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
         with pytest.raises(BleakError, match="shutdown"):

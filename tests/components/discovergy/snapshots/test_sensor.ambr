@@ -132,7 +132,7 @@
     'entity_id': 'sensor.electricity_teststrasse_1_total_power',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '531.75',
+    'state': '0.0',
   })
 # ---
 # name: test_sensor[gas last transmitted]

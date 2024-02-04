@@ -1,6 +1,7 @@
 """Support for Duotecno switches."""
 from typing import Any
 
+from duotecno.controller import PyDuotecno
 from duotecno.unit import SwitchUnit
 
 from homeassistant.components.switch import SwitchEntity
@@ -18,7 +19,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]
+    cntrl: PyDuotecno = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         DuotecnoSwitch(channel) for channel in cntrl.get_units("SwitchUnit")
     )

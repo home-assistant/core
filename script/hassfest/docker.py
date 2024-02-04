@@ -34,12 +34,19 @@ RUN \
     && if ls homeassistant/home_assistant_intents*.whl 1> /dev/null 2>&1; then \
         pip3 install homeassistant/home_assistant_intents-*.whl; \
     fi \
-    && \
+    && if [ "${{BUILD_ARCH}}" = "i386" ]; then \
+        LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
+        MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
+        linux32 pip3 install \
+            --only-binary=:all: \
+            -r homeassistant/requirements_all.txt; \
+    else \
         LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
         MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
         pip3 install \
             --only-binary=:all: \
-            -r homeassistant/requirements_all.txt
+            -r homeassistant/requirements_all.txt; \
+    fi
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
@@ -59,9 +66,10 @@ WORKDIR /config
 
 def _generate_dockerfile() -> str:
     timeout = (
-        core.STAGE_1_SHUTDOWN_TIMEOUT
-        + core.STAGE_2_SHUTDOWN_TIMEOUT
-        + core.STAGE_3_SHUTDOWN_TIMEOUT
+        core.STOPPING_STAGE_SHUTDOWN_TIMEOUT
+        + core.STOP_STAGE_SHUTDOWN_TIMEOUT
+        + core.FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT
+        + core.CLOSE_STAGE_SHUTDOWN_TIMEOUT
         + executor.EXECUTOR_SHUTDOWN_TIMEOUT
         + thread.THREADING_SHUTDOWN_TIMEOUT
         + 10

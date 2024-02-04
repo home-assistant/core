@@ -8,7 +8,6 @@ from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import logging
-import ssl
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
@@ -84,7 +83,7 @@ _P = ParamSpec("_P")
 
 
 def cmd(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
 
@@ -473,14 +472,11 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         SSLContext to bypass validation errors if url starts with https.
         """
         content = None
-        ssl_context = None
-        if url.startswith("https"):
-            ssl_context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_CLIENT)
 
         websession = async_get_clientsession(self.hass)
         with suppress(asyncio.TimeoutError):
             async with asyncio.timeout(10):
-                response = await websession.get(url, ssl=ssl_context)
+                response = await websession.get(url, ssl=False)
                 if response.status == HTTPStatus.OK:
                     content = await response.read()
 

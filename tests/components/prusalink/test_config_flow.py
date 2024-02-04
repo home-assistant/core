@@ -25,16 +25,18 @@ async def test_form(hass: HomeAssistant, mock_version_api) -> None:
             result["flow_id"],
             {
                 "host": "http://1.1.1.1/",
-                "api_key": "abcdefg",
+                "username": "abcdefg",
+                "password": "abcdefg",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "PrusaMINI"
+    assert result2["title"] == "PrusaXL"
     assert result2["data"] == {
         "host": "http://1.1.1.1",
-        "api_key": "abcdefg",
+        "username": "abcdefg",
+        "password": "abcdefg",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -53,7 +55,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "api_key": "abcdefg",
+                "username": "abcdefg",
+                "password": "abcdefg",
             },
         )
 
@@ -75,7 +78,8 @@ async def test_form_unknown(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "api_key": "abcdefg",
+                "username": "abcdefg",
+                "password": "abcdefg",
             },
         )
 
@@ -95,7 +99,8 @@ async def test_form_too_low_version(hass: HomeAssistant, mock_version_api) -> No
         result["flow_id"],
         {
             "host": "1.1.1.1",
-            "api_key": "abcdefg",
+            "username": "abcdefg",
+            "password": "abcdefg",
         },
     )
 
@@ -115,7 +120,8 @@ async def test_form_invalid_version_2(hass: HomeAssistant, mock_version_api) -> 
         result["flow_id"],
         {
             "host": "1.1.1.1",
-            "api_key": "abcdefg",
+            "username": "abcdefg",
+            "password": "abcdefg",
         },
     )
 
@@ -137,7 +143,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "api_key": "abcdefg",
+                "username": "abcdefg",
+                "password": "abcdefg",
             },
         )
 

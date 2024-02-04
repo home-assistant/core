@@ -41,6 +41,7 @@ from .const import (
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
     SENSORS_TEMPERATURES,
+    SENSORS_TEMPERATURES_LEGACY,
 )
 
 SENSORS_TYPE_BYTES = "sensors_bytes"
@@ -55,7 +56,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 _AsusWrtBridgeT = TypeVar("_AsusWrtBridgeT", bound="AsusWrtBridge")
-_FuncType = Callable[[_AsusWrtBridgeT], Awaitable[list[Any] | dict[str, Any]]]
+_FuncType = Callable[
+    [_AsusWrtBridgeT], Awaitable[list[Any] | tuple[Any] | dict[str, Any]]
+]
 _ReturnFuncType = Callable[[_AsusWrtBridgeT], Coroutine[Any, Any, dict[str, Any]]]
 
 
@@ -81,7 +84,7 @@ def handle_errors_and_zip(
 
             if isinstance(data, dict):
                 return dict(zip(keys, list(data.values())))
-            if not isinstance(data, list):
+            if not isinstance(data, (list, tuple)):
                 raise UpdateFailed("Received invalid data type")
             return dict(zip(keys, data))
 
@@ -275,7 +278,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
     async def _get_available_temperature_sensors(self) -> list[str]:
         """Check which temperature information is available on the router."""
         availability = await self._api.async_find_temperature_commands()
-        return [SENSORS_TEMPERATURES[i] for i in range(3) if availability[i]]
+        return [SENSORS_TEMPERATURES_LEGACY[i] for i in range(3) if availability[i]]
 
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_BYTES)
     async def _get_bytes(self) -> Any:
