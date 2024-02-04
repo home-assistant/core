@@ -1757,7 +1757,9 @@ class StateMachine:
 
         Async friendly.
         """
-        return self._states_data.get(entity_id.lower())
+        return self._states_data.get(entity_id) or self._states_data.get(
+            entity_id.lower()
+        )
 
     def is_state(self, entity_id: str, state: str) -> bool:
         """Test if entity exists and is in specified state.
@@ -1795,7 +1797,6 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
-            EventOrigin.local,
             context=context,
         )
         return True
@@ -1870,10 +1871,16 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}
-        if (old_state := self._states_data.get(entity_id)) is None:
+        old_state = self._states_data.get(entity_id)
+        if old_state is None:
+            # If the state is missing, try to convert the entity_id to lowercase
+            # and try again.
+            entity_id = entity_id.lower()
+            old_state = self._states_data.get(entity_id)
+
+        if old_state is None:
             same_state = False
             same_attr = False
             last_changed = None
@@ -1924,8 +1931,7 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
-            EventOrigin.local,
-            context,
+            context=context,
             time_fired=now,
         )
 

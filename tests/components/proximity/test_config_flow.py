@@ -185,3 +185,67 @@ async def test_abort_duplicated_entry(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
         await hass.async_block_till_done()
+
+
+async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
+    """Test if we avoid duplicate titles."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="home",
+        data={
+            CONF_ZONE: "zone.home",
+            CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
+            CONF_IGNORED_ZONES: ["zone.work"],
+            CONF_TOLERANCE: 10,
+        },
+        unique_id=f"{DOMAIN}_home",
+    ).add_to_hass(hass)
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="home 3",
+        data={
+            CONF_ZONE: "zone.home",
+            CONF_TRACKED_ENTITIES: ["device_tracker.test2"],
+            CONF_IGNORED_ZONES: ["zone.work"],
+            CONF_TOLERANCE: 10,
+        },
+        unique_id=f"{DOMAIN}_home",
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.proximity.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ZONE: "zone.home",
+                CONF_TRACKED_ENTITIES: ["device_tracker.test3"],
+                CONF_IGNORED_ZONES: [],
+                CONF_TOLERANCE: 10,
+            },
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "home 2"
+
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ZONE: "zone.home",
+                CONF_TRACKED_ENTITIES: ["device_tracker.test4"],
+                CONF_IGNORED_ZONES: [],
+                CONF_TOLERANCE: 10,
+            },
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "home 4"
+
+        await hass.async_block_till_done()
