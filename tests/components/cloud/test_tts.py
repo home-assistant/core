@@ -17,6 +17,7 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.issue_registry import IssueRegistry, IssueSeverity
 from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
@@ -408,3 +409,113 @@ async def test_migrating_pipelines(
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["wake_word_id"] is None
     assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][1]
     assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][2]
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_url_suffix"),
+    [
+        ({"platform": DOMAIN}, DOMAIN),
+        ({"engine_id": DOMAIN}, DOMAIN),
+        ({"engine_id": "tts.home_assistant_cloud"}, "tts.home_assistant_cloud"),
+    ],
+)
+async def test_deprecated_voice(
+    hass: HomeAssistant,
+    issue_registry: IssueRegistry,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    data: dict[str, Any],
+    expected_url_suffix: str,
+) -> None:
+    """Test we create an issue when a deprecated voice is used for text-to-speech."""
+    language = "zh-CN"
+    deprecated_voice = "XiaoxuanNeural"
+    replacement_voice = "XiaozhenNeural"
+    mock_process_tts = AsyncMock(
+        return_value=b"",
+    )
+    cloud.voice.process_tts = mock_process_tts
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+    client = await hass_client()
+
+    # Test with non deprecated voice.
+    url = "/api/tts_get_url"
+    data |= {
+        "message": "There is someone at the door.",
+        "language": language,
+        "options": {"voice": replacement_voice},
+    }
+
+    req = await client.post(url, json=data)
+    assert req.status == HTTPStatus.OK
+    response = await req.json()
+
+    assert response == {
+        "url": (
+            "http://example.local:8123/api/tts_proxy/"
+            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+            f"_{language.lower()}_1c4ec2f170_{expected_url_suffix}.mp3"
+        ),
+        "path": (
+            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
+            f"_{language.lower()}_1c4ec2f170_{expected_url_suffix}.mp3"
+        ),
+    }
+    await hass.async_block_till_done()
+
+    assert mock_process_tts.call_count == 1
+    assert mock_process_tts.call_args is not None
+    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+    assert mock_process_tts.call_args.kwargs["language"] == language
+    assert mock_process_tts.call_args.kwargs["gender"] == "female"
+    assert mock_process_tts.call_args.kwargs["voice"] == replacement_voice
+    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+    issue = issue_registry.async_get_issue(
+        "cloud", f"deprecated_voice_{replacement_voice}"
+    )
+    assert issue is None
+    mock_process_tts.reset_mock()
+
+    # Test with deprecated voice.
+    data["options"] = {"voice": deprecated_voice}
+
+    req = await client.post(url, json=data)
+    assert req.status == HTTPStatus.OK
+    response = await req.json()
+
+    assert response == {
+        "url": (
+            "http://example.local:8123/api/tts_proxy/"
+            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+            f"_{language.lower()}_a1c3b0ac0e_{expected_url_suffix}.mp3"
+        ),
+        "path": (
+            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
+            f"_{language.lower()}_a1c3b0ac0e_{expected_url_suffix}.mp3"
+        ),
+    }
+    await hass.async_block_till_done()
+
+    assert mock_process_tts.call_count == 1
+    assert mock_process_tts.call_args is not None
+    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+    assert mock_process_tts.call_args.kwargs["language"] == language
+    assert mock_process_tts.call_args.kwargs["gender"] == "female"
+    assert mock_process_tts.call_args.kwargs["voice"] == replacement_voice
+    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+    issue = issue_registry.async_get_issue(
+        "cloud", f"deprecated_voice_{deprecated_voice}"
+    )
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2024.8.0"
+    assert issue.is_fixable is True
+    assert issue.is_persistent is True
+    assert issue.severity == IssueSeverity.WARNING
+    assert issue.translation_key == "deprecated_voice"
+    assert issue.translation_placeholders == {
+        "deprecated_voice": deprecated_voice,
+        "replacement_voice": replacement_voice,
+    }
