@@ -47,13 +47,13 @@
         "name": "Relocate"
       },
       "reset_lifespan_brush": {
-        "name": "Reset brush lifespan"
+        "name": "Reset main brush lifespan"
       },
       "reset_lifespan_filter": {
         "name": "Reset filter lifespan"
       },
       "reset_lifespan_side_brush": {
-        "name": "Reset side brush lifespan"
+        "name": "Reset side brushes lifespan"
       }
     },
     "image": {
@@ -79,13 +79,13 @@
         }
       },
       "lifespan_brush": {
-        "name": "Brush lifespan"
+        "name": "Main brush lifespan"
       },
       "lifespan_filter": {
         "name": "Filter lifespan"
       },
       "lifespan_side_brush": {
-        "name": "Side brush lifespan"
+        "name": "Side brushes lifespan"
       },
       "network_ip": {
         "name": "IP address"
@@ -100,7 +100,7 @@
         "name": "Area cleaned"
       },
       "stats_time": {
-        "name": "Time cleaned"
+        "name": "Cleaning duration"
       },
       "total_stats_area": {
         "name": "Total area cleaned"
@@ -109,12 +109,12 @@
         "name": "Total cleanings"
       },
       "total_stats_time": {
-        "name": "Total time cleaned"
+        "name": "Total cleaning duration"
       }
     },
     "select": {
       "water_amount": {
-        "name": "Water amount",
+        "name": "Water flow level",
         "state": {
           "high": "High",
           "low": "Low",
@@ -137,7 +137,7 @@
         "name": "Advanced mode"
       },
       "carpet_auto_fan_boost": {
-        "name": "Carpet auto fan speed boost"
+        "name": "Carpet auto-boost suction"
       },
       "clean_preference": {
         "name": "Clean preference"

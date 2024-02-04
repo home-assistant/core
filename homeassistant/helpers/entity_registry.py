@@ -498,17 +498,24 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         """Get entry from id."""
         return self._entry_ids.get(key)
 
-    def get_entries_for_device_id(self, device_id: str) -> list[RegistryEntry]:
+    def get_entries_for_device_id(
+        self, device_id: str, include_disabled_entities: bool = False
+    ) -> list[RegistryEntry]:
         """Get entries for device."""
-        return [self.data[key] for key in self._device_id_index.get(device_id, ())]
+        data = self.data
+        return [
+            entry
+            for key in self._device_id_index.get(device_id, ())
+            if not (entry := data[key]).disabled_by or include_disabled_entities
+        ]
 
     def get_entries_for_config_entry_id(
         self, config_entry_id: str
     ) -> list[RegistryEntry]:
         """Get entries for config entry."""
+        data = self.data
         return [
-            self.data[key]
-            for key in self._config_entry_id_index.get(config_entry_id, ())
+            data[key] for key in self._config_entry_id_index.get(config_entry_id, ())
         ]
 
 
@@ -1249,11 +1256,9 @@ def async_entries_for_device(
     registry: EntityRegistry, device_id: str, include_disabled_entities: bool = False
 ) -> list[RegistryEntry]:
     """Return entries that match a device."""
-    return [
-        entry
-        for entry in registry.entities.get_entries_for_device_id(device_id)
-        if (not entry.disabled_by or include_disabled_entities)
-    ]
+    return registry.entities.get_entries_for_device_id(
+        device_id, include_disabled_entities
+    )
 
 
 @callback
@@ -1379,16 +1384,12 @@ async def async_migrate_entries(
     Can also be used to remove duplicated entity registry entries.
     """
     ent_reg = async_get(hass)
-
-    for entry in list(ent_reg.entities.values()):
-        if entry.config_entry_id != config_entry_id:
-            continue
-        if not ent_reg.entities.get_entry(entry.id):
-            continue
-
-        updates = entry_callback(entry)
-
-        if updates is not None:
+    entities = ent_reg.entities
+    for entry in entities.get_entries_for_config_entry_id(config_entry_id):
+        if (
+            entities.get_entry(entry.id)
+            and (updates := entry_callback(entry)) is not None
+        ):
             ent_reg.async_update_entity(entry.entity_id, **updates)
 
 

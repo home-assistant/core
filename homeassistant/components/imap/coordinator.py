@@ -9,7 +9,7 @@ from email.header import decode_header, make_header
 from email.message import Message
 from email.utils import parseaddr, parsedate_to_datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
 
@@ -97,9 +97,8 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
 class ImapMessage:
     """Class to parse an RFC822 email message."""
 
-    def __init__(self, raw_message: bytes, charset: str = "utf-8") -> None:
+    def __init__(self, raw_message: bytes) -> None:
         """Initialize IMAP message."""
-        self._charset = charset
         self.email_message = email.message_from_bytes(raw_message)
 
     @property
@@ -153,7 +152,7 @@ class ImapMessage:
     def text(self) -> str:
         """Get the message text from the email.
 
-        Will look for text/plain or use text/html if not found.
+        Will look for text/plain or use/ text/html if not found.
         """
         message_text: str | None = None
         message_html: str | None = None
@@ -166,8 +165,13 @@ class ImapMessage:
             Falls back to the raw content part if decoding fails.
             """
             try:
-                return str(part.get_payload(decode=True).decode(self._charset))
+                decoded_payload: Any = part.get_payload(decode=True)
+                if TYPE_CHECKING:
+                    assert isinstance(decoded_payload, bytes)
+                content_charset = part.get_content_charset() or "utf-8"
+                return decoded_payload.decode(content_charset)
             except ValueError:
+                # return undecoded payload
                 return str(part.get_payload())
 
         part: Message
@@ -237,9 +241,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         """Send a event for the last message if the last message was changed."""
         response = await self.imap_client.fetch(last_message_uid, "BODY.PEEK[]")
         if response.result == "OK":
-            message = ImapMessage(
-                response.lines[1], charset=self.config_entry.data[CONF_CHARSET]
-            )
+            message = ImapMessage(response.lines[1])
             # Set `initial` to `False` if the last message is triggered again
             initial: bool = True
             if (message_id := message.message_id) == self._last_message_id:

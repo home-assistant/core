@@ -143,6 +143,7 @@ class HoneywellUSThermostat(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "honeywell"
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -187,6 +188,10 @@ class HoneywellUSThermostat(ClimateEntity):
             | ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
         if device._data.get("canControlHumidification"):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
