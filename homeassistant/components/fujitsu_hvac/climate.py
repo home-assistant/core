@@ -79,11 +79,11 @@ class FujitsuHVACDevice(ClimateEntity):
 
         self._attr_unique_id = dev.device_serial_number
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._dev.device_serial_number)},
-            name=self._dev.device_name,
+            identifiers={(DOMAIN, dev.device_serial_number)},
+            name=dev.device_name,
             manufacturer="Fujitsu",
-            model=self._dev.property_values["model_name"],
-            serial_number=self._dev.device_serial_number,
+            model=dev.property_values["model_name"],
+            serial_number=dev.device_serial_number,
             sw_version=self._dev.property_values["mcu_firmware_version"],
         )
         self.update_attributes()
