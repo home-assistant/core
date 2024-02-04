@@ -1,4 +1,5 @@
 """Support for SwitchBee climate."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -87,9 +88,6 @@ async def async_setup_entry(
 class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity):
     """Representation of a SwitchBee climate."""
 
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-    )
     _attr_fan_modes = SUPPORTED_FAN_MODES
     _attr_target_temperature_step = 1
     _enable_turn_on_off_backwards_compatibility = False
