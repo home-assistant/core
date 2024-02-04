@@ -9,6 +9,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.systemmonitor.sensor import get_cpu_icon
+from homeassistant.components.systemmonitor.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -429,3 +431,47 @@ async def test_exception_handling_disk_sensor(
     assert disk_sensor is not None
     assert disk_sensor.state == "70.0"
     assert disk_sensor.attributes["unit_of_measurement"] == "%"
+
+
+async def test_loading_disks_not_mounted(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_psutil: Mock,
+    mock_added_config_entry: ConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test we load disk entities that are enabled even if disk_mount does not exist."""
+
+    assert await hass.config_entries.async_unload(mock_added_config_entry.entry_id)
+    await hass.async_block_till_done()
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        SENSOR_DOMAIN,
+        "disk_free_not_existing_mounting_point",
+        config_entry=mock_added_config_entry,
+    )
+    assert await hass.config_entries.async_setup(mock_added_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    disk_sensor = hass.states.get(
+        "sensor.system_monitor_disk_free_not_existing_mounting_point"
+    )
+    assert disk_sensor is not None
+    assert disk_sensor.state == STATE_UNAVAILABLE
+
+    entity_registry.async_update_entity(
+        "sensor.system_monitor_disk_free_not_existing_mounting_point",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    assert await hass.config_entries.async_unload(mock_added_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_setup(mock_added_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    disk_sensor = hass.states.get(
+        "sensor.system_monitor_disk_free_not_existing_mounting_point"
+    )
+    assert disk_sensor is None
