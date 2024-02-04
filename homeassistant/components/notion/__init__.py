@@ -4,9 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from datetime import timedelta
-import logging
-import traceback
-from typing import Any, cast
+from typing import Any
 from uuid import UUID
 
 from aionotion import async_get_client
@@ -163,41 +161,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update() -> NotionData:
         """Get the latest data from the Notion API."""
         data = NotionData(hass=hass, entry=entry)
-        tasks = {
-            DATA_BRIDGES: client.bridge.async_all(),
-            DATA_LISTENERS: client.listener.async_all(),
-            DATA_SENSORS: client.sensor.async_all(),
-            DATA_USER_PREFERENCES: client.user.async_preferences(),
-        }
 
-        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
-        for attr, result in zip(tasks, results):
+        try:
+            async with asyncio.TaskGroup() as tg:
+                bridges = tg.create_task(client.bridge.async_all())
+                listeners = tg.create_task(client.listener.async_all())
+                sensors = tg.create_task(client.sensor.async_all())
+                user_preferences = tg.create_task(client.user.async_preferences())
+        except BaseExceptionGroup as err:
+            result = err.exceptions[0]
             if isinstance(result, InvalidCredentialsError):
                 raise ConfigEntryAuthFailed(
                     "Invalid username and/or password"
                 ) from result
             if isinstance(result, NotionError):
                 raise UpdateFailed(
-                    f"There was a Notion error while updating {attr}: {result}"
+                    f"There was a Notion error while updating: {result}"
                 ) from result
             if isinstance(result, Exception):
-                if LOGGER.isEnabledFor(logging.DEBUG):
-                    LOGGER.debug("".join(traceback.format_tb(result.__traceback__)))
+                LOGGER.debug(
+                    "There was an unknown error while updating: %s",
+                    result,
+                    exc_info=result,
+                )
                 raise UpdateFailed(
-                    f"There was an unknown error while updating {attr}: {result}"
+                    f"There was an unknown error while updating: {result}"
                 ) from result
             if isinstance(result, BaseException):
                 raise result from None
 
-            if attr == DATA_BRIDGES:
-                data.update_bridges(cast(list[Bridge], result))
-            elif attr == DATA_LISTENERS:
-                data.update_listeners(cast(list[Listener], result))
-            elif attr == DATA_SENSORS:
-                data.update_sensors(cast(list[Sensor], result))
-            elif attr == DATA_USER_PREFERENCES:
-                data.update_user_preferences(cast(UserPreferences, result))
-
+        data.update_bridges(bridges.result())
+        data.update_listeners(listeners.result())
+        data.update_sensors(sensors.result())
+        data.update_user_preferences(user_preferences.result())
         return data
 
     coordinator = DataUpdateCoordinator(
