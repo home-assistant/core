@@ -118,6 +118,7 @@ class ProbeEndpoint:
 
         if device.is_coordinator:
             self.discover_coordinator_device_entities(device)
+            return
 
     @callback
     def discover_coordinator_device_entities(self, device: ZHADevice) -> None:
