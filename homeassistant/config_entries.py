@@ -923,6 +923,9 @@ class ConfigEntry:
         if any(self.async_get_active_flows(hass, {SOURCE_RECONFIGURE})):
             # Reconfigure flow already in progress for this entry
             return
+        if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+            # Reauth flow already in progress for this entry
+            return
         hass.async_create_task(
             self._async_init_reconfigure(hass, context, data),
             f"config entry reconfigure {self.title} {self.domain} {self.entry_id}",
@@ -938,6 +941,9 @@ class ConfigEntry:
         async with self._reconfigure_lock:
             if any(self.async_get_active_flows(hass, {SOURCE_RECONFIGURE})):
                 # Reconfigure flow already in progress for this entry
+                return
+            if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+                # Reauth flow already in progress for this entry
                 return
             await hass.config_entries.flow.async_init(
                 self.domain,
