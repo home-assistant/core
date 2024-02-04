@@ -56,14 +56,11 @@ class ProximityData:
     entities: dict[str, dict[str, str | int | None]]
 
 
-DEFAULT_DATA = ProximityData(
-    {
-        ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
-        ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
-        ATTR_NEAREST: DEFAULT_NEAREST,
-    },
-    {},
-)
+DEFAULT_PROXIMITY_DATA: dict[str, str | float] = {
+    ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
+    ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
+    ATTR_NEAREST: DEFAULT_NEAREST,
+}
 
 
 class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
@@ -92,7 +89,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             update_interval=None,
         )
 
-        self.data = DEFAULT_DATA
+        self.data = ProximityData(DEFAULT_PROXIMITY_DATA, {})
 
         self.state_change_data: StateChangedData | None = None
 
@@ -238,7 +235,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 self.name,
                 self.proximity_zone_id,
             )
-            return DEFAULT_DATA
+            return ProximityData(DEFAULT_PROXIMITY_DATA, {})
 
         entities_data = self.data.entities
 
