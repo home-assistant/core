@@ -20,7 +20,6 @@ DOMAIN = "motionblinds_ble"
 
 ENTITY_NAME = "MotionBlind {mac_code}"
 
-ERROR_ALREADY_CONFIGURED = "already_configured"
 ERROR_COULD_NOT_FIND_MOTOR = "could_not_find_motor"
 ERROR_INVALID_MAC_CODE = "invalid_mac_code"
 ERROR_NO_BLUETOOTH_ADAPTER = "no_bluetooth_adapter"
