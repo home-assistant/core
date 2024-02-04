@@ -36,7 +36,13 @@ from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .const import ATTR_LAST_RESET, ATTR_STATE_CLASS, DOMAIN, SensorStateClass
+from .const import (
+    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    DOMAIN,
+    SensorStateClass,
+    UnitOfVolumeFlowRate,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +58,7 @@ EQUIVALENT_UNITS = {
     "RPM": REVOLUTIONS_PER_MINUTE,
     "ft3": UnitOfVolume.CUBIC_FEET,
     "m3": UnitOfVolume.CUBIC_METERS,
+    "ft³/m": UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
