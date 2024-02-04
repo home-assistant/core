@@ -9,7 +9,7 @@ import inspect
 from json import JSONDecodeError, JSONEncoder
 import logging
 import os
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import (
@@ -27,6 +27,12 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.file import WriteError
 
 from . import json as json_helper
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from ..backports.functools import cached_property
+
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -110,7 +116,7 @@ class Store(Generic[_T]):
         self._atomic_writes = atomic_writes
         self._read_only = read_only
 
-    @property
+    @cached_property
     def path(self):
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
