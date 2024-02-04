@@ -168,7 +168,7 @@ class ProximityTrackedEntitySensor(
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{tracked_entity_descriptor.identifier}_{description.key}"
         self._attr_device_info = _device_info(coordinator)
         self._attr_translation_placeholders = {
-            "tracked_device": self.tracked_entity_id.split(".")[-1]
+            "tracked_entity": self.tracked_entity_id.split(".")[-1]
         }
 
     async def async_added_to_hass(self) -> None:

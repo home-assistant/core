@@ -32,7 +32,7 @@
   "entity": {
     "sensor": {
       "dir_of_travel": {
-        "name": "{tracked_device} Direction of travel",
+        "name": "{tracked_entity} Direction of travel",
         "state": {
           "arrived": "Arrived",
           "away_from": "Away from",
@@ -40,7 +40,7 @@
           "towards": "Towards"
         }
       },
-      "dist_to_zone": { "name": "{tracked_device} Distance" },
+      "dist_to_zone": { "name": "{tracked_entity} Distance" },
       "nearest": { "name": "Nearest device" },
       "nearest_dir_of_travel": {
         "name": "Nearest direction of travel",
