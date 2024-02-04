@@ -9,7 +9,7 @@ from email.header import decode_header, make_header
 from email.message import Message
 from email.utils import parseaddr, parsedate_to_datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
 
@@ -166,10 +166,11 @@ class ImapMessage:
             """
             try:
                 decoded_payload: Any = part.get_payload(decode=True)
-                assert isinstance(decoded_payload, bytes)
+                if TYPE_CHECKING:
+                    assert isinstance(decoded_payload, bytes)
                 content_charset = part.get_content_charset() or "utf-8"
                 return decoded_payload.decode(content_charset)
-            except (AssertionError, ValueError):
+            except ValueError:
                 # return undecoded payload
                 return str(part.get_payload())
 
