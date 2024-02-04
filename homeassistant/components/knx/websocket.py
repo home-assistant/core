@@ -23,6 +23,10 @@ from .storage.entity_store_schema import (
     SCHEMA_OPTIONS,
     UPDATE_ENTITY_BASE_SCHEMA,
 )
+from .storage.entity_store_validation import (
+    EntityStoreValidationSuccess,
+    validate_entity_data,
+)
 from .telegrams import TelegramDict
 
 if TYPE_CHECKING:
@@ -234,15 +238,10 @@ def ws_subscribe_telegram(
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    vol.All(
-        websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-            {
-                vol.Required("type"): "knx/create_entity",
-                **CREATE_ENTITY_BASE_SCHEMA,
-            }
-        ),
-        ENTITY_STORE_DATA_SCHEMA,
-    )
+    {
+        vol.Required("type"): "knx/create_entity",
+        **CREATE_ENTITY_BASE_SCHEMA,
+    }
 )
 @websocket_api.async_response
 async def ws_create_entity(
@@ -251,6 +250,9 @@ async def ws_create_entity(
     msg: dict,
 ) -> None:
     """Create entity in entity store and load it."""
+    if (validation_error := validate_entity_data(msg)) is not None:
+        connection.send_result(msg["id"], validation_error)
+        return
     knx: KNXModule = hass.data[DOMAIN]
     try:
         entity_id = await knx.config_store.create_entitiy(msg["platform"], msg["data"])
@@ -259,7 +261,9 @@ async def ws_create_entity(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
         )
         return
-    connection.send_result(msg["id"], entity_id)
+    connection.send_result(
+        msg["id"], EntityStoreValidationSuccess(success=True, entity_id=entity_id)
+    )
 
 
 @websocket_api.require_admin

@@ -1,4 +1,6 @@
 """KNX entity store schema."""
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.const import Platform
@@ -26,18 +28,20 @@ def ga_schema(
     state_required: bool = False,
 ) -> vol.Schema:
     """Return a schema for a knx group address selector."""
-    schema = {}
+    schema: dict[vol.Marker, Any] = {}
     if write:
-        _write_marker = vol.Required if write_required else vol.Optional
-        schema[_write_marker("write", default=None)] = (
-            ga_validator if write_required else vol.Maybe(ga_validator)
+        schema |= (
+            {vol.Required("write"): ga_validator}
+            if write_required
+            else {vol.Optional("write", default=None): vol.Maybe(ga_validator)}
         )
     else:
         schema[vol.Remove("write")] = object
     if state:
-        _state_marker = vol.Required if state_required else vol.Optional
-        schema[_state_marker("state", default=None)] = (
-            ga_validator if state_required else vol.Maybe(ga_validator)
+        schema |= (
+            {vol.Required("state"): ga_validator}
+            if state_required
+            else {vol.Optional("state", default=None): vol.Maybe(ga_validator)}
         )
     else:
         schema[vol.Remove("state")] = object
