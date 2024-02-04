@@ -193,7 +193,7 @@ class GenericBlind(CoverEntity):
 
     async def async_update(self) -> None:
         """Update state, called by HA if there is a poll interval and by the service homeassistant.update_entity."""
-        _LOGGER.info("(%s) Updating entity", self.config_entry.data[CONF_MAC_CODE])
+        _LOGGER.debug("(%s) Updating entity", self.config_entry.data[CONF_MAC_CODE])
         await self.async_connect()
 
     def async_refresh_disconnect_timer(
@@ -222,13 +222,13 @@ class GenericBlind(CoverEntity):
     @run_command
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop moving the blind."""
-        _LOGGER.info("(%s) Stopping", self.config_entry.data[CONF_MAC_CODE])
+        _LOGGER.debug("(%s) Stopping", self.config_entry.data[CONF_MAC_CODE])
         await self._device.stop()
 
     @run_command
     async def async_favorite(self, **kwargs: Any) -> None:
         """Move the blind to the favorite position."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "(%s) Going to favorite position", self.config_entry.data[CONF_MAC_CODE]
         )
         await self._device.favorite()
@@ -237,7 +237,7 @@ class GenericBlind(CoverEntity):
     @no_run_command
     async def async_speed(self, speed_level: MotionSpeedLevel, **kwargs: Any) -> None:
         """Change the speed level of the device."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "(%s) Changing speed to {speed_level.name.lower()}",
             self.config_entry.data[CONF_MAC_CODE],
         )
@@ -292,7 +292,7 @@ class GenericBlind(CoverEntity):
     @callback
     def async_update_connection(self, connection_type: MotionConnectionType) -> None:
         """Update the connection status."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "(%s) %s",
             self.config_entry.data[CONF_MAC_CODE],
             connection_type.value.title(),
@@ -354,7 +354,7 @@ class GenericBlind(CoverEntity):
         self, service_info: BluetoothServiceInfoBleak, change: BluetoothChange
     ) -> None:
         """Update the BLEDevice."""
-        _LOGGER.info("(%s) New BLE device found", service_info.address)
+        _LOGGER.debug("(%s) New BLE device found", service_info.address)
         self._device.set_ble_device(service_info.device)
         self.device_rssi = service_info.advertisement.rssi
         if callable(self._signal_strength_callback):
@@ -438,7 +438,7 @@ class PositionBlind(GenericBlind):
         self, ignore_end_positions_not_set: bool = False, **kwargs: Any
     ) -> None:
         """Open the blind."""
-        _LOGGER.info("(%s) Opening", self.config_entry.data[CONF_MAC_CODE])
+        _LOGGER.debug("(%s) Opening", self.config_entry.data[CONF_MAC_CODE])
         self.async_update_running(MotionRunningType.OPENING)
         if await self._device.open(
             ignore_end_positions_not_set=ignore_end_positions_not_set
@@ -452,7 +452,7 @@ class PositionBlind(GenericBlind):
         self, ignore_end_positions_not_set: bool = False, **kwargs: Any
     ) -> None:
         """Close the blind."""
-        _LOGGER.info("(%s) Closing", self.config_entry.data[CONF_MAC_CODE])
+        _LOGGER.debug("(%s) Closing", self.config_entry.data[CONF_MAC_CODE])
         self.async_update_running(MotionRunningType.CLOSING)
         if await self._device.close(
             ignore_end_positions_not_set=ignore_end_positions_not_set
@@ -472,7 +472,7 @@ class PositionBlind(GenericBlind):
             else None
         )
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "(%s) Setting position to %i",
             self.config_entry.data[CONF_MAC_CODE],
             new_position,
@@ -509,7 +509,7 @@ class TiltBlind(GenericBlind):
         self, ignore_end_positions_not_set: bool = False, **kwargs: Any
     ) -> None:
         """Tilt the blind open."""
-        _LOGGER.info("(%s) Tilt opening", self.config_entry.data[CONF_MAC_CODE])
+        _LOGGER.debug("(%s) Tilt opening", self.config_entry.data[CONF_MAC_CODE])
         self.async_update_running(MotionRunningType.OPENING)
         if await self._device.open_tilt(
             ignore_end_positions_not_set=ignore_end_positions_not_set
@@ -523,7 +523,7 @@ class TiltBlind(GenericBlind):
         self, ignore_end_positions_not_set: bool = False, **kwargs: Any
     ) -> None:
         """Tilt the blind closed."""
-        _LOGGER.info("(%s) Tilt closing", self.config_entry.data[CONF_MAC_CODE])
+        _LOGGER.debug("(%s) Tilt closing", self.config_entry.data[CONF_MAC_CODE])
         self.async_update_running(MotionRunningType.CLOSING)
         if await self._device.close_tilt(
             ignore_end_positions_not_set=ignore_end_positions_not_set
@@ -548,7 +548,7 @@ class TiltBlind(GenericBlind):
             else None
         )
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "(%s) Setting tilt position to %i",
             self.config_entry.data[CONF_MAC_CODE],
             new_tilt_position,
@@ -605,7 +605,7 @@ class PositionCalibrationBlind(PositionBlind):
             ]
         ):
             # Curtain motor will calibrate if not calibrated and moved to some position
-            _LOGGER.info(
+            _LOGGER.debug(
                 "(%s) Calibration status: calibrating",
                 self.config_entry.data[CONF_MAC_CODE],
             )
@@ -628,7 +628,7 @@ class PositionCalibrationBlind(PositionBlind):
             else MotionCalibrationType.UNCALIBRATED
         )
         if new_calibration_type != self._calibration_type:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "(%s) Calibration status: %s",
                 self.config_entry.data[CONF_MAC_CODE],
                 new_calibration_type,
