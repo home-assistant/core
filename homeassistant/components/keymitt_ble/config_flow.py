@@ -155,4 +155,3 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ACCESS_TOKEN: token,
             },
         )
-        
