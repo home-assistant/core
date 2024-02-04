@@ -93,7 +93,7 @@ async def test_device_failures(
     aioclient_mock_fixture,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test Flo by Moen devices."""
+    """Test Flo by Moen devices buffer API failures."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
