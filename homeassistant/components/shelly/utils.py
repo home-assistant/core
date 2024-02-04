@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from types import MappingProxyType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
@@ -414,8 +414,8 @@ def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
     if settings.get("mode") == "roller":
         return True
 
-    if block.channel is None:
-        return False
+    if TYPE_CHECKING:
+        assert block.channel is not None
 
     return is_block_channel_type_light(settings, block.channel)
 
