@@ -38,6 +38,7 @@ TODO_STATUS_MAP = {
     "CANCELLED": TodoItemStatus.COMPLETED,
 }
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -124,12 +125,11 @@ class WebDavTodoListEntity(TodoListEntity):
         item_data: dict[str, Any] = {}
         if summary := item.summary:
             item_data["summary"] = summary
-        if status := item.status:
-            item_data["status"] = "NEEDS-ACTION"
         if due := item.due:
             item_data["due"] = due
         if description := item.description:
             item_data["description"] = description
+        item_data["status"] = "NEEDS-ACTION"
         try:
             await self.hass.async_add_executor_job(
                 partial(self._calendar.save_todo, **item_data),
