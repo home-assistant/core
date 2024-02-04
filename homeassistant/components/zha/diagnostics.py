@@ -37,6 +37,7 @@ KEYS_TO_REDACT = {
     "network_key",
     CONF_NWK_EXTENDED_PAN_ID,
     "partner_ieee",
+    "tc_link_key",
 }
 
 ATTRIBUTES = "attributes"
