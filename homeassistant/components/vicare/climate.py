@@ -151,6 +151,8 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _attr_preset_modes = list(HA_TO_VICARE_PRESET_HEATING)
     _current_action: bool | None = None
     _current_mode: str | None = None
+    _current_program: str | None = None
+    _attributes: dict[str, Any] = {}
 
     def __init__(
         self,
@@ -162,8 +164,6 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(device_config, device, circuit, circuit.id)
         self._device = device
-        self._attributes: dict[str, Any] = {}
-        self._current_program = None
         self._attr_translation_key = translation_key
 
     def update(self) -> None:
@@ -252,7 +252,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         _LOGGER.debug("Setting hvac mode to %s / %s", hvac_mode, vicare_mode)
         self._api.setMode(vicare_mode)
 
-    def vicare_mode_from_hvac_mode(self, hvac_mode):
+    def vicare_mode_from_hvac_mode(self, hvac_mode) -> str | None:
         """Return the corresponding vicare mode for an hvac_mode."""
         if "vicare_modes" not in self._attributes:
             return None
@@ -292,9 +292,11 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._attr_target_temperature = temp
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        return VICARE_TO_HA_PRESET_HEATING.get(self._current_program)
+        if self._current_program:
+            return VICARE_TO_HA_PRESET_HEATING.get(self._current_program)
+        return None
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode and deactivate any existing programs."""
@@ -347,11 +349,11 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 ) from err
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Show Device Attributes."""
         return self._attributes
 
-    def set_vicare_mode(self, vicare_mode):
+    def set_vicare_mode(self, vicare_mode) -> None:
         """Service function to set vicare modes directly."""
         if vicare_mode not in self._attributes["vicare_modes"]:
             raise ValueError(f"Cannot set invalid vicare mode: {vicare_mode}.")
