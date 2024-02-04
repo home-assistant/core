@@ -93,4 +93,8 @@ async def test_device(
         "homeassistant.components.flo.device.FloDeviceDataUpdateCoordinator.send_presence_ping",
         side_effect=RequestError,
     ), pytest.raises(UpdateFailed):
+        # simulate 4 updates failing
+        await valve._async_update_data()
+        await valve._async_update_data()
+        await valve._async_update_data()
         await valve._async_update_data()
