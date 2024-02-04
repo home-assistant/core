@@ -77,7 +77,7 @@ def icon_schema(integration_type: str) -> vol.Schema:
     )
 
     if integration_type in ("entity", "helper", "system"):
-        if integration_type == "helper":
+        if integration_type != "entity":
             field = vol.Optional("entity_component")
         else:
             field = vol.Required("entity_component")
