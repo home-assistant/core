@@ -125,7 +125,6 @@ async def test_block_device_update(
     """Test block device update."""
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "output", False)
     await init_integration(hass, 1)
-
     assert hass.states.get("switch.test_name_channel_1").state == STATE_OFF
 
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "output", True)
