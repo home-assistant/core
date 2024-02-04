@@ -10,7 +10,6 @@ from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
@@ -83,9 +82,8 @@ async def test_device(
 
     call_count = aioclient_mock.call_count
 
-    time = dt_util.utcnow() + timedelta(seconds=90)
-    freezer.move_to(time)
-    async_fire_time_changed(hass, time)
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == call_count + 6
@@ -112,9 +110,8 @@ async def test_device_failures(
     assert_state("home")
 
     async def move_time_and_assert_state(state: str) -> None:
-        time = dt_util.utcnow() + timedelta(seconds=65)
-        freezer.move_to(time)
-        async_fire_time_changed(hass, time)
+        freezer.tick(timedelta(seconds=65))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert_state(state)
 
