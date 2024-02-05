@@ -73,6 +73,7 @@ RPC_RELAY_SWITCHES = {
         key="switch",
         sub_key="output",
         removal_condition=is_rpc_exclude_from_relay,
+        unique_appends_id=False,
     )
 }
 
@@ -252,7 +253,6 @@ class RpcRelaySwitch(ShellyRpcAttributeEntity, SwitchEntity):
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator, key, attribute, description)
-        self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._id = self.status["id"]
 
     @property
