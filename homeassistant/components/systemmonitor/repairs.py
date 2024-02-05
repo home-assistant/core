@@ -17,9 +17,9 @@ class ProcessFixFlow(RepairsFlow):
 
     def __init__(self, entry: ConfigEntry, processes: list[str]) -> None:
         """Create flow."""
+        super().__init__()
         self.entry = entry
         self._processes = processes
-        super().__init__()
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -36,9 +36,8 @@ class ProcessFixFlow(RepairsFlow):
                 step_id="migrate_process_sensor",
                 description_placeholders={"processes": ", ".join(self._processes)},
             )
-        options = dict(self.entry.options)
-        resources: list[str] | None = options.get("resources")
-        processes: dict[str, list[str]] | None = options.get(SENSOR_DOMAIN)
+        resources: list[str] | None = self.entry.options.get("resources")
+        processes: dict[str, list[str]] | None = self.entry.options.get(SENSOR_DOMAIN)
         new_options: dict[str, Any] = {}
         if processes:
             new_options[BINARY_SENSOR_DOMAIN] = processes

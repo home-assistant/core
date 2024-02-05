@@ -1,4 +1,5 @@
 """Binary sensors for System Monitor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -108,7 +109,6 @@ async def async_setup_entry(
                     argument,
                 )
             )
-        continue
     async_add_entities(entities)
 
 

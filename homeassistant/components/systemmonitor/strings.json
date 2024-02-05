@@ -29,7 +29,7 @@
         "step": {
           "migrate_process_sensor": {
             "title": "Process sensors have been setup as binary sensors",
-            "description": "Process sensors `{processes}` has been created as binary sensors and the sensors will be removed in 2024.8.0.\n\nPlease update all automations, scripts, dashboards or other depending on these sensors to use the newly created binary sensors instead and press **Submit** to fix this issue."
+            "description": "Process sensors `{processes}` have been created as binary sensors and the sensors will be removed in 2024.9.0.\n\nPlease update all automations, scripts, dashboards or other things depending on these sensors to use the newly created binary sensors instead and press **Submit** to fix this issue."
           }
         }
       }

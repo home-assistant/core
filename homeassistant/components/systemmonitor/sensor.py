@@ -1,4 +1,5 @@
 """Support for monitoring the local system."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -643,7 +644,7 @@ async def async_setup_entry(  # noqa: C901
                     hass,
                     DOMAIN,
                     "process_sensor",
-                    breaks_in_ha_version="2024.8.0",
+                    breaks_in_ha_version="2024.9.0",
                     is_fixable=True,
                     is_persistent=False,
                     severity=IssueSeverity.WARNING,
