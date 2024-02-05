@@ -215,7 +215,7 @@ aiobafi6==0.9.0
 aiobotocore==2.9.1
 
 # homeassistant.components.comelit
-aiocomelit==0.8.2
+aiocomelit==0.8.3
 
 # homeassistant.components.dhcp
 aiodiscover==1.6.0
@@ -2184,7 +2184,7 @@ python-awair==0.2.4
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bring
-python-bring-api==2.0.0
+python-bring-api==3.0.0
 
 # homeassistant.components.bsblan
 python-bsblan==0.5.18
