@@ -66,6 +66,17 @@ async def async_setup_entry(
             ]
         )
 
+    def _async_add_new_lock(lock_id: int) -> None:
+        lock = coordinator.data[lock_id]
+        async_add_entities(
+            [
+                TedeeBinarySensorEntity(lock, coordinator, entity_description)
+                for entity_description in ENTITIES
+            ]
+        )
+
+    coordinator.new_lock_callbacks.append(_async_add_new_lock)
+
 
 class TedeeBinarySensorEntity(TedeeDescriptionEntity, BinarySensorEntity):
     """Tedee sensor entity."""

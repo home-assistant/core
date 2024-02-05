@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -20,7 +21,6 @@ from aioesphomeapi import (
     UserService,
     UserServiceArgType,
     VoiceAssistantAudioSettings,
-    VoiceAssistantEventType,
 )
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -202,14 +202,19 @@ class ESPHomeManager:
                     template.render_complex(data_template, service.variables)
                 )
             except TemplateError as ex:
-                _LOGGER.error("Error rendering data template for %s: %s", self.host, ex)
+                _LOGGER.error(
+                    "Error rendering data template %s for %s: %s",
+                    service.data_template,
+                    self.host,
+                    ex,
+                )
                 return
 
         if service.is_event:
             device_id = self.device_id
             # ESPHome uses service call packet for both events and service calls
             # Ensure the user can only send events of form 'esphome.xyz'
-            if domain != "esphome":
+            if domain != DOMAIN:
                 _LOGGER.error(
                     "Can only generate events under esphome domain! (%s)", self.host
                 )
@@ -279,53 +284,50 @@ class ESPHomeManager:
 
         await self.cli.send_home_assistant_state(entity_id, attribute, str(send_state))
 
+    async def _send_home_assistant_state_event(
+        self,
+        attribute: str | None,
+        event: EventType[EventStateChangedData],
+    ) -> None:
+        """Forward Home Assistant states updates to ESPHome."""
+        event_data = event.data
+        new_state = event_data["new_state"]
+        old_state = event_data["old_state"]
+
+        if new_state is None or old_state is None:
+            return
+
+        # Only communicate changes to the state or attribute tracked
+        if (not attribute and old_state.state == new_state.state) or (
+            attribute
+            and old_state.attributes.get(attribute)
+            == new_state.attributes.get(attribute)
+        ):
+            return
+
+        await self._send_home_assistant_state(
+            event.data["entity_id"], attribute, new_state
+        )
+
     @callback
     def async_on_state_subscription(
         self, entity_id: str, attribute: str | None = None
     ) -> None:
         """Subscribe and forward states for requested entities."""
         hass = self.hass
-
-        async def send_home_assistant_state_event(
-            event: EventType[EventStateChangedData],
-        ) -> None:
-            """Forward Home Assistant states updates to ESPHome."""
-            event_data = event.data
-            new_state = event_data["new_state"]
-            old_state = event_data["old_state"]
-
-            if new_state is None or old_state is None:
-                return
-
-            # Only communicate changes to the state or attribute tracked
-            if (not attribute and old_state.state == new_state.state) or (
-                attribute
-                and old_state.attributes.get(attribute)
-                == new_state.attributes.get(attribute)
-            ):
-                return
-
-            await self._send_home_assistant_state(
-                event.data["entity_id"], attribute, new_state
-            )
-
         self.entry_data.disconnect_callbacks.add(
             async_track_state_change_event(
-                hass, [entity_id], send_home_assistant_state_event
+                hass,
+                [entity_id],
+                partial(self._send_home_assistant_state_event, attribute),
             )
         )
-
         # Send initial state
         hass.async_create_task(
             self._send_home_assistant_state(
                 entity_id, attribute, hass.states.get(entity_id)
             )
         )
-
-    def _handle_pipeline_event(
-        self, event_type: VoiceAssistantEventType, data: dict[str, str] | None
-    ) -> None:
-        self.cli.send_voice_assistant_event(event_type, data)
 
     def _handle_pipeline_finished(self) -> None:
         self.entry_data.async_set_assist_pipeline_state(False)
@@ -344,14 +346,13 @@ class ESPHomeManager:
         if self.voice_assistant_udp_server is not None:
             _LOGGER.warning("Voice assistant UDP server was not stopped")
             self.voice_assistant_udp_server.stop()
-            self.voice_assistant_udp_server.close()
             self.voice_assistant_udp_server = None
 
         hass = self.hass
         self.voice_assistant_udp_server = VoiceAssistantUDPServer(
             hass,
             self.entry_data,
-            self._handle_pipeline_event,
+            self.cli.send_voice_assistant_event,
             self._handle_pipeline_finished,
         )
         port = await self.voice_assistant_udp_server.start_server()
@@ -376,6 +377,17 @@ class ESPHomeManager:
 
     async def on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
+        try:
+            await self._on_connnect()
+        except APIConnectionError as err:
+            _LOGGER.warning(
+                "Error getting setting up connection for %s: %s", self.host, err
+            )
+            # Re-connection logic will trigger after this
+            await self.cli.disconnect()
+
+    async def _on_connnect(self) -> None:
+        """Subscribe to states and list entities on successful API login."""
         entry = self.entry
         unique_id = entry.unique_id
         entry_data = self.entry_data
@@ -385,16 +397,10 @@ class ESPHomeManager:
         cli = self.cli
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
-        try:
-            results = await asyncio.gather(
-                cli.device_info(),
-                cli.list_entities_services(),
-            )
-        except APIConnectionError as err:
-            _LOGGER.warning("Error getting device info for %s: %s", self.host, err)
-            # Re-connection logic will trigger after this
-            await cli.disconnect()
-            return
+        results = await asyncio.gather(
+            cli.device_info(),
+            cli.list_entities_services(),
+        )
 
         device_info: EsphomeDeviceInfo = results[0]
         entity_infos_services: tuple[list[EntityInfo], list[UserService]] = results[1]
@@ -456,12 +462,10 @@ class ESPHomeManager:
 
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
         entry_data.async_update_device_state(hass)
-        await asyncio.gather(
-            entry_data.async_update_static_infos(
-                hass, entry, entity_infos, device_info.mac_address
-            ),
-            _setup_services(hass, entry_data, services),
+        await entry_data.async_update_static_infos(
+            hass, entry, entity_infos, device_info.mac_address
         )
+        _setup_services(hass, entry_data, services)
 
         setup_coros_with_disconnect_callbacks: list[
             Coroutine[Any, Any, CALLBACK_TYPE]
@@ -481,18 +485,12 @@ class ESPHomeManager:
                 )
             )
 
-        try:
-            setup_results = await asyncio.gather(
-                *setup_coros_with_disconnect_callbacks,
-                cli.subscribe_states(entry_data.async_update_state),
-                cli.subscribe_service_calls(self.async_on_service_call),
-                cli.subscribe_home_assistant_states(self.async_on_state_subscription),
-            )
-        except APIConnectionError as err:
-            _LOGGER.warning("Error getting initial data for %s: %s", self.host, err)
-            # Re-connection logic will trigger after this
-            await cli.disconnect()
-            return
+        setup_results = await asyncio.gather(
+            *setup_coros_with_disconnect_callbacks,
+            cli.subscribe_states(entry_data.async_update_state),
+            cli.subscribe_service_calls(self.async_on_service_call),
+            cli.subscribe_home_assistant_states(self.async_on_state_subscription),
+        )
 
         for result_idx in range(len(setup_coros_with_disconnect_callbacks)):
             cancel_callback = setup_results[result_idx]
@@ -586,7 +584,7 @@ class ESPHomeManager:
             await entry_data.async_update_static_infos(
                 hass, entry, infos, entry.unique_id.upper()
             )
-        await _setup_services(hass, entry_data, services)
+        _setup_services(hass, entry_data, services)
 
         if entry_data.device_info is not None and entry_data.device_info.name:
             reconnect_logic.name = entry_data.device_info.name
@@ -708,12 +706,27 @@ ARG_TYPE_METADATA = {
 }
 
 
-async def _register_service(
-    hass: HomeAssistant, entry_data: RuntimeEntryData, service: UserService
+async def execute_service(
+    entry_data: RuntimeEntryData, service: UserService, call: ServiceCall
 ) -> None:
-    if entry_data.device_info is None:
-        raise ValueError("Device Info needs to be fetched first")
-    service_name = f"{entry_data.device_info.name.replace('-', '_')}_{service.name}"
+    """Execute a service on a node."""
+    await entry_data.client.execute_service(service, call.data)
+
+
+def build_service_name(device_info: EsphomeDeviceInfo, service: UserService) -> str:
+    """Build a service name for a node."""
+    return f"{device_info.name.replace('-', '_')}_{service.name}"
+
+
+@callback
+def _async_register_service(
+    hass: HomeAssistant,
+    entry_data: RuntimeEntryData,
+    device_info: EsphomeDeviceInfo,
+    service: UserService,
+) -> None:
+    """Register a service on a node."""
+    service_name = build_service_name(device_info, service)
     schema = {}
     fields = {}
 
@@ -736,33 +749,36 @@ async def _register_service(
             "selector": metadata.selector,
         }
 
-    async def execute_service(call: ServiceCall) -> None:
-        await entry_data.client.execute_service(service, call.data)
-
     hass.services.async_register(
-        DOMAIN, service_name, execute_service, vol.Schema(schema)
+        DOMAIN,
+        service_name,
+        partial(execute_service, entry_data, service),
+        vol.Schema(schema),
+    )
+    async_set_service_schema(
+        hass,
+        DOMAIN,
+        service_name,
+        {
+            "description": (
+                f"Calls the service {service.name} of the node {device_info.name}"
+            ),
+            "fields": fields,
+        },
     )
 
-    service_desc = {
-        "description": (
-            f"Calls the service {service.name} of the node"
-            f" {entry_data.device_info.name}"
-        ),
-        "fields": fields,
-    }
 
-    async_set_service_schema(hass, DOMAIN, service_name, service_desc)
-
-
-async def _setup_services(
+@callback
+def _setup_services(
     hass: HomeAssistant, entry_data: RuntimeEntryData, services: list[UserService]
 ) -> None:
-    if entry_data.device_info is None:
+    device_info = entry_data.device_info
+    if device_info is None:
         # Can happen if device has never connected or .storage cleared
         return
     old_services = entry_data.services.copy()
-    to_unregister = []
-    to_register = []
+    to_unregister: list[UserService] = []
+    to_register: list[UserService] = []
     for service in services:
         if service.key in old_services:
             # Already exists
@@ -780,11 +796,11 @@ async def _setup_services(
     entry_data.services = {serv.key: serv for serv in services}
 
     for service in to_unregister:
-        service_name = f"{entry_data.device_info.name}_{service.name}"
+        service_name = build_service_name(device_info, service)
         hass.services.async_remove(DOMAIN, service_name)
 
     for service in to_register:
-        await _register_service(hass, entry_data, service)
+        _async_register_service(hass, entry_data, device_info, service)
 
 
 async def cleanup_instance(hass: HomeAssistant, entry: ConfigEntry) -> RuntimeEntryData:

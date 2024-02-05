@@ -439,7 +439,7 @@ async def test_no_polling_after_stop_event(
 
     assert needs_poll_calls == 1
 
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await hass.async_block_till_done()
     assert needs_poll_calls == 1
 

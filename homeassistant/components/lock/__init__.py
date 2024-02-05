@@ -33,6 +33,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -69,10 +70,6 @@ class LockEntityFeature(IntFlag):
 # The SUPPORT_OPEN constant is deprecated as of Home Assistant 2022.5.
 # Please use the LockEntityFeature enum instead.
 _DEPRECATED_SUPPORT_OPEN = DeprecatedConstantEnum(LockEntityFeature.OPEN, "2025.1")
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
@@ -315,3 +312,11 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         self._lock_option_default_code = ""
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

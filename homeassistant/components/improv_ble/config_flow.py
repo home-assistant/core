@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any, TypeVar
@@ -325,14 +325,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return
 
         if not self._provision_task:
-            self._provision_task = self.hass.async_create_task(
-                self._resume_flow_when_done(_do_provision())
-            )
+            self._provision_task = self.hass.async_create_task(_do_provision())
+
+        if not self._provision_task.done():
             return self.async_show_progress(
-                step_id="do_provision", progress_action="provisioning"
+                step_id="do_provision",
+                progress_action="provisioning",
+                progress_task=self._provision_task,
             )
 
-        await self._provision_task
         self._provision_task = None
         return self.async_show_progress_done(next_step_id="provision_done")
 
@@ -346,14 +347,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         result = self._provision_result
         self._provision_result = None
         return result
-
-    async def _resume_flow_when_done(self, awaitable: Awaitable) -> None:
-        try:
-            await awaitable
-        finally:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
-            )
 
     async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None
@@ -378,14 +371,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except AbortFlow as err:
                 return self.async_abort(reason=err.reason)
 
-            self._authorize_task = self.hass.async_create_task(
-                self._resume_flow_when_done(authorized_event.wait())
-            )
+            self._authorize_task = self.hass.async_create_task(authorized_event.wait())
+
+        if not self._authorize_task.done():
             return self.async_show_progress(
-                step_id="authorize", progress_action="authorize"
+                step_id="authorize",
+                progress_action="authorize",
+                progress_task=self._authorize_task,
             )
 
-        await self._authorize_task
         self._authorize_task = None
         if self._unsub:
             self._unsub()

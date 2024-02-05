@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -22,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
+from . import TadoConnector
 from .const import CONF_HOME_ID, DATA, DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(tado.home_id),
             update_devices,
         )
     )
@@ -99,12 +99,12 @@ async def async_setup_entry(
 @callback
 def add_tracked_entities(
     hass: HomeAssistant,
-    tado: Any,
+    tado: TadoConnector,
     async_add_entities: AddEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new tracker entities from Tado."""
-    _LOGGER.debug("Fetching Tado devices from API")
+    _LOGGER.debug("Fetching Tado devices from API for (newly) tracked entities")
     new_tracked = []
     for device_key, device in tado.data["mobile_device"].items():
         if device_key in tracked:
@@ -123,12 +123,13 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     """A Tado Device Tracker entity."""
 
     _attr_should_poll = False
+    _attr_available = False
 
     def __init__(
         self,
         device_id: str,
         device_name: str,
-        tado: Any,
+        tado: TadoConnector,
     ) -> None:
         """Initialize a Tado Device Tracker entity."""
         super().__init__()
@@ -150,6 +151,17 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         )
         device = self._tado.data["mobile_device"][self._device_id]
 
+        self._attr_available = False
+        _LOGGER.debug(
+            "Tado device %s has geoTracking state %s",
+            device["name"],
+            device["settings"]["geoTrackingEnabled"],
+        )
+
+        if device["settings"]["geoTrackingEnabled"] is False:
+            return
+
+        self._attr_available = True
         self._active = False
         if device.get("location") is not None and device["location"]["atHome"]:
             _LOGGER.debug("Tado device %s is at home", device["name"])
@@ -169,7 +181,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(self._tado.home_id),
                 self.on_demand_update,
             )
         )

@@ -220,13 +220,12 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
         if existing_entry:
-            self.hass.config_entries.async_update_entry(
-                existing_entry, data=config_data
+            reason = (
+                "reauth_successful" if self.reauth_conf else "reconfigure_successful"
             )
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            if self.reauth_conf:
-                return self.async_abort(reason="reauth_successful")
-            return self.async_abort(reason="reconfigure_successful")
+            return self.async_update_reload_and_abort(
+                existing_entry, data=config_data, reason=reason
+            )
 
         return self.async_create_entry(title=friendly_name or host, data=config_data)
 
