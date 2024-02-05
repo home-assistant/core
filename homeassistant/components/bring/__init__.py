@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import BringDataUpdateCoordinator
@@ -29,14 +30,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
 
-    bring = Bring(email, password)
-
-    def login_and_load_lists() -> None:
-        bring.login()
-        bring.loadLists()
+    session = async_get_clientsession(hass)
+    bring = Bring(email, password, sessionAsync=session)
 
     try:
-        await hass.async_add_executor_job(login_and_load_lists)
+        await bring.loginAsync()
+        await bring.loadListsAsync()
     except BringRequestException as e:
         raise ConfigEntryNotReady(
             f"Timeout while connecting for email '{email}'"
