@@ -559,7 +559,7 @@ def _get_states_for_entities_stmt(
     # in the inner query.
     if schema_version >= 31:
         run_start_ts = process_timestamp(run_start).timestamp()
-        utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
+        utc_point_in_time_ts = utc_point_in_time.timestamp()
         stmt += lambda q: q.join(
             (
                 most_recent_states_for_entities_by_date := (
@@ -657,7 +657,7 @@ def _get_single_entity_states_stmt(
         schema_version, no_attributes, include_last_changed=True
     )
     if schema_version >= 31:
-        utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
+        utc_point_in_time_ts = utc_point_in_time.timestamp()
         stmt += (
             lambda q: q.filter(
                 States.last_updated_ts < utc_point_in_time_ts,
