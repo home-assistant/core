@@ -77,8 +77,8 @@ def async_load_screenlogic_services(hass: HomeAssistant):
             )
         ):
             raise ServiceValidationError(
-                f"Failed to call service '{service_call.service}'. Config entry for"
-                " target not found"
+                f"Failed to call service '{service_call.service}'. Config entry for "
+                "target not found"
             )
         return screenlogic_entry_ids
 
@@ -108,15 +108,18 @@ def async_load_screenlogic_services(hass: HomeAssistant):
             )
             if not config_entry:
                 raise ServiceValidationError(
-                    f"Failed to call service '{service_call.service}'. Config entry '{entry_id}' not found"
+                    f"Failed to call service '{service_call.service}'. Config entry "
+                    f"'{entry_id}' not found"
                 )
             if not config_entry.domain == DOMAIN:
                 raise ServiceValidationError(
-                    f"Failed to call service '{service_call.service}'. Config entry '{entry_id}' is not a {DOMAIN} config"
+                    f"Failed to call service '{service_call.service}'. Config entry "
+                    f"'{entry_id}' is not a {DOMAIN} config"
                 )
             if not config_entry.state == ConfigEntryState.LOADED:
                 raise ServiceValidationError(
-                    f"Failed to call service '{service_call.service}'. Config entry '{entry_id}' not loaded"
+                    f"Failed to call service '{service_call.service}'. Config entry "
+                    f"'{entry_id}' not loaded"
                 )
             coordinators.append(hass.data[DOMAIN][entry_id])
 
