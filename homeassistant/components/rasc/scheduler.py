@@ -5,9 +5,8 @@ from collections.abc import Sequence
 from datetime import timedelta
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.script import BaseScriptEntity
 from homeassistant.const import (
     CONF_DELAY,
     CONF_DEVICE_ID,
@@ -27,7 +26,10 @@ from homeassistant.const import (
     RASC_START,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers.entity_component import EntityComponent
+
+if TYPE_CHECKING:
+    from homeassistant.components.script import BaseScriptEntity
+    from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.rascalscheduler import (
     async_get_entity_id_from_number,
     async_get_routine_id,
@@ -432,7 +434,7 @@ class RascalSchedulerEntity(BaseReadyQueues):
             routine_id = async_get_routine_id(action_id)
 
             try:
-                return self._serialization_order[routine_id][action_id]
+                return self._serialization_order[routine_id].actions[action_id]
             except (KeyError, ValueError):
                 _LOGGER.exception(
                     "While getting active action %s from serialization order", action_id

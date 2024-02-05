@@ -3,7 +3,7 @@
   "name": "Automation",
   "after_dependencies": ["device_automation", "webhook"],
   "codeowners": ["@home-assistant/core"],
-  "dependencies": ["blueprint", "trace"],
+  "dependencies": ["blueprint", "trace", "script", "rascalscheduler"],
   "documentation": "https://www.home-assistant.io/integrations/automation",
   "integration_type": "system",
   "quality_scale": "internal"

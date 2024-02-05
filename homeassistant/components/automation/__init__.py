@@ -6,13 +6,14 @@ import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
-import time
 from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.components.rascalscheduler.entity import BaseRoutineEntity
+from homeassistant.components.rascalscheduler.rascalscheduler import create_routine
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -28,6 +29,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_VARIABLES,
     CONF_ZONE,
+    DOMAIN_RASCALSCHEDULER,
     EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
@@ -62,11 +64,6 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.rascalscheduler import (
-    RoutineEntity,
-    dag_operator,
-    get_rascal_scheduler,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -126,8 +123,6 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
-
-TIME_MILLISECOND = 1000
 
 
 class IfAction(Protocol):
@@ -257,24 +252,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         LOGGER, DOMAIN, hass
     )
 
-    # Set up rascal scheduler component
-    # setup_rascal_scheduler_entity(hass)
-
-    # Wait until script component is loaded
-    # Convert automation entity into DAG
-    def on_script_setup() -> None:
-        """Handle SCRIPT_SETUP_COMPLETE event."""
-        for entity in component.entities:
-            if entity.unique_id is not None and entity.raw_config:
-                routine_entity = dag_operator(
-                    hass=hass,
-                    name=entity.raw_config["alias"],
-                    routine_id=entity.unique_id,
-                    action_script=entity.raw_config["action"],
-                )
-                routine_entity.output()
-                entity.routine = routine_entity
-
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
     await async_process_integration_platform_for_component(hass, DOMAIN)
@@ -284,14 +261,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await _async_process_config(hass, config, component)
 
-    if "script" in hass.config.components:
-        on_script_setup()
-    else:
-        hass.bus.async_listen_once("SCRIPT_SETUP_COMPLETE", lambda _: on_script_setup())
-
     # Add some default blueprints to blueprints/automation, does nothing
     # if blueprints/automation already exists
     await async_get_blueprints(hass).async_populate()
+
+    # async def create_routines() -> None:
+    #     """Create routines."""
+    #     for entity in component.entities:
+    #         if entity.unique_id is not None and entity.raw_config:
+    #             routine_entity = create_routine(
+    #                 hass=hass,
+    #                 name=entity.raw_config["alias"],
+    #                 routine_id=entity.unique_id,
+    #                 action_script=entity.raw_config["action"],
+    #             )
+    #             entity.routine = routine_entity
+    #             routine_entity.output()
+
+    # # Create routines
+    # await create_routines()
 
     async def trigger_service_handler(
         entity: BaseAutomationEntity, service_call: ServiceCall
@@ -326,16 +314,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         await _async_process_config(hass, conf, component)
 
-        for entity in component.entities:
-            if entity.unique_id is not None and entity.raw_config is not None:
-                routine_entity = dag_operator(
-                    hass=hass,
-                    name=entity.raw_config["alias"],
-                    routine_id=entity.unique_id,
-                    action_script=entity.raw_config["action"],
-                )
-                routine_entity.output()
-                entity.routine = routine_entity
+        # await create_routines()
 
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
@@ -358,7 +337,6 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     """Base class for automation entities."""
 
     raw_config: ConfigType | None
-    routine: RoutineEntity
 
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
@@ -488,7 +466,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
-        self.routine: RoutineEntity
+        self._routine: BaseRoutineEntity | None = None
 
     @property
     def name(self) -> str:
@@ -511,6 +489,16 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
+
+    @property
+    def routine(self) -> BaseRoutineEntity | None:
+        """Return routine."""
+        return self._routine
+
+    @routine.setter
+    def routine(self, routine: BaseRoutineEntity) -> None:
+        """Set routine."""
+        self._routine = routine
 
     @property
     def referenced_areas(self) -> set[str]:
@@ -599,6 +587,15 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if enable_automation:
             await self.async_enable()
+
+        if self.raw_config:
+            self._routine = create_routine(
+                hass=self.hass,
+                name=self.raw_config["alias"],
+                routine_id=self.unique_id,
+                action_script=self.raw_config["action"],
+            )
+            self._routine.output()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on and update the state."""
@@ -702,20 +699,14 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             try:
                 with trace_path("action"):
                     # change to execute rascal scheduler
-                    rascal = get_rascal_scheduler(self.hass)
+                    rascal = self.hass.data.get(DOMAIN_RASCALSCHEDULER)
 
-                    now = time.time()
-                    last_trigger_time = self.routine.last_trigger_time
-                    timeout = self.routine.timeout
-
-                    if (
-                        last_trigger_time is None
-                        or (now - last_trigger_time) * TIME_MILLISECOND > timeout
-                    ):
-                        routine_entity = self.routine.duplicate()
-                        routine_entity.set_variables(variables)
-                        routine_entity.set_context(trigger_context)
-                        rascal.start_routine(routine_entity)
+                    if rascal and self._routine:
+                        routine_entity = self._routine.duplicate(
+                            variables, trigger_context
+                        )
+                        routine_entity.output()
+                        rascal.init_routine(routine_entity)
 
                     # await self.action_script.async_run(
                     #     variables, trigger_context, started_action

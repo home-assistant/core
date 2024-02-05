@@ -487,7 +487,7 @@ class Queue(OrderedDict[_KT, _VT]):
     def next(self):
         """Get the first key (action_id) and its corresponding value (action_state) in the OrderedDict."""
         if self._queue:
-            key, value = next(iter(self._queue))
+            key, value = list(self._queue.items())[0]
             return key, value
         return None, None
 

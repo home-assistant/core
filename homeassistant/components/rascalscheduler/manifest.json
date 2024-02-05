@@ -1,9 +1,9 @@
 {
   "domain": "rascalscheduler",
   "name": "Rascal Scheduler",
-  "codeowners": ["@homeassistant"],
+  "codeowners": ["@home-assistant/core"],
   "config_flow": false,
-  "documentation": "https://github.com/kwang1012/home-assistant-core/blob/dev/README.rst",
+  "documentation": "https://github.com/home-assistant/core/blob/dev/README.rst",
   "iot_class": "local_polling",
   "issue_tracker": "https://www.home-assistant.io/help/"
 }

@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
+    DOMAIN_RASCALSCHEDULER,
 )
 from homeassistant.core import (
     HassJobType,
@@ -41,6 +42,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, LOGGER, RASC_ACK, RASC_COMPLETE, RASC_RESPONSE, RASC_START
+from .scheduler import RascalSchedulerEntity
 
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import EntityPlatform
@@ -60,6 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the RASC component."""
     component = hass.data[DOMAIN] = RASC(LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN_RASCALSCHEDULER] = RascalSchedulerEntity(hass)
 
     await component.async_load()
 
@@ -514,7 +517,7 @@ class RASCState(ABC):
             key = ",".join(
                 (self.entity.entity_id, self.service_call.service, str(self.transition))
             )
-            history = self._store.histories[key]
+            history = self._store.histories.get(key, RASCHistory())
             self._s_detector = StateDetector(history.st_history)
             self._c_detector = StateDetector(history.ct_history)
             # fire failure if exceed upper_bound
