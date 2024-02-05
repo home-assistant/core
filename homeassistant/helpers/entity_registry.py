@@ -1218,9 +1218,8 @@ class EntityRegistry:
         """Clear config entry from registry entries."""
         now_time = time.time()
         for entity_id in [
-            entity_id
-            for entity_id, entry in self.entities.items()
-            if config_entry_id == entry.config_entry_id
+            entry.entity_id
+            for entry in self.entities.get_entries_for_config_entry_id(config_entry_id)
         ]:
             self.async_remove(entity_id)
         for key, deleted_entity in list(self.deleted_entities.items()):
