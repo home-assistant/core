@@ -86,7 +86,6 @@ class FujitsuHVACDevice(ClimateEntity):
             serial_number=dev.device_serial_number,
             sw_version=self._dev.property_values["mcu_firmware_version"],
         )
-        self.update_attributes()
 
     async def async_update(self) -> None:
         """Gather data from API and update our attributes."""
@@ -97,31 +96,24 @@ class FujitsuHVACDevice(ClimateEntity):
             await self._dev.ayla_api.async_sign_in()
 
         await self._dev.async_update()
-        self.update_attributes()
 
-    def update_attributes(self) -> None:
-        """Update all dynamic attributes."""
-        self._attr_supported_features = self._get_supported_features()
-        self._attr_current_temperature = self._dev.sensed_temp
-        self._attr_fan_mode = self._get_fan_mode()
-        self._attr_fan_modes = self._get_fan_modes()
-        self._attr_hvac_mode = self._get_hvac_mode()
-        self._attr_hvac_modes = self._get_hvac_modes()
-        self._attr_swing_mode = self._get_swing_mode()
-        self._attr_swing_modes = self._get_swing_modes()
-        self._attr_target_temperature = self._get_target_temperature()
-        (
-            self._attr_min_temp,
-            self._attr_max_temp,
-        ) = self._dev.temperature_range
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the fan setting.
 
-    def _get_fan_mode(self) -> str | None:
+        Requires ClimateEntityFeature.FAN_MODE.
+        """
         with suppress(KeyError):
             return FAN_MODE_MAP.inverse[self._dev.fan_speed]
 
         return None
 
-    def _get_fan_modes(self) -> list[str] | None:
+    @property
+    def fan_modes(self) -> list[str] | None:
+        """Return the list of available fan modes.
+
+        Requires ClimateEntityFeature.FAN_MODE.
+        """
         ret = [
             FAN_MODE_MAP.inverse[mode]
             for mode in self._dev.supported_fan_speeds
@@ -133,13 +125,17 @@ class FujitsuHVACDevice(ClimateEntity):
 
         return None
 
-    def _get_hvac_mode(self) -> HVACMode | None:
+    @property
+    def hvac_mode(self) -> HVACMode | None:
+        """Return hvac operation ie. heat, cool mode."""
         with suppress(KeyError):
             return HVAC_MODE_MAP.inverse[self._dev.op_mode]
 
         return None
 
-    def _get_hvac_modes(self) -> list[HVACMode]:
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the list of available hvac operation modes."""
         ret = [
             HVAC_MODE_MAP.inverse[mode]
             for mode in self._dev.supported_op_modes
@@ -148,13 +144,23 @@ class FujitsuHVACDevice(ClimateEntity):
 
         return ret
 
-    def _get_swing_mode(self) -> str | None:
+    @property
+    def swing_mode(self) -> str | None:
+        """Return the swing setting.
+
+        Requires ClimateEntityFeature.SWING_MODE.
+        """
         with suppress(KeyError):
             return SWING_MODE_MAP.inverse[self._dev.swing_mode]
 
         return None
 
-    def _get_swing_modes(self) -> list[str] | None:
+    @property
+    def swing_modes(self) -> list[str] | None:
+        """Return the list of available swing modes.
+
+        Requires ClimateEntityFeature.SWING_MODE.
+        """
         ret = [
             SWING_MODE_MAP.inverse[mode]
             for mode in self._dev.supported_swing_modes
@@ -166,10 +172,29 @@ class FujitsuHVACDevice(ClimateEntity):
 
         return None
 
-    def _get_target_temperature(self) -> float | None:
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        return float(self._dev.temperature_range[0])
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        return float(self._dev.temperature_range[1])
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return float(self._dev.sensed_temp)
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the target temperature."""
         return float(self._dev.set_temp)
 
-    def _get_supported_features(self) -> ClimateEntityFeature:
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
         ret = ClimateEntityFeature.TARGET_TEMPERATURE
         if self._dev.has_capability(Capability.OP_FAN):
             ret |= ClimateEntityFeature.FAN_MODE
