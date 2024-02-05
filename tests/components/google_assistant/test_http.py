@@ -466,6 +466,6 @@ async def test_async_enable_local_sdk(
     )
     assert resp.status == HTTPStatus.OK
     assert (
-        "Cannot process request for webhook mock_webhook_id as no linked agent user is found:"
+        "Cannot process request for webhook **REDACTED** as no linked agent user is found:"
         in caplog.text
     )

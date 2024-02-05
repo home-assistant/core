@@ -608,6 +608,11 @@ async def async_get_all_descriptions(
 
     # Files we loaded for missing descriptions
     loaded: dict[str, JSON_TYPE] = {}
+    # We try to avoid making a copy in the event the cache is good,
+    # but now we must make a copy in case new services get added
+    # while we are loading the missing ones so we do not
+    # add the new ones to the cache without their descriptions
+    services = {domain: service.copy() for domain, service in services.items()}
 
     if domains_with_missing_services:
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
@@ -635,7 +640,7 @@ async def async_get_all_descriptions(
         descriptions[domain] = {}
         domain_descriptions = descriptions[domain]
 
-        for service_name in services_map:
+        for service_name, service in services_map.items():
             cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
             if description is not None:
@@ -690,11 +695,10 @@ async def async_get_all_descriptions(
             if "target" in yaml_description:
                 description["target"] = yaml_description["target"]
 
-            if (
-                response := hass.services.supports_response(domain, service_name)
-            ) != SupportsResponse.NONE:
+            response = service.supports_response
+            if response is not SupportsResponse.NONE:
                 description["response"] = {
-                    "optional": response == SupportsResponse.OPTIONAL,
+                    "optional": response is SupportsResponse.OPTIONAL,
                 }
 
             descriptions_cache[cache_key] = description

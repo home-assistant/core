@@ -12,10 +12,10 @@ import pytest
 from homeassistant.components.ecovacs import PLATFORMS
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import Platform
+from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import VALID_ENTRY_DATA
+from .const import VALID_ENTRY_DATA_CLOUD
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -30,12 +30,18 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry_data() -> dict[str, Any]:
+    """Return the default mocked config entry data."""
+    return VALID_ENTRY_DATA_CLOUD
+
+
+@pytest.fixture
+def mock_config_entry(mock_config_entry_data: dict[str, Any]) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="username",
+        title=mock_config_entry_data[CONF_USERNAME],
         domain=DOMAIN,
-        data=VALID_ENTRY_DATA,
+        data=mock_config_entry_data,
     )
 
 
@@ -62,7 +68,7 @@ def mock_authenticator(device_fixture: str) -> Generator[Mock, None, None]:
             load_json_object_fixture(f"devices/{device_fixture}/device.json", DOMAIN)
         ]
 
-        def post_authenticated(
+        async def post_authenticated(
             path: str,
             json: dict[str, Any],
             *,
@@ -89,8 +95,11 @@ def mock_mqtt_client(mock_authenticator: Mock) -> Mock:
     with patch(
         "homeassistant.components.ecovacs.controller.MqttClient",
         autospec=True,
-    ) as mock_mqtt_client:
-        client = mock_mqtt_client.return_value
+    ) as mock, patch(
+        "homeassistant.components.ecovacs.config_flow.MqttClient",
+        new=mock,
+    ):
+        client = mock.return_value
         client._authenticator = mock_authenticator
         client.subscribe.return_value = lambda: None
         yield client

@@ -241,12 +241,12 @@ class TrackerEntity(BaseTrackerEntity):
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        raise NotImplementedError
+        return None
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        raise NotImplementedError
+        return None
 
     @property
     def state(self) -> str | None:

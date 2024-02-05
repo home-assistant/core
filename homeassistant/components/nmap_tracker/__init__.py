@@ -191,8 +191,9 @@ class NmapDeviceScanner:
         registry = er.async_get(self._hass)
         self._known_mac_addresses = {
             entry.unique_id: entry.original_name
-            for entry in registry.entities.values()
-            if entry.config_entry_id == self._entry_id
+            for entry in registry.entities.get_entries_for_config_entry_id(
+                self._entry_id
+            )
         }
 
     @property

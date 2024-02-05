@@ -1,0 +1,16 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:script-text",
+      "state": {
+        "on": "mdi:script-text-play"
+      }
+    }
+  },
+  "services": {
+    "reload": "mdi:reload",
+    "turn_on": "mdi:script-text-play",
+    "turn_off": "mdi:script-text",
+    "toggle": "mdi:script-text"
+  }
+}
