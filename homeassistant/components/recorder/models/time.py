@@ -61,6 +61,8 @@ def process_datetime_to_timestamp(ts: datetime) -> float:
     Mirrors the behavior of process_timestamp_to_utc_isoformat
     except it returns the epoch time.
     """
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=dt_util.UTC)
     return ts.timestamp()
 
 
