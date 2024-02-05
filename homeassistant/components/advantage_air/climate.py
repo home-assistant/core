@@ -18,6 +18,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -202,7 +203,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         if hvac_mode == HVACMode.OFF:
             return await self.async_turn_off()
         if hvac_mode == HVACMode.HEAT_COOL and self.preset_mode != ADVANTAGE_AIR_MYAUTO:
-            raise ValueError("Heat/Cool is not supported in this mode")
+            raise ServiceValidationError("Heat/Cool is not supported in this mode")
         await self.async_update_ac(
             {
                 "state": ADVANTAGE_AIR_STATE_ON,
@@ -223,7 +224,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         if ATTR_TEMPERATURE in kwargs:
             await self.async_update_ac({"setTemp": kwargs[ATTR_TEMPERATURE]})
         if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
-            await self.async_update_ac(
+            await self.async_update_ac(F
                 {
                     ADVANTAGE_AIR_COOL_TARGET: kwargs[ATTR_TARGET_TEMP_HIGH],
                     ADVANTAGE_AIR_HEAT_TARGET: kwargs[ATTR_TARGET_TEMP_LOW],
