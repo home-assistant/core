@@ -1,4 +1,5 @@
 """Helpers for the data entry flow."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -56,6 +57,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
             {
                 vol.Required("handler"): vol.Any(str, list),
                 vol.Optional("show_advanced_options", default=False): cv.boolean,
+                vol.Optional("source", default=config_entries.SOURCE_USER): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
         )

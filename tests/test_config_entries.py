@@ -2125,20 +2125,10 @@ async def test_unique_id_update_existing_entry_with_reload(
 
     # Test we don't reload if entry not started
     updates["host"] = "2.2.2.2"
-<<<<<<< HEAD
     entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
         "homeassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
-=======
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
-    with (
-        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_reload"
-        ) as async_reload,
-    ):
->>>>>>> a4c1322de3 (test_config_entries)
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
