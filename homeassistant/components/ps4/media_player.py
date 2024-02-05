@@ -1,5 +1,4 @@
 """Support for PlayStation 4 consoles."""
-import asyncio
 from contextlib import suppress
 import logging
 from typing import Any, cast
@@ -257,7 +256,7 @@ class PS4Device(MediaPlayerEntity):
 
         except PSDataIncomplete:
             title = None
-        except asyncio.TimeoutError:
+        except TimeoutError:
             title = None
             _LOGGER.error("PS Store Search Timed out")
 
