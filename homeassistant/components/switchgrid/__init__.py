@@ -19,7 +19,6 @@ PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Switchgrid from a config entry."""
-    _LOGGER.warning("🟢 __init__ async_setup_entry")
 
     hass.data.setdefault(DOMAIN, {})
 
