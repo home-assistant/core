@@ -27,7 +27,7 @@ turn_on:
       selector:
         color_rgb:
     rgbw_color:
-      status: legacy
+      status: secondary
       filter:
         attribute:
           supported_color_modes:
@@ -40,7 +40,7 @@ turn_on:
       selector:
         object:
     rgbww_color:
-      status: legacy
+      status: secondary
       filter:
         attribute:
           supported_color_modes:
