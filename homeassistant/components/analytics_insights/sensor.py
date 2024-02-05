@@ -1,16 +1,59 @@
 """Sensor for Home Assistant analytics."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AnalyticsData
+from . import AnalyticsInsightsData
 from .const import DOMAIN
-from .coordinator import HomeassistantAnalyticsDataUpdateCoordinator
+from .coordinator import AnalyticsData, HomeassistantAnalyticsDataUpdateCoordinator
+
+
+@dataclass(frozen=True, kw_only=True)
+class AnalyticsSensorEntityDescription(SensorEntityDescription):
+    """Analytics sensor entity description."""
+
+    value_fn: Callable[[AnalyticsData], StateType]
+
+
+def get_core_integration_entity_description(
+    domain: str, name: str
+) -> AnalyticsSensorEntityDescription:
+    """Get core integration entity description."""
+    return AnalyticsSensorEntityDescription(
+        key=f"core_{domain}_active_installations",
+        translation_key="core_integrations",
+        name=name,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="active installations",
+        value_fn=lambda data: data.core_integrations.get(domain),
+    )
+
+
+def get_custom_integration_entity_description(
+    domain: str,
+) -> AnalyticsSensorEntityDescription:
+    """Get custom integration entity description."""
+    return AnalyticsSensorEntityDescription(
+        key=f"custom_{domain}_active_installations",
+        translation_key="custom_integrations",
+        translation_placeholders={"custom_integration_domain": domain},
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="active installations",
+        value_fn=lambda data: data.custom_integrations.get(domain),
+    )
 
 
 async def async_setup_entry(
@@ -20,15 +63,28 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the entries."""
 
-    analytics_data: AnalyticsData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        HomeassistantAnalyticsSensor(
-            analytics_data.coordinator,
-            integration_domain,
-            analytics_data.names[integration_domain],
-        )
-        for integration_domain in analytics_data.coordinator.data
+    analytics_data: AnalyticsInsightsData = hass.data[DOMAIN][entry.entry_id]
+    coordinator: HomeassistantAnalyticsDataUpdateCoordinator = (
+        analytics_data.coordinator
     )
+    entities: list[HomeassistantAnalyticsSensor] = []
+    entities.extend(
+        HomeassistantAnalyticsSensor(
+            coordinator,
+            get_core_integration_entity_description(
+                integration_domain, analytics_data.names[integration_domain]
+            ),
+        )
+        for integration_domain in coordinator.data.core_integrations
+    )
+    entities.extend(
+        HomeassistantAnalyticsSensor(
+            coordinator,
+            get_custom_integration_entity_description(integration_domain),
+        )
+        for integration_domain in coordinator.data.custom_integrations
+    )
+    async_add_entities(entities)
 
 
 class HomeassistantAnalyticsSensor(
@@ -37,26 +93,24 @@ class HomeassistantAnalyticsSensor(
     """Home Assistant Analytics Sensor."""
 
     _attr_has_entity_name = True
-    _attr_state_class = SensorStateClass.TOTAL
-    _attr_native_unit_of_measurement = "active installations"
+
+    entity_description: AnalyticsSensorEntityDescription
 
     def __init__(
         self,
         coordinator: HomeassistantAnalyticsDataUpdateCoordinator,
-        integration_domain: str,
-        name: str,
+        entity_description: AnalyticsSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = name
-        self._attr_unique_id = f"core_{integration_domain}_active_installations"
+        self.entity_description = entity_description
+        self._attr_unique_id = entity_description.key
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, DOMAIN)},
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._integration_domain = integration_domain
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data.get(self._integration_domain)
+        return self.entity_description.value_fn(self.coordinator.data)

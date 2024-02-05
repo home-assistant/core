@@ -89,7 +89,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     uuid=uuid,
                     password=password,
                 )
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             self.host = None
             return self.async_show_form(
                 step_id="user",

@@ -11,7 +11,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, LupusecDevice
+from . import DOMAIN
+from .entity import LupusecBaseSensor
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
@@ -28,14 +29,16 @@ async def async_setup_entry(
     device_types = CONST.TYPE_SWITCH
 
     switches = []
-    for device in data.lupusec.get_devices(generic_type=device_types):
-        switches.append(LupusecSwitch(data, device))
+    for device in data.get_devices(generic_type=device_types):
+        switches.append(LupusecSwitch(device, config_entry.entry_id))
 
     async_add_devices(switches)
 
 
-class LupusecSwitch(LupusecDevice, SwitchEntity):
+class LupusecSwitch(LupusecBaseSensor, SwitchEntity):
     """Representation of a Lupusec switch."""
+
+    _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
@@ -46,6 +49,6 @@ class LupusecSwitch(LupusecDevice, SwitchEntity):
         self._device.switch_off()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.is_on

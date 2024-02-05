@@ -61,18 +61,3 @@
     'state': 'idle',
   })
 # ---
-# name: test_media_player[media_player.test_media_player-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Test Media player',
-      'supported_features': <MediaPlayerEntityFeature: 0>,
-      'volume_level': 0.22580323309042688,
-    }),
-    'context': <ANY>,
-    'entity_id': 'media_player.test_media_player',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'idle',
-  })
-# ---
