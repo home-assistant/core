@@ -15,6 +15,9 @@ DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.UTC
 DEFAULT_TIME_ZONE: dt.tzinfo = dt.UTC
 
+# EPOCHORDINAL is not exposed as a constant
+# https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L12
+EPOCHORDINAL = dt.datetime(1970, 1, 1).toordinal()
 
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
@@ -148,7 +151,15 @@ utc_from_timestamp = partial(dt.datetime.fromtimestamp, tz=UTC)
 
 def utc_to_timestamp(utc_dt: dt.datetime) -> float:
     """Fast conversion of a datetime in UTC to a timestamp."""
-    return utc_dt.timestamp()
+    # Taken from
+    # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L185
+    return (
+        (utc_dt.toordinal() - EPOCHORDINAL) * 86400
+        + utc_dt.hour * 3600
+        + utc_dt.minute * 60
+        + utc_dt.second
+        + (utc_dt.microsecond / 1000000)
+    )
 
 
 def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datetime:
