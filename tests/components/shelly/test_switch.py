@@ -289,6 +289,8 @@ async def test_rpc_device_services(
 ) -> None:
     """Test RPC device turn on/off services."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.delitem(mock_rpc_device.status, "thermostat:0")
+    monkeypatch.delitem(mock_rpc_device.config, "thermostat:0")
     await init_integration(hass, 2)
 
     await hass.services.async_call(
@@ -318,6 +320,8 @@ async def test_rpc_device_unique_ids(
 ) -> None:
     """Test RPC device unique_ids."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.delitem(mock_rpc_device.status, "thermostat:0")
+    monkeypatch.delitem(mock_rpc_device.config, "thermostat:0")
     await init_integration(hass, 2)
 
     entry = entity_registry.async_get("switch.test_switch_0")
@@ -345,6 +349,8 @@ async def test_rpc_set_state_errors(
 ) -> None:
     """Test RPC device set state connection/call errors."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.delitem(mock_rpc_device.status, "thermostat:0")
+    monkeypatch.delitem(mock_rpc_device.config, "thermostat:0")
     monkeypatch.setattr(mock_rpc_device, "call_rpc", AsyncMock(side_effect=exc))
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
@@ -364,6 +370,8 @@ async def test_rpc_auth_error(
 ) -> None:
     """Test RPC device set state authentication error."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.delitem(mock_rpc_device.status, "thermostat:0")
+    monkeypatch.delitem(mock_rpc_device.config, "thermostat:0")
     monkeypatch.setattr(
         mock_rpc_device,
         "call_rpc",
@@ -411,6 +419,19 @@ async def test_remove_gas_valve_switch(
     await init_integration(hass, 1, MODEL_GAS)
 
     assert entity_registry.async_get(entity_id) is None
+    assert state.attributes.get(ATTR_ICON) == "mdi:valve-open"
+
+
+async def test_wall_display_thermostat_mode(
+    hass: HomeAssistant,
+    mock_rpc_device,
+) -> None:
+    """Test Wall Display in thermostat mode."""
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    # the switch entity should not be created, only the climate entity
+    assert hass.states.get("switch.test_switch_0") is None
+    assert hass.states.get("climate.test_name")
 
 
 async def test_wall_display_relay_mode(

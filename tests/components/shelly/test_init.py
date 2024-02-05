@@ -374,6 +374,8 @@ async def test_entry_unload(
 ) -> None:
     """Test entry unload."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.delitem(mock_rpc_device.status, "thermostat:0")
+    monkeypatch.delitem(mock_rpc_device.config, "thermostat:0")
     entry = await init_integration(hass, gen)
 
     assert entry.state is ConfigEntryState.LOADED
@@ -423,6 +425,8 @@ async def test_entry_unload_not_connected(
         "homeassistant.components.shelly.coordinator.async_stop_scanner"
     ) as mock_stop_scanner:
         monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+        monkeypatch.delitem(mock_rpc_device.status, "thermostat:0")
+        monkeypatch.delitem(mock_rpc_device.config, "thermostat:0")
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
@@ -453,6 +457,8 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         side_effect=DeviceConnectionError,
     ) as mock_stop_scanner:
         monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+        monkeypatch.delitem(mock_rpc_device.status, "thermostat:0")
+        monkeypatch.delitem(mock_rpc_device.config, "thermostat:0")
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )

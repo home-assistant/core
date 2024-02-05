@@ -205,6 +205,7 @@ MOCK_CONFIG = {
         "id": 0,
         "enable": True,
         "type": "heating",
+        "actuator": f"shelly://shellywalldisplay-{MOCK_MAC.lower()}/c/switch:0",
     },
     "sys": {
         "ui_data": {},
