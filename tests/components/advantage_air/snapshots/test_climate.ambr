@@ -40,7 +40,7 @@
       ]),
       'max_temp': 32,
       'min_temp': 16,
-      'supported_features': <ClimateEntityFeature: 11>,
+      'supported_features': <ClimateEntityFeature: 395>,
       'target_temp_high': 24,
       'target_temp_low': 20,
       'target_temp_step': 1,

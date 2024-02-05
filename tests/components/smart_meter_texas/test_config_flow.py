@@ -1,5 +1,4 @@
 """Test the Smart Meter Texas config flow."""
-import asyncio
 from unittest.mock import patch
 
 from aiohttp import ClientError
@@ -63,7 +62,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect", [asyncio.TimeoutError, ClientError, SmartMeterTexasAPIError]
+    "side_effect", [TimeoutError, ClientError, SmartMeterTexasAPIError]
 )
 async def test_form_cannot_connect(hass: HomeAssistant, side_effect) -> None:
     """Test we handle cannot connect error."""

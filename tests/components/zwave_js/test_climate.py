@@ -83,6 +83,8 @@ async def test_thermostat_v2(
         == ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     client.async_send_command.reset_mock()
@@ -432,7 +434,10 @@ async def test_thermostat_heatit_z_trm6(
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_MIN_TEMP] == 5
     assert state.attributes[ATTR_MAX_TEMP] == 40
@@ -513,6 +518,8 @@ async def test_thermostat_heatit_z_trm3(
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_MIN_TEMP] == 5
     assert state.attributes[ATTR_MAX_TEMP] == 35
@@ -582,7 +589,10 @@ async def test_thermostat_heatit_z_trm2fx(
     assert state.attributes[ATTR_TEMPERATURE] == 29
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_MIN_TEMP] == 7
     assert state.attributes[ATTR_MAX_TEMP] == 35
@@ -627,7 +637,7 @@ async def test_thermostat_srt321_hrt4_zw(
         HVACMode.HEAT,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 384
 
 
 async def test_preset_and_no_setpoint(

@@ -294,7 +294,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         try:
             async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
                 url = await self.async_generate_authorize_url()
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             _LOGGER.error("Timeout generating authorize url: %s", err)
             return self.async_abort(reason="authorize_url_timeout")
         except NoURLAvailableError:
@@ -320,7 +320,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
                 token = await self.flow_impl.async_resolve_external_data(
                     self.external_data
                 )
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             _LOGGER.error("Timeout resolving OAuth token: %s", err)
             return self.async_abort(reason="oauth_timeout")
         except (ClientResponseError, ClientError) as err:

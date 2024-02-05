@@ -32,6 +32,6 @@ WEBOSTV_EXCEPTIONS = (
     ConnectionClosedOK,
     ConnectionRefusedError,
     WebOsTvCommandError,
-    asyncio.TimeoutError,
+    TimeoutError,
     asyncio.CancelledError,
 )
