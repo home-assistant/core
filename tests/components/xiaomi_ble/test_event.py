@@ -50,6 +50,36 @@ from tests.components.bluetooth import (
             ],
         ),
         (
+            "F8:24:41:E9:50:74",
+            make_advertisement(
+                "F8:24:41:E9:50:74",
+                b"P0S\x01?tP\xe9A$\xf8\x01\x10\x03\x04\x00\x02",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.remote_control_5074_button_m",
+                    ATTR_FRIENDLY_NAME: "Remote Control 5074 Button M",
+                    ATTR_EVENT_TYPE: "long_press",
+                }
+            ],
+        ),
+        (
+            "F8:24:41:E9:50:74",
+            make_advertisement(
+                "F8:24:41:E9:50:74",
+                b"P0S\x01?tP\xe9A$\xf8\x01\x10\x03\x03\x00\x00",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.remote_control_5074_button_plus",
+                    ATTR_FRIENDLY_NAME: "Remote Control 5074 Button plus",
+                    ATTR_EVENT_TYPE: "press",
+                }
+            ],
+        ),
+        (
             "DE:70:E8:B2:39:0C",
             make_advertisement(
                 "DE:70:E8:B2:39:0C",
@@ -61,6 +91,53 @@ from tests.components.bluetooth import (
                     "entity": "event.nightlight_390c_motion",
                     ATTR_FRIENDLY_NAME: "Nightlight 390C Motion",
                     ATTR_EVENT_TYPE: "motion_detected",
+                }
+            ],
+        ),
+        (
+            "E2:53:30:E6:D3:54",
+            make_advertisement(
+                "E2:53:30:E6:D3:54",
+                b"P0\xe1\x04\x8eT\xd3\xe60S\xe2\x01\x10\x03\x01\x00\x00",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.magic_cube_d354_cube",
+                    ATTR_FRIENDLY_NAME: "Magic Cube D354 Cube",
+                    ATTR_EVENT_TYPE: "rotate_left",
+                }
+            ],
+        ),
+        (
+            "F8:24:41:C5:98:8B",
+            make_advertisement(
+                "F8:24:41:C5:98:8B",
+                b"X0\xb6\x036\x8b\x98\xc5A$\xf8\x8b\xb8\xf2f" b"\x13Q\x00\x00\x00\xd6",
+            ),
+            "b853075158487ca39a5b5ea9",
+            [
+                {
+                    "entity": "event.dimmer_switch_988b_dimmer",
+                    ATTR_FRIENDLY_NAME: "Dimmer Switch 988B Dimmer",
+                    ATTR_EVENT_TYPE: "rotate_left",
+                    "event_properties": {"steps": 1},
+                }
+            ],
+        ),
+        (
+            "F8:24:41:C5:98:8B",
+            make_advertisement(
+                "F8:24:41:C5:98:8B",
+                b"X0\xb6\x03\xd2\x8b\x98\xc5A$\xf8\xc3I\x14vu~\x00\x00\x00\x99",
+            ),
+            "b853075158487ca39a5b5ea9",
+            [
+                {
+                    "entity": "event.dimmer_switch_988b_dimmer",
+                    ATTR_FRIENDLY_NAME: "Dimmer Switch 988B Dimmer",
+                    ATTR_EVENT_TYPE: "press",
+                    "event_properties": {"duration": 2},
                 }
             ],
         ),
