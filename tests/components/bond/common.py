@@ -1,7 +1,6 @@
 """Common methods used across tests for Bond."""
 from __future__ import annotations
 
-from asyncio import TimeoutError as AsyncIOTimeoutError
 from contextlib import nullcontext
 from datetime import timedelta
 from typing import Any
@@ -248,7 +247,7 @@ async def help_test_entity_available(
 
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    with patch_bond_device_state(side_effect=AsyncIOTimeoutError()):
+    with patch_bond_device_state(side_effect=TimeoutError()):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

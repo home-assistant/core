@@ -331,7 +331,7 @@ async def _async_setup_component(
             if task:
                 async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
                     result = await task
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error(
                 (
                     "Setup of '%s' is taking longer than %s seconds."

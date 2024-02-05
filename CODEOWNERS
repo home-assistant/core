@@ -180,6 +180,8 @@ build.json @home-assistant/supervisor
 /tests/components/bosch_shc/ @tschamm
 /homeassistant/components/braviatv/ @bieniu @Drafteed
 /tests/components/braviatv/ @bieniu @Drafteed
+/homeassistant/components/bring/ @miaucl @tr4nt0r
+/tests/components/bring/ @miaucl @tr4nt0r
 /homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger
 /tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger
 /homeassistant/components/brother/ @bieniu
@@ -345,6 +347,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/elmax/ @albertogeniola
 /tests/components/elmax/ @albertogeniola
 /homeassistant/components/elv/ @majuss
+/homeassistant/components/elvia/ @ludeeus
+/tests/components/elvia/ @ludeeus
 /homeassistant/components/emby/ @mezz64
 /homeassistant/components/emoncms/ @borpin
 /homeassistant/components/emonitor/ @bdraco
@@ -503,7 +507,8 @@ build.json @home-assistant/supervisor
 /tests/components/govee_ble/ @bdraco @PierreAronnax
 /homeassistant/components/govee_light_local/ @Galorhallen
 /tests/components/govee_light_local/ @Galorhallen
-/homeassistant/components/gpsd/ @fabaff
+/homeassistant/components/gpsd/ @fabaff @jrieger
+/tests/components/gpsd/ @fabaff @jrieger
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
 /homeassistant/components/greeneye_monitor/ @jkeljo
@@ -1120,6 +1125,8 @@ build.json @home-assistant/supervisor
 /tests/components/roborock/ @humbertogontijo @Lash-L
 /homeassistant/components/roku/ @ctalkington
 /tests/components/roku/ @ctalkington
+/homeassistant/components/romy/ @xeniter
+/tests/components/romy/ @xeniter
 /homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1
 /tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1
 /homeassistant/components/roon/ @pavoni
@@ -1330,8 +1337,8 @@ build.json @home-assistant/supervisor
 /tests/components/tailwind/ @frenck
 /homeassistant/components/tami4/ @Guy293
 /tests/components/tami4/ @Guy293
-/homeassistant/components/tankerkoenig/ @guillempages @mib1185
-/tests/components/tankerkoenig/ @guillempages @mib1185
+/homeassistant/components/tankerkoenig/ @guillempages @mib1185 @jpbede
+/tests/components/tankerkoenig/ @guillempages @mib1185 @jpbede
 /homeassistant/components/tapsaff/ @bazwilliams
 /homeassistant/components/tasmota/ @emontnemery
 /tests/components/tasmota/ @emontnemery
@@ -1388,6 +1395,8 @@ build.json @home-assistant/supervisor
 /tests/components/tplink_omada/ @MarkGodwin
 /homeassistant/components/traccar/ @ludeeus
 /tests/components/traccar/ @ludeeus
+/homeassistant/components/traccar_server/ @ludeeus
+/tests/components/traccar_server/ @ludeeus
 /homeassistant/components/trace/ @home-assistant/core
 /tests/components/trace/ @home-assistant/core
 /homeassistant/components/tractive/ @Danielhiversen @zhulik @bieniu

@@ -154,6 +154,14 @@ async def zigpy_app_controller():
             zigpy.config.CONF_STARTUP_ENERGY_SCAN: False,
             zigpy.config.CONF_NWK_BACKUP_ENABLED: False,
             zigpy.config.CONF_TOPO_SCAN_ENABLED: False,
+            zigpy.config.CONF_OTA: {
+                zigpy.config.CONF_OTA_IKEA: False,
+                zigpy.config.CONF_OTA_INOVELLI: False,
+                zigpy.config.CONF_OTA_LEDVANCE: False,
+                zigpy.config.CONF_OTA_SALUS: False,
+                zigpy.config.CONF_OTA_SONOFF: False,
+                zigpy.config.CONF_OTA_THIRDREALITY: False,
+            },
         }
     )
 

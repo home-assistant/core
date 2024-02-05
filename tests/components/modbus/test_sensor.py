@@ -357,7 +357,7 @@ async def test_config_wrong_struct_sensor(
             },
             [7],
             False,
-            "34",
+            "34.0000",
         ),
         (
             {
@@ -379,7 +379,7 @@ async def test_config_wrong_struct_sensor(
             },
             [9],
             False,
-            "18",
+            "18.5",
         ),
         (
             {
@@ -390,7 +390,7 @@ async def test_config_wrong_struct_sensor(
             },
             [1],
             False,
-            "2",
+            "2.40",
         ),
         (
             {
@@ -401,7 +401,7 @@ async def test_config_wrong_struct_sensor(
             },
             [2],
             False,
-            "-8",
+            "-8.3",
         ),
         (
             {
@@ -676,7 +676,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x00AB, 0xCDEF],
             False,
-            "112594",
+            "112593.75",
         ),
         (
             {

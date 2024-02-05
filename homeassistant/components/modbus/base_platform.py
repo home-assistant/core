@@ -182,7 +182,6 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
         self._scale = config[CONF_SCALE]
-        self._precision = config.get(CONF_PRECISION, 2)
         self._offset = config[CONF_OFFSET]
         self._slave_count = config.get(CONF_SLAVE_COUNT, None) or config.get(
             CONF_VIRTUAL_COUNT, 0
@@ -196,11 +195,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             DataType.UINT32,
             DataType.UINT64,
         )
-        if self._value_is_int:
-            if self._min_value:
-                self._min_value = round(self._min_value)
-            if self._max_value:
-                self._max_value = round(self._max_value)
+        if not self._value_is_int:
+            self._precision = config.get(CONF_PRECISION, 2)
+        else:
+            self._precision = config.get(CONF_PRECISION, 0)
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""
@@ -235,13 +233,13 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             return None
         val: float | int = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
-            return str(self._min_value)
+            val = self._min_value
         if self._max_value is not None and val > self._max_value:
-            return str(self._max_value)
+            val = self._max_value
         if self._zero_suppress is not None and abs(val) <= self._zero_suppress:
             return "0"
-        if self._precision == 0 or self._value_is_int:
-            return str(int(round(val, 0)))
+        if self._precision == 0:
+            return str(round(val))
         return f"{float(val):.{self._precision}f}"
 
     def unpack_structure_result(self, registers: list[int]) -> str | None:

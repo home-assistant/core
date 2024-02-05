@@ -18,7 +18,6 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
     """Parent class for Teslemetry Entities."""
 
     _attr_has_entity_name = True
-    _wakelock = asyncio.Lock()
 
     def __init__(
         self,
@@ -29,6 +28,7 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
         super().__init__(vehicle.coordinator)
         self.key = key
         self.api = vehicle.api
+        self._wakelock = vehicle.wakelock
 
         car_type = self.coordinator.data["vehicle_config_car_type"]
 

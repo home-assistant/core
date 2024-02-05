@@ -23,15 +23,23 @@ from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 from . import data_entry_flow, loader
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
-from .core import CALLBACK_TYPE, CoreState, Event, HassJob, HomeAssistant, callback
-from .data_entry_flow import FlowResult
+from .core import (
+    CALLBACK_TYPE,
+    DOMAIN as HA_DOMAIN,
+    CoreState,
+    Event,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
+from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowResult
 from .exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from .helpers import device_registry, entity_registry, storage
+from .helpers import device_registry, entity_registry, issue_registry as ir, storage
 from .helpers.debounce import Debouncer
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.event import (
@@ -793,7 +801,7 @@ class ConfigEntry:
             if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
                 # Reauth flow already in progress for this entry
                 return
-            await hass.config_entries.flow.async_init(
+            result = await hass.config_entries.flow.async_init(
                 self.domain,
                 context={
                     "source": SOURCE_REAUTH,
@@ -804,6 +812,21 @@ class ConfigEntry:
                 | (context or {}),
                 data=self.data | (data or {}),
             )
+        if result["type"] not in FLOW_NOT_COMPLETE_STEPS:
+            return
+
+        # Create an issue, there's no need to hold the lock when doing that
+        issue_id = f"config_entry_reauth_{self.domain}_{self.entry_id}"
+        ir.async_create_issue(
+            hass,
+            HA_DOMAIN,
+            issue_id,
+            data={"flow_id": result["flow_id"]},
+            is_fixable=False,
+            issue_domain=self.domain,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="config_entry_reauth",
+        )
 
     @callback
     def async_get_active_flows(
@@ -980,6 +1003,14 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # Remove notification if no other discovery config entries in progress
         if not self._async_has_other_discovery_flows(flow.flow_id):
             persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
+
+        # Clean up issue if this is a reauth flow
+        if flow.context["source"] == SOURCE_REAUTH:
+            if (entry_id := flow.context.get("entry_id")) is not None and (
+                entry := self.config_entries.async_get_entry(entry_id)
+            ) is not None:
+                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
+                ir.async_delete_issue(self.hass, HA_DOMAIN, issue_id)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
@@ -1230,12 +1261,15 @@ class ConfigEntries:
         ent_reg.async_clear_config_entry(entry_id)
 
         # If the configuration entry is removed during reauth, it should
-        # abort any reauth flow that is active for the removed entry.
+        # abort any reauth flow that is active for the removed entry and
+        # linked issues.
         for progress_flow in self.hass.config_entries.flow.async_progress_by_handler(
             entry.domain, match_context={"entry_id": entry_id, "source": SOURCE_REAUTH}
         ):
             if "flow_id" in progress_flow:
                 self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
+                ir.async_delete_issue(self.hass, HA_DOMAIN, issue_id)
 
         # After we have fully removed an "ignore" config entry we can try and rediscover
         # it so that a user is able to immediately start configuring it. We do this by

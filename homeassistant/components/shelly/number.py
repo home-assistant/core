@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from aioshelly.block_device import Block
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
@@ -37,7 +37,7 @@ class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     rest_arg: str = ""
 
 
-NUMBERS: Final = {
+NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
         icon="mdi:pipe-valve",
