@@ -25,10 +25,10 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up MotionBlinds BLE integration."""
 
-    _LOGGER.info("Setting up MotionBlinds BLE integration")
+    _LOGGER.debug("Setting up MotionBlinds BLE integration")
 
     # The correct time is needed for encryption
-    _LOGGER.info("Setting timezone for encryption: %s", hass.config.time_zone)
+    _LOGGER.debug("Setting timezone for encryption: %s", hass.config.time_zone)
     MotionCrypt.set_timezone(hass.config.time_zone)
 
     return True
@@ -37,13 +37,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MotionBlinds BLE device from a config entry."""
 
-    _LOGGER.info("(%s) Setting up device", entry.data[CONF_MAC_CODE])
+    _LOGGER.debug("(%s) Setting up device", entry.data[CONF_MAC_CODE])
 
     hass.data.setdefault(DOMAIN, {})
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    _LOGGER.info("(%s) Finished setting up device", entry.data[CONF_MAC_CODE])
+    _LOGGER.debug("(%s) Finished setting up device", entry.data[CONF_MAC_CODE])
 
     return True
 
