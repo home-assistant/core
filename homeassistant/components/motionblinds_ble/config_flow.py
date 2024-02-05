@@ -41,10 +41,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MotionBlinds BLE."""
 
 
-    _discovery_info: BluetoothServiceInfoBleak | BLEDevice | None = None
-    _mac_code: str | None = None
-    _display_name: str | None = None
-    _blind_type: MotionBlindType | None = None
+    def __init__(self):
+        self._discovery_info: BluetoothServiceInfoBleak | BLEDevice | None = None
+        self._mac_code: str | None = None
+        self._display_name: str | None = None
+        self._blind_type: MotionBlindType | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
