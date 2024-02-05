@@ -1,4 +1,5 @@
 """The System Monitor integration."""
+
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -36,6 +37,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.version == 1:
         new_options = {**entry.options}
         if entry.minor_version == 1:
+            # Migration copies process sensors to binary sensors
+            # Repair will remove sensors when user submit the fix
             if processes := entry.options.get(SENSOR_DOMAIN):
                 new_options[BINARY_SENSOR_DOMAIN] = processes
         entry.version = 1

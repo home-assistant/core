@@ -5,11 +5,11 @@ from __future__ import annotations
 from typing import Any, cast
 
 from homeassistant import data_entry_flow
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 
 class ProcessFixFlow(RepairsFlow):
@@ -36,13 +36,19 @@ class ProcessFixFlow(RepairsFlow):
                 step_id="migrate_process_sensor",
                 description_placeholders={"processes": ", ".join(self._processes)},
             )
-        resources: list[str] | None = self.entry.options.get("resources")
-        processes: dict[str, list[str]] | None = self.entry.options.get(SENSOR_DOMAIN)
-        new_options: dict[str, Any] = {}
-        if processes:
-            new_options[BINARY_SENSOR_DOMAIN] = processes
-        if resources:
-            new_options["resources"] = resources
+
+        # Migration has copied the sensors to binary sensors
+        # Pop the sensors to repair and remove entities
+        new_options: dict[str, Any] = self.entry.options.copy()
+        new_options.pop(SENSOR_DOMAIN)
+
+        entity_reg = er.async_get(self.hass)
+        entries = er.async_entries_for_config_entry(entity_reg, self.entry.entry_id)
+        for entry in entries:
+            if entry.entity_id.startswith("sensor.") and entry.unique_id.startswith(
+                "process_"
+            ):
+                entity_reg.async_remove(entry.entity_id)
 
         self.hass.config_entries.async_update_entry(self.entry, options=new_options)
         await self.hass.config_entries.async_reload(self.entry.entry_id)

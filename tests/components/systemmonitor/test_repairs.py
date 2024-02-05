@@ -1,4 +1,5 @@
 """Test repairs for System Monitor."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -14,7 +15,7 @@ from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.issue_registry import async_create_issue
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import ANY, MockConfigEntry
@@ -23,6 +24,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 async def test_migrate_process_sensor(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
@@ -54,12 +56,18 @@ async def test_migrate_process_sensor(
     assert hass.config_entries.async_entries(DOMAIN) == snapshot(
         name="before_migration"
     )
+    assert er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    ) == snapshot(name="entities_before_migration")
 
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.system_monitor_process_python3")
+    entity = "sensor.system_monitor_process_python3"
+    state = hass.states.get(entity)
     assert state
+
+    assert entity_registry.async_get(entity)
 
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
@@ -106,7 +114,16 @@ async def test_migrate_process_sensor(
             issue = i
     assert not issue
 
+    entity = "sensor.system_monitor_process_python3"
+    state = hass.states.get(entity)
+    assert not state
+
+    assert not entity_registry.async_get(entity)
+
     assert hass.config_entries.async_entries(DOMAIN) == snapshot(name="after_migration")
+    assert er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    ) == snapshot(name="entities_before_migration")
 
 
 async def test_other_fixable_issues(
@@ -137,7 +154,7 @@ async def test_other_fixable_issues(
         "severity": "error",
         "translation_key": "issue_1",
     }
-    async_create_issue(
+    ir.async_create_issue(
         hass,
         issue["domain"],
         issue["issue_id"],
