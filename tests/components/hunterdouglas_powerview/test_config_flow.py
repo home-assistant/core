@@ -73,7 +73,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
 
     with patch(
         "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
-        return_value=AsyncMock(asyncio.TimeoutError),
+        side_effect=asyncio.TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
