@@ -224,7 +224,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.hunterdouglas_powerview.config_flow.Hub.query_firmware",
-        return_value=AsyncMock(SyntaxError),
+        side_effect=SyntaxError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
