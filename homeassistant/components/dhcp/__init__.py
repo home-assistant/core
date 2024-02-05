@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from fnmatch import translate
 from functools import lru_cache
+import itertools
 import logging
 import os
 import re
@@ -89,11 +90,55 @@ class DhcpServiceInfo(BaseServiceInfo):
     macaddress: str
 
 
+@dataclass(slots=True)
+class DhcpMatchers:
+    """Prepared info from dhcp entries."""
+
+    registered_devices_domains: set[str]
+    no_oui_matchers: dict[str, list[DHCPMatcher]]
+    oui_matchers: dict[str, list[DHCPMatcher]]
+
+
+def async_index_integration_matchers(
+    integration_matchers: list[DHCPMatcher],
+) -> DhcpMatchers:
+    """Index the integration matchers.
+
+    We have three types of matchers:
+
+    1. Registered devices
+    2. Devices with no OUI - index by first char of lower() hostname
+    3. Devices with OUI - index by OUI
+    """
+    registered_devices_domains: set[str] = set()
+    no_oui_matchers: dict[str, list[DHCPMatcher]] = {}
+    oui_matchers: dict[str, list[DHCPMatcher]] = {}
+    for matcher in integration_matchers:
+        domain = matcher["domain"]
+        if REGISTERED_DEVICES in matcher:
+            registered_devices_domains.add(domain)
+            continue
+
+        if mac_address := matcher.get(MAC_ADDRESS):
+            oui_matchers.setdefault(mac_address[:6], []).append(matcher)
+            continue
+
+        if hostname := matcher.get(HOSTNAME):
+            first_char = hostname[0].lower()
+            no_oui_matchers.setdefault(first_char, []).append(matcher)
+
+    return DhcpMatchers(
+        registered_devices_domains=registered_devices_domains,
+        no_oui_matchers=no_oui_matchers,
+        oui_matchers=oui_matchers,
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the dhcp component."""
     watchers: list[WatcherBase] = []
     address_data: dict[str, dict[str, str]] = {}
-    integration_matchers = await async_get_dhcp(hass)
+    integration_matchers = async_index_integration_matchers(await async_get_dhcp(hass))
     # For the passive classes we need to start listening
     # for state changes and connect the dispatchers before
     # everything else starts up or we will miss events
@@ -125,7 +170,7 @@ class WatcherBase(ABC):
         self,
         hass: HomeAssistant,
         address_data: dict[str, dict[str, str]],
-        integration_matchers: list[DHCPMatcher],
+        integration_matchers: DhcpMatchers,
     ) -> None:
         """Initialize class."""
         super().__init__()
@@ -189,28 +234,29 @@ class WatcherBase(ABC):
             lowercase_hostname,
         )
 
-        matched_domains = set()
-        device_domains = set()
+        matched_domains: set[str] = set()
+        matchers = self._integration_matchers
+        registered_devices_domains = matchers.registered_devices_domains
 
         dev_reg: DeviceRegistry = async_get(self.hass)
         if device := dev_reg.async_get_device(
             connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
         ):
             for entry_id in device.config_entries:
-                if entry := self.hass.config_entries.async_get_entry(entry_id):
-                    device_domains.add(entry.domain)
+                if (
+                    entry := self.hass.config_entries.async_get_entry(entry_id)
+                ) and entry.domain in registered_devices_domains:
+                    matched_domains.add(entry.domain)
 
-        for matcher in self._integration_matchers:
+        oui = uppercase_mac[:6]
+        lowercase_hostname_first_char = (
+            lowercase_hostname[0] if len(lowercase_hostname) else ""
+        )
+        for matcher in itertools.chain(
+            matchers.no_oui_matchers.get(lowercase_hostname_first_char, ()),
+            matchers.oui_matchers.get(oui, ()),
+        ):
             domain = matcher["domain"]
-
-            if matcher.get(REGISTERED_DEVICES) and domain not in device_domains:
-                continue
-
-            if (
-                matcher_mac := matcher.get(MAC_ADDRESS)
-            ) is not None and not _memorized_fnmatch(uppercase_mac, matcher_mac):
-                continue
-
             if (
                 matcher_hostname := matcher.get(HOSTNAME)
             ) is not None and not _memorized_fnmatch(
@@ -241,7 +287,7 @@ class NetworkWatcher(WatcherBase):
         self,
         hass: HomeAssistant,
         address_data: dict[str, dict[str, str]],
-        integration_matchers: list[DHCPMatcher],
+        integration_matchers: DhcpMatchers,
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
@@ -294,7 +340,7 @@ class DeviceTrackerWatcher(WatcherBase):
         self,
         hass: HomeAssistant,
         address_data: dict[str, dict[str, str]],
-        integration_matchers: list[DHCPMatcher],
+        integration_matchers: DhcpMatchers,
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
@@ -349,7 +395,7 @@ class DeviceTrackerRegisteredWatcher(WatcherBase):
         self,
         hass: HomeAssistant,
         address_data: dict[str, dict[str, str]],
-        integration_matchers: list[DHCPMatcher],
+        integration_matchers: DhcpMatchers,
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
@@ -387,7 +433,7 @@ class DHCPWatcher(WatcherBase):
         self,
         hass: HomeAssistant,
         address_data: dict[str, dict[str, str]],
-        integration_matchers: list[DHCPMatcher],
+        integration_matchers: DhcpMatchers,
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)

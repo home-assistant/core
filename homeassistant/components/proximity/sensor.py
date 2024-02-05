@@ -17,37 +17,49 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_DIR_OF_TRAVEL, ATTR_DIST_TO, ATTR_NEAREST, DOMAIN
+from .const import (
+    ATTR_DIR_OF_TRAVEL,
+    ATTR_DIST_TO,
+    ATTR_NEAREST,
+    ATTR_NEAREST_DIR_OF_TRAVEL,
+    ATTR_NEAREST_DIST_TO,
+    DOMAIN,
+)
 from .coordinator import ProximityDataUpdateCoordinator
+
+DIRECTIONS = ["arrived", "away_from", "stationary", "towards"]
 
 SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key=ATTR_DIST_TO,
-        name="Distance",
+        translation_key=ATTR_DIST_TO,
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
     ),
     SensorEntityDescription(
         key=ATTR_DIR_OF_TRAVEL,
-        name="Direction of travel",
         translation_key=ATTR_DIR_OF_TRAVEL,
-        icon="mdi:compass-outline",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "arrived",
-            "away_from",
-            "stationary",
-            "towards",
-        ],
+        options=DIRECTIONS,
     ),
 ]
 
 SENSORS_PER_PROXIMITY: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key=ATTR_NEAREST,
-        name="Nearest",
         translation_key=ATTR_NEAREST,
-        icon="mdi:near-me",
+    ),
+    SensorEntityDescription(
+        key=ATTR_DIST_TO,
+        translation_key=ATTR_NEAREST_DIST_TO,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.METERS,
+    ),
+    SensorEntityDescription(
+        key=ATTR_DIR_OF_TRAVEL,
+        translation_key=ATTR_NEAREST_DIR_OF_TRAVEL,
+        device_class=SensorDeviceClass.ENUM,
+        options=DIRECTIONS,
     ),
 ]
 
@@ -151,8 +163,10 @@ class ProximityTrackedEntitySensor(
         self.tracked_entity_id = tracked_entity_descriptor.entity_id
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{tracked_entity_descriptor.identifier}_{description.key}"
-        self._attr_name = f"{self.tracked_entity_id.split('.')[-1]} {description.name}"
         self._attr_device_info = _device_info(coordinator)
+        self._attr_translation_placeholders = {
+            "tracked_entity": self.tracked_entity_id.split(".")[-1]
+        }
 
     async def async_added_to_hass(self) -> None:
         """Register entity mapping."""

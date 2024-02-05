@@ -731,7 +731,7 @@ geocachingapi==0.2.1
 geopy==2.3.0
 
 # homeassistant.components.geo_rss_events
-georss-generic-client==0.6
+georss-generic-client==0.8
 
 # homeassistant.components.ign_sismologia
 georss-ign-sismologia-client==0.6
@@ -2182,7 +2182,7 @@ wyoming==1.5.2
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.23.1
+xiaomi-ble==0.25.2
 
 # homeassistant.components.knx
 xknx==2.11.2
