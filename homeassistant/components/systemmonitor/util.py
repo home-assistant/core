@@ -1,4 +1,5 @@
 """Utils for System Monitor."""
+
 import logging
 import os
 
@@ -71,6 +72,7 @@ def read_cpu_temperature(temps: dict[str, list[shwtemp]] | None = None) -> float
         temps = psutil.sensors_temperatures()
     entry: shwtemp
 
+    _LOGGER.debug("CPU Temperatures: %s", temps)
     for name, entries in temps.items():
         for i, entry in enumerate(entries, start=1):
             # In case the label is empty (e.g. on Raspberry PI 4),

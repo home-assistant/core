@@ -5086,6 +5086,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "samsam": {
+      "name": "SamSam",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
+    },
     "samsung": {
       "name": "Samsung",
       "integrations": {
@@ -6179,7 +6184,7 @@
         "traccar": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "local_polling",
+          "iot_class": "cloud_push",
           "name": "Traccar Client"
         },
         "traccar_server": {
@@ -6957,6 +6962,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "zondergas": {
+      "name": "ZonderGas",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
     },
     "zoneminder": {
       "name": "ZoneMinder",
