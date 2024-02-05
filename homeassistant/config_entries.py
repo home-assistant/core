@@ -920,11 +920,8 @@ class ConfigEntry:
         """Start a reconfigure flow."""
         # We will check this again in the task when we hold the lock,
         # but we also check it now to try to avoid creating the task.
-        if any(self.async_get_active_flows(hass, {SOURCE_RECONFIGURE})):
-            # Reconfigure flow already in progress for this entry
-            return
-        if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
-            # Reauth flow already in progress for this entry
+        if any(self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})):
+            # Reconfigure or reauth flow already in progress for this entry
             return
         hass.async_create_task(
             self._async_init_reconfigure(hass, context, data),
@@ -939,11 +936,10 @@ class ConfigEntry:
     ) -> None:
         """Start a reconfigure flow."""
         async with self._reconfigure_lock:
-            if any(self.async_get_active_flows(hass, {SOURCE_RECONFIGURE})):
-                # Reconfigure flow already in progress for this entry
-                return
-            if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
-                # Reauth flow already in progress for this entry
+            if any(
+                self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})
+            ):
+                # Reconfigure or reauth flow already in progress for this entry
                 return
             await hass.config_entries.flow.async_init(
                 self.domain,
