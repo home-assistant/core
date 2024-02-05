@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from mycroftapi import MycroftAPI
+from mycroft_bus_client import Message, MessageBusClient
 
 from homeassistant.components.notify import BaseNotificationService
 from homeassistant.core import HomeAssistant
@@ -24,16 +25,17 @@ def get_service(
 class MycroftNotificationService(BaseNotificationService):
     """The Mycroft Notification Service."""
 
-    def __init__(self, mycroft_ip):
+    def __init__(self, mycroft_ip) -> None:
         """Initialize the service."""
         self.mycroft_ip = mycroft_ip
+        self.bus = MessageBusClient(host=self.mycroft_ip)
+        self.bus.run_in_thread()
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message mycroft to speak on instance."""
 
-        text = message
-        mycroft = MycroftAPI(self.mycroft_ip)
-        if mycroft is not None:
-            mycroft.speak_text(text)
+        if self.bus is not None:
+            _LOGGER.debug("Notifying: %s", message)
+            self.bus.emit(Message("speak", data={"utterance": message}))
         else:
-            _LOGGER.log("Could not reach this instance of mycroft")
+            _LOGGER.error("Error in mycroft messagebus initialization")

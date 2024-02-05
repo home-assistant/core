@@ -1327,6 +1327,9 @@ mutagen==1.47.0
 # homeassistant.components.mutesync
 mutesync==0.0.1
 
+# homeassistant.components.mycroft
+mycroft-messagebus-client==0.10.1
+
 # homeassistant.components.permobil
 mypermobil==0.1.8
 
