@@ -37,21 +37,56 @@ async def async_setup_entry(
         hc_api = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
             entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("switch", [])
+            _LOGGER.debug("Switch Entities: %s", entity_dicts)
             entity_list = [
                 HomeConnectProgramSwitch(**d)
-                for d in entity_dicts
                 if d.get("program_name")
-            ]
-            entity_list += [
-                HomeConnectSuperModeSwitch(**d)
+                else HomeConnectSwitch(**d)
                 for d in entity_dicts
-                if d.get("super_mode")
             ]
             entity_list += [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
             entities += entity_list
         return entities
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
+
+
+class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
+    """Generic switch class for Home Connect Binary Settings."""
+
+    def __init__(self, device, key, desc):
+        """Initialize the entity."""
+        super().__init__(device, desc)
+        self._key = key
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Tuen on setting."""
+        _LOGGER.debug("Tried to turn on %s", self._key)
+        try:
+            await self.hass.async_add_executor_job(
+                self.device.appliance.set_setting, self._key, True
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("Error while trying to turn on: %s", err)
+        self.async_entity_update()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off setting."""
+        _LOGGER.debug("Tried to turn off %s", self._key)
+        try:
+            await self.hass.async_add_executor_job(
+                self.device.appliance.set_setting, self._key, False
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("Error while trying to turn off: %s", err)
+        self.async_entity_update()
+
+    async def async_update(self) -> None:
+        """Update the switch's status."""
+
+        state = self.device.appliance.status.get(self._key, {})
+        self._attr_is_on = state.get(ATTR_VALUE)
+        _LOGGER.debug("Updated %s, new state: %s", self._key, self._attr_is_on)
 
 
 class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
@@ -162,42 +197,3 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         else:
             self._attr_is_on = None
         _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
-
-
-class HomeConnectSuperModeSwitch(HomeConnectEntity, SwitchEntity):
-    """Super mode switch class for Home Connect."""
-
-    def __init__(self, device, super_mode):
-        """Initialize the entity."""
-        desc = f'{super_mode.split(".")[-1]}'
-        super().__init__(device, desc)
-        self.super_mode = super_mode
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Start super mode."""
-        _LOGGER.debug("Tried to turn on %s", self.super_mode)
-        try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, self.super_mode, True
-            )
-        except HomeConnectError as err:
-            _LOGGER.error("Error while trying to start super mode: %s", err)
-        self.async_entity_update()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Stop the program."""
-        _LOGGER.debug("Tried to stop program %s", self.super_mode)
-        try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, self.super_mode, False
-            )
-        except HomeConnectError as err:
-            _LOGGER.error("Error while trying to start super mode: %s", err)
-        self.async_entity_update()
-
-    async def async_update(self) -> None:
-        """Update the switch's status."""
-
-        state = self.device.appliance.status.get(self.super_mode, {})
-        self._attr_is_on = state.get(ATTR_VALUE)
-        _LOGGER.debug("Updated %s, new state: %s", self.super_mode, self._attr_is_on)
