@@ -1,5 +1,5 @@
 """Test the Bring! config flow."""
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 from python_bring_api.exceptions import (
@@ -25,7 +25,7 @@ MOCK_DATA_STEP = {
 
 
 async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bring_client: Mock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bring_client: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -59,10 +59,10 @@ async def test_form(
     ],
 )
 async def test_flow_user_init_data_unknown_error_and_recover(
-    hass: HomeAssistant, mock_bring_client: Mock, raise_error, text_error
+    hass: HomeAssistant, mock_bring_client: AsyncMock, raise_error, text_error
 ) -> None:
     """Test unknown errors."""
-    mock_bring_client.login.side_effect = raise_error
+    mock_bring_client.loginAsync.side_effect = raise_error
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -76,7 +76,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
     assert result["errors"]["base"] == text_error
 
     # Recover
-    mock_bring_client.login.side_effect = None
+    mock_bring_client.loginAsync.side_effect = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
@@ -92,7 +92,9 @@ async def test_flow_user_init_data_unknown_error_and_recover(
 
 
 async def test_flow_user_init_data_already_configured(
-    hass: HomeAssistant, mock_bring_client: Mock, bring_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_bring_client: AsyncMock,
+    bring_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort user data set when entry is already configured."""
 
