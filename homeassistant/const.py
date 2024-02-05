@@ -1222,10 +1222,6 @@ class UnitOfSpeed(StrEnum):
     MILES_PER_HOUR = "mph"
 
 
-_DEPRECATED_SPEED_BEAUFORT: Final = DeprecatedConstantEnum(
-    UnitOfSpeed.BEAUFORT, "2025.1"
-)
-"""Deprecated: please use UnitOfSpeed.BEAUFORT"""
 _DEPRECATED_SPEED_FEET_PER_SECOND: Final = DeprecatedConstantEnum(
     UnitOfSpeed.FEET_PER_SECOND, "2025.1"
 )
