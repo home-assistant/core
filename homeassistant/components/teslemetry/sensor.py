@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from itertools import chain
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -262,6 +263,7 @@ ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery-high",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="percentage_charged",
@@ -314,6 +316,7 @@ ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
         icon="mdi:generator-stationary",
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -352,27 +355,26 @@ async def async_setup_entry(
     """Set up the Teslemetry sensor platform from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
 
-    # Add vehicles
     async_add_entities(
-        TeslemetryVehicleSensorEntity(vehicle, description)
-        for vehicle in data.vehicles
-        for description in VEHICLE_DESCRIPTIONS
-    )
-
-    # Add energy sites
-    async_add_entities(
-        TeslemetryEnergySensorEntity(energysite, description)
-        for energysite in data.energysites
-        for description in ENERGY_DESCRIPTIONS
-        if description.key in energysite.coordinator.data
-    )
-
-    # Add wall connectors
-    async_add_entities(
-        TeslemetryWallConnectorSensorEntity(energysite, din, description)
-        for energysite in data.energysites
-        for din in energysite.coordinator.data.get("wall_connectors", {})
-        for description in WALL_CONNECTOR_DESCRIPTIONS
+        chain(
+            (  # Add vehicles
+                TeslemetryVehicleSensorEntity(vehicle, description)
+                for vehicle in data.vehicles
+                for description in VEHICLE_DESCRIPTIONS
+            ),
+            (  # Add energy sites
+                TeslemetryEnergySensorEntity(energysite, description)
+                for energysite in data.energysites
+                for description in ENERGY_DESCRIPTIONS
+                if description.key in energysite.coordinator.data
+            ),
+            (  # Add wall connectors
+                TeslemetryWallConnectorSensorEntity(energysite, din, description)
+                for energysite in data.energysites
+                for din in energysite.coordinator.data.get("wall_connectors", {})
+                for description in WALL_CONNECTOR_DESCRIPTIONS
+            ),
+        )
     )
 
 
