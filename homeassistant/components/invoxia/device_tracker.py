@@ -1,7 +1,6 @@
 """Platform for invoxia.device_tracker integration."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 
 from gps_tracker import AsyncClient, Tracker
@@ -15,7 +14,15 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, CLIENT, DOMAIN, LOGGER, MDI_ICONS
+from .const import (
+    ATTRIBUTION,
+    CLIENT,
+    COORDINATORS,
+    DOMAIN,
+    LOGGER,
+    MDI_ICONS,
+    TRACKERS,
+)
 from .coordinator import GpsTrackerCoordinator
 from .helpers import GpsTrackerData
 
@@ -28,26 +35,17 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the device_tracker platform."""
-    client: AsyncClient = hass.data[DOMAIN][entry.entry_id][CLIENT]
-    trackers: list[Tracker] = await client.get_trackers()
-
-    coordinators = [
-        GpsTrackerCoordinator(hass, client, tracker) for tracker in trackers
-    ]
-
-    await asyncio.gather(
-        *[
-            coordinator.async_config_entry_first_refresh()
-            for coordinator in coordinators
-        ]
-    )
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    client: AsyncClient = entry_data[CLIENT]
+    trackers: list[Tracker] = entry_data[TRACKERS]
+    coordinators: list[GpsTrackerCoordinator] = entry_data[COORDINATORS]
 
     entities = [
         GpsTrackerEntity(coordinator, client, tracker)
         for tracker, coordinator in zip(trackers, coordinators)
     ]
 
-    hass.data[DOMAIN][entry.entry_id][CONF_ENTITIES].extend(entities)
+    entry_data[CONF_ENTITIES].extend(entities)
     async_add_entities(entities, update_before_add=True)
 
 

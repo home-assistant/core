@@ -26,7 +26,7 @@ async def test_setup_entry_auth_failed(
     entry_id = mock_config_entry.entry_id
 
     with patch(
-        "gps_tracker.client.asynchronous.AsyncClient.get_devices",
+        "gps_tracker.client.asynchronous.AsyncClient.get_trackers",
         side_effect=gps_tracker.client.exceptions.UnauthorizedQuery,
     ):
         await hass.config_entries.async_setup(entry_id)
@@ -46,7 +46,7 @@ async def test_setup_entry_not_ready(
     mock_config_entry.add_to_hass(hass)
     entry_id = mock_config_entry.entry_id
     with patch(
-        "gps_tracker.client.asynchronous.AsyncClient.get_devices",
+        "gps_tracker.client.asynchronous.AsyncClient.get_trackers",
         side_effect=gps_tracker.client.exceptions.GpsTrackerException,
     ):
         await hass.config_entries.async_setup(entry_id)
@@ -64,7 +64,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "gps_tracker.client.asynchronous.AsyncClient.get_devices",
+        "gps_tracker.client.asynchronous.AsyncClient.get_trackers",
         return_value=[],
     ) as mock_client, patch(
         "homeassistant.components.invoxia.async_setup_entry",
@@ -90,7 +90,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "gps_tracker.client.asynchronous.AsyncClient.get_devices",
+        "gps_tracker.client.asynchronous.AsyncClient.get_trackers",
         side_effect=gps_tracker.client.exceptions.UnauthorizedQuery,
     ) as mock_client:
         result2 = await hass.config_entries.flow.async_configure(
@@ -103,7 +103,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert len(mock_client.mock_calls) == 1
 
     with patch(
-        "gps_tracker.client.asynchronous.AsyncClient.get_devices",
+        "gps_tracker.client.asynchronous.AsyncClient.get_trackers",
         side_effect=gps_tracker.client.exceptions.ForbiddenQuery,
     ) as mock_client:
         result3 = await hass.config_entries.flow.async_configure(
@@ -116,7 +116,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert len(mock_client.mock_calls) == 1
 
     with patch(
-        "gps_tracker.client.asynchronous.AsyncClient.get_devices",
+        "gps_tracker.client.asynchronous.AsyncClient.get_trackers",
         side_effect=Exception,
     ) as mock_client:
         result4 = await hass.config_entries.flow.async_configure(
@@ -151,7 +151,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert "flow_id" in result
 
     with patch(
-        "gps_tracker.client.asynchronous.AsyncClient.get_devices",
+        "gps_tracker.client.asynchronous.AsyncClient.get_trackers",
         return_value=[],
     ) as mock_client, patch(
         "homeassistant.components.invoxia.async_setup_entry",
@@ -195,7 +195,7 @@ async def test_reauth_with_exceptions(hass: HomeAssistant) -> None:
 
     # Authentication error
     with patch(
-        "gps_tracker.client.asynchronous.AsyncClient.get_devices",
+        "gps_tracker.client.asynchronous.AsyncClient.get_trackers",
         side_effect=gps_tracker.client.exceptions.UnauthorizedQuery,
     ) as mock_client:
         result2 = await hass.config_entries.flow.async_configure(
@@ -210,7 +210,7 @@ async def test_reauth_with_exceptions(hass: HomeAssistant) -> None:
 
     # Connection Error
     with patch(
-        "gps_tracker.client.asynchronous.AsyncClient.get_devices",
+        "gps_tracker.client.asynchronous.AsyncClient.get_trackers",
         side_effect=gps_tracker.client.exceptions.ForbiddenQuery,
     ) as mock_client:
         result3 = await hass.config_entries.flow.async_configure(
@@ -227,7 +227,7 @@ async def test_reauth_with_exceptions(hass: HomeAssistant) -> None:
 
     # Unknown Error
     with patch(
-        "gps_tracker.client.asynchronous.AsyncClient.get_devices",
+        "gps_tracker.client.asynchronous.AsyncClient.get_trackers",
         side_effect=Exception,
     ) as mock_client:
         result4 = await hass.config_entries.flow.async_configure(

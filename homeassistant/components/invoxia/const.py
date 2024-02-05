@@ -11,6 +11,8 @@ ATTRIBUTION = "Data provided by an unofficial client for Invoxia API."
 
 CLIENT = "client"
 
+COORDINATORS = "coordinators"
+
 DATA_UPDATE_INTERVAL = timedelta(minutes=4)
 
 DOMAIN = "invoxia"
@@ -55,3 +57,5 @@ MDI_ICONS: Mapping[TrackerIcon, str] = {
     TrackerIcon.TV: "mdi:television",
     TrackerIcon.PHONE: "mdi:cellphone",
 }
+
+TRACKERS = "trackers"

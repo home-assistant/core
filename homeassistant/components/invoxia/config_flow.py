@@ -42,7 +42,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     async with get_invoxia_client(hass, cfg) as client:
         try:
-            await client.get_devices()
+            await client.get_trackers()
         except gps_tracker.client.exceptions.UnauthorizedQuery as err:
             raise InvalidAuth from err
         except (
