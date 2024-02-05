@@ -4,7 +4,7 @@ import uuid
 
 import gps_tracker
 
-from homeassistant.components.device_tracker.const import ATTR_SOURCE_TYPE
+from homeassistant.components.device_tracker.const import ATTR_SOURCE_TYPE, SourceType
 from homeassistant.components.invoxia.const import DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -58,7 +58,7 @@ async def test_device_tracker_add_entities(
     # Test state
     state = hass.states.get("device_tracker.dummy_tracker")
     assert state
-    assert state.attributes.get(ATTR_SOURCE_TYPE) == "gps"
+    assert state.attributes.get(ATTR_SOURCE_TYPE) == SourceType.GPS
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == tracker_status.battery
     assert state.attributes.get(ATTR_GPS_ACCURACY) == tracker_data[0].precision
     assert state.attributes.get(ATTR_LATITUDE) == tracker_data[0].lat

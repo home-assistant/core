@@ -4,7 +4,7 @@ from __future__ import annotations
 import gps_tracker
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITIES, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_EMAIL, CONF_ENTITIES, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     config = gps_tracker.Config(
         password=entry.data[CONF_PASSWORD],
-        username=entry.data[CONF_USERNAME],
+        username=entry.data[CONF_EMAIL],
     )
 
     client = get_invoxia_client(hass, config)

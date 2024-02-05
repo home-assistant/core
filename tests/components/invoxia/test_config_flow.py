@@ -6,7 +6,7 @@ import gps_tracker
 import pytest
 
 from homeassistant.components.invoxia.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -33,6 +33,7 @@ async def test_setup_entry_auth_failed(
         await hass.async_block_till_done()
 
     assert "could not authenticate" in caplog.text
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_not_ready(
@@ -51,6 +52,7 @@ async def test_setup_entry_not_ready(
         await hass.config_entries.async_setup(entry_id)
         await hass.async_block_till_done()
     assert "not ready yet" in caplog.text
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -75,7 +77,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "test-username"
+    assert result2["title"] == "test-user@domain.ha"
     assert result2["data"] == TEST_CONF
     assert len(mock_client) == 0
     assert len(mock_setup_entry.mock_calls) == 1
@@ -221,6 +223,8 @@ async def test_reauth_with_exceptions(hass: HomeAssistant) -> None:
     assert result3["errors"] == {"base": "cannot_connect"}
     assert len(mock_client.mock_calls) == 1
 
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
     # Unknown Error
     with patch(
         "gps_tracker.client.asynchronous.AsyncClient.get_devices",
@@ -237,3 +241,4 @@ async def test_reauth_with_exceptions(hass: HomeAssistant) -> None:
     assert len(mock_client.mock_calls) == 1
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
