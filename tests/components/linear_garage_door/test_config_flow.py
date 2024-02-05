@@ -30,7 +30,8 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.linear_garage_door.config_flow.Linear.close",
         return_value=None,
     ), patch(
-        "uuid.uuid4", return_value="test-uuid"
+        "uuid.uuid4",
+        return_value="test-uuid",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -89,7 +90,8 @@ async def test_reauth(hass: HomeAssistant) -> None:
         "homeassistant.components.linear_garage_door.config_flow.Linear.close",
         return_value=None,
     ), patch(
-        "uuid.uuid4", return_value="test-uuid"
+        "uuid.uuid4",
+        return_value="test-uuid",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

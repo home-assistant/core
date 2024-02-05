@@ -16,11 +16,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    CONF_PIN,
     CONF_WEBFSAPI_URL,
     DEFAULT_PIN,
     DEFAULT_PORT,

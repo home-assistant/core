@@ -1,5 +1,4 @@
 """Test the DSMR config flow."""
-import asyncio
 from itertools import chain, repeat
 import os
 from typing import Any
@@ -335,7 +334,7 @@ async def test_setup_serial_fail(
     # override the mock to have it fail the first time and succeed after
     first_fail_connection_factory = AsyncMock(
         return_value=(transport, protocol),
-        side_effect=chain([serial.serialutil.SerialException], repeat(DEFAULT)),
+        side_effect=chain([serial.SerialException], repeat(DEFAULT)),
     )
 
     assert result["type"] == "form"
@@ -388,13 +387,13 @@ async def test_setup_serial_timeout(
 
     first_timeout_wait_closed = AsyncMock(
         return_value=True,
-        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+        side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )
     protocol.wait_closed = first_timeout_wait_closed
 
     first_timeout_wait_closed = AsyncMock(
         return_value=True,
-        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+        side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )
     rfxtrx_protocol.wait_closed = first_timeout_wait_closed
 
@@ -474,8 +473,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
-        "precision": 4,
-        "reconnect_interval": 30,
     }
 
     entry = MockConfigEntry(

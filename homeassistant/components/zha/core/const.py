@@ -89,6 +89,7 @@ CLUSTER_HANDLER_LEVEL = ATTR_LEVEL
 CLUSTER_HANDLER_MULTISTATE_INPUT = "multistate_input"
 CLUSTER_HANDLER_OCCUPANCY = "occupancy"
 CLUSTER_HANDLER_ON_OFF = "on_off"
+CLUSTER_HANDLER_OTA = "ota"
 CLUSTER_HANDLER_POWER_CONFIGURATION = "power"
 CLUSTER_HANDLER_PRESSURE = "pressure"
 CLUSTER_HANDLER_SHADE = "shade"
@@ -120,6 +121,7 @@ PLATFORMS = (
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.UPDATE,
 )
 
 CONF_ALARM_MASTER_CODE = "alarm_master_code"
@@ -127,6 +129,7 @@ CONF_ALARM_FAILED_TRIES = "alarm_failed_tries"
 CONF_ALARM_ARM_REQUIRES_CODE = "alarm_arm_requires_code"
 
 CONF_BAUDRATE = "baudrate"
+CONF_FLOW_CONTROL = "flow_control"
 CONF_CUSTOM_QUIRKS_PATH = "custom_quirks_path"
 CONF_DEFAULT_LIGHT_TRANSITION = "default_light_transition"
 CONF_DEVICE_CONFIG = "device_config"
@@ -136,7 +139,6 @@ CONF_ALWAYS_PREFER_XY_COLOR_MODE = "always_prefer_xy_color_mode"
 CONF_GROUP_MEMBERS_ASSUME_STATE = "group_members_assume_state"
 CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_ENABLE_QUIRKS = "enable_quirks"
-CONF_FLOWCONTROL = "flow_control"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
 CONF_USE_THREAD = "use_thread"
@@ -408,9 +410,6 @@ class Strobe(t.enum8):
     No_Strobe = 0x00
     Strobe = 0x01
 
-
-STARTUP_FAILURE_DELAY_S = 3
-STARTUP_RETRIES = 3
 
 EZSP_OVERWRITE_EUI64 = (
     "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"

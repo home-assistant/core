@@ -1,7 +1,6 @@
 """The Twinkly light component."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -19,16 +18,19 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SW_VERSION, CONF_MODEL
+from homeassistant.const import (
+    ATTR_SW_VERSION,
+    CONF_HOST,
+    CONF_ID,
+    CONF_MODEL,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_HOST,
-    CONF_ID,
-    CONF_NAME,
     DATA_CLIENT,
     DATA_DEVICE_INFO,
     DEV_LED_PROFILE,
@@ -279,7 +281,7 @@ class TwinklyLight(LightEntity):
             # We don't use the echo API to track the availability since
             # we already have to pull the device to get its state.
             self._attr_available = True
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             # We log this as "info" as it's pretty common that the Christmas
             # light are not reachable in July
             if self._attr_available:

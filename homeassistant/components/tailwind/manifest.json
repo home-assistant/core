@@ -1,0 +1,24 @@
+{
+  "domain": "tailwind",
+  "name": "Tailwind",
+  "codeowners": ["@frenck"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/tailwind",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "platinum",
+  "requirements": ["gotailwind==0.2.2"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "properties": {
+        "vendor": "tailwind"
+      }
+    }
+  ]
+}

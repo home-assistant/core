@@ -36,7 +36,7 @@ def _get_temperature_sensor_unit(device: Device) -> str:
     return UnitOfTemperature.FAHRENHEIT
 
 
-@dataclass
+@dataclass(frozen=True)
 class HoneywellSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -44,7 +44,7 @@ class HoneywellSensorEntityDescriptionMixin:
     unit_fn: Callable[[Device], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class HoneywellSensorEntityDescription(
     SensorEntityDescription, HoneywellSensorEntityDescriptionMixin
 ):

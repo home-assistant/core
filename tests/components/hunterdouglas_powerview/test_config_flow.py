@@ -1,5 +1,4 @@
-"""Test the Logitech Harmony Hub config flow."""
-import asyncio
+"""Test the Hunter Douglas Powerview config flow."""
 from ipaddress import ip_address
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -11,6 +10,8 @@ from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
+from . import MOCK_MAC
+
 from tests.common import MockConfigEntry, load_fixture
 
 ZEROCONF_HOST = "1.2.3.4"
@@ -20,7 +21,7 @@ HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     hostname="mock_hostname",
     name="Hunter Douglas Powerview Hub._hap._tcp.local.",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: "AA::BB::CC::DD::EE::FF"},
+    properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC},
     type="mock_type",
 )
 
@@ -189,9 +190,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     )
     ignored_config_entry.add_to_hass(hass)
 
-    mock_powerview_userdata = _get_mock_powerview_userdata(
-        get_resources=asyncio.TimeoutError
-    )
+    mock_powerview_userdata = _get_mock_powerview_userdata(get_resources=TimeoutError)
     with patch(
         "homeassistant.components.hunterdouglas_powerview.UserData",
         return_value=mock_powerview_userdata,
@@ -298,9 +297,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerview_userdata = _get_mock_powerview_userdata(
-        get_resources=asyncio.TimeoutError
-    )
+    mock_powerview_userdata = _get_mock_powerview_userdata(get_resources=TimeoutError)
     with patch(
         "homeassistant.components.hunterdouglas_powerview.UserData",
         return_value=mock_powerview_userdata,

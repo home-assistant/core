@@ -93,7 +93,7 @@ def create_window_covering_service_with_v_tilt_2(accessory):
     tilt_target.maxValue = 0
 
 
-async def test_change_window_cover_state(hass: HomeAssistant, utcnow) -> None:
+async def test_change_window_cover_state(hass: HomeAssistant) -> None:
     """Test that we can turn a HomeKit alarm on and off again."""
     helper = await setup_test_component(hass, create_window_covering_service)
 
@@ -118,7 +118,7 @@ async def test_change_window_cover_state(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_read_window_cover_state(hass: HomeAssistant, utcnow) -> None:
+async def test_read_window_cover_state(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit alarm accessory."""
     helper = await setup_test_component(hass, create_window_covering_service)
 
@@ -151,7 +151,7 @@ async def test_read_window_cover_state(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["obstruction-detected"] is True
 
 
-async def test_read_window_cover_tilt_horizontal(hass: HomeAssistant, utcnow) -> None:
+async def test_read_window_cover_tilt_horizontal(hass: HomeAssistant) -> None:
     """Test that horizontal tilt is handled correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_h_tilt
@@ -166,7 +166,7 @@ async def test_read_window_cover_tilt_horizontal(hass: HomeAssistant, utcnow) ->
     assert state.attributes["current_tilt_position"] == 83
 
 
-async def test_read_window_cover_tilt_horizontal_2(hass: HomeAssistant, utcnow) -> None:
+async def test_read_window_cover_tilt_horizontal_2(hass: HomeAssistant) -> None:
     """Test that horizontal tilt is handled correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_h_tilt_2
@@ -181,7 +181,7 @@ async def test_read_window_cover_tilt_horizontal_2(hass: HomeAssistant, utcnow) 
     assert state.attributes["current_tilt_position"] == 83
 
 
-async def test_read_window_cover_tilt_vertical(hass: HomeAssistant, utcnow) -> None:
+async def test_read_window_cover_tilt_vertical(hass: HomeAssistant) -> None:
     """Test that vertical tilt is handled correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_v_tilt
@@ -196,7 +196,7 @@ async def test_read_window_cover_tilt_vertical(hass: HomeAssistant, utcnow) -> N
     assert state.attributes["current_tilt_position"] == 83
 
 
-async def test_read_window_cover_tilt_vertical_2(hass: HomeAssistant, utcnow) -> None:
+async def test_read_window_cover_tilt_vertical_2(hass: HomeAssistant) -> None:
     """Test that vertical tilt is handled correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_v_tilt_2
@@ -211,7 +211,7 @@ async def test_read_window_cover_tilt_vertical_2(hass: HomeAssistant, utcnow) ->
     assert state.attributes["current_tilt_position"] == 83
 
 
-async def test_write_window_cover_tilt_horizontal(hass: HomeAssistant, utcnow) -> None:
+async def test_write_window_cover_tilt_horizontal(hass: HomeAssistant) -> None:
     """Test that horizontal tilt is written correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_h_tilt
@@ -232,9 +232,7 @@ async def test_write_window_cover_tilt_horizontal(hass: HomeAssistant, utcnow) -
     )
 
 
-async def test_write_window_cover_tilt_horizontal_2(
-    hass: HomeAssistant, utcnow
-) -> None:
+async def test_write_window_cover_tilt_horizontal_2(hass: HomeAssistant) -> None:
     """Test that horizontal tilt is written correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_h_tilt_2
@@ -255,7 +253,7 @@ async def test_write_window_cover_tilt_horizontal_2(
     )
 
 
-async def test_write_window_cover_tilt_vertical(hass: HomeAssistant, utcnow) -> None:
+async def test_write_window_cover_tilt_vertical(hass: HomeAssistant) -> None:
     """Test that vertical tilt is written correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_v_tilt
@@ -276,7 +274,7 @@ async def test_write_window_cover_tilt_vertical(hass: HomeAssistant, utcnow) -> 
     )
 
 
-async def test_write_window_cover_tilt_vertical_2(hass: HomeAssistant, utcnow) -> None:
+async def test_write_window_cover_tilt_vertical_2(hass: HomeAssistant) -> None:
     """Test that vertical tilt is written correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_v_tilt_2
@@ -297,7 +295,7 @@ async def test_write_window_cover_tilt_vertical_2(hass: HomeAssistant, utcnow) -
     )
 
 
-async def test_window_cover_stop(hass: HomeAssistant, utcnow) -> None:
+async def test_window_cover_stop(hass: HomeAssistant) -> None:
     """Test that vertical tilt is written correctly."""
     helper = await setup_test_component(
         hass, create_window_covering_service_with_v_tilt
@@ -333,7 +331,7 @@ def create_garage_door_opener_service(accessory):
     return service
 
 
-async def test_change_door_state(hass: HomeAssistant, utcnow) -> None:
+async def test_change_door_state(hass: HomeAssistant) -> None:
     """Test that we can turn open and close a HomeKit garage door."""
     helper = await setup_test_component(hass, create_garage_door_opener_service)
 
@@ -358,7 +356,7 @@ async def test_change_door_state(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_read_door_state(hass: HomeAssistant, utcnow) -> None:
+async def test_read_door_state(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit garage door."""
     helper = await setup_test_component(hass, create_garage_door_opener_service)
 
@@ -399,7 +397,7 @@ async def test_read_door_state(hass: HomeAssistant, utcnow) -> None:
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test a we can migrate a cover unique id."""
     aid = get_next_aid()

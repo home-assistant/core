@@ -25,7 +25,7 @@ from homeassistant.components.shelly.const import DOMAIN, MODEL_WALL_DISPLAY
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -145,6 +145,29 @@ async def test_climate_set_temperature(
 
     mock_block_device.http_request.assert_called_once_with(
         "get", "thermostat/0", {"target_t_enabled": 1, "target_t": "23.0"}
+    )
+    mock_block_device.http_request.reset_mock()
+
+    # Test conversion from C to F
+    monkeypatch.setattr(
+        mock_block_device,
+        "settings",
+        {
+            "thermostats": [
+                {"target_t": {"units": "F"}},
+            ]
+        },
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
+        blocking=True,
+    )
+
+    mock_block_device.http_request.assert_called_once_with(
+        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": "68.0"}
     )
 
 
@@ -382,12 +405,13 @@ async def test_block_restored_climate_set_preset_before_online(
 
     assert hass.states.get(entity_id).state == HVACMode.HEAT
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "Profile1"},
-        blocking=True,
-    )
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "Profile1"},
+            blocking=True,
+        )
 
     mock_block_device.http_request.assert_not_called()
 
@@ -503,11 +527,12 @@ async def test_block_restored_climate_auth_error(
 
 
 async def test_device_not_calibrated(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    mock_block_device,
+    monkeypatch,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test to create an issue when the device is not calibrated."""
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
-
     await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online

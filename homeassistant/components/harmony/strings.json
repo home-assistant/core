@@ -7,6 +7,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "Hub Name"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Logitech Harmony Hub."
         }
       },
       "link": {

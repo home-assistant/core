@@ -19,13 +19,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_DSMR_VERSION,
-    CONF_PROTOCOL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -116,7 +115,7 @@ class DSMRConnection:
 
         try:
             transport, protocol = await asyncio.create_task(reader_factory())
-        except (serial.serialutil.SerialException, OSError):
+        except (serial.SerialException, OSError):
             LOGGER.exception("Error connecting to DSMR")
             return False
 
@@ -124,7 +123,7 @@ class DSMRConnection:
             try:
                 async with asyncio.timeout(30):
                     await protocol.wait_closed()
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Timeout (no data received), close transport and return True (if telegram is empty, will result in CannotCommunicate error)
                 transport.close()
                 await protocol.wait_closed()

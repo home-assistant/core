@@ -18,14 +18,14 @@ from .entity import BAFEntity
 from .models import BAFData
 
 
-@dataclass
+@dataclass(frozen=True)
 class BAFSwitchDescriptionMixin:
     """Required values for BAF sensors."""
 
     value_fn: Callable[[Device], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BAFSwitchDescription(
     SwitchEntityDescription,
     BAFSwitchDescriptionMixin,

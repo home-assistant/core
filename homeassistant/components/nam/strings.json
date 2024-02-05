@@ -6,6 +6,9 @@
         "description": "Set up Nettigo Air Monitor integration.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Nettigo Air Monitor to control."
         }
       },
       "credentials": {

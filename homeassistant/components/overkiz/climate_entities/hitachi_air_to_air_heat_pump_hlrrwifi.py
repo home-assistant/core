@@ -90,6 +90,7 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -101,6 +102,8 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
 
         if self.device.states.get(SWING_STATE):
@@ -245,12 +248,13 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
             MODE_CHANGE_STATE,
             OverkizCommandParam.AUTO,
         ).lower()  # Overkiz can return states that have uppercase characters which are not accepted back as commands
-        if hvac_mode.replace(
-            " ", ""
-        ) in [  # Overkiz can return states like 'auto cooling' or 'autoHeating' that are not valid commands and need to be converted to 'auto'
-            OverkizCommandParam.AUTOCOOLING,
-            OverkizCommandParam.AUTOHEATING,
-        ]:
+        if (
+            hvac_mode.replace(" ", "")
+            in [  # Overkiz can return states like 'auto cooling' or 'autoHeating' that are not valid commands and need to be converted to 'auto'
+                OverkizCommandParam.AUTOCOOLING,
+                OverkizCommandParam.AUTOHEATING,
+            ]
+        ):
             hvac_mode = OverkizCommandParam.AUTO
 
         swing_mode = self._control_backfill(

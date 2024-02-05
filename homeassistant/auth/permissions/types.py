@@ -5,9 +5,7 @@ from collections.abc import Mapping
 
 ValueType = (
     # Example: entities.all = { read: true, control: true }
-    Mapping[str, bool]
-    | bool
-    | None
+    Mapping[str, bool] | bool | None
 )
 
 # Example: entities.domains = { light: … }
