@@ -21,9 +21,11 @@ async def async_setup_entry(
     switches = []
     for bee in bees:
         if bee.active:
-            if bee.productID == 46:
-                for switch in bee.actuators:
-                    switches.append(MBSwitch(switch, microbees))
+            match bee.productID:
+                case 25 | 26 | 27 | 35 | 38 | 46 | 63 | 64 | 65 | 86:
+                    for switch in bee.actuators:
+                        switches.append(MBSwitch(switch, microbees))
+
     async_add_entities(switches)
 
 

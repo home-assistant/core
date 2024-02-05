@@ -13,7 +13,6 @@ from .api import get_api_scopes
 from .const import DOMAIN, VERSION
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.warning(DOMAIN)
 
 
 class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
