@@ -6,10 +6,12 @@ from unittest import mock
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from zhaquirks.ikea import PowerConfig1CRCluster, ScenesCluster
 from zigpy.const import SIG_ENDPOINTS, SIG_MANUFACTURER, SIG_MODEL, SIG_NODE_DESC
 import zigpy.profiles.zha
 import zigpy.quirks
 import zigpy.types
+from zigpy.zcl import ClusterType
 import zigpy.zcl.clusters.closures
 import zigpy.zcl.clusters.general
 import zigpy.zcl.clusters.security
@@ -37,6 +39,8 @@ from .zha_devices_list import (
     DEV_SIG_EVT_CLUSTER_HANDLERS,
     DEVICES,
 )
+
+from tests.components.zha.common import find_entity_id, update_attribute_cache
 
 NO_TAIL_ID = re.compile("_\\d$")
 UNIQUE_ID_HD = re.compile(r"^(([\da-fA-F]{2}:){7}[\da-fA-F]{2}-\d{1,3})", re.X)
@@ -461,3 +465,73 @@ async def test_group_probe_cleanup_called(
     await config_entry.async_unload(hass_disable_services)
     await hass_disable_services.async_block_till_done()
     disc.GROUP_PROBE.cleanup.assert_called()
+
+
+async def test_quirks_v2_entity_discovery(
+    hass,
+    zigpy_device_mock,
+    zha_device_joined,
+) -> None:
+    """Test quirks v2 discovery."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    zigpy.zcl.clusters.general.PowerConfiguration.cluster_id,
+                    zigpy.zcl.clusters.general.Groups.cluster_id,
+                    zigpy.zcl.clusters.general.OnOff.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    zigpy.zcl.clusters.general.Scenes.cluster_id,
+                ],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.NON_COLOR_CONTROLLER,
+            }
+        },
+        ieee="01:2d:6f:00:0a:90:69:e8",
+        manufacturer="Ikea of Sweden",
+        model="TRADFRI remote control",
+    )
+    zigpy_device.endpoints[1].power.PLUGGED_ATTR_READS = {
+        "battery_voltage": 3,
+        "battery_percentage_remaining": 100,
+    }
+    update_attribute_cache(zigpy_device.endpoints[1].power)
+    zigpy_device.endpoints[1].on_off.PLUGGED_ATTR_READS = {
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name: 3,
+    }
+    update_attribute_cache(zigpy_device.endpoints[1].on_off)
+
+    zigpy.quirks._DEVICE_REGISTRY.add_to_registry_v2(
+        "Ikea of Sweden", "TRADFRI remote control"
+    ).replaces(PowerConfig1CRCluster).replaces(
+        ScenesCluster, cluster_type=ClusterType.Client
+    ).exposes_number(
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+        zigpy.zcl.clusters.general.OnOff.cluster_id,
+    )
+
+    zigpy_device = zigpy.quirks._DEVICE_REGISTRY.get_device(zigpy_device)
+    zigpy_device.endpoints[1].power.PLUGGED_ATTR_READS = {
+        "battery_voltage": 3,
+        "battery_percentage_remaining": 100,
+    }
+    update_attribute_cache(zigpy_device.endpoints[1].power)
+    zigpy_device.endpoints[1].on_off.PLUGGED_ATTR_READS = {
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name: 3,
+    }
+    update_attribute_cache(zigpy_device.endpoints[1].on_off)
+
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.available = True
+    await hass.async_block_till_done()
+
+    entity_id = find_entity_id(
+        Platform.NUMBER,
+        zha_device,
+        hass,
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None

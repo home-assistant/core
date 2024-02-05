@@ -400,7 +400,20 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if (
+        if "entity_metadata" in kwargs:
+            attribute_name = kwargs["entity_metadata"].entity_metadata.attribute_name
+            if (
+                attribute_name in cluster_handler.cluster.unsupported_attributes
+                or attribute_name not in cluster_handler.cluster.attributes_by_name
+                or cluster_handler.cluster.get(attribute_name) is None
+            ):
+                _LOGGER.debug(
+                    "%s is not supported - skipping %s entity creation",
+                    attribute_name,
+                    cls.__name__,
+                )
+                return None
+        elif (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -423,6 +436,11 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     ) -> None:
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if "entity_metadata" in kwargs:
+            self._attribute_name = kwargs[
+                "entity_metadata"
+            ].entity_metadata.attribute_name
+            self._unique_id_suffix = self._attribute_name
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @property

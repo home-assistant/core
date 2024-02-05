@@ -211,6 +211,7 @@ class Endpoint:
         entity_class: CALLABLE_T,
         unique_id: str,
         cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
     ) -> None:
         """Create a new entity."""
         from .device import DeviceStatus  # pylint: disable=import-outside-toplevel
@@ -220,7 +221,7 @@ class Endpoint:
 
         zha_data = get_zha_data(self.device.hass)
         zha_data.platforms[platform].append(
-            (entity_class, (unique_id, self.device, cluster_handlers))
+            (entity_class, (unique_id, self.device, cluster_handlers), kwargs or {})
         )
 
     @callback
