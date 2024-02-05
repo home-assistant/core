@@ -1,7 +1,6 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 from __future__ import annotations
 
-import asyncio
 import datetime
 from typing import Any
 
@@ -508,7 +507,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 AuthError,
                 ClientConnectionError,
                 AscConnectionError,
-                asyncio.TimeoutError,
+                TimeoutError,
             ):
                 self._retry += 1
                 self._attr_available = self._retry <= RETRY
@@ -524,7 +523,7 @@ class HoneywellUSThermostat(ClimateEntity):
             await _login()
             return
 
-        except (AscConnectionError, ClientConnectionError, asyncio.TimeoutError):
+        except (AscConnectionError, ClientConnectionError, TimeoutError):
             self._retry += 1
             self._attr_available = self._retry <= RETRY
             return
