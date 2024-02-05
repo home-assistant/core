@@ -11,7 +11,12 @@ from homeassistant.components.proximity.const import (
     DOMAIN,
 )
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.const import CONF_ZONE, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    CONF_ZONE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
@@ -1205,7 +1210,7 @@ async def test_sensor_unique_ids(
 ) -> None:
     """Test that when tracked entity is renamed."""
     t1 = entity_registry.async_get_or_create(
-        "device_tracker", "device_tracker", "test1"
+        "device_tracker", "device_tracker", "test1", original_name="Test tracker 1"
     )
     hass.states.async_set(t1.entity_id, "not_home")
 
@@ -1227,10 +1232,12 @@ async def test_sensor_unique_ids(
     assert await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
 
-    sensor_t1 = f"sensor.home_{t1.entity_id.split('.')[-1]}_distance"
+    sensor_t1 = "sensor.home_test_tracker_1_distance"
     entity = entity_registry.async_get(sensor_t1)
     assert entity
     assert entity.unique_id == f"{mock_config.entry_id}_{t1.id}_dist_to_zone"
+    state = hass.states.get(sensor_t1)
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home Test tracker 1 Distance"
 
     entity = entity_registry.async_get("sensor.home_test2_distance")
     assert entity
