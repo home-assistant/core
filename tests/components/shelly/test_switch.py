@@ -430,7 +430,7 @@ async def test_wall_display_thermostat_mode(
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # the switch entity should not be created, only the climate entity
-    assert hass.states.get("switch.test_switch_0") is None
+    assert hass.states.async_entity_ids("switch") == []
     assert hass.states.get("climate.test_name")
 
 
