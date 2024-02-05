@@ -1,5 +1,6 @@
+"""Support for Switchgrid Calendar platform."""
+
 import datetime
-import logging
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
@@ -10,8 +11,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import SwitchgridCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -27,6 +26,8 @@ async def async_setup_entry(
 class SwitchgridCalendarEntity(
     CoordinatorEntity[SwitchgridCoordinator], CalendarEntity
 ):
+    """A calendar entity holding Switchgrid Electric Loadshaving events."""
+
     _attr_has_entity_name = True
     _attr_translation_key = "switchgrid_events"
     _events: list[CalendarEvent] = []
@@ -34,6 +35,7 @@ class SwitchgridCalendarEntity(
     def __init__(
         self, coordinator: SwitchgridCoordinator, config_entry: ConfigEntry
     ) -> None:
+        """Create the Calendar entity."""
         super().__init__(coordinator)
         self._attr_unique_id = "switchgrid_events"
         self._config_entry = config_entry
@@ -48,18 +50,15 @@ class SwitchgridCalendarEntity(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        _LOGGER.debug(self.coordinator.data)
-        self._events = list(
-            map(
-                lambda event: CalendarEvent(
-                    start=event.startUtc,
-                    end=event.endUtc,
-                    summary=event.summary,
-                    description=event.description,
-                ),
-                self.coordinator.data.events,
+        self._events = [
+            CalendarEvent(
+                start=event.startUtc,
+                end=event.endUtc,
+                summary=event.summary,
+                description=event.description,
             )
-        )
+            for event in self.coordinator.data.events
+        ]
         self.async_write_ha_state()
 
     async def async_get_events(
@@ -68,6 +67,7 @@ class SwitchgridCalendarEntity(
         start_date: datetime.datetime,
         end_date: datetime.datetime,
     ) -> list[CalendarEvent]:
+        """Return all events in specified time frame."""
         return list(
             filter(
                 lambda event: start_date <= event.start <= end_date

@@ -1263,6 +1263,10 @@ omit =
     homeassistant/components/switchbot_cloud/entity.py
     homeassistant/components/switchbot_cloud/switch.py
     homeassistant/components/switchmate/switch.py
+    homeassistant/components/switchgrid/sensor.py
+    homeassistant/components/switchgrid/calendar.py
+    homeassistant/components/switchgrid/coordinator.py
+    homeassistant/components/switchgrid/const.py
     homeassistant/components/syncthing/__init__.py
     homeassistant/components/syncthing/sensor.py
     homeassistant/components/syncthru/__init__.py

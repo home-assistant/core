@@ -1,7 +1,6 @@
 """Config flow for Switchgrid integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -30,3 +29,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title="Switchgrid", data=user_input)
 
         return self.async_show_form(step_id="user")
+
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+        """Handle import from configuration.yaml."""
+        return await self.async_step_user(user_input)

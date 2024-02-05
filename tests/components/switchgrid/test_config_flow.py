@@ -1,90 +1,70 @@
-"""Test the Switchgrid config flow."""
-from unittest.mock import AsyncMock, patch
+"""Tests for the Switchgrid config flow."""
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.switchgrid.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.switchgrid.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+async def test_full_user_flow(hass: HomeAssistant) -> None:
+    """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
     with patch(
-        "homeassistant.components.switchgrid.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.switchgrid.async_setup_entry",
         return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            user_input={},
         )
-        await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
-    }
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Switchgrid"
+    assert result.get("data") == {}
+    assert result.get("options") == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
+async def test_single_instance_allowed(
+    hass: HomeAssistant,
+    source: str,
+) -> None:
+    """Test we abort if already setup."""
+    mock_config_entry = MockConfigEntry(domain=DOMAIN)
+
+    mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": source}
     )
 
-    with patch(
-        "homeassistant.components.switchgrid.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "single_instance_allowed"
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+async def test_import_flow(
+    hass: HomeAssistant,
+) -> None:
+    """Test the import configuration flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={},
     )
 
-    with patch(
-        "homeassistant.components.switchgrid.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Switchgrid"
+    assert result.get("data") == {}
+    assert result.get("options") == {}

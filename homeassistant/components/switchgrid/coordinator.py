@@ -1,29 +1,17 @@
+"""Coordinator for collecting Switchgrid data."""
+from asyncio import timeout
 import logging
 
 import aiohttp
-import async_timeout
-from switchgrid_python_client import SwitchgridData
+from switchgrid_python_client import Event, SwitchgridData, SwitchgridEventsResponse
 
 from homeassistant import core
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the calendar platform for entity."""
-    coordinator: SwitchgridCoordinator = SwitchgridCoordinator(hass, config_entry)
-    async_add_entities([SwitchgridCoordinator(coordinator, config_entry)])
 
 
 class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridData]):
@@ -34,6 +22,7 @@ class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridData]):
         hass: core.HomeAssistant,
         data: SwitchgridData,
     ) -> None:
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -42,20 +31,17 @@ class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridData]):
         )
         self._data = data
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> SwitchgridEventsResponse:
         try:
-            async with async_timeout.timeout(10):
+            async with timeout(10):
                 await self._data.update()
                 return self._data.data
         except aiohttp.ClientError as error:
             raise UpdateFailed(error) from error
 
-    def next_event(self):
+    def next_event(self) -> Event | None:
+        """Return the next (first) upcoming event."""
         now = dt_util.now()
         return next(
-            filter(
-                lambda event: event.startUtc > now,
-                self._data.data.events,
-            ),
-            None,
+            (event for event in self._data.data.events if event.startUtc > now), None
         )
