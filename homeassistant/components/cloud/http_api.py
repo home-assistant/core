@@ -44,6 +44,7 @@ from .const import (
     PREF_ENABLE_GOOGLE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
+    PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
 )
@@ -408,6 +409,7 @@ async def websocket_subscription(
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
             vol.Coerce(tuple), vol.In(MAP_VOICE)
         ),
+        vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
     }
 )
 @websocket_api.async_response
