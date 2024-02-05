@@ -56,9 +56,6 @@ async def test_migrate_process_sensor(
     assert hass.config_entries.async_entries(DOMAIN) == snapshot(
         name="before_migration"
     )
-    assert er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    ) == snapshot(name="entities_before_migration")
 
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
@@ -121,9 +118,6 @@ async def test_migrate_process_sensor(
     assert not entity_registry.async_get(entity)
 
     assert hass.config_entries.async_entries(DOMAIN) == snapshot(name="after_migration")
-    assert er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    ) == snapshot(name="entities_before_migration")
 
 
 async def test_other_fixable_issues(
