@@ -8,6 +8,7 @@ from webio_api import WebioAPI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, MANUFACTURER, NASWEB_CONFIG_URL
@@ -36,14 +37,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
     )
     if not await webio_api.check_connection():
-        _LOGGER.error("WebioAPI.check_connection: failed")
-        return False
+        raise ConfigEntryNotReady(f"[{entry.data[CONF_HOST]}] Check connection failed")
     if not await webio_api.refresh_device_info():
-        _LOGGER.error("WebioAPI.refresh_device_info: failed")
+        _LOGGER.error("[%s] Refresh device info failed", entry.data[CONF_HOST])
         return False
     webio_serial = webio_api.get_serial_number()
     if webio_serial is None:
-        _LOGGER.error("WebIO serial number is not available")
+        _LOGGER.error("[%s] Serial number not available", entry.data[CONF_HOST])
         return False
 
     coordinator = NASwebCoordinator(
