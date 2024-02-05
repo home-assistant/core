@@ -46,7 +46,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=
                 await self._update_device()
                 await self._update_consumption_data()
                 self._failure_count = 0
-        except RequestError as error:
+        except (RequestError, TimeoutError) as error:
             self._failure_count += 1
             if self._failure_count > 3:
                 raise UpdateFailed(error) from error
