@@ -1,0 +1,27 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "cloud": {
+        "title": "Yeelock",
+        "description": "Devices must be set-up in the Yeelock app first (requires an account).",
+        "data": {
+          "country_code": "Country Code",
+          "phone": "Phone Number",
+          "password": "[%key:common::config_flow::data::password%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "mac": "MAC Address",
+          "api_key": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    }
+  }
+}
