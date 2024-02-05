@@ -347,7 +347,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 await self.imap_client.stop_wait_server_push()
                 await self.imap_client.close()
                 await self.imap_client.logout()
-            except (AioImapException, asyncio.TimeoutError):
+            except (AioImapException, TimeoutError):
                 if log_error:
                     _LOGGER.debug("Error while cleaning up imap connection")
             finally:
@@ -379,7 +379,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         except (
             AioImapException,
             UpdateFailed,
-            asyncio.TimeoutError,
+            TimeoutError,
         ) as ex:
             await self._cleanup()
             self.async_set_update_error(ex)
@@ -451,7 +451,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             except (
                 UpdateFailed,
                 AioImapException,
-                asyncio.TimeoutError,
+                TimeoutError,
             ) as ex:
                 await self._cleanup()
                 self.async_set_update_error(ex)
@@ -467,8 +467,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 async with asyncio.timeout(10):
                     await idle
 
-            # From python 3.11 asyncio.TimeoutError is an alias of TimeoutError
-            except (AioImapException, asyncio.TimeoutError):
+            except (AioImapException, TimeoutError):
                 _LOGGER.debug(
                     "Lost %s (will attempt to reconnect after %s s)",
                     self.config_entry.data[CONF_SERVER],

@@ -1,5 +1,4 @@
 """Test the imap config flow."""
-import asyncio
 import ssl
 from unittest.mock import AsyncMock, patch
 
@@ -117,7 +116,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exc", "error"),
     [
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (AioImapException(""), "cannot_connect"),
         (ssl.SSLError, "ssl_error"),
     ],
@@ -306,7 +305,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -520,7 +519,7 @@ async def test_config_flow_from_with_advanced_settings(
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], config
