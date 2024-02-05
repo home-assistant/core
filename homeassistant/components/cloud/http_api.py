@@ -55,7 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 _CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
-    asyncio.TimeoutError: (
+    TimeoutError: (
         HTTPStatus.BAD_GATEWAY,
         "Unable to reach the Home Assistant cloud.",
     ),
@@ -429,7 +429,7 @@ async def websocket_update_prefs(
         try:
             async with asyncio.timeout(10):
                 await alexa_config.async_get_access_token()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             connection.send_error(
                 msg["id"], "alexa_timeout", "Timeout validating Alexa access token."
             )
