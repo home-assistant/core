@@ -1,5 +1,6 @@
 """"Config flow for Lupusec integration."""
 
+from json import JSONDecodeError
 import logging
 from typing import Any
 
@@ -49,6 +50,8 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await test_host_connection(self.hass, host, username, password)
             except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except JSONDecodeError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
