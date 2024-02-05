@@ -462,9 +462,6 @@ beautifulsoup4==4.12.2
 # homeassistant.components.zha
 bellows==0.37.6
 
-# homeassistant.components.fujitsu_hvac
-bidict==0.22.1
-
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
 
