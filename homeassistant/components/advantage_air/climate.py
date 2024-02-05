@@ -116,6 +116,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
+        # Dynamically adjust the supported HVAC modes based on the preset mode
         if self.preset_mode == ADVANTAGE_AIR_MYAUTO:
             return self._attr_hvac_modes + [HVACMode.HEAT_COOL]
         return self._attr_hvac_modes
@@ -123,15 +124,19 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the supported features."""
+        # Dynamically adjust the supported features based on the preset mode
         if self.preset_mode == ADVANTAGE_AIR_MYZONE:
+            # MyZone supports a single target temp
             return (
                 self._attr_supported_features | ClimateEntityFeature.TARGET_TEMPERATURE
             )
         if self.preset_mode == ADVANTAGE_AIR_MYAUTO:
+            # MyAuto supports a target temp range
             return (
                 self._attr_supported_features
                 | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
+        # MyTemp does not support any master temperature control
         return self._attr_supported_features
 
     @property
