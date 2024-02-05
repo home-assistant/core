@@ -150,36 +150,8 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
             result["flow_id"],
             {const.CONF_MAC_CODE: TEST_MAC},
         )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": const.ERROR_NO_BLUETOOTH_ADAPTER}
-
-    # Recover
-    with patch(
-        "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_scanner_count",
-        return_value=1,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {const.CONF_MAC_CODE: TEST_MAC},
-        )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    # Finish flow
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_BLIND_TYPE: const.MotionBlindType.ROLLER},
-    )
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
-    assert result["data"] == {
-        const.CONF_ADDRESS: TEST_ADDRESS,
-        const.CONF_LOCAL_NAME: TEST_NAME,
-        const.CONF_MAC_CODE: TEST_MAC.upper(),
-        const.CONF_BLIND_TYPE: TEST_BLIND_TYPE,
-    }
-    assert result["options"] == {}
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == const.ERROR_NO_BLUETOOTH_ADAPTER
 
 
 async def test_config_flow_manual_error_could_not_find_motor(
@@ -244,39 +216,13 @@ async def test_config_flow_manual_error_no_devices_found(
     assert result["errors"] == {}
 
     # Try with zero found bluetooth devices
-    initial_return_value = motionblinds_ble_connect[0].discover.return_value
     motionblinds_ble_connect[0].discover.return_value = []
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {const.CONF_MAC_CODE: TEST_MAC},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": const.ERROR_NO_DEVICES_FOUND}
-
-    # Recover
-    motionblinds_ble_connect[0].discover.return_value = initial_return_value
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_MAC_CODE: TEST_MAC},
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    # Finish flow
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_BLIND_TYPE: const.MotionBlindType.ROLLER},
-    )
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
-    assert result["data"] == {
-        const.CONF_ADDRESS: TEST_ADDRESS,
-        const.CONF_LOCAL_NAME: TEST_NAME,
-        const.CONF_MAC_CODE: TEST_MAC.upper(),
-        const.CONF_BLIND_TYPE: TEST_BLIND_TYPE,
-    }
-    assert result["options"] == {}
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == const.ERROR_NO_DEVICES_FOUND
 
 
 async def test_config_flow_bluetooth_success(

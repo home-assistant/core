@@ -1,10 +1,12 @@
 {
   "config": {
-    "error": {
-      "could_not_find_motor": "Could not find a motor with that MAC code",
-      "invalid_mac_code": "Invalid MAC code",
+    "abort": {
       "no_bluetooth_adapter": "No bluetooth adapter found",
       "no_devices_found": "Could not find any bluetooth devices"
+    },
+    "error": {
+      "could_not_find_motor": "Could not find a motor with that MAC code",
+      "invalid_mac_code": "Invalid MAC code"
     },
     "step": {
       "user": {
