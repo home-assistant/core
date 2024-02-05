@@ -20,7 +20,7 @@ SCAN_INTERVAL = timedelta(seconds=2)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lupusec switch devices."""
 
@@ -32,7 +32,7 @@ async def async_setup_entry(
     for device in data.get_devices(generic_type=device_types):
         switches.append(LupusecSwitch(device, config_entry.entry_id))
 
-    async_add_devices(switches)
+    async_add_entities(switches)
 
 
 class LupusecSwitch(LupusecBaseSensor, SwitchEntity):

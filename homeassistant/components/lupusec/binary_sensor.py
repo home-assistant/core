@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a binary sensors for a Lupusec device."""
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
     for device in data.get_devices(generic_type=device_types):
         sensors.append(LupusecBinarySensor(device, config_entry.entry_id))
 
-    async_add_devices(sensors)
+    async_add_entities(sensors)
 
 
 class LupusecBinarySensor(LupusecBaseSensor, BinarySensorEntity):
