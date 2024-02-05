@@ -105,7 +105,10 @@ class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
 
     async def _fetch_data(self) -> list[Health]:
         """Fetch the health data."""
-        return await self.api_client.async_get_failed_health_checks()
+        health = await self.api_client.async_get_failed_health_checks()
+        if isinstance(health, Health):
+            health = [health]
+        return health
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
