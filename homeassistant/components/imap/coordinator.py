@@ -94,29 +94,29 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     return client
 
 
-def _decode_payload(part: Message) -> str:
-    """Try to decode text payloads.
-
-    Common text encodings are quoted-printable or base64.
-    Falls back to the raw content part if decoding fails.
-    """
-    try:
-        decoded_payload: Any = part.get_payload(decode=True)
-        if TYPE_CHECKING:
-            assert isinstance(decoded_payload, bytes)
-        content_charset = part.get_content_charset() or "utf-8"
-        return decoded_payload.decode(content_charset)
-    except ValueError:
-        # return undecoded payload
-        return str(part.get_payload())
-
-
 class ImapMessage:
     """Class to parse an RFC822 email message."""
 
     def __init__(self, raw_message: bytes) -> None:
         """Initialize IMAP message."""
         self.email_message = email.message_from_bytes(raw_message)
+
+    @staticmethod
+    def _decode_payload(part: Message) -> str:
+        """Try to decode text payloads.
+
+        Common text encodings are quoted-printable or base64.
+        Falls back to the raw content part if decoding fails.
+        """
+        try:
+            decoded_payload: Any = part.get_payload(decode=True)
+            if TYPE_CHECKING:
+                assert isinstance(decoded_payload, bytes)
+            content_charset = part.get_content_charset() or "utf-8"
+            return decoded_payload.decode(content_charset)
+        except ValueError:
+            # return undecoded payload
+            return str(part.get_payload())
 
     @property
     def headers(self) -> dict[str, tuple[str,]]:
@@ -179,10 +179,10 @@ class ImapMessage:
         for part in self.email_message.walk():
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
                 if message_text is None:
-                    message_text = _decode_payload(part)
+                    message_text = self._decode_payload(part)
             elif part.get_content_type() == "text/html":
                 if message_html is None:
-                    message_html = _decode_payload(part)
+                    message_html = self._decode_payload(part)
             elif (
                 part.get_content_type().startswith("text")
                 and message_untyped_text is None
