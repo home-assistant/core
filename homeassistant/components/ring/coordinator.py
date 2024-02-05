@@ -96,7 +96,7 @@ class RingDataCoordinator(DataUpdateCoordinator[dict[int, RingDeviceData]]):
                         if history_task:
                             data[device.id].history = history_task.result()
                     except ExceptionGroup as eg:
-                        raise eg.exceptions[0] from eg
+                        raise eg.exceptions[0]
 
         return data
 
