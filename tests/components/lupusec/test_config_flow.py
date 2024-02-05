@@ -1,5 +1,6 @@
 """"Unit tests for the Lupusec config flow."""
 
+from json import JSONDecodeError
 from unittest.mock import patch
 
 from lupupy import LupusecException
@@ -70,6 +71,7 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
     ("raise_error", "text_error"),
     [
         (LupusecException("Test lupusec exception"), "cannot_connect"),
+        (JSONDecodeError("Test JSONDecodeError", "test", 1), "cannot_connect"),
         (Exception("Test unknown exception"), "unknown"),
     ],
 )
@@ -183,6 +185,7 @@ async def test_flow_source_import(
     ("raise_error", "text_error"),
     [
         (LupusecException("Test lupusec exception"), "cannot_connect"),
+        (JSONDecodeError("Test JSONDecodeError", "test", 1), "cannot_connect"),
         (Exception("Test unknown exception"), "unknown"),
     ],
 )
