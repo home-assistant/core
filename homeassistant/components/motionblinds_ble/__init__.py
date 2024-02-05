@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.COVER])
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _LOGGER.info("(%s) Finished setting up device", entry.data[CONF_MAC_CODE])
 
