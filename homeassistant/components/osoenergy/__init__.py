@@ -20,8 +20,11 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
-_T = TypeVar(
-    "_T", OSOEnergyBinarySensorData, OSOEnergySensorData, OSOEnergyWaterHeaterData
+_OSOEnergyT = TypeVar(
+    "_OSOEnergyT",
+    OSOEnergyBinarySensorData,
+    OSOEnergySensorData,
+    OSOEnergyWaterHeaterData,
 )
 
 MANUFACTURER = "OSO Energy"
@@ -73,18 +76,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class OSOEnergyEntity(Entity, Generic[_T]):
+class OSOEnergyEntity(Entity, Generic[_OSOEnergyT]):
     """Initiate OSO Energy Base Class."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, osoenergy: OSOEnergy, osoenergy_device: _T) -> None:
+    def __init__(self, osoenergy: OSOEnergy, device: _OSOEnergyT) -> None:
         """Initialize the instance."""
         self.osoenergy = osoenergy
-        self.device = osoenergy_device
+        self.device = device
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device.device_id)},
+            identifiers={(DOMAIN, device.device_id)},
             manufacturer=MANUFACTURER,
-            model=self.device.device_type,
-            name=self.device.device_name,
+            model=device.device_type,
+            name=device.device_name,
         )

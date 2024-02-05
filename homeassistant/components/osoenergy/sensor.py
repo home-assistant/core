@@ -140,9 +140,11 @@ async def async_setup_entry(
     entities = []
     if devices:
         for dev in devices:
-            description = SENSOR_TYPES.get(dev.osoEnergyType.lower())
-            if description is not None:
-                entities.append(OSOEnergySensor(osoenergy, description, dev))
+            sensor_type = dev.osoEnergyType.lower()
+            if sensor_type in SENSOR_TYPES:
+                entities.append(
+                    OSOEnergySensor(osoenergy, SENSOR_TYPES[sensor_type], dev)
+                )
 
     async_add_entities(entities, True)
 
@@ -156,12 +158,12 @@ class OSOEnergySensor(OSOEnergyEntity[OSOEnergySensorData], SensorEntity):
         self,
         instance: OSOEnergy,
         description: OSOEnergySensorEntityDescription,
-        osoenergy_device: OSOEnergySensorData,
+        device: OSOEnergySensorData,
     ) -> None:
         """Initialize the OSO Energy sensor."""
-        super().__init__(instance, osoenergy_device)
+        super().__init__(instance, device)
 
-        device_id = osoenergy_device.device_id
+        device_id = device.device_id
         self._attr_unique_id = f"{device_id}_{description.key}"
         self.entity_description = description
 

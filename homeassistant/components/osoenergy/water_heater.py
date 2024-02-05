@@ -60,11 +60,11 @@ class OSOEnergyWaterHeater(
     def __init__(
         self,
         instance: OSOEnergy,
-        osoenergy_device: OSOEnergyWaterHeaterData,
+        device: OSOEnergyWaterHeaterData,
     ) -> None:
         """Initialize the OSO Energy water heater."""
-        super().__init__(instance, osoenergy_device)
-        self._attr_unique_id = osoenergy_device.device_id
+        super().__init__(instance, device)
+        self._attr_unique_id = device.device_id
 
     @property
     def available(self) -> bool:
