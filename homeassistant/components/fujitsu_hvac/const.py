@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 
+API = "api"
 API_TIMEOUT = 10
 
 DOMAIN = "fujitsu_hvac"
@@ -20,9 +21,6 @@ AYLA_APP_ID = "CJIOSP-id"
 AYLA_APP_SECRET = "CJIOSP-Vb8MQL_lFiYQ7DKjN0eCFXznKZE"
 
 CONF_EUROPE = "is_europe"
-CONF_DEVICE = "device"
-
-NO_DEVICES_ERROR = "No devices found."
 
 HA_TO_FUJI_FAN = {
     FAN_LOW: FanSpeed.LOW,

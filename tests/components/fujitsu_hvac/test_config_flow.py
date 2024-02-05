@@ -2,16 +2,13 @@
 from unittest.mock import AsyncMock, patch
 
 from ayla_iot_unofficial import AylaAuthError
-from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
 
 from homeassistant import config_entries
 from homeassistant.components.fujitsu_hvac.const import (
     AYLA_APP_ID,
     AYLA_APP_SECRET,
-    CONF_DEVICE,
     CONF_EUROPE,
     DOMAIN,
-    NO_DEVICES_ERROR,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -57,8 +54,13 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     apimock = AsyncMock()
     result = await _initial_step(hass, apimock)
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == NO_DEVICES_ERROR
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Fujitsu HVAC ({TEST_USERNAME})"
+    assert result["data"] == {
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_EUROPE: False,
+    }
 
 
 async def test_form_invalid_auth(
@@ -88,8 +90,13 @@ async def test_form_invalid_auth(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == NO_DEVICES_ERROR
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Fujitsu HVAC ({TEST_USERNAME})"
+    assert result["data"] == {
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_EUROPE: False,
+    }
 
 
 async def test_form_cannot_connect(
@@ -119,33 +126,9 @@ async def test_form_cannot_connect(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == NO_DEVICES_ERROR
-
-
-async def test_form_one_device(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test that we get the device selection form and that it creates an entry when submitted."""
-    apimock = AsyncMock()
-    devicemock = AsyncMock(spec=FujitsuHVAC)
-    devicemock.device_name = TEST_DEVICE_NAME
-    devicemock.device_serial_number = TEST_DEVICE_SERIAL
-    apimock.async_get_devices.return_value = [devicemock]
-
-    result = await _initial_step(hass, apimock)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "choose_device"
-    assert result["data_schema"]({CONF_DEVICE: TEST_DEVICE_SERIAL})
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_DEVICE: TEST_DEVICE_SERIAL}
-    )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_DEVICE_NAME
+    assert result["title"] == f"Fujitsu HVAC ({TEST_USERNAME})"
     assert result["data"] == {
-        CONF_DEVICE: TEST_DEVICE_SERIAL,
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_EUROPE: False,

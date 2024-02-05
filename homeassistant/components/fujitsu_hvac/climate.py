@@ -1,9 +1,9 @@
 """Support for Fujitsu HVAC devices that use the Ayla Iot platform."""
-from asyncio import timeout
+from asyncio import gather
 from contextlib import suppress
 from typing import Any
 
-from ayla_iot_unofficial import AylaAuthError, new_ayla_api
+from ayla_iot_unofficial import AylaAuthError
 from ayla_iot_unofficial.fujitsu_hvac import Capability, FujitsuHVAC
 
 from homeassistant.components.climate import (
@@ -12,23 +12,13 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    PRECISION_HALVES,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    API_TIMEOUT,
-    AYLA_APP_ID,
-    AYLA_APP_SECRET,
-    CONF_DEVICE,
-    CONF_EUROPE,
+    API,
     DOMAIN,
     FUJI_TO_HA_FAN,
     FUJI_TO_HA_HVAC,
@@ -45,26 +35,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up one Fujitsu HVAC device."""
-    api = new_ayla_api(
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        AYLA_APP_ID,
-        AYLA_APP_SECRET,
-        europe=entry.data[CONF_EUROPE],
-    )
-
-    try:
-        async with timeout(API_TIMEOUT):
-            await api.async_sign_in()
-    except (TimeoutError, AylaAuthError):
-        return
+    api = hass.data[DOMAIN][API]
 
     devices = await api.async_get_devices()
-    for dev in devices:
-        if dev.device_serial_number == entry.data[CONF_DEVICE]:
-            await dev.async_update()
-            async_add_entities([FujitsuHVACDevice(dev)])
-            return
+    devices = list(filter(lambda x: isinstance(x, FujitsuHVAC), devices))
+    await gather(*[dev.async_update() for dev in devices])
+
+    async_add_entities([FujitsuHVACDevice(dev) for dev in devices])
 
 
 class FujitsuHVACDevice(ClimateEntity):
