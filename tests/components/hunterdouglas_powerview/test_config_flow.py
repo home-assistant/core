@@ -1,6 +1,5 @@
 """Test the Hunter Douglas Powerview config flow."""
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -73,7 +72,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
 
     with patch(
         "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -184,7 +183,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
-        return_value=AsyncMock(asyncio.TimeoutError),
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
