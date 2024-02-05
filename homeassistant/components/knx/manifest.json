@@ -13,6 +13,6 @@
   "requirements": [
     "xknx==2.11.2",
     "xknxproject==3.4.0",
-    "knx-frontend==2023.6.23.191712"
+    "knx-frontend==2024.1.20.105944"
   ]
 }

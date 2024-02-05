@@ -39,7 +39,6 @@ def async_setup_entry_attribute_entities(
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[tuple[str, str], BlockEntityDescription],
     sensor_class: Callable,
-    description_class: Callable[[RegistryEntry], BlockEntityDescription],
 ) -> None:
     """Set up entities for attributes."""
     coordinator = get_entry_data(hass)[config_entry.entry_id].block
@@ -56,7 +55,6 @@ def async_setup_entry_attribute_entities(
             coordinator,
             sensors,
             sensor_class,
-            description_class,
         )
 
 
@@ -113,7 +111,6 @@ def async_restore_block_attribute_entities(
     coordinator: ShellyBlockCoordinator,
     sensors: Mapping[tuple[str, str], BlockEntityDescription],
     sensor_class: Callable,
-    description_class: Callable[[RegistryEntry], BlockEntityDescription],
 ) -> None:
     """Restore block attributes entities."""
     entities = []
@@ -128,11 +125,12 @@ def async_restore_block_attribute_entities(
             continue
 
         attribute = entry.unique_id.split("-")[-1]
-        description = description_class(entry)
+        block_type = entry.unique_id.split("-")[-2].split("_")[0]
 
-        entities.append(
-            sensor_class(coordinator, None, attribute, description, entry, sensors)
-        )
+        if description := sensors.get((block_type, attribute)):
+            entities.append(
+                sensor_class(coordinator, None, attribute, description, entry)
+            )
 
     if not entities:
         return
@@ -444,7 +442,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
         """Available."""
         available = super().available
 
-        if not available or not self.entity_description.available:
+        if not available or not self.entity_description.available or self.block is None:
             return available
 
         return self.entity_description.available(self.block)
@@ -559,10 +557,8 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         attribute: str,
         description: BlockEntityDescription,
         entry: RegistryEntry | None = None,
-        sensors: Mapping[tuple[str, str], BlockEntityDescription] | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
-        self.sensors = sensors
         self.last_state: State | None = None
         self.coordinator = coordinator
         self.attribute = attribute
@@ -587,11 +583,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     @callback
     def _update_callback(self) -> None:
         """Handle device update."""
-        if (
-            self.block is not None
-            or not self.coordinator.device.initialized
-            or self.sensors is None
-        ):
+        if self.block is not None or not self.coordinator.device.initialized:
             super()._update_callback()
             return
 
@@ -607,13 +599,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
                 if sensor_id != entity_sensor:
                     continue
 
-                description = self.sensors.get((block.type, sensor_id))
-                if description is None:
-                    continue
-
                 self.block = block
-                self.entity_description = description
-
                 LOGGER.debug("Entity %s attached to block", self.name)
                 super()._update_callback()
                 return

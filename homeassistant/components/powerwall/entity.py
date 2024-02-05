@@ -29,8 +29,7 @@ class PowerWallEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
         assert coordinator is not None
         super().__init__(coordinator)
         self.power_wall = powerwall_data[POWERWALL_API]
-        # The serial numbers of the powerwalls are unique to every site
-        self.base_unique_id = "_".join(base_info.serial_numbers)
+        self.base_unique_id = base_info.gateway_din
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.base_unique_id)},
             manufacturer=MANUFACTURER,

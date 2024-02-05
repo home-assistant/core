@@ -1,3 +1,17 @@
 {
-  "title": "Proximity"
+  "title": "Proximity",
+  "entity": {
+    "sensor": {
+      "dir_of_travel": {
+        "name": "Direction of travel",
+        "state": {
+          "arrived": "Arrived",
+          "away_from": "Away from",
+          "stationary": "Stationary",
+          "towards": "Towards"
+        }
+      },
+      "nearest": { "name": "Nearest device" }
+    }
+  }
 }

@@ -804,6 +804,7 @@ def test_entity_device_info_schema() -> None:
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
+            "serial_number": "1234deadbeef",
             "sw_version": "0.1-beta",
             "configuration_url": "http://example.com",
         }
@@ -819,6 +820,7 @@ def test_entity_device_info_schema() -> None:
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
+            "serial_number": "1234deadbeef",
             "sw_version": "0.1-beta",
             "via_device": "test-hub",
             "configuration_url": "http://example.com",
@@ -2450,7 +2452,7 @@ async def test_delayed_birth_message(
     """Test sending birth message does not happen until Home Assistant starts."""
     mqtt_mock = await mqtt_mock_entry()
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     birth = asyncio.Event()
 
     await hass.async_block_till_done()

@@ -11,8 +11,12 @@ from aioshelly.exceptions import (
 import pytest
 
 from homeassistant.components.shelly.const import (
+    BLOCK_EXPECTED_SLEEP_PERIOD,
+    BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
+    CONF_SLEEP_PERIOD,
     DOMAIN,
+    MODELS_WITH_WRONG_SLEEP_PERIOD,
     BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -309,3 +313,17 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device) -> None
 
     assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get("switch.test_name_channel_1").state is STATE_ON
+
+
+@pytest.mark.parametrize(("model"), MODELS_WITH_WRONG_SLEEP_PERIOD)
+async def test_sleeping_block_device_wrong_sleep_period(
+    hass: HomeAssistant, mock_block_device, model
+) -> None:
+    """Test sleeping block device with wrong sleep period."""
+    entry = await init_integration(
+        hass, 1, model=model, sleep_period=BLOCK_WRONG_SLEEP_PERIOD, skip_setup=True
+    )
+    assert entry.data[CONF_SLEEP_PERIOD] == BLOCK_WRONG_SLEEP_PERIOD
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.data[CONF_SLEEP_PERIOD] == BLOCK_EXPECTED_SLEEP_PERIOD

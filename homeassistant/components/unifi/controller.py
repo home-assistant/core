@@ -7,6 +7,7 @@ import ssl
 from types import MappingProxyType
 from typing import Any, Literal
 
+import aiohttp
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -374,7 +375,10 @@ class UniFiController:
 
         async def _websocket_runner() -> None:
             """Start websocket."""
-            await self.api.start_websocket()
+            try:
+                await self.api.start_websocket()
+            except (aiohttp.ClientConnectorError, aiounifi.WebsocketError):
+                LOGGER.error("Websocket disconnected")
             self.available = False
             async_dispatcher_send(self.hass, self.signal_reachable)
             self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)

@@ -233,6 +233,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -569,6 +574,13 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: (
                     "sensor.climaxtechnology_psmp5_00_00_02_02tc_summation_delivered"
+                ),
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.climaxtechnology_psmp5_00_00_02_02tc_summation_received"
                 ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
@@ -1510,6 +1522,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -1565,6 +1582,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -1619,6 +1641,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_summation_received",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
@@ -2182,6 +2209,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_summation_received",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
@@ -4199,6 +4231,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -4955,6 +4992,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -5003,6 +5045,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_summation_received",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -5050,6 +5097,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_received"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_summation_received",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],

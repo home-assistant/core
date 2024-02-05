@@ -52,6 +52,7 @@ from homeassistant.const import (
     CONF_SERVICE,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
+    CONF_SET_CONVERSATION_RESPONSE,
     CONF_STOP,
     CONF_TARGET,
     CONF_THEN,
@@ -78,7 +79,7 @@ from homeassistant.util.dt import utcnow
 
 from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
-from .dispatcher import async_dispatcher_connect, async_dispatcher_send
+from .dispatcher import SignalType, async_dispatcher_connect, async_dispatcher_send
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptVariables
 from .trace import (
@@ -98,7 +99,7 @@ from .trace import (
     trace_update_result,
 )
 from .trigger import async_initialize_triggers, async_validate_trigger_config
-from .typing import ConfigType
+from .typing import UNDEFINED, ConfigType, UndefinedType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -142,7 +143,7 @@ _SHUTDOWN_MAX_WAIT = 60
 
 ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated actions
 
-SCRIPT_BREAKPOINT_HIT = "script_breakpoint_hit"
+SCRIPT_BREAKPOINT_HIT = SignalType[str, str, str]("script_breakpoint_hit")
 SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
@@ -259,6 +260,7 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_ACTIVATE_SCENE,
     cv.SCRIPT_ACTION_VARIABLES,
     cv.SCRIPT_ACTION_STOP,
+    cv.SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
 )
 
 
@@ -385,6 +387,7 @@ class _ScriptRun:
         self._step = -1
         self._stop = asyncio.Event()
         self._stopped = asyncio.Event()
+        self._conversation_response: str | None | UndefinedType = UNDEFINED
 
     def _changed(self) -> None:
         if not self._stop.is_set():
@@ -450,7 +453,7 @@ class _ScriptRun:
             script_stack.pop()
             self._finish()
 
-        return ScriptRunResult(response, self._variables)
+        return ScriptRunResult(self._conversation_response, response, self._variables)
 
     async def _async_step(self, log_exceptions: bool) -> None:
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
@@ -474,11 +477,12 @@ class _ScriptRun:
                 try:
                     handler = f"_async_{action}_step"
                     await getattr(self, handler)()
-                    trace_element.update_variables(self._variables)
                 except Exception as ex:  # pylint: disable=broad-except
                     self._handle_exception(
                         ex, continue_on_error, self._log_exceptions or log_exceptions
                     )
+                finally:
+                    trace_element.update_variables(self._variables)
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access
@@ -1031,6 +1035,18 @@ class _ScriptRun:
             self._hass, self._variables, render_as_defaults=False
         )
 
+    async def _async_set_conversation_response_step(self):
+        """Set conversation response."""
+        self._step_log("setting conversation response")
+        resp: template.Template | None = self._action[CONF_SET_CONVERSATION_RESPONSE]
+        if resp is None:
+            self._conversation_response = None
+        else:
+            self._conversation_response = resp.async_render(
+                variables=self._variables, parse_result=False
+            )
+        trace_set_result(conversation_response=self._conversation_response)
+
     async def _async_stop_step(self):
         """Stop script execution."""
         stop = self._action[CONF_STOP]
@@ -1075,11 +1091,13 @@ class _ScriptRun:
 
     async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""
-        await self._async_run_long_action(
+        result = await self._async_run_long_action(
             self._hass.async_create_task(
                 script.async_run(self._variables, self._context)
             )
         )
+        if result and result.conversation_response is not UNDEFINED:
+            self._conversation_response = result.conversation_response
 
 
 class _QueuedScriptRun(_ScriptRun):
@@ -1202,6 +1220,7 @@ class _IfData(TypedDict):
 class ScriptRunResult:
     """Container with the result of a script run."""
 
+    conversation_response: str | None | UndefinedType
     service_response: ServiceResponse
     variables: dict
 
@@ -1793,7 +1812,9 @@ class Script:
 
 
 @callback
-def breakpoint_clear(hass, key, run_id, node):
+def breakpoint_clear(
+    hass: HomeAssistant, key: str, run_id: str | None, node: str
+) -> None:
     """Clear a breakpoint."""
     run_id = run_id or RUN_ID_ANY
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
@@ -1809,7 +1830,9 @@ def breakpoint_clear_all(hass: HomeAssistant) -> None:
 
 
 @callback
-def breakpoint_set(hass, key, run_id, node):
+def breakpoint_set(
+    hass: HomeAssistant, key: str, run_id: str | None, node: str
+) -> None:
     """Set a breakpoint."""
     run_id = run_id or RUN_ID_ANY
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
@@ -1834,7 +1857,7 @@ def breakpoint_list(hass: HomeAssistant) -> list[dict[str, Any]]:
 
 
 @callback
-def debug_continue(hass, key, run_id):
+def debug_continue(hass: HomeAssistant, key: str, run_id: str) -> None:
     """Continue execution of a halted script."""
     # Clear any wildcard breakpoint
     breakpoint_clear(hass, key, run_id, NODE_ANY)
@@ -1844,7 +1867,7 @@ def debug_continue(hass, key, run_id):
 
 
 @callback
-def debug_step(hass, key, run_id):
+def debug_step(hass: HomeAssistant, key: str, run_id: str) -> None:
     """Single step a halted script."""
     # Set a wildcard breakpoint
     breakpoint_set(hass, key, run_id, NODE_ANY)
@@ -1854,7 +1877,7 @@ def debug_step(hass, key, run_id):
 
 
 @callback
-def debug_stop(hass, key, run_id):
+def debug_stop(hass: HomeAssistant, key: str, run_id: str) -> None:
     """Stop execution of a running or halted script."""
     signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
     async_dispatcher_send(hass, signal, "stop")

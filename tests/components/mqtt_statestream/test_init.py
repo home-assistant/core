@@ -58,7 +58,7 @@ async def test_setup_and_stop_waits_for_ha(
     e_id = "fake.entity"
 
     # HA is not running
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     assert await add_statestream(hass, base_topic="pub")
     await hass.async_block_till_done()

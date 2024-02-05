@@ -166,7 +166,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         try:
             info = await validate_input(self.hass, user_input)
-        except PowerwallUnreachableError as ex:
+        except (PowerwallUnreachableError, asyncio.TimeoutError) as ex:
             errors[CONF_IP_ADDRESS] = "cannot_connect"
             description_placeholders = {"error": str(ex)}
         except WrongVersion as ex:
@@ -258,11 +258,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {CONF_IP_ADDRESS: entry_data[CONF_IP_ADDRESS], **user_input}
             )
             if not errors:
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self.reauth_entry, data={**entry_data, **user_input}
                 )
-                await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",

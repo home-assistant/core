@@ -121,10 +121,11 @@ async def test_flow_with_activation_failure(
     )
     assert result["step_id"] == "device"
     assert result["type"] == FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "could_not_register"
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "could_not_register"
 
 
 async def test_flow_with_remove_while_activating(

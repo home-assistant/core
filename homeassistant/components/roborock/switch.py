@@ -52,7 +52,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="lock_status",
         key="child_lock",
         translation_key="child_lock",
-        icon="mdi:account-lock",
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockSwitchDescription(
@@ -63,7 +62,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="status",
         key="status_indicator",
         translation_key="status_indicator",
-        icon="mdi:alarm-light-outline",
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockSwitchDescription(
@@ -81,7 +79,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="enabled",
         key="dnd_switch",
         translation_key="dnd_switch",
-        icon="mdi:bell-cancel",
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockSwitchDescription(
@@ -99,7 +96,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="enabled",
         key="off_peak_switch",
         translation_key="off_peak_switch",
-        icon="mdi:power-plug",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),

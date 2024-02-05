@@ -1,6 +1,7 @@
 """Persistently store thread datasets."""
 from __future__ import annotations
 
+from asyncio import Event, Task, wait
 import dataclasses
 from datetime import datetime
 import logging
@@ -16,6 +17,9 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 
+from . import discovery
+
+BORDER_AGENT_DISCOVERY_TIMEOUT = 30
 DATA_STORE = "thread.datasets"
 STORAGE_KEY = "thread.datasets"
 STORAGE_VERSION_MAJOR = 1
@@ -177,6 +181,7 @@ class DatasetStore:
         self.hass = hass
         self.datasets: dict[str, DatasetEntry] = {}
         self._preferred_dataset: str | None = None
+        self._set_preferred_dataset_task: Task | None = None
         self._store: Store[dict[str, Any]] = DatasetStoreStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -267,10 +272,20 @@ class DatasetStore:
             preferred_border_agent_id=preferred_border_agent_id, source=source, tlv=tlv
         )
         self.datasets[entry.id] = entry
-        # Set to preferred if there is no preferred dataset
-        if self._preferred_dataset is None:
-            self._preferred_dataset = entry.id
         self.async_schedule_save()
+
+        # Set the new network as preferred if there is no preferred dataset and there is
+        # no other router present. We only attempt this once.
+        if (
+            self._preferred_dataset is None
+            and preferred_border_agent_id
+            and not self._set_preferred_dataset_task
+        ):
+            self._set_preferred_dataset_task = self.hass.async_create_task(
+                self._set_preferred_dataset_if_only_network(
+                    entry.id, preferred_border_agent_id
+                )
+            )
 
     @callback
     def async_delete(self, dataset_id: str) -> None:
@@ -309,6 +324,62 @@ class DatasetStore:
             raise KeyError("unknown dataset")
         self._preferred_dataset = dataset_id
         self.async_schedule_save()
+
+    async def _set_preferred_dataset_if_only_network(
+        self, dataset_id: str, border_agent_id: str
+    ) -> None:
+        """Set the preferred dataset, unless there are other routers present."""
+        _LOGGER.debug(
+            "_set_preferred_dataset_if_only_network called for router %s",
+            border_agent_id,
+        )
+
+        own_router_evt = Event()
+        other_router_evt = Event()
+
+        @callback
+        def router_discovered(
+            key: str, data: discovery.ThreadRouterDiscoveryData
+        ) -> None:
+            """Handle router discovered."""
+            _LOGGER.debug("discovered router with id %s", data.border_agent_id)
+            if data.border_agent_id == border_agent_id:
+                own_router_evt.set()
+                return
+
+            other_router_evt.set()
+
+        # Start Thread router discovery
+        thread_discovery = discovery.ThreadRouterDiscovery(
+            self.hass, router_discovered, lambda key: None
+        )
+        await thread_discovery.async_start()
+
+        found_own_router = self.hass.async_create_task(own_router_evt.wait())
+        found_other_router = self.hass.async_create_task(other_router_evt.wait())
+        pending = {found_own_router, found_other_router}
+        (done, pending) = await wait(pending, timeout=BORDER_AGENT_DISCOVERY_TIMEOUT)
+        if found_other_router in done:
+            # We found another router on the network, don't set the dataset
+            # as preferred
+            _LOGGER.debug("Other router found, do not set dataset as default")
+
+        # Note that asyncio.wait does not raise TimeoutError, it instead returns
+        # the jobs which did not finish in the pending-set.
+        elif found_own_router in pending:
+            # Either the router is not there, or mDNS is not working. In any case,
+            # don't set the router as preferred.
+            _LOGGER.debug("Own router not found, do not set dataset as default")
+
+        else:
+            # We've discovered the router connected to the dataset, but we did not
+            # find any other router on the network - mark the dataset as preferred.
+            _LOGGER.debug("No other router found, set dataset as default")
+            self.preferred_dataset = dataset_id
+
+        for task in pending:
+            task.cancel()
+        await thread_discovery.async_stop()
 
     async def async_load(self) -> None:
         """Load the datasets."""

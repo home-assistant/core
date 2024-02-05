@@ -344,6 +344,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_bangolufsen._tcp.local.": [
+        {
+            "domain": "bang_olufsen",
+        },
+    ],
     "_bbxsrv._tcp.local.": [
         {
             "domain": "blebox",
@@ -703,6 +708,11 @@ ZEROCONF = {
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
+        },
+    ],
+    "_technove-stations._tcp.local.": [
+        {
+            "domain": "technove",
         },
     ],
     "_touch-able._tcp.local.": [

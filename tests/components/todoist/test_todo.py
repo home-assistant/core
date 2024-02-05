@@ -402,8 +402,52 @@ async def test_update_todo_item_status(
                 "status": "needs_action",
             },
         ),
+        (
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Soda",
+                    description="6-pack",
+                    is_completed=False,
+                    # Create a mock task with a string value in the Due object and verify it
+                    # gets preserved when verifying the kwargs to update below
+                    due=Due(date="2024-01-01", is_recurring=True, string="every day"),
+                )
+            ],
+            {"due_date": "2024-02-01"},
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Soda",
+                    description="6-pack",
+                    is_completed=False,
+                    due=Due(date="2024-02-01", is_recurring=True, string="every day"),
+                )
+            ],
+            {
+                "task_id": "task-id-1",
+                "content": "Soda",
+                "description": "6-pack",
+                "due_date": "2024-02-01",
+                "due_string": "every day",
+            },
+            {
+                "uid": "task-id-1",
+                "summary": "Soda",
+                "status": "needs_action",
+                "description": "6-pack",
+                "due": "2024-02-01",
+            },
+        ),
     ],
-    ids=["rename", "due_date", "due_datetime", "description", "clear_description"],
+    ids=[
+        "rename",
+        "due_date",
+        "due_datetime",
+        "description",
+        "clear_description",
+        "due_date_with_recurrence",
+    ],
 )
 async def test_update_todo_items(
     hass: HomeAssistant,

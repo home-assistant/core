@@ -685,7 +685,7 @@ async def test_shade_restore_state(
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     zha_device = await zha_device_restored(zigpy_shade_device)
     entity_id = find_entity_id(Platform.COVER, zha_device, hass)
@@ -711,7 +711,7 @@ async def test_cover_restore_state(
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     zha_device = await zha_device_restored(zigpy_cover_device)
     entity_id = find_entity_id(Platform.COVER, zha_device, hass)

@@ -97,10 +97,6 @@ class BasePlatform(Entity):
                 },
             )
             _LOGGER.warning(
-                "`close_comm_on_error`: is deprecated and will be removed in version 2024.4"
-            )
-
-            _LOGGER.warning(
                 "`lazy_error_count`: is deprecated and will be removed in version 2024.7"
             )
 

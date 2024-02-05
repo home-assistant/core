@@ -151,7 +151,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         if auth_type != "Bearer":
             return False
 
-        refresh_token = await hass.auth.async_validate_access_token(auth_val)
+        refresh_token = hass.auth.async_validate_access_token(auth_val)
 
         if refresh_token is None:
             return False
@@ -189,7 +189,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         if claims["params"] != params:
             return False
 
-        refresh_token = await hass.auth.async_get_refresh_token(claims["iss"])
+        refresh_token = hass.auth.async_get_refresh_token(claims["iss"])
 
         if refresh_token is None:
             return False

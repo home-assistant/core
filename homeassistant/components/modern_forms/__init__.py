@@ -34,8 +34,8 @@ _P = ParamSpec("_P")
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.LIGHT,
     Platform.FAN,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

@@ -56,6 +56,9 @@
     "lock": {
       "vehicle_state_locked": {
         "name": "[%key:component::lock::title%]"
+      },
+      "charge_state_charge_port_latch": {
+        "name": "Charge cable lock"
       }
     },
     "media_player": {
@@ -84,6 +87,9 @@
       },
       "charge_state_battery_range": {
         "name": "Battery range"
+      },
+      "charge_state_minutes_to_full_charge": {
+        "name": "Time to full charge"
       },
       "drive_state_speed": {
         "name": "Speed"
@@ -126,6 +132,21 @@
       },
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
+      },
+      "drive_state_active_route_traffic_minutes_delay": {
+        "name": "Traffic delay"
+      },
+      "drive_state_active_route_energy_at_arrival": {
+        "name": "State of charge at arrival"
+      },
+      "drive_state_active_route_miles_to_arrival": {
+        "name": "Distance to arrival"
+      },
+      "drive_state_active_route_time_to_arrival": {
+        "name": "Time to arrival"
+      },
+      "drive_state_active_route_destination": {
+        "name": "Destination"
       }
     },
     "cover": {
@@ -314,6 +335,11 @@
       "update": {
         "name": "[%key:component::update::title%]"
       }
+    }
+  },
+  "exceptions": {
+    "no_cable": {
+      "message": "Insert cable to lock"
     }
   }
 }

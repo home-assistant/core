@@ -54,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ProtectSensorEntityDescription(
     ProtectRequiredKeysMixin[T], SensorEntityDescription
 ):
@@ -65,13 +65,12 @@ class ProtectSensorEntityDescription(
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
         value = super().get_ufp_value(obj)
-
-        if isinstance(value, float) and self.precision:
-            value = round(value, self.precision)
+        if self.precision and value is not None:
+            return round(value, self.precision)
         return value
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ProtectSensorEventEntityDescription(
     ProtectEventMixin[T], SensorEntityDescription
 ):

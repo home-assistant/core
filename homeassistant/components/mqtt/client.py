@@ -413,7 +413,7 @@ class MQTT:
         )
         self._pending_unsubscribes: set[str] = set()  # topic
 
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             self._ha_started.set()
         else:
 

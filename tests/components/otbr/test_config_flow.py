@@ -121,9 +121,11 @@ async def test_user_flow_router_not_setup(
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
+    pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
     assert aioclient_mock.mock_calls[-2][2] == {
         "Channel": 15,
-        "NetworkName": "home-assistant",
+        "NetworkName": f"ha-thread-{pan_id:04x}",
+        "PanId": pan_id,
     }
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
@@ -425,9 +427,11 @@ async def test_hassio_discovery_flow_router_not_setup(
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
+    pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
     assert aioclient_mock.mock_calls[-2][2] == {
         "Channel": 15,
-        "NetworkName": "home-assistant",
+        "NetworkName": f"ha-thread-{pan_id:04x}",
+        "PanId": pan_id,
     }
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
@@ -532,9 +536,11 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
+    pan_id = aioclient_mock.mock_calls[-2][2]["PanId"]
     assert aioclient_mock.mock_calls[-2][2] == {
         "Channel": 15,
-        "NetworkName": "home-assistant",
+        "NetworkName": f"ha-thread-{pan_id:04x}",
+        "PanId": pan_id,
     }
 
     assert aioclient_mock.mock_calls[-1][0] == "PUT"

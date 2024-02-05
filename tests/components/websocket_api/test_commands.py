@@ -716,22 +716,21 @@ async def test_get_config(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    if "components" in msg["result"]:
-        msg["result"]["components"] = set(msg["result"]["components"])
-    if "whitelist_external_dirs" in msg["result"]:
-        msg["result"]["whitelist_external_dirs"] = set(
-            msg["result"]["whitelist_external_dirs"]
-        )
-    if "allowlist_external_dirs" in msg["result"]:
-        msg["result"]["allowlist_external_dirs"] = set(
-            msg["result"]["allowlist_external_dirs"]
-        )
-    if "allowlist_external_urls" in msg["result"]:
-        msg["result"]["allowlist_external_urls"] = set(
-            msg["result"]["allowlist_external_urls"]
-        )
+    result = msg["result"]
+    ignore_order_keys = (
+        "components",
+        "allowlist_external_dirs",
+        "whitelist_external_dirs",
+        "allowlist_external_urls",
+    )
+    config = hass.config.as_dict()
 
-    assert msg["result"] == hass.config.as_dict()
+    for key in ignore_order_keys:
+        if key in result:
+            result[key] = set(result[key])
+            config[key] = set(config[key])
+
+    assert result == config
 
 
 async def test_ping(websocket_client: MockHAClientWebSocket) -> None:
@@ -776,7 +775,7 @@ async def test_call_service_context_with_user(
         msg = await ws.receive_json()
         assert msg["success"]
 
-        refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+        refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
         assert len(calls) == 1
         call = calls[0]
@@ -804,6 +803,7 @@ async def test_states_filters_visible(
     hass: HomeAssistant, hass_admin_user: MockUser, websocket_client
 ) -> None:
     """Test we only get entities that we're allowed to see."""
+    hass_admin_user.groups = []
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"test.entity": True}}})
     hass.states.async_set("test.entity", "hello")
     hass.states.async_set("test.not_visible_entity", "invisible")
@@ -1048,6 +1048,7 @@ async def test_subscribe_unsubscribe_entities(
     }
     hass_admin_user.groups = []
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
+    assert not hass_admin_user.is_admin
 
     await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
 

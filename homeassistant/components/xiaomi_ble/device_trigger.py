@@ -65,7 +65,7 @@ async def async_validate_trigger_config(
     """Validate trigger config."""
     device_id = config[CONF_DEVICE_ID]
     if model_data := _async_trigger_model_data(hass, device_id):
-        return model_data.schema(config)
+        return model_data.schema(config)  # type: ignore[no-any-return]
     return config
 
 

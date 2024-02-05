@@ -156,8 +156,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ):
                 prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-        # Default to Celsius
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        # Default to System Temperature Unit
+        self._attr_temperature_unit = self.hass.config.units.temperature_unit
 
         # Figure out current temperature, use preferred unit or what is available
         celsius_type = self.find_dpcode(
