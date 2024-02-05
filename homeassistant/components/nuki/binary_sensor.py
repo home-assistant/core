@@ -26,7 +26,7 @@ async def async_setup_entry(
 
     for lock in entry_data.locks:
         if lock.is_door_sensor_activated:
-            entities.extend([NukiDoorsensorEntity(entry_data.coordinator, lock)])
+            entities.append(NukiDoorsensorEntity(entry_data.coordinator, lock))
 
     entities.extend(
         [
