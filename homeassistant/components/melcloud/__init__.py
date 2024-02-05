@@ -22,7 +22,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
@@ -138,8 +138,9 @@ async def mel_devices_setup(
         all_devices = await get_devices(
             token,
             session,
-            conf_update_interval=timedelta(minutes=5),
-            device_set_debounce=timedelta(seconds=1),
+            user_update_interval=timedelta(minutes=30),
+            conf_update_interval=timedelta(minutes=15),
+            device_set_debounce=timedelta(seconds=2),
         )
     wrapped_devices: dict[str, list[MelCloudDevice]] = {}
     for device_type, devices in all_devices.items():
