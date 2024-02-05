@@ -1335,7 +1335,7 @@ class Recorder(threading.Thread):
         try:
             async with asyncio.timeout(DB_LOCK_TIMEOUT):
                 await database_locked.wait()
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             task.database_unlock.set()
             raise TimeoutError(
                 f"Could not lock database within {DB_LOCK_TIMEOUT} seconds."

@@ -255,7 +255,7 @@ async def handle_devices_execute(
         for entity_id, result in zip(executions, execute_results):
             if result is not None:
                 results[entity_id] = result
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pass
 
     final_results = list(results.values())
