@@ -75,6 +75,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             # Discover with BLE
             try:
                 await self.async_discover_motionblind(mac_code)
+            except NoBluetoothAdapter:
+                return self.async_abort(reason=EXCEPTION_MAP[NoBluetoothAdapter])
+            except NoDevicesFound:
+                return self.async_abort(reason=EXCEPTION_MAP[NoDevicesFound])
             except tuple(EXCEPTION_MAP.keys()) as e:
                 errors = {
                     "base": EXCEPTION_MAP[type(e)]
@@ -135,9 +139,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         count = bluetooth.async_scanner_count(self.hass, connectable=True)
         if count == 0:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
-            )
             _LOGGER.error("No bluetooth adapter found")
             raise NoBluetoothAdapter()
 
