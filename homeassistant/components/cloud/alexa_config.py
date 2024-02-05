@@ -505,7 +505,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
             return True
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("Timeout trying to sync entities to Alexa")
             return False
 

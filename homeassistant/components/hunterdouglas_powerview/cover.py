@@ -61,7 +61,7 @@ async def async_setup_entry(
     for shade in pv_entry.shade_data.values():
         # The shade may be out of sync with the hub
         # so we force a refresh when we add it if possible
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(1):
                 await shade.refresh()
         coordinator.data.update_shade_position(shade.id, shade.current_position)

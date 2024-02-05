@@ -1,5 +1,4 @@
 """Test the Oncue config flow."""
-import asyncio
 from unittest.mock import patch
 
 from aiooncue import LoginFailedException
@@ -72,7 +71,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.oncue.config_flow.Oncue.async_login",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

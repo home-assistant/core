@@ -64,8 +64,6 @@ UNIT_TIME = {
     UnitOfTime.DAYS: 24 * 60 * 60,
 }
 
-ICON = "mdi:chart-line"
-
 DEFAULT_ROUND = 3
 DEFAULT_TIME_WINDOW = 0
 
@@ -157,9 +155,9 @@ async def async_setup_platform(
 
 
 class DerivativeSensor(RestoreSensor, SensorEntity):
-    """Representation of an derivative sensor."""
+    """Representation of a derivative sensor."""
 
-    _attr_icon = ICON
+    _attr_translation_key = "derivative"
     _attr_should_poll = False
 
     def __init__(

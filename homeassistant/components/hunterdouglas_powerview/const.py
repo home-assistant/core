@@ -1,6 +1,5 @@
 """Constants for Hunter Douglas Powerview hub."""
 
-import asyncio
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from aiopvapi.helpers.aiorequest import (
@@ -20,7 +19,7 @@ STATE_ATTRIBUTE_ROOM_NAME = "room_name"
 
 HUB_EXCEPTIONS = (
     ServerDisconnectedError,
-    asyncio.TimeoutError,
+    TimeoutError,
     PvApiConnectionError,
     PvApiResponseStatusError,
     PvApiMaintenance,
