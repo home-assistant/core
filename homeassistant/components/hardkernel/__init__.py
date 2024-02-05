@@ -1,7 +1,7 @@
 """The Hardkernel integration."""
 from __future__ import annotations
 
-from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, get_os_info
+from homeassistant.components.hassio import get_os_info, is_hassio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Hardkernel config entry."""
-    if HASSIO_DOMAIN not in hass.config.components:
+    if not is_hassio(hass):
         # Not running under supervisor, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return False
