@@ -136,7 +136,7 @@ class GenericBlind(CoverEntity):
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the blind."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "(%s) Setting up %s cover entity (%s)",
             entry.data[CONF_MAC_CODE],
             entry.data[CONF_BLIND_TYPE],
