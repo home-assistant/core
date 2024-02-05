@@ -27,27 +27,23 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 @pytest.fixture(name="invalid_key_api")
 def mock_invalid_key_api() -> Generator:
     """Return an authentication error."""
-    instance = Mock()
-    instance.get_sites.side_effect = ApiException(status=403)
 
-    with patch("amberelectric.api.AmberApi.create", return_value=instance):
-        yield instance
+    with patch("amberelectric.api.AmberApi.create") as mock:
+        mock.return_value.get_sites.side_effect = ApiException(status=403)
+        yield mock
 
 
 @pytest.fixture(name="api_error")
 def mock_api_error() -> Generator:
     """Return an authentication error."""
-    instance = Mock()
-    instance.get_sites.side_effect = ApiException(status=500)
-
-    with patch("amberelectric.api.AmberApi.create", return_value=instance):
-        yield instance
+    with patch("amberelectric.api.AmberApi.create") as mock:
+        mock.return_value.get_sites.side_effect = ApiException(status=500)
+        yield mock
 
 
 @pytest.fixture(name="single_site_api")
 def mock_single_site_api() -> Generator:
     """Return a single site."""
-    instance = Mock()
     site = Site(
         "01FG0AGP818PXK0DWHXJRRT2DH",
         "11111111111",
@@ -57,16 +53,15 @@ def mock_single_site_api() -> Generator:
         date(2002, 1, 1),
         None,
     )
-    instance.get_sites.return_value = [site]
 
-    with patch("amberelectric.api.AmberApi.create", return_value=instance):
-        yield instance
+    with patch("amberelectric.api.AmberApi.create") as mock:
+        mock.return_value.get_sites.return_value = [site]
+        yield mock
 
 
 @pytest.fixture(name="single_site_pending_api")
 def mock_single_site_pending_api() -> Generator:
     """Return a single site."""
-    instance = Mock()
     site = Site(
         "01FG0AGP818PXK0DWHXJRRT2DH",
         "11111111111",
@@ -76,10 +71,10 @@ def mock_single_site_pending_api() -> Generator:
         None,
         None,
     )
-    instance.get_sites.return_value = [site]
 
-    with patch("amberelectric.api.AmberApi.create", return_value=instance):
-        yield instance
+    with patch("amberelectric.api.AmberApi.create") as mock:
+        mock.return_value.get_sites.return_value = [site]
+        yield mock
 
 
 @pytest.fixture(name="single_site_rejoin_api")
