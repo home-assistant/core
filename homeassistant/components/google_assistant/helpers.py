@@ -105,6 +105,7 @@ class AbstractConfig(ABC):
         self._local_last_active: datetime | None = None
         self._local_sdk_version_warn = False
         self.is_supported_cache: dict[str, tuple[int | None, bool]] = {}
+        self._on_deinitialize: list[CALLBACK_TYPE] = []
 
     async def async_initialize(self) -> None:
         """Perform async initialization of config."""
@@ -118,7 +119,14 @@ class AbstractConfig(ABC):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        start.async_at_start(self.hass, sync_google)
+        self._on_deinitialize.append(start.async_at_start(self.hass, sync_google))
+
+    @callback
+    def async_deinitialize(self) -> None:
+        """Remove listeners."""
+        _LOGGER.debug("async_deinitialize")
+        while self._on_deinitialize:
+            self._on_deinitialize.pop()()
 
     @property
     def enabled(self):
