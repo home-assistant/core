@@ -90,7 +90,7 @@ class EpionSensor(CoordinatorEntity[EpionCoordinator], SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{epion_device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._epion_device_id)},
+            identifiers={(DOMAIN, epion_device_id)},
             manufacturer="Epion",
             name=self.device.get("deviceName"),
             sw_version=self.device.get("fwVersion"),
