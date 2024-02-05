@@ -36,9 +36,7 @@ async def async_setup_entry(
 
     alarm = await hass.async_add_executor_job(data.get_alarm)
 
-    alarm_devices = [LupusecAlarm(data, alarm, config_entry.entry_id)]
-
-    async_add_entities(alarm_devices)
+    async_add_entities([LupusecAlarm(data, alarm, config_entry.entry_id)])
 
 
 class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import partial
 import logging
 
 import lupupy.constants as CONST
@@ -34,7 +35,9 @@ async def async_setup_entry(
     device_types = CONST.TYPE_OPENING + CONST.TYPE_SENSOR
 
     sensors = []
-    for device in data.get_devices(generic_type=device_types):
+    partial_func = partial(data.get_devices, generic_type=device_types)
+    devices = await hass.async_add_executor_job(partial_func)
+    for device in devices:
         sensors.append(LupusecBinarySensor(device, config_entry.entry_id))
 
     async_add_entities(sensors)
