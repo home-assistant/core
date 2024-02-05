@@ -34,7 +34,9 @@ async def async_setup_entry(
     """Set up an alarm control panel for a Lupusec device."""
     data = hass.data[DOMAIN][config_entry.entry_id]
 
-    alarm_devices = [LupusecAlarm(data, data.get_alarm(), config_entry.entry_id)]
+    alarm = await hass.async_add_executor_job(data.get_alarm)
+
+    alarm_devices = [LupusecAlarm(data, alarm, config_entry.entry_id)]
 
     async_add_entities(alarm_devices)
 
