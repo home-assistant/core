@@ -3,7 +3,6 @@
   "name": "Invoxia (unofficial)",
   "codeowners": ["@ezlo-picori"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/invoxia",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
