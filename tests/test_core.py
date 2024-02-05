@@ -410,7 +410,7 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
 async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test timeouts at each step."""
 
-    with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
+    with patch.object(hass.timeout, "async_timeout", side_effect=TimeoutError):
         await hass.async_stop()
 
     assert hass.state is CoreState.stopped

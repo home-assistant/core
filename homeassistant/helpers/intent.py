@@ -542,7 +542,7 @@ class ServiceIntentHandler(IntentHandler):
         """
         try:
             await asyncio.wait({task}, timeout=self.service_timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pass
         except asyncio.CancelledError:
             # Task calling us was cancelled, so cancel service call task, and wait for
